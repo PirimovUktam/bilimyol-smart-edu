@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
+import '../features/auth/forgot_password_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/course_selection/course_selection_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/placement/placement_test_screen.dart';
@@ -14,6 +18,22 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       redirect: (context, state) => '/courses',
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
       path: '/courses',
