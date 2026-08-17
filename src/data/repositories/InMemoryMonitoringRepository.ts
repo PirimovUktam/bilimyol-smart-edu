@@ -27,6 +27,26 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
     this.currentRole = role;
   }
 
+  async redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }> {
+    const cleanCode = code.trim().toUpperCase();
+    const validCodes = ['USTOZ-2026-ALPHA', 'BILIMYO-USTOZ-77', 'MAKTAB-MATH-2026', 'TEACHER-DEMO-2026'];
+
+    if (!cleanCode) {
+      return { success: false, message: 'O‘qituvchi tasdiqlash kodini kiriting.' };
+    }
+
+    if (!validCodes.includes(cleanCode)) {
+      return { success: false, message: 'Kiritilgan tasdiqlash kodi yaroqsiz yoki muddati tugagan.' };
+    }
+
+    this.currentRole = 'teacher';
+    return {
+      success: true,
+      schoolName: 'BilimYo‘l Boshqaruv Markazi',
+      message: 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!',
+    };
+  }
+
   async createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }> {
     const id = 'link_' + Math.random().toString(36).substring(2, 9);
     const linkCode = Math.random().toString(36).substring(2, 8).toUpperCase();

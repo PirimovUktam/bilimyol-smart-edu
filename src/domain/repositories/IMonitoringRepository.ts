@@ -9,9 +9,10 @@ import {
 } from '../entities/MonitoringEntities';
 
 export interface IMonitoringRepository {
-  // Role
+  // Role & Teacher Verification
   getUserRole(): Promise<UserRole>;
   setUserRole(role: UserRole): Promise<void>;
+  redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }>;
 
   // Parent Features
   createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }>;

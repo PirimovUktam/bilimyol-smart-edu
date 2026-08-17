@@ -34,6 +34,7 @@ interface MonitoringState {
   // Actions
   loadUserRole: () => Promise<UserRole>;
   switchRole: (role: UserRole) => Promise<void>;
+  redeemTeacherInvitationCode: (code: string) => Promise<{ success: boolean; schoolName?: string; message: string }>;
   fetchParentData: () => Promise<void>;
   selectChild: (studentId: string) => Promise<void>;
   createParentLinkCode: () => Promise<string>;
@@ -43,6 +44,7 @@ interface MonitoringState {
   redeemParentLinkCode: (code: string) => Promise<{ success: boolean; message: string }>;
   joinClassByCode: (code: string) => Promise<{ success: boolean; message: string }>;
   fetchStudentConnections: () => Promise<void>;
+  resetAll: () => void;
 }
 
 const repository: IMonitoringRepository = new SupabaseMonitoringRepository();
@@ -86,6 +88,24 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       } else {
         await get().fetchStudentConnections();
       }
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  redeemTeacherInvitationCode: async (code: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await repository.redeemTeacherInvitationCode(code);
+      if (res.success) {
+        set({ currentRole: 'teacher' });
+        await get().fetchTeacherData();
+      }
+      return res;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Tasdiqlash kodi tekshirilmadi.';
+      set({ error: msg });
+      return { success: false, message: msg };
     } finally {
       set({ isLoading: false });
     }
@@ -236,5 +256,23 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     } catch {
       // Non-blocking
     }
+  },
+
+  resetAll: () => {
+    set({
+      currentRole: 'student',
+      isLoading: false,
+      error: null,
+      children: [],
+      activeChild: null,
+      childWeeklyStats: [],
+      childAlerts: [],
+      generatedLinkCode: null,
+      classes: [],
+      activeClass: null,
+      classStudents: [],
+      linkedParents: [],
+      joinedClasses: [],
+    });
   },
 }));

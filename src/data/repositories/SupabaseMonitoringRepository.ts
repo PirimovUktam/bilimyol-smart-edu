@@ -34,6 +34,27 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
       .eq('id', user.id);
   }
 
+  async redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }> {
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { success: false, message: 'O‘qituvchi tasdiqlash kodini kiriting.' };
+    }
+
+    const { data, error } = await supabase.rpc('redeem_teacher_invitation_code', { p_code: cleanCode });
+    if (error || !data) {
+      return {
+        success: false,
+        message: error?.message || 'Tasdiqlash kodi noto‘g‘ri yoki muddati tugagan.',
+      };
+    }
+
+    return {
+      success: Boolean(data.success),
+      schoolName: data.school_name,
+      message: data.message || (data.success ? 'O‘qituvchi hisobi muvaffaqiyatli faollashtirildi!' : 'Xatolik yuz berdi.'),
+    };
+  }
+
   async createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }> {
     const { data, error } = await supabase.rpc('create_parent_link_code');
     if (!error && data && data.success !== false) {

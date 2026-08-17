@@ -15,6 +15,27 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> redeemTeacherInvitationCode(String code) async {
+    final cleanCode = code.trim().toUpperCase();
+    const validCodes = ['USTOZ-2026-ALPHA', 'BILIMYO-USTOZ-77', 'MAKTAB-MATH-2026'];
+
+    if (cleanCode.isEmpty) {
+      return {'success': false, 'message': 'O‘qituvchi tasdiqlash kodini kiriting.'};
+    }
+
+    if (!validCodes.contains(cleanCode)) {
+      return {'success': false, 'message': 'Kiritilgan tasdiqlash kodi yaroqsiz yoki muddati tugagan.'};
+    }
+
+    _role = UserRole.teacher;
+    return {
+      'success': true,
+      'school_name': 'BilimYo‘l Boshqaruv Markazi',
+      'message': 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!',
+    };
+  }
+
+  @override
   Future<Map<String, dynamic>> createParentLinkCode() async {
     final code = 'LK${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 12)}';
     return {

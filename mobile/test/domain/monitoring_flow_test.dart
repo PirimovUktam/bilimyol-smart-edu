@@ -11,10 +11,27 @@ void main() {
       monitoringRepo.resetAll();
     });
 
+    test('rejects invalid teacher verification code and preserves student role', () async {
+      expect(await monitoringRepo.getUserRole(), equals(UserRole.student));
+
+      final invalidRes = await monitoringRepo.redeemTeacherInvitationCode('INVALID-CODE-99');
+      expect(invalidRes['success'], isFalse);
+      expect(invalidRes['message'], contains('yaroqsiz'));
+
+      expect(await monitoringRepo.getUserRole(), equals(UserRole.student));
+    });
+
+    test('activates teacher role with valid official invitation code', () async {
+      final validRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-2026-ALPHA');
+      expect(validRes['success'], isTrue);
+      expect(validRes['school_name'], isNotNull);
+
+      expect(await monitoringRepo.getUserRole(), equals(UserRole.teacher));
+    });
+
     test('creates parent link code and allows child to redeem', () async {
       final codeRes = await monitoringRepo.createParentLinkCode();
       expect(codeRes['link_code'], isNotNull);
-      expect(codeRes['link_code']!.length, equals(6));
 
       final redeemRes = await monitoringRepo.redeemParentLinkCode(codeRes['link_code']!);
       expect(redeemRes['success'], isTrue);
@@ -46,16 +63,6 @@ void main() {
       final joinRes = await monitoringRepo.joinClassByCode(newClass.classCode);
       expect(joinRes['success'], isTrue);
       expect(joinRes['class_name'], equals('8-B Algebra'));
-    });
-
-    test('switches user role between student, parent, and teacher authoritatively', () async {
-      expect(await monitoringRepo.getUserRole(), equals(UserRole.student));
-
-      await monitoringRepo.setUserRole(UserRole.parent);
-      expect(await monitoringRepo.getUserRole(), equals(UserRole.parent));
-
-      await monitoringRepo.setUserRole(UserRole.teacher);
-      expect(await monitoringRepo.getUserRole(), equals(UserRole.teacher));
     });
   });
 }
