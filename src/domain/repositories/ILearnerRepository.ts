@@ -29,6 +29,7 @@ export interface PlacementAttemptData {
 
 export interface ILearnerRepository {
   getProfile(): Promise<LearnerProfile>;
+  getCurrentProfile(): Promise<LearnerProfile>;
   updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile>;
   saveSkillScores(courseId: string, scores: Record<string, SkillScore>): Promise<void>;
   savePlacementAttempt(data: PlacementAttemptData): Promise<string>;

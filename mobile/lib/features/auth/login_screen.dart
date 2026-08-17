@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/app_button.dart';
@@ -42,14 +43,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMsg = null;
     });
 
-    // Simulate login / save to profile
-    await Future.delayed(const Duration(milliseconds: 300));
-    final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
-    await learnerNotifier.loadProfile();
+    try {
+      final client = Supabase.instance.client;
+      await client.auth.signInWithPassword(email: email, password: password);
+      final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
+      await learnerNotifier.loadProfile();
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/dashboard');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/dashboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMsg = e.toString().replaceFirst('Exception: ', '').replaceFirst('AuthApiException: ', '');
+        });
+      }
     }
   }
 

@@ -5,7 +5,10 @@ import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine'
 
 const DEFAULT_PROFILE: LearnerProfile = {
   id: 'learner_default_01',
-  name: 'O‘quvchi',
+  name: 'Foydalanuvchi',
+  firstName: 'Foydalanuvchi',
+  lastName: '',
+  email: '',
   selectedCourseId: 'course_math_01',
   goal: 'mastery',
   dailyMinutes: 15,
@@ -25,6 +28,10 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   private answerAttempts: AnswerAttemptRecord[] = [];
   private processedActionKeys: Set<string> = new Set();
   private recordedActivityDates: Set<string> = new Set();
+
+  async getCurrentProfile(): Promise<LearnerProfile> {
+    return this.getProfile();
+  }
 
   async getProfile(): Promise<LearnerProfile> {
     return JSON.parse(JSON.stringify(this.profile));

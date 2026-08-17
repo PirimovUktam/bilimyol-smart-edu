@@ -7,6 +7,10 @@ import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 export class SupabaseLearnerRepository implements ILearnerRepository {
   private fallbackRepo = new InMemoryLearnerRepository();
 
+  async getCurrentProfile(): Promise<LearnerProfile> {
+    return this.getProfile();
+  }
+
   async getProfile(): Promise<LearnerProfile> {
     if (!isSupabaseConfigured) {
       return this.fallbackRepo.getProfile();
@@ -19,11 +23,37 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       }
 
       // Fetch user profile from public.profiles table
-      const { data: userProfileData } = await supabase
+      let { data: userProfileData } = await supabase
         .from('profiles')
-        .select('first_name, last_name, email')
+        .select('id, first_name, last_name, display_name, email, avatar_url, created_at, updated_at')
         .eq('id', user.id)
         .maybeSingle();
+
+      // If public.profiles row is missing or empty, provision it
+      if (!userProfileData || !userProfileData.first_name) {
+        const metaFirst = (user.user_metadata?.first_name || '').trim();
+        const metaLast = (user.user_metadata?.last_name || '').trim();
+        const resolvedFirst = metaFirst || (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
+        const resolvedDisplay = metaLast ? `${resolvedFirst} ${metaLast}` : resolvedFirst;
+
+        const { data: provisioned } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            first_name: resolvedFirst,
+            last_name: metaLast,
+            display_name: resolvedDisplay,
+            email: user.email || '',
+            avatar_url: user.user_metadata?.avatar_url || null,
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .maybeSingle();
+
+        if (provisioned) {
+          userProfileData = provisioned;
+        }
+      }
 
       // Fetch learner profile
       const { data: learnerData } = await supabase
@@ -74,13 +104,18 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         }
       }
 
-      const resolvedName = userProfileData?.first_name ||
+      const firstName = userProfileData?.first_name ||
         user.user_metadata?.first_name ||
-        (user.email ? user.email.split('@')[0] : 'O‘quvchi');
+        (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
+      const lastName = userProfileData?.last_name || user.user_metadata?.last_name || '';
 
       return {
         id: user.id,
-        name: resolvedName,
+        name: firstName,
+        firstName,
+        lastName,
+        email: user.email || userProfileData?.email || '',
+        avatarUrl: userProfileData?.avatar_url || '',
         selectedCourseId: learnerData?.selected_course_id || 'course_math_01',
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,
@@ -117,6 +152,22 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         ...updates,
         scoresByCourse: updates.scoresByCourse || currentProfile.scoresByCourse,
       };
+
+      // Sync public.profiles if name/names/avatar are updated
+      if (updates.name !== undefined || updates.firstName !== undefined || updates.lastName !== undefined || updates.avatarUrl !== undefined) {
+        const newFirst = updates.firstName || updates.name || currentProfile.firstName || 'Foydalanuvchi';
+        const newLast = updates.lastName ?? currentProfile.lastName ?? '';
+        const newDisplay = newLast ? `${newFirst} ${newLast}` : newFirst;
+
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          first_name: newFirst,
+          last_name: newLast,
+          display_name: newDisplay,
+          avatar_url: updates.avatarUrl ?? currentProfile.avatarUrl ?? null,
+          updated_at: new Date().toISOString(),
+        });
+      }
 
       await supabase.from('learner_profiles').upsert({
         user_id: user.id,

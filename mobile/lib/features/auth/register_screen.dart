@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/app_button.dart';
@@ -36,6 +37,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _handleRegister() async {
     final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
@@ -60,13 +62,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _errorMsg = null;
     });
 
-    await Future.delayed(const Duration(milliseconds: 300));
-    final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
-    await learnerNotifier.loadProfile();
+    try {
+      final client = Supabase.instance.client;
+      final res = await client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+        },
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/courses');
+      if (res.user != null) {
+        final displayName = lastName.isNotEmpty ? '$firstName $lastName' : firstName;
+        try {
+          await client.from('profiles').upsert({
+            'id': res.user!.id,
+            'first_name': firstName,
+            'last_name': lastName,
+            'display_name': displayName,
+            'email': email,
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+        } catch (_) {}
+      }
+
+      final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
+      await learnerNotifier.loadProfile();
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/courses');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMsg = e.toString().replaceFirst('Exception: ', '').replaceFirst('AuthApiException: ', '');
+        });
+      }
     }
   }
 

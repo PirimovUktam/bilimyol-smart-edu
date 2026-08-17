@@ -8,12 +8,50 @@ class SupabaseLearnerRepository implements ILearnerRepository {
   final InMemoryLearnerRepository _fallbackRepo = InMemoryLearnerRepository();
 
   @override
+  Future<LearnerProfile> getCurrentProfile() async {
+    return getProfile();
+  }
+
+  @override
   Future<LearnerProfile> getProfile() async {
     try {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
         return _fallbackRepo.getProfile();
+      }
+
+      // Fetch user profile from public.profiles table
+      var userProfile = await client
+          .from('profiles')
+          .select('id, first_name, last_name, display_name, email, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (userProfile == null || userProfile['first_name'] == null || userProfile['first_name'] == 'Foydalanuvchi') {
+        final metaFirst = (user.userMetadata?['first_name'] as String? ?? '').trim();
+        final metaLast = (user.userMetadata?['last_name'] as String? ?? '').trim();
+        final resolvedFirst = metaFirst.isNotEmpty ? metaFirst : (user.email != null ? user.email!.split('@').first : 'Foydalanuvchi');
+        final resolvedLast = metaLast;
+        final resolvedDisplay = resolvedLast.isNotEmpty ? '$resolvedFirst $resolvedLast' : resolvedFirst;
+
+        await client.from('profiles').upsert({
+          'id': user.id,
+          'first_name': resolvedFirst,
+          'last_name': resolvedLast,
+          'display_name': resolvedDisplay,
+          'email': user.email ?? '',
+          'avatar_url': user.userMetadata?['avatar_url'],
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        userProfile = {
+          'id': user.id,
+          'first_name': resolvedFirst,
+          'last_name': resolvedLast,
+          'display_name': resolvedDisplay,
+          'email': user.email ?? '',
+        };
       }
 
       // Fetch learner profile
@@ -75,20 +113,13 @@ class SupabaseLearnerRepository implements ILearnerRepository {
               .toList() ??
           [];
 
-      // Fetch user profile from public.profiles table
-      final userProfile = await client
-          .from('profiles')
-          .select('first_name, last_name, email')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      final resolvedName = userProfile?['first_name'] as String? ??
+      final firstName = userProfile['first_name'] as String? ??
           user.userMetadata?['first_name'] as String? ??
-          (user.email != null ? user.email!.split('@').first : 'O‘quvchi');
+          (user.email != null ? user.email!.split('@').first : 'Foydalanuvchi');
 
       return LearnerProfile(
         id: user.id,
-        name: resolvedName,
+        name: firstName,
         selectedCourseId: learnerData?['selected_course_id'] ?? 'course_math_01',
         goal: OnboardingGoal.mastery,
         dailyMinutes: learnerData?['daily_minutes'] ?? 15,
@@ -117,12 +148,20 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         return _fallbackRepo.updateProfile(updated);
       }
 
+      await client.from('profiles').upsert({
+        'id': user.id,
+        'first_name': updated.name,
+        'display_name': updated.name,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
       await client.from('learner_profiles').upsert({
         'user_id': user.id,
         'selected_course_id': updated.selectedCourseId,
         'daily_minutes': updated.dailyMinutes,
         'goal': updated.goal.name,
         'initial_level': updated.initialLevel.name,
+        'updated_at': DateTime.now().toIso8601String(),
       });
 
       return updated;

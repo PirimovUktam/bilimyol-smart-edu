@@ -11,7 +11,7 @@ class InMemoryLearnerRepository implements ILearnerRepository {
 
   LearnerProfile _profile = LearnerProfile(
     id: 'learner_mobile_01',
-    name: 'O‘quvchi',
+    name: 'Foydalanuvchi',
     selectedCourseId: 'course_math_01',
     goal: OnboardingGoal.mastery,
     dailyMinutes: 15,
@@ -25,6 +25,11 @@ class InMemoryLearnerRepository implements ILearnerRepository {
     completedReinforcementIds: [],
     createdAt: DateTime.now().millisecondsSinceEpoch,
   );
+
+  @override
+  Future<LearnerProfile> getCurrentProfile() async {
+    return _profile;
+  }
 
   @override
   Future<LearnerProfile> getProfile() async {
@@ -189,7 +194,7 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   Future<LearnerProfile> resetAll() async {
     _profile = LearnerProfile(
       id: 'learner_mobile_01',
-      name: 'O‘quvchi',
+      name: 'Foydalanuvchi',
       selectedCourseId: 'course_math_01',
       goal: OnboardingGoal.mastery,
       dailyMinutes: 15,

@@ -103,7 +103,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Assalomu alaykum, {authProfile?.firstName || profile?.name || 'O‘quvchi'}!
+            Assalomu alaykum, {authProfile?.firstName || profile?.firstName || profile?.name || 'Foydalanuvchi'}!
           </h1>
           <p className="text-sm text-slate-600 mt-1">
             Shaxsiy moslashuvchan ta’lim yo‘lingiz bo‘yicha real ko‘rsatkichlar

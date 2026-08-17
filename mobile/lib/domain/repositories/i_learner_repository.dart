@@ -53,6 +53,7 @@ class PlacementAttemptData {
 
 abstract class ILearnerRepository {
   Future<LearnerProfile> getProfile();
+  Future<LearnerProfile> getCurrentProfile();
   Future<LearnerProfile> updateProfile(LearnerProfile updated);
   Future<void> saveSkillScores(String courseId, Map<String, SkillScore> scores);
   Future<String> savePlacementAttempt(PlacementAttemptData data);

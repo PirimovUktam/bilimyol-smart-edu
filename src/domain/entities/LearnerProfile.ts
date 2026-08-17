@@ -4,6 +4,9 @@ import { SkillScore } from './SkillScore';
 export interface LearnerProfile {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   avatarUrl?: string;
   selectedCourseId: string;
   goal: OnboardingGoal;
@@ -17,4 +20,5 @@ export interface LearnerProfile {
   completedNodeIds: string[];
   completedReinforcementIds: string[];
   createdAt: number;
+  updatedAt?: number;
 }

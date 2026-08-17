@@ -76,7 +76,7 @@ class DashboardScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Assalomu alaykum, ${profile.name}! 👋',
+                                  'Assalomu alaykum, ${profile.name.isNotEmpty ? profile.name : 'Foydalanuvchi'}! 👋',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,

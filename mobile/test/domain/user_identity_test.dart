@@ -10,9 +10,9 @@ void main() {
       await learnerRepo.resetAll();
     });
 
-    test('initializes default profile with neutral name O‘quvchi without hardcoded name', () async {
+    test('initializes default profile with neutral name Foydalanuvchi without hardcoded name', () async {
       final profile = await learnerRepo.getProfile();
-      expect(profile.name, equals('O‘quvchi'));
+      expect(profile.name, equals('Foydalanuvchi'));
       expect(profile.name, isNot(equals('Azizbek')));
     });
 
@@ -21,7 +21,7 @@ void main() {
       final updated = current.copyWith(name: 'Aaaaa');
       await learnerRepo.updateProfile(updated);
 
-      final fresh = await learnerRepo.getProfile();
+      final fresh = await learnerRepo.getCurrentProfile();
       expect(fresh.name, equals('Aaaaa'));
     });
 
@@ -35,7 +35,7 @@ void main() {
 
       await learnerRepo.resetAll();
       profile = await learnerRepo.getProfile();
-      expect(profile.name, equals('O‘quvchi'));
+      expect(profile.name, equals('Foydalanuvchi'));
       expect(profile.xp, equals(0));
     });
   });

@@ -26,7 +26,7 @@ interface AuthContextType {
 
 const defaultDemoProfile: UserProfile = {
   id: 'guest_user_01',
-  firstName: 'O‘quvchi',
+  firstName: 'Foydalanuvchi',
   lastName: '',
   email: 'guest@bilimyol.uz',
   avatarUrl: '',
@@ -43,32 +43,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = useCallback(async (userId: string, email: string) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, first_name, last_name, display_name, email, avatar_url')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
-        setProfile({
-          id: userId,
-          firstName: 'O‘quvchi',
-          lastName: '',
-          email,
-        });
-      } else {
+      if (data && data.first_name && data.first_name !== 'Foydalanuvchi') {
         setProfile({
           id: data.id,
           firstName: data.first_name,
-          lastName: data.last_name,
-          email: data.email,
-          avatarUrl: data.avatar_url,
+          lastName: data.last_name || '',
+          email: data.email || email,
+          avatarUrl: data.avatar_url || '',
+        });
+      } else {
+        // Check user_metadata if profile row is missing or default
+        const { data: userData } = await supabase.auth.getUser();
+        const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
+        const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
+        const resolvedFirst = data?.first_name || metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
+        const resolvedLast = data?.last_name || metaLast || '';
+        const resolvedDisplay = resolvedLast ? `${resolvedFirst} ${resolvedLast}` : resolvedFirst;
+
+        // Auto-provision public.profiles row
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            first_name: resolvedFirst,
+            last_name: resolvedLast,
+            display_name: resolvedDisplay,
+            email: email || userData.user?.email || '',
+            avatar_url: data?.avatar_url || userData.user?.user_metadata?.avatar_url || null,
+            updated_at: new Date().toISOString(),
+          });
+
+        setProfile({
+          id: userId,
+          firstName: resolvedFirst,
+          lastName: resolvedLast,
+          email: email || userData.user?.email || '',
+          avatarUrl: data?.avatar_url || '',
         });
       }
-    } catch {
+    } catch (err) {
+      console.warn('Error resolving authenticated profile from Supabase:', err);
       setProfile({
         id: userId,
-        firstName: 'O‘quvchi',
+        firstName: email ? email.split('@')[0] : 'Foydalanuvchi',
         lastName: '',
         email,
       });
@@ -123,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
 
     if (isSupabaseConfigured) {
-      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
         if (!mounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -181,7 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -191,8 +214,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       },
     });
+
+    if (error) {
+      setIsLoading(false);
+      return { error: new Error(error.message) };
+    }
+
+    if (signUpData.user) {
+      const displayName = lastName ? `${firstName} ${lastName}` : firstName;
+      // Proactively ensure public.profiles record exists immediately
+      try {
+        await supabase.from('profiles').upsert({
+          id: signUpData.user.id,
+          first_name: firstName,
+          last_name: lastName,
+          display_name: displayName,
+          email,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('Could not pre-insert public.profiles, trigger will handle it:', err);
+      }
+
+      setProfile({
+        id: signUpData.user.id,
+        firstName,
+        lastName,
+        email,
+      });
+    }
+
     setIsLoading(false);
-    return { error: error ? new Error(error.message) : null };
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -220,15 +273,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(updated);
 
     if (isSupabaseConfigured && user) {
+      const displayName = updated.lastName ? `${updated.firstName} ${updated.lastName}` : updated.firstName;
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           first_name: updated.firstName,
           last_name: updated.lastName,
+          display_name: displayName,
           avatar_url: updated.avatarUrl,
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        });
 
       if (error) return { error: new Error(error.message) };
     } else {
