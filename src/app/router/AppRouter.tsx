@@ -41,7 +41,7 @@ export const AppRouter: React.FC = () => {
   useEffect(() => {
     loadCourses();
     loadProfile();
-  }, [loadCourses, loadProfile]);
+  }, [loadCourses, loadProfile, authProfile]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');

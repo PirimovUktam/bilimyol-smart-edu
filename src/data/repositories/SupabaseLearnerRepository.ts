@@ -18,19 +18,26 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         return this.fallbackRepo.getProfile();
       }
 
+      // Fetch user profile from public.profiles table
+      const { data: userProfileData } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', user.id)
+        .maybeSingle();
+
       // Fetch learner profile
       const { data: learnerData } = await supabase
         .from('learner_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Fetch gamification profile
       const { data: gamifyData } = await supabase
         .from('gamification_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       // Fetch skill scores
       const { data: scoreRows } = await supabase
@@ -67,9 +74,13 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         }
       }
 
+      const resolvedName = userProfileData?.first_name ||
+        user.user_metadata?.first_name ||
+        (user.email ? user.email.split('@')[0] : 'O‘quvchi');
+
       return {
         id: user.id,
-        name: user.user_metadata?.first_name || 'Azizbek',
+        name: resolvedName,
         selectedCourseId: learnerData?.selected_course_id || 'course_math_01',
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,

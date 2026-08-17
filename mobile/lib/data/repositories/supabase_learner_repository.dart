@@ -75,9 +75,20 @@ class SupabaseLearnerRepository implements ILearnerRepository {
               .toList() ??
           [];
 
+      // Fetch user profile from public.profiles table
+      final userProfile = await client
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      final resolvedName = userProfile?['first_name'] as String? ??
+          user.userMetadata?['first_name'] as String? ??
+          (user.email != null ? user.email!.split('@').first : 'O‘quvchi');
+
       return LearnerProfile(
         id: user.id,
-        name: user.userMetadata?['first_name'] ?? 'Azizbek',
+        name: resolvedName,
         selectedCourseId: learnerData?['selected_course_id'] ?? 'course_math_01',
         goal: OnboardingGoal.mastery,
         dailyMinutes: learnerData?['daily_minutes'] ?? 15,

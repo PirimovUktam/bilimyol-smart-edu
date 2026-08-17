@@ -5,6 +5,8 @@ import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRe
 import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
 import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases/SubmitLessonAnswerUseCase';
 
+import { useLearnerStore } from '@/app/store/useLearnerStore';
+
 const aiService = new GeminiAITutorService();
 
 interface LessonState {
@@ -78,10 +80,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     set({ isEvaluatingAnswer: true, selectedAnswerIndex: selectedIndex });
 
     const useCase = new SubmitLessonAnswerUseCase(aiService, supabaseLearnerRepository);
+    const learnerName = useLearnerStore.getState().profile?.name || 'O‘quvchi';
     const result = await useCase.execute(
       currentStep.interactiveQuestion,
       selectedIndex,
-      'Azizbek',
+      learnerName,
       currentLesson.id
     );
 

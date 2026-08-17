@@ -15,6 +15,7 @@ import {
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useAuth } from '@/core/context/AuthContext';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
@@ -37,6 +38,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { activeCourse, activeCourseSkills } = useCourseStore();
   const { profile } = useLearnerStore();
+  const { profile: authProfile } = useAuth();
   const { loadRoadmap } = useRoadmapStore();
   const [recentAttempts, setRecentAttempts] = useState<AnswerAttemptRecord[]>([]);
 
@@ -101,7 +103,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Assalomu alaykum, {profile?.name || 'O‘quvchi'}!
+            Assalomu alaykum, {authProfile?.firstName || profile?.name || 'O‘quvchi'}!
           </h1>
           <p className="text-sm text-slate-600 mt-1">
             Shaxsiy moslashuvchan ta’lim yo‘lingiz bo‘yicha real ko‘rsatkichlar

@@ -25,10 +25,10 @@ interface AuthContextType {
 }
 
 const defaultDemoProfile: UserProfile = {
-  id: 'demo_user_01',
-  firstName: 'Azizbek',
-  lastName: 'Rahmonov',
-  email: 'demo@bilimyol.uz',
+  id: 'guest_user_01',
+  firstName: 'O‘quvchi',
+  lastName: '',
+  email: 'guest@bilimyol.uz',
   avatarUrl: '',
 };
 

@@ -4,8 +4,8 @@ import { SkillScore } from '@/domain/entities/SkillScore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 
 const DEFAULT_PROFILE: LearnerProfile = {
-  id: 'learner_demo_01',
-  name: 'Azizbek',
+  id: 'learner_default_01',
+  name: 'O‘quvchi',
   selectedCourseId: 'course_math_01',
   goal: 'mastery',
   dailyMinutes: 15,

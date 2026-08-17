@@ -144,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextField(
                         controller: _firstNameController,
                         decoration: InputDecoration(
-                          hintText: 'Azizbek',
+                          hintText: 'Ismingiz',
                           prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
