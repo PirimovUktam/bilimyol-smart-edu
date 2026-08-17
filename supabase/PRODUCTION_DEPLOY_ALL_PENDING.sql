@@ -723,13 +723,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 6.2 CREATE TEACHER INVITATION (Admin only)
+-- 6.2 Ensure pgcrypto extension is active in extensions schema
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
+
+-- 6.3 Schema-qualified, immutable hashing helper
+CREATE OR REPLACE FUNCTION public.hash_teacher_code(p_code TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+  SELECT encode(extensions.digest(convert_to(UPPER(TRIM(p_code)), 'UTF8'), 'sha256'), 'hex');
+$$;
+
+REVOKE ALL ON FUNCTION public.hash_teacher_code(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.hash_teacher_code(TEXT) TO authenticated, postgres, service_role;
+
+-- 6.4 CREATE TEACHER INVITATION (Admin only)
 CREATE OR REPLACE FUNCTION public.create_teacher_invitation(
   p_school_name TEXT DEFAULT 'BilimYo‘l Smart School',
   p_max_uses INT DEFAULT 1,
   p_validity_days INT DEFAULT 7
 )
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_part1 TEXT;
@@ -754,7 +775,7 @@ BEGIN
   v_part2 := UPPER(SUBSTRING(MD5(RANDOM()::TEXT || clock_timestamp()::TEXT) FROM 5 FOR 4));
   v_plain_code := 'USTOZ-' || v_part1 || '-' || v_part2;
   v_prefix := 'USTOZ-' || v_part1 || '-****';
-  v_hash := encode(digest(v_plain_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_plain_code);
   v_expires_at := now() + (v_days || ' days')::INTERVAL;
 
   INSERT INTO public.teacher_invitation_codes (
@@ -794,11 +815,17 @@ BEGIN
     'message', 'O‘qituvchi taklif kodi muvaffaqiyatli yaratildi. Ushbu kodni hozir nusxalab oling!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- 6.3 LIST TEACHER INVITATIONS (Admin only)
+GRANT EXECUTE ON FUNCTION public.create_teacher_invitation(TEXT, INT, INT) TO authenticated, postgres, service_role;
+
+-- 6.5 LIST TEACHER INVITATIONS (Admin only)
 CREATE OR REPLACE FUNCTION public.list_teacher_invitations()
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_list JSONB;
@@ -830,11 +857,17 @@ BEGIN
 
   RETURN v_list;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- 6.4 REVOKE TEACHER INVITATION (Admin only)
+GRANT EXECUTE ON FUNCTION public.list_teacher_invitations() TO authenticated, postgres, service_role;
+
+-- 6.6 REVOKE TEACHER INVITATION (Admin only)
 CREATE OR REPLACE FUNCTION public.revoke_teacher_invitation(p_id UUID)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
 BEGIN
@@ -853,11 +886,17 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'message', 'Taklif kodi muvaffaqiyatli bekor qilindi.');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- 6.5 REDEEM TEACHER INVITATION CODE
+GRANT EXECUTE ON FUNCTION public.revoke_teacher_invitation(UUID) TO authenticated, postgres, service_role;
+
+-- 6.7 REDEEM TEACHER INVITATION CODE
 CREATE OR REPLACE FUNCTION public.redeem_teacher_invitation_code(p_code TEXT)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_clean_code TEXT := UPPER(TRIM(p_code));
@@ -866,6 +905,7 @@ DECLARE
   v_recent_fails INT := 0;
   v_new_used INT;
   v_new_status TEXT;
+  v_caller_email TEXT;
 BEGIN
   IF v_uid IS NULL THEN
     RETURN jsonb_build_object('success', false, 'message', 'Autentifikatsiyadan o‘tilmagan.');
@@ -889,7 +929,7 @@ BEGIN
     );
   END IF;
 
-  v_hash := encode(digest(v_clean_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_clean_code);
 
   SELECT * INTO v_inv
   FROM public.teacher_invitation_codes
@@ -913,11 +953,23 @@ BEGIN
   INSERT INTO public.teacher_invitation_attempts (user_id, attempted_at, is_success)
   VALUES (v_uid, now(), true);
 
-  -- Upgrade role in public.profiles
-  UPDATE public.profiles
-  SET role = 'teacher',
-      updated_at = now()
-  WHERE id = v_uid;
+  -- Ensure profile exists and atomically upgrade to 'teacher'
+  SELECT email INTO v_caller_email FROM auth.users WHERE id = v_uid;
+
+  INSERT INTO public.profiles (id, first_name, last_name, email, display_name, role, created_at, updated_at)
+  VALUES (
+    v_uid,
+    COALESCE(SPLIT_PART(v_caller_email, '@', 1), 'O‘qituvchi'),
+    '',
+    COALESCE(v_caller_email, ''),
+    COALESCE(SPLIT_PART(v_caller_email, '@', 1), 'O‘qituvchi'),
+    'teacher',
+    now(),
+    now()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    role = 'teacher',
+    updated_at = now();
 
   v_new_used := v_inv.used_count + 1;
   IF v_new_used >= v_inv.max_uses THEN
@@ -939,7 +991,9 @@ BEGIN
     'message', 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.redeem_teacher_invitation_code(TEXT) TO authenticated, postgres, service_role;
 
 -- 6.6 CREATE PARENT LINK CODE
 CREATE OR REPLACE FUNCTION public.create_parent_link_code()
