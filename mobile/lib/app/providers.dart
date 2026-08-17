@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/services/demo_ai_tutor_service.dart';
 import '../data/repositories/in_memory_course_repository.dart';
 import '../data/repositories/in_memory_lesson_repository.dart';
 import '../data/repositories/in_memory_learner_repository.dart';
@@ -19,8 +18,11 @@ import '../domain/entities/learning_path_node.dart';
 import '../domain/entities/lesson.dart';
 import '../domain/personalization/adaptive_question_selector.dart';
 
+import '../data/services/i_ai_tutor_service.dart';
+import '../data/services/supabase_ai_tutor_service.dart';
+
 // --- Singleton Service & Repository Providers ---
-final aiTutorServiceProvider = Provider((ref) => DemoAITutorService());
+final aiTutorServiceProvider = Provider<IAITutorService>((ref) => SupabaseAITutorService());
 final courseRepositoryProvider = Provider((ref) => InMemoryCourseRepository());
 final lessonRepositoryProvider = Provider((ref) => InMemoryLessonRepository());
 final learnerRepositoryProvider = Provider((ref) => InMemoryLearnerRepository());
