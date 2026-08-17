@@ -193,7 +193,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-medium">Ko‘nikma o‘zlashtirish darajasi:</span>
                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    +22% O‘SISH
+                    +{scoreTransition ? Math.max(0, scoreTransition.newScore - scoreTransition.oldScore) : 0}% O‘SISH
                   </span>
                 </div>
 

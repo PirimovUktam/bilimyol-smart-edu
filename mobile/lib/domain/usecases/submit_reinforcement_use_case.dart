@@ -39,7 +39,18 @@ class SubmitReinforcementUseCase {
     final isCorrect = selectedIndex == reinforcementQuestion.correctIndex;
     final profile = await learnerRepository.getProfile();
     final courseScores = profile.scoresByCourse[courseId] ?? {};
-    final currentSkillScore = courseScores[skillId]?.score ?? 41;
+    final currentSkillScore = courseScores[skillId]?.score ?? 0;
+
+    // Record answer attempt
+    await learnerRepository.recordAnswerAttempt(
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: reinforcementNodeId,
+      questionId: reinforcementQuestion.id,
+      selectedIndex: selectedIndex,
+      selectedAnswer: reinforcementQuestion.options[selectedIndex],
+      isCorrect: isCorrect,
+    );
 
     if (!isCorrect) {
       final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);

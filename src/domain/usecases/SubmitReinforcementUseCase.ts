@@ -30,7 +30,18 @@ export class SubmitReinforcementUseCase {
     const isCorrect = selectedIndex === reinforcementQuestion.correctIndex;
     const profile = await this.learnerRepo.getProfile();
     const courseScores = profile.scoresByCourse[courseId] || {};
-    const currentSkillScore = courseScores[skillId]?.score ?? 41;
+    const currentSkillScore = courseScores[skillId]?.score ?? 0;
+
+    // Record answer attempt in audit log
+    await this.learnerRepo.recordAnswerAttempt({
+      courseId,
+      skillId,
+      lessonId: reinforcementNodeId,
+      questionId: reinforcementQuestion.id,
+      selectedIndex,
+      selectedAnswer: reinforcementQuestion.options[selectedIndex] || '',
+      isCorrect,
+    });
 
     if (!isCorrect) {
       const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
