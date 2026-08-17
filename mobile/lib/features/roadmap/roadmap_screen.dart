@@ -6,7 +6,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
-import '../../core/widgets/demo_control_bar.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/learning_path_node.dart';
 
@@ -49,7 +48,6 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const DemoControlBar(),
             Expanded(
               child: roadmapAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),

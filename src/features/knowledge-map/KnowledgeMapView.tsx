@@ -5,7 +5,7 @@ import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { GetKnowledgeMapUseCase, KnowledgeMapData } from '@/domain/usecases/GetKnowledgeMapUseCase';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
-import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -22,7 +22,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
 
   useEffect(() => {
     if (activeCourse) {
-      const useCase = new GetKnowledgeMapUseCase(inMemoryCourseRepository, inMemoryLearnerRepository);
+      const useCase = new GetKnowledgeMapUseCase(inMemoryCourseRepository, supabaseLearnerRepository);
       useCase.execute(activeCourse.id).then(setMapData);
     }
   }, [activeCourse, profile]);

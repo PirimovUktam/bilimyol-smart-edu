@@ -6,7 +6,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
-import '../../core/widgets/demo_control_bar.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
@@ -34,7 +33,6 @@ class KnowledgeMapScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const DemoControlBar(),
             Expanded(
               child: learnerAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),

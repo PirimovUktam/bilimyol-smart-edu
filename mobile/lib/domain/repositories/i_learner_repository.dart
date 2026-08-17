@@ -25,10 +25,37 @@ class AnswerAttemptRecord {
   });
 }
 
+class PlacementAttemptSubmission {
+  final String questionId;
+  final int selectedIndex;
+  final bool isCorrect;
+
+  const PlacementAttemptSubmission({
+    required this.questionId,
+    required this.selectedIndex,
+    required this.isCorrect,
+  });
+}
+
+class PlacementAttemptData {
+  final String courseId;
+  final int score;
+  final String? weakestSkillId;
+  final List<PlacementAttemptSubmission> submissions;
+
+  const PlacementAttemptData({
+    required this.courseId,
+    required this.score,
+    this.weakestSkillId,
+    required this.submissions,
+  });
+}
+
 abstract class ILearnerRepository {
   Future<LearnerProfile> getProfile();
   Future<LearnerProfile> updateProfile(LearnerProfile updated);
   Future<void> saveSkillScores(String courseId, Map<String, SkillScore> scores);
+  Future<String> savePlacementAttempt(PlacementAttemptData data);
   Future<void> markLessonCompleted(String lessonId);
   Future<void> markNodeCompleted(String nodeId);
   Future<void> markReinforcementCompleted(String reinforcementId);

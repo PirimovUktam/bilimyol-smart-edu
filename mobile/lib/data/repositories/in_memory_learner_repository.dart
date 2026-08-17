@@ -48,6 +48,11 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
+  Future<String> savePlacementAttempt(PlacementAttemptData data) async {
+    return 'plc_att_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  @override
   Future<void> markLessonCompleted(String lessonId) async {
     if (!_profile.completedLessonIds.contains(lessonId)) {
       final list = List<String>.from(_profile.completedLessonIds)..add(lessonId);

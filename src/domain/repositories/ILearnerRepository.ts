@@ -14,10 +14,24 @@ export interface AnswerAttemptRecord {
   timestamp: number;
 }
 
+export interface PlacementAttemptSubmission {
+  questionId: string;
+  selectedIndex: number;
+  isCorrect: boolean;
+}
+
+export interface PlacementAttemptData {
+  courseId: string;
+  score: number;
+  weakestSkillId?: string;
+  submissions: PlacementAttemptSubmission[];
+}
+
 export interface ILearnerRepository {
   getProfile(): Promise<LearnerProfile>;
   updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile>;
   saveSkillScores(courseId: string, scores: Record<string, SkillScore>): Promise<void>;
+  savePlacementAttempt(data: PlacementAttemptData): Promise<string>;
   markLessonCompleted(lessonId: string): Promise<void>;
   markNodeCompleted(nodeId: string): Promise<void>;
   markReinforcementCompleted(reinforcementId: string): Promise<void>;

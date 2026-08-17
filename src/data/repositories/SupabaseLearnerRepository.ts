@@ -1,4 +1,4 @@
-import { ILearnerRepository, AnswerAttemptRecord } from '../../domain/repositories/ILearnerRepository';
+import { ILearnerRepository, AnswerAttemptRecord, PlacementAttemptData } from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
@@ -160,6 +160,63 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     } catch (err) {
       console.warn('Error saving skill scores to Supabase, saving locally:', err);
       return this.fallbackRepo.saveSkillScores(courseId, scores);
+    }
+  }
+
+  async savePlacementAttempt(data: PlacementAttemptData): Promise<string> {
+    if (!isSupabaseConfigured) {
+      return this.fallbackRepo.savePlacementAttempt(data);
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return this.fallbackRepo.savePlacementAttempt(data);
+      }
+
+      const { data: attemptRow, error: attemptErr } = await supabase
+        .from('placement_attempts')
+        .insert({
+          user_id: user.id,
+          course_id: data.courseId,
+          score: data.score,
+          weakest_skill_id: data.weakestSkillId || null,
+          started_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (attemptErr || !attemptRow) {
+        console.warn('Error inserting placement attempt to Supabase:', attemptErr);
+        return this.fallbackRepo.savePlacementAttempt(data);
+      }
+
+      const attemptId = attemptRow.id;
+
+      if (data.submissions && data.submissions.length > 0) {
+        const answerRows = data.submissions.map((sub) => ({
+          attempt_id: attemptId,
+          user_id: user.id,
+          question_id: sub.questionId,
+          selected_index: sub.selectedIndex,
+          is_correct: sub.isCorrect,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error: answersErr } = await supabase
+          .from('placement_answers')
+          .insert(answerRows);
+
+        if (answersErr) {
+          console.warn('Error inserting placement answers to Supabase:', answersErr);
+        }
+      }
+
+      return attemptId;
+    } catch (err) {
+      console.warn('Exception saving placement attempt to Supabase:', err);
+      return this.fallbackRepo.savePlacementAttempt(data);
     }
   }
 

@@ -31,13 +31,7 @@ export class SubmitPlacementTestUseCase {
 
     // Compute real scores strictly from actual submissions
     const computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, submissions);
-
-    // Save scores into learner repository
-    await this.learnerRepo.saveSkillScores(courseId, computedScores);
-
-    // Award +20 XP for completing placement test (idempotent)
-    await this.learnerRepo.addXp(20, `placement_completed_${courseId}`);
-    await this.learnerRepo.recordDailyActivity();
+    const overallScore = SkillScoringEngine.computeOverallScore(computedScores);
 
     // Find weakest skill dynamically
     let weakestSkillId = '';
@@ -49,8 +43,27 @@ export class SubmitPlacementTestUseCase {
       }
     });
 
+    // Save placement attempt & individual answers to Supabase / repository
+    const attemptId = await this.learnerRepo.savePlacementAttempt({
+      courseId,
+      score: overallScore,
+      weakestSkillId,
+      submissions: submissions.map((s) => ({
+        questionId: s.questionId,
+        selectedIndex: s.selectedIndex,
+        isCorrect: s.isCorrect,
+      })),
+    });
+
+    // Save scores into learner repository
+    await this.learnerRepo.saveSkillScores(courseId, computedScores);
+
+    // Award +20 XP for completing placement test (idempotent)
+    await this.learnerRepo.addXp(20, `placement_completed_${courseId}`);
+    await this.learnerRepo.recordDailyActivity();
+
     return {
-      assessmentId: `placement_${courseId}`,
+      assessmentId: attemptId || `placement_${courseId}`,
       courseId,
       submissions,
       computedScores,

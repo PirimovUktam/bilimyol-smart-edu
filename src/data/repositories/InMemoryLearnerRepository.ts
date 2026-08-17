@@ -1,4 +1,4 @@
-import { ILearnerRepository, AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
+import { ILearnerRepository, AnswerAttemptRecord, PlacementAttemptData } from '@/domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '@/domain/entities/LearnerProfile';
 import { SkillScore } from '@/domain/entities/SkillScore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
@@ -47,6 +47,11 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       ...(this.profile.scoresByCourse[courseId] || {}),
       ...scores,
     };
+  }
+
+  async savePlacementAttempt(_data: PlacementAttemptData): Promise<string> {
+    const attemptId = 'plc_att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    return attemptId;
   }
 
   async markLessonCompleted(lessonId: string): Promise<void> {

@@ -52,12 +52,6 @@ class SubmitPlacementTestUseCase {
     final computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, submissions);
 
     // Save to learner profile
-    await learnerRepository.saveSkillScores(courseId, computedScores);
-
-    // Award +20 XP for completing placement test (idempotent)
-    await learnerRepository.addXp(20, 'placement_completed_$courseId');
-    await learnerRepository.recordDailyActivity();
-
     // Identify weakest skill dynamically
     String weakestSkillId = '';
     int minScore = 101;
@@ -68,8 +62,33 @@ class SubmitPlacementTestUseCase {
       }
     }
 
+    final overallScore = SkillScoringEngine.computeOverallScore(computedScores);
+
+    // Save placement attempt record to Supabase
+    final attemptId = await learnerRepository.savePlacementAttempt(
+      PlacementAttemptData(
+        courseId: courseId,
+        score: overallScore,
+        weakestSkillId: weakestSkillId,
+        submissions: submissions
+            .map((s) => PlacementAttemptSubmission(
+                  questionId: s.questionId,
+                  selectedIndex: s.selectedIndex,
+                  isCorrect: s.isCorrect,
+                ))
+            .toList(),
+      ),
+    );
+
+    // Save to learner profile
+    await learnerRepository.saveSkillScores(courseId, computedScores);
+
+    // Award +20 XP for completing placement test (idempotent)
+    await learnerRepository.addXp(20, 'placement_completed_$courseId');
+    await learnerRepository.recordDailyActivity();
+
     return AssessmentResult(
-      assessmentId: 'placement_$courseId',
+      assessmentId: attemptId.isNotEmpty ? attemptId : 'placement_$courseId',
       courseId: courseId,
       submissions: submissions,
       computedScores: computedScores,

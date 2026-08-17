@@ -146,6 +146,51 @@ class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   @override
+  Future<String> savePlacementAttempt(PlacementAttemptData data) async {
+    try {
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) {
+        return _fallbackRepo.savePlacementAttempt(data);
+      }
+
+      final attemptRow = await client
+          .from('placement_attempts')
+          .insert({
+            'user_id': user.id,
+            'course_id': data.courseId,
+            'score': data.score,
+            'weakest_skill_id': data.weakestSkillId,
+            'started_at': DateTime.now().toIso8601String(),
+            'completed_at': DateTime.now().toIso8601String(),
+          })
+          .select('id')
+          .single();
+
+      final attemptId = attemptRow['id'] as String;
+
+      if (data.submissions.isNotEmpty) {
+        final answerRows = data.submissions
+            .map((sub) => {
+                  'attempt_id': attemptId,
+                  'user_id': user.id,
+                  'question_id': sub.questionId,
+                  'selected_index': sub.selectedIndex,
+                  'is_correct': sub.isCorrect,
+                  'created_at': DateTime.now().toIso8601String(),
+                })
+            .toList();
+
+        await client.from('placement_answers').insert(answerRows);
+      }
+
+      return attemptId;
+    } catch (_) {
+      return _fallbackRepo.savePlacementAttempt(data);
+    }
+  }
+
+  @override
   Future<void> markLessonCompleted(String lessonId) async {
     try {
       final client = Supabase.instance.client;
