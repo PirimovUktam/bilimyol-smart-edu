@@ -15,7 +15,7 @@ import {
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
@@ -44,7 +44,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (activeCourse) {
       loadRoadmap(activeCourse.id);
     }
-    inMemoryLearnerRepository.getAnswerAttempts(5).then(setRecentAttempts);
+    supabaseLearnerRepository.getAnswerAttempts(5).then(setRecentAttempts);
   }, [activeCourse, loadRoadmap, profile]);
 
   const scores = (profile?.scoresByCourse && activeCourse) ? (profile.scoresByCourse[activeCourse.id] || {}) : {};
@@ -273,21 +273,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </Card>
 
-      {/* Demo Controls Section */}
+      {/* Platform Info & Reset */}
       <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>Real Adaptive Engine: Barcha natijalar haqiqiy hisob-kitob asosida.</span>
+          <span>Real Adaptive Engine: Natijalar real-vaqtda Supabase va Yo‘lchi AI orqali hisoblanadi.</span>
         </div>
 
         <Button
           variant="outline"
           size="sm"
           onClick={onResetDemo}
-          leftIcon={<RotateCcw className="w-3.5 h-3.5 text-amber-600" />}
+          leftIcon={<RotateCcw className="w-3.5 h-3.5 text-slate-600" />}
           className="text-xs border-slate-300 text-slate-700"
         >
-          Natijalarni Qayta Tiklash (Reset)
+          Kursni Qayta Boshlash
         </Button>
       </div>
     </div>

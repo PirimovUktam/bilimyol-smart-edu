@@ -140,7 +140,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
           </div>
 
-          {/* Quick Demo Access for Hackathon Judges */}
+          {/* Quick Access Account */}
           <Button
             type="button"
             variant="outline"
@@ -149,7 +149,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             className="w-full border-dashed text-slate-700 hover:text-blue-600 text-xs font-bold"
             leftIcon={<Sparkles className="w-4 h-4 text-amber-500" />}
           >
-            Hakamlar uchun Tezkor Kirish (Demo)
+            Namuna hisobi bilan kirish
           </Button>
 
           <div className="mt-5 text-center text-xs text-slate-500">

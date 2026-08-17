@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Lesson } from '@/domain/entities/Lesson';
 import { inMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
-import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
 import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases/SubmitLessonAnswerUseCase';
 
@@ -77,7 +77,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
     set({ isEvaluatingAnswer: true, selectedAnswerIndex: selectedIndex });
 
-    const useCase = new SubmitLessonAnswerUseCase(aiService, inMemoryLearnerRepository);
+    const useCase = new SubmitLessonAnswerUseCase(aiService, supabaseLearnerRepository);
     const result = await useCase.execute(
       currentStep.interactiveQuestion,
       selectedIndex,
@@ -86,7 +86,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     );
 
     if (result.isCorrect) {
-      await inMemoryLearnerRepository.markLessonCompleted(currentLesson.id);
+      await supabaseLearnerRepository.markLessonCompleted(currentLesson.id);
       set({
         lastAnswerResult: result,
         isEvaluatingAnswer: false,

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/in_memory_course_repository.dart';
 import '../data/repositories/in_memory_lesson_repository.dart';
-import '../data/repositories/in_memory_learner_repository.dart';
+import '../domain/repositories/i_learner_repository.dart';
 import '../domain/usecases/select_course_use_case.dart';
 import '../domain/usecases/submit_placement_test_use_case.dart';
 import '../domain/usecases/get_knowledge_map_use_case.dart';
@@ -20,12 +20,13 @@ import '../domain/personalization/adaptive_question_selector.dart';
 
 import '../data/services/i_ai_tutor_service.dart';
 import '../data/services/supabase_ai_tutor_service.dart';
+import '../data/repositories/supabase_learner_repository.dart';
 
 // --- Singleton Service & Repository Providers ---
 final aiTutorServiceProvider = Provider<IAITutorService>((ref) => SupabaseAITutorService());
 final courseRepositoryProvider = Provider((ref) => InMemoryCourseRepository());
 final lessonRepositoryProvider = Provider((ref) => InMemoryLessonRepository());
-final learnerRepositoryProvider = Provider((ref) => InMemoryLearnerRepository());
+final learnerRepositoryProvider = Provider<ILearnerRepository>((ref) => SupabaseLearnerRepository());
 
 // --- UseCase Providers ---
 final selectCourseUseCaseProvider = Provider((ref) => SelectCourseUseCase(

@@ -88,25 +88,6 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Diagnostika • ${activeCourse?.title ?? ""}'),
-        actions: [
-          TextButton.icon(
-            onPressed: () async {
-              await ref.read(placementStateNotifierProvider.notifier).fastCalibrateDemo();
-              if (context.mounted) {
-                context.go('/knowledge-map');
-              }
-            },
-            icon: const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFF59E0B)),
-            label: Text(
-              'Tezkor Test',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFFB45309),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(

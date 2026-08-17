@@ -204,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 12),
 
                       AppButton(
-                        text: 'Tezkor Kirish (Hakamlar / Demo)',
+                        text: 'Namuna hisobi bilan kirish',
                         isFullWidth: true,
                         size: AppButtonSize.medium,
                         variant: AppButtonVariant.outline,

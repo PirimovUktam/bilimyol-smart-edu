@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Question, QuestionAnswerSubmission } from '@/domain/entities/Question';
 import { AssessmentResult } from '@/domain/entities/Assessment';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
-import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
 import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
 
@@ -110,7 +110,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       // Evaluate full placement test using UseCase
       const useCase = new SubmitPlacementTestUseCase(
         inMemoryCourseRepository,
-        inMemoryLearnerRepository
+        supabaseLearnerRepository
       );
 
       const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions);

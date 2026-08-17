@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Zap, ArrowRight, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ShieldAlert } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
 import { Button } from '@/presentation/components/Button';
@@ -40,28 +40,13 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
   };
 
   const handleConfirmAnswer = async () => {
-    if (selectedOption === null || isSubmitting || !currentQuestion) return;
+    if (selectedOption === null || isSubmitting) return;
+
     sounds.playSuccess();
     const isDone = await submitAnswer(selectedOption);
     setSelectedOption(null);
     if (isDone) {
       onComplete();
-    }
-  };
-
-  // Demo shortcut: Complete with a variety of answers for quick testing
-  const handleAutoFillDemo = async () => {
-    if (isSubmitting || !currentQuestion) return;
-    while (usePlacementStore.getState().currentQuestion) {
-      const q = usePlacementStore.getState().currentQuestion;
-      if (!q) break;
-      const isWeak = q.skillId === 'skill_math_functions';
-      const pickIndex = isWeak ? (q.correctIndex + 1) % q.options.length : q.correctIndex;
-      const done = await submitAnswer(pickIndex);
-      if (done) {
-        onComplete();
-        break;
-      }
     }
   };
 
@@ -112,17 +97,6 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
               Bilim darajangizni aniqlash
             </h1>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAutoFillDemo}
-            leftIcon={<Zap className="w-3.5 h-3.5 text-amber-500" />}
-            className="text-slate-600 hover:text-blue-600 text-xs border-dashed"
-            title="Tezkor avtomatik to‘ldirish"
-          >
-            Tezkor Test (Demo)
-          </Button>
         </div>
 
         {/* Progress bar */}

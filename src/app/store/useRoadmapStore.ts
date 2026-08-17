@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { inMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
-import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { GetRoadmapUseCase } from '@/domain/usecases/GetRoadmapUseCase';
 import { SubmitReinforcementUseCase, ReinforcementResult } from '@/domain/usecases/SubmitReinforcementUseCase';
 import { Question } from '@/domain/entities/Question';
@@ -31,7 +31,7 @@ export const useRoadmapStore = create<RoadmapState>((set) => ({
 
   loadRoadmap: async (courseId: string) => {
     set({ isLoading: true });
-    const useCase = new GetRoadmapUseCase(inMemoryLessonRepository, inMemoryLearnerRepository);
+    const useCase = new GetRoadmapUseCase(inMemoryLessonRepository, supabaseLearnerRepository);
     const roadmap = await useCase.execute(courseId);
     const activeNode =
       roadmap.nodes.find((n) => n.status === 'reinforcement' || n.status === 'available') ||
@@ -51,7 +51,7 @@ export const useRoadmapStore = create<RoadmapState>((set) => ({
 
   completeReinforcement: async (courseId, skillId, reinforcementNodeId, reinforcementQuestion, selectedIndex) => {
     set({ isUpdating: true });
-    const useCase = new SubmitReinforcementUseCase(inMemoryLearnerRepository, inMemoryLessonRepository);
+    const useCase = new SubmitReinforcementUseCase(supabaseLearnerRepository, inMemoryLessonRepository);
     const result = await useCase.execute(
       courseId,
       skillId,

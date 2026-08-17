@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { QuickDemoBar } from '@/presentation/components/QuickDemoBar';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -76,9 +75,6 @@ export const AppRouter: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Top Demo Fast Controls */}
-      <QuickDemoBar onNavigate={(v) => setCurrentView(v as AppView)} currentView={currentView} />
-
       {/* Main Navigation (Hidden on standalone Auth screens) */}
       {!isAuthView && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />
@@ -163,10 +159,10 @@ export const AppRouter: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
-            <strong>BilimYo‘l Smart Edu</strong> © 2026 — Umummilliy AI Xakaton 2026 (Qarshi bosqichi)
+            <strong>BilimYo‘l Smart Edu</strong> © 2026 — Shaxsiylashtirilgan Ta’lim Platformasi
           </span>
           <span className="text-slate-400">
-            {authProfile ? `Foydalanuvchi: ${authProfile.email}` : 'Checkpoint 2 • Supabase & Gemini AI'}
+            {authProfile ? `Foydalanuvchi: ${authProfile.email}` : 'Yo‘lchi AI • Real Adaptive Learning'}
           </span>
         </div>
       </footer>

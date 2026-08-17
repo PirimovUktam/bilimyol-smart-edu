@@ -89,38 +89,47 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
   }
 
-  async updateProfile(profile: LearnerProfile): Promise<LearnerProfile> {
+  async updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile> {
     if (!isSupabaseConfigured) {
-      return this.fallbackRepo.updateProfile(profile);
+      return this.fallbackRepo.updateProfile(updates);
     }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return this.fallbackRepo.updateProfile(profile);
+        return this.fallbackRepo.updateProfile(updates);
       }
+
+      const currentProfile = await this.getProfile();
+      const merged: LearnerProfile = {
+        ...currentProfile,
+        ...updates,
+        scoresByCourse: updates.scoresByCourse || currentProfile.scoresByCourse,
+      };
 
       await supabase.from('learner_profiles').upsert({
         user_id: user.id,
-        selected_course_id: profile.selectedCourseId,
-        goal: profile.goal,
-        daily_minutes: profile.dailyMinutes,
-        initial_level: profile.initialLevel,
+        selected_course_id: merged.selectedCourseId,
+        goal: merged.goal,
+        daily_minutes: merged.dailyMinutes,
+        initial_level: merged.initialLevel,
         updated_at: new Date().toISOString(),
       });
 
-      await supabase.from('gamification_profiles').upsert({
-        user_id: user.id,
-        xp: profile.xp,
-        streak_days: profile.streakDays,
-        last_activity_date: profile.lastActiveDate,
-        updated_at: new Date().toISOString(),
-      });
+      if (updates.xp !== undefined || updates.streakDays !== undefined || updates.lastActiveDate !== undefined) {
+        await supabase.from('gamification_profiles').upsert({
+          user_id: user.id,
+          xp: merged.xp,
+          streak_days: merged.streakDays,
+          last_activity_date: merged.lastActiveDate,
+          updated_at: new Date().toISOString(),
+        });
+      }
 
-      return profile;
+      return merged;
     } catch (err) {
-      console.warn('Error updating Supabase learner profile, updating locally:', err);
-      return this.fallbackRepo.updateProfile(profile);
+      console.warn('Error updating Supabase learner profile, using local state:', err);
+      return this.fallbackRepo.updateProfile(updates);
     }
   }
 
@@ -249,3 +258,5 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     return this.fallbackRepo.resetAll();
   }
 }
+
+export const supabaseLearnerRepository = new SupabaseLearnerRepository();
