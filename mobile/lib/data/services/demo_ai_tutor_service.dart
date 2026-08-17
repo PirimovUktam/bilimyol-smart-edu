@@ -29,4 +29,26 @@ class DemoAITutorService implements IAITutorService {
       isDeterministicFallback: true,
     );
   }
+
+  @override
+  Future<GeneratedLessonResponse> generateLesson(GenerateLessonRequest request) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    final topic = request.topic ?? request.skillId;
+    return GeneratedLessonResponse(
+      lessonId: 'lesson_fallback_${request.skillId}',
+      courseId: request.courseId,
+      skillId: request.skillId,
+      topic: topic,
+      level: request.level ?? 'intermediate',
+      difficulty: request.difficulty ?? 'medium',
+      title: '$topic bo‘yicha interaktiv dars',
+      summary: 'Asosiy nazariy qoidalar va amaliy misollar jamlanmasi.',
+      objective: 'Mavzuni to‘liq o‘zlashtirish va mustahkamlash.',
+      estimatedMinutes: 15,
+      steps: const [],
+      questions: const [],
+      isAiGenerated: false,
+      model: 'gemini-3.6-flash',
+    );
+  }
 }

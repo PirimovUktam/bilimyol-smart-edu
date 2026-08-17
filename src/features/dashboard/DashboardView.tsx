@@ -15,6 +15,7 @@ import {
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useLessonStore } from '@/app/store/useLessonStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
@@ -55,6 +56,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // Find strongest and weakest skills dynamically
   let strongestSkillName = 'Algebra';
   let strongestScore = 0;
+  let weakestSkillId = 'skill_math_functions';
   let weakestSkillName = 'Funksiyalar';
   let weakestScore = 100;
 
@@ -66,9 +68,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
     if (sc <= weakestScore) {
       weakestScore = sc;
+      weakestSkillId = sk.id;
       weakestSkillName = sk.name;
     }
   });
+
+  const [isGeneratingAILesson, setIsGeneratingAILesson] = useState(false);
+
+  const handleCreateAILesson = async () => {
+    if (!activeCourse) return;
+    setIsGeneratingAILesson(true);
+    try {
+      const difficulty = weakestScore < 40 ? 'easy' : weakestScore > 75 ? 'hard' : 'medium';
+      await useLessonStore.getState().generateAILesson(
+        activeCourse.id,
+        weakestSkillId,
+        weakestSkillName,
+        difficulty
+      );
+      onContinueLesson();
+    } finally {
+      setIsGeneratingAILesson(false);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -110,7 +132,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             size="md"
@@ -118,6 +140,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             leftIcon={<Map className="w-4 h-4 text-blue-600" />}
           >
             Yo‘l Xaritasi
+          </Button>
+
+          <Button
+            variant="outline"
+            size="md"
+            onClick={handleCreateAILesson}
+            disabled={isGeneratingAILesson}
+            leftIcon={<Sparkles className={`w-4 h-4 text-amber-500 ${isGeneratingAILesson ? 'animate-spin' : ''}`} />}
+            className="border-amber-300 bg-amber-50/50 hover:bg-amber-100/60 text-amber-900 font-semibold"
+          >
+            {isGeneratingAILesson ? 'AI Darsi Yaratilmoqda...' : 'Gemini AI Darsi'}
           </Button>
 
           <Button

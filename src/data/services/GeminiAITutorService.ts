@@ -5,6 +5,8 @@ import {
   GenerateQuestionRequest,
   GeneratedQuestionResponse,
   GenerateReinforcementRequest,
+  GenerateLessonRequest,
+  GeneratedLessonResponse,
 } from './IAITutorService';
 import { DemoAITutorService } from './DemoAITutorService';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
@@ -108,6 +110,47 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch {
       return this.getFallbackQuestion(request.skillId, 'easy');
+    }
+  }
+
+  async generateLesson(request: GenerateLessonRequest): Promise<GeneratedLessonResponse> {
+    if (!isSupabaseConfigured) {
+      return this.fallbackService.generateLesson(request);
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('yolchi-tutor', {
+        body: {
+          action: 'generate_lesson',
+          ...request,
+        },
+      });
+
+      if (error || !data || !data.title || !Array.isArray(data.steps)) {
+        console.warn('[Gemini AI] Edge Function returned error for generate_lesson, using fallback:', error);
+        return this.fallbackService.generateLesson(request);
+      }
+
+      return {
+        lessonId: data.lessonId,
+        courseId: data.courseId,
+        skillId: data.skillId,
+        topic: data.topic,
+        level: data.level,
+        difficulty: data.difficulty,
+        title: data.title,
+        summary: data.summary,
+        objective: data.objective,
+        estimatedMinutes: data.estimatedMinutes || 15,
+        steps: data.steps,
+        questions: data.questions || [],
+        isAiGenerated: Boolean(data.isAiGenerated),
+        model: data.model || 'gemini-3.6-flash',
+        isDeterministicFallback: false,
+      };
+    } catch (err) {
+      console.warn('[Gemini AI] Network error during generate_lesson, using fallback:', err);
+      return this.fallbackService.generateLesson(request);
     }
   }
 

@@ -45,5 +45,24 @@ void main() {
       expect(response.explanation, contains('to‘g‘ri emas'));
       expect(response.isDeterministicFallback, isTrue);
     });
+
+    test('generates structured lesson using gemini-3.6-flash configuration', () async {
+      final aiService = DemoAITutorService();
+
+      const request = GenerateLessonRequest(
+        courseId: 'course_math_01',
+        skillId: 'skill_math_functions',
+        topic: 'Chiziqli funksiyalar',
+        level: 'intermediate',
+        difficulty: 'medium',
+      );
+
+      final response = await aiService.generateLesson(request);
+
+      expect(response.lessonId, isNotEmpty);
+      expect(response.title, contains('Chiziqli funksiyalar'));
+      expect(response.model, equals('gemini-3.6-flash'));
+      expect(response.estimatedMinutes, equals(15));
+    });
   });
 }

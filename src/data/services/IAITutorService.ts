@@ -1,3 +1,5 @@
+import { LessonStep } from '../../domain/entities/Lesson';
+
 export interface AIExplanationRequest {
   courseId: string;
   skillId: string;
@@ -48,8 +50,39 @@ export interface GenerateReinforcementRequest {
   previousQuestionText?: string;
 }
 
+export interface GenerateLessonRequest {
+  courseId: string;
+  skillId: string;
+  topic?: string;
+  level?: string;
+  difficulty?: 'easy' | 'medium' | 'hard' | number;
+  questionCount?: number;
+  language?: string;
+  learnerScore?: number;
+  recentMistakes?: string[];
+}
+
+export interface GeneratedLessonResponse {
+  lessonId: string;
+  courseId: string;
+  skillId: string;
+  topic: string;
+  level: string;
+  difficulty: 'easy' | 'medium' | 'hard' | string;
+  title: string;
+  summary: string;
+  objective: string;
+  estimatedMinutes: number;
+  steps: LessonStep[];
+  questions: GeneratedQuestionResponse[];
+  isAiGenerated: boolean;
+  model?: string;
+  isDeterministicFallback?: boolean;
+}
+
 export interface IAITutorService {
   explainMistake(request: AIExplanationRequest): Promise<AIExplanationResponse>;
   generateQuestion?(request: GenerateQuestionRequest): Promise<GeneratedQuestionResponse>;
   generateReinforcement?(request: GenerateReinforcementRequest): Promise<GeneratedQuestionResponse>;
+  generateLesson?(request: GenerateLessonRequest): Promise<GeneratedLessonResponse>;
 }
