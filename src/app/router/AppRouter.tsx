@@ -11,10 +11,13 @@ import { LoginView } from '@/features/auth/LoginView';
 import { RegisterView } from '@/features/auth/RegisterView';
 import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
 import { ProfileView } from '@/features/profile/ProfileView';
+import { ParentDashboardView } from '@/features/parent/ParentDashboardView';
+import { TeacherDashboardView } from '@/features/teacher/TeacherDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useAuth } from '@/core/context/AuthContext';
+import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 
 export type AppView =
   | 'course-selection'
@@ -27,7 +30,9 @@ export type AppView =
   | 'login'
   | 'register'
   | 'forgot-password'
-  | 'profile';
+  | 'profile'
+  | 'parent'
+  | 'teacher';
 
 export const AppRouter: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('course-selection');
@@ -41,7 +46,16 @@ export const AppRouter: React.FC = () => {
   useEffect(() => {
     loadCourses();
     loadProfile();
-  }, [loadCourses, loadProfile, authProfile]);
+
+    // Start active learning tracker if user has session
+    if (authProfile) {
+      activeLearningTracker.start(activeCourse?.id || 'course_math_01', activeLessonId);
+    }
+
+    return () => {
+      activeLearningTracker.stop();
+    };
+  }, [loadCourses, loadProfile, authProfile, activeCourse, activeLessonId]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');
@@ -57,6 +71,7 @@ export const AppRouter: React.FC = () => {
 
   const handleStartLesson = (lessonId: string) => {
     setActiveLessonId(lessonId);
+    activeLearningTracker.setLesson(lessonId);
     setCurrentView('lesson');
   };
 
@@ -153,13 +168,21 @@ export const AppRouter: React.FC = () => {
             onResetDemo={handleResetDemo}
           />
         )}
+
+        {currentView === 'parent' && (
+          <ParentDashboardView />
+        )}
+
+        {currentView === 'teacher' && (
+          <TeacherDashboardView />
+        )}
       </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
-            <strong>BilimYo‘l Smart Edu</strong> © 2026 — Shaxsiylashtirilgan Ta’lim Platformasi
+            <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona va O‘qituvchi Yagona Ekotizimi
           </span>
           <span className="text-slate-400">
             {authProfile ? `Foydalanuvchi: ${authProfile.email}` : 'Yo‘lchi AI • Real Adaptive Learning'}
