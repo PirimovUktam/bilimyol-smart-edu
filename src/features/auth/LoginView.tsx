@@ -37,7 +37,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setIsSubmitting(false);
 
     if (error) {
-      setErrorMsg('Email yoki parol noto‘g‘ri kiritildi. Iltimos, qaytadan urinib ko‘ring.');
+      setErrorMsg(error.message || 'Email yoki parol noto‘g‘ri kiritildi. Iltimos, qaytadan urinib ko‘ring.');
     } else {
       onSuccess(loggedProfile?.role);
     }

@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: userRole,
         };
 
-        console.log('[BilimYo‘l Auth] Loaded public.profiles record:', {
+        console.log('[AUTH] Loaded public.profiles record:', {
           userId,
           email,
           databaseRole: data.role,
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return userProfile;
       }
 
-      // If no row exists yet in public.profiles (e.g. fresh signup before trigger or local demo)
+      // If no row exists yet in public.profiles (e.g. fresh signup before trigger)
       const { data: userData } = await supabase.auth.getUser();
       const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
       const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
@@ -142,7 +142,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function initAuth() {
       try {
         if (!isSupabaseConfigured) {
-          console.warn('[BilimYo‘l Auth] Running in LOCAL DEMO / FALLBACK mode (VITE_SUPABASE_URL not configured).');
+          if (import.meta.env.PROD) {
+            console.error('[CONFIG] Production missing Supabase configuration: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
+            if (mounted) {
+              setProfile(null);
+              setIsDemoMode(false);
+              setIsLoading(false);
+            }
+            return;
+          }
+
+          console.warn('[AUTH] Running in local development fallback mode.');
           const cached = localStorage.getItem('bilimyol_auth_session');
           if (cached) {
             const parsed = JSON.parse(cached);
@@ -172,10 +182,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err) {
-        console.warn('Auth initialization error, using local fallback:', err);
+        console.warn('Auth initialization error:', err);
         if (mounted) {
-          setProfile(defaultDemoProfile);
-          setIsDemoMode(true);
+          if (import.meta.env.PROD) {
+            setProfile(null);
+            setIsDemoMode(false);
+          } else {
+            setProfile(defaultDemoProfile);
+            setIsDemoMode(true);
+          }
           setIsLoading(false);
         }
       }
@@ -209,14 +224,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     if (!isSupabaseConfigured) {
-      const cleanEmail = email.trim().toLowerCase();
-      let demoRole: UserProfile['role'] = 'student';
-      if (cleanEmail === 'oktamtatu@gmail.com' || cleanEmail.includes('admin')) {
-        demoRole = 'admin';
-      } else if (cleanEmail.includes('teacher') || cleanEmail.includes('ustoz')) {
-        demoRole = 'teacher';
-      } else if (cleanEmail.includes('parent') || cleanEmail.includes('otaona')) {
-        demoRole = 'parent';
+      if (import.meta.env.PROD) {
+        return {
+          error: new Error('Server konfiguratsiyasi topilmadi. Vercel sozlamalarida VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY parametrlarini kiriting.'),
+        };
       }
 
       const demoProf: UserProfile = {
@@ -224,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName: email.split('@')[0],
         lastName: '',
         email,
-        role: demoRole,
+        role: 'student',
       };
       setProfile(demoProf);
       setIsDemoMode(true);
