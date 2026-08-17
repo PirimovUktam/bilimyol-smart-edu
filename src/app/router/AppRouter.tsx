@@ -17,6 +17,7 @@ import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { Card } from '@/presentation/components/Card';
@@ -47,8 +48,9 @@ export const AppRouter: React.FC = () => {
   const { loadProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
   const { profile: authProfile } = useAuth();
+  const monitoringRole = useMonitoringStore((s) => s.currentRole);
 
-  const userRole = authProfile?.role || 'student';
+  const userRole = authProfile?.role || monitoringRole || 'student';
 
   useEffect(() => {
     loadCourses();
@@ -65,7 +67,7 @@ export const AppRouter: React.FC = () => {
   }, [loadCourses, loadProfile, authProfile, userRole, activeCourse, activeLessonId]);
 
   const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'parent' | 'teacher' | 'admin') => {
-    const role = resolvedRole || authProfile?.role || 'student';
+    const role = resolvedRole || authProfile?.role || monitoringRole || 'student';
     if (role === 'admin') {
       setCurrentView('admin');
     } else if (role === 'parent') {
@@ -75,20 +77,21 @@ export const AppRouter: React.FC = () => {
     } else {
       setCurrentView('dashboard');
     }
-  }, [authProfile?.role]);
+  }, [authProfile?.role, monitoringRole]);
 
   // Adjust landing view when role is resolved
   useEffect(() => {
-    if (authProfile?.role) {
-      if (authProfile.role === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
+    const effectiveRole = authProfile?.role || monitoringRole;
+    if (effectiveRole) {
+      if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
         setCurrentView('admin');
-      } else if (authProfile.role === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
+      } else if (effectiveRole === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
         setCurrentView('parent');
-      } else if (authProfile.role === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
+      } else if (effectiveRole === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
         setCurrentView('teacher');
       }
     }
-  }, [authProfile?.role, currentView]);
+  }, [authProfile?.role, monitoringRole, currentView]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');

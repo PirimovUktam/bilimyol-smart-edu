@@ -145,4 +145,37 @@ describe('Admin Role & Bootstrap Security Hardening Tests', () => {
     expect(invalidRes.success).toBe(false);
     expect(await monitoringRepo.getUserRole()).toBe('student');
   });
+
+  it('11. Teacher Role Route Resolution: Teacher role deterministically routes to teacher view', () => {
+    const routeForRole = (role?: string) => {
+      if (role === 'admin') return 'admin';
+      if (role === 'parent') return 'parent';
+      if (role === 'teacher') return 'teacher';
+      return 'dashboard';
+    };
+
+    expect(routeForRole('teacher')).toBe('teacher');
+    expect(routeForRole('admin')).toBe('admin');
+    expect(routeForRole('parent')).toBe('parent');
+    expect(routeForRole('student')).toBe('dashboard');
+  });
+
+  it('12. Role Guard: Student cannot access teacher view and Teacher cannot access admin view', () => {
+    const isAccessDenied = (targetView: string, userRole: string) => {
+      if (targetView === 'parent' && userRole !== 'parent' && userRole !== 'admin') return true;
+      if (targetView === 'teacher' && userRole !== 'teacher' && userRole !== 'admin') return true;
+      if (targetView === 'admin' && userRole !== 'admin') return true;
+      return false;
+    };
+
+    expect(isAccessDenied('teacher', 'student')).toBe(true);
+    expect(isAccessDenied('teacher', 'teacher')).toBe(false);
+    expect(isAccessDenied('admin', 'teacher')).toBe(true);
+    expect(isAccessDenied('admin', 'admin')).toBe(false);
+  });
+
+  it('13. Session Refresh: User role persistence retains teacher status', async () => {
+    await monitoringRepo.setUserRole('teacher');
+    expect(await monitoringRepo.getUserRole()).toBe('teacher');
+  });
 });

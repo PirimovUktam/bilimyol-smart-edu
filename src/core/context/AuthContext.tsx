@@ -23,6 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<UserProfile | null>;
   setDemoUser: () => void;
 }
 
@@ -42,10 +43,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(!isSupabaseConfigured);
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
-  const fetchProfile = useCallback(async (userId: string, email: string): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (userId: string, email: string) => {
+    if (!isSupabaseConfigured) {
+      const cached = localStorage.getItem('bilimyol_auth_session');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed.profile) {
+            setProfile(parsed.profile);
+            useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
+            return parsed.profile;
+          }
+        } catch {}
+      }
+      setProfile(defaultDemoProfile);
+      return defaultDemoProfile;
+    }
+
     try {
+      // Query authoritative public.profiles
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, display_name, email, avatar_url, role')
@@ -69,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: userRole,
         };
 
-        console.log('[AUTH] Loaded public.profiles record:', {
+        console.log('[AUTH] Loaded authoritative public.profiles record:', {
           userId,
           email,
           databaseRole: data.role,
@@ -77,7 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         setProfile(userProfile);
-        useMonitoringStore.getState().loadUserRole().catch(() => {});
+        localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
+        useMonitoringStore.setState({ currentRole: userRole as any });
         return userProfile;
       }
 
@@ -88,25 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const metaRole = (userData.user?.user_metadata?.role as UserProfile['role']) || 'student';
       const resolvedFirst = metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
       const resolvedLast = metaLast || '';
-      const resolvedDisplay = resolvedLast ? `${resolvedFirst} ${resolvedLast}` : resolvedFirst;
-
-      try {
-        await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            first_name: resolvedFirst,
-            last_name: resolvedLast,
-            display_name: resolvedDisplay,
-            email: email || userData.user?.email || '',
-            avatar_url: userData.user?.user_metadata?.avatar_url || null,
-            role: metaRole,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-      } catch (insErr) {
-        console.warn('Could not auto-insert profiles row (trigger may have already inserted it):', insErr);
-      }
 
       const userProfile: UserProfile = {
         id: userId,
@@ -118,7 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setProfile(userProfile);
-      useMonitoringStore.getState().loadUserRole().catch(() => {});
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
+      useMonitoringStore.setState({ currentRole: metaRole as any });
       return userProfile;
     } catch (err) {
       console.warn('Error resolving authenticated profile from Supabase:', err);
@@ -135,6 +136,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   }, []);
+
+  const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
+    if (!isSupabaseConfigured) {
+      const cached = localStorage.getItem('bilimyol_auth_session');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed.profile) {
+            setProfile(parsed.profile);
+            useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
+            return parsed.profile;
+          }
+        } catch {}
+      }
+      return profile;
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      return await fetchProfile(userData.user.id, userData.user.email ?? '');
+    }
+    return null;
+  }, [fetchProfile, profile]);
 
   useEffect(() => {
     let mounted = true;
@@ -159,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (mounted) {
               setProfile(parsed.profile);
               setIsDemoMode(true);
-              useMonitoringStore.getState().loadUserRole().catch(() => {});
+              useMonitoringStore.setState({ currentRole: (parsed?.profile?.role as any) || 'student' });
             }
           } else {
             if (mounted) {
@@ -230,17 +254,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      console.warn('[AUTH] Signing in via local development demo mode.');
       const demoProf: UserProfile = {
         id: 'user_' + Date.now(),
         firstName: email.split('@')[0],
         lastName: '',
         email,
-        role: 'student',
+        role: email.includes('admin') ? 'admin' : email.includes('parent') ? 'parent' : email.includes('teacher') ? 'teacher' : 'student',
       };
       setProfile(demoProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf }));
-      useMonitoringStore.getState().loadUserRole().catch(() => {});
+      useMonitoringStore.setState({ currentRole: demoProf.role as any });
       return { error: null, profile: demoProf };
     }
 
@@ -274,6 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(newProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: newProf }));
+      useMonitoringStore.setState({ currentRole: role as any });
       return { error: null };
     }
 
@@ -296,28 +322,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (signUpData.user) {
-      const displayName = lastName ? `${firstName} ${lastName}` : firstName;
-      try {
-        await supabase.from('profiles').upsert({
-          id: signUpData.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          display_name: displayName,
-          email,
-          role,
-          updated_at: new Date().toISOString(),
-        });
-      } catch (err) {
-        console.warn('Could not pre-insert public.profiles, trigger will handle it:', err);
-      }
-
-      setProfile({
+      const initialProf: UserProfile = {
         id: signUpData.user.id,
         firstName,
         lastName,
         email,
         role,
-      });
+      };
+      setProfile(initialProf);
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: initialProf }));
+      useMonitoringStore.setState({ currentRole: role as any });
     }
 
     setIsLoading(false);
@@ -348,13 +362,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!profile) return { error: new Error('No profile loaded') };
+    if (!profile) return { error: new Error('Profil topilmadi') };
 
     const updated = { ...profile, ...data };
     setProfile(updated);
+    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated }));
 
     if (!isSupabaseConfigured) {
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated }));
       return { error: null };
     }
 
@@ -376,6 +390,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
     localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile }));
+    useMonitoringStore.setState({ currentRole: 'student' });
   };
 
   return (
@@ -391,6 +406,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         resetPassword,
         updateProfile,
+        refreshProfile,
         setDemoUser,
       }}
     >

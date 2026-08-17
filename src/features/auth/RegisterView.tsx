@@ -16,7 +16,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   onSuccess,
   onNavigateLogin,
 }) => {
-  const { signUp } = useAuth();
+  const { signUp, refreshProfile } = useAuth();
   const { redeemTeacherInvitationCode } = useMonitoringStore();
 
   const [role, setRole] = useState<'student' | 'parent' | 'teacher'>('student');
@@ -87,8 +87,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           setIsSubmitting(false);
           return;
         }
+
+        // Immediately refresh profile so AuthContext and Router adopt role='teacher'
+        await refreshProfile();
+        useMonitoringStore.setState({ currentRole: 'teacher' });
+
         setSuccessMsg(`Hisob tasdiqlandi (${teacherRes.schoolName || 'O‘qituvchi'}). Yo‘naltirilmoqda...`);
       } else {
+        await refreshProfile();
         setSuccessMsg('Hisob muvaffaqiyatli yaratildi! Tizimga yo‘naltirilmoqda...');
       }
 
