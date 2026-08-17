@@ -71,7 +71,12 @@ interface MonitoringState {
   resetAll: () => void;
 }
 
-const repository: IMonitoringRepository = new SupabaseMonitoringRepository();
+import { isSupabaseConfigured } from '@/core/config/supabase';
+import { InMemoryMonitoringRepository } from '@/data/repositories/InMemoryMonitoringRepository';
+
+const repository: IMonitoringRepository = isSupabaseConfigured
+  ? new SupabaseMonitoringRepository()
+  : new InMemoryMonitoringRepository();
 
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   currentRole: 'student',
@@ -96,6 +101,15 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
   loadUserRole: async () => {
     try {
+      if (!isSupabaseConfigured) {
+        const cached = localStorage.getItem('bilimyol_auth_session');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const role = (parsed?.profile?.role as UserRole) || 'student';
+          set({ currentRole: role });
+          return role;
+        }
+      }
       const role = await repository.getUserRole();
       set({ currentRole: role });
       return role;

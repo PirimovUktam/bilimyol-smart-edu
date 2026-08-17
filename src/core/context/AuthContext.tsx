@@ -69,6 +69,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: userRole,
         };
 
+        console.log('[BilimYo‘l Auth] Loaded public.profiles record:', {
+          userId,
+          email,
+          databaseRole: data.role,
+          resolvedRole: userRole,
+        });
+
         setProfile(userProfile);
         useMonitoringStore.getState().loadUserRole().catch(() => {});
         return userProfile;
@@ -135,12 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function initAuth() {
       try {
         if (!isSupabaseConfigured) {
+          console.warn('[BilimYo‘l Auth] Running in LOCAL DEMO / FALLBACK mode (VITE_SUPABASE_URL not configured).');
           const cached = localStorage.getItem('bilimyol_auth_session');
           if (cached) {
             const parsed = JSON.parse(cached);
             if (mounted) {
               setProfile(parsed.profile);
               setIsDemoMode(true);
+              useMonitoringStore.getState().loadUserRole().catch(() => {});
             }
           } else {
             if (mounted) {
@@ -200,16 +209,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     if (!isSupabaseConfigured) {
+      const cleanEmail = email.trim().toLowerCase();
+      let demoRole: UserProfile['role'] = 'student';
+      if (cleanEmail === 'oktamtatu@gmail.com' || cleanEmail.includes('admin')) {
+        demoRole = 'admin';
+      } else if (cleanEmail.includes('teacher') || cleanEmail.includes('ustoz')) {
+        demoRole = 'teacher';
+      } else if (cleanEmail.includes('parent') || cleanEmail.includes('otaona')) {
+        demoRole = 'parent';
+      }
+
       const demoProf: UserProfile = {
         id: 'user_' + Date.now(),
         firstName: email.split('@')[0],
         lastName: '',
         email,
-        role: 'student',
+        role: demoRole,
       };
       setProfile(demoProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf }));
+      useMonitoringStore.getState().loadUserRole().catch(() => {});
       return { error: null, profile: demoProf };
     }
 
