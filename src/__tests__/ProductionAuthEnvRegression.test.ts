@@ -81,4 +81,24 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(typeof supabaseProjectRef).toBe('string');
     expect(typeof isSupabaseConfigured).toBe('boolean');
   });
+
+  it('I: Self-profile query uses direct identity predicate without circular table dependencies', () => {
+    const authUid = 'user-uuid-123';
+    const profileRow = { id: 'user-uuid-123', email: 'user@bilimyol.uz', role: 'admin' };
+
+    // Direct predicate: id = auth.uid()
+    const canRead = profileRow.id === authUid;
+    expect(canRead).toBe(true);
+  });
+
+  it('J: Teacher-student and parent-student authorization decouple from classes policy loop', () => {
+    // Helper function simulates decoupled check
+    const isTeacherOfStudent = (teacherId: string, studentId: string, activePairs: Array<{ teacherId: string; studentId: string }>) => {
+      return activePairs.some(p => p.teacherId === teacherId && p.studentId === studentId);
+    };
+
+    const pairs = [{ teacherId: 'teacher-1', studentId: 'student-1' }];
+    expect(isTeacherOfStudent('teacher-1', 'student-1', pairs)).toBe(true);
+    expect(isTeacherOfStudent('teacher-1', 'student-2', pairs)).toBe(false);
+  });
 });

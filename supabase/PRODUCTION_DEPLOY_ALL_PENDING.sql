@@ -244,34 +244,338 @@ CREATE TABLE IF NOT EXISTS public.teacher_invitation_attempts (
 CREATE INDEX IF NOT EXISTS idx_teacher_inv_attempts_user ON public.teacher_invitation_attempts(user_id, attempted_at);
 
 -- ==============================================================================
--- 5. ROW LEVEL SECURITY (RLS) POLICIES
+-- 5. ROW LEVEL SECURITY (RLS) & HELPER FUNCTIONS (RECURSION-FREE)
 -- ==============================================================================
 
-ALTER TABLE public.parent_student_links ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.class_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.learning_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.daily_learning_stats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.teacher_invitation_codes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.teacher_invitation_attempts ENABLE ROW LEVEL SECURITY;
-
--- Helper check
+-- 5.1 SECURITY DEFINER AUTHORIZATION HELPER FUNCTIONS
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RETURN false;
-  END IF;
-
-  RETURN EXISTS (
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'admin'
   );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- Teacher invitation RLS: Admin exclusive
+CREATE OR REPLACE FUNCTION public.is_student_in_class(p_class_id UUID, p_student_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.class_members
+    WHERE class_id = p_class_id
+      AND student_user_id = p_student_id
+      AND status = 'active'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_teacher_of_class(p_class_id UUID, p_teacher_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.classes
+    WHERE id = p_class_id
+      AND teacher_user_id = p_teacher_id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_teacher_of_student(p_teacher_id UUID, p_student_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.classes c
+    INNER JOIN public.class_members cm ON cm.class_id = c.id
+    WHERE c.teacher_user_id = p_teacher_id
+      AND cm.student_user_id = p_student_id
+      AND cm.status = 'active'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_parent_of_student(p_parent_id UUID, p_student_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.parent_student_links
+    WHERE parent_user_id = p_parent_id
+      AND student_user_id = p_student_id
+      AND status = 'active'
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_student_in_class(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_teacher_of_class(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_teacher_of_student(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_parent_of_student(UUID, UUID) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, postgres, service_role;
+GRANT EXECUTE ON FUNCTION public.is_student_in_class(UUID, UUID) TO authenticated, postgres, service_role;
+GRANT EXECUTE ON FUNCTION public.is_teacher_of_class(UUID, UUID) TO authenticated, postgres, service_role;
+GRANT EXECUTE ON FUNCTION public.is_teacher_of_student(UUID, UUID) TO authenticated, postgres, service_role;
+GRANT EXECUTE ON FUNCTION public.is_parent_of_student(UUID, UUID) TO authenticated, postgres, service_role;
+
+-- 5.2 PROFILES POLICIES (Zero table-recursion)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "User can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "User can update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "User can insert own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admin can read all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Parents can read linked child profile" ON public.profiles;
+DROP POLICY IF EXISTS "Teachers can read enrolled student profile" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles self read" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles self update" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles self insert" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles admin read all" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles parent read linked child" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles teacher read enrolled student" ON public.profiles;
+
+CREATE POLICY "Profiles self read"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (id = auth.uid());
+
+CREATE POLICY "Profiles self update"
+  ON public.profiles
+  FOR UPDATE
+  TO authenticated
+  USING (id = auth.uid())
+  WITH CHECK (id = auth.uid());
+
+CREATE POLICY "Profiles self insert"
+  ON public.profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (id = auth.uid());
+
+CREATE POLICY "Profiles admin read all"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (public.is_admin());
+
+CREATE POLICY "Profiles parent read linked child"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (public.is_parent_of_student(auth.uid(), id));
+
+CREATE POLICY "Profiles teacher read enrolled student"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (public.is_teacher_of_student(auth.uid(), id));
+
+-- 5.3 CLASSES POLICIES
+ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Teachers can CRUD own classes" ON public.classes;
+DROP POLICY IF EXISTS "Students can view classes they belong to" ON public.classes;
+DROP POLICY IF EXISTS "Classes teacher management" ON public.classes;
+DROP POLICY IF EXISTS "Classes student view" ON public.classes;
+
+CREATE POLICY "Classes teacher management"
+  ON public.classes
+  FOR ALL
+  TO authenticated
+  USING (teacher_user_id = auth.uid() OR public.is_admin())
+  WITH CHECK (teacher_user_id = auth.uid() OR public.is_admin());
+
+CREATE POLICY "Classes student view"
+  ON public.classes
+  FOR SELECT
+  TO authenticated
+  USING (public.is_student_in_class(id, auth.uid()));
+
+-- 5.4 CLASS MEMBERS POLICIES
+ALTER TABLE public.class_members ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Teachers can manage members in own classes" ON public.class_members;
+DROP POLICY IF EXISTS "Students can view and join classes" ON public.class_members;
+DROP POLICY IF EXISTS "Class members student access" ON public.class_members;
+DROP POLICY IF EXISTS "Class members teacher management" ON public.class_members;
+
+CREATE POLICY "Class members student access"
+  ON public.class_members
+  FOR ALL
+  TO authenticated
+  USING (student_user_id = auth.uid())
+  WITH CHECK (student_user_id = auth.uid());
+
+CREATE POLICY "Class members teacher management"
+  ON public.class_members
+  FOR ALL
+  TO authenticated
+  USING (public.is_teacher_of_class(class_id, auth.uid()) OR public.is_admin())
+  WITH CHECK (public.is_teacher_of_class(class_id, auth.uid()) OR public.is_admin());
+
+-- 5.5 PARENT STUDENT LINKS POLICIES
+ALTER TABLE public.parent_student_links ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Parents can manage own links" ON public.parent_student_links;
+DROP POLICY IF EXISTS "Students can read their pending and active links" ON public.parent_student_links;
+DROP POLICY IF EXISTS "Students can update links assigned to them" ON public.parent_student_links;
+DROP POLICY IF EXISTS "Parent links parent management" ON public.parent_student_links;
+DROP POLICY IF EXISTS "Parent links student view" ON public.parent_student_links;
+DROP POLICY IF EXISTS "Parent links student update" ON public.parent_student_links;
+
+CREATE POLICY "Parent links parent management"
+  ON public.parent_student_links
+  FOR ALL
+  TO authenticated
+  USING (parent_user_id = auth.uid() OR public.is_admin())
+  WITH CHECK (parent_user_id = auth.uid() OR public.is_admin());
+
+CREATE POLICY "Parent links student view"
+  ON public.parent_student_links
+  FOR SELECT
+  TO authenticated
+  USING (student_user_id = auth.uid() OR status = 'pending');
+
+CREATE POLICY "Parent links student update"
+  ON public.parent_student_links
+  FOR UPDATE
+  TO authenticated
+  USING (student_user_id = auth.uid() OR status = 'pending')
+  WITH CHECK (student_user_id = auth.uid());
+
+-- 5.6 LEARNING SESSIONS POLICIES
+ALTER TABLE public.learning_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Students can manage own sessions" ON public.learning_sessions;
+DROP POLICY IF EXISTS "Parents can view linked child sessions" ON public.learning_sessions;
+DROP POLICY IF EXISTS "Teachers can view class student sessions" ON public.learning_sessions;
+DROP POLICY IF EXISTS "Sessions self management" ON public.learning_sessions;
+DROP POLICY IF EXISTS "Sessions parent read child" ON public.learning_sessions;
+DROP POLICY IF EXISTS "Sessions teacher read student" ON public.learning_sessions;
+
+CREATE POLICY "Sessions self management"
+  ON public.learning_sessions
+  FOR ALL
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Sessions parent read child"
+  ON public.learning_sessions
+  FOR SELECT
+  TO authenticated
+  USING (public.is_parent_of_student(auth.uid(), user_id));
+
+CREATE POLICY "Sessions teacher read student"
+  ON public.learning_sessions
+  FOR SELECT
+  TO authenticated
+  USING (public.is_teacher_of_student(auth.uid(), user_id));
+
+-- 5.7 DAILY STATS POLICIES
+ALTER TABLE public.daily_learning_stats ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Students can manage own daily stats" ON public.daily_learning_stats;
+DROP POLICY IF EXISTS "Parents can view child daily stats" ON public.daily_learning_stats;
+DROP POLICY IF EXISTS "Teachers can view student daily stats" ON public.daily_learning_stats;
+DROP POLICY IF EXISTS "Daily stats self management" ON public.daily_learning_stats;
+DROP POLICY IF EXISTS "Daily stats parent read child" ON public.daily_learning_stats;
+DROP POLICY IF EXISTS "Daily stats teacher read student" ON public.daily_learning_stats;
+
+CREATE POLICY "Daily stats self management"
+  ON public.daily_learning_stats
+  FOR ALL
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Daily stats parent read child"
+  ON public.daily_learning_stats
+  FOR SELECT
+  TO authenticated
+  USING (public.is_parent_of_student(auth.uid(), user_id));
+
+CREATE POLICY "Daily stats teacher read student"
+  ON public.daily_learning_stats
+  FOR SELECT
+  TO authenticated
+  USING (public.is_teacher_of_student(auth.uid(), user_id));
+
+-- 5.8 STUDENT ALERTS POLICIES
+ALTER TABLE public.student_alerts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Students can view own alerts" ON public.student_alerts;
+DROP POLICY IF EXISTS "Parents can view child alerts" ON public.student_alerts;
+DROP POLICY IF EXISTS "Teachers can view student alerts" ON public.student_alerts;
+DROP POLICY IF EXISTS "Alerts self view" ON public.student_alerts;
+DROP POLICY IF EXISTS "Alerts parent read child" ON public.student_alerts;
+DROP POLICY IF EXISTS "Alerts teacher read student" ON public.student_alerts;
+
+CREATE POLICY "Alerts self view"
+  ON public.student_alerts
+  FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Alerts parent read child"
+  ON public.student_alerts
+  FOR SELECT
+  TO authenticated
+  USING (public.is_parent_of_student(auth.uid(), user_id));
+
+CREATE POLICY "Alerts teacher read student"
+  ON public.student_alerts
+  FOR SELECT
+  TO authenticated
+  USING (public.is_teacher_of_student(auth.uid(), user_id));
+
+-- 5.9 LEARNER SKILL SCORES POLICIES
+ALTER TABLE public.learner_skill_scores ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Parents can read child skill scores" ON public.learner_skill_scores;
+DROP POLICY IF EXISTS "Teachers can read student skill scores" ON public.learner_skill_scores;
+DROP POLICY IF EXISTS "Skill scores self view" ON public.learner_skill_scores;
+DROP POLICY IF EXISTS "Skill scores parent read child" ON public.learner_skill_scores;
+DROP POLICY IF EXISTS "Skill scores teacher read student" ON public.learner_skill_scores;
+
+CREATE POLICY "Skill scores self view"
+  ON public.learner_skill_scores
+  FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Skill scores parent read child"
+  ON public.learner_skill_scores
+  FOR SELECT
+  TO authenticated
+  USING (public.is_parent_of_student(auth.uid(), user_id));
+
+CREATE POLICY "Skill scores teacher read student"
+  ON public.learner_skill_scores
+  FOR SELECT
+  TO authenticated
+  USING (public.is_teacher_of_student(auth.uid(), user_id));
+
+-- 5.10 TEACHER INVITATION CODES POLICIES
+ALTER TABLE public.teacher_invitation_codes ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "Teacher invitation codes access control" ON public.teacher_invitation_codes;
 DROP POLICY IF EXISTS "Admin exclusive teacher invitation access" ON public.teacher_invitation_codes;
 
@@ -280,272 +584,6 @@ CREATE POLICY "Admin exclusive teacher invitation access"
   FOR ALL
   TO authenticated
   USING (public.is_admin());
-
--- Parent Student Links RLS
-DROP POLICY IF EXISTS "Parents can manage own links" ON public.parent_student_links;
-DROP POLICY IF EXISTS "Students can read their pending and active links" ON public.parent_student_links;
-DROP POLICY IF EXISTS "Students can update links assigned to them" ON public.parent_student_links;
-
-CREATE POLICY "Parents can manage own links"
-  ON public.parent_student_links
-  FOR ALL
-  TO authenticated
-  USING (auth.uid() = parent_user_id)
-  WITH CHECK (auth.uid() = parent_user_id);
-
-CREATE POLICY "Students can read their pending and active links"
-  ON public.parent_student_links
-  FOR SELECT
-  TO authenticated
-  USING (auth.uid() = student_user_id OR status = 'pending');
-
-CREATE POLICY "Students can update links assigned to them"
-  ON public.parent_student_links
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = student_user_id OR status = 'pending')
-  WITH CHECK (auth.uid() = student_user_id);
-
--- Classes RLS
-DROP POLICY IF EXISTS "Teachers can CRUD own classes" ON public.classes;
-DROP POLICY IF EXISTS "Students can view classes they belong to" ON public.classes;
-
-CREATE POLICY "Teachers can CRUD own classes"
-  ON public.classes
-  FOR ALL
-  TO authenticated
-  USING (auth.uid() = teacher_user_id OR public.is_admin())
-  WITH CHECK (auth.uid() = teacher_user_id OR public.is_admin());
-
-CREATE POLICY "Students can view classes they belong to"
-  ON public.classes
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members
-      WHERE class_members.class_id = classes.id
-      AND class_members.student_user_id = auth.uid()
-    )
-  );
-
--- Class Members RLS
-DROP POLICY IF EXISTS "Teachers can manage members in own classes" ON public.class_members;
-DROP POLICY IF EXISTS "Students can view and join classes" ON public.class_members;
-
-CREATE POLICY "Teachers can manage members in own classes"
-  ON public.class_members
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.classes
-      WHERE classes.id = class_members.class_id
-      AND (classes.teacher_user_id = auth.uid() OR public.is_admin())
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.classes
-      WHERE classes.id = class_members.class_id
-      AND (classes.teacher_user_id = auth.uid() OR public.is_admin())
-    )
-  );
-
-CREATE POLICY "Students can view and join classes"
-  ON public.class_members
-  FOR ALL
-  TO authenticated
-  USING (auth.uid() = student_user_id)
-  WITH CHECK (auth.uid() = student_user_id);
-
--- Learning Sessions RLS
-DROP POLICY IF EXISTS "Students can manage own sessions" ON public.learning_sessions;
-DROP POLICY IF EXISTS "Parents can view linked child sessions" ON public.learning_sessions;
-DROP POLICY IF EXISTS "Teachers can view class student sessions" ON public.learning_sessions;
-
-CREATE POLICY "Students can manage own sessions"
-  ON public.learning_sessions
-  FOR ALL
-  TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Parents can view linked child sessions"
-  ON public.learning_sessions
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.parent_student_links
-      WHERE parent_student_links.parent_user_id = auth.uid()
-      AND parent_student_links.student_user_id = learning_sessions.user_id
-      AND parent_student_links.status = 'active'
-    )
-  );
-
-CREATE POLICY "Teachers can view class student sessions"
-  ON public.learning_sessions
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members cm
-      JOIN public.classes c ON cm.class_id = c.id
-      WHERE c.teacher_user_id = auth.uid()
-      AND cm.student_user_id = learning_sessions.user_id
-      AND cm.status = 'active'
-    )
-  );
-
--- Daily Stats RLS
-DROP POLICY IF EXISTS "Students can manage own daily stats" ON public.daily_learning_stats;
-DROP POLICY IF EXISTS "Parents can view child daily stats" ON public.daily_learning_stats;
-DROP POLICY IF EXISTS "Teachers can view student daily stats" ON public.daily_learning_stats;
-
-CREATE POLICY "Students can manage own daily stats"
-  ON public.daily_learning_stats
-  FOR ALL
-  TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Parents can view child daily stats"
-  ON public.daily_learning_stats
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.parent_student_links
-      WHERE parent_student_links.parent_user_id = auth.uid()
-      AND parent_student_links.student_user_id = daily_learning_stats.user_id
-      AND parent_student_links.status = 'active'
-    )
-  );
-
-CREATE POLICY "Teachers can view student daily stats"
-  ON public.daily_learning_stats
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members cm
-      JOIN public.classes c ON cm.class_id = c.id
-      WHERE c.teacher_user_id = auth.uid()
-      AND cm.student_user_id = daily_learning_stats.user_id
-      AND cm.status = 'active'
-    )
-  );
-
--- Student Alerts RLS
-DROP POLICY IF EXISTS "Students can view own alerts" ON public.student_alerts;
-DROP POLICY IF EXISTS "Parents can view child alerts" ON public.student_alerts;
-DROP POLICY IF EXISTS "Teachers can view student alerts" ON public.student_alerts;
-
-CREATE POLICY "Students can view own alerts"
-  ON public.student_alerts
-  FOR SELECT
-  TO authenticated
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Parents can view child alerts"
-  ON public.student_alerts
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.parent_student_links
-      WHERE parent_student_links.parent_user_id = auth.uid()
-      AND parent_student_links.student_user_id = student_alerts.user_id
-      AND parent_student_links.status = 'active'
-    )
-  );
-
-CREATE POLICY "Teachers can view student alerts"
-  ON public.student_alerts
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members cm
-      JOIN public.classes c ON cm.class_id = c.id
-      WHERE c.teacher_user_id = auth.uid()
-      AND cm.student_user_id = student_alerts.user_id
-      AND cm.status = 'active'
-    )
-  );
-
--- Profile self and cross-read policies
-DROP POLICY IF EXISTS "User can read own profile" ON public.profiles;
-CREATE POLICY "User can read own profile" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
-
-DROP POLICY IF EXISTS "User can update own profile" ON public.profiles;
-CREATE POLICY "User can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
-
-DROP POLICY IF EXISTS "User can insert own profile" ON public.profiles;
-CREATE POLICY "User can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Admin can read all profiles" ON public.profiles;
-CREATE POLICY "Admin can read all profiles" ON public.profiles FOR SELECT TO authenticated USING (public.is_admin());
-
-DROP POLICY IF EXISTS "Parents can read linked child profile" ON public.profiles;
-DROP POLICY IF EXISTS "Teachers can read enrolled student profile" ON public.profiles;
-DROP POLICY IF EXISTS "Parents can read child skill scores" ON public.learner_skill_scores;
-DROP POLICY IF EXISTS "Teachers can read student skill scores" ON public.learner_skill_scores;
-
-CREATE POLICY "Parents can read linked child profile"
-  ON public.profiles
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.parent_student_links
-      WHERE parent_student_links.parent_user_id = auth.uid()
-      AND parent_student_links.student_user_id = profiles.id
-      AND parent_student_links.status = 'active'
-    )
-  );
-
-CREATE POLICY "Teachers can read enrolled student profile"
-  ON public.profiles
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members cm
-      JOIN public.classes c ON cm.class_id = c.id
-      WHERE c.teacher_user_id = auth.uid()
-      AND cm.student_user_id = profiles.id
-      AND cm.status = 'active'
-    )
-  );
-
-CREATE POLICY "Parents can read child skill scores"
-  ON public.learner_skill_scores
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.parent_student_links
-      WHERE parent_student_links.parent_user_id = auth.uid()
-      AND parent_student_links.student_user_id = learner_skill_scores.user_id
-      AND parent_student_links.status = 'active'
-    )
-  );
-
-CREATE POLICY "Teachers can read student skill scores"
-  ON public.learner_skill_scores
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.class_members cm
-      JOIN public.classes c ON cm.class_id = c.id
-      WHERE c.teacher_user_id = auth.uid()
-      AND cm.student_user_id = learner_skill_scores.user_id
-      AND cm.status = 'active'
-    )
-  );
 
 -- ==============================================================================
 -- 6. SECURITY DEFINER RPCS
