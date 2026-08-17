@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
-  Bot,
   Clock,
 } from 'lucide-react';
 import { useLessonStore } from '@/app/store/useLessonStore';
@@ -252,22 +251,6 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       </button>
                     );
                   })}
-                </div>
-
-                {/* Demo Hint Helper */}
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Bot className="w-4 h-4 text-amber-600" />
-                    <strong>Yo‘lchi AI Demo sinovi:</strong> 1-variantni (noto‘g‘ri javob) tanlab, sun'iy intellekt xato tahlilini ko‘rishingiz mumkin!
-                  </span>
-                  <button
-                    onClick={() => {
-                      setPickedOption(0);
-                    }}
-                    className="px-2.5 py-1 rounded bg-amber-200 text-amber-950 font-bold hover:bg-amber-300 transition-colors text-[10px] cursor-pointer"
-                  >
-                    Xato javobni tanlash
-                  </button>
                 </div>
 
                 {/* Quiz Submission Button */}

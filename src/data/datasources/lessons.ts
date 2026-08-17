@@ -70,12 +70,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
           skillId: 'skill_math_functions',
           text: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) ni toping:',
           formulaLatex: 'f(4) = 2 \\cdot 4 + 3 = ?',
-          options: [
-            '11  (to‘g‘ri javob)',
-            '8   (ozod son unutilgan)',
-            '14  (x² deb hisoblangan)',
-            '9   (noto‘g‘ri qo‘shilgan)',
-          ],
+          options: ['11', '8', '14', '9'],
           correctIndex: 0,
           difficulty: 'medium',
           explanation: 'x = 4 qo‘yilganda: f(4) = 2(4) + 3 = 8 + 3 = 11 bo‘ladi.',

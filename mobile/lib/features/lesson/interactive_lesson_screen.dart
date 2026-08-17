@@ -311,26 +311,9 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const AppBadge(text: 'Interaktiv Savol', variant: AppBadgeVariant.blue),
-              // Shortcut helper for testing wrong answer
-              TextButton(
-                onPressed: () {
-                  // Select deliberate wrong answer (Index 0 in Math: '8')
-                  ref.read(lessonSessionNotifierProvider.notifier).selectOption(0);
-                },
-                child: Text(
-                  'Xato javobni tanlash',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.error,
-                  ),
-                ),
-              ),
-            ],
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: AppBadge(text: 'Interaktiv Savol', variant: AppBadgeVariant.blue),
           ),
           const SizedBox(height: 10),
           Text(
