@@ -21,10 +21,11 @@ void main() {
       expect(await monitoringRepo.getUserRole(), equals(UserRole.student));
     });
 
-    test('activates teacher role with valid official invitation code', () async {
-      final validRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-2026-ALPHA');
+    test('activates teacher role with valid dynamically created invitation code', () async {
+      final created = await monitoringRepo.createTeacherInvitation(schoolName: 'Toshkent IDUM');
+      final validRes = await monitoringRepo.redeemTeacherInvitationCode(created['plain_code']!);
       expect(validRes['success'], isTrue);
-      expect(validRes['school_name'], isNotNull);
+      expect(validRes['school_name'], equals('Toshkent IDUM'));
 
       expect(await monitoringRepo.getUserRole(), equals(UserRole.teacher));
     });

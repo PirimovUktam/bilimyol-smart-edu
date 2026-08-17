@@ -3,6 +3,7 @@ import '../entities/monitoring_entities.dart';
 abstract class IMonitoringRepository {
   Future<UserRole> getUserRole();
   Future<void> setUserRole(UserRole role);
+  Future<Map<String, dynamic>> createTeacherInvitation({String schoolName, int maxUses, int validityDays});
   Future<Map<String, dynamic>> redeemTeacherInvitationCode(String code);
 
   // Parent

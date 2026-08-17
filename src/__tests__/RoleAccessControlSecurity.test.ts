@@ -19,7 +19,8 @@ describe('Role & Access Control Security Hardening Tests', () => {
   });
 
   it('2. Teacher Activation Code: Valid server code elevates role to teacher', async () => {
-    const validRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-7K4P-2M9X');
+    const inv = await monitoringRepo.createTeacherInvitation('BilimYo‘l Markazi', 1, 7);
+    const validRes = await monitoringRepo.redeemTeacherInvitationCode(inv.plainCode);
     expect(validRes.success).toBe(true);
     expect(validRes.message).toContain('muvaffaqiyatli');
     expect(validRes.schoolName).toBeDefined();

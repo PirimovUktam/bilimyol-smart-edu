@@ -5,6 +5,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
   UserRole _role = UserRole.student;
   final List<ParentStudentLink> _links = [];
   final List<TeacherClass> _classes = [];
+  final Map<String, Map<String, dynamic>> _invitations = {};
 
   @override
   Future<UserRole> getUserRole() async => _role;
@@ -15,22 +16,49 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> createTeacherInvitation({
+    String schoolName = 'BilimYo‘l Smart School',
+    int maxUses = 1,
+    int validityDays = 7,
+  }) async {
+    final randCode = 'USTOZ-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 11)}-${DateTime.now().microsecond.toString().padLeft(4, '0')}';
+    _invitations[randCode] = {
+      'school_name': schoolName,
+      'max_uses': maxUses,
+      'used_count': 0,
+      'expires_at': DateTime.now().add(Duration(days: validityDays)),
+      'status': 'active',
+    };
+    return {
+      'success': true,
+      'plain_code': randCode,
+      'code_prefix': '${randCode.substring(0, 10)}****',
+      'school_name': schoolName,
+    };
+  }
+
+  @override
   Future<Map<String, dynamic>> redeemTeacherInvitationCode(String code) async {
     final cleanCode = code.trim().toUpperCase();
-    const validCodes = ['USTOZ-2026-ALPHA', 'BILIMYO-USTOZ-77', 'MAKTAB-MATH-2026'];
 
     if (cleanCode.isEmpty) {
       return {'success': false, 'message': 'O‘qituvchi tasdiqlash kodini kiriting.'};
     }
 
-    if (!validCodes.contains(cleanCode)) {
+    final inv = _invitations[cleanCode];
+    if (inv == null || inv['status'] != 'active' || (inv['expires_at'] as DateTime).isBefore(DateTime.now()) || (inv['used_count'] as int) >= (inv['max_uses'] as int)) {
       return {'success': false, 'message': 'Kiritilgan tasdiqlash kodi yaroqsiz yoki muddati tugagan.'};
+    }
+
+    inv['used_count'] = (inv['used_count'] as int) + 1;
+    if ((inv['used_count'] as int) >= (inv['max_uses'] as int)) {
+      inv['status'] = 'exhausted';
     }
 
     _role = UserRole.teacher;
     return {
       'success': true,
-      'school_name': 'BilimYo‘l Boshqaruv Markazi',
+      'school_name': inv['school_name'] ?? 'BilimYo‘l Boshqaruv Markazi',
       'message': 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!',
     };
   }
@@ -179,5 +207,6 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     _role = UserRole.student;
     _links.clear();
     _classes.clear();
+    _invitations.clear();
   }
 }

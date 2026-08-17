@@ -31,43 +31,7 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   private classMembers: ClassMember[] = [];
   private dailyStats: Map<string, DailyLearningStats> = new Map();
   private alerts: Map<string, StudentAlert[]> = new Map();
-  private teacherInvitations: InMemoryTeacherInvitation[] = [
-    {
-      id: 'inv_1',
-      plainCode: 'USTOZ-7K4P-2M9X',
-      codePrefix: 'USTOZ-7K4P-****',
-      schoolName: 'BilimYo‘l Boshqaruv Markazi',
-      maxUses: 10,
-      usedCount: 0,
-      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'inv_2',
-      plainCode: 'USTOZ-9B3V-4X1R',
-      codePrefix: 'USTOZ-9B3V-****',
-      schoolName: 'Toshkent IDUM №1',
-      maxUses: 5,
-      usedCount: 0,
-      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'inv_3',
-      plainCode: 'USTOZ-2026-ALPHA',
-      codePrefix: 'USTOZ-2026-****',
-      schoolName: 'BilimYo‘l Demo Markazi',
-      maxUses: 100,
-      usedCount: 0,
-      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  private hasAdminBeenClaimed = false;
+  private teacherInvitations: InMemoryTeacherInvitation[] = [];
 
   async getUserRole(): Promise<UserRole> {
     return this.currentRole;
@@ -77,19 +41,11 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
     this.currentRole = role;
   }
 
-  async claimFirstAdminRole(_bootstrapKey = ''): Promise<{ success: boolean; message: string }> {
-    if (this.hasAdminBeenClaimed) {
-      return {
-        success: false,
-        message: 'Tizimda bosh administrator allaqachon mavjud. Qayta bootstrap qilish bloklangan.',
-      };
-    }
-
-    this.hasAdminBeenClaimed = true;
+  async promoteUserToAdmin(_email: string): Promise<{ success: boolean; message: string }> {
     this.currentRole = 'admin';
     return {
       success: true,
-      message: 'Tabriklaymiz! Siz platforma bosh administratori sifatida muvaffaqiyatli faollashtirildingiz.',
+      message: 'Foydalanuvchi muvaffaqiyatli Admin roliga o‘tkazildi.',
     };
   }
 
@@ -437,7 +393,7 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
 
   resetAll(): void {
     this.currentRole = 'student';
-    this.hasAdminBeenClaimed = false;
+    this.teacherInvitations = [];
     this.links = [];
     this.classes = [];
     this.classMembers = [];

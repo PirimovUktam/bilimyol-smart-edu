@@ -56,21 +56,6 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
     };
   }
 
-  async claimFirstAdminRole(bootstrapKey = ''): Promise<{ success: boolean; message: string }> {
-    const { data, error } = await supabase.rpc('claim_first_admin_role', { p_bootstrap_key: bootstrapKey });
-    if (error || !data) {
-      return {
-        success: false,
-        message: error?.message || 'Admin bootstrap xatoligi yuz berdi.',
-      };
-    }
-
-    return {
-      success: Boolean(data.success),
-      message: data.message || (data.success ? 'Admin roli muvaffaqiyatli faollashtirildi!' : 'Xatolik yuz berdi.'),
-    };
-  }
-
   async createTeacherInvitation(
     schoolName = 'BilimYo‘l Smart School',
     maxUses = 1,

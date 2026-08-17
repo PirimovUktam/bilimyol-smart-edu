@@ -14,7 +14,6 @@ export interface IMonitoringRepository {
   getUserRole(): Promise<UserRole>;
   setUserRole(role: UserRole): Promise<void>;
   redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }>;
-  claimFirstAdminRole(bootstrapKey?: string): Promise<{ success: boolean; message: string }>;
 
   // Teacher Invitation Management (Admin/Management)
   createTeacherInvitation(

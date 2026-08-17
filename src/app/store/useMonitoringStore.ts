@@ -46,7 +46,6 @@ interface MonitoringState {
   loadUserRole: () => Promise<UserRole>;
   switchRole: (role: UserRole) => Promise<void>;
   redeemTeacherInvitationCode: (code: string) => Promise<{ success: boolean; schoolName?: string; message: string }>;
-  claimFirstAdminRole: (bootstrapKey?: string) => Promise<{ success: boolean; message: string }>;
   createTeacherInvitation: (
     schoolName?: string,
     maxUses?: number,
@@ -132,23 +131,6 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       return res;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Tasdiqlash kodi tekshirilmadi.';
-      set({ error: msg });
-      return { success: false, message: msg };
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  claimFirstAdminRole: async (bootstrapKey = '') => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await repository.claimFirstAdminRole(bootstrapKey);
-      if (res.success) {
-        set({ currentRole: 'admin' });
-      }
-      return res;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Admin bootstrap xatoligi.';
       set({ error: msg });
       return { success: false, message: msg };
     } finally {
