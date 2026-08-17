@@ -54,8 +54,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
                 <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
                   {profile?.firstName} {profile?.lastName}
                 </h1>
-                <Badge variant="blue" size="sm">
-                  Faol O‘quvchi
+                <Badge
+                  variant={
+                    profile?.role === 'admin'
+                      ? 'purple'
+                      : profile?.role === 'teacher'
+                      ? 'blue'
+                      : profile?.role === 'parent'
+                      ? 'emerald'
+                      : 'blue'
+                  }
+                  size="sm"
+                >
+                  {profile?.role === 'admin'
+                    ? '⚡ Administrator'
+                    : profile?.role === 'teacher'
+                    ? '👨‍🏫 O‘qituvchi'
+                    : profile?.role === 'parent'
+                    ? '👨‍👩‍👧 Ota-ona'
+                    : '🎓 Faol O‘quvchi'}
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 flex items-center justify-center sm:justify-start gap-1.5 font-medium">

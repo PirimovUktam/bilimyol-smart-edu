@@ -222,6 +222,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 <span>O‘qituvchi Paneli</span>
               </button>
             )}
+
+            {userRole === 'admin' && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className="flex items-center gap-2 py-1 px-3 text-xs font-bold text-purple-700 bg-purple-50 rounded-lg border border-purple-200"
+              >
+                <ShieldAlert className="w-4 h-4 text-purple-600" />
+                <span>Boshqaruv (Admin)</span>
+              </button>
+            )}
           </div>
         </div>
       </nav>

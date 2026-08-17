@@ -475,7 +475,19 @@ CREATE POLICY "Teachers can view student alerts"
     )
   );
 
--- Cross-read policies on profiles and scores
+-- Profile self and cross-read policies
+DROP POLICY IF EXISTS "User can read own profile" ON public.profiles;
+CREATE POLICY "User can read own profile" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "User can update own profile" ON public.profiles;
+CREATE POLICY "User can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "User can insert own profile" ON public.profiles;
+CREATE POLICY "User can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Admin can read all profiles" ON public.profiles;
+CREATE POLICY "Admin can read all profiles" ON public.profiles FOR SELECT TO authenticated USING (public.is_admin());
+
 DROP POLICY IF EXISTS "Parents can read linked child profile" ON public.profiles;
 DROP POLICY IF EXISTS "Teachers can read enrolled student profile" ON public.profiles;
 DROP POLICY IF EXISTS "Parents can read child skill scores" ON public.learner_skill_scores;

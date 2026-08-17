@@ -80,11 +80,11 @@ export const AppRouter: React.FC = () => {
   // Adjust landing view when role is resolved
   useEffect(() => {
     if (authProfile?.role) {
-      if (authProfile.role === 'admin' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
+      if (authProfile.role === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
         setCurrentView('admin');
-      } else if (authProfile.role === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
+      } else if (authProfile.role === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
         setCurrentView('parent');
-      } else if (authProfile.role === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
+      } else if (authProfile.role === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
         setCurrentView('teacher');
       }
     }
