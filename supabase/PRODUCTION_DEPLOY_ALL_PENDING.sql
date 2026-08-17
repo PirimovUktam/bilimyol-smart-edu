@@ -44,23 +44,29 @@ ALTER TABLE public.profiles
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 
 -- ==============================================================================
--- 2. SECURE AUTH REGISTRATION TRIGGER
+-- 2. SECURE AUTH REGISTRATION TRIGGER (PRODUCTION HARDENED)
 -- ==============================================================================
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_first_name TEXT;
   v_last_name TEXT;
   v_display_name TEXT;
   v_role TEXT;
+  v_valid_course_id TEXT;
 BEGIN
+  -- 1. Extract and sanitize registration metadata
   v_first_name := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'first_name'), ''), 'Foydalanuvchi');
   v_last_name := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'last_name'), ''), '');
   v_role := COALESCE(NULLIF(TRIM(NEW.raw_user_meta_data->>'role'), ''), 'student');
   
-  -- Prevent privilege escalation via signup payload
-  -- Only 'student' and 'parent' roles can be selected at public signup
+  -- Public registration only assigns 'student' or 'parent' initially.
+  -- Teacher role elevation is strictly authenticated via redeem_teacher_invitation_code RPC.
   IF v_role NOT IN ('student', 'parent') THEN
     v_role := 'student';
   END IF;
@@ -71,7 +77,18 @@ BEGIN
     v_display_name := v_first_name;
   END IF;
 
-  INSERT INTO public.profiles (id, first_name, last_name, email, avatar_url, display_name, role, created_at, updated_at)
+  -- 2. Core Profile Record (Must always succeed)
+  INSERT INTO public.profiles (
+    id,
+    first_name,
+    last_name,
+    email,
+    avatar_url,
+    display_name,
+    role,
+    created_at,
+    updated_at
+  )
   VALUES (
     NEW.id,
     v_first_name,
@@ -90,24 +107,86 @@ BEGIN
     email = EXCLUDED.email,
     updated_at = now();
 
-  -- Initialize student defaults
+  -- 3. Student Defaults (Isolated & Non-blocking)
   IF v_role = 'student' THEN
-    INSERT INTO public.learner_profiles (user_id, selected_course_id, goal, daily_minutes, initial_level, created_at, updated_at)
-    VALUES (NEW.id, 'course_math_01', 'mastery', 15, 'intermediate', now(), now())
-    ON CONFLICT (user_id) DO NOTHING;
+    BEGIN
+      -- Validate course existence before inserting FK reference
+      SELECT id INTO v_valid_course_id FROM public.courses WHERE id = 'course_math_01' LIMIT 1;
+      
+      INSERT INTO public.learner_profiles (
+        user_id,
+        selected_course_id,
+        goal,
+        daily_minutes,
+        initial_level,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        NEW.id,
+        v_valid_course_id,
+        'mastery',
+        15,
+        'intermediate',
+        now(),
+        now()
+      )
+      ON CONFLICT (user_id) DO NOTHING;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'handle_new_user: learner_profiles insert warning: %', SQLERRM;
+    END;
 
-    INSERT INTO public.gamification_profiles (user_id, xp, streak_days, last_activity_date, created_at, updated_at)
-    VALUES (NEW.id, 0, 1, CURRENT_DATE, now(), now())
-    ON CONFLICT (user_id) DO NOTHING;
+    BEGIN
+      INSERT INTO public.gamification_profiles (
+        user_id,
+        xp,
+        streak_days,
+        last_activity_date,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        NEW.id,
+        0,
+        1,
+        CURRENT_DATE,
+        now(),
+        now()
+      )
+      ON CONFLICT (user_id) DO NOTHING;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'handle_new_user: gamification_profiles insert warning: %', SQLERRM;
+    END;
   END IF;
 
-  INSERT INTO public.user_preferences (user_id, dark_mode, notifications_enabled, language, updated_at)
-  VALUES (NEW.id, false, true, 'uz', now())
-  ON CONFLICT (user_id) DO NOTHING;
+  -- 4. User Preferences (Isolated & Non-blocking)
+  BEGIN
+    INSERT INTO public.user_preferences (
+      user_id,
+      dark_mode,
+      notifications_enabled,
+      language,
+      updated_at
+    )
+    VALUES (
+      NEW.id,
+      false,
+      true,
+      'uz',
+      now()
+    )
+    ON CONFLICT (user_id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user: user_preferences insert warning: %', SQLERRM;
+  END;
 
   RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  -- Guarantee that auth.users creation never aborts
+  RAISE WARNING 'handle_new_user FATAL: %', SQLERRM;
+  RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Rebind trigger safely
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

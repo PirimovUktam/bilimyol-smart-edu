@@ -118,4 +118,31 @@ describe('Admin Role & Bootstrap Security Hardening Tests', () => {
     expect(checkAccess('parent', 'parent')).toBe(true);
     expect(checkAccess('parent', 'student')).toBe(false);
   });
+
+  it('9. Teacher Signup: Valid code upgrades user role to teacher', async () => {
+    await monitoringRepo.promoteUserToAdmin('admin@bilimyol.uz');
+    const created = await monitoringRepo.createTeacherInvitation('Smart Maktab', 1, 7);
+    expect(created.plainCode).toBeDefined();
+
+    // Initial role is student
+    await monitoringRepo.setUserRole('student');
+    expect(await monitoringRepo.getUserRole()).toBe('student');
+
+    // Redeem valid code
+    const res = await monitoringRepo.redeemTeacherInvitationCode(created.plainCode);
+    expect(res.success).toBe(true);
+    expect(await monitoringRepo.getUserRole()).toBe('teacher');
+  });
+
+  it('10. Teacher Signup: Invalid or missing code fails and leaves user as student', async () => {
+    await monitoringRepo.setUserRole('student');
+
+    const emptyRes = await monitoringRepo.redeemTeacherInvitationCode('');
+    expect(emptyRes.success).toBe(false);
+    expect(await monitoringRepo.getUserRole()).toBe('student');
+
+    const invalidRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-FAKE-CODE');
+    expect(invalidRes.success).toBe(false);
+    expect(await monitoringRepo.getUserRole()).toBe('student');
+  });
 });

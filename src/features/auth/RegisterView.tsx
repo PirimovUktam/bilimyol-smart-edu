@@ -67,7 +67,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
       );
 
       if (error) {
-        setErrorMsg(error.message || 'Ro‘yxatdan o‘tishda xatolik yuz berdi.');
+        console.error('[AUTH] Registration error:', error);
+        let userFacingError = error.message || 'Ro‘yxatdan o‘tishda xatolik yuz berdi.';
+        if (userFacingError.includes('Database error saving new user') || userFacingError.includes('unexpected_failure')) {
+          userFacingError = 'Akkount yaratishda muammo yuz berdi. Iltimos, ma’lumotlarni tekshirib qaytadan urinib ko‘ring.';
+        } else if (userFacingError.includes('User already registered')) {
+          userFacingError = 'Ushbu email bilan foydalanuvchi allaqachon mavjud. Kirish sahifasiga o‘ting.';
+        }
+        setErrorMsg(userFacingError);
         setIsSubmitting(false);
         return;
       }
@@ -89,6 +96,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         onSuccess();
       }, 1000);
     } catch (err: unknown) {
+      console.error('[AUTH] Unexpected registration catch:', err);
       setErrorMsg(err instanceof Error ? err.message : 'Ro‘yxatdan o‘tishda kutilmagan xatolik.');
     } finally {
       setIsSubmitting(false);
