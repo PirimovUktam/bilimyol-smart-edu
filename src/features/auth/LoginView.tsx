@@ -7,7 +7,7 @@ import { Button } from '../../presentation/components/Button';
 import { Card } from '../../presentation/components/Card';
 
 interface LoginViewProps {
-  onSuccess: () => void;
+  onSuccess: (role?: 'student' | 'parent' | 'teacher' | 'admin') => void;
   onNavigateRegister: () => void;
   onNavigateForgotPassword: () => void;
 }
@@ -33,13 +33,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }
 
     setIsSubmitting(true);
-    const { error } = await signIn(email.trim(), password);
+    const { error, profile: loggedProfile } = await signIn(email.trim(), password);
     setIsSubmitting(false);
 
     if (error) {
       setErrorMsg('Email yoki parol noto‘g‘ri kiritildi. Iltimos, qaytadan urinib ko‘ring.');
     } else {
-      onSuccess();
+      onSuccess(loggedProfile?.role);
     }
   };
 

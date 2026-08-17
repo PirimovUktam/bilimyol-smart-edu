@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -64,18 +64,31 @@ export const AppRouter: React.FC = () => {
     };
   }, [loadCourses, loadProfile, authProfile, userRole, activeCourse, activeLessonId]);
 
+  const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'parent' | 'teacher' | 'admin') => {
+    const role = resolvedRole || authProfile?.role || 'student';
+    if (role === 'admin') {
+      setCurrentView('admin');
+    } else if (role === 'parent') {
+      setCurrentView('parent');
+    } else if (role === 'teacher') {
+      setCurrentView('teacher');
+    } else {
+      setCurrentView('dashboard');
+    }
+  }, [authProfile?.role]);
+
   // Adjust landing view when role is resolved
   useEffect(() => {
-    if (authProfile) {
-      if (authProfile.role === 'admin' && currentView === 'course-selection') {
+    if (authProfile?.role) {
+      if (authProfile.role === 'admin' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
         setCurrentView('admin');
-      } else if (authProfile.role === 'parent' && currentView === 'course-selection') {
+      } else if (authProfile.role === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
         setCurrentView('parent');
-      } else if (authProfile.role === 'teacher' && currentView === 'course-selection') {
+      } else if (authProfile.role === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register')) {
         setCurrentView('teacher');
       }
     }
-  }, [authProfile, currentView]);
+  }, [authProfile?.role, currentView]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');
@@ -147,7 +160,7 @@ export const AppRouter: React.FC = () => {
           <>
             {currentView === 'login' && (
               <LoginView
-                onSuccess={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
+                onSuccess={handleRoleRouting}
                 onNavigateRegister={() => setCurrentView('register')}
                 onNavigateForgotPassword={() => setCurrentView('forgot-password')}
               />
@@ -155,7 +168,7 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'register' && (
               <RegisterView
-                onSuccess={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
+                onSuccess={handleRoleRouting}
                 onNavigateLogin={() => setCurrentView('login')}
               />
             )}

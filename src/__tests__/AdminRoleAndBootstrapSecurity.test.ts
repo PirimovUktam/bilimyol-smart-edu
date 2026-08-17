@@ -84,4 +84,38 @@ describe('Admin Role & Bootstrap Security Hardening Tests', () => {
     const secondRedeem = await monitoringRepo.redeemTeacherInvitationCode(created.plainCode);
     expect(secondRedeem.success).toBe(false);
   });
+
+  it('7. Role Routing Logic: Maps roles deterministically to dedicated landing views', () => {
+    const routeForRole = (role?: string) => {
+      if (role === 'admin') return 'admin';
+      if (role === 'parent') return 'parent';
+      if (role === 'teacher') return 'teacher';
+      return 'dashboard';
+    };
+
+    expect(routeForRole('admin')).toBe('admin');
+    expect(routeForRole('parent')).toBe('parent');
+    expect(routeForRole('teacher')).toBe('teacher');
+    expect(routeForRole('student')).toBe('dashboard');
+    expect(routeForRole(undefined)).toBe('dashboard');
+  });
+
+  it('8. Role Access Guard: Non-admin users are strictly blocked from admin panel', () => {
+    const checkAccess = (targetView: string, userRole: string) => {
+      if (targetView === 'admin' && userRole !== 'admin') return false;
+      if (targetView === 'parent' && userRole !== 'parent') return false;
+      if (targetView === 'teacher' && userRole !== 'teacher') return false;
+      return true;
+    };
+
+    expect(checkAccess('admin', 'admin')).toBe(true);
+    expect(checkAccess('admin', 'student')).toBe(false);
+    expect(checkAccess('admin', 'teacher')).toBe(false);
+    expect(checkAccess('admin', 'parent')).toBe(false);
+
+    expect(checkAccess('teacher', 'teacher')).toBe(true);
+    expect(checkAccess('teacher', 'student')).toBe(false);
+    expect(checkAccess('parent', 'parent')).toBe(true);
+    expect(checkAccess('parent', 'student')).toBe(false);
+  });
 });

@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-6">
               <button
-                onClick={() => onNavigate(userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
+                onClick={() => onNavigate(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
                 className="cursor-pointer focus:outline-none"
               >
                 <BilimYolLogo size="md" />

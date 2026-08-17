@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
+import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 
 export interface UserProfile {
   id: string;
@@ -17,7 +18,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isDemoMode: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher' | 'admin') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -43,67 +44,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(!isSupabaseConfigured);
 
-  const fetchProfile = useCallback(async (userId: string, email: string) => {
+  const fetchProfile = useCallback(async (userId: string, email: string): Promise<UserProfile | null> => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, display_name, email, avatar_url, role')
         .eq('id', userId)
         .maybeSingle();
 
-      const userRole = (data?.role as 'student' | 'parent' | 'teacher') || 'student';
+      if (error) {
+        console.warn('Error querying public.profiles in AuthContext:', error);
+      }
 
-      if (data && data.first_name && data.first_name !== 'Foydalanuvchi') {
-        setProfile({
+      if (data) {
+        // Authoritative role from public.profiles
+        const userRole = (data.role as UserProfile['role']) || 'student';
+        const resolvedFirst = data.first_name || (email ? email.split('@')[0] : 'Foydalanuvchi');
+        const userProfile: UserProfile = {
           id: data.id,
-          firstName: data.first_name,
+          firstName: resolvedFirst,
           lastName: data.last_name || '',
           email: data.email || email,
           avatarUrl: data.avatar_url || '',
           role: userRole,
-        });
-      } else {
-        // Check user_metadata if profile row is missing or default
-        const { data: userData } = await supabase.auth.getUser();
-        const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
-        const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
-        const metaRole = (userData.user?.user_metadata?.role as 'student' | 'parent' | 'teacher') || userRole;
-        const resolvedFirst = data?.first_name || metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
-        const resolvedLast = data?.last_name || metaLast || '';
-        const resolvedDisplay = resolvedLast ? `${resolvedFirst} ${resolvedLast}` : resolvedFirst;
+        };
 
-        // Auto-provision public.profiles row
+        setProfile(userProfile);
+        useMonitoringStore.getState().loadUserRole().catch(() => {});
+        return userProfile;
+      }
+
+      // If no row exists yet in public.profiles (e.g. fresh signup before trigger or local demo)
+      const { data: userData } = await supabase.auth.getUser();
+      const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
+      const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
+      const metaRole = (userData.user?.user_metadata?.role as UserProfile['role']) || 'student';
+      const resolvedFirst = metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
+      const resolvedLast = metaLast || '';
+      const resolvedDisplay = resolvedLast ? `${resolvedFirst} ${resolvedLast}` : resolvedFirst;
+
+      try {
         await supabase
           .from('profiles')
-          .upsert({
+          .insert({
             id: userId,
             first_name: resolvedFirst,
             last_name: resolvedLast,
             display_name: resolvedDisplay,
             email: email || userData.user?.email || '',
-            avatar_url: data?.avatar_url || userData.user?.user_metadata?.avatar_url || null,
+            avatar_url: userData.user?.user_metadata?.avatar_url || null,
             role: metaRole,
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
-
-        setProfile({
-          id: userId,
-          firstName: resolvedFirst,
-          lastName: resolvedLast,
-          email: email || userData.user?.email || '',
-          avatarUrl: data?.avatar_url || '',
-          role: metaRole,
-        });
+      } catch (insErr) {
+        console.warn('Could not auto-insert profiles row (trigger may have already inserted it):', insErr);
       }
+
+      const userProfile: UserProfile = {
+        id: userId,
+        firstName: resolvedFirst,
+        lastName: resolvedLast,
+        email: email || userData.user?.email || '',
+        avatarUrl: userData.user?.user_metadata?.avatar_url || '',
+        role: metaRole,
+      };
+
+      setProfile(userProfile);
+      useMonitoringStore.getState().loadUserRole().catch(() => {});
+      return userProfile;
     } catch (err) {
       console.warn('Error resolving authenticated profile from Supabase:', err);
-      setProfile({
+      const fallback: UserProfile = {
         id: userId,
         firstName: email ? email.split('@')[0] : 'Foydalanuvchi',
         lastName: '',
         email,
         role: 'student',
-      });
+      };
+      setProfile(fallback);
+      return fallback;
     } finally {
       setIsLoading(false);
     }
@@ -185,17 +205,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName: email.split('@')[0],
         lastName: '',
         email,
+        role: 'student',
       };
       setProfile(demoProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf }));
-      return { error: null };
+      return { error: null, profile: demoProf };
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !authData.user) {
+      setIsLoading(false);
+      return { error: error ? new Error(error.message) : new Error('Kirishda xatolik yuz berdi.') };
+    }
+
+    const resolved = await fetchProfile(authData.user.id, authData.user.email ?? email);
     setIsLoading(false);
-    return { error: error ? new Error(error.message) : null };
+    return { error: null, profile: resolved };
   };
 
   const signUp = async (
@@ -239,7 +266,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (signUpData.user) {
       const displayName = lastName ? `${firstName} ${lastName}` : firstName;
-      // Proactively ensure public.profiles record exists immediately
       try {
         await supabase.from('profiles').upsert({
           id: signUpData.user.id,
@@ -275,41 +301,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setSession(null);
     setProfile(null);
+    useMonitoringStore.getState().resetAll();
   };
 
   const resetPassword = async (email: string) => {
     if (!isSupabaseConfigured) {
       return { error: null };
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
     return { error: error ? new Error(error.message) : null };
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!profile) return { error: new Error('Foydalanuvchi topilmadi') };
+    if (!profile) return { error: new Error('No profile loaded') };
 
     const updated = { ...profile, ...data };
     setProfile(updated);
 
-    if (isSupabaseConfigured && user) {
-      const displayName = updated.lastName ? `${updated.firstName} ${updated.lastName}` : updated.firstName;
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          first_name: updated.firstName,
-          last_name: updated.lastName,
-          display_name: displayName,
-          avatar_url: updated.avatarUrl,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (error) return { error: new Error(error.message) };
-    } else {
+    if (!isSupabaseConfigured) {
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated }));
+      return { error: null };
     }
 
-    return { error: null };
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        first_name: updated.firstName,
+        last_name: updated.lastName,
+        display_name: updated.lastName ? `${updated.firstName} ${updated.lastName}` : updated.firstName,
+        avatar_url: updated.avatarUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id);
+
+    return { error: error ? new Error(error.message) : null };
   };
 
   const setDemoUser = () => {
