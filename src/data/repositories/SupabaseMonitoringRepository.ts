@@ -36,33 +36,39 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
 
   async createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }> {
     const { data, error } = await supabase.rpc('create_parent_link_code');
-    if (error || !data) {
-      // Fallback direct insert if RPC not yet deployed
-      const { data: { user } } = await supabase.auth.getUser();
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-
-      const { data: inserted, error: insErr } = await supabase
-        .from('parent_student_links')
-        .insert({
-          parent_user_id: user?.id,
-          link_code: code,
-          status: 'pending',
-          expires_at: expiresAt,
-        })
-        .select('id, link_code, expires_at')
-        .single();
-
-      if (insErr || !inserted) {
-        throw new Error('Bog‘lanish kodini yaratib bo‘lmadi.');
-      }
-      return { id: inserted.id, linkCode: inserted.link_code, expiresAt: inserted.expires_at };
+    if (!error && data && data.success !== false) {
+      return {
+        id: data.id,
+        linkCode: data.link_code,
+        expiresAt: data.expires_at,
+      };
     }
-    return {
-      id: data.id,
-      linkCode: data.link_code,
-      expiresAt: data.expires_at,
-    };
+
+    // Direct fallback with user check
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    }
+
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+    const { data: inserted, error: insErr } = await supabase
+      .from('parent_student_links')
+      .insert({
+        parent_user_id: user.id,
+        link_code: code,
+        status: 'pending',
+        expires_at: expiresAt,
+      })
+      .select('id, link_code, expires_at')
+      .single();
+
+    if (insErr || !inserted) {
+      throw new Error(data?.message || insErr?.message || 'Bog‘lanish kodini yaratib bo‘lmadi.');
+    }
+
+    return { id: inserted.id, linkCode: inserted.link_code, expiresAt: inserted.expires_at };
   }
 
   async getParentChildren(): Promise<ChildSummary[]> {
@@ -234,9 +240,14 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
   }
 
   async redeemParentLinkCode(code: string): Promise<{ success: boolean; parentName?: string; message: string }> {
-    const { data, error } = await supabase.rpc('redeem_parent_link_code', { p_code: code.trim().toUpperCase() });
+    const cleanCode = code.trim().toUpperCase();
+    if (cleanCode.length !== 6) {
+      return { success: false, message: 'Ulanish kodi 6 ta belgidan iborat bo‘lishi lozim.' };
+    }
+
+    const { data, error } = await supabase.rpc('redeem_parent_link_code', { p_code: cleanCode });
     if (error || !data) {
-      return { success: false, message: 'Yaroqsiz yoki muddati o‘tgan kod.' };
+      return { success: false, message: error?.message || 'Yaroqsiz yoki muddati o‘tgan kod.' };
     }
     return {
       success: Boolean(data.success),
@@ -246,54 +257,64 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
   }
 
   async createTeacherClass(name: string, subject = 'Matematika', gradeLevel = '7-sinf'): Promise<TeacherClass> {
+    const cleanName = name.trim();
+    if (!cleanName) {
+      throw new Error('Sinf nomi bo‘sh bo‘lishi mumkin emas.');
+    }
+
     const { data, error } = await supabase.rpc('create_teacher_class', {
-      p_name: name,
+      p_name: cleanName,
       p_subject: subject,
       p_grade_level: gradeLevel,
     });
 
-    if (error || !data) {
-      // Fallback insert
-      const { data: { user } } = await supabase.auth.getUser();
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const { data: ins, error: insErr } = await supabase
-        .from('classes')
-        .insert({
-          teacher_user_id: user?.id,
-          name,
-          subject,
-          grade_level: gradeLevel,
-          class_code: code,
-        })
-        .select('*')
-        .single();
-
-      if (insErr || !ins) {
-        throw new Error('Sinf yaratib bo‘lmadi.');
-      }
+    if (!error && data && data.success !== false) {
       return {
-        id: ins.id,
-        teacherUserId: ins.teacher_user_id,
-        name: ins.name,
-        subject: ins.subject,
-        gradeLevel: ins.grade_level,
-        classCode: ins.class_code,
+        id: data.id,
+        teacherUserId: data.teacher_user_id,
+        name: data.name,
+        subject: data.subject,
+        gradeLevel: data.grade_level,
+        classCode: data.class_code,
         studentCount: 0,
         averageMastery: 0,
-        createdAt: ins.created_at,
+        createdAt: data.created_at || new Date().toISOString(),
       };
     }
 
+    // Direct fallback insert
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    }
+
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const { data: ins, error: insErr } = await supabase
+      .from('classes')
+      .insert({
+        teacher_user_id: user.id,
+        name: cleanName,
+        subject,
+        grade_level: gradeLevel,
+        class_code: code,
+      })
+      .select('*')
+      .single();
+
+    if (insErr || !ins) {
+      throw new Error(data?.message || insErr?.message || 'Sinf yaratib bo‘lmadi.');
+    }
+
     return {
-      id: data.id,
-      teacherUserId: data.teacher_user_id,
-      name: data.name,
-      subject: data.subject,
-      gradeLevel: data.grade_level,
-      classCode: data.class_code,
+      id: ins.id,
+      teacherUserId: ins.teacher_user_id,
+      name: ins.name,
+      subject: ins.subject,
+      gradeLevel: ins.grade_level,
+      classCode: ins.class_code,
       studentCount: 0,
       averageMastery: 0,
-      createdAt: data.created_at,
+      createdAt: ins.created_at,
     };
   }
 
@@ -334,15 +355,20 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
   }
 
   async joinClassByCode(code: string): Promise<{ success: boolean; className?: string; subject?: string; message: string }> {
-    const { data, error } = await supabase.rpc('join_class_by_code', { p_code: code.trim().toUpperCase() });
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { success: false, message: 'Sinf kodini kiriting.' };
+    }
+
+    const { data, error } = await supabase.rpc('join_class_by_code', { p_code: cleanCode });
     if (error || !data) {
-      return { success: false, message: 'Bunday sinf kodi topilmadi yoki xatolik yuz berdi.' };
+      return { success: false, message: error?.message || 'Bunday sinf kodi topilmadi yoki xatolik yuz berdi.' };
     }
     return {
       success: Boolean(data.success),
       className: data.class_name,
       subject: data.subject,
-      message: data.message,
+      message: data.message || 'Sinfga muvaffaqiyatli qo‘shildingiz.',
     };
   }
 

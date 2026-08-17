@@ -3,7 +3,6 @@ import { BilimYolLogo } from './BilimYolLogo';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useAuth } from '@/core/context/AuthContext';
-import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import {
   Flame,
   Award,
@@ -26,9 +25,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
   const { activeCourse } = useCourseStore();
   const { profile } = useLearnerStore();
   const { profile: authProfile } = useAuth();
-  const { currentRole, switchRole } = useMonitoringStore();
-
   const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
+
+  const userRole = authProfile?.role || 'student';
 
   const studentNavLinks = [
     { id: 'course-selection', label: 'Fanlar', icon: BookOpen },
@@ -44,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-6">
               <button
-                onClick={() => onNavigate('course-selection')}
+                onClick={() => onNavigate(userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
                 className="cursor-pointer focus:outline-none"
               >
                 <BilimYolLogo size="md" />
@@ -52,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-1 pl-4 border-l border-slate-200">
-                {currentRole === 'student' &&
+                {userRole === 'student' &&
                   studentNavLinks.map((link) => {
                     const Icon = link.icon;
                     const isActive = currentView === link.id;
@@ -72,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     );
                   })}
 
-                {currentRole === 'parent' && (
+                {userRole === 'parent' && (
                   <button
                     onClick={() => onNavigate('parent')}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700"
@@ -82,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   </button>
                 )}
 
-                {currentRole === 'teacher' && (
+                {userRole === 'teacher' && (
                   <button
                     onClick={() => onNavigate('teacher')}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-blue-50 text-blue-700"
@@ -94,56 +93,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               </div>
             </div>
 
-            {/* Right Status (Role Selector + Stats + Profile) */}
+            {/* Right Status (Role Badge + Stats + Profile) */}
             <div className="flex items-center gap-2.5">
-              {/* Role Switcher */}
-              <div className="flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold">
-                <button
-                  onClick={() => {
-                    switchRole('student');
-                    onNavigate('dashboard');
-                  }}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentRole === 'student'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  O‘quvchi
-                </button>
-                <button
-                  onClick={() => {
-                    switchRole('parent');
-                    onNavigate('parent');
-                  }}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentRole === 'parent'
-                      ? 'bg-white text-emerald-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Ota-ona
-                </button>
-                <button
-                  onClick={() => {
-                    switchRole('teacher');
-                    onNavigate('teacher');
-                  }}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentRole === 'teacher'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  O‘qituvchi
-                </button>
+              {/* Role Indicator Badge */}
+              <div className="flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold border">
+                {userRole === 'student' && (
+                  <span className="text-blue-700 bg-blue-50 border-blue-200 px-2 py-0.5 rounded-lg border">
+                    🎓 O‘quvchi
+                  </span>
+                )}
+                {userRole === 'parent' && (
+                  <span className="text-emerald-700 bg-emerald-50 border-emerald-200 px-2 py-0.5 rounded-lg border">
+                    👨‍👩‍👧 Ota-ona
+                  </span>
+                )}
+                {userRole === 'teacher' && (
+                  <span className="text-indigo-700 bg-indigo-50 border-indigo-200 px-2 py-0.5 rounded-lg border">
+                    👨‍🏫 O‘qituvchi
+                  </span>
+                )}
               </div>
 
               {/* Student Connection Trigger */}
-              {currentRole === 'student' && (
+              {userRole === 'student' && (
                 <button
                   onClick={() => setIsConnectionsModalOpen(true)}
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-xs font-bold text-blue-700 transition-colors shadow-xs"
                   title="Ota-ona yoki Sinfga Ulanish"
                 >
                   <Link2 className="w-3.5 h-3.5 text-blue-600" />
@@ -151,14 +126,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 </button>
               )}
 
-              {activeCourse && currentRole === 'student' && (
+              {activeCourse && userRole === 'student' && (
                 <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/80 text-xs font-semibold text-slate-700">
                   <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                   <span>{activeCourse.title}</span>
                 </div>
               )}
 
-              {currentRole === 'student' && (
+              {userRole === 'student' && (
                 <>
                   <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs font-bold text-amber-800">
                     <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -194,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
 
           {/* Mobile Navigation bar */}
           <div className="md:hidden flex items-center justify-around py-2 border-t border-slate-100">
-            {currentRole === 'student' &&
+            {userRole === 'student' &&
               studentNavLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = currentView === link.id;
@@ -212,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 );
               })}
 
-            {currentRole === 'parent' && (
+            {userRole === 'parent' && (
               <button
                 onClick={() => onNavigate('parent')}
                 className="flex items-center gap-2 py-1 px-3 text-xs font-bold text-emerald-600"
@@ -222,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               </button>
             )}
 
-            {currentRole === 'teacher' && (
+            {userRole === 'teacher' && (
               <button
                 onClick={() => onNavigate('teacher')}
                 className="flex items-center gap-2 py-1 px-3 text-xs font-bold text-blue-600"

@@ -68,7 +68,13 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
 
   @override
   Future<Map<String, dynamic>> joinClassByCode(String code) async {
-    return {'success': true, 'message': 'Sinfga muvaffaqiyatli qo‘shildingiz!'};
+    final matching = _classes.where((c) => c.classCode == code.toUpperCase()).toList();
+    final name = matching.isNotEmpty ? matching.first.name : 'Matematika';
+    return {
+      'success': true,
+      'class_name': name,
+      'message': '$name sinfiga muvaffaqiyatli qo‘shildingiz!',
+    };
   }
 
   @override

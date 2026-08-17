@@ -96,7 +96,12 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   }
 
   async redeemParentLinkCode(code: string): Promise<{ success: boolean; parentName?: string; message: string }> {
-    const link = this.links.find((l) => l.linkCode === code.trim().toUpperCase() && l.status === 'pending');
+    const cleanCode = code.trim().toUpperCase();
+    if (cleanCode.length !== 6) {
+      return { success: false, message: 'Ulanish kodi 6 ta belgidan iborat bo‘lishi lozim.' };
+    }
+
+    const link = this.links.find((l) => l.linkCode === cleanCode && l.status === 'pending');
     if (!link) {
       return { success: false, message: 'Yaroqsiz yoki muddati o‘tgan kod.' };
     }
@@ -112,12 +117,17 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   }
 
   async createTeacherClass(name: string, subject = 'Matematika', gradeLevel = '7-sinf'): Promise<TeacherClass> {
+    const cleanName = name.trim();
+    if (!cleanName) {
+      throw new Error('Sinf nomi bo‘sh bo‘lishi mumkin emas.');
+    }
+
     const id = 'class_' + Math.random().toString(36).substring(2, 9);
     const classCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const newClass: TeacherClass = {
       id,
       teacherUserId: 'teacher_user_01',
-      name,
+      name: cleanName,
       subject,
       gradeLevel,
       classCode,
@@ -134,9 +144,14 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   }
 
   async joinClassByCode(code: string): Promise<{ success: boolean; className?: string; subject?: string; message: string }> {
-    const targetClass = this.classes.find((c) => c.classCode === code.trim().toUpperCase());
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { success: false, message: 'Sinf kodini kiriting.' };
+    }
+
+    const targetClass = this.classes.find((c) => c.classCode === cleanCode);
     if (!targetClass) {
-      return { success: false, message: 'Bunday sinf kodi topilmadi.' };
+      return { success: false, message: 'Bunday sinf kodi topilmadi. Kodni tekshirib qayta kiriting.' };
     }
 
     this.classMembers.push({

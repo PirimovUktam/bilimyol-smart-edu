@@ -32,6 +32,7 @@ interface MonitoringState {
   joinedClasses: TeacherClass[];
 
   // Actions
+  loadUserRole: () => Promise<UserRole>;
   switchRole: (role: UserRole) => Promise<void>;
   fetchParentData: () => Promise<void>;
   selectChild: (studentId: string) => Promise<void>;
@@ -63,6 +64,16 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
   linkedParents: [],
   joinedClasses: [],
+
+  loadUserRole: async () => {
+    try {
+      const role = await repository.getUserRole();
+      set({ currentRole: role });
+      return role;
+    } catch {
+      return 'student';
+    }
+  },
 
   switchRole: async (role: UserRole) => {
     set({ currentRole: role, isLoading: true });
@@ -121,11 +132,15 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   },
 
   createParentLinkCode: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const { linkCode, expiresAt } = await repository.createParentLinkCode();
       set({ generatedLinkCode: { code: linkCode, expiresAt } });
       return linkCode;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bog‘lanish kodini yaratib bo‘lmadi.';
+      set({ error: msg });
+      throw new Error(msg);
     } finally {
       set({ isLoading: false });
     }
@@ -168,23 +183,27 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   },
 
   createTeacherClass: async (name: string, subject = 'Matematika', gradeLevel = '7-sinf') => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const newClass = await repository.createTeacherClass(name, subject, gradeLevel);
-      const updatedClasses = [newClass, ...get().classes];
+      const updatedClasses = [newClass, ...get().classes.filter(c => c.id !== newClass.id)];
       set({
         classes: updatedClasses,
         activeClass: newClass,
         classStudents: [],
       });
       return newClass;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Sinf yaratib bo‘lmadi.';
+      set({ error: msg });
+      throw new Error(msg);
     } finally {
       set({ isLoading: false });
     }
   },
 
   redeemParentLinkCode: async (code: string) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const res = await repository.redeemParentLinkCode(code);
       if (res.success) {
@@ -197,7 +216,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   },
 
   joinClassByCode: async (code: string) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const res = await repository.joinClassByCode(code);
       if (res.success) {

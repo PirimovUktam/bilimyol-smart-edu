@@ -8,6 +8,7 @@ export interface UserProfile {
   lastName: string;
   email: string;
   avatarUrl?: string;
+  role?: 'student' | 'parent' | 'teacher';
 }
 
 interface AuthContextType {
@@ -17,7 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
@@ -30,6 +31,7 @@ const defaultDemoProfile: UserProfile = {
   lastName: '',
   email: 'guest@bilimyol.uz',
   avatarUrl: '',
+  role: 'student',
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,9 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, display_name, email, avatar_url')
+        .select('id, first_name, last_name, display_name, email, avatar_url, role')
         .eq('id', userId)
         .maybeSingle();
+
+      const userRole = (data?.role as 'student' | 'parent' | 'teacher') || 'student';
 
       if (data && data.first_name && data.first_name !== 'Foydalanuvchi') {
         setProfile({
@@ -56,12 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastName: data.last_name || '',
           email: data.email || email,
           avatarUrl: data.avatar_url || '',
+          role: userRole,
         });
       } else {
         // Check user_metadata if profile row is missing or default
         const { data: userData } = await supabase.auth.getUser();
         const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
         const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
+        const metaRole = (userData.user?.user_metadata?.role as 'student' | 'parent' | 'teacher') || userRole;
         const resolvedFirst = data?.first_name || metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
         const resolvedLast = data?.last_name || metaLast || '';
         const resolvedDisplay = resolvedLast ? `${resolvedFirst} ${resolvedLast}` : resolvedFirst;
@@ -76,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             display_name: resolvedDisplay,
             email: email || userData.user?.email || '',
             avatar_url: data?.avatar_url || userData.user?.user_metadata?.avatar_url || null,
+            role: metaRole,
             updated_at: new Date().toISOString(),
           });
 
@@ -85,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastName: resolvedLast,
           email: email || userData.user?.email || '',
           avatarUrl: data?.avatar_url || '',
+          role: metaRole,
         });
       }
     } catch (err) {
@@ -94,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName: email ? email.split('@')[0] : 'Foydalanuvchi',
         lastName: '',
         email,
+        role: 'student',
       });
     } finally {
       setIsLoading(false);
@@ -189,13 +198,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: 'student' | 'parent' | 'teacher' = 'student'
+  ) => {
     if (!isSupabaseConfigured) {
       const newProf: UserProfile = {
         id: 'user_' + Date.now(),
         firstName,
         lastName,
         email,
+        role,
       };
       setProfile(newProf);
       setIsDemoMode(true);
@@ -211,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: {
           first_name: firstName,
           last_name: lastName,
+          role,
         },
       },
     });
@@ -230,6 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           last_name: lastName,
           display_name: displayName,
           email,
+          role,
           updated_at: new Date().toISOString(),
         });
       } catch (err) {
@@ -241,6 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName,
         lastName,
         email,
+        role,
       });
     }
 

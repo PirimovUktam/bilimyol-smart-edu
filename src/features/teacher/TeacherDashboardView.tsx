@@ -10,6 +10,7 @@ import {
   Search,
   CheckCircle,
   Copy,
+  AlertTriangle,
 } from 'lucide-react';
 import { useMonitoringStore } from '../../app/store/useMonitoringStore';
 import { Button } from '../../presentation/components/Button';
@@ -33,6 +34,9 @@ export const TeacherDashboardView: React.FC = () => {
   const [newGradeLevel, setNewGradeLevel] = useState('7-sinf');
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeacherData();
@@ -40,10 +44,29 @@ export const TeacherDashboardView: React.FC = () => {
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClassName.trim()) return;
-    await createTeacherClass(newClassName.trim(), newSubject, newGradeLevel);
-    setNewClassName('');
-    setIsCreateModalOpen(false);
+    setModalError(null);
+    setModalSuccess(null);
+
+    const cleanName = newClassName.trim();
+    if (!cleanName) {
+      setModalError('Iltimos, sinf nomini kiriting.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const created = await createTeacherClass(cleanName, newSubject, newGradeLevel);
+      setModalSuccess(`"${created.name}" sinfi muvaffaqiyatli ochildi! Kod: ${created.classCode}`);
+      setNewClassName('');
+      setTimeout(() => {
+        setIsCreateModalOpen(false);
+        setModalSuccess(null);
+      }, 1500);
+    } catch (err: unknown) {
+      setModalError(err instanceof Error ? err.message : 'Sinf yaratishda xatolik yuz berdi. Qayta urinib ko‘ring.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCopyClassCode = (code: string) => {
@@ -70,8 +93,8 @@ export const TeacherDashboardView: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-              O‘qituvchi Paneli
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              O‘qituvchi Boshqaruv Paneli
             </span>
             <span className="text-xs text-muted-foreground">• Sinf nazorati va pedagogik tahlil</span>
           </div>
@@ -86,7 +109,11 @@ export const TeacherDashboardView: React.FC = () => {
         <Button
           variant="primary"
           className="flex items-center gap-2 shadow-sm"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => {
+            setModalError(null);
+            setModalSuccess(null);
+            setIsCreateModalOpen(true);
+          }}
         >
           <PlusCircle className="w-4 h-4" />
           Yangi sinf ochish
@@ -102,9 +129,9 @@ export const TeacherDashboardView: React.FC = () => {
               <button
                 key={c.id}
                 onClick={() => selectClass(c.id)}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
                     : 'bg-card text-muted-foreground hover:text-foreground border border-border/50 hover:border-border'
                 }`}
               >
@@ -121,17 +148,24 @@ export const TeacherDashboardView: React.FC = () => {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State if no classes */}
       {classes.length === 0 && !isLoading && (
         <Card className="p-12 text-center border-dashed border-2">
-          <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Hali sinflar yaratilmagan</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Hali sinflar ochilmagan</h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
             O‘quvchilaringizni biriktirish va dars monitoringini boshlash uchun birinchi sinfingizni oching.
           </p>
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModalError(null);
+              setModalSuccess(null);
+              setIsCreateModalOpen(true);
+            }}
+          >
             Yangi sinf ochish
           </Button>
         </Card>
@@ -140,9 +174,9 @@ export const TeacherDashboardView: React.FC = () => {
       {activeClass && (
         <div className="space-y-6">
           {/* Class Code Banner */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-transparent border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-600/10 via-blue-600/10 to-transparent border border-indigo-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
                 {activeClass.gradeLevel.charAt(0)}
               </div>
               <div>
@@ -150,12 +184,12 @@ export const TeacherDashboardView: React.FC = () => {
                   <h3 className="font-bold text-foreground">{activeClass.name}</h3>
                   <Badge variant="slate">{activeClass.subject}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">O‘quvchilar qo‘shilishi uchun sinf kodi</p>
+                <p className="text-xs text-muted-foreground">O‘quvchilar qo‘shilishi uchun 6 xonali sinf kodi</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="px-3 py-1.5 rounded-xl bg-card border border-border flex items-center gap-2 font-mono font-bold text-blue-600 dark:text-blue-400 text-base">
+              <div className="px-3.5 py-1.5 rounded-xl bg-card border border-border flex items-center gap-2 font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-base tracking-widest">
                 <span>{activeClass.classCode}</span>
               </div>
               <Button
@@ -175,7 +209,7 @@ export const TeacherDashboardView: React.FC = () => {
             <Card className="p-5 border-border/60">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-muted-foreground">O‘quvchilar soni</span>
-                <Users className="w-4 h-4 text-blue-500" />
+                <Users className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="text-3xl font-extrabold text-foreground">{totalStudents}</div>
               <p className="text-xs text-muted-foreground mt-2">Sinf a’zolari ro‘yxatida</p>
@@ -193,7 +227,7 @@ export const TeacherDashboardView: React.FC = () => {
             <Card className="p-5 border-border/60">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-muted-foreground">Bugun faol o‘quvchilar</span>
-                <Clock className="w-4 h-4 text-purple-500" />
+                <Clock className="w-4 h-4 text-blue-500" />
               </div>
               <div className="text-3xl font-extrabold text-foreground">
                 {activeTodayCount} <span className="text-base text-muted-foreground font-normal">/ {totalStudents}</span>
@@ -228,7 +262,7 @@ export const TeacherDashboardView: React.FC = () => {
                   placeholder="O‘quvchi qidirish..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -321,17 +355,32 @@ export const TeacherDashboardView: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-foreground">Yangi Sinf Yaratish</h2>
               <button
+                type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground text-sm font-semibold"
+                className="text-muted-foreground hover:text-foreground text-sm font-semibold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
+            {modalError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 text-rose-700 text-xs font-semibold">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{modalError}</span>
+              </div>
+            )}
+
+            {modalSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2 text-emerald-700 text-xs font-semibold">
+                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{modalSuccess}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreateClass} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1">
-                  Sinf Nomi
+                  Sinf Nomi *
                 </label>
                 <input
                   type="text"
@@ -339,7 +388,8 @@ export const TeacherDashboardView: React.FC = () => {
                   value={newClassName}
                   onChange={(e) => setNewClassName(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 />
               </div>
 
@@ -350,7 +400,8 @@ export const TeacherDashboardView: React.FC = () => {
                 <select
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="Matematika">Matematika</option>
                   <option value="Ingliz tili">Ingliz tili</option>
@@ -364,7 +415,8 @@ export const TeacherDashboardView: React.FC = () => {
                 <select
                   value={newGradeLevel}
                   onChange={(e) => setNewGradeLevel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="5-sinf">5-sinf</option>
                   <option value="6-sinf">6-sinf</option>
@@ -379,11 +431,17 @@ export const TeacherDashboardView: React.FC = () => {
                   type="button"
                   variant="secondary"
                   className="w-1/2"
+                  disabled={isSubmitting}
                   onClick={() => setIsCreateModalOpen(false)}
                 >
                   Bekor qilish
                 </Button>
-                <Button type="submit" variant="primary" className="w-1/2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-1/2"
+                  isLoading={isSubmitting}
+                >
                   Sinfni ochish
                 </Button>
               </div>

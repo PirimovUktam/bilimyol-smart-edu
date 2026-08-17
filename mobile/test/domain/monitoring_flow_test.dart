@@ -3,7 +3,7 @@ import 'package:bilimyol_mobile/domain/entities/monitoring_entities.dart';
 import 'package:bilimyol_mobile/data/repositories/in_memory_monitoring_repository.dart';
 
 void main() {
-  group('Parent + Teacher Monitoring System Tests (Flutter)', () {
+  group('Parent + Teacher Monitoring & Security Tests (Flutter)', () {
     late InMemoryMonitoringRepository monitoringRepo;
 
     setUp(() {
@@ -14,8 +14,9 @@ void main() {
     test('creates parent link code and allows child to redeem', () async {
       final codeRes = await monitoringRepo.createParentLinkCode();
       expect(codeRes['link_code'], isNotNull);
+      expect(codeRes['link_code']!.length, equals(6));
 
-      final redeemRes = await monitoringRepo.redeemParentLinkCode(codeRes['link_code']);
+      final redeemRes = await monitoringRepo.redeemParentLinkCode(codeRes['link_code']!);
       expect(redeemRes['success'], isTrue);
     });
 
@@ -33,13 +34,21 @@ void main() {
       final newClass = await monitoringRepo.createTeacherClass('7-A Sinf');
       expect(newClass.name, equals('7-A Sinf'));
       expect(newClass.classCode, isNotNull);
+      expect(newClass.classCode.length, greaterThanOrEqualTo(4));
 
       final students = await monitoringRepo.getClassStudents(newClass.id);
       expect(students.length, equals(3));
       expect(students.any((s) => s.status == 'E’tibor'), isTrue);
     });
 
-    test('switches user role between student, parent, and teacher', () async {
+    test('student joins teacher class by unique code', () async {
+      final newClass = await monitoringRepo.createTeacherClass('8-B Algebra');
+      final joinRes = await monitoringRepo.joinClassByCode(newClass.classCode);
+      expect(joinRes['success'], isTrue);
+      expect(joinRes['class_name'], equals('8-B Algebra'));
+    });
+
+    test('switches user role between student, parent, and teacher authoritatively', () async {
       expect(await monitoringRepo.getUserRole(), equals(UserRole.student));
 
       await monitoringRepo.setUserRole(UserRole.parent);

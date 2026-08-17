@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2, GraduationCap, Users, BookOpen } from 'lucide-react';
 import { useAuth } from '../../core/context/AuthContext';
 import { BilimYolLogo } from '../../presentation/components/BilimYolLogo';
 import { Button } from '../../presentation/components/Button';
@@ -16,6 +16,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   onNavigateLogin,
 }) => {
   const { signUp } = useAuth();
+  const [role, setRole] = useState<'student' | 'parent' | 'teacher'>('student');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -46,7 +47,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
     }
 
     setIsSubmitting(true);
-    const { error } = await signUp(email.trim(), password, firstName.trim(), lastName.trim());
+    const { error } = await signUp(email.trim(), password, firstName.trim(), lastName.trim(), role);
     setIsSubmitting(false);
 
     if (error) {
@@ -74,12 +75,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
             Hisob yaratish
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            BilimYo‘l platformasida individual o‘quv yo‘lingizni boshlang
+            BilimYo‘l platformasida hisob turini tanlang va boshlang
           </p>
         </div>
 
         <Card className="p-7 shadow-xl border-slate-200">
-          <form onSubmit={handleRegister} className="space-y-3.5">
+          <form onSubmit={handleRegister} className="space-y-4">
             {errorMsg && (
               <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -93,6 +94,53 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                 <span>{successMsg}</span>
               </div>
             )}
+
+            {/* Role Selection */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Hisob turi *
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole('student')}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold ${
+                    role === 'student'
+                      ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm ring-1 ring-blue-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>O‘quvchi</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('parent')}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold ${
+                    role === 'parent'
+                      ? 'bg-emerald-50 border-emerald-600 text-emerald-700 shadow-sm ring-1 ring-emerald-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Ota-ona</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('teacher')}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold ${
+                    role === 'teacher'
+                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-sm ring-1 ring-indigo-600'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span>O‘qituvchi</span>
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -162,7 +210,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Parolni tasdiqlang *
+                Parolni takrorlang *
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -180,24 +228,25 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
             <Button
               type="submit"
               variant="primary"
-              size="lg"
-              className="w-full mt-3"
+              className="w-full mt-2"
               isLoading={isSubmitting}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Ro‘yxatdan o‘tish
+              <span>Ro‘yxatdan o‘tish</span>
+              <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </form>
 
-          <div className="mt-5 text-center text-xs text-slate-500">
-            Hisobingiz bormi?{' '}
-            <button
-              type="button"
-              onClick={onNavigateLogin}
-              className="font-bold text-blue-600 hover:underline cursor-pointer"
-            >
-              Kirish
-            </button>
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500">
+              Hisobingiz bormi?{' '}
+              <button
+                type="button"
+                onClick={onNavigateLogin}
+                className="font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+              >
+                Kirish
+              </button>
+            </p>
           </div>
         </Card>
       </motion.div>
