@@ -13,6 +13,7 @@ import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
 import { ProfileView } from '@/features/profile/ProfileView';
 import { ParentDashboardView } from '@/features/parent/ParentDashboardView';
 import { TeacherDashboardView } from '@/features/teacher/TeacherDashboardView';
+import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
@@ -35,7 +36,8 @@ export type AppView =
   | 'forgot-password'
   | 'profile'
   | 'parent'
-  | 'teacher';
+  | 'teacher'
+  | 'admin';
 
 export const AppRouter: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('course-selection');
@@ -65,7 +67,9 @@ export const AppRouter: React.FC = () => {
   // Adjust landing view when role is resolved
   useEffect(() => {
     if (authProfile) {
-      if (authProfile.role === 'parent' && currentView === 'course-selection') {
+      if (authProfile.role === 'admin' && currentView === 'course-selection') {
+        setCurrentView('admin');
+      } else if (authProfile.role === 'parent' && currentView === 'course-selection') {
         setCurrentView('parent');
       } else if (authProfile.role === 'teacher' && currentView === 'course-selection') {
         setCurrentView('teacher');
@@ -107,7 +111,8 @@ export const AppRouter: React.FC = () => {
   // Role Guard validation
   const isAccessDenied =
     (currentView === 'parent' && userRole !== 'parent') ||
-    (currentView === 'teacher' && userRole !== 'teacher');
+    (currentView === 'teacher' && userRole !== 'teacher') ||
+    (currentView === 'admin' && userRole !== 'admin');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
@@ -127,12 +132,12 @@ export const AppRouter: React.FC = () => {
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">Ruxsat Cheklangan</h2>
               <p className="text-sm text-slate-600 mb-6">
-                Ushbu panelga kirish faqat {currentView === 'parent' ? 'ota-onalar' : 'o‘qituvchilar'} uchun ruxsat etilgan.
-                Sizning joriy hisob turingiz: <strong>{userRole === 'student' ? 'O‘quvchi' : userRole === 'parent' ? 'Ota-ona' : 'O‘qituvchi'}</strong>.
+                Ushbu panelga kirish faqat {currentView === 'parent' ? 'ota-onalar' : currentView === 'teacher' ? 'o‘qituvchilar' : 'administratorlar'} uchun ruxsat etilgan.
+                Sizning joriy hisob turingiz: <strong>{userRole === 'student' ? 'O‘quvchi' : userRole === 'parent' ? 'Ota-ona' : userRole === 'teacher' ? 'O‘qituvchi' : 'Administrator'}</strong>.
               </p>
               <Button
                 variant="primary"
-                onClick={() => setCurrentView(userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
+                onClick={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
               >
                 O‘z panelingizga qaytish
               </Button>
@@ -142,7 +147,7 @@ export const AppRouter: React.FC = () => {
           <>
             {currentView === 'login' && (
               <LoginView
-                onSuccess={() => setCurrentView(userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
+                onSuccess={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
                 onNavigateRegister={() => setCurrentView('register')}
                 onNavigateForgotPassword={() => setCurrentView('forgot-password')}
               />
@@ -150,7 +155,7 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'register' && (
               <RegisterView
-                onSuccess={() => setCurrentView(userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
+                onSuccess={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'course-selection')}
                 onNavigateLogin={() => setCurrentView('login')}
               />
             )}
@@ -212,13 +217,11 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
-            {currentView === 'parent' && (
-              <ParentDashboardView />
-            )}
+            {currentView === 'parent' && <ParentDashboardView />}
 
-            {currentView === 'teacher' && (
-              <TeacherDashboardView />
-            )}
+            {currentView === 'teacher' && <TeacherDashboardView />}
+
+            {currentView === 'admin' && <AdminDashboardView />}
           </>
         )}
       </main>
@@ -227,7 +230,7 @@ export const AppRouter: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
-            <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona va O‘qituvchi Yagona Ekotizimi
+            <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
           </span>
           <span className="text-slate-400">
             {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}

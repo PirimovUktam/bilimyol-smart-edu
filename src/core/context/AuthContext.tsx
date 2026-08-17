@@ -8,7 +8,7 @@ export interface UserProfile {
   lastName: string;
   email: string;
   avatarUrl?: string;
-  role?: 'student' | 'parent' | 'teacher';
+  role?: 'student' | 'parent' | 'teacher' | 'admin';
 }
 
 interface AuthContextType {
@@ -18,7 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher') => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher' | 'admin') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
@@ -203,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string,
     firstName: string,
     lastName: string,
-    role: 'student' | 'parent' | 'teacher' = 'student'
+    role: 'student' | 'parent' | 'teacher' | 'admin' = 'student'
   ) => {
     if (!isSupabaseConfigured) {
       const newProf: UserProfile = {

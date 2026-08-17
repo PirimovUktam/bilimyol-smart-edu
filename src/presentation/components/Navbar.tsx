@@ -13,6 +13,7 @@ import {
   Users,
   GraduationCap,
   Link2,
+  ShieldAlert,
 } from 'lucide-react';
 import { StudentConnectionsModal } from '@/features/student/StudentConnectionsModal';
 
@@ -90,6 +91,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     <span>O‘qituvchi Paneli</span>
                   </button>
                 )}
+
+                {userRole === 'admin' && (
+                  <button
+                    onClick={() => onNavigate('admin')}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-200"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-purple-600" />
+                    <span>Boshqaruv (Admin)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -110,6 +121,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 {userRole === 'teacher' && (
                   <span className="text-indigo-700 bg-indigo-50 border-indigo-200 px-2 py-0.5 rounded-lg border">
                     👨‍🏫 O‘qituvchi
+                  </span>
+                )}
+                {userRole === 'admin' && (
+                  <span className="text-purple-700 bg-purple-50 border-purple-200 px-2 py-0.5 rounded-lg border flex items-center gap-1 font-bold">
+                    ⚡ Administrator
                   </span>
                 )}
               </div>

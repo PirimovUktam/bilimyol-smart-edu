@@ -67,12 +67,30 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
     },
   ];
 
+  private hasAdminBeenClaimed = false;
+
   async getUserRole(): Promise<UserRole> {
     return this.currentRole;
   }
 
   async setUserRole(role: UserRole): Promise<void> {
     this.currentRole = role;
+  }
+
+  async claimFirstAdminRole(_bootstrapKey = ''): Promise<{ success: boolean; message: string }> {
+    if (this.hasAdminBeenClaimed) {
+      return {
+        success: false,
+        message: 'Tizimda bosh administrator allaqachon mavjud. Qayta bootstrap qilish bloklangan.',
+      };
+    }
+
+    this.hasAdminBeenClaimed = true;
+    this.currentRole = 'admin';
+    return {
+      success: true,
+      message: 'Tabriklaymiz! Siz platforma bosh administratori sifatida muvaffaqiyatli faollashtirildingiz.',
+    };
   }
 
   async redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }> {
@@ -419,6 +437,7 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
 
   resetAll(): void {
     this.currentRole = 'student';
+    this.hasAdminBeenClaimed = false;
     this.links = [];
     this.classes = [];
     this.classMembers = [];
