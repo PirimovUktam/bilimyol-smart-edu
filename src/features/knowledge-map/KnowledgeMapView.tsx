@@ -6,6 +6,7 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { GetKnowledgeMapUseCase, KnowledgeMapData } from '@/domain/usecases/GetKnowledgeMapUseCase';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
 import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
@@ -34,8 +35,11 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
     );
   }
 
-  const isMath = activeCourse.subject === 'mathematics';
   const weakest = mapData.weakestSkill;
+  const weakestSkillName = weakest
+    ? activeCourseSkills.find((s) => s.id === weakest.skillId)?.name || 'Ko‘nikma'
+    : 'Ko‘nikma';
+  const overallScore = mapData.overallScore;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -43,19 +47,19 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant={isMath ? 'blue' : 'teal'} size="sm">
+            <Badge variant="blue" size="sm">
               <Compass className="w-3.5 h-3.5 mr-1" />
-              Bilim Xaritasi (Knowledge Map)
+              Bilim Xaritasi
             </Badge>
             <span className="text-xs font-semibold text-slate-500">
-              {activeCourse.title}
+              {activeCourse.title} • Umumiy natija: {overallScore}%
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Ko‘nikmalar Tahlili va Natijalar
+            Ko‘nikmalar Tahlili va Diagnostika Natijasi
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Placement Test natijalariga ko‘ra aniqlangan har bir ko‘nikma darajasi
+            Haqiqiy javoblaringiz asosida hisoblangan har bir ko‘nikma darajasi
           </p>
         </div>
 
@@ -65,12 +69,12 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
           onClick={onProceedToRoadmap}
           rightIcon={<ArrowRight className="w-5 h-5" />}
         >
-          Moslashuvchan Yo‘l Xaritasi
+          Shaxsiy Yo‘l Xaritasi
         </Button>
       </div>
 
       {/* Weakest Skill Alert Banner */}
-      {weakest && (
+      {weakest && weakest.score < 50 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -87,13 +91,11 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                   DIQQAT: Zaif Bo‘g‘in Aniqlandi
                 </span>
                 <span className="text-sm font-extrabold text-amber-950">
-                  {isMath ? 'Funksiyalar — 41%' : 'Listening — 43%'}
+                  {weakestSkillName} — {weakest.score}%
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-amber-900/90 font-medium">
-                {isMath
-                  ? 'Funksiya qiymatini hisoblashda formuladagi ozod sonni hisobga olish bo‘yicha bo‘shliq aniqlandi. Yo‘l xaritangizga mustahkamlash darsi qo‘shildi.'
-                  : 'Ingliz tilida vaqt ko‘rsatkichlarini ("quarter to", "not at...") farqlashda tushunchani mustahkamlash talab etiladi.'}
+                {weakestSkillName} bo‘yicha tushunchalarda bo‘shliq aniqlandi ({weakest.score}%). Shaxsiy yo‘l xaritangizga ushbu ko‘nikmani mustahkamlash qadami qo‘shildi.
               </p>
             </div>
           </div>
@@ -113,8 +115,9 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {activeCourseSkills.map((skill, idx) => {
           const scoreObj = mapData.scores[skill.id];
-          const score = scoreObj ? scoreObj.score : (isMath && skill.id.includes('functions') ? 41 : 75);
+          const score = scoreObj ? scoreObj.score : 0;
           const isWeak = score < 50;
+          const levelLabel = SkillScoringEngine.getMasteryLabelUz(score);
 
           return (
             <motion.div
@@ -138,11 +141,11 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                       </span>
                       {isWeak ? (
                         <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> DIQQAT FOKUS
+                          <AlertTriangle className="w-3 h-3" /> {levelLabel}
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> Yaxshi
+                          <CheckCircle2 className="w-3 h-3" /> {levelLabel}
                         </span>
                       )}
                     </div>
@@ -158,7 +161,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                     >
                       {score}%
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400">O‘zlashtirish</span>
+                    <span className="text-[10px] font-semibold text-slate-400">Haqiqiy Ko‘rsatkich</span>
                   </div>
                 </div>
 
@@ -178,7 +181,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-500 font-medium">
                     <span>0%</span>
-                    <span>50% (Min talab)</span>
+                    <span>50% (Mustahkamlash chegarasi)</span>
                     <span>100%</span>
                   </div>
                 </div>
@@ -196,12 +199,12 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
             <span>Yo‘lchi AI Tavsiyasi</span>
           </div>
           <h4 className="text-lg font-bold text-white">
-            {isMath
-              ? 'Funksiyalar bo‘yicha 10 daqiqalik interaktiv dars rejalashtirildi'
-              : 'Listening bo‘yicha 12 daqiqalik audio simulyatsiya tayyorlandi'}
+            {weakest
+              ? `${weakestSkillName} bo‘yicha interaktiv dars va mustahkamlash rejalashtirildi`
+              : 'Darslar rejalashtirildi'}
           </h4>
           <p className="text-xs text-slate-400">
-            Darsdagi xatolar tahlil qilinib, natijangiz mustahkamlangach, keyingi bosqich ochiladi.
+            Darsdagi har bir javobingiz tahlil qilinib, bilim darajangiz real vaqtda qayta hisoblanadi.
           </p>
         </div>
 

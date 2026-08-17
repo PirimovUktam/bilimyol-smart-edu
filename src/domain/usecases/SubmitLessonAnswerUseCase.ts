@@ -1,4 +1,5 @@
 import { IAITutorService, AIExplanationResponse } from '@/data/services/IAITutorService';
+import { ILearnerRepository } from '../repositories/ILearnerRepository';
 import { Question } from '../entities/Question';
 
 export interface LessonAnswerResult {
@@ -9,16 +10,33 @@ export interface LessonAnswerResult {
 }
 
 export class SubmitLessonAnswerUseCase {
-  constructor(private aiTutorService: IAITutorService) {}
+  constructor(
+    private aiTutorService: IAITutorService,
+    private learnerRepo?: ILearnerRepository
+  ) {}
 
   async execute(
     question: Question,
     selectedIndex: number,
-    learnerName?: string
+    learnerName?: string,
+    lessonId?: string
   ): Promise<LessonAnswerResult> {
     const isCorrect = selectedIndex === question.correctIndex;
     const selectedOption = question.options[selectedIndex] || '';
     const correctOption = question.options[question.correctIndex] || '';
+
+    // Log answer attempt if repository provided
+    if (this.learnerRepo) {
+      await this.learnerRepo.recordAnswerAttempt({
+        courseId: question.courseId,
+        skillId: question.skillId,
+        lessonId: lessonId || 'lesson_general',
+        questionId: question.id,
+        selectedIndex,
+        selectedAnswer: selectedOption,
+        isCorrect,
+      });
+    }
 
     if (isCorrect) {
       return {

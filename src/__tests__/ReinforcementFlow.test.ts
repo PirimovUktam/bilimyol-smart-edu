@@ -34,7 +34,7 @@ describe('ReinforcementFlow', () => {
       'skill_math_functions',
       'reinf_node_math_func',
       lesson!.reinforcementExercise,
-      1 // Correct answer ('8')
+      lesson!.reinforcementExercise.correctIndex // Correct answer
     );
 
     expect(result.isCorrect).toBe(true);

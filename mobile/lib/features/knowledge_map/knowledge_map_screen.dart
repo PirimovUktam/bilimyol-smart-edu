@@ -9,6 +9,7 @@ import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/demo_control_bar.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/skill_score.dart';
+import '../../domain/personalization/skill_scoring_engine.dart';
 
 class KnowledgeMapScreen extends ConsumerWidget {
   const KnowledgeMapScreen({super.key});
@@ -43,18 +44,13 @@ class KnowledgeMapScreen extends ConsumerWidget {
                   final skills = courseState.activeSkills;
 
                   SkillScore? weakestSkill;
-                  int totalScore = 0;
-                  int count = 0;
-
                   for (final s in scores.values) {
-                    totalScore += s.score;
-                    count++;
                     if (weakestSkill == null || s.score < weakestSkill.score) {
                       weakestSkill = s;
                     }
                   }
 
-                  final avgScore = count > 0 ? (totalScore / count).round() : 0;
+                  final avgScore = SkillScoringEngine.computeOverallScore(scores);
                   final weakestSkillObj = skills.where((s) => s.id == weakestSkill?.skillId).firstOrNull;
 
                   return SingleChildScrollView(
@@ -121,7 +117,7 @@ class KnowledgeMapScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 14),
                               Text(
-                                'Diagnostic Placement natijalari asosida shaxsiy o‘quv yo‘nalishingiz shakllantirildi.',
+                                'Haqiqiy javoblaringiz tahlili asosida bilim xaritangiz shakllantirildi.',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12.5,
                                   color: const Color(0xFFCBD5E1),
@@ -215,13 +211,13 @@ class KnowledgeMapScreen extends ConsumerWidget {
 
                         ...skills.map((skill) {
                           final scoreObj = scores[skill.id];
-                          final score = scoreObj?.score ?? 50;
+                          final score = scoreObj?.score ?? 0;
                           final isWeak = weakestSkill?.skillId == skill.id && score < 50;
 
                           Color progressColor = AppColors.primary;
-                          if (score < 50) {
+                          if (score < 40) {
                             progressColor = AppColors.error;
-                          } else if (score < 70) {
+                          } else if (score < 60) {
                             progressColor = AppColors.warning;
                           } else if (score >= 80) {
                             progressColor = AppColors.success;
@@ -252,13 +248,11 @@ class KnowledgeMapScreen extends ConsumerWidget {
                                                     color: AppColors.textPrimary,
                                                   ),
                                                 ),
-                                                if (isWeak) ...[
-                                                  const SizedBox(width: 6),
-                                                  const AppBadge(
-                                                    text: 'Fokus',
-                                                    variant: AppBadgeVariant.rose,
-                                                  ),
-                                                ],
+                                                const SizedBox(width: 6),
+                                                AppBadge(
+                                                  text: SkillScoringEngine.getMasteryLabelUz(score),
+                                                  variant: isWeak ? AppBadgeVariant.rose : AppBadgeVariant.blue,
+                                                ),
                                               ],
                                             ),
                                             const SizedBox(height: 2),

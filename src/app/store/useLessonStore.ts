@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import { Lesson } from '@/domain/entities/Lesson';
 import { inMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
 import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
-import { demoAITutorService } from '@/data/services/DemoAITutorService';
+import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
 import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases/SubmitLessonAnswerUseCase';
+
+const aiService = new GeminiAITutorService();
 
 interface LessonState {
   currentLesson: Lesson | null;
@@ -75,8 +77,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
     set({ isEvaluatingAnswer: true, selectedAnswerIndex: selectedIndex });
 
-    const useCase = new SubmitLessonAnswerUseCase(demoAITutorService);
-    const result = await useCase.execute(currentStep.interactiveQuestion, selectedIndex, 'Azizbek');
+    const useCase = new SubmitLessonAnswerUseCase(aiService, inMemoryLearnerRepository);
+    const result = await useCase.execute(
+      currentStep.interactiveQuestion,
+      selectedIndex,
+      'Azizbek',
+      currentLesson.id
+    );
 
     if (result.isCorrect) {
       await inMemoryLearnerRepository.markLessonCompleted(currentLesson.id);

@@ -8,6 +8,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/demo_control_bar.dart';
 import '../../app/providers.dart';
+import '../../domain/personalization/skill_scoring_engine.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -40,12 +41,25 @@ class DashboardScreen extends ConsumerWidget {
                 error: (e, _) => Center(child: Text('Xatolik: $e')),
                 data: (profile) {
                   final courseScores = profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
+                  final overallScore = SkillScoringEngine.computeOverallScore(courseScores);
 
-                  // Get focus skill score
-                  final focusSkillId = activeCourse?.id == 'course_math_01'
-                      ? 'skill_math_functions'
-                      : 'skill_eng_listening';
-                  final focusScore = courseScores[focusSkillId]?.score ?? 63;
+                  // Find weakest and strongest skills dynamically
+                  String weakestSkillName = 'Funksiyalar';
+                  int weakestScore = 100;
+                  String strongestSkillName = 'Algebra';
+                  int strongestScore = 0;
+
+                  for (final sk in courseState.activeSkills) {
+                    final sc = courseScores[sk.id]?.score ?? 0;
+                    if (sc >= strongestScore) {
+                      strongestScore = sc;
+                      strongestSkillName = sk.name;
+                    }
+                    if (sc <= weakestScore) {
+                      weakestScore = sc;
+                      weakestSkillName = sk.name;
+                    }
+                  }
 
                   final nextActionTitle = activeCourse?.id == 'course_math_01'
                       ? 'Grafiklar: Koordinatalar tekisligida chizish'
@@ -73,7 +87,7 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Bugungi rejangiz muvaffaqiyatli yangilandi.',
+                                  'Shaxsiy adaptiv ta’lim yo‘lingiz ko‘rsatkichlari.',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12.5,
                                     color: AppColors.textSecondary,
@@ -172,18 +186,18 @@ class DashboardScreen extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.trending_up_rounded, color: AppColors.success, size: 20),
+                                    const Icon(Icons.trending_up_rounded, color: AppColors.primary, size: 20),
                                     const SizedBox(height: 6),
                                     Text(
-                                      '$focusScore%',
+                                      '$overallScore%',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.success,
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                     Text(
-                                      'Joriy fokus',
+                                      'Umumiy bilim',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 11,
                                         color: AppColors.textMuted,
@@ -231,7 +245,7 @@ class DashboardScreen extends ConsumerWidget {
                                             ),
                                           ),
                                           Text(
-                                            'Mustahkamlangan ko‘nikma',
+                                            'Fokus ko‘nikma: $weakestSkillName ($weakestScore%)',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 11.5,
                                               color: AppColors.textMuted,
@@ -242,7 +256,7 @@ class DashboardScreen extends ConsumerWidget {
                                     ],
                                   ),
                                   AppBadge(
-                                    text: '$focusScore%',
+                                    text: '$overallScore%',
                                     variant: AppBadgeVariant.emerald,
                                     fontSize: 13,
                                   ),
@@ -250,9 +264,7 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                activeCourse?.id == 'course_math_01'
-                                    ? 'Funksiyalar mavzusi 41% dan 63% ga ko‘tarildi va muvaffaqiyatli mustahkamlandi.'
-                                    : 'Listening ko‘nikmasi 43% dan 65% ga ko‘tarildi va mustahkamlandi.',
+                                'Eng kuchli mavzu: $strongestSkillName ($strongestScore%). Real vaqtda barcha ko‘nikmalar qayta hisoblanadi.',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,

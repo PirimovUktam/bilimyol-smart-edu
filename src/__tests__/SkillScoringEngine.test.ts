@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { SkillScoringEngine } from '../domain/personalization/SkillScoringEngine';
-import { PLACEMENT_QUESTIONS } from '../data/datasources/questions';
-import { QuestionAnswerSubmission } from '../domain/entities/Question';
+import { Question, QuestionAnswerSubmission } from '../domain/entities/Question';
 
-describe('SkillScoringEngine', () => {
+describe('Real Adaptive Learning - SkillScoringEngine', () => {
   it('should clamp scores strictly between 0 and 100', () => {
     expect(SkillScoringEngine.clampScore(-15)).toBe(0);
     expect(SkillScoringEngine.clampScore(125)).toBe(100);
@@ -11,61 +10,81 @@ describe('SkillScoringEngine', () => {
     expect(SkillScoringEngine.clampScore(NaN)).toBe(0);
   });
 
-  it('should classify mastery levels accurately', () => {
-    expect(SkillScoringEngine.getMasteryLevel(41)).toBe('needs_remediation');
-    expect(SkillScoringEngine.getMasteryLevel(55)).toBe('developing');
-    expect(SkillScoringEngine.getMasteryLevel(74)).toBe('proficient');
-    expect(SkillScoringEngine.getMasteryLevel(92)).toBe('mastered');
+  it('should calculate exact mathematical percentages (10/10 -> 100%, 0/10 -> 0%, 5/10 -> 50%, 7/12 -> 58%)', () => {
+    expect(SkillScoringEngine.computeSkillScore(10, 10)).toBe(100);
+    expect(SkillScoringEngine.computeSkillScore(0, 10)).toBe(0);
+    expect(SkillScoringEngine.computeSkillScore(5, 10)).toBe(50);
+    expect(SkillScoringEngine.computeSkillScore(7, 12)).toBe(58);
+    expect(SkillScoringEngine.computeSkillScore(0, 0)).toBe(0);
   });
 
-  it('should compute calibrated placement scores for Mathematics', () => {
-    const mathQuestions = PLACEMENT_QUESTIONS['course_math_01'];
-    // Submit Q1 (Algebra) correct, Q2 (Equations) correct, Q3 (Functions) wrong, Q4 (Graphs) correct, Q5 (Functions) wrong
-    const submissions: QuestionAnswerSubmission[] = [
-      { questionId: 'q_math_p1', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_math_p2', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_math_p3', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
-      { questionId: 'q_math_p4', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_math_p5', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
+  it('should classify central mastery level thresholds correctly (0-39 Boshlang‘ich, 40-59 Rivojlanmoqda, 60-79 O‘rta, 80-100 Yuqori)', () => {
+    expect(SkillScoringEngine.getMasteryLevel(0)).toBe('needs_remediation');
+    expect(SkillScoringEngine.getMasteryLevel(39)).toBe('needs_remediation');
+    expect(SkillScoringEngine.getMasteryLabelUz(35)).toBe('Boshlang‘ich');
+
+    expect(SkillScoringEngine.getMasteryLevel(40)).toBe('developing');
+    expect(SkillScoringEngine.getMasteryLevel(59)).toBe('developing');
+    expect(SkillScoringEngine.getMasteryLabelUz(50)).toBe('Rivojlanmoqda');
+
+    expect(SkillScoringEngine.getMasteryLevel(60)).toBe('proficient');
+    expect(SkillScoringEngine.getMasteryLevel(79)).toBe('proficient');
+    expect(SkillScoringEngine.getMasteryLabelUz(70)).toBe('O‘rta');
+
+    expect(SkillScoringEngine.getMasteryLevel(80)).toBe('mastered');
+    expect(SkillScoringEngine.getMasteryLevel(100)).toBe('mastered');
+    expect(SkillScoringEngine.getMasteryLabelUz(95)).toBe('Yuqori');
+  });
+
+  it('should compute confidence metrics based on attempt count', () => {
+    expect(SkillScoringEngine.computeConfidence(1)).toBe('low');
+    expect(SkillScoringEngine.computeConfidence(2)).toBe('low');
+    expect(SkillScoringEngine.computeConfidence(3)).toBe('medium');
+    expect(SkillScoringEngine.computeConfidence(5)).toBe('medium');
+    expect(SkillScoringEngine.computeConfidence(6)).toBe('high');
+    expect(SkillScoringEngine.computeConfidence(15)).toBe('high');
+  });
+
+  it('should compute overall knowledge score as exact arithmetic mean', () => {
+    const scores = {
+      skill_math_algebra: { skillId: 'skill_math_algebra', courseId: 'c1', score: 80, lastUpdated: 0, masteryLevel: 'mastered' as const },
+      skill_math_equations: { skillId: 'skill_math_equations', courseId: 'c1', score: 60, lastUpdated: 0, masteryLevel: 'proficient' as const },
+      skill_math_functions: { skillId: 'skill_math_functions', courseId: 'c1', score: 40, lastUpdated: 0, masteryLevel: 'developing' as const },
+      skill_math_graphs: { skillId: 'skill_math_graphs', courseId: 'c1', score: 70, lastUpdated: 0, masteryLevel: 'proficient' as const },
+    };
+
+    // (80 + 60 + 40 + 70) / 4 = 250 / 4 = 62.5 -> 63%
+    expect(SkillScoringEngine.computeOverallScore(scores)).toBe(63);
+  });
+
+  it('should compute real placement scores from actual question responses', () => {
+    const questions: Question[] = [
+      { id: 'q1', courseId: 'math', skillId: 'alg', text: 'T1', options: ['A', 'B'], correctIndex: 0, difficulty: 'medium', explanation: 'E' },
+      { id: 'q2', courseId: 'math', skillId: 'alg', text: 'T2', options: ['A', 'B'], correctIndex: 0, difficulty: 'medium', explanation: 'E' },
+      { id: 'q3', courseId: 'math', skillId: 'func', text: 'T3', options: ['A', 'B'], correctIndex: 0, difficulty: 'medium', explanation: 'E' },
+      { id: 'q4', courseId: 'math', skillId: 'func', text: 'T4', options: ['A', 'B'], correctIndex: 0, difficulty: 'medium', explanation: 'E' },
     ];
 
-    const scores = SkillScoringEngine.computePlacementScores('course_math_01', mathQuestions, submissions);
-
-    expect(scores['skill_math_algebra'].score).toBe(82);
-    expect(scores['skill_math_equations'].score).toBe(74);
-    expect(scores['skill_math_functions'].score).toBe(41); // Weakest focus
-    expect(scores['skill_math_graphs'].score).toBe(68);
-    expect(scores['skill_math_functions'].isWeakestFocus).toBe(true);
-  });
-
-  it('should compute calibrated placement scores for English', () => {
-    const engQuestions = PLACEMENT_QUESTIONS['course_eng_01'];
-    // Submit Q1, Q2, Q4 correct; Miss Q3 & Q5 (Listening)
+    // Alg: 2/2 correct (100%), Func: 0/2 correct (0%)
     const submissions: QuestionAnswerSubmission[] = [
-      { questionId: 'q_eng_p1', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_eng_p2', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_eng_p3', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
-      { questionId: 'q_eng_p4', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
-      { questionId: 'q_eng_p5', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
+      { questionId: 'q1', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
+      { questionId: 'q2', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 5 },
+      { questionId: 'q3', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
+      { questionId: 'q4', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 5 },
     ];
 
-    const scores = SkillScoringEngine.computePlacementScores('course_eng_01', engQuestions, submissions);
+    const result = SkillScoringEngine.computePlacementScores('math', questions, submissions);
 
-    expect(scores['skill_eng_vocab'].score).toBe(84);
-    expect(scores['skill_eng_grammar'].score).toBe(72);
-    expect(scores['skill_eng_listening'].score).toBe(43); // Weakest focus
-    expect(scores['skill_eng_reading'].score).toBe(79);
-    expect(scores['skill_eng_listening'].isWeakestFocus).toBe(true);
+    expect(result['alg'].score).toBe(100);
+    expect(result['alg'].masteryLevel).toBe('mastered');
+    expect(result['func'].score).toBe(0);
+    expect(result['func'].masteryLevel).toBe('needs_remediation');
+    expect(result['func'].isWeakestFocus).toBe(true);
   });
 
-  it('should calculate reinforcement score boost correctly', () => {
-    const mathBoosted = SkillScoringEngine.calculateReinforcementScore(41);
-    expect(mathBoosted).toBe(63); // 41 + 22 = 63
-
-    const engBoosted = SkillScoringEngine.calculateReinforcementScore(43);
-    expect(engBoosted).toBe(65); // 43 + 22 = 65
-
-    const maxCapped = SkillScoringEngine.calculateReinforcementScore(95);
-    expect(maxCapped).toBe(100);
+  it('should calculate real cumulative reinforcement score without artificial boosts', () => {
+    // Old score: 4/10 (40%), Reinforcement: 3/5 (60%) -> Total: 7/15 (46.67% -> 47%)
+    const cumulative = SkillScoringEngine.calculateCumulativeReinforcementScore(4, 10, 3, 5);
+    expect(cumulative).toBe(47);
   });
 });

@@ -1,4 +1,4 @@
-import { ILearnerRepository } from '../../domain/repositories/ILearnerRepository';
+import { ILearnerRepository, AnswerAttemptRecord } from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
@@ -74,12 +74,12 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,
         initialLevel: learnerData?.initial_level || 'intermediate',
-        xp: gamifyData?.xp || 120,
-        streakDays: gamifyData?.streak_days || 3,
+        xp: gamifyData?.xp || 0,
+        streakDays: gamifyData?.streak_days || 1,
         lastActiveDate: gamifyData?.last_activity_date || new Date().toISOString().split('T')[0],
         scoresByCourse,
         completedLessonIds: (progressRows || []).map((r) => r.lesson_id),
-        completedNodeIds: ['node_math_alg', 'node_math_eq'],
+        completedNodeIds: [],
         completedReinforcementIds: (reinfRows || []).map((r) => r.reinforcement_node_id),
         createdAt: new Date(learnerData?.created_at || Date.now()).getTime(),
       };
@@ -155,20 +155,17 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async markLessonCompleted(lessonId: string): Promise<void> {
-    if (!isSupabaseConfigured) {
-      return this.fallbackRepo.markLessonCompleted(lessonId);
-    }
+    await this.fallbackRepo.markLessonCompleted(lessonId);
+    if (!isSupabaseConfigured) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.markLessonCompleted(lessonId);
-      }
+      if (!user) return;
 
       await supabase.from('lesson_progress').upsert({
         user_id: user.id,
         lesson_id: lessonId,
-        course_id: lessonId.includes('math') ? 'course_math_01' : 'course_eng_01',
+        course_id: 'course_math_01',
         status: 'completed',
         progress_percent: 100,
         completed_at: new Date().toISOString(),
@@ -178,7 +175,6 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       });
     } catch (err) {
       console.warn('Error marking lesson completed in Supabase:', err);
-      return this.fallbackRepo.markLessonCompleted(lessonId);
     }
   }
 
@@ -187,33 +183,66 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async markReinforcementCompleted(reinforcementId: string): Promise<void> {
-    if (!isSupabaseConfigured) {
-      return this.fallbackRepo.markReinforcementCompleted(reinforcementId);
-    }
+    await this.fallbackRepo.markReinforcementCompleted(reinforcementId);
+    if (!isSupabaseConfigured) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.markReinforcementCompleted(reinforcementId);
-      }
+      if (!user) return;
 
       await supabase.from('reinforcement_attempts').upsert({
         user_id: user.id,
-        course_id: reinforcementId.includes('math') ? 'course_math_01' : 'course_eng_01',
-        skill_id: reinforcementId.includes('math') ? 'skill_math_functions' : 'skill_eng_listening',
+        course_id: 'course_math_01',
+        skill_id: 'skill_math_functions',
         reinforcement_node_id: reinforcementId,
-        before_score: 41,
-        after_score: 63,
+        before_score: 40,
+        after_score: 60,
         is_correct: true,
-        xp_awarded: 30,
+        xp_awarded: 15,
         created_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,reinforcement_node_id',
       });
     } catch (err) {
       console.warn('Error marking reinforcement completed in Supabase:', err);
-      return this.fallbackRepo.markReinforcementCompleted(reinforcementId);
     }
+  }
+
+  async recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord> {
+    const record = await this.fallbackRepo.recordAnswerAttempt(attempt);
+    if (!isSupabaseConfigured) return record;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return record;
+
+      // Invoke server-side RPC if available
+      await supabase.rpc('submit_answer_attempt', {
+        p_user_id: user.id,
+        p_course_id: attempt.courseId,
+        p_skill_id: attempt.skillId,
+        p_lesson_id: attempt.lessonId || 'general',
+        p_question_id: attempt.questionId,
+        p_selected_index: attempt.selectedIndex,
+        p_selected_text: attempt.selectedAnswer,
+      });
+    } catch (err) {
+      console.warn('Error recording answer attempt to Supabase, logged locally:', err);
+    }
+
+    return record;
+  }
+
+  async getAnswerAttempts(limit: number = 10): Promise<AnswerAttemptRecord[]> {
+    return this.fallbackRepo.getAnswerAttempts(limit);
+  }
+
+  async addXp(amount: number, actionIdempotencyKey?: string): Promise<number> {
+    return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
+  }
+
+  async recordDailyActivity(dateStr?: string): Promise<number> {
+    return this.fallbackRepo.recordDailyActivity(dateStr);
   }
 
   async resetAll(): Promise<LearnerProfile> {

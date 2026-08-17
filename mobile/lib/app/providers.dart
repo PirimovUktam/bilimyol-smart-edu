@@ -17,6 +17,7 @@ import '../domain/entities/learner_profile.dart';
 import '../domain/entities/question.dart';
 import '../domain/entities/learning_path_node.dart';
 import '../domain/entities/lesson.dart';
+import '../domain/personalization/adaptive_question_selector.dart';
 
 // --- Singleton Service & Repository Providers ---
 final aiTutorServiceProvider = Provider((ref) => DemoAITutorService());
@@ -196,35 +197,58 @@ final courseStateNotifierProvider =
 });
 
 // 3. Placement Test State Notifier
+const targetSkillsMath = [
+  'skill_math_algebra',
+  'skill_math_equations',
+  'skill_math_functions',
+  'skill_math_graphs',
+];
+
 class PlacementState {
   final String courseId;
-  final List<Question> questions;
-  final int currentIndex;
+  final List<Question> allQuestions;
+  final Question? currentQuestion;
+  final int questionNumber;
+  final int totalQuestionsToAsk;
+  final List<AnswerHistoryItem> history;
   final List<QuestionAnswerSubmission> submissions;
   final bool isSubmitting;
   final AssessmentResult? result;
 
   const PlacementState({
     required this.courseId,
-    required this.questions,
-    this.currentIndex = 0,
+    required this.allQuestions,
+    this.currentQuestion,
+    this.questionNumber = 1,
+    this.totalQuestionsToAsk = 8,
+    required this.history,
     required this.submissions,
     this.isSubmitting = false,
     this.result,
   });
 
+  // Backward-compatible getters
+  List<Question> get questions => allQuestions;
+  int get currentIndex => questionNumber - 1;
+
   PlacementState copyWith({
     String? courseId,
-    List<Question>? questions,
-    int? currentIndex,
+    List<Question>? allQuestions,
+    Question? currentQuestion,
+    int? questionNumber,
+    int? totalQuestionsToAsk,
+    List<AnswerHistoryItem>? history,
     List<QuestionAnswerSubmission>? submissions,
     bool? isSubmitting,
     AssessmentResult? result,
   }) {
     return PlacementState(
       courseId: courseId ?? this.courseId,
-      questions: questions ?? this.questions,
-      currentIndex: currentIndex ?? this.currentIndex,
+      allQuestions: allQuestions ?? this.allQuestions,
+      currentQuestion: currentQuestion ?? this.currentQuestion,
+      questionNumber: questionNumber ?? this.questionNumber,
+      totalQuestionsToAsk: totalQuestionsToAsk ?? this.totalQuestionsToAsk,
+      history: history ?? this.history,
       submissions: submissions ?? this.submissions,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       result: result ?? this.result,
@@ -236,25 +260,49 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
   final Ref ref;
 
   PlacementStateNotifier(this.ref)
-      : super(const PlacementState(courseId: '', questions: [], submissions: []));
+      : super(const PlacementState(
+          courseId: '',
+          allQuestions: [],
+          history: [],
+          submissions: [],
+        ));
 
   Future<void> loadQuestions(String courseId) async {
     final courseRepo = ref.read(courseRepositoryProvider);
-    final questions = await courseRepo.getPlacementQuestions(courseId);
+    final allQuestions = await courseRepo.getPlacementQuestions(courseId);
+
+    final firstQ = AdaptiveQuestionSelector.getNextQuestion(
+          allQuestions,
+          targetSkillsMath,
+          [],
+          2,
+        ) ??
+        (allQuestions.isNotEmpty ? allQuestions.first : null);
+
     state = PlacementState(
       courseId: courseId,
-      questions: questions,
-      currentIndex: 0,
+      allQuestions: allQuestions,
+      currentQuestion: firstQ,
+      questionNumber: 1,
+      totalQuestionsToAsk: 8,
+      history: [],
       submissions: [],
       isSubmitting: false,
     );
   }
 
   Future<bool> submitAnswer(int selectedIndex) async {
-    if (state.currentIndex >= state.questions.length) return true;
+    final currentQ = state.currentQuestion;
+    if (currentQ == null || state.isSubmitting) return true;
 
-    final currentQ = state.questions[state.currentIndex];
     final isCorrect = selectedIndex == currentQ.correctIndex;
+
+    final historyItem = AnswerHistoryItem(
+      questionId: currentQ.id,
+      skillId: currentQ.skillId,
+      difficulty: currentQ.difficulty,
+      isCorrect: isCorrect,
+    );
 
     final submission = QuestionAnswerSubmission(
       questionId: currentQ.id,
@@ -262,15 +310,23 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       isCorrect: isCorrect,
     );
 
+    final updatedHistory = List<AnswerHistoryItem>.from(state.history)..add(historyItem);
     final updatedSubmissions = List<QuestionAnswerSubmission>.from(state.submissions)..add(submission);
 
-    final nextIndex = state.currentIndex + 1;
-    final isDone = nextIndex >= state.questions.length;
+    final nextQ = AdaptiveQuestionSelector.getNextQuestion(
+      state.allQuestions,
+      targetSkillsMath,
+      updatedHistory,
+      2,
+    );
+
+    final isDone = nextQ == null || state.questionNumber >= state.totalQuestionsToAsk;
 
     if (isDone) {
       state = state.copyWith(
+        history: updatedHistory,
         submissions: updatedSubmissions,
-        currentIndex: nextIndex,
+        currentQuestion: null,
         isSubmitting: true,
       );
 
@@ -282,27 +338,27 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         result: result,
       );
 
-      // Refresh learner profile & roadmap
       await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
       await ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(state.courseId);
 
       return true;
     } else {
       state = state.copyWith(
+        history: updatedHistory,
         submissions: updatedSubmissions,
-        currentIndex: nextIndex,
+        currentQuestion: nextQ,
+        questionNumber: state.questionNumber + 1,
       );
       return false;
     }
   }
 
-  /// Demo Fast-Calibrate shortcut (Answers correctly except Functions / Listening)
+  /// Demo Fast-Calibrate shortcut
   Future<void> fastCalibrateDemo() async {
-    if (state.questions.isEmpty) return;
-    for (int i = 0; i < state.questions.length; i++) {
-      final q = state.questions[i];
-      final shouldMiss = q.skillId == 'skill_math_functions' || q.skillId == 'skill_eng_listening';
-      final pickIndex = shouldMiss ? (q.correctIndex + 1) % q.options.length : q.correctIndex;
+    while (state.currentQuestion != null) {
+      final q = state.currentQuestion!;
+      final isWeak = q.skillId == 'skill_math_functions';
+      final pickIndex = isWeak ? (q.correctIndex + 1) % q.options.length : q.correctIndex;
       final isDone = await submitAnswer(pickIndex);
       if (isDone) break;
     }
@@ -470,7 +526,6 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     );
 
     if (result.isCorrect) {
-      // Update roadmap and learner state
       ref.read(roadmapStateNotifierProvider.notifier).updateRoadmapDirect(result.updatedRoadmap);
       await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
     }

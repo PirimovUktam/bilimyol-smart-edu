@@ -15,8 +15,9 @@ interface PlacementTestViewProps {
 export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete }) => {
   const { activeCourse } = useCourseStore();
   const {
-    questions,
-    currentQuestionIndex,
+    currentQuestion,
+    questionNumber,
+    totalQuestionsToAsk,
     isSubmitting,
     initPlacement,
     submitAnswer,
@@ -31,8 +32,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
     }
   }, [activeCourse, initPlacement]);
 
-  const currentQ = questions[currentQuestionIndex];
-  const progressPercent = questions.length > 0 ? (currentQuestionIndex / questions.length) * 100 : 0;
+  const progressPercent = (questionNumber / totalQuestionsToAsk) * 100;
 
   const handleSelectOption = (index: number) => {
     if (isSubmitting) return;
@@ -40,7 +40,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
   };
 
   const handleConfirmAnswer = async () => {
-    if (selectedOption === null || isSubmitting || !currentQ) return;
+    if (selectedOption === null || isSubmitting || !currentQuestion) return;
     sounds.playSuccess();
     const isDone = await submitAnswer(selectedOption);
     setSelectedOption(null);
@@ -49,29 +49,42 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
     }
   };
 
-  // Demo shortcut: Auto-complete placement with calibrated weak focus
-  const handleAutoCalibrateDemo = async () => {
-    if (isSubmitting || questions.length === 0) return;
-    // Answer correctly for Q1, Q2, Q4; Miss Q3 & Q5 (Focus skill: Funksiyalar / Listening)
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
-      const shouldMiss = q.skillId === 'skill_math_functions' || q.skillId === 'skill_eng_listening';
-      const pickIndex = shouldMiss ? (q.correctIndex + 1) % q.options.length : q.correctIndex;
-      const isDone = await submitAnswer(pickIndex);
-      if (isDone) {
+  // Demo shortcut: Complete with a variety of answers for quick testing
+  const handleAutoFillDemo = async () => {
+    if (isSubmitting || !currentQuestion) return;
+    while (usePlacementStore.getState().currentQuestion) {
+      const q = usePlacementStore.getState().currentQuestion;
+      if (!q) break;
+      const isWeak = q.skillId === 'skill_math_functions';
+      const pickIndex = isWeak ? (q.correctIndex + 1) % q.options.length : q.correctIndex;
+      const done = await submitAnswer(pickIndex);
+      if (done) {
         onComplete();
         break;
       }
     }
   };
 
-  if (!currentQ || hasFinished) {
+  const getDifficultyLabel = (diff: string) => {
+    switch (diff) {
+      case 'easy':
+        return 'Oson daraja';
+      case 'medium':
+        return 'O‘rta daraja';
+      case 'hard':
+        return 'Murakkab daraja';
+      default:
+        return 'Moslashuvchan';
+    }
+  };
+
+  if (!currentQuestion || hasFinished) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-sm font-semibold text-slate-600">
-            {hasFinished ? 'Natijalar hisoblanmoqda...' : 'Placement test tayyorlanmoqda...'}
+            {hasFinished ? 'Real bilim darajangiz hisoblanmoqda...' : 'Savol tayyorlanmoqda...'}
           </p>
         </div>
       </div>
@@ -86,26 +99,29 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
           <div>
             <div className="flex items-center gap-2">
               <Badge variant="blue" size="sm">
-                Placement Test • {activeCourse?.title}
+                Adaptiv Diagnostika • {activeCourse?.title || 'Matematika'}
+              </Badge>
+              <Badge variant="slate" size="sm">
+                {getDifficultyLabel(currentQuestion.difficulty)}
               </Badge>
               <span className="text-xs font-semibold text-slate-500">
-                Savol {currentQuestionIndex + 1} / {questions.length}
+                Savol {questionNumber} / {totalQuestionsToAsk}
               </span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 mt-1">
-              Boshlang‘ich bilim darajasini aniqlash
+              Bilim darajangizni aniqlash
             </h1>
           </div>
 
           <Button
             variant="outline"
             size="sm"
-            onClick={handleAutoCalibrateDemo}
+            onClick={handleAutoFillDemo}
             leftIcon={<Zap className="w-3.5 h-3.5 text-amber-500" />}
             className="text-slate-600 hover:text-blue-600 text-xs border-dashed"
-            title="Hakamlar / Demo uchun 1-bosishda kalibrlangan 41% fokus bilan to‘ldirish"
+            title="Tezkor avtomatik to‘ldirish"
           >
-            Tezkor Demo To‘ldirish
+            Tezkor Test (Demo)
           </Button>
         </div>
 
@@ -122,7 +138,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
         {/* Question Card */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentQ.id}
+            key={currentQuestion.id}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
@@ -133,15 +149,15 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-extrabold text-sm flex items-center justify-center shrink-0 mt-0.5">
-                    {currentQuestionIndex + 1}
+                    {questionNumber}
                   </span>
                   <div className="space-y-2 flex-1">
                     <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                      {currentQ.text}
+                      {currentQuestion.text}
                     </h2>
-                    {currentQ.contextSnippet && (
-                      <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 font-medium">
-                        {currentQ.contextSnippet}
+                    {currentQuestion.formulaLatex && (
+                      <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100 font-mono text-sm text-blue-900 inline-block">
+                        {currentQuestion.formulaLatex}
                       </div>
                     )}
                   </div>
@@ -150,7 +166,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
 
               {/* Options */}
               <div className="space-y-3 pt-2">
-                {currentQ.options.map((option, idx) => {
+                {currentQuestion.options.map((option, idx) => {
                   const isSelected = selectedOption === idx;
                   const optionLetters = ['A', 'B', 'C', 'D'];
 
@@ -190,7 +206,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
               <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  Javoblar deterministic scoring orqali hisoblanadi
+                  Har bir javob real ko‘nikma foiziga ta’sir qiladi
                 </span>
 
                 <Button
@@ -201,7 +217,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
                   onClick={handleConfirmAnswer}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  {currentQuestionIndex === questions.length - 1 ? 'Natijani Ko‘rish' : 'Tasdiqlash'}
+                  {questionNumber >= totalQuestionsToAsk ? 'Natijani Ko‘rish' : 'Keyingi Savol'}
                 </Button>
               </div>
             </Card>

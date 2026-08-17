@@ -2,13 +2,15 @@ import { ICourseRepository } from '../repositories/ICourseRepository';
 import { ILearnerRepository } from '../repositories/ILearnerRepository';
 import { Skill } from '../entities/Skill';
 import { SkillScore } from '../entities/SkillScore';
+import { SkillScoringEngine } from '../personalization/SkillScoringEngine';
 
 export interface KnowledgeMapData {
   courseId: string;
   skills: Skill[];
   scores: Record<string, SkillScore>;
   weakestSkill: SkillScore | null;
-  averageScore: number;
+  strongestSkill: SkillScore | null;
+  overallScore: number;
 }
 
 export class GetKnowledgeMapUseCase {
@@ -23,23 +25,26 @@ export class GetKnowledgeMapUseCase {
     const scores = profile.scoresByCourse[courseId] || {};
 
     let weakestSkill: SkillScore | null = null;
-    let totalScore = 0;
-    let count = 0;
+    let strongestSkill: SkillScore | null = null;
 
     Object.values(scores).forEach((s) => {
-      totalScore += s.score;
-      count += 1;
       if (!weakestSkill || s.score < weakestSkill.score) {
         weakestSkill = s;
       }
+      if (!strongestSkill || s.score > strongestSkill.score) {
+        strongestSkill = s;
+      }
     });
+
+    const overallScore = SkillScoringEngine.computeOverallScore(scores);
 
     return {
       courseId,
       skills,
       scores,
       weakestSkill,
-      averageScore: count > 0 ? Math.round(totalScore / count) : 0,
+      strongestSkill,
+      overallScore,
     };
   }
 }

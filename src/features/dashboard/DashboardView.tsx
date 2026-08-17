@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   TrendingUp,
-  Clock,
   Sparkles,
   ArrowRight,
   Flame,
@@ -10,14 +9,18 @@ import {
   Map,
   Compass,
   RotateCcw,
+  Award,
+  XCircle,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
+import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
-import { ProgressEngine } from '@/domain/personalization/ProgressEngine';
 
 interface DashboardViewProps {
   onContinueLesson: () => void;
@@ -32,38 +35,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenKnowledgeMap,
   onResetDemo,
 }) => {
-  const { activeCourse } = useCourseStore();
+  const { activeCourse, activeCourseSkills } = useCourseStore();
   const { profile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
+  const [recentAttempts, setRecentAttempts] = useState<AnswerAttemptRecord[]>([]);
 
   useEffect(() => {
     if (activeCourse) {
       loadRoadmap(activeCourse.id);
     }
+    inMemoryLearnerRepository.getAnswerAttempts(5).then(setRecentAttempts);
   }, [activeCourse, loadRoadmap, profile]);
 
-  const isMath = activeCourse?.subject === 'mathematics';
   const scores = (profile?.scoresByCourse && activeCourse) ? (profile.scoresByCourse[activeCourse.id] || {}) : {};
-  const averageMastery = ProgressEngine.calculateCourseMastery(scores) || (isMath ? 63 : 65);
+  const overallScore = SkillScoringEngine.computeOverallScore(scores);
 
-  const focusSkillScore = isMath
-    ? (scores['skill_math_functions']?.score ?? 63)
-    : (scores['skill_eng_listening']?.score ?? 65);
+  // Find strongest and weakest skills dynamically
+  let strongestSkillName = 'Algebra';
+  let strongestScore = 0;
+  let weakestSkillName = 'Funksiyalar';
+  let weakestScore = 100;
 
-  const nextNodeTitle = isMath ? 'Grafiklar' : 'Reading';
+  activeCourseSkills.forEach((sk) => {
+    const sc = scores[sk.id]?.score ?? 0;
+    if (sc > strongestScore) {
+      strongestScore = sc;
+      strongestSkillName = sk.name;
+    }
+    if (sc <= weakestScore) {
+      weakestScore = sc;
+      weakestSkillName = sk.name;
+    }
+  });
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      {/* Reminder Banner Simulation */}
+      {/* Reminder Banner */}
       <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
             <Bell className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h4 className="font-bold text-sm">Bugungi o‘quv rejangiz tayyor!</h4>
+            <h4 className="font-bold text-sm">Bugungi o‘quv rejangiz</h4>
             <p className="text-xs text-blue-100">
-              {activeCourse?.title} • {profile?.dailyMinutes || 15} daqiqa ajrating va ko‘nikmalaringizni mustahkamlang.
+              {activeCourse?.title || 'Matematika'} • {profile?.dailyMinutes || 15} daqiqa ajrating va ko‘nikmalaringizni mustahkamlang.
             </p>
           </div>
         </div>
@@ -78,17 +94,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="emerald" size="sm">
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-              Intelligence Loop Bajarildi
+              Faol O‘quvchi
             </Badge>
             <span className="text-xs font-semibold text-slate-500">
-              {activeCourse?.title}
+              {activeCourse?.title || 'Matematika'}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Assalomu alaykum, {profile?.name || 'O‘quvchi'}!
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Siz muvaffaqiyatli adaptatsiya va mustahkamlash bosqichidan o‘tdingiz.
+            Shaxsiy moslashuvchan ta’lim yo‘lingiz bo‘yicha real ko‘rsatkichlar
           </p>
         </div>
 
@@ -115,45 +131,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Main Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Stat 1: Subject Progress */}
+        {/* Stat 1: Overall Subject Knowledge */}
         <Card className="p-5 border-slate-200/90 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
-            <span>Umumiy O‘zlashtirish</span>
+            <span>Umumiy Bilim</span>
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-3xl font-black text-slate-900">{averageMastery}%</div>
+          <div className="text-3xl font-black text-slate-900">{overallScore}%</div>
           <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${averageMastery}%` }} />
+            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${overallScore}%` }} />
           </div>
+          <span className="text-[11px] text-slate-400 font-medium">Barcha ko‘nikmalar o‘rtachasi</span>
         </Card>
 
-        {/* Stat 2: Current Focus Skill */}
+        {/* Stat 2: Weakest Skill / Focus */}
         <Card className="p-5 border-slate-200/90 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
-            <span>Joriy Fokus Ko‘nikmasi</span>
-            <Sparkles className="w-4 h-4 text-teal-600" />
+            <span>Fokus Mavzu</span>
+            <Sparkles className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-xl font-bold text-slate-900 truncate">
-            {isMath ? 'Funksiyalar' : 'Listening'}
+            {weakestSkillName}
           </div>
-          <div className="text-xs font-bold text-teal-700 flex items-center gap-1">
-            <span>{focusSkillScore}%</span>
-            <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-              +22% o‘sdi
+          <div className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
+            <span>{weakestScore}%</span>
+            <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+              {SkillScoringEngine.getMasteryLabelUz(weakestScore)}
             </span>
           </div>
+          <span className="text-[11px] text-slate-400 font-medium">Mustahkamlash talab etiladi</span>
         </Card>
 
-        {/* Stat 3: Daily Commitment */}
+        {/* Stat 3: Strongest Skill */}
         <Card className="p-5 border-slate-200/90 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
-            <span>Bugungi Dars Vaqti</span>
-            <Clock className="w-4 h-4 text-amber-500" />
+            <span>Kuchli Mavzu</span>
+            <Award className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-3xl font-black text-slate-900">
-            {profile?.dailyMinutes || 15} daqiqa
+          <div className="text-xl font-bold text-slate-900 truncate">
+            {strongestSkillName}
           </div>
-          <span className="text-xs text-slate-500">Muntazam kunlik reja</span>
+          <div className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+            <span>{strongestScore}%</span>
+            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+              {SkillScoringEngine.getMasteryLabelUz(strongestScore)}
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-400 font-medium">Yaxshi o‘zlashtirilgan</span>
         </Card>
 
         {/* Stat 4: Gamification XP & Streak */}
@@ -163,13 +187,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
           </div>
           <div className="text-3xl font-black text-slate-900">
-            {profile?.xp || 150} <span className="text-xs font-semibold text-slate-500">XP</span>
+            {profile?.xp || 0} <span className="text-xs font-semibold text-slate-500">XP</span>
           </div>
           <div className="text-xs font-bold text-orange-600 flex items-center gap-1">
-            <span>{profile?.streakDays || 3} kunlik faoliyat</span>
+            <span>{profile?.streakDays || 1} kunlik faoliyat</span>
           </div>
+          <span className="text-[11px] text-slate-400 font-medium">Kunlik faollik hisobi</span>
         </Card>
       </div>
+
+      {/* Recent Performance Section */}
+      {recentAttempts.length > 0 && (
+        <Card className="p-5 border-slate-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
+              Oxirgi 5 ta savol natijasi
+            </h3>
+            <span className="text-xs text-slate-400">Audit jurnali</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {recentAttempts.map((att, i) => (
+              <div
+                key={att.id || i}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
+                  att.isCorrect
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}
+                title={`Savol: ${att.questionId}`}
+              >
+                {att.isCorrect ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                )}
+                <span>{att.isCorrect ? 'To‘g‘ri' : 'Xato'}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Next Action Journey Card */}
       <Card className="p-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl shadow-xl border-0">
@@ -177,18 +234,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
-                Keyingi Bosqich Ochildi
+                Shaxsiy Yo‘l Xaritasi
               </span>
               <span className="text-xs font-medium text-slate-400">
-                {activeCourse?.title} Yo‘l Xaritasi
+                {activeCourse?.title || 'Matematika'}
               </span>
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
-              {nextNodeTitle} mavzusini o‘rganishga tayyormisiz?
+              O‘quv yo‘lingizni davom ettirishga tayyormisiz?
             </h3>
             <p className="text-slate-300 text-sm max-w-xl leading-relaxed">
-              Funksiyalar bo‘yicha mustahkamlash yakunlangani sababli, uning asosidagi navbatdagi dars qulfdan ochildi.
+              Yo‘lchi AI va statistik scoring tizimi orqali keyingi eng samarali mikro-darsingiz shakllantirildi.
             </p>
           </div>
 
@@ -210,7 +267,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               rightIcon={<ArrowRight className="w-5 h-5" />}
               className="w-full sm:w-auto shadow-lg shadow-blue-600/30 bg-blue-600 hover:bg-blue-500"
             >
-              Darsni Boshlash
+              Darsga o‘tish
             </Button>
           </div>
         </div>
@@ -220,7 +277,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>Checkpoint 1 Core Status: Barcha 14 ta asosiy oqim to‘liq ishladi.</span>
+          <span>Real Adaptive Engine: Barcha natijalar haqiqiy hisob-kitob asosida.</span>
         </div>
 
         <Button
@@ -230,7 +287,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           leftIcon={<RotateCcw className="w-3.5 h-3.5 text-amber-600" />}
           className="text-xs border-slate-300 text-slate-700"
         >
-          Demonstratsiyani Qayta Boshlash (Demo Reset)
+          Natijalarni Qayta Tiklash (Reset)
         </Button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, Headphones, ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Calculator, Headphones, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Clock } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { Button } from '@/presentation/components/Button';
@@ -30,14 +30,14 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Shaxsiy O‘quv Traektoriyasi</span>
+          <span>Haqiqiy Moslashuvchan Ta’lim Tizimi</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-          O‘zingizga mos fanni tanlang
+          O‘rganishni istagan fanni tanlang
         </h1>
         <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
-          BilimYo‘l sun'iy intellekti darajangizni aniqlaydi va sizga moslashuvchan, bosqichma-bosqich o‘quv yo‘lini tuzib beradi.
+          BilimYo‘l sun'iy intellekti darajangizni aniqlaydi va sizga individual, qadamma-qadam o‘quv traektoriyasini tuzib beradi.
         </p>
       </motion.div>
 
@@ -45,7 +45,7 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
         {courses.map((course, index) => {
           const isMath = course.subject === 'mathematics';
           const Icon = isMath ? Calculator : Headphones;
-          const iconBg = isMath ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700';
+          const iconBg = isMath ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500';
 
           return (
             <motion.div
@@ -53,7 +53,11 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="group relative bg-white border-2 border-slate-200/90 rounded-3xl p-7 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+              className={`group relative bg-white border-2 rounded-3xl p-7 shadow-sm transition-all duration-300 flex flex-col justify-between ${
+                isMath
+                  ? 'border-blue-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1'
+                  : 'border-slate-200 opacity-80'
+              }`}
             >
               <div className="space-y-5">
                 <div className="flex items-start justify-between">
@@ -62,11 +66,12 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
                   </div>
                   {isMath ? (
                     <Badge variant="blue" size="sm">
-                      Asosiy Demo
+                      Faol Kurs (Full Adaptive)
                     </Badge>
                   ) : (
-                    <Badge variant="teal" size="sm">
-                      Ikkinchi Demo
+                    <Badge variant="slate" size="sm">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Tez kunda
                     </Badge>
                   )}
                 </div>
@@ -82,7 +87,7 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
 
                 <div className="pt-2 border-t border-slate-100">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
-                    Asosiy ko‘nikmalar (Skill Module):
+                    Asosiy ko‘nikmalar:
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {isMath ? (
@@ -93,8 +98,8 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
                         <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Tenglamalar
                         </span>
-                        <span className="text-xs font-semibold text-blue-600 flex items-center gap-1.5 bg-blue-50/80 px-2 py-1 rounded-lg">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Funksiyalar (Fokus)
+                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Funksiyalar
                         </span>
                         <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Grafiklar
@@ -102,17 +107,17 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
                       </>
                     ) : (
                       <>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-500" /> Vocabulary
+                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                          Vocabulary (Tez orada)
                         </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-500" /> Grammar
+                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                          Grammar (Tez orada)
                         </span>
-                        <span className="text-xs font-semibold text-teal-600 flex items-center gap-1.5 bg-teal-50/80 px-2 py-1 rounded-lg">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" /> Listening (Fokus)
+                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                          Listening (Tez orada)
                         </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-teal-500" /> Reading
+                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                          Reading (Tez orada)
                         </span>
                       </>
                     )}
@@ -121,15 +126,21 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
               </div>
 
               <div className="mt-8 pt-4">
-                <Button
-                  onClick={() => handleChoose(course.id)}
-                  variant={isMath ? 'primary' : 'secondary'}
-                  size="lg"
-                  className="w-full justify-between group-hover:shadow-lg"
-                  rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-                >
-                  Tanlash va Boshlash
-                </Button>
+                {isMath ? (
+                  <Button
+                    onClick={() => handleChoose(course.id)}
+                    variant="primary"
+                    size="lg"
+                    className="w-full justify-between group-hover:shadow-lg"
+                    rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                  >
+                    Kursni Tanlash va Boshlash
+                  </Button>
+                ) : (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs font-semibold text-slate-500">
+                    Ushbu kurs kontenti tez orada ishga tushadi
+                  </div>
+                )}
               </div>
             </motion.div>
           );
@@ -138,7 +149,7 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
 
       <div className="mt-12 flex items-center gap-2 text-xs text-slate-500">
         <ShieldCheck className="w-4 h-4 text-emerald-600" />
-        <span>Barcha darslar va tahlillar 100% offline rejimda ishlaydi</span>
+        <span>Barcha natijalar va o‘quv yo‘li real statistik hisob-kitoblarga asoslangan</span>
       </div>
     </div>
   );

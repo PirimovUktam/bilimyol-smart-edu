@@ -1,6 +1,8 @@
 import { SkillScore, SkillId } from '../entities/SkillScore';
 import { Question, QuestionAnswerSubmission } from '../entities/Question';
-import { REINFORCEMENT_SCORE_BUMP } from '@/core/constants/adaptiveThresholds';
+
+export type MasteryLevel = 'needs_remediation' | 'developing' | 'proficient' | 'mastered';
+export type ConfidenceLevel = 'low' | 'medium' | 'high';
 
 export class SkillScoringEngine {
   /**
@@ -12,19 +14,68 @@ export class SkillScoringEngine {
   }
 
   /**
-   * Determines mastery classification according to pedagogical standard
+   * Central level classification:
+   * 0–39: needs_remediation (Boshlang‘ich)
+   * 40–59: developing (Rivojlanmoqda)
+   * 60–79: proficient (O‘rta)
+   * 80–100: mastered (Yuqori)
    */
-  public static getMasteryLevel(score: number): 'needs_remediation' | 'developing' | 'proficient' | 'mastered' {
+  public static getMasteryLevel(score: number): MasteryLevel {
     const clamped = this.clampScore(score);
-    if (clamped < 50) return 'needs_remediation';
-    if (clamped < 70) return 'developing';
-    if (clamped < 85) return 'proficient';
+    if (clamped < 40) return 'needs_remediation';
+    if (clamped < 60) return 'developing';
+    if (clamped < 80) return 'proficient';
     return 'mastered';
   }
 
   /**
-   * Deterministically computes placement test scores based on question results & skill weights.
-   * Produces calibrated baseline scores for the demo courses.
+   * Uzbek level label
+   */
+  public static getMasteryLabelUz(score: number): string {
+    const level = this.getMasteryLevel(score);
+    switch (level) {
+      case 'needs_remediation':
+        return 'Boshlang‘ich';
+      case 'developing':
+        return 'Rivojlanmoqda';
+      case 'proficient':
+        return 'O‘rta';
+      case 'mastered':
+        return 'Yuqori';
+    }
+  }
+
+  /**
+   * Determines confidence level based on number of attempts
+   */
+  public static computeConfidence(attemptCount: number): ConfidenceLevel {
+    if (attemptCount < 3) return 'low';
+    if (attemptCount <= 5) return 'medium';
+    return 'high';
+  }
+
+  /**
+   * Real statistical score calculation: (correct / total) * 100
+   */
+  public static computeSkillScore(correctCount: number, totalCount: number): number {
+    if (totalCount <= 0) return 0;
+    const ratio = (correctCount / totalCount) * 100;
+    return this.clampScore(ratio);
+  }
+
+  /**
+   * Computes overall knowledge score as exact arithmetic mean of skill scores
+   */
+  public static computeOverallScore(skillScores: Record<SkillId, SkillScore> | SkillScore[]): number {
+    const scores = Array.isArray(skillScores) ? skillScores : Object.values(skillScores);
+    if (scores.length === 0) return 0;
+    const sum = scores.reduce((acc, s) => acc + s.score, 0);
+    return this.clampScore(sum / scores.length);
+  }
+
+  /**
+   * Real statistical placement test scoring from actual student submissions.
+   * Zero hardcoded numbers.
    */
   public static computePlacementScores(
     courseId: string,
@@ -32,63 +83,24 @@ export class SkillScoringEngine {
     submissions: QuestionAnswerSubmission[]
   ): Record<SkillId, SkillScore> {
     const skillScoreMap: Record<SkillId, SkillScore> = {};
+    const skillStats: Record<SkillId, { correct: number; total: number }> = {};
 
     // Group submissions by skill
-    const skillSubmissions: Record<SkillId, { totalWeight: number; weightedCorrect: number; questionsCount: number }> = {};
-
     questions.forEach((q) => {
-      if (!skillSubmissions[q.skillId]) {
-        skillSubmissions[q.skillId] = { totalWeight: 0, weightedCorrect: 0, questionsCount: 0 };
+      if (!skillStats[q.skillId]) {
+        skillStats[q.skillId] = { correct: 0, total: 0 };
       }
-      const weight = q.difficulty === 'hard' ? 1.5 : q.difficulty === 'medium' ? 1.2 : 1.0;
-      skillSubmissions[q.skillId].totalWeight += weight;
-      skillSubmissions[q.skillId].questionsCount += 1;
+      skillStats[q.skillId].total += 1;
 
       const sub = submissions.find((s) => s.questionId === q.id);
       if (sub && sub.isCorrect) {
-        skillSubmissions[q.skillId].weightedCorrect += weight;
+        skillStats[q.skillId].correct += 1;
       }
     });
 
-    // Calibrated deterministic baseline maps for demo alignment
-    // Mathematics target: Algebra 82%, Tenglamalar 74%, Funksiyalar 41%, Grafiklar 68%
-    // English target: Vocabulary 84%, Grammar 72%, Listening 43%, Reading 79%
-    const baselineMap: Record<string, Record<string, { correctBase: number; wrongBase: number }>> = {
-      'course_math_01': {
-        'skill_math_algebra': { correctBase: 82, wrongBase: 35 },
-        'skill_math_equations': { correctBase: 74, wrongBase: 38 },
-        'skill_math_functions': { correctBase: 80, wrongBase: 41 }, // 41% focus when missed or partially answered
-        'skill_math_graphs': { correctBase: 68, wrongBase: 40 },
-      },
-      'course_eng_01': {
-        'skill_eng_vocab': { correctBase: 84, wrongBase: 40 },
-        'skill_eng_grammar': { correctBase: 72, wrongBase: 35 },
-        'skill_eng_listening': { correctBase: 85, wrongBase: 43 }, // 43% focus when missed
-        'skill_eng_reading': { correctBase: 79, wrongBase: 38 },
-      },
-    };
-
-    const courseBaselines = baselineMap[courseId] || {};
-
-    Object.keys(skillSubmissions).forEach((skillId) => {
-      const stats = skillSubmissions[skillId];
-      const baseline = courseBaselines[skillId];
-
-      let computedPercentage: number;
-      if (baseline) {
-        // If skill has baseline calibration
-        const ratio = stats.totalWeight > 0 ? stats.weightedCorrect / stats.totalWeight : 0;
-        if (ratio >= 0.5) {
-          computedPercentage = baseline.correctBase;
-        } else {
-          computedPercentage = baseline.wrongBase;
-        }
-      } else {
-        const rawRatio = stats.totalWeight > 0 ? (stats.weightedCorrect / stats.totalWeight) * 100 : 50;
-        computedPercentage = rawRatio;
-      }
-
-      const finalScore = this.clampScore(computedPercentage);
+    Object.keys(skillStats).forEach((skillId) => {
+      const stats = skillStats[skillId];
+      const finalScore = this.computeSkillScore(stats.correct, stats.total);
 
       skillScoreMap[skillId] = {
         skillId,
@@ -99,7 +111,7 @@ export class SkillScoringEngine {
       };
     });
 
-    // Find and tag weakest skill
+    // Find and tag weakest skill dynamically
     let lowestScore = 101;
     let weakestId = '';
     Object.values(skillScoreMap).forEach((s) => {
@@ -117,10 +129,24 @@ export class SkillScoringEngine {
   }
 
   /**
-   * Applies the deterministic reinforcement score increment
+   * Real cumulative reinforcement score calculation
    */
-  public static calculateReinforcementScore(currentScore: number, customBump: number = REINFORCEMENT_SCORE_BUMP): number {
-    const updated = currentScore + customBump;
-    return this.clampScore(updated);
+  public static calculateCumulativeReinforcementScore(
+    previousCorrect: number,
+    previousTotal: number,
+    reinforcementCorrect: number,
+    reinforcementTotal: number
+  ): number {
+    const totalAttempts = previousTotal + reinforcementTotal;
+    if (totalAttempts <= 0) return 0;
+    const totalCorrect = previousCorrect + reinforcementCorrect;
+    return this.computeSkillScore(totalCorrect, totalAttempts);
+  }
+
+  /**
+   * Helper for standard reinforcement score recalculation
+   */
+  public static calculateReinforcementScore(currentScore: number, customBump: number = 22): number {
+    return this.clampScore(currentScore + customBump);
   }
 }

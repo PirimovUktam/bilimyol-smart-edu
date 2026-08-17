@@ -76,9 +76,11 @@ class CourseSelectionScreen extends ConsumerWidget {
                             backgroundColor: isSelected
                                 ? (isMath ? AppColors.primaryLight.withValues(alpha: 0.5) : AppColors.secondaryLight.withValues(alpha: 0.5))
                                 : AppColors.surface,
-                            onTap: () async {
-                              await ref.read(courseStateNotifierProvider.notifier).selectCourse(course.id);
-                            },
+                            onTap: isMath
+                                ? () async {
+                                    await ref.read(courseStateNotifierProvider.notifier).selectCourse(course.id);
+                                  }
+                                : null,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -88,12 +90,12 @@ class CourseSelectionScreen extends ConsumerWidget {
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: isMath ? AppColors.primaryLight : AppColors.secondaryLight,
+                                        color: isMath ? AppColors.primaryLight : const Color(0xFFF1F5F9),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         isMath ? Icons.calculate_rounded : Icons.headphones_rounded,
-                                        color: isMath ? AppColors.primary : AppColors.secondary,
+                                        color: isMath ? AppColors.primary : AppColors.textMuted,
                                         size: 24,
                                       ),
                                     ),
@@ -109,25 +111,25 @@ class CourseSelectionScreen extends ConsumerWidget {
                                                 style: GoogleFonts.plusJakartaSans(
                                                   fontSize: 17,
                                                   fontWeight: FontWeight.w800,
-                                                  color: AppColors.textPrimary,
+                                                  color: isMath ? AppColors.textPrimary : AppColors.textSecondary,
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               if (isMath)
                                                 const AppBadge(
-                                                  text: 'Asosiy Demo',
+                                                  text: 'Faol Kurs',
                                                   variant: AppBadgeVariant.blue,
                                                 )
                                               else
                                                 const AppBadge(
-                                                  text: '2-Demo',
-                                                  variant: AppBadgeVariant.teal,
+                                                  text: 'Tez kunda',
+                                                  variant: AppBadgeVariant.slate,
                                                 ),
                                             ],
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${course.totalStudentsEstimate}+ o‘quvchi',
+                                            isMath ? 'Full Adaptive Learning Engine' : 'Ushbu kurs tez orada ishga tushadi',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 11.5,
                                               color: AppColors.textMuted,
@@ -137,13 +139,12 @@ class CourseSelectionScreen extends ConsumerWidget {
                                         ],
                                       ),
                                     ),
-                                    Icon(
-                                      isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                      color: isSelected
-                                          ? (isMath ? AppColors.primary : AppColors.secondary)
-                                          : AppColors.cardBorder,
-                                      size: 24,
-                                    ),
+                                    if (isMath)
+                                      Icon(
+                                        isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                        color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                                        size: 24,
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
@@ -154,25 +155,6 @@ class CourseSelectionScreen extends ConsumerWidget {
                                     color: AppColors.textSecondary,
                                     height: 1.4,
                                   ),
-                                ),
-                                const SizedBox(height: 14),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.track_changes_rounded,
-                                      size: 14,
-                                      color: isMath ? AppColors.primary : AppColors.secondary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      isMath ? 'Demo fokus: Funksiyalar (41% → 63%)' : 'Demo fokus: Listening (43% → 65%)',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: isMath ? AppColors.primary : AppColors.secondary,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),

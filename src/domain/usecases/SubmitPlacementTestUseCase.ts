@@ -13,13 +13,33 @@ export class SubmitPlacementTestUseCase {
   async execute(courseId: string, submissions: QuestionAnswerSubmission[]): Promise<AssessmentResult> {
     const questions = await this.courseRepo.getPlacementQuestions(courseId);
 
-    // Compute deterministic scores
+    // Record answer attempts for audit and logging
+    for (const sub of submissions) {
+      const q = questions.find((item) => item.id === sub.questionId);
+      if (q) {
+        await this.learnerRepo.recordAnswerAttempt({
+          courseId,
+          skillId: q.skillId,
+          lessonId: 'placement_test',
+          questionId: q.id,
+          selectedIndex: sub.selectedIndex,
+          selectedAnswer: q.options[sub.selectedIndex] || '',
+          isCorrect: sub.isCorrect,
+        });
+      }
+    }
+
+    // Compute real scores strictly from actual submissions
     const computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, submissions);
 
     // Save scores into learner repository
     await this.learnerRepo.saveSkillScores(courseId, computedScores);
 
-    // Find weakest skill
+    // Award +20 XP for completing placement test (idempotent)
+    await this.learnerRepo.addXp(20, `placement_completed_${courseId}`);
+    await this.learnerRepo.recordDailyActivity();
+
+    // Find weakest skill dynamically
     let weakestSkillId = '';
     let minScore = 101;
     Object.values(computedScores).forEach((s) => {

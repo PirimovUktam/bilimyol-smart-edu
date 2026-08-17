@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../domain/entities/question.dart';
 import '../../app/providers.dart';
 
 class PlacementTestScreen extends ConsumerStatefulWidget {
@@ -29,17 +30,28 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     });
   }
 
+  String _getDifficultyLabel(QuestionDifficulty diff) {
+    switch (diff) {
+      case QuestionDifficulty.easy:
+        return 'Oson';
+      case QuestionDifficulty.medium:
+        return 'O‘rta';
+      case QuestionDifficulty.hard:
+        return 'Qiyin';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final courseState = ref.watch(courseStateNotifierProvider);
     final placementState = ref.watch(placementStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
 
-    final questions = placementState.questions;
-    final currentIndex = placementState.currentIndex;
-    final isDone = currentIndex >= questions.length;
+    final currentQ = placementState.currentQuestion;
+    final qNumber = placementState.questionNumber;
+    final totalQ = placementState.totalQuestionsToAsk;
 
-    if (placementState.isSubmitting || (isDone && questions.isNotEmpty)) {
+    if (placementState.isSubmitting || currentQ == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
@@ -58,7 +70,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Deterministic scoring orqali bilim xaritasi tuzilmoqda',
+                'Haqiqiy javoblaringiz asosida bilim xaritasi tuzilmoqda',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: AppColors.textMuted,
@@ -70,19 +82,12 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
       );
     }
 
-    if (questions.isEmpty) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final currentQ = questions[currentIndex];
-    final progress = (currentIndex + 1) / questions.length;
+    final progress = qNumber / totalQ;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Placement Test • ${activeCourse?.title ?? ""}'),
+        title: Text('Diagnostika • ${activeCourse?.title ?? ""}'),
         actions: [
           TextButton.icon(
             onPressed: () async {
@@ -93,7 +98,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
             },
             icon: const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFF59E0B)),
             label: Text(
-              'Tezkor Demo',
+              'Tezkor Test',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -114,7 +119,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Savol ${currentIndex + 1} / ${questions.length}',
+                    'Savol $qNumber / $totalQ',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -160,7 +165,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Q${currentIndex + 1}',
+                                'Q$qNumber',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
@@ -172,6 +177,11 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                             AppBadge(
                               text: currentQ.skillId.replaceAll('skill_math_', '').replaceAll('skill_eng_', '').toUpperCase(),
                               variant: AppBadgeVariant.blue,
+                            ),
+                            const SizedBox(width: 6),
+                            AppBadge(
+                              text: _getDifficultyLabel(currentQ.difficulty),
+                              variant: AppBadgeVariant.slate,
                             ),
                           ],
                         ),
@@ -185,6 +195,25 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                             height: 1.35,
                           ),
                         ),
+                        if (currentQ.formulaLatex != null) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                            ),
+                            child: Text(
+                              currentQ.formulaLatex!,
+                              style: GoogleFonts.firaCode(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
                         if (currentQ.contextSnippet != null) ...[
                           const SizedBox(height: 10),
                           Container(
@@ -284,7 +313,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
               const SizedBox(height: 12),
               // Submit button
               AppButton(
-                text: currentIndex == questions.length - 1 ? 'Natijalarni Ko‘rish' : 'Tasdiqlash',
+                text: qNumber >= totalQ ? 'Natijalarni Ko‘rish' : 'Keyingi Savol',
                 isFullWidth: true,
                 size: AppButtonSize.large,
                 rightIcon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),

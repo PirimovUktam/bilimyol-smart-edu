@@ -1,6 +1,7 @@
 import '../entities/skill_score.dart';
 import '../entities/question.dart';
-import '../../core/constants/adaptive_thresholds.dart';
+
+enum ConfidenceLevel { low, medium, high }
 
 class SkillScoringEngine {
   /// Clamps score strictly within [0, 100]
@@ -9,80 +10,77 @@ class SkillScoringEngine {
     return value.clamp(0, 100).round();
   }
 
-  /// Determines mastery classification according to pedagogical standard
+  /// Central level classification:
+  /// 0–39: needsRemediation (Boshlang‘ich)
+  /// 40–59: developing (Rivojlanmoqda)
+  /// 60–79: proficient (O‘rta)
+  /// 80–100: mastered (Yuqori)
   static MasteryLevel getMasteryLevel(int score) {
     final clamped = clampScore(score);
-    if (clamped < 50) return MasteryLevel.needsRemediation;
-    if (clamped < 70) return MasteryLevel.developing;
-    if (clamped < 85) return MasteryLevel.proficient;
+    if (clamped < 40) return MasteryLevel.needsRemediation;
+    if (clamped < 60) return MasteryLevel.developing;
+    if (clamped < 80) return MasteryLevel.proficient;
     return MasteryLevel.mastered;
   }
 
-  /// Deterministically computes placement test scores based on question results & skill weights.
-  /// Produces calibrated baseline scores:
-  /// Mathematics: Algebra 82%, Equations 74%, Functions 41% (weakest), Graphs 68%
-  /// English: Vocabulary 84%, Grammar 72%, Listening 43% (weakest), Reading 79%
+  /// Uzbek level label
+  static String getMasteryLabelUz(int score) {
+    final level = getMasteryLevel(score);
+    switch (level) {
+      case MasteryLevel.needsRemediation:
+        return 'Boshlang‘ich';
+      case MasteryLevel.developing:
+        return 'Rivojlanmoqda';
+      case MasteryLevel.proficient:
+        return 'O‘rta';
+      case MasteryLevel.mastered:
+        return 'Yuqori';
+    }
+  }
+
+  /// Determines confidence level based on number of attempts
+  static ConfidenceLevel computeConfidence(int attemptCount) {
+    if (attemptCount < 3) return ConfidenceLevel.low;
+    if (attemptCount <= 5) return ConfidenceLevel.medium;
+    return ConfidenceLevel.high;
+  }
+
+  /// Real statistical score calculation: (correct / total) * 100
+  static int computeSkillScore(int correctCount, int totalCount) {
+    if (totalCount <= 0) return 0;
+    final ratio = (correctCount / totalCount) * 100;
+    return clampScore(ratio);
+  }
+
+  /// Computes overall knowledge score as exact arithmetic mean of skill scores
+  static int computeOverallScore(Map<String, SkillScore> skillScores) {
+    final scores = skillScores.values.toList();
+    if (scores.isEmpty) return 0;
+    final sum = scores.fold<int>(0, (acc, s) => acc + s.score);
+    return clampScore(sum / scores.length);
+  }
+
+  /// Real statistical placement test scoring from actual student submissions
   static Map<String, SkillScore> computePlacementScores(
     String courseId,
     List<Question> questions,
     List<QuestionAnswerSubmission> submissions,
   ) {
     final Map<String, SkillScore> skillScoreMap = {};
-
-    // Group submissions by skill
     final Map<String, _SkillStats> skillStats = {};
 
     for (final q in questions) {
       skillStats.putIfAbsent(q.skillId, () => _SkillStats());
-      final weight = q.difficulty == QuestionDifficulty.hard
-          ? 1.5
-          : q.difficulty == QuestionDifficulty.medium
-              ? 1.2
-              : 1.0;
-      skillStats[q.skillId]!.totalWeight += weight;
-      skillStats[q.skillId]!.questionsCount += 1;
+      skillStats[q.skillId]!.total += 1;
 
       final sub = submissions.where((s) => s.questionId == q.id).firstOrNull;
       if (sub != null && sub.isCorrect) {
-        skillStats[q.skillId]!.weightedCorrect += weight;
+        skillStats[q.skillId]!.correct += 1;
       }
     }
 
-    // Calibrated deterministic baseline maps for demo alignment
-    final Map<String, Map<String, _BaselineScores>> baselineMap = {
-      'course_math_01': {
-        'skill_math_algebra': _BaselineScores(correctBase: 82, wrongBase: 35),
-        'skill_math_equations': _BaselineScores(correctBase: 74, wrongBase: 38),
-        'skill_math_functions': _BaselineScores(correctBase: 80, wrongBase: 41), // 41% focus when missed
-        'skill_math_graphs': _BaselineScores(correctBase: 68, wrongBase: 40),
-      },
-      'course_eng_01': {
-        'skill_eng_vocab': _BaselineScores(correctBase: 84, wrongBase: 40),
-        'skill_eng_grammar': _BaselineScores(correctBase: 72, wrongBase: 35),
-        'skill_eng_listening': _BaselineScores(correctBase: 85, wrongBase: 43), // 43% focus when missed
-        'skill_eng_reading': _BaselineScores(correctBase: 79, wrongBase: 38),
-      },
-    };
-
-    final courseBaselines = baselineMap[courseId] ?? {};
-
     skillStats.forEach((skillId, stats) {
-      final baseline = courseBaselines[skillId];
-
-      int computedPercentage;
-      if (baseline != null) {
-        final ratio = stats.totalWeight > 0 ? stats.weightedCorrect / stats.totalWeight : 0.0;
-        if (ratio >= 0.5) {
-          computedPercentage = baseline.correctBase;
-        } else {
-          computedPercentage = baseline.wrongBase;
-        }
-      } else {
-        final rawRatio = stats.totalWeight > 0 ? (stats.weightedCorrect / stats.totalWeight) * 100 : 50.0;
-        computedPercentage = rawRatio.round();
-      }
-
-      final finalScore = clampScore(computedPercentage);
+      final finalScore = computeSkillScore(stats.correct, stats.total);
 
       skillScoreMap[skillId] = SkillScore(
         skillId: skillId,
@@ -93,7 +91,7 @@ class SkillScoringEngine {
       );
     });
 
-    // Find and tag weakest skill
+    // Find and tag weakest skill dynamically
     int lowestScore = 101;
     String weakestId = '';
     for (final s in skillScoreMap.values) {
@@ -110,25 +108,26 @@ class SkillScoringEngine {
     return skillScoreMap;
   }
 
-  /// Applies the deterministic reinforcement score increment
-  static int calculateReinforcementScore(
-    int currentScore, [
-    int customBump = AdaptiveThresholds.reinforcementScoreBump,
-  ]) {
-    final updated = currentScore + customBump;
-    return clampScore(updated);
+  /// Real cumulative reinforcement score calculation
+  static int calculateCumulativeReinforcementScore(
+    int previousCorrect,
+    int previousTotal,
+    int reinforcementCorrect,
+    int reinforcementTotal,
+  ) {
+    final totalAttempts = previousTotal + reinforcementTotal;
+    if (totalAttempts <= 0) return 0;
+    final totalCorrect = previousCorrect + reinforcementCorrect;
+    return computeSkillScore(totalCorrect, totalAttempts);
+  }
+
+  /// Standard helper for reinforcement score bump
+  static int calculateReinforcementScore(int currentScore, [int customBump = 22]) {
+    return clampScore(currentScore + customBump);
   }
 }
 
 class _SkillStats {
-  double totalWeight = 0;
-  double weightedCorrect = 0;
-  int questionsCount = 0;
-}
-
-class _BaselineScores {
-  final int correctBase;
-  final int wrongBase;
-
-  _BaselineScores({required this.correctBase, required this.wrongBase});
+  int correct = 0;
+  int total = 0;
 }

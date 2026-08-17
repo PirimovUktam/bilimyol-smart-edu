@@ -31,13 +31,34 @@ class SubmitPlacementTestUseCase {
   Future<AssessmentResult> execute(String courseId, List<QuestionAnswerSubmission> submissions) async {
     final questions = await courseRepository.getPlacementQuestions(courseId);
 
-    // Deterministic placement scoring
+    // Record answer attempts in repository
+    for (final sub in submissions) {
+      final q = questions.where((item) => item.id == sub.questionId).firstOrNull;
+      if (q != null) {
+        final optionText = sub.selectedIndex < q.options.length ? q.options[sub.selectedIndex] : '';
+        await learnerRepository.recordAnswerAttempt(
+          courseId: courseId,
+          skillId: q.skillId,
+          lessonId: 'placement_test',
+          questionId: q.id,
+          selectedIndex: sub.selectedIndex,
+          selectedAnswer: optionText,
+          isCorrect: sub.isCorrect,
+        );
+      }
+    }
+
+    // Real statistical placement scoring
     final computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, submissions);
 
     // Save to learner profile
     await learnerRepository.saveSkillScores(courseId, computedScores);
 
-    // Identify weakest skill
+    // Award +20 XP for completing placement test (idempotent)
+    await learnerRepository.addXp(20, 'placement_completed_$courseId');
+    await learnerRepository.recordDailyActivity();
+
+    // Identify weakest skill dynamically
     String weakestSkillId = '';
     int minScore = 101;
     for (final s in computedScores.values) {

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bilimyol_mobile/domain/personalization/skill_scoring_engine.dart';
 import 'package:bilimyol_mobile/domain/entities/skill_score.dart';
 import 'package:bilimyol_mobile/domain/entities/question.dart';
-import 'package:bilimyol_mobile/data/datasources/questions_data.dart';
 
 void main() {
   group('SkillScoringEngine Tests', () {
@@ -13,68 +12,96 @@ void main() {
       expect(SkillScoringEngine.clampScore(82), equals(82));
     });
 
-    test('correctly categorizes mastery level thresholds', () {
-      expect(SkillScoringEngine.getMasteryLevel(41), equals(MasteryLevel.needsRemediation));
-      expect(SkillScoringEngine.getMasteryLevel(63), equals(MasteryLevel.developing));
-      expect(SkillScoringEngine.getMasteryLevel(74), equals(MasteryLevel.proficient));
-      expect(SkillScoringEngine.getMasteryLevel(88), equals(MasteryLevel.mastered));
+    test('calculates exact mathematical percentages (10/10 -> 100%, 0/10 -> 0%, 5/10 -> 50%, 7/12 -> 58%)', () {
+      expect(SkillScoringEngine.computeSkillScore(10, 10), equals(100));
+      expect(SkillScoringEngine.computeSkillScore(0, 10), equals(0));
+      expect(SkillScoringEngine.computeSkillScore(5, 10), equals(50));
+      expect(SkillScoringEngine.computeSkillScore(7, 12), equals(58));
+      expect(SkillScoringEngine.computeSkillScore(0, 0), equals(0));
     });
 
-    test('computes calibrated deterministic placement scores for Mathematics', () {
-      final mathQuestions = placementQuestionsData['course_math_01']!;
+    test('correctly categorizes mastery level thresholds (0-39, 40-59, 60-79, 80-100)', () {
+      expect(SkillScoringEngine.getMasteryLevel(0), equals(MasteryLevel.needsRemediation));
+      expect(SkillScoringEngine.getMasteryLevel(39), equals(MasteryLevel.needsRemediation));
+      expect(SkillScoringEngine.getMasteryLabelUz(35), equals('Boshlang‘ich'));
 
-      // User gets Q1 (Algebra), Q2 (Equations), Q4 (Graphs) right; misses Q3 & Q5 (Functions)
-      final submissions = [
-        const QuestionAnswerSubmission(questionId: 'q_math_p1', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_math_p2', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_math_p3', selectedIndex: 1, isCorrect: false),
-        const QuestionAnswerSubmission(questionId: 'q_math_p4', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_math_p5', selectedIndex: 1, isCorrect: false),
-      ];
+      expect(SkillScoringEngine.getMasteryLevel(40), equals(MasteryLevel.developing));
+      expect(SkillScoringEngine.getMasteryLevel(59), equals(MasteryLevel.developing));
+      expect(SkillScoringEngine.getMasteryLabelUz(50), equals('Rivojlanmoqda'));
 
-      final scores = SkillScoringEngine.computePlacementScores(
-        'course_math_01',
-        mathQuestions,
-        submissions,
-      );
+      expect(SkillScoringEngine.getMasteryLevel(60), equals(MasteryLevel.proficient));
+      expect(SkillScoringEngine.getMasteryLevel(79), equals(MasteryLevel.proficient));
+      expect(SkillScoringEngine.getMasteryLabelUz(70), equals('O‘rta'));
 
-      expect(scores['skill_math_algebra']?.score, equals(82));
-      expect(scores['skill_math_equations']?.score, equals(74));
-      expect(scores['skill_math_functions']?.score, equals(41));
-      expect(scores['skill_math_graphs']?.score, equals(68));
-      expect(scores['skill_math_functions']?.isWeakestFocus, isTrue);
-      expect(scores['skill_math_functions']?.masteryLevel, equals(MasteryLevel.needsRemediation));
+      expect(SkillScoringEngine.getMasteryLevel(80), equals(MasteryLevel.mastered));
+      expect(SkillScoringEngine.getMasteryLevel(100), equals(MasteryLevel.mastered));
+      expect(SkillScoringEngine.getMasteryLabelUz(95), equals('Yuqori'));
     });
 
-    test('computes calibrated deterministic placement scores for English', () {
-      final engQuestions = placementQuestionsData['course_eng_01']!;
+    test('computes overall knowledge score as exact arithmetic mean', () {
+      const scores = {
+        'skill_math_algebra': SkillScore(
+          skillId: 'skill_math_algebra',
+          courseId: 'c1',
+          score: 80,
+          lastUpdated: 0,
+          masteryLevel: MasteryLevel.mastered,
+        ),
+        'skill_math_equations': SkillScore(
+          skillId: 'skill_math_equations',
+          courseId: 'c1',
+          score: 60,
+          lastUpdated: 0,
+          masteryLevel: MasteryLevel.proficient,
+        ),
+        'skill_math_functions': SkillScore(
+          skillId: 'skill_math_functions',
+          courseId: 'c1',
+          score: 40,
+          lastUpdated: 0,
+          masteryLevel: MasteryLevel.developing,
+        ),
+        'skill_math_graphs': SkillScore(
+          skillId: 'skill_math_graphs',
+          courseId: 'c1',
+          score: 70,
+          lastUpdated: 0,
+          masteryLevel: MasteryLevel.proficient,
+        ),
+      };
 
-      // User gets Vocab, Grammar, Reading right; misses Listening
-      final submissions = [
-        const QuestionAnswerSubmission(questionId: 'q_eng_p1', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_eng_p2', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_eng_p3', selectedIndex: 1, isCorrect: false),
-        const QuestionAnswerSubmission(questionId: 'q_eng_p4', selectedIndex: 0, isCorrect: true),
-        const QuestionAnswerSubmission(questionId: 'q_eng_p5', selectedIndex: 1, isCorrect: false),
+      // (80 + 60 + 40 + 70) / 4 = 250 / 4 = 62.5 -> 63%
+      expect(SkillScoringEngine.computeOverallScore(scores), equals(63));
+    });
+
+    test('computes real placement scores from actual question responses', () {
+      const questions = [
+        Question(id: 'q1', courseId: 'math', skillId: 'alg', text: 'T1', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.medium, explanation: 'E'),
+        Question(id: 'q2', courseId: 'math', skillId: 'alg', text: 'T2', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.medium, explanation: 'E'),
+        Question(id: 'q3', courseId: 'math', skillId: 'func', text: 'T3', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.medium, explanation: 'E'),
+        Question(id: 'q4', courseId: 'math', skillId: 'func', text: 'T4', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.medium, explanation: 'E'),
       ];
 
-      final scores = SkillScoringEngine.computePlacementScores(
-        'course_eng_01',
-        engQuestions,
-        submissions,
-      );
+      final submissions = [
+        const QuestionAnswerSubmission(questionId: 'q1', selectedIndex: 0, isCorrect: true),
+        const QuestionAnswerSubmission(questionId: 'q2', selectedIndex: 0, isCorrect: true),
+        const QuestionAnswerSubmission(questionId: 'q3', selectedIndex: 1, isCorrect: false),
+        const QuestionAnswerSubmission(questionId: 'q4', selectedIndex: 1, isCorrect: false),
+      ];
 
-      expect(scores['skill_eng_vocab']?.score, equals(84));
-      expect(scores['skill_eng_grammar']?.score, equals(72));
-      expect(scores['skill_eng_listening']?.score, equals(43));
-      expect(scores['skill_eng_reading']?.score, equals(79));
-      expect(scores['skill_eng_listening']?.isWeakestFocus, isTrue);
+      final scores = SkillScoringEngine.computePlacementScores('math', questions, submissions);
+
+      expect(scores['alg']?.score, equals(100));
+      expect(scores['alg']?.masteryLevel, equals(MasteryLevel.mastered));
+      expect(scores['func']?.score, equals(0));
+      expect(scores['func']?.masteryLevel, equals(MasteryLevel.needsRemediation));
+      expect(scores['func']?.isWeakestFocus, isTrue);
     });
 
     test('calculates reinforcement score boost (+22%)', () {
       expect(SkillScoringEngine.calculateReinforcementScore(41), equals(63));
       expect(SkillScoringEngine.calculateReinforcementScore(43), equals(65));
-      expect(SkillScoringEngine.calculateReinforcementScore(90), equals(100)); // Clamp test
+      expect(SkillScoringEngine.calculateReinforcementScore(90), equals(100));
     });
   });
 }

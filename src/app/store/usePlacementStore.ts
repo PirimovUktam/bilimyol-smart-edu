@@ -4,33 +4,57 @@ import { AssessmentResult } from '@/domain/entities/Assessment';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
 import { inMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
+import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
 
 interface PlacementState {
-  questions: Question[];
-  currentQuestionIndex: number;
+  allQuestions: Question[];
+  currentQuestion: Question | null;
+  questionNumber: number;
+  totalQuestionsToAsk: number;
+  history: AnswerHistoryItem[];
   submissions: QuestionAnswerSubmission[];
   assessmentResult: AssessmentResult | null;
   isSubmitting: boolean;
   hasFinished: boolean;
 
   initPlacement: (courseId: string) => Promise<void>;
-  submitAnswer: (selectedIndex: number) => Promise<boolean>; // returns true if test finished
+  submitAnswer: (selectedIndex: number) => Promise<boolean>;
   resetPlacement: () => void;
 }
 
+const TARGET_SKILLS_MATH = [
+  'skill_math_algebra',
+  'skill_math_equations',
+  'skill_math_functions',
+  'skill_math_graphs',
+];
+
 export const usePlacementStore = create<PlacementState>((set, get) => ({
-  questions: [],
-  currentQuestionIndex: 0,
+  allQuestions: [],
+  currentQuestion: null,
+  questionNumber: 1,
+  totalQuestionsToAsk: 8, // 2 questions per skill (8 total adaptive questions)
+  history: [],
   submissions: [],
   assessmentResult: null,
   isSubmitting: false,
   hasFinished: false,
 
   initPlacement: async (courseId: string) => {
-    const questions = await inMemoryCourseRepository.getPlacementQuestions(courseId);
+    const allQuestions = await inMemoryCourseRepository.getPlacementQuestions(courseId);
+    const firstQ = AdaptiveQuestionSelector.getNextQuestion(
+      allQuestions,
+      TARGET_SKILLS_MATH,
+      [],
+      2
+    ) || allQuestions[0];
+
     set({
-      questions,
-      currentQuestionIndex: 0,
+      allQuestions,
+      currentQuestion: firstQ,
+      questionNumber: 1,
+      totalQuestionsToAsk: 8,
+      history: [],
       submissions: [],
       assessmentResult: null,
       isSubmitting: false,
@@ -39,37 +63,62 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   },
 
   submitAnswer: async (selectedIndex: number) => {
-    const { questions, currentQuestionIndex, submissions, isSubmitting } = get();
-    if (isSubmitting || currentQuestionIndex >= questions.length) return false;
+    const {
+      allQuestions,
+      currentQuestion,
+      questionNumber,
+      totalQuestionsToAsk,
+      history,
+      submissions,
+      isSubmitting,
+    } = get();
+
+    if (isSubmitting || !currentQuestion) return false;
 
     set({ isSubmitting: true });
-    const currentQ = questions[currentQuestionIndex];
-    const isCorrect = selectedIndex === currentQ.correctIndex;
+    const isCorrect = selectedIndex === currentQuestion.correctIndex;
 
-    const newSubmissions: QuestionAnswerSubmission[] = [
-      ...submissions,
-      {
-        questionId: currentQ.id,
-        selectedIndex,
-        isCorrect,
-        timeSpentSeconds: 5,
-      },
-    ];
+    const newHistoryItem: AnswerHistoryItem = {
+      questionId: currentQuestion.id,
+      skillId: currentQuestion.skillId,
+      difficulty: currentQuestion.difficulty,
+      isCorrect,
+    };
 
-    const nextIndex = currentQuestionIndex + 1;
+    const updatedHistory = [...history, newHistoryItem];
 
-    if (nextIndex >= questions.length) {
-      // Test is finished! Compute results using UseCase
+    const newSubmission: QuestionAnswerSubmission = {
+      questionId: currentQuestion.id,
+      selectedIndex,
+      isCorrect,
+      timeSpentSeconds: 5,
+    };
+
+    const updatedSubmissions = [...submissions, newSubmission];
+
+    // Find next adaptive question
+    const nextQ = AdaptiveQuestionSelector.getNextQuestion(
+      allQuestions,
+      TARGET_SKILLS_MATH,
+      updatedHistory,
+      2
+    );
+
+    const isDone = !nextQ || questionNumber >= totalQuestionsToAsk;
+
+    if (isDone) {
+      // Evaluate full placement test using UseCase
       const useCase = new SubmitPlacementTestUseCase(
         inMemoryCourseRepository,
         inMemoryLearnerRepository
       );
 
-      const result = await useCase.execute(currentQ.courseId, newSubmissions);
+      const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions);
 
       set({
-        submissions: newSubmissions,
-        currentQuestionIndex: nextIndex,
+        history: updatedHistory,
+        submissions: updatedSubmissions,
+        currentQuestion: null,
         assessmentResult: result,
         hasFinished: true,
         isSubmitting: false,
@@ -77,8 +126,10 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       return true;
     } else {
       set({
-        submissions: newSubmissions,
-        currentQuestionIndex: nextIndex,
+        history: updatedHistory,
+        submissions: updatedSubmissions,
+        currentQuestion: nextQ,
+        questionNumber: questionNumber + 1,
         isSubmitting: false,
       });
       return false;
@@ -87,8 +138,10 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
   resetPlacement: () => {
     set({
-      questions: [],
-      currentQuestionIndex: 0,
+      allQuestions: [],
+      currentQuestion: null,
+      questionNumber: 1,
+      history: [],
       submissions: [],
       assessmentResult: null,
       isSubmitting: false,
