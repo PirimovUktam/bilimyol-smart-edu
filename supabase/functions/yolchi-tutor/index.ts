@@ -10,8 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Central Model Configuration (Default: stable Google Gemini 2.0 Flash)
-const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
+// Central Model Configuration (Default: Google Gemini 3.6 Flash)
+const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-3.6-flash";
 
 // Simple in-memory sliding window rate limiter (per user ID)
 // Limit: 30 requests per minute per authenticated user
