@@ -11,11 +11,13 @@ import {
   CheckCircle,
   Copy,
   AlertTriangle,
+  KeyRound,
 } from 'lucide-react';
 import { useMonitoringStore } from '../../app/store/useMonitoringStore';
 import { Button } from '../../presentation/components/Button';
 import { Card } from '../../presentation/components/Card';
 import { Badge } from '../../presentation/components/Badge';
+import { TeacherInvitationManagementModal } from '../admin/TeacherInvitationManagementModal';
 
 export const TeacherDashboardView: React.FC = () => {
   const {
@@ -29,6 +31,7 @@ export const TeacherDashboardView: React.FC = () => {
   } = useMonitoringStore();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isInvModalOpen, setIsInvModalOpen] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [newSubject, setNewSubject] = useState('Matematika');
   const [newGradeLevel, setNewGradeLevel] = useState('7-sinf');
@@ -106,18 +109,29 @@ export const TeacherDashboardView: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          className="flex items-center gap-2 shadow-sm"
-          onClick={() => {
-            setModalError(null);
-            setModalSuccess(null);
-            setIsCreateModalOpen(true);
-          }}
-        >
-          <PlusCircle className="w-4 h-4" />
-          Yangi sinf ochish
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2 shadow-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+            onClick={() => setIsInvModalOpen(true)}
+          >
+            <KeyRound className="w-4 h-4 text-indigo-600" />
+            Ustoz Kodlari
+          </Button>
+
+          <Button
+            variant="primary"
+            className="flex items-center gap-2 shadow-sm"
+            onClick={() => {
+              setModalError(null);
+              setModalSuccess(null);
+              setIsCreateModalOpen(true);
+            }}
+          >
+            <PlusCircle className="w-4 h-4" />
+            Yangi sinf ochish
+          </Button>
+        </div>
       </div>
 
       {/* Class Selector Tabs */}
@@ -449,6 +463,12 @@ export const TeacherDashboardView: React.FC = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Teacher Invitation Codes Modal */}
+      <TeacherInvitationManagementModal
+        isOpen={isInvModalOpen}
+        onClose={() => setIsInvModalOpen(false)}
+      />
     </div>
   );
 };

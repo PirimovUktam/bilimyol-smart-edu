@@ -6,6 +6,7 @@ import {
   ClassStudentSummary,
   WeeklyActivityDay,
   StudentAlert,
+  TeacherInvitationSummary,
 } from '../../domain/entities/MonitoringEntities';
 import { IMonitoringRepository } from '../../domain/repositories/IMonitoringRepository';
 import { SupabaseMonitoringRepository } from '../../data/repositories/SupabaseMonitoringRepository';
@@ -27,6 +28,16 @@ interface MonitoringState {
   activeClass: TeacherClass | null;
   classStudents: ClassStudentSummary[];
 
+  // Teacher Invitation Management
+  invitations: TeacherInvitationSummary[];
+  createdInvitation: {
+    plainCode: string;
+    codePrefix: string;
+    schoolName: string;
+    maxUses: number;
+    expiresAt: string;
+  } | null;
+
   // Student Connections
   linkedParents: { parentId: string; parentName: string; linkedAt: string }[];
   joinedClasses: TeacherClass[];
@@ -35,6 +46,19 @@ interface MonitoringState {
   loadUserRole: () => Promise<UserRole>;
   switchRole: (role: UserRole) => Promise<void>;
   redeemTeacherInvitationCode: (code: string) => Promise<{ success: boolean; schoolName?: string; message: string }>;
+  createTeacherInvitation: (
+    schoolName?: string,
+    maxUses?: number,
+    validityDays?: number
+  ) => Promise<{
+    plainCode: string;
+    codePrefix: string;
+    schoolName: string;
+    maxUses: number;
+    expiresAt: string;
+  }>;
+  fetchTeacherInvitations: () => Promise<void>;
+  revokeTeacherInvitation: (id: string) => Promise<{ success: boolean; message: string }>;
   fetchParentData: () => Promise<void>;
   selectChild: (studentId: string) => Promise<void>;
   createParentLinkCode: () => Promise<string>;
@@ -63,6 +87,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   classes: [],
   activeClass: null,
   classStudents: [],
+
+  invitations: [],
+  createdInvitation: null,
 
   linkedParents: [],
   joinedClasses: [],
@@ -108,6 +135,54 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       return { success: false, message: msg };
     } finally {
       set({ isLoading: false });
+    }
+  },
+
+  createTeacherInvitation: async (
+    schoolName = 'BilimYo‘l Smart School',
+    maxUses = 1,
+    validityDays = 7
+  ) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await repository.createTeacherInvitation(schoolName, maxUses, validityDays);
+      const createdObj = {
+        plainCode: res.plainCode,
+        codePrefix: res.codePrefix,
+        schoolName: res.schoolName,
+        maxUses: res.maxUses,
+        expiresAt: res.expiresAt,
+      };
+      set({ createdInvitation: createdObj });
+      await get().fetchTeacherInvitations();
+      return createdObj;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Taklif kodini yaratib bo‘lmadi.';
+      set({ error: msg });
+      throw new Error(msg);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchTeacherInvitations: async () => {
+    try {
+      const list = await repository.listTeacherInvitations();
+      set({ invitations: list });
+    } catch {
+      // Non-blocking
+    }
+  },
+
+  revokeTeacherInvitation: async (id: string) => {
+    try {
+      const res = await repository.revokeTeacherInvitation(id);
+      if (res.success) {
+        await get().fetchTeacherInvitations();
+      }
+      return res;
+    } catch {
+      return { success: false, message: 'Bekor qilib bo‘lmadi.' };
     }
   },
 
@@ -271,6 +346,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       classes: [],
       activeClass: null,
       classStudents: [],
+      invitations: [],
+      createdInvitation: null,
       linkedParents: [],
       joinedClasses: [],
     });

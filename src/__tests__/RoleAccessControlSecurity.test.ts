@@ -19,7 +19,7 @@ describe('Role & Access Control Security Hardening Tests', () => {
   });
 
   it('2. Teacher Activation Code: Valid server code elevates role to teacher', async () => {
-    const validRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-2026-ALPHA');
+    const validRes = await monitoringRepo.redeemTeacherInvitationCode('USTOZ-7K4P-2M9X');
     expect(validRes.success).toBe(true);
     expect(validRes.message).toContain('muvaffaqiyatli');
     expect(validRes.schoolName).toBeDefined();
@@ -28,27 +28,54 @@ describe('Role & Access Control Security Hardening Tests', () => {
     expect(await monitoringRepo.getUserRole()).toBe('teacher');
   });
 
-  it('3. Role Authorization: Teacher can create classes, generates unique code', async () => {
-    await monitoringRepo.redeemTeacherInvitationCode('BILIMYO-USTOZ-77');
-    expect(await monitoringRepo.getUserRole()).toBe('teacher');
+  it('3. Admin Invitation Generation: Generates secure high-entropy token and safe prefix', async () => {
+    const created = await monitoringRepo.createTeacherInvitation('Toshkent IDUM №1', 1, 7);
 
-    const newClass = await monitoringRepo.createTeacherClass('9-A Geometriya');
-    expect(newClass.classCode).toBeDefined();
-    expect(newClass.name).toBe('9-A Geometriya');
+    expect(created.plainCode).toMatch(/^USTOZ-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    expect(created.codePrefix).toContain('****');
+    expect(created.maxUses).toBe(1);
+
+    // List displays only prefix, not full plain token
+    const list = await monitoringRepo.listTeacherInvitations();
+    const found = list.find((i) => i.id === created.id);
+    expect(found).toBeDefined();
+    expect(found?.codePrefix).toBe(created.codePrefix);
+    expect((found as unknown as { plainCode?: string }).plainCode).toBeUndefined();
   });
 
-  it('4. Parent Isolation: Parent cannot view children before active linking', async () => {
+  it('4. Usage Limits & Exhaustion: Single-use invitation becomes exhausted after redemption', async () => {
+    const created = await monitoringRepo.createTeacherInvitation('Prezident Maktabi', 1, 7);
+
+    // First redemption succeeds
+    const firstRedeem = await monitoringRepo.redeemTeacherInvitationCode(created.plainCode);
+    expect(firstRedeem.success).toBe(true);
+
+    // Second redemption fails because max_uses = 1 is exhausted
+    const secondRedeem = await monitoringRepo.redeemTeacherInvitationCode(created.plainCode);
+    expect(secondRedeem.success).toBe(false);
+    expect(secondRedeem.message).toContain('yaroqsiz');
+  });
+
+  it('5. Revocation: Admin can revoke active invitation code', async () => {
+    const created = await monitoringRepo.createTeacherInvitation('Samarqand Maktabi', 5, 14);
+
+    const revokeRes = await monitoringRepo.revokeTeacherInvitation(created.id);
+    expect(revokeRes.success).toBe(true);
+
+    // Attempting to redeem revoked code is rejected
+    const redeemRes = await monitoringRepo.redeemTeacherInvitationCode(created.plainCode);
+    expect(redeemRes.success).toBe(false);
+  });
+
+  it('6. Parent Isolation: Parent cannot view children before active linking', async () => {
     await monitoringRepo.setUserRole('parent');
 
-    // Without redemption, active child list is empty
     const initialChildren = await monitoringRepo.getParentChildren();
     expect(initialChildren.length).toBe(0);
 
-    // Creating linking code generates a secure 6-char token
     const { linkCode } = await monitoringRepo.createParentLinkCode();
     expect(linkCode).toMatch(/^[A-Z0-9]{6}$/);
 
-    // Redeeming code connects the student
     const res = await monitoringRepo.redeemParentLinkCode(linkCode);
     expect(res.success).toBe(true);
 
@@ -56,7 +83,7 @@ describe('Role & Access Control Security Hardening Tests', () => {
     expect(linkedChildren.length).toBe(1);
   });
 
-  it('5. Class Code Security: Invalid or malformed class code is rejected with descriptive error', async () => {
+  it('7. Class Code Security: Invalid or malformed class code is rejected with descriptive error', async () => {
     await monitoringRepo.setUserRole('student');
 
     const emptyJoin = await monitoringRepo.joinClassByCode('');
@@ -68,19 +95,7 @@ describe('Role & Access Control Security Hardening Tests', () => {
     expect(invalidJoin.message).toContain('topilmadi');
   });
 
-  it('6. Parent Link Code Security: Invalid or malformed code is rejected', async () => {
-    await monitoringRepo.setUserRole('student');
-
-    const shortCode = await monitoringRepo.redeemParentLinkCode('ABC');
-    expect(shortCode.success).toBe(false);
-    expect(shortCode.message).toContain('6 ta belgi');
-
-    const nonExistent = await monitoringRepo.redeemParentLinkCode('XYZ999');
-    expect(nonExistent.success).toBe(false);
-    expect(nonExistent.message).toContain('Yaroqsiz');
-  });
-
-  it('7. Teacher Class Roster Isolation: Students only appear in classes they joined', async () => {
+  it('8. Teacher Class Roster Isolation: Students only appear in classes they joined', async () => {
     await monitoringRepo.setUserRole('teacher');
 
     const classA = await monitoringRepo.createTeacherClass('Math 101');

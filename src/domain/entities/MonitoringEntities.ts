@@ -1,4 +1,15 @@
-export type UserRole = 'student' | 'parent' | 'teacher';
+export type UserRole = 'student' | 'parent' | 'teacher' | 'admin';
+
+export interface TeacherInvitationSummary {
+  id: string;
+  codePrefix: string;
+  schoolName: string;
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string;
+  status: 'active' | 'expired' | 'revoked' | 'exhausted';
+  createdAt: string;
+}
 
 export interface ParentStudentLink {
   id: string;
@@ -66,7 +77,7 @@ export interface WeeklyActivityDay {
 export interface StudentAlert {
   id: string;
   userId: string;
-  alertType: 'inactivity' | 'weak_topic' | 'score_drop' | 'goal_achieved' | 'streak_milestone';
+  alertType: 'inactivity' | 'weak_topic' | 'goal_missed' | 'streak_risk';
   title: string;
   description: string;
   severity: 'info' | 'warning' | 'critical';
@@ -98,7 +109,8 @@ export interface ChildSummary {
 export interface ClassStudentSummary {
   studentId: string;
   name: string;
-  email?: string;
+  email: string;
+  avatarUrl?: string;
   todayActiveMinutes: number;
   overallScore: number;
   completedLessonsCount: number;

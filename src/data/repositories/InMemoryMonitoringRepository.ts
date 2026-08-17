@@ -8,8 +8,21 @@ import {
   StudentAlert,
   ChildSummary,
   ClassStudentSummary,
+  TeacherInvitationSummary,
   UserRole,
 } from '../../domain/entities/MonitoringEntities';
+
+interface InMemoryTeacherInvitation {
+  id: string;
+  plainCode: string;
+  codePrefix: string;
+  schoolName: string;
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string;
+  status: 'active' | 'expired' | 'revoked' | 'exhausted';
+  createdAt: string;
+}
 
 export class InMemoryMonitoringRepository implements IMonitoringRepository {
   private currentRole: UserRole = 'student';
@@ -18,6 +31,41 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   private classMembers: ClassMember[] = [];
   private dailyStats: Map<string, DailyLearningStats> = new Map();
   private alerts: Map<string, StudentAlert[]> = new Map();
+  private teacherInvitations: InMemoryTeacherInvitation[] = [
+    {
+      id: 'inv_1',
+      plainCode: 'USTOZ-7K4P-2M9X',
+      codePrefix: 'USTOZ-7K4P-****',
+      schoolName: 'BilimYo‘l Boshqaruv Markazi',
+      maxUses: 10,
+      usedCount: 0,
+      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'inv_2',
+      plainCode: 'USTOZ-9B3V-4X1R',
+      codePrefix: 'USTOZ-9B3V-****',
+      schoolName: 'Toshkent IDUM №1',
+      maxUses: 5,
+      usedCount: 0,
+      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'inv_3',
+      plainCode: 'USTOZ-2026-ALPHA',
+      codePrefix: 'USTOZ-2026-****',
+      schoolName: 'BilimYo‘l Demo Markazi',
+      maxUses: 100,
+      usedCount: 0,
+      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    },
+  ];
 
   async getUserRole(): Promise<UserRole> {
     return this.currentRole;
@@ -29,22 +77,93 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
 
   async redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }> {
     const cleanCode = code.trim().toUpperCase();
-    const validCodes = ['USTOZ-2026-ALPHA', 'BILIMYO-USTOZ-77', 'MAKTAB-MATH-2026', 'TEACHER-DEMO-2026'];
-
     if (!cleanCode) {
       return { success: false, message: 'O‘qituvchi tasdiqlash kodini kiriting.' };
     }
 
-    if (!validCodes.includes(cleanCode)) {
+    const inv = this.teacherInvitations.find((i) => i.plainCode === cleanCode);
+    if (!inv || inv.status !== 'active' || new Date(inv.expiresAt).getTime() <= Date.now() || inv.usedCount >= inv.maxUses) {
       return { success: false, message: 'Kiritilgan tasdiqlash kodi yaroqsiz yoki muddati tugagan.' };
+    }
+
+    inv.usedCount += 1;
+    if (inv.usedCount >= inv.maxUses) {
+      inv.status = 'exhausted';
     }
 
     this.currentRole = 'teacher';
     return {
       success: true,
-      schoolName: 'BilimYo‘l Boshqaruv Markazi',
+      schoolName: inv.schoolName,
       message: 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!',
     };
+  }
+
+  async createTeacherInvitation(
+    schoolName = 'BilimYo‘l Smart School',
+    maxUses = 1,
+    validityDays = 7
+  ): Promise<{
+    id: string;
+    plainCode: string;
+    codePrefix: string;
+    schoolName: string;
+    maxUses: number;
+    expiresAt: string;
+    message: string;
+  }> {
+    const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const plainCode = `USTOZ-${part1}-${part2}`;
+    const codePrefix = `USTOZ-${part1}-****`;
+    const id = 'inv_' + Math.random().toString(36).substring(2, 9);
+    const expiresAt = new Date(Date.now() + validityDays * 24 * 3600 * 1000).toISOString();
+
+    const newInv: InMemoryTeacherInvitation = {
+      id,
+      plainCode,
+      codePrefix,
+      schoolName,
+      maxUses,
+      usedCount: 0,
+      expiresAt,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
+
+    this.teacherInvitations.unshift(newInv);
+
+    return {
+      id,
+      plainCode,
+      codePrefix,
+      schoolName,
+      maxUses,
+      expiresAt,
+      message: 'O‘qituvchi taklif kodi muvaffaqiyatli yaratildi.',
+    };
+  }
+
+  async listTeacherInvitations(): Promise<TeacherInvitationSummary[]> {
+    return this.teacherInvitations.map((i) => ({
+      id: i.id,
+      codePrefix: i.codePrefix,
+      schoolName: i.schoolName,
+      maxUses: i.maxUses,
+      usedCount: i.usedCount,
+      expiresAt: i.expiresAt,
+      status: i.status,
+      createdAt: i.createdAt,
+    }));
+  }
+
+  async revokeTeacherInvitation(id: string): Promise<{ success: boolean; message: string }> {
+    const inv = this.teacherInvitations.find((i) => i.id === id);
+    if (!inv) {
+      return { success: false, message: 'Taklif kodi topilmadi.' };
+    }
+    inv.status = 'revoked';
+    return { success: true, message: 'Taklif kodi bekor qilindi.' };
   }
 
   async createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }> {
@@ -210,7 +329,6 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
   async getClassStudents(classId: string): Promise<ClassStudentSummary[]> {
     const members = this.classMembers.filter((m) => m.classId === classId);
     if (members.length === 0) {
-      // Seed default sample roster for UI testing if teacher created a class
       return [
         {
           studentId: 'stud_1',
@@ -254,31 +372,18 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
           alertCount: 2,
           lastActiveDate: '2026-08-17',
         },
-        {
-          studentId: 'stud_4',
-          name: 'Zebo Olimova',
-          email: 'zebo@example.com',
-          todayActiveMinutes: 47,
-          overallScore: 89,
-          completedLessonsCount: 5,
-          totalAttemptsCount: 20,
-          weakestSkillName: 'Tenglamalar',
-          weakestSkillScore: 84,
-          status: 'A’lo',
-          alertCount: 0,
-          lastActiveDate: '2026-08-17',
-        },
       ];
     }
 
     return members.map((m, idx) => ({
       studentId: m.studentUserId,
-      name: `O‘quvchi #${idx + 1}`,
-      todayActiveMinutes: 30,
+      name: `O‘quvchi ${idx + 1}`,
+      email: `student${idx + 1}@bilimyol.uz`,
+      todayActiveMinutes: 35,
       overallScore: 75,
       completedLessonsCount: 2,
       totalAttemptsCount: 10,
-      weakestSkillName: 'Funksiyalar',
+      weakestSkillName: 'Algebra',
       weakestSkillScore: 60,
       status: 'Yaxshi',
       alertCount: 0,
@@ -288,34 +393,36 @@ export class InMemoryMonitoringRepository implements IMonitoringRepository {
 
   async recordHeartbeat(
     _sessionId: string,
-    _courseId?: string,
+    _courseId = 'course_math_01',
     _lessonId?: string,
-    _platform?: string
+    _platform = 'web'
   ): Promise<{ addedSeconds: number; totalSeconds: number }> {
     return { addedSeconds: 30, totalSeconds: 300 };
   }
 
   async getTodayDailyStats(userId = 'current_user'): Promise<DailyLearningStats | null> {
-    return this.dailyStats.get(userId) || {
-      id: 'stat_today',
-      userId,
-      activityDate: new Date().toISOString().split('T')[0],
-      activeSeconds: 1800,
-      lessonsCompleted: 2,
-      questionsAnswered: 12,
-      correctAnswers: 9,
-      accuracyPercent: 75,
-      xpEarned: 24,
-      overallScore: 76,
-    };
+    return (
+      this.dailyStats.get(userId) || {
+        id: 'ds_01',
+        userId,
+        activityDate: '2026-08-17',
+        activeSeconds: 1800,
+        lessonsCompleted: 2,
+        questionsAnswered: 8,
+        correctAnswers: 6,
+        accuracyPercent: 75,
+        xpEarned: 80,
+        overallScore: 76,
+      }
+    );
   }
 
   resetAll(): void {
+    this.currentRole = 'student';
     this.links = [];
     this.classes = [];
     this.classMembers = [];
     this.dailyStats.clear();
     this.alerts.clear();
-    this.currentRole = 'student';
   }
 }

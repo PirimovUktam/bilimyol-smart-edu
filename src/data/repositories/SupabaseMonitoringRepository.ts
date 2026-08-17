@@ -7,6 +7,7 @@ import {
   StudentAlert,
   ChildSummary,
   ClassStudentSummary,
+  TeacherInvitationSummary,
   UserRole,
 } from '../../domain/entities/MonitoringEntities';
 
@@ -52,6 +53,69 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
       success: Boolean(data.success),
       schoolName: data.school_name,
       message: data.message || (data.success ? 'O‘qituvchi hisobi muvaffaqiyatli faollashtirildi!' : 'Xatolik yuz berdi.'),
+    };
+  }
+
+  async createTeacherInvitation(
+    schoolName = 'BilimYo‘l Smart School',
+    maxUses = 1,
+    validityDays = 7
+  ): Promise<{
+    id: string;
+    plainCode: string;
+    codePrefix: string;
+    schoolName: string;
+    maxUses: number;
+    expiresAt: string;
+    message: string;
+  }> {
+    const { data, error } = await supabase.rpc('create_teacher_invitation', {
+      p_school_name: schoolName,
+      p_max_uses: maxUses,
+      p_validity_days: validityDays,
+    });
+
+    if (error || !data || data.success === false) {
+      throw new Error(data?.message || error?.message || 'Taklif kodini yaratib bo‘lmadi.');
+    }
+
+    return {
+      id: data.id,
+      plainCode: data.plain_code,
+      codePrefix: data.code_prefix,
+      schoolName: data.school_name,
+      maxUses: data.max_uses,
+      expiresAt: data.expires_at,
+      message: data.message || 'Kod muvaffaqiyatli yaratildi.',
+    };
+  }
+
+  async listTeacherInvitations(): Promise<TeacherInvitationSummary[]> {
+    const { data, error } = await supabase.rpc('list_teacher_invitations');
+    if (error || !data || !Array.isArray(data)) {
+      return [];
+    }
+
+    return data.map((d: Record<string, unknown>) => ({
+      id: String(d.id),
+      codePrefix: String(d.code_prefix),
+      schoolName: String(d.school_name),
+      maxUses: Number(d.max_uses || 1),
+      usedCount: Number(d.used_count || 0),
+      expiresAt: String(d.expires_at),
+      status: d.status as TeacherInvitationSummary['status'],
+      createdAt: String(d.created_at),
+    }));
+  }
+
+  async revokeTeacherInvitation(id: string): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await supabase.rpc('revoke_teacher_invitation', { p_id: id });
+    if (error || !data) {
+      return { success: false, message: error?.message || 'Bekor qilishda xatolik yuz berdi.' };
+    }
+    return {
+      success: Boolean(data.success),
+      message: data.message || 'Taklif kodi bekor qilindi.',
     };
   }
 

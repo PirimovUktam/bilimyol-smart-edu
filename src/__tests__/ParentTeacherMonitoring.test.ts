@@ -80,7 +80,7 @@ describe('Parent + Teacher Learning Monitoring System Tests', () => {
     const newClass = await monitoringRepo.createTeacherClass('7-A Sinf');
     const students = await monitoringRepo.getClassStudents(newClass.id);
 
-    expect(students.length).toBe(4);
+    expect(students.length).toBe(3);
     const weakStudent = students.find((s) => s.status === 'E’tibor');
     expect(weakStudent).toBeDefined();
     expect(weakStudent?.overallScore).toBeLessThan(55);

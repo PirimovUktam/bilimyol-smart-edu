@@ -5,6 +5,7 @@ import {
   StudentAlert,
   ChildSummary,
   ClassStudentSummary,
+  TeacherInvitationSummary,
   UserRole,
 } from '../entities/MonitoringEntities';
 
@@ -13,6 +14,23 @@ export interface IMonitoringRepository {
   getUserRole(): Promise<UserRole>;
   setUserRole(role: UserRole): Promise<void>;
   redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }>;
+
+  // Teacher Invitation Management (Admin/Management)
+  createTeacherInvitation(
+    schoolName?: string,
+    maxUses?: number,
+    validityDays?: number
+  ): Promise<{
+    id: string;
+    plainCode: string;
+    codePrefix: string;
+    schoolName: string;
+    maxUses: number;
+    expiresAt: string;
+    message: string;
+  }>;
+  listTeacherInvitations(): Promise<TeacherInvitationSummary[]>;
+  revokeTeacherInvitation(id: string): Promise<{ success: boolean; message: string }>;
 
   // Parent Features
   createParentLinkCode(): Promise<{ id: string; linkCode: string; expiresAt: string }>;
