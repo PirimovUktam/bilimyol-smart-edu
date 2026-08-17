@@ -6,12 +6,24 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. UPDATE PROFILES ROLE CONSTRAINT TO INCLUDE ADMIN
+-- 1. ENSURE ROLE & DISPLAY NAME COLUMNS EXIST ON PROFILES
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS display_name TEXT;
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'student';
+
+UPDATE public.profiles
+SET role = 'student'
+WHERE role IS NULL OR role NOT IN ('student', 'parent', 'teacher', 'admin');
+
 ALTER TABLE public.profiles
   DROP CONSTRAINT IF EXISTS profiles_role_check;
 
 ALTER TABLE public.profiles
   ADD CONSTRAINT profiles_role_check CHECK (role IN ('student', 'parent', 'teacher', 'admin'));
+
+CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 
 -- 2. CREATE TEACHER INVITATION CODES TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS public.teacher_invitation_codes (
@@ -61,9 +73,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. PRIVILEGED SERVER-SIDE FUNCTION: PROMOTE USER TO ADMIN
--- Can be safely run by database superuser in Supabase SQL Editor or by existing Admin.
--- Any unprivileged authenticated user trying to invoke it is strictly DENIED.
+-- 5. PRIVILEGED FUNCTION: PROMOTE USER TO ADMIN (SUPERUSER / ADMIN ONLY)
 CREATE OR REPLACE FUNCTION public.promote_user_to_admin(p_email TEXT)
 RETURNS JSONB AS $$
 DECLARE
@@ -71,7 +81,7 @@ DECLARE
   v_target_id UUID;
   v_clean_email TEXT := LOWER(TRIM(p_email));
 BEGIN
-  -- If called from client RPC (auth.uid() is not null), verify caller is already an admin
+  -- If called from client RPC, caller MUST already be an admin
   IF v_caller_id IS NOT NULL AND NOT public.is_admin() THEN
     RETURN jsonb_build_object(
       'success', false,
@@ -83,12 +93,10 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Email manzili kiritilishi shart.');
   END IF;
 
-  -- Look up in auth.users
   SELECT id INTO v_target_id
   FROM auth.users
   WHERE LOWER(email) = v_clean_email;
 
-  -- Fallback check in public.profiles
   IF v_target_id IS NULL THEN
     SELECT id INTO v_target_id
     FROM public.profiles
@@ -98,11 +106,10 @@ BEGIN
   IF v_target_id IS NULL THEN
     RETURN jsonb_build_object(
       'success', false,
-      'message', 'Ko‘rsatilgan email (' || v_clean_email || ') bilan foydalanuvchi topilmadi. Avval platformada ro‘yxatdan o‘ting.'
+      'message', 'Ko‘rsatilgan email (' || v_clean_email || ') bilan foydalanuvchi topilmadi. Avval ro‘yxatdan o‘ting.'
     );
   END IF;
 
-  -- Elevate role to admin in public.profiles
   UPDATE public.profiles
   SET role = 'admin',
       updated_at = now()
@@ -141,12 +148,10 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'Autentifikatsiyadan o‘tilmagan.');
   END IF;
 
-  -- Strict check: caller MUST be an Admin
   IF NOT public.is_admin() THEN
     RETURN jsonb_build_object('success', false, 'message', 'Faqat administratorlar taklif kodi yarata oladi.');
   END IF;
 
-  -- Generate human-readable high-entropy token: USTOZ-XXXX-YYYY
   v_part1 := UPPER(SUBSTRING(MD5(RANDOM()::TEXT || clock_timestamp()::TEXT) FROM 1 FOR 4));
   v_part2 := UPPER(SUBSTRING(MD5(RANDOM()::TEXT || clock_timestamp()::TEXT) FROM 5 FOR 4));
   v_plain_code := 'USTOZ-' || v_part1 || '-' || v_part2;
@@ -270,7 +275,7 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'message', 'O‘qituvchi tasdiqlash kodini kiriting.');
   END IF;
 
-  -- 1. Rate Limiting: max 5 failed attempts in past 5 minutes
+  -- Rate Limiting: max 5 failed attempts in past 5 minutes
   SELECT COUNT(*) INTO v_recent_fails
   FROM public.teacher_invitation_attempts
   WHERE user_id = v_uid
@@ -284,10 +289,8 @@ BEGIN
     );
   END IF;
 
-  -- 2. Compute SHA-256 hash of normalized code
   v_hash := encode(digest(v_clean_code, 'sha256'), 'hex');
 
-  -- 3. Row lock query
   SELECT * INTO v_inv
   FROM public.teacher_invitation_codes
   WHERE code_hash = v_hash

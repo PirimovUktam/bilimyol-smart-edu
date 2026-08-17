@@ -70,8 +70,8 @@ describe('Admin Role & Bootstrap Security Hardening Tests', () => {
     await monitoringRepo.promoteUserToAdmin('admin@bilimyol.uz');
     const created = await monitoringRepo.createTeacherInvitation('Namangan IDUM', 1, 7);
 
-    // Switch to a new teacher candidate
-    monitoringRepo.resetAll();
+    // Switch to a new teacher candidate role
+    await monitoringRepo.setUserRole('student');
     expect(await monitoringRepo.getUserRole()).toBe('student');
 
     // Teacher candidate redeems the single-use invitation code
