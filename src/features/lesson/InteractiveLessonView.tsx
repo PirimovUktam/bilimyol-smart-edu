@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { useCourseStore } from '@/app/store/useCourseStore';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
@@ -37,7 +38,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   onFinish,
   onBackToRoadmap,
 }) => {
-  const { activeCourse } = useCourseStore();
+  const { activeCourse, activeCourseSkills } = useCourseStore();
+  const { profile } = useLearnerStore();
   const {
     currentLesson,
     currentStepIndex,
@@ -455,18 +457,60 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       />
 
       {/* Lesson Completion Modal matching Infographic 2 Step 10 & 11 */}
-      <LessonCompletionModal
-        isOpen={isCompleted}
-        scorePercentage={100}
-        correctCount={1}
-        totalCount={1}
-        courseTitle={activeCourse?.title || 'Matematika'}
-        lessonTitle={currentLesson.title}
-        onProceedToNext={() => {
-          useLessonStore.getState().resetLessonState();
-          onFinish();
-        }}
-      />
+      {(() => {
+        const courseScores = (profile?.scoresByCourse && currentLesson?.courseId)
+          ? (profile.scoresByCourse[currentLesson.courseId] || {})
+          : {};
+        const currentSkillId = currentLesson?.skillId || '';
+        const prevScore = courseScores[currentSkillId]?.score ?? 50;
+        const newSkillScore = lastAnswerResult?.newSkillScore ?? (lastAnswerResult?.isCorrect ? Math.min(100, prevScore + 15) : prevScore);
+        const realDelta = Math.max(0, newSkillScore - prevScore);
+
+        const dynamicSkillProgressList = activeCourseSkills.length > 0
+          ? activeCourseSkills.slice(0, 5).map((sk) => {
+              if (sk.id === currentSkillId) {
+                return {
+                  skillName: sk.name,
+                  score: newSkillScore,
+                  delta: realDelta > 0 ? realDelta : (lastAnswerResult?.isCorrect ? 15 : undefined),
+                };
+              }
+              return {
+                skillName: sk.name,
+                score: courseScores[sk.id]?.score ?? 50,
+                delta: undefined,
+              };
+            })
+          : [
+              {
+                skillName: currentLesson.title,
+                score: newSkillScore,
+                delta: realDelta > 0 ? realDelta : (lastAnswerResult?.isCorrect ? 15 : undefined),
+              },
+            ];
+
+        const currentSkillName = activeCourseSkills.find((s) => s.id === currentSkillId)?.name || currentLesson.title;
+        const dynamicRecommendation = realDelta > 0
+          ? `Siz ${currentSkillName} mavzusini muvaffaqiyatli o‘zlashtirdingiz (+${realDelta}% o‘sish). Ushbu bilimni keyingi modul bilan mustahkamlashni tavsiya qilamiz.`
+          : `Siz ${currentSkillName} mavzusi bo‘yicha tushunchalarni mustahkamlab oldingiz. Yangi mashqlarga o‘tishga tayyorsiz.`;
+
+        return (
+          <LessonCompletionModal
+            isOpen={isCompleted}
+            scorePercentage={lastAnswerResult?.isCorrect ? 100 : (lastAnswerResult?.overallScore || 80)}
+            correctCount={lastAnswerResult?.isCorrect ? 1 : 0}
+            totalCount={1}
+            courseTitle={activeCourse?.title || 'Matematika'}
+            lessonTitle={currentLesson.title}
+            skillProgressList={dynamicSkillProgressList}
+            aiRecommendation={dynamicRecommendation}
+            onProceedToNext={() => {
+              useLessonStore.getState().resetLessonState();
+              onFinish();
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

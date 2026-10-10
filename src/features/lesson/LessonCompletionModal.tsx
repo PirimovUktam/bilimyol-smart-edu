@@ -30,14 +30,8 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   totalCount,
   courseTitle = 'Matematika',
   lessonTitle = 'Chiziqli tenglamalar',
-  skillProgressList = [
-    { skillName: 'Chiziqli tenglamalar', score: 85, delta: 15 },
-    { skillName: 'Tenglamalar sistemasi', score: 60, delta: 10 },
-    { skillName: 'Funksiyalar', score: 45 },
-    { skillName: 'Geometriya', score: 70 },
-    { skillName: 'Matnli masalalar', score: 40 },
-  ],
-  aiRecommendation = 'Siz chiziqli tenglamalarni yaxshi o‘zlashtirdingiz. Endi tenglamalar sistemasini o‘rganishni tavsiya qilaman.',
+  skillProgressList = [],
+  aiRecommendation = 'Siz ushbu dars mavzusini yaxshi o‘zlashtirdingiz. Keyingi mavzularni o‘rganishni tavsiya qilamiz.',
   onProceedToNext,
 }) => {
   if (!isOpen) return null;
