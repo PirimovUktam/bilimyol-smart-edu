@@ -1,4 +1,10 @@
-import { ILearnerRepository, AnswerAttemptRecord, PlacementAttemptData } from '../../domain/repositories/ILearnerRepository';
+import {
+  ILearnerRepository,
+  AnswerAttemptRecord,
+  PlacementAttemptData,
+  SubmitAnswerAttemptRequest,
+  SubmitAnswerAttemptResult,
+} from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
@@ -333,6 +339,65 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       });
     } catch (err) {
       console.warn('Error marking reinforcement completed in Supabase:', err);
+    }
+  }
+
+  async submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult> {
+    if (!isSupabaseConfigured) {
+      return this.fallbackRepo.submitAnswerAttempt(request);
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return this.fallbackRepo.submitAnswerAttempt(request);
+      }
+
+      const { data, error } = await supabase.rpc('submit_answer_attempt', {
+        p_user_id: user.id,
+        p_course_id: request.courseId,
+        p_skill_id: request.skillId,
+        p_lesson_id: request.lessonId || 'general',
+        p_question_id: request.questionId,
+        p_selected_index: request.selectedIndex,
+        p_selected_text: request.selectedAnswer,
+        p_idempotency_key: request.idempotencyKey || null,
+      });
+
+      if (error || !data) {
+        console.warn('RPC submit_answer_attempt error, falling back to local evaluation:', error);
+        return this.fallbackRepo.submitAnswerAttempt(request);
+      }
+
+      const result: SubmitAnswerAttemptResult = {
+        isCorrect: Boolean(data.is_correct),
+        correctIndex: typeof data.correct_index === 'number' ? data.correct_index : undefined,
+        correctOption: data.correct_option || undefined,
+        explanation: data.explanation || 'To‘g‘ri yechim.',
+        newSkillScore: typeof data.new_skill_score === 'number' ? data.new_skill_score : 50,
+        overallScore: typeof data.overall_score === 'number' ? data.overall_score : 50,
+        xpAwarded: typeof data.xp_awarded === 'number' ? data.xp_awarded : 0,
+        totalXp: typeof data.total_xp === 'number' ? data.total_xp : undefined,
+        totalAttempts: typeof data.total_attempts === 'number' ? data.total_attempts : undefined,
+        correctAttempts: typeof data.correct_attempts === 'number' ? data.correct_attempts : undefined,
+        alreadyProcessed: Boolean(data.already_processed),
+      };
+
+      // Sync local fallback repository state with verified evaluation
+      await this.fallbackRepo.recordAnswerAttempt({
+        courseId: request.courseId,
+        skillId: request.skillId,
+        lessonId: request.lessonId,
+        questionId: request.questionId,
+        selectedIndex: request.selectedIndex,
+        selectedAnswer: request.selectedAnswer,
+        isCorrect: result.isCorrect,
+      });
+
+      return result;
+    } catch (err) {
+      console.warn('Exception during submitAnswerAttempt RPC:', err);
+      return this.fallbackRepo.submitAnswerAttempt(request);
     }
   }
 

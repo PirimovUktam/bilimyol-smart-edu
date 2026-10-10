@@ -7,6 +7,7 @@ export interface Skill {
   code: string;
   description: string;
   order: number;
+  orderIndex?: number;
   iconName: string;
 }
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Lesson } from '@/domain/entities/Lesson';
-import { inMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
+import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
 import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases/SubmitLessonAnswerUseCase';
@@ -29,6 +29,7 @@ interface LessonState {
   ) => Promise<void>;
   nextStep: () => void;
   prevStep: () => void;
+  goToStep: (index: number) => void;
   submitAnswer: (selectedIndex: number) => Promise<LessonAnswerResult | null>;
   openReinforcement: () => void;
   closeReinforcement: () => void;
@@ -57,7 +58,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       showReinforcementModal: false,
       isCompleted: false,
     });
-    const lesson = await inMemoryLessonRepository.getLessonById(lessonId);
+    const lesson = await supabaseLessonRepository.getLessonById(lessonId);
     set({ currentLesson: lesson, isLoading: false });
   },
 
@@ -94,7 +95,6 @@ export const useLessonStore = create<LessonState>((set, get) => ({
             text: firstQ.text,
             formulaLatex: firstQ.formulaLatex || undefined,
             options: firstQ.options,
-            correctIndex: 0, // Server validates answer attempts for anti-cheat
             difficulty: (typeof firstQ.difficulty === 'string' ? firstQ.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
             explanation: '',
             isPlacement: false,
@@ -105,7 +105,6 @@ export const useLessonStore = create<LessonState>((set, get) => ({
             skillId: response.skillId,
             text: 'Mavzuni to‘liq o‘zlashtirdingizmi?',
             options: ['Ha, tushundim', 'Qisman', 'Mashq qilish kerak', 'Qaytadan'],
-            correctIndex: 0,
             difficulty: 'medium' as const,
             explanation: 'Dars muvaffaqiyatli yakunlandi.',
             isPlacement: false,
@@ -135,7 +134,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       set({ currentLesson: lessonEntity, isLoading: false });
     } catch (err) {
       console.warn('[useLessonStore] generateAILesson error, falling back:', err);
-      const fallbackLesson = await inMemoryLessonRepository.getLessonById('lesson_math_functions_01');
+      const fallbackLesson = await supabaseLessonRepository.getLessonById('lesson_math_functions_01');
       set({ currentLesson: fallbackLesson, isLoading: false });
     }
   },
@@ -152,6 +151,14 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const { currentStepIndex } = get();
     if (currentStepIndex > 0) {
       set({ currentStepIndex: currentStepIndex - 1 });
+    }
+  },
+
+  goToStep: (index: number) => {
+    const { currentLesson } = get();
+    if (!currentLesson) return;
+    if (index >= 0 && index < currentLesson.steps.length) {
+      set({ currentStepIndex: index });
     }
   },
 
@@ -175,6 +182,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
     if (result.isCorrect) {
       await supabaseLearnerRepository.markLessonCompleted(currentLesson.id);
+      await useLearnerStore.getState().loadProfile();
       set({
         lastAnswerResult: result,
         isEvaluatingAnswer: false,
@@ -182,6 +190,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         showAIPanel: false,
       });
     } else {
+      await useLearnerStore.getState().loadProfile();
       // Wrong answer -> Show Yo'lchi AI Feedback panel
       set({
         lastAnswerResult: result,

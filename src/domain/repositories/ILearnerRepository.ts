@@ -27,6 +27,30 @@ export interface PlacementAttemptData {
   submissions: PlacementAttemptSubmission[];
 }
 
+export interface SubmitAnswerAttemptRequest {
+  courseId: string;
+  skillId: string;
+  lessonId: string;
+  questionId: string;
+  selectedIndex: number;
+  selectedAnswer: string;
+  idempotencyKey?: string;
+}
+
+export interface SubmitAnswerAttemptResult {
+  isCorrect: boolean;
+  correctIndex?: number;
+  correctOption?: string;
+  explanation: string;
+  newSkillScore: number;
+  overallScore: number;
+  xpAwarded: number;
+  totalXp?: number;
+  totalAttempts?: number;
+  correctAttempts?: number;
+  alreadyProcessed?: boolean;
+}
+
 export interface ILearnerRepository {
   getProfile(): Promise<LearnerProfile>;
   getCurrentProfile(): Promise<LearnerProfile>;
@@ -36,6 +60,7 @@ export interface ILearnerRepository {
   markLessonCompleted(lessonId: string): Promise<void>;
   markNodeCompleted(nodeId: string): Promise<void>;
   markReinforcementCompleted(reinforcementId: string): Promise<void>;
+  submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult>;
   recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord>;
   getAnswerAttempts(limit?: number): Promise<AnswerAttemptRecord[]>;
   addXp(amount: number, actionIdempotencyKey?: string): Promise<number>;

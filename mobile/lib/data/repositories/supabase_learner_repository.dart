@@ -301,7 +301,7 @@ class SupabaseLearnerRepository implements ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user != null) {
-        await client.rpc('submit_answer_attempt', params: {
+        final rpcRes = await client.rpc('submit_answer_attempt', params: {
           'p_user_id': user.id,
           'p_course_id': courseId,
           'p_skill_id': skillId,
@@ -310,6 +310,20 @@ class SupabaseLearnerRepository implements ILearnerRepository {
           'p_selected_index': selectedIndex,
           'p_selected_text': selectedAnswer,
         });
+
+        final serverCorrect = (rpcRes is Map && rpcRes['is_correct'] != null)
+            ? (rpcRes['is_correct'] as bool)
+            : isCorrect;
+
+        return _fallbackRepo.recordAnswerAttempt(
+          courseId: courseId,
+          skillId: skillId,
+          lessonId: lessonId,
+          questionId: questionId,
+          selectedIndex: selectedIndex,
+          selectedAnswer: selectedAnswer,
+          isCorrect: serverCorrect,
+        );
       }
       return _fallbackRepo.recordAnswerAttempt(
         courseId: courseId,

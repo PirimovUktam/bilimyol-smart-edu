@@ -11,7 +11,10 @@ const corsHeaders = {
 };
 
 // Central Model Configuration (Default: Google Gemini 3.6 Flash)
-const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-3.6-flash";
+// Docs: https://ai.google.dev/gemini-api/docs/models (gemini-3.6-flash = stable).
+// Override only via Supabase Edge secret: `supabase secrets set GEMINI_MODEL=<model-id>`.
+// GEMINI_API_KEY is read exclusively from Deno.env (Edge secret) below — never logged, never bundled.
+const GEMINI_MODEL = (Deno.env.get("GEMINI_MODEL") || "").trim() || "gemini-3.6-flash";
 
 // Sliding window rate limiters (per user ID)
 const generalRateLimitMap = new Map<string, { count: number; resetTime: number }>();

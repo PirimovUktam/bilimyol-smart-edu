@@ -6,6 +6,10 @@ export interface LessonAnswerResult {
   isCorrect: boolean;
   selectedOption: string;
   correctOption: string;
+  explanation?: string;
+  newSkillScore?: number;
+  overallScore?: number;
+  xpAwarded?: number;
   aiExplanation?: AIExplanationResponse;
 }
 
@@ -21,21 +25,54 @@ export class SubmitLessonAnswerUseCase {
     learnerName?: string,
     lessonId?: string
   ): Promise<LessonAnswerResult> {
-    const isCorrect = selectedIndex === question.correctIndex;
     const selectedOption = question.options[selectedIndex] || '';
-    const correctOption = question.options[question.correctIndex] || '';
 
-    // Log answer attempt if repository provided
+    let isCorrect = false;
+    let correctOption = '';
+    let explanation = '';
+    let newSkillScore: number | undefined;
+    let overallScore: number | undefined;
+    let xpAwarded: number | undefined;
+
     if (this.learnerRepo) {
-      await this.learnerRepo.recordAnswerAttempt({
-        courseId: question.courseId,
-        skillId: question.skillId,
-        lessonId: lessonId || 'lesson_general',
-        questionId: question.id,
-        selectedIndex,
-        selectedAnswer: selectedOption,
-        isCorrect,
-      });
+      if (typeof this.learnerRepo.submitAnswerAttempt === 'function') {
+        const serverResult = await this.learnerRepo.submitAnswerAttempt({
+          courseId: question.courseId,
+          skillId: question.skillId,
+          lessonId: lessonId || 'lesson_general',
+          questionId: question.id,
+          selectedIndex,
+          selectedAnswer: selectedOption,
+          idempotencyKey: `attempt_${lessonId || 'general'}_${question.id}_${selectedIndex}`,
+        });
+
+        isCorrect = serverResult.isCorrect;
+        correctOption =
+          serverResult.correctOption ||
+          (serverResult.correctIndex !== undefined ? question.options[serverResult.correctIndex] || '' : '');
+        explanation = serverResult.explanation;
+        newSkillScore = serverResult.newSkillScore;
+        overallScore = serverResult.overallScore;
+        xpAwarded = serverResult.xpAwarded;
+      } else {
+        const knownIndex = question.correctIndex ?? 0;
+        isCorrect = selectedIndex === knownIndex;
+        correctOption = question.options[knownIndex] || '';
+        await this.learnerRepo.recordAnswerAttempt({
+          courseId: question.courseId,
+          skillId: question.skillId,
+          lessonId: lessonId || 'lesson_general',
+          questionId: question.id,
+          selectedIndex,
+          selectedAnswer: selectedOption,
+          isCorrect,
+        });
+      }
+    } else {
+      // Local fallback only if no repository injected
+      const knownIndex = question.correctIndex ?? 0;
+      isCorrect = selectedIndex === knownIndex;
+      correctOption = question.options[knownIndex] || '';
     }
 
     if (isCorrect) {
@@ -43,6 +80,10 @@ export class SubmitLessonAnswerUseCase {
         isCorrect: true,
         selectedOption,
         correctOption,
+        explanation,
+        newSkillScore,
+        overallScore,
+        xpAwarded,
       };
     }
 
@@ -61,6 +102,10 @@ export class SubmitLessonAnswerUseCase {
       isCorrect: false,
       selectedOption,
       correctOption,
+      explanation,
+      newSkillScore,
+      overallScore,
+      xpAwarded,
       aiExplanation,
     };
   }

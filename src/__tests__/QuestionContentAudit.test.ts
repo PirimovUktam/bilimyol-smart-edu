@@ -100,7 +100,8 @@ describe('Question Content & Assessment Audit Tests', () => {
       expect(q).toBeDefined();
 
       if (q) {
-        const correctOption = q.options[q.correctIndex];
+        expect(q.correctIndex).toBeDefined();
+        const correctOption = q.options[q.correctIndex!];
         expect(correctOption).toBe('11');
 
         // Check distractors are distinct numbers
@@ -118,7 +119,8 @@ describe('Question Content & Assessment Audit Tests', () => {
       expect(reinf).toBeDefined();
 
       if (reinf) {
-        const correctOption = reinf.options[reinf.correctIndex];
+        expect(reinf.correctIndex).toBeDefined();
+        const correctOption = reinf.options[reinf.correctIndex!];
         expect(correctOption).toBe('8');
       }
     });

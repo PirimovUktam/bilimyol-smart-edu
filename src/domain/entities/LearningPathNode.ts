@@ -14,6 +14,7 @@ export interface LearningPathNode {
   targetLessonId?: string;
   estimatedMinutes: number;
   order: number;
+  orderIndex?: number;
 }
 
 export interface LearningPath {

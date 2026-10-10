@@ -26,7 +26,7 @@ describe('ProductionPersistenceFlow', () => {
     // Build real user submissions: answer half correctly, half incorrectly
     const submissions: QuestionAnswerSubmission[] = questions.slice(0, 4).map((q, idx) => ({
       questionId: q.id,
-      selectedIndex: idx % 2 === 0 ? q.correctIndex : (q.correctIndex + 1) % 4,
+      selectedIndex: idx % 2 === 0 ? (q.correctIndex ?? 0) : ((q.correctIndex ?? 0) + 1) % 4,
       isCorrect: idx % 2 === 0,
       timeSpentSeconds: 12,
     }));

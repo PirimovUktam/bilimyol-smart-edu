@@ -7,7 +7,7 @@ export interface Question {
   text: string;
   contextSnippet?: string;
   options: string[];
-  correctIndex: number;
+  correctIndex?: number;
   difficulty: DifficultyLevel;
   explanation: string;
   formulaLatex?: string;

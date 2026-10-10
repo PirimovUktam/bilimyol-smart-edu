@@ -11,6 +11,13 @@ import {
   RotateCcw,
   Award,
   XCircle,
+  Bot,
+  Brain,
+  Calendar,
+  Zap,
+  Target,
+  Clock,
+  BookOpen,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
@@ -91,6 +98,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       setIsGeneratingAILesson(false);
     }
   };
+
+  const streakDays = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+  const todayIdx = 2; // For demonstration Wednesday
+
+  const achievements = [
+    { id: 1, title: 'Dars ustasi', icon: '🏆', color: 'from-amber-400 to-amber-600', earned: true },
+    { id: 2, title: 'Jonboz o‘quvchi', icon: '🚀', color: 'from-blue-500 to-indigo-600', earned: true },
+    { id: 3, title: 'Ketma-ketlik chempioni', icon: '🔥', color: 'from-orange-500 to-rose-600', earned: true },
+    { id: 4, title: 'Bilim kashfiyotchisi', icon: '🧭', color: 'from-teal-400 to-emerald-600', earned: true },
+  ];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -225,22 +242,247 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {profile?.xp || 0} <span className="text-xs font-semibold text-slate-500">XP</span>
           </div>
           <div className="text-xs font-bold text-orange-600 flex items-center gap-1">
-            <span>{profile?.streakDays || 1} kunlik faoliyat</span>
+            <span>{profile?.streakDays || 7} kunlik faoliyat</span>
           </div>
           <span className="text-[11px] text-slate-400 font-medium">Kunlik faollik hisobi</span>
         </Card>
       </div>
 
-      {/* Recent Performance Section */}
+      {/* Infographic 3 Section: Yo‘lchi AI Assistant Card & Streak/Gamification */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Yo‘lchi AI Assistant Interactive Dialogue matching Infographic 3 Step 13 */}
+        <Card className="p-6 border-blue-200 bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/50 shadow-md lg:col-span-2 space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+                <Bot className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-1.5">
+                  Yo‘lchi AI
+                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                    AI Yordamchi
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500">Shaxsiy ta’lim mentori</p>
+              </div>
+            </div>
+            <Badge variant="blue" size="sm">
+              Online
+            </Badge>
+          </div>
+
+          {/* Dialogue bubbles matching Infographic 3 Step 13 */}
+          <div className="space-y-2.5 pt-1">
+            <div className="p-3.5 bg-white rounded-2xl rounded-tl-xs border border-blue-100 shadow-xs max-w-md">
+              <p className="text-xs sm:text-sm text-slate-800 font-semibold">
+                Bugungi mavzuni birgalikda o‘rganamiz! Qanday topshiriq tayyorlay? 🚀
+              </p>
+            </div>
+            <div className="p-3.5 bg-blue-600 text-white rounded-2xl rounded-tr-xs shadow-xs max-w-sm ml-auto text-right">
+              <p className="text-xs sm:text-sm font-medium">
+                Men uchun misollar ko‘proq bo‘lsin, iltimos.
+              </p>
+            </div>
+            <div className="p-3.5 bg-white rounded-2xl rounded-tl-xs border border-blue-100 shadow-xs max-w-md">
+              <p className="text-xs sm:text-sm text-slate-800 font-semibold">
+                Albatta! Sizning darajangizga mos 5 ta misol tayyorladim. 💡
+              </p>
+            </div>
+          </div>
+
+          {/* Quick action prompt chips matching Infographic 3 Step 13 */}
+          <div className="pt-2 flex flex-wrap items-center gap-2">
+            {['Tushuntirish', 'Misollar', 'Interaktiv mashq', 'Savol-javob'].map((chip, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={handleCreateAILesson}
+                className="px-3 py-1.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-xs font-bold text-blue-800 transition-colors shadow-xs cursor-pointer"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* 7-Day Streak & Badges matching Infographic 3 Step 17 */}
+        <Card className="p-6 border-slate-200/90 shadow-md space-y-4 flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500 fill-orange-500" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  7 kun ketma-ket!
+                </h3>
+              </div>
+              <span className="text-xs font-extrabold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                +50 XP
+              </span>
+            </div>
+
+            {/* Streak day pills */}
+            <div className="grid grid-cols-7 gap-1 pt-1">
+              {streakDays.map((day, i) => (
+                <div
+                  key={day}
+                  className={`flex flex-col items-center justify-center p-2 rounded-xl text-xs font-bold ${
+                    i <= todayIdx
+                      ? 'bg-orange-500 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-400'
+                  }`}
+                >
+                  <span className="text-[10px]">{day}</span>
+                  <Flame className={`w-3.5 h-3.5 mt-0.5 ${i <= todayIdx ? 'fill-white' : 'text-slate-300'}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Badges Grid */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+              Yutuqlar:
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {achievements.map((ach) => (
+                <div
+                  key={ach.id}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800"
+                >
+                  <span className="text-base">{ach.icon}</span>
+                  <span className="truncate">{ach.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Infographic 3 Step 16: Spaced Repetition (Adaptiv takrorlash tizimi) & Targeted exercises */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Targeted exercises matching Infographic 3 Step 16 */}
+        <Card className="p-6 border-slate-200/90 shadow-md space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-blue-600" />
+              <h3 className="text-base font-bold text-slate-900">
+                Siz uchun tavsiya etilgan mashqlar
+              </h3>
+            </div>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+              Adaptiv Reja
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <div className="p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-rose-200 text-rose-900">
+                  1. Zaif mavzu
+                </span>
+                <h4 className="text-sm font-bold text-slate-900 mt-1">Tenglamalar</h4>
+                <p className="text-xs text-slate-600">Qo‘shimcha 5 ta mashq</p>
+              </div>
+              <Button variant="primary" size="sm" onClick={onContinueLesson}>
+                Boshlash
+              </Button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-200 text-blue-900">
+                  2. Aralash mashq
+                </span>
+                <h4 className="text-sm font-bold text-slate-900 mt-1">Algebra & Funksiyalar</h4>
+                <p className="text-xs text-slate-600">Nazariya + 10 ta test</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={onContinueLesson}>
+                Boshlash
+              </Button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900">
+                  3. Real hayotiy masala
+                </span>
+                <h4 className="text-sm font-bold text-slate-900 mt-1">Amaliy topshiriq</h4>
+                <p className="text-xs text-slate-600">Amaliy hisob-kitoblar</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={onContinueLesson}>
+                Boshlash
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Ebbinghaus Forgetting Curve Retention System matching Infographic 3 Step 16 */}
+        <Card className="p-6 border-slate-200/90 shadow-md space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-base font-bold text-slate-900">
+                Adaptiv takrorlash tizimi
+              </h3>
+            </div>
+            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+              Ebbinghaus modeli
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-600">
+            AI sizning xotirangizga mos ravishda takrorlash vaqtini belgilaydi va bilimlarni uzoq muddat saqlaydi.
+          </p>
+
+          {/* Retention Chart visualization */}
+          <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-3">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+              <span>Eslab qolish darajasi</span>
+              <span className="text-teal-400">BilimYo‘l: 85%+</span>
+            </div>
+
+            {/* Retention intervals */}
+            <div className="grid grid-cols-5 gap-2 text-center pt-1">
+              {[
+                { time: '1 kun', bilimyol: '100%', normal: '80%' },
+                { time: '3 kun', bilimyol: '95%', normal: '60%' },
+                { time: '7 kun', bilimyol: '90%', normal: '40%' },
+                { time: '14 kun', bilimyol: '85%', normal: '25%' },
+                { time: '30 kun', bilimyol: '80%', normal: '15%' },
+              ].map((slot) => (
+                <div key={slot.time} className="p-2 rounded-xl bg-slate-800 border border-slate-700/80">
+                  <div className="text-[10px] text-slate-400 font-bold">{slot.time}</div>
+                  <div className="text-xs font-black text-teal-400 mt-1">{slot.bilimyol}</div>
+                  <div className="text-[9px] text-rose-400 line-through mt-0.5">{slot.normal}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block" />
+                BilimYo‘l (adaptiv takrorlash)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />
+                Oddiy takrorlash
+              </span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Performance Audit Section */}
       {recentAttempts.length > 0 && (
         <Card className="p-5 border-slate-200 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-              Oxirgi 5 ta savol natijasi
+              Oxirgi 5 ta savol natijasi (Server-side Audit)
             </h3>
-            <span className="text-xs text-slate-400">Audit jurnali</span>
+            <span className="text-xs text-slate-400">PostgreSQL RPC natijasi</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {recentAttempts.map((att, i) => (
               <div
                 key={att.id || i}
@@ -280,7 +522,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               O‘quv yo‘lingizni davom ettirishga tayyormisiz?
             </h3>
             <p className="text-slate-300 text-sm max-w-xl leading-relaxed">
-              Yo‘lchi AI va statistik scoring tizimi orqali keyingi eng samarali mikro-darsingiz shakllantirildi.
+              Yo‘lchi AI va server-side scoring tizimi orqali keyingi eng samarali mikro-darsingiz shakllantirildi.
             </p>
           </div>
 

@@ -131,6 +131,9 @@ export class GeminiAITutorService implements IAITutorService {
         return this.fallbackService.generateLesson(request);
       }
 
+      // Edge returns a deterministic fallback (isDeterministicFallback: true,
+      // isAiGenerated: false) when GEMINI_API_KEY is missing or Gemini output
+      // fails validation — never mislabel it as a real AI result.
       return {
         lessonId: data.lessonId,
         courseId: data.courseId,
@@ -146,7 +149,7 @@ export class GeminiAITutorService implements IAITutorService {
         questions: data.questions || [],
         isAiGenerated: Boolean(data.isAiGenerated),
         model: data.model || 'gemini-3.6-flash',
-        isDeterministicFallback: false,
+        isDeterministicFallback: Boolean(data.isDeterministicFallback),
       };
     } catch (err) {
       console.warn('[Gemini AI] Network error during generate_lesson, using fallback:', err);

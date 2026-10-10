@@ -8,7 +8,10 @@ export interface Course {
   iconName: string;
   primaryColor: string;
   secondaryColor: string;
+  primaryColorHex?: string;
+  secondaryColorHex?: string;
   skills: string[]; // skill IDs
   lessons: string[]; // lesson IDs
   totalStudentsEstimate?: number;
+  isActive?: boolean;
 }

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
-import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
+import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
 
 interface CourseState {
   courses: Course[];
@@ -20,16 +20,16 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   loadCourses: async () => {
     set({ isLoading: true });
-    const courses = await inMemoryCourseRepository.getAllCourses();
+    const courses = await supabaseCourseRepository.getAllCourses();
     const activeCourse = courses[0] || null;
-    const skills = activeCourse ? await inMemoryCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
+    const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
     set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
   },
 
   selectCourseById: async (courseId: string) => {
-    const courses = get().courses.length > 0 ? get().courses : await inMemoryCourseRepository.getAllCourses();
+    const courses = get().courses.length > 0 ? get().courses : await supabaseCourseRepository.getAllCourses();
     const activeCourse = courses.find((c) => c.id === courseId) || courses[0];
-    const skills = activeCourse ? await inMemoryCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
+    const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
     set({ courses, activeCourse, activeCourseSkills: skills });
   },
 }));
