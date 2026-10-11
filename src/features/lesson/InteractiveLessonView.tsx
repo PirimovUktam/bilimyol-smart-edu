@@ -12,10 +12,12 @@ import {
   HelpCircle,
   XCircle,
   RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { isLessonCourseMismatch } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
@@ -44,6 +46,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     currentLesson,
     currentStepIndex,
     isLoading,
+    error,
     isEvaluatingAnswer,
     lastAnswerResult,
     showAIPanel,
@@ -68,12 +71,46 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     setHasSubmittedCurrent(false);
   }, [lessonId, loadLesson]);
 
-  if (isLoading || !currentLesson) {
+  if (isLoading) {
     return (
       <AILessonGeneratingCard
-        topic={currentLesson?.title || 'Chiziqli tenglamalar'}
-        courseTitle={activeCourse?.title || 'Matematika'}
+        topic={currentLesson?.title || activeCourse?.title || 'Mavzu tahlili'}
+        courseTitle={activeCourse?.title || 'Fan'}
+        onCancel={onBackToRoadmap}
+        onRetry={() => loadLesson(lessonId)}
       />
+    );
+  }
+
+  if (error || !currentLesson) {
+    return (
+      <AILessonGeneratingCard
+        error={error || 'Ushbu dars topilmadi yoki yuklashda xatolik yuz berdi.'}
+        topic={activeCourse?.title || 'Dars'}
+        courseTitle={activeCourse?.title || 'Fan'}
+        onCancel={onBackToRoadmap}
+        onRetry={() => loadLesson(lessonId)}
+      />
+    );
+  }
+
+  // Cross-course isolation: refuse to render a lesson from a different course.
+  if (isLessonCourseMismatch(currentLesson, activeCourse)) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center">
+        <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Dars noto‘g‘ri fanda</h2>
+          <p className="text-sm text-slate-600 mb-6">
+            Ushbu dars boshqa fanga tegishli. Iltimos, yo‘nalishingizni tanlab, qayta urinib ko‘ring.
+          </p>
+          <Button variant="primary" onClick={onBackToRoadmap}>
+            Yo‘l xaritasiga qaytish
+          </Button>
+        </Card>
+      </div>
     );
   }
 
@@ -106,6 +143,17 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* Honest disclosure when the AI edge function failed and a deterministic demo lesson is shown */}
+      {currentLesson.isDeterministicFallback && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-sm text-amber-900 font-medium leading-relaxed">
+            AI xizmati hozircha javob bera olmayapti — namunaviy (demo) dars ko‘rsatilmoqda.
+            Mavzular haqiqiy AI bilan yaratilganda avtomatik ravishda yangilanadi.
+          </div>
+        </div>
+      )}
+
       {/* Top Breadcrumb & Progress */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -281,8 +329,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   )}
                 </div>
 
-                {/* Option buttons with A, B, C, D indicators */}
-                <div className="space-y-3">
+                {/* Option buttons with A, B, C, D indicators and 2x2 grid (Reference 4) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {currentStep.interactiveQuestion.options.map((opt, idx) => {
                     const isSelected = pickedOption === idx;
                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
@@ -295,50 +343,54 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         disabled={isEvaluatingAnswer || hasSubmittedCurrent}
                         className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'border-blue-600 bg-blue-50/70 shadow-xs ring-2 ring-blue-500/20'
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-indigo-600 bg-indigo-50/80 shadow-md ring-2 ring-indigo-500/20'
+                            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50/80'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0 ${
                               isSelected
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-slate-100 text-slate-600'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-700'
                             }`}
                           >
                             {letter}
                           </span>
-                          <span className="font-semibold text-slate-800 text-sm">{opt}</span>
+                          <span className="font-bold text-slate-800 text-sm font-mono">{opt}</span>
                         </div>
-                        {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                        {isSelected && (
+                          <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200 shrink-0">
+                            tanlangan ✓
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Real-time Inline AI Explanation Card matching Infographic 2 Step 9 */}
+                {/* Real-time Inline AI Explanation Card matching Reference 4 */}
                 {lastAnswerResult && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`p-5 rounded-2xl border-2 space-y-3 ${
+                    className={`p-5 rounded-3xl border-2 space-y-3 ${
                       lastAnswerResult.isCorrect
                         ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
-                        : 'bg-indigo-50/90 border-indigo-300 text-indigo-950'
+                        : 'bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border-rose-300 text-rose-950 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-emerald-600' : 'text-indigo-600'}`} />
+                        <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-emerald-600' : 'text-rose-600'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
-                          AI Tushuntirishi
+                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob! 🎉' : 'Error Diagnosis: Yo‘lchi AI'}
                         </span>
                       </div>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                         lastAnswerResult.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
                       }`}>
-                        {lastAnswerResult.isCorrect ? 'To‘g‘ri javob! +2 XP' : 'Qayta mustahkamlash zarur'}
+                        {lastAnswerResult.isCorrect ? '+10 XP' : 'Mustahkamlash tavsiya etiladi'}
                       </span>
                     </div>
 
@@ -352,35 +404,50 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-1.5 text-xs sm:text-sm">
-                        <p className="font-bold text-indigo-950">
-                          {lastAnswerResult.explanation || 'Bu yerda formulani qo‘llashda noaniqlik yuz berdi.'}
+                      <div className="space-y-2 text-xs sm:text-sm">
+                        <p className="font-bold text-rose-950">
+                          {lastAnswerResult.explanation || 'Hisoblashda hadlarni birlashtirishda xatolik yuz berdi.'}
                         </p>
                         {lastAnswerResult.aiExplanation && (
-                          <p className="text-slate-700 italic">
-                            💡 {lastAnswerResult.aiExplanation.remediationStep}
-                          </p>
+                          <div className="p-3 bg-white/90 rounded-2xl border border-rose-200 text-slate-800 space-y-1">
+                            <span className="text-[11px] font-black uppercase text-indigo-700 block">
+                              Yo‘lchi AI maslahati:
+                            </span>
+                            <p className="font-medium">
+                              {lastAnswerResult.aiExplanation.remediationStep}
+                            </p>
+                          </div>
                         )}
+                        <Button
+                          variant="coral"
+                          size="sm"
+                          onClick={openReinforcement}
+                          rightIcon={<ArrowRight className="w-4 h-4" />}
+                          className="mt-2 font-bold"
+                        >
+                          Mavzuni mustahkamlash mashqi
+                        </Button>
                       </div>
                     )}
                   </motion.div>
                 )}
 
-                {/* Quiz Submission Button */}
+                {/* Quiz Submission Button (Reference 4 style TEKSHIRISH) */}
                 <div className="pt-2 flex justify-end">
                   {!hasSubmittedCurrent ? (
                     <Button
-                      variant="primary"
+                      variant="gradient"
                       size="lg"
                       disabled={pickedOption === null || isEvaluatingAnswer}
                       isLoading={isEvaluatingAnswer}
                       onClick={handleAnswerSubmit}
                       rightIcon={<ArrowRight className="w-5 h-5" />}
+                      className="w-full sm:w-auto font-black px-8 py-3.5 tracking-wider shadow-lg shadow-indigo-600/30"
                     >
-                      Javobni Tekshirish
+                      TEKSHIRISH
                     </Button>
                   ) : (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
                       {!lastAnswerResult?.isCorrect && (
                         <Button
                           variant="outline"
@@ -390,17 +457,19 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                             setHasSubmittedCurrent(false);
                           }}
                           leftIcon={<RotateCcw className="w-4 h-4" />}
+                          className="flex-1 sm:flex-none"
                         >
                           Qayta urinish
                         </Button>
                       )}
                       <Button
-                        variant="primary"
+                        variant="gradient"
                         size="md"
                         onClick={nextStep}
                         rightIcon={<ArrowRight className="w-4 h-4" />}
+                        className="flex-1 sm:flex-none font-black"
                       >
-                        Davom etish
+                        Keyingi savol
                       </Button>
                     </div>
                   )}
@@ -500,7 +569,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             scorePercentage={lastAnswerResult?.isCorrect ? 100 : (lastAnswerResult?.overallScore || 80)}
             correctCount={lastAnswerResult?.isCorrect ? 1 : 0}
             totalCount={1}
-            courseTitle={activeCourse?.title || 'Matematika'}
+            courseTitle={activeCourse?.title || 'Fan'}
             lessonTitle={currentLesson.title}
             skillProgressList={dynamicSkillProgressList}
             aiRecommendation={dynamicRecommendation}

@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { CheckCircle2, Award, ArrowRight, Unlock, Zap, X } from 'lucide-react';
 import { Question } from '@/domain/entities/Question';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { deriveReinforcementNodeId } from './reinforcementNodeId';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { sounds } from '@/core/utils/soundEffects';
@@ -25,7 +26,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   onSuccess,
   onClose,
 }) => {
-  const { completeReinforcement, isUpdating } = useRoadmapStore();
+  const { completeReinforcement, isUpdating, roadmap } = useRoadmapStore();
 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [feedbackState, setFeedbackState] = useState<'answering' | 'success' | 'incorrect'>('answering');
@@ -33,12 +34,10 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isMath = courseId === 'course_math_01';
-
   const handleSubmit = async () => {
     if (selectedIdx === null || isUpdating) return;
 
-    const reinforcementNodeId = isMath ? 'reinf_node_math_func' : 'reinf_node_eng_list';
+    const reinforcementNodeId = deriveReinforcementNodeId(roadmap, courseId, skillId);
 
     const result = await completeReinforcement(
       courseId,

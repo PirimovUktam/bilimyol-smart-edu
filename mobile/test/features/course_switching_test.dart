@@ -60,5 +60,29 @@ void main() {
       expect(mathSkills.length, equals(4));
       expect(engSkills.length, equals(4));
     });
+
+    test('guarantees 100% strict subject isolation in placement questions without data leakage', () async {
+      final courseRepo = InMemoryCourseRepository();
+
+      final mathQuestions = await courseRepo.getPlacementQuestions('course_math_01');
+      final engQuestions = await courseRepo.getPlacementQuestions('course_eng_01');
+
+      expect(mathQuestions.length, greaterThan(0));
+      expect(engQuestions.length, greaterThan(0));
+
+      for (final q in mathQuestions) {
+        expect(q.courseId, equals('course_math_01'));
+        expect(q.skillId.startsWith('skill_math_'), isTrue);
+        expect(q.text.toLowerCase().contains('synonym'), isFalse);
+        expect(q.text.toLowerCase().contains('listening'), isFalse);
+      }
+
+      for (final q in engQuestions) {
+        expect(q.courseId, equals('course_eng_01'));
+        expect(q.skillId.startsWith('skill_eng_'), isTrue);
+        expect(q.text.toLowerCase().contains('tenglama'), isFalse);
+        expect(q.text.toLowerCase().contains('parabola'), isFalse);
+      }
+    });
   });
 }

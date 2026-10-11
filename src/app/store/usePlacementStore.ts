@@ -22,12 +22,20 @@ interface PlacementState {
   resetPlacement: () => void;
 }
 
-const TARGET_SKILLS_MATH = [
-  'skill_math_algebra',
-  'skill_math_equations',
-  'skill_math_functions',
-  'skill_math_graphs',
-];
+const COURSE_TARGET_SKILLS: Record<string, string[]> = {
+  course_math_01: [
+    'skill_math_algebra',
+    'skill_math_equations',
+    'skill_math_functions',
+    'skill_math_graphs',
+  ],
+  course_eng_01: [
+    'skill_eng_vocab',
+    'skill_eng_grammar',
+    'skill_eng_listening',
+    'skill_eng_reading',
+  ],
+};
 
 export const usePlacementStore = create<PlacementState>((set, get) => ({
   allQuestions: [],
@@ -42,9 +50,10 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
   initPlacement: async (courseId: string) => {
     const allQuestions = await inMemoryCourseRepository.getPlacementQuestions(courseId);
+    const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
     const firstQ = AdaptiveQuestionSelector.getNextQuestion(
       allQuestions,
-      TARGET_SKILLS_MATH,
+      targetSkills,
       [],
       2
     ) || allQuestions[0];
@@ -97,9 +106,10 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     const updatedSubmissions = [...submissions, newSubmission];
 
     // Find next adaptive question
+    const targetSkills = COURSE_TARGET_SKILLS[currentQuestion.courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
     const nextQ = AdaptiveQuestionSelector.getNextQuestion(
       allQuestions,
-      TARGET_SKILLS_MATH,
+      targetSkills,
       updatedHistory,
       2
     );

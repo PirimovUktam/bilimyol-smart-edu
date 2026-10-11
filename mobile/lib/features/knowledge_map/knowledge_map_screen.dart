@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
@@ -22,17 +23,84 @@ class KnowledgeMapScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Bilim Xaritasi • ${activeCourse?.title ?? ""}'),
+        title: Text(
+          'Bilim Xaritasi • ${activeCourse?.title ?? ""}',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.dashboard_rounded),
-            onPressed: () => context.go('/dashboard'),
+            icon: const Icon(Icons.alt_route_rounded),
+            tooltip: 'Roadmap',
+            onPressed: () => context.push('/roadmap'),
           ),
         ],
       ),
+      bottomNavigationBar: const BilimYolBottomNav(currentIndex: 1),
       body: SafeArea(
         child: Column(
           children: [
+            // Reference 2 Top Toggle Switch: [Bilim xaritasi | Roadmap]
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Bilim xaritasi',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => context.push('/roadmap'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Roadmap',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Expanded(
               child: learnerAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),

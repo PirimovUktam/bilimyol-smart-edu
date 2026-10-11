@@ -11,6 +11,8 @@ import '../features/knowledge_map/knowledge_map_screen.dart';
 import '../features/roadmap/roadmap_screen.dart';
 import '../features/lesson/interactive_lesson_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/progress/progress_screen.dart';
+import '../features/ai_tutor/ai_tutor_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/courses',
@@ -62,6 +64,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardScreen(),
+    ),
+    GoRoute(
+      path: '/progress',
+      builder: (context, state) => const ProgressScreen(),
+    ),
+    GoRoute(
+      path: '/ai-tutor',
+      builder: (context, state) => const AITutorScreen(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

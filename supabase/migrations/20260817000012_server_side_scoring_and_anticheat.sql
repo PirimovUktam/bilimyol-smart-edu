@@ -108,7 +108,11 @@ CREATE OR REPLACE FUNCTION public.submit_answer_attempt(
   p_selected_text TEXT,
   p_idempotency_key TEXT DEFAULT NULL
 )
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_caller_uid UUID;
   v_existing_id UUID;
@@ -331,7 +335,7 @@ BEGIN
     'already_processed', false
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$;
 
 GRANT EXECUTE ON FUNCTION public.submit_answer_attempt(UUID, TEXT, TEXT, TEXT, TEXT, INT, TEXT, TEXT) TO authenticated, service_role;
 

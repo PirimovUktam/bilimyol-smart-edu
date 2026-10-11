@@ -1,4 +1,4 @@
-export type SubjectType = 'mathematics' | 'english';
+export type SubjectType = 'mathematics' | 'english' | 'it' | 'logic';
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 

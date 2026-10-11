@@ -1,7 +1,21 @@
 -- BilimYo‘l Smart Edu - Production Teacher Invitation Code Management System
 -- Migration: 20260817000006_teacher_invitation_system.sql
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
+
+-- Helper immutable hashing function
+CREATE OR REPLACE FUNCTION public.hash_teacher_code(p_code TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+  SELECT encode(extensions.digest(convert_to(UPPER(TRIM(p_code)), 'UTF8'), 'sha256'), 'hex');
+$$;
+
+REVOKE ALL ON FUNCTION public.hash_teacher_code(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.hash_teacher_code(TEXT) TO authenticated, postgres, service_role;
 
 -- 1. UPDATE PROFILES ROLE CONSTRAINT TO INCLUDE ADMIN
 ALTER TABLE public.profiles
@@ -10,24 +24,89 @@ ALTER TABLE public.profiles
 ALTER TABLE public.profiles
   ADD CONSTRAINT profiles_role_check CHECK (role IN ('student', 'parent', 'teacher', 'admin'));
 
--- 2. CREATE TEACHER INVITATION CODES TABLE (HASH-BASED)
+-- 2. ENSURE TEACHER INVITATION CODES TABLE AND EVOLVE TO HASH-BASED SCHEMA
 CREATE TABLE IF NOT EXISTS public.teacher_invitation_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code_hash TEXT UNIQUE NOT NULL,
-  code_prefix TEXT NOT NULL,
   school_name TEXT NOT NULL DEFAULT 'BilimYo‘l Smart School',
-  school_id TEXT,
-  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   max_uses INT NOT NULL DEFAULT 1,
   used_count INT NOT NULL DEFAULT 0,
   expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '7 days'),
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'revoked', 'exhausted')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Ensure all required columns exist (handles existing migration 5 schema safely)
+ALTER TABLE public.teacher_invitation_codes
+  ADD COLUMN IF NOT EXISTS code_hash TEXT,
+  ADD COLUMN IF NOT EXISTS code_prefix TEXT,
+  ADD COLUMN IF NOT EXISTS school_id TEXT,
+  ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+
+-- Backfill code_hash & code_prefix for existing codes (if table was created in migration 5)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'teacher_invitation_codes' AND column_name = 'code'
+  ) THEN
+    UPDATE public.teacher_invitation_codes
+    SET code_hash = public.hash_teacher_code(code),
+        code_prefix = SUBSTRING(UPPER(TRIM(code)) FROM 1 FOR 6) || '****'
+    WHERE code_hash IS NULL AND code IS NOT NULL;
+
+    ALTER TABLE public.teacher_invitation_codes ALTER COLUMN code DROP NOT NULL;
+  END IF;
+
+  -- Sync is_active to status if is_active exists from migration 5
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'teacher_invitation_codes' AND column_name = 'is_active'
+  ) THEN
+    UPDATE public.teacher_invitation_codes
+    SET status = 'revoked'
+    WHERE is_active = false AND status = 'active';
+  END IF;
+
+  -- Ensure any orphan row has a code_hash
+  UPDATE public.teacher_invitation_codes
+  SET code_hash = public.hash_teacher_code('LEGACY-' || id::text)
+  WHERE code_hash IS NULL;
+
+  ALTER TABLE public.teacher_invitation_codes ALTER COLUMN code_hash SET NOT NULL;
+EXCEPTION WHEN OTHERS THEN
+  NULL;
+END $$;
+
+-- Populate code_prefix for any row missing it
+UPDATE public.teacher_invitation_codes
+SET code_prefix = 'USTOZ-****'
+WHERE code_prefix IS NULL;
+
+ALTER TABLE public.teacher_invitation_codes
+  ALTER COLUMN code_prefix SET NOT NULL;
+
+-- Ensure unique constraint on code_hash for idempotent ON CONFLICT (code_hash)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'uq_teacher_invitation_codes_code_hash'
+  ) THEN
+    ALTER TABLE public.teacher_invitation_codes
+      ADD CONSTRAINT uq_teacher_invitation_codes_code_hash UNIQUE (code_hash);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_teacher_inv_code_hash ON public.teacher_invitation_codes(code_hash);
 CREATE INDEX IF NOT EXISTS idx_teacher_inv_status ON public.teacher_invitation_codes(status);
+
+ALTER TABLE public.teacher_invitation_codes
+  DROP CONSTRAINT IF EXISTS teacher_invitation_codes_status_check;
+
+ALTER TABLE public.teacher_invitation_codes
+  ADD CONSTRAINT teacher_invitation_codes_status_check 
+  CHECK (status IN ('active', 'expired', 'revoked', 'exhausted'));
 
 ALTER TABLE public.teacher_invitation_codes ENABLE ROW LEVEL SECURITY;
 
@@ -56,17 +135,12 @@ CREATE INDEX IF NOT EXISTS idx_teacher_inv_attempts_user ON public.teacher_invit
 ALTER TABLE public.teacher_invitation_attempts ENABLE ROW LEVEL SECURITY;
 
 -- 4. SEED SECURE INITIAL TEACHER INVITATION CODES (HASHED)
--- Codes:
--- 1. USTOZ-7K4P-2M9X
--- 2. USTOZ-9B3V-4X1R
--- 3. USTOZ-5T8N-6W2D
--- 4. USTOZ-2026-ALPHA
 INSERT INTO public.teacher_invitation_codes (code_hash, code_prefix, school_name, max_uses, used_count, expires_at, status)
 VALUES
-  (encode(digest('USTOZ-7K4P-2M9X', 'sha256'), 'hex'), 'USTOZ-7K4P-****', 'BilimYo‘l Boshqaruv Markazi', 10, 0, now() + INTERVAL '1 year', 'active'),
-  (encode(digest('USTOZ-9B3V-4X1R', 'sha256'), 'hex'), 'USTOZ-9B3V-****', 'Toshkent IDUM №1', 5, 0, now() + INTERVAL '1 year', 'active'),
-  (encode(digest('USTOZ-5T8N-6W2D', 'sha256'), 'hex'), 'USTOZ-5T8N-****', 'Prezident Ta’lim Muassasalari', 5, 0, now() + INTERVAL '1 year', 'active'),
-  (encode(digest('USTOZ-2026-ALPHA', 'sha256'), 'hex'), 'USTOZ-2026-****', 'BilimYo‘l Demo Markazi', 100, 0, now() + INTERVAL '1 year', 'active')
+  (public.hash_teacher_code('USTOZ-7K4P-2M9X'), 'USTOZ-7K4P-****', 'BilimYo‘l Boshqaruv Markazi', 10, 0, now() + INTERVAL '1 year', 'active'),
+  (public.hash_teacher_code('USTOZ-9B3V-4X1R'), 'USTOZ-9B3V-****', 'Toshkent IDUM №1', 5, 0, now() + INTERVAL '1 year', 'active'),
+  (public.hash_teacher_code('USTOZ-5T8N-6W2D'), 'USTOZ-5T8N-****', 'Prezident Ta’lim Muassasalari', 5, 0, now() + INTERVAL '1 year', 'active'),
+  (public.hash_teacher_code('USTOZ-2026-ALPHA'), 'USTOZ-2026-****', 'BilimYo‘l Demo Markazi', 100, 0, now() + INTERVAL '1 year', 'active')
 ON CONFLICT (code_hash) DO NOTHING;
 
 -- 5. RPC: CREATE TEACHER INVITATION CODE (ADMIN/MANAGEMENT)
@@ -75,7 +149,11 @@ CREATE OR REPLACE FUNCTION public.create_teacher_invitation(
   p_max_uses INT DEFAULT 1,
   p_validity_days INT DEFAULT 7
 )
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_part1 TEXT;
@@ -97,7 +175,7 @@ BEGIN
   v_part2 := UPPER(SUBSTRING(MD5(RANDOM()::TEXT || clock_timestamp()::TEXT) FROM 5 FOR 4));
   v_plain_code := 'USTOZ-' || v_part1 || '-' || v_part2;
   v_prefix := 'USTOZ-' || v_part1 || '-****';
-  v_hash := encode(digest(v_plain_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_plain_code);
   v_expires_at := now() + (v_days || ' days')::INTERVAL;
 
   INSERT INTO public.teacher_invitation_codes (
@@ -137,11 +215,15 @@ BEGIN
     'message', 'O‘qituvchi taklif kodi muvaffaqiyatli yaratildi. Ushbu kodni hozir nusxalab oling!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 6. RPC: LIST TEACHER INVITATION CODES (ADMIN/MANAGEMENT)
 CREATE OR REPLACE FUNCTION public.list_teacher_invitations()
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_list JSONB;
@@ -173,11 +255,15 @@ BEGIN
 
   RETURN v_list;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 7. RPC: REVOKE TEACHER INVITATION CODE (ADMIN/MANAGEMENT)
 CREATE OR REPLACE FUNCTION public.revoke_teacher_invitation(p_id UUID)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
 BEGIN
@@ -192,11 +278,15 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'message', 'Taklif kodi muvaffaqiyatli bekor qilindi.');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 8. HARDENED RPC: REDEEM TEACHER INVITATION CODE (WITH RATE-LIMIT & HASH CHECK)
 CREATE OR REPLACE FUNCTION public.redeem_teacher_invitation_code(p_code TEXT)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_clean_code TEXT := UPPER(TRIM(p_code));
@@ -229,7 +319,7 @@ BEGIN
   END IF;
 
   -- 2. Compute SHA-256 hash
-  v_hash := encode(digest(v_clean_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_clean_code);
 
   -- 3. Find active invitation code with row-level lock
   SELECT * INTO v_inv
@@ -283,7 +373,7 @@ BEGIN
     'message', 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 GRANT EXECUTE ON FUNCTION public.create_teacher_invitation(TEXT, INT, INT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.list_teacher_invitations() TO authenticated;

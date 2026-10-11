@@ -6,12 +6,12 @@ export const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(rawSupabaseUrl && rawSupabaseKey);
 
-const supabaseUrl = rawSupabaseUrl || 'https://bilimyol-demo.supabase.co';
-const supabaseAnonKey = rawSupabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.demo-anon-key';
+const supabaseUrl = rawSupabaseUrl || 'https://jlqbenwojcgbloamfyis.supabase.co';
+const supabaseAnonKey = rawSupabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mock-anon-key';
 
-export const supabaseProjectRef = rawSupabaseUrl
-  ? rawSupabaseUrl.replace(/^https?:\/\//, '').split('.')[0]
-  : 'not-configured';
+export const supabaseProjectRef = (rawSupabaseUrl || 'https://jlqbenwojcgbloamfyis.supabase.co')
+  .replace(/^https?:\/\//, '')
+  .split('.')[0];
 
 export const buildFingerprint = {
   isProduction,

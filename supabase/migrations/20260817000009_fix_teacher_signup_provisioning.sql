@@ -168,7 +168,7 @@ CREATE OR REPLACE FUNCTION public.redeem_teacher_invitation_code(p_code TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_uid UUID := auth.uid();
@@ -202,7 +202,7 @@ BEGIN
     );
   END IF;
 
-  v_hash := encode(digest(v_clean_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_clean_code);
 
   SELECT * INTO v_inv
   FROM public.teacher_invitation_codes

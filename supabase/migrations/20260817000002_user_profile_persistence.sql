@@ -136,6 +136,9 @@ CREATE OR REPLACE FUNCTION public.sync_profile(
 RETURNS JSONB AS $$
 DECLARE
   v_uid UUID := auth.uid();
+  v_email TEXT;
+  v_first_name TEXT;
+  v_last_name TEXT;
   v_display_name TEXT;
   v_result JSONB;
 BEGIN
@@ -152,13 +155,16 @@ BEGIN
     v_display_name := v_first_name;
   END IF;
 
-  INSERT INTO public.profiles (id, first_name, last_name, display_name, avatar_url, updated_at)
-  VALUES (v_uid, v_first_name, v_last_name, v_display_name, p_avatar_url, now())
+  SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
+
+  INSERT INTO public.profiles (id, first_name, last_name, email, display_name, avatar_url, updated_at)
+  VALUES (v_uid, v_first_name, v_last_name, COALESCE(v_email, ''), v_display_name, p_avatar_url, now())
   ON CONFLICT (id) DO UPDATE SET
     first_name = EXCLUDED.first_name,
     last_name = EXCLUDED.last_name,
     display_name = EXCLUDED.display_name,
     avatar_url = COALESCE(EXCLUDED.avatar_url, public.profiles.avatar_url),
+    email = CASE WHEN public.profiles.email = '' AND EXCLUDED.email <> '' THEN EXCLUDED.email ELSE public.profiles.email END,
     updated_at = now();
 
   SELECT to_jsonb(p) INTO v_result

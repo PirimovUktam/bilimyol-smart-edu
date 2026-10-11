@@ -17,14 +17,21 @@ import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { resolveContinuationLessonId } from '@/app/router/lessonResolution';
 import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
+import { YolchiAIChatView } from '@/features/ai-tutor/YolchiAIChatView';
+import { ProgressView } from '@/features/progress/ProgressView';
 import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
 import { ShieldAlert } from 'lucide-react';
+import { PitchShowcaseView } from '@/features/pitch/PitchShowcaseView';
+import { DemoShowcaseView } from '@/features/pitch/DemoShowcaseView';
 
 export type AppView =
+  | 'pitch'
+  | 'demo'
   | 'course-selection'
   | 'onboarding'
   | 'placement'
@@ -32,6 +39,8 @@ export type AppView =
   | 'roadmap'
   | 'lesson'
   | 'dashboard'
+  | 'ai-tutor'
+  | 'progress'
   | 'login'
   | 'register'
   | 'forgot-password'
@@ -40,12 +49,22 @@ export type AppView =
   | 'teacher'
   | 'admin';
 
+const getInitialView = (): AppView => {
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    if (path === '/demo' || hash === '#demo') return 'demo';
+    if (path === '/pitch' || hash === '#pitch') return 'pitch';
+  }
+  return 'course-selection';
+};
+
 export const AppRouter: React.FC = () => {
-  const [currentView, setCurrentView] = useState<AppView>('course-selection');
-  const [activeLessonId, setActiveLessonId] = useState<string>('lesson_math_functions_01');
+  const [currentView, setCurrentView] = useState<AppView>(getInitialView);
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
   const { loadCourses, activeCourse } = useCourseStore();
-  const { loadProfile } = useLearnerStore();
+  const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
   const { profile: authProfile } = useAuth();
   const monitoringRole = useMonitoringStore((s) => s.currentRole);
@@ -55,16 +74,27 @@ export const AppRouter: React.FC = () => {
   useEffect(() => {
     loadCourses();
     loadProfile();
+  }, [loadCourses, loadProfile]);
 
+  // Reconcile active course with the persisted learner profile (server truth).
+  useEffect(() => {
+    const selectedId = learnerProfile?.selectedCourseId;
+    if (!selectedId) return;
+    if (activeCourse && activeCourse.id === selectedId) return;
+    if (useCourseStore.getState().courses.length === 0) return;
+    void useCourseStore.getState().selectCourseById(selectedId);
+  }, [learnerProfile?.selectedCourseId, activeCourse?.id, activeCourse]);
+
+  useEffect(() => {
     // Start active learning tracker if user is student
-    if (authProfile && userRole === 'student') {
-      activeLearningTracker.start(activeCourse?.id || 'course_math_01', activeLessonId);
+    if (authProfile && userRole === 'student' && activeCourse) {
+      activeLearningTracker.start(activeCourse.id, activeLessonId ?? undefined);
     }
 
     return () => {
       activeLearningTracker.stop();
     };
-  }, [loadCourses, loadProfile, authProfile, userRole, activeCourse, activeLessonId]);
+  }, [authProfile, userRole, activeCourse, activeLessonId]);
 
   const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'parent' | 'teacher' | 'admin') => {
     const role = resolvedRole || authProfile?.role || monitoringRole || 'student';
@@ -79,8 +109,45 @@ export const AppRouter: React.FC = () => {
     }
   }, [authProfile?.role, monitoringRole]);
 
-  // Adjust landing view when role is resolved
+  // Synchronize browser URL bar with currentView
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const path = window.location.pathname.toLowerCase();
+    if (currentView === 'demo' && path !== '/demo') {
+      window.history.pushState(null, '', '/demo');
+    } else if (currentView === 'pitch' && path !== '/pitch') {
+      window.history.pushState(null, '', '/pitch');
+    } else if (currentView !== 'demo' && currentView !== 'pitch' && (path === '/demo' || path === '/pitch')) {
+      window.history.pushState(null, '', '/');
+    }
+  }, [currentView]);
+
+  // Handle browser back/forward and hash changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/demo' || hash === '#demo') {
+        setCurrentView('demo');
+      } else if (path === '/pitch' || hash === '#pitch') {
+        setCurrentView('pitch');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
+
+  // Adjust landing view when role is resolved (preserve pitch / demo if user explicitly opened them)
+  useEffect(() => {
+    if (currentView === 'pitch' || currentView === 'demo') {
+      return;
+    }
     const effectiveRole = authProfile?.role || monitoringRole;
     if (effectiveRole) {
       if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
@@ -111,6 +178,17 @@ export const AppRouter: React.FC = () => {
     setCurrentView('lesson');
   };
 
+  const handleContinueLesson = (lessonId?: string) => {
+    const resolvedLessonId =
+      lessonId || resolveContinuationLessonId(activeCourse, useRoadmapStore.getState().roadmap);
+
+    if (resolvedLessonId) {
+      handleStartLesson(resolvedLessonId);
+    } else {
+      setCurrentView('roadmap');
+    }
+  };
+
   const handleLessonFinish = () => {
     setCurrentView('dashboard');
   };
@@ -122,6 +200,7 @@ export const AppRouter: React.FC = () => {
     setCurrentView('course-selection');
   };
 
+  const isPitchOrDemo = currentView === 'pitch' || currentView === 'demo';
   const isAuthView = currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
 
   // Role Guard validation
@@ -131,9 +210,9 @@ export const AppRouter: React.FC = () => {
     (currentView === 'admin' && userRole !== 'admin');
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Main Navigation (Hidden on standalone Auth screens) */}
-      {!isAuthView && (
+    <div className={`min-h-screen flex flex-col font-sans ${isPitchOrDemo ? 'bg-[#0A0D14] text-white' : 'bg-slate-50 text-slate-900'}`}>
+      {/* Main Navigation (Hidden on standalone Auth screens & Pitch/Demo presentations) */}
+      {!isAuthView && !isPitchOrDemo && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />
       )}
 
@@ -161,6 +240,23 @@ export const AppRouter: React.FC = () => {
           </div>
         ) : (
           <>
+            {currentView === 'pitch' && (
+              <PitchShowcaseView
+                onNavigateDemo={() => setCurrentView('demo')}
+                onNavigateApp={() => setCurrentView('dashboard')}
+                onNavigateAiTutor={() => setCurrentView('ai-tutor')}
+              />
+            )}
+
+            {currentView === 'demo' && (
+              <DemoShowcaseView
+                onNavigateCourses={() => setCurrentView('course-selection')}
+                onNavigateDashboard={() => setCurrentView('dashboard')}
+                onNavigateAiTutor={() => setCurrentView('ai-tutor')}
+                onNavigatePitch={() => setCurrentView('pitch')}
+              />
+            )}
+
             {currentView === 'login' && (
               <LoginView
                 onSuccess={handleRoleRouting}
@@ -210,7 +306,7 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
-            {currentView === 'lesson' && (
+            {currentView === 'lesson' && activeLessonId && (
               <InteractiveLessonView
                 lessonId={activeLessonId}
                 onFinish={handleLessonFinish}
@@ -218,18 +314,44 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
+            {currentView === 'lesson' && !activeLessonId && (
+              <div className="max-w-md mx-auto px-4 py-16 text-center">
+                <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
+                  <p className="text-sm text-slate-600 mb-4">
+                    Dars topilmadi. Iltimos, yo‘nalishingizdan qayta tanlang.
+                  </p>
+                  <Button variant="primary" onClick={() => setCurrentView('roadmap')}>
+                    Yo‘nalishga qaytish
+                  </Button>
+                </Card>
+              </div>
+            )}
+
             {currentView === 'dashboard' && (
               <DashboardView
-                onContinueLesson={() => {
-                  const defaultLesson =
-                    activeCourse?.subject === 'mathematics'
-                      ? 'lesson_math_functions_01'
-                      : 'lesson_eng_listening_01';
-                  handleStartLesson(defaultLesson);
-                }}
+                onContinueLesson={(lessonId?: string) => handleContinueLesson(lessonId)}
                 onOpenRoadmap={() => setCurrentView('roadmap')}
                 onOpenKnowledgeMap={() => setCurrentView('knowledge-map')}
+                onOpenAITutor={() => setCurrentView('ai-tutor')}
+                onOpenProgress={() => setCurrentView('progress')}
+                onOpenProfile={() => setCurrentView('profile')}
+                onOpenPitch={() => setCurrentView('pitch')}
+                onOpenDemo={() => setCurrentView('demo')}
                 onResetDemo={handleResetDemo}
+              />
+            )}
+
+            {currentView === 'ai-tutor' && (
+              <YolchiAIChatView
+                onStartLesson={() => handleContinueLesson()}
+              />
+            )}
+
+            {currentView === 'progress' && (
+              <ProgressView
+                onContinueLesson={() => handleContinueLesson()}
+                onOpenRoadmap={() => setCurrentView('roadmap')}
+                onOpenKnowledgeMap={() => setCurrentView('knowledge-map')}
               />
             )}
 
@@ -242,17 +364,19 @@ export const AppRouter: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>
-            <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
-          </span>
-          <span className="text-slate-400">
-            {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
-          </span>
-        </div>
-      </footer>
+      {/* Footer (Hidden on Pitch/Demo pages which have their own rich pitch footer) */}
+      {!isPitchOrDemo && (
+        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>
+              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
+            </span>
+            <span className="text-slate-400">
+              {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
+            </span>
+          </div>
+        </footer>
+      )}
     </div>
   );
 };

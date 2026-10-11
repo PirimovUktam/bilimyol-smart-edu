@@ -64,14 +64,29 @@ export class SubmitReinforcementUseCase {
     // 1. Calculate new score deterministically
     const newScore = SkillScoringEngine.calculateReinforcementScore(currentSkillScore);
 
-    // 2. Mark reinforcement node as completed
-    await this.learnerRepo.markReinforcementCompleted(reinforcementNodeId);
+    // 2. Calculate XP idempotently BEFORE writes so the audit row stores real values
+    const { newXP, wasAwarded } = ProgressEngine.calculateNewXP(
+      profile.xp,
+      'reinforcement_completion',
+      reinforcementNodeId,
+      profile.completedReinforcementIds
+    );
+    const xpAwarded = wasAwarded ? Math.max(0, newXP - profile.xp) : 0;
+
+    // 3. Mark reinforcement node as completed with full course context
+    await this.learnerRepo.markReinforcementCompleted(reinforcementNodeId, {
+      courseId,
+      skillId,
+      beforeScore: currentSkillScore,
+      afterScore: newScore,
+      xpAwarded,
+    });
 
     // Also mark the target node as completed so downstream unlocks
     const targetNodeId = reinforcementNodeId.replace('reinf_', '');
     await this.learnerRepo.markNodeCompleted(targetNodeId);
 
-    // 3. Save new score
+    // 4. Save new score
     const updatedSkillScore = {
       skillId,
       courseId,
@@ -84,14 +99,6 @@ export class SubmitReinforcementUseCase {
     await this.learnerRepo.saveSkillScores(courseId, {
       [skillId]: updatedSkillScore,
     });
-
-    // 4. Calculate XP idempotently
-    const { newXP, wasAwarded } = ProgressEngine.calculateNewXP(
-      profile.xp,
-      'reinforcement_completion',
-      reinforcementNodeId,
-      profile.completedReinforcementIds
-    );
 
     if (wasAwarded) {
       await this.learnerRepo.updateProfile({ xp: newXP });
@@ -114,7 +121,7 @@ export class SubmitReinforcementUseCase {
       isCorrect: true,
       oldScore: currentSkillScore,
       newScore,
-      xpAwarded: wasAwarded ? 30 : 0,
+      xpAwarded,
       updatedRoadmap,
     };
   }

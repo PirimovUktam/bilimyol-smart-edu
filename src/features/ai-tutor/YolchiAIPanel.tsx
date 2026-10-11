@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, AlertCircle, ArrowRight, X, Lightbulb } from 'lucide-react';
+import { AlertCircle, ArrowRight, X, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
 import { AIExplanationResponse } from '@/data/services/IAITutorService';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
+import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
 interface YolchiAIPanelProps {
   isOpen: boolean;
@@ -22,93 +23,116 @@ export const YolchiAIPanel: React.FC<YolchiAIPanelProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25 }}
-          className="max-w-2xl w-full"
+          className="max-w-xl w-full my-6"
         >
-          <Card className="p-7 sm:p-9 shadow-2xl border-2 border-blue-500 bg-white relative overflow-hidden">
-            {/* Header / Avatar */}
-            <div className="flex items-start justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3.5">
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0">
-                  <Bot className="w-7 h-7" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-extrabold text-slate-900">
-                      {explanation.tutorName}
-                    </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-                      Pedagogik Tahlil
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Xatolik sababini tushuntirish va o‘rganish yo‘li
-                  </p>
-                </div>
+          {/* Reference 4: Error Diagnosis Card with Sunset Coral-Orange Container */}
+          <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-b from-[#FFF5F2] via-[#FFEBE5] to-[#FFDDD4] border-2 border-[#FF8A65] shadow-2xl space-y-6 relative overflow-hidden">
+            {/* Top Badge & Close */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-[#FF7043] text-white text-xs font-black tracking-wider uppercase shadow-xs">
+                  Error Diagnosis: Yo‘lchi AI
+                </span>
+                <span className="w-2 h-2 rounded-full bg-[#FF7043] animate-pulse" />
               </div>
 
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Misconception Diagnostic */}
-            <div className="space-y-5">
-              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>Aniqlangan Xatolik Turi: {explanation.title}</span>
-                </div>
-                <p className="text-sm font-medium text-amber-950 leading-relaxed">
-                  {explanation.explanation}
+            {/* Mascot with Speech Bubble (Reference 4 layout) */}
+            <div className="flex items-start gap-4">
+              <YolchiAIMascot size="md" mood="explaining" />
+              <div className="flex-1 p-4 rounded-2xl bg-white border border-[#FFCCBC] shadow-xs text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed">
+                <p>
+                  Afsuski, javob noto‘g‘ri bo‘ldi. Lekin xavotirlanmang! Bu mavzuni o‘zlashtirish uchun eng yaxshi imkoniyat.
+                  Keling, bosqichma-bosqich qanday yechilishini ko‘ramiz:
                 </p>
               </div>
-
-              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 text-blue-900 space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-800">
-                  <Lightbulb className="w-4 h-4 text-blue-600" />
-                  <span>Qoida va Yechim:</span>
-                </div>
-                <p className="text-sm font-medium text-slate-800 leading-relaxed">
-                  {explanation.remediationStep}
-                </p>
-              </div>
-
-              <p className="text-xs font-medium text-slate-500 italic">
-                💡 {explanation.suggestedAction}
-              </p>
             </div>
 
-            {/* Action CTAs */}
-            <div className="pt-6 mt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={onClose}
-                className="w-full sm:w-auto text-slate-500"
-              >
-                Qayta o‘ylab ko‘rish
-              </Button>
+            {/* Step-by-Step Visual Solution Breakdown (Reference 4) */}
+            <div className="space-y-3">
+              {/* Step 1 */}
+              <div className="p-4 rounded-2xl bg-white/90 border border-[#FFAB91] shadow-2xs space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#FF7043] text-white font-black text-xs flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <span className="text-xs font-extrabold text-slate-900">
+                    Har bir hadni alohida ko‘paytiring
+                  </span>
+                </div>
+                <div className="pl-8 text-xs text-slate-700 font-mono font-bold bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  {explanation.title || '(3x + 5)(x - 2) = 3x·x + 3x·(-2) + 5·x + 5·(-2)'}
+                </div>
+              </div>
 
+              {/* Step 2 */}
+              <div className="p-4 rounded-2xl bg-white/90 border border-[#FFAB91] shadow-2xs space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#FF7043] text-white font-black text-xs flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <span className="text-xs font-extrabold text-slate-900">
+                    O‘xshash hadlarni birlashtiring
+                  </span>
+                </div>
+                <div className="pl-8 text-xs text-slate-700 font-mono font-bold bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  {explanation.explanation || '3x² - 6x + 5x - 10  →  -6x va 5x hadlari qo‘shiladi'}
+                </div>
+              </div>
+
+              {/* Step 3: Correct Result */}
+              <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 shadow-2xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      3
+                    </span>
+                    <span className="text-xs font-extrabold text-emerald-950">
+                      Yakuniy to‘g‘ri natija
+                    </span>
+                  </div>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="pl-8 text-sm font-mono font-black text-emerald-900">
+                  {explanation.remediationStep || '3x² - x - 10'}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons (Reference 4) */}
+            <div className="space-y-2.5 pt-2">
               <Button
-                variant="primary"
+                variant="gradient"
                 size="lg"
                 onClick={onProceedToReinforcement}
                 rightIcon={<ArrowRight className="w-5 h-5" />}
-                className="w-full sm:w-auto shadow-lg shadow-blue-600/30"
+                className="w-full font-black py-4 shadow-xl shadow-indigo-600/30 text-sm sm:text-base tracking-wide"
               >
-                Mustahkamlash Mashqiga O‘tish
+                MAVZUNI MUSTAHKAMLASH
               </Button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2.5 text-center text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              >
+                Tekshirishni o‘tkazib yuborish
+              </button>
             </div>
-          </Card>
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>

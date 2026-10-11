@@ -42,10 +42,13 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
-        {courses.map((course, index) => {
+        {courses.filter((c) => c.id === 'course_math_01' || c.id === 'course_eng_01').map((course, index) => {
           const isMath = course.subject === 'mathematics';
+          const isEnglish = course.subject === 'english';
           const Icon = isMath ? Calculator : Headphones;
-          const iconBg = isMath ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500';
+          const iconBg = isMath
+            ? 'bg-blue-100 text-blue-700'
+            : 'bg-rose-100 text-rose-600';
 
           return (
             <motion.div
@@ -56,7 +59,7 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
               className={`group relative bg-white border-2 rounded-3xl p-7 shadow-sm transition-all duration-300 flex flex-col justify-between ${
                 isMath
                   ? 'border-blue-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1'
-                  : 'border-slate-200 opacity-80'
+                  : 'border-rose-200 hover:border-rose-500 hover:shadow-xl hover:-translate-y-1'
               }`}
             >
               <div className="space-y-5">
@@ -64,16 +67,9 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
                   <div className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center shadow-inner`}>
                     <Icon className="w-7 h-7" />
                   </div>
-                  {isMath ? (
-                    <Badge variant="blue" size="sm">
-                      Faol Kurs (Full Adaptive)
-                    </Badge>
-                  ) : (
-                    <Badge variant="slate" size="sm">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Tez kunda
-                    </Badge>
-                  )}
+                  <Badge variant={isMath ? 'blue' : 'rose'} size="sm">
+                    Faol Kurs (Full Adaptive)
+                  </Badge>
                 </div>
 
                 <div>
@@ -107,17 +103,17 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
                       </>
                     ) : (
                       <>
-                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                          Vocabulary (Tez orada)
+                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Vocabulary
                         </span>
-                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                          Grammar (Tez orada)
+                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Grammar
                         </span>
-                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                          Listening (Tez orada)
+                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Listening
                         </span>
-                        <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                          Reading (Tez orada)
+                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Reading
                         </span>
                       </>
                     )}
@@ -126,21 +122,15 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
               </div>
 
               <div className="mt-8 pt-4">
-                {isMath ? (
-                  <Button
-                    onClick={() => handleChoose(course.id)}
-                    variant="primary"
-                    size="lg"
-                    className="w-full justify-between group-hover:shadow-lg"
-                    rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-                  >
-                    Kursni Tanlash va Boshlash
-                  </Button>
-                ) : (
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs font-semibold text-slate-500">
-                    Ushbu kurs kontenti tez orada ishga tushadi
-                  </div>
-                )}
+                <Button
+                  onClick={() => handleChoose(course.id)}
+                  variant={isMath ? 'primary' : 'coral'}
+                  size="lg"
+                  className="w-full justify-between group-hover:shadow-lg font-bold"
+                  rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                >
+                  Kursni Tanlash va Boshlash
+                </Button>
               </div>
             </motion.div>
           );

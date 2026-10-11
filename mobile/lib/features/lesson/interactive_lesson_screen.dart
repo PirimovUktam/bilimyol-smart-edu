@@ -44,6 +44,33 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
       );
     }
 
+    // Cross-course isolation: refuse to render a lesson from a different course.
+    final activeCourse = ref.watch(courseStateNotifierProvider).activeCourse;
+    if (activeCourse != null && lesson.courseId != activeCourse.id) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Dars')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Ushbu dars boshqa fanga tegishli va ko‘rsatilmaydi.\nIltimos, yo‘nalishingizni tanlab qayta urinib ko‘ring.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                AppButton(
+                  text: 'Yo‘l xaritasiga qaytish',
+                  onPressed: () => context.pop(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final currentStepIndex = lessonState.currentStepIndex;
     final currentStep = lesson.steps[currentStepIndex];
     final totalSteps = lesson.steps.length;
@@ -274,14 +301,31 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                   ],
                   Expanded(
                     child: currentStep.interactiveQuestion != null
-                        ? AppButton(
-                            text: 'Javobni Tekshirish',
-                            isFullWidth: true,
-                            size: AppButtonSize.large,
-                            isLoading: lessonState.isSubmittingAnswer,
-                            onPressed: lessonState.selectedOptionIndex == null
+                        ? ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 2,
+                            ),
+                            onPressed: lessonState.selectedOptionIndex == null || lessonState.isSubmittingAnswer
                                 ? null
                                 : () => _handleQuizSubmit(context),
+                            child: lessonState.isSubmittingAnswer
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : Text(
+                                    'TEKSHIRISH',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                           )
                         : AppButton(
                             text: currentStepIndex < totalSteps - 1 ? 'Keyingi qadam' : 'Yakunlash',
@@ -332,57 +376,90 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
             final isSelected = selectedIdx == idx;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Material(
-                color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.7) : AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
+                color: isSelected ? const Color(0xFFEEF2FF) : AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () {
                     ref.read(lessonSessionNotifierProvider.notifier).selectOption(idx);
                   },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                        color: isSelected ? const Color(0xFF2563EB) : AppColors.cardBorder,
                         width: isSelected ? 2 : 1.2,
                       ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Center(
-                            child: Text(
-                              ['A', 'B', 'C', 'D'][idx],
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: isSelected ? Colors.white : AppColors.textSecondary,
+                        if (isSelected)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'tanlangan ✓',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            opt,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                        Row(
+                          children: [
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  ['A', 'B', 'C', 'D'][idx],
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                opt,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                  color: isSelected ? const Color(0xFF1E293B) : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(Icons.check_circle_rounded, color: Color(0xFF2563EB), size: 20),
+                          ],
                         ),
-                        if (isSelected)
-                          const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
                       ],
                     ),
                   ),

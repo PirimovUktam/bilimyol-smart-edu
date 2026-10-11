@@ -35,4 +35,47 @@ describe('CourseSwitching', () => {
     expect(mathNodes.some((n) => n.id === 'node_math_func')).toBe(true);
     expect(engNodes.some((n) => n.id === 'node_eng_list')).toBe(true);
   });
+
+  it('should guarantee 100% strict subject isolation in placement questions without data leakage', async () => {
+    const mathQuestions = await courseRepo.getPlacementQuestions('course_math_01');
+    const engQuestions = await courseRepo.getPlacementQuestions('course_eng_01');
+
+    expect(mathQuestions.length).toBeGreaterThan(0);
+    expect(engQuestions.length).toBeGreaterThan(0);
+
+    // Math questions must only refer to math skills and math course
+    for (const q of mathQuestions) {
+      expect(q.courseId).toBe('course_math_01');
+      expect(q.skillId.startsWith('skill_math_')).toBe(true);
+      expect(q.text.toLowerCase()).not.toContain('synonym');
+      expect(q.text.toLowerCase()).not.toContain('listening');
+    }
+
+    // English questions must only refer to english skills and english course
+    for (const q of engQuestions) {
+      expect(q.courseId).toBe('course_eng_01');
+      expect(q.skillId.startsWith('skill_eng_')).toBe(true);
+      expect(q.text.toLowerCase()).not.toContain('tenglama');
+      expect(q.text.toLowerCase()).not.toContain('parabola');
+    }
+  });
+
+  it('should ensure all roadmap nodes have correct course alignment and target lessons', async () => {
+    const mathNodes = await lessonRepo.getBaseRoadmapNodes('course_math_01');
+    const engNodes = await lessonRepo.getBaseRoadmapNodes('course_eng_01');
+
+    for (const node of mathNodes) {
+      expect(node.courseId).toBe('course_math_01');
+      expect(node.skillId.startsWith('skill_math_')).toBe(true);
+    }
+
+    for (const node of engNodes) {
+      expect(node.courseId).toBe('course_eng_01');
+      expect(node.skillId.startsWith('skill_eng_')).toBe(true);
+      if (node.targetLessonId) {
+        const lesson = await lessonRepo.getLessonById(node.targetLessonId);
+        expect(lesson?.courseId).toBe('course_eng_01');
+      }
+    }
+  });
 });

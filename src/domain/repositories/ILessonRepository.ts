@@ -5,4 +5,5 @@ export interface ILessonRepository {
   getLessonById(lessonId: string): Promise<Lesson | null>;
   getLessonByCourseAndSkill(courseId: string, skillId: string): Promise<Lesson | null>;
   getBaseRoadmapNodes(courseId: string): Promise<LearningPathNode[]>;
+  saveLesson?(lesson: Lesson): Promise<void>;
 }

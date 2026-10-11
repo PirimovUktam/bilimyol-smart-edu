@@ -2,6 +2,7 @@ import {
   ILearnerRepository,
   AnswerAttemptRecord,
   PlacementAttemptData,
+  ReinforcementCompletionContext,
   SubmitAnswerAttemptRequest,
   SubmitAnswerAttemptResult,
 } from '@/domain/repositories/ILearnerRepository';
@@ -69,7 +70,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     return attemptId;
   }
 
-  async markLessonCompleted(lessonId: string): Promise<void> {
+  async markLessonCompleted(lessonId: string, _courseId?: string | null): Promise<void> {
     if (!this.profile.completedLessonIds.includes(lessonId)) {
       this.profile.completedLessonIds.push(lessonId);
       await this.addXp(20, `lesson_completed_${lessonId}`);
@@ -83,7 +84,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     }
   }
 
-  async markReinforcementCompleted(reinforcementId: string): Promise<void> {
+  async markReinforcementCompleted(reinforcementId: string, _context?: ReinforcementCompletionContext): Promise<void> {
     if (!this.profile.completedReinforcementIds.includes(reinforcementId)) {
       this.profile.completedReinforcementIds.push(reinforcementId);
       await this.addXp(15, `reinforcement_completed_${reinforcementId}`);

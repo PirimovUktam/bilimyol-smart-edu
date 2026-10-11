@@ -1,6 +1,8 @@
 enum SubjectType {
   mathematics,
   english,
+  it,
+  logic,
 }
 
 class Course {

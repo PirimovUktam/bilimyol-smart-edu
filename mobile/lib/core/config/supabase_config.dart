@@ -4,7 +4,7 @@ class SupabaseConfig {
   /// Reads configuration dynamically via `--dart-define=SUPABASE_URL=...`
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://jlqbenwojcgbloamfyis.supabase.co',
   );
 
   /// Reads anon key dynamically via `--dart-define=SUPABASE_ANON_KEY=...`

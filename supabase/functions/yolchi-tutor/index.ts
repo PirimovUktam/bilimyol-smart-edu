@@ -186,15 +186,16 @@ serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error(`[Yo‘lchi AI] Error (Request: ${requestId}):`, error?.message || error);
-    const fallback = getDeterministicDiagnosisFallback({
-      courseId: "course_math_01",
-      skillId: "skill_math_functions",
-      questionText: "",
-      selectedOption: "",
-      correctOption: "",
-    });
     logAudit({ requestId, userId: "unknown", action: "error", latency: Date.now() - startTime, status: 500 });
-    return new Response(JSON.stringify(fallback), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Never disguise a server failure as another course's "successful" content —
+    // return a clear, recoverable error so the client can retry honestly.
+    return new Response(
+      JSON.stringify({
+        error: "Serverda kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.",
+        status: 500,
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
 
@@ -535,7 +536,7 @@ async function handleGenerateQuestion(
   supabaseServiceKey?: string
 ) {
   if (!geminiApiKey) {
-    return getDeterministicQuestionFallback(payload.skillId, payload.difficulty);
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, payload.difficulty);
   }
 
   const systemPrompt = `Sen BilimYo‘l Smart Edu platformasining professional test tuzuvchisisan.
@@ -558,7 +559,7 @@ O‘quvchi balli: ${payload.learnerScore ?? 50}%`;
 
   const rawJson = await callGeminiAPI(systemPrompt, userPrompt, geminiApiKey);
   if (!rawJson) {
-    return getDeterministicQuestionFallback(payload.skillId, payload.difficulty);
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, payload.difficulty);
   }
 
   try {
@@ -572,7 +573,7 @@ O‘quvchi balli: ${payload.learnerScore ?? 50}%`;
       parsed.correctIndex > 3 ||
       !parsed.explanation
     ) {
-      return getDeterministicQuestionFallback(payload.skillId, payload.difficulty);
+      return getDeterministicQuestionFallback(payload.courseId, payload.skillId, payload.difficulty);
     }
 
     const questionId = `q_gen_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -609,7 +610,7 @@ O‘quvchi balli: ${payload.learnerScore ?? 50}%`;
       isAiGenerated: true,
     };
   } catch {
-    return getDeterministicQuestionFallback(payload.skillId, payload.difficulty);
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, payload.difficulty);
   }
 }
 
@@ -623,7 +624,7 @@ async function handleGenerateReinforcement(
   supabaseServiceKey?: string
 ) {
   if (!geminiApiKey) {
-    return getDeterministicQuestionFallback(payload.skillId, "easy");
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, "easy");
   }
 
   const systemPrompt = `Sen BilimYo‘l Smart Edu tizimining mustahkamlovchi mashq tuzuvchi pedagogik intellektisan.
@@ -645,13 +646,13 @@ Oldingi savol: ${payload.previousQuestionText || ''}`;
 
   const rawJson = await callGeminiAPI(systemPrompt, userPrompt, geminiApiKey);
   if (!rawJson) {
-    return getDeterministicQuestionFallback(payload.skillId, "easy");
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, "easy");
   }
 
   try {
     const parsed = JSON.parse(rawJson);
     if (!parsed.text || !Array.isArray(parsed.options) || parsed.options.length !== 4) {
-      return getDeterministicQuestionFallback(payload.skillId, "easy");
+      return getDeterministicQuestionFallback(payload.courseId, payload.skillId, "easy");
     }
 
     const questionId = `q_reinf_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -687,7 +688,7 @@ Oldingi savol: ${payload.previousQuestionText || ''}`;
       isAiGenerated: true,
     };
   } catch {
-    return getDeterministicQuestionFallback(payload.skillId, "easy");
+    return getDeterministicQuestionFallback(payload.courseId, payload.skillId, "easy");
   }
 }
 
@@ -766,6 +767,244 @@ function sanitizeLessonForClient(dbLesson: any) {
 // DETERMINISTIC FALLBACKS
 // ==========================================
 function getDeterministicLessonFallback(courseId: string, skillId: string, topic: string, difficulty: string) {
+  if (courseId === "course_eng_01") {
+    return {
+      lessonId: `lesson_fallback_${skillId}`,
+      courseId,
+      skillId,
+      topic,
+      level: "intermediate",
+      difficulty,
+      title: `${topic || 'Ingliz tili'} bo‘yicha interaktiv dars`,
+      summary: "Ingliz tili ko‘nikmalari: kalit iboralar, talaffuz tahlili va interaktiv mashqlar.",
+      objective: "Ingliz tilida tinglab tushunish va so‘z boyligini mustahkamlash.",
+      estimatedMinutes: 12,
+      steps: [
+        {
+          id: "step_1",
+          stepNumber: 1,
+          type: "concept",
+          title: "Asosiy qoidalar",
+          content: "Ingliz tilida tinglashda har bir so‘zni alohida emas, kalit so‘zlarni va kontekstni umumiy anglash lozim.",
+          highlightNotes: ["Kalit so‘zlarni ajrating", "Intonatsiyaga e’tibor qarating"],
+        },
+        {
+          id: "step_2",
+          stepNumber: 2,
+          type: "visual_example",
+          title: "Audio Xabar Tahlili",
+          content: "Quyidagi audio to‘lqin va talaffuz ifodasini tinglang:",
+          visualModelData: {
+            type: "audio_wave",
+            speakerName: "Sarah (English Teacher)",
+            audioTranscript: "Consistent daily practice is the key to mastering English vocabulary.",
+          },
+        },
+        {
+          id: "step_3",
+          stepNumber: 3,
+          type: "concept",
+          title: "Amaliy Qo‘llanish",
+          content: "O‘rganilgan iboralarni jonli muloqotda qo‘llash orqali nutq ravonligiga erishiladi.",
+        },
+        {
+          id: "step_4",
+          stepNumber: 4,
+          type: "interactive_question",
+          title: "O‘zlashtirishni tekshirish",
+          content: "Quyidagi savolga to‘g‘ri javob berib, darsni yakunlang.",
+        },
+      ],
+      questions: [
+        {
+          id: "q_fallback_eng_1",
+          courseId,
+          skillId,
+          text: "What does 'consistent daily practice' lead to according to the lesson?",
+          formulaLatex: null,
+          options: ["Mastering vocabulary", "Forgetting words", "Reducing fluency", "Changing grammar rules"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_eng_2",
+          courseId,
+          skillId,
+          text: "Choose the correct word: 'She has a very ___ understanding of the topic.'",
+          formulaLatex: null,
+          options: ["deep", "deeply", "depth", "deepness"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_eng_3",
+          courseId,
+          skillId,
+          text: "What is the synonym of 'crucial'?",
+          formulaLatex: null,
+          options: ["Extremely important", "Simple", "Unnecessary", "Small"],
+          difficulty,
+          isAiGenerated: false,
+        },
+      ],
+      isAiGenerated: false,
+      isDeterministicFallback: true,
+    };
+  }
+
+  if (courseId === "course_it") {
+    return {
+      lessonId: `lesson_fallback_${skillId}`,
+      courseId,
+      skillId,
+      topic,
+      level: "intermediate",
+      difficulty,
+      title: `${topic || 'IT'} bo‘yicha interaktiv dars`,
+      summary: "Dasturlash asoslari, o‘zgaruvchilar va algoritmlash mantiqi.",
+      objective: "Kod yozish va kompyuter fanlari tushunchalarini o‘zlashtirish.",
+      estimatedMinutes: 15,
+      steps: [
+        {
+          id: "step_1",
+          stepNumber: 1,
+          type: "concept",
+          title: "Algoritm nima?",
+          content: "Algoritm — bu belgilangan maqsadga erishish uchun kompyuter bajarishi kerak bo‘lgan qadamma-qadam ko‘rsatmalar ketma-ketligidir.",
+          highlightNotes: ["Ketma-ketlik buzilmasligi shart", "Har bir qadam aniq bo‘lishi lozim"],
+        },
+        {
+          id: "step_2",
+          stepNumber: 2,
+          type: "concept",
+          title: "O‘zgaruvchilar",
+          content: "Dasturda ma’lumotlarni saqlash uchun o‘zgaruvchilardan foydalaniladi.",
+        },
+        {
+          id: "step_3",
+          stepNumber: 3,
+          type: "interactive_question",
+          title: "Amaliy Test",
+          content: "Dasturlash savoliga javob bering.",
+        },
+      ],
+      questions: [
+        {
+          id: "q_fallback_it_1",
+          courseId,
+          skillId,
+          text: "Python tilida matnli qiymat qaysi belgilar ichida yoziladi?",
+          formulaLatex: null,
+          options: ["Qo‘shtirnoq yoki bittalik tirnoq", "Kvadrat qavslar", "Burchakli qavslar", "Belgisiz"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_it_2",
+          courseId,
+          skillId,
+          text: "O‘zgaruvchiga qiymat berish uchun qaysi belgi ishlatiladi?",
+          formulaLatex: null,
+          options: ["=", "==", ":=", "->"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_it_3",
+          courseId,
+          skillId,
+          text: "Quyidagilardan qaysi biri butun son (integer) turiga kiradi?",
+          formulaLatex: null,
+          options: ["42", "'42'", "42.5", "True"],
+          difficulty,
+          isAiGenerated: false,
+        },
+      ],
+      isAiGenerated: false,
+      isDeterministicFallback: true,
+    };
+  }
+
+  if (courseId === "course_logic") {
+    return {
+      lessonId: `lesson_fallback_${skillId}`,
+      courseId,
+      skillId,
+      topic,
+      level: "intermediate",
+      difficulty,
+      title: `${topic || 'Mantiqiy fikrlash'} bo‘yicha interaktiv dars`,
+      summary: "Naqshlar (patterns), mantiqiy ketma-ketliklar va xulosalar chiqarish asoslari.",
+      objective: "Mantiqiy naqshlarni tanib, asoslangan xulosalar chiqarish ko‘nikmasini rivojlantirish.",
+      estimatedMinutes: 13,
+      steps: [
+        {
+          id: "step_1",
+          stepNumber: 1,
+          type: "concept",
+          title: "Naqsh (pattern) nima?",
+          content: "Naqsh — tartibli ravishda takrorlanayotgan elementlar ketma-ketligi. Naqshni topish uchun har bir qadam orasidagi bog‘lanishni aniqlash kerak.",
+          highlightNotes: ["Har bir element orasidagi farqni hisoblang", "Farq o‘zgarmasa — arifmetik naqsh"],
+        },
+        {
+          id: "step_2",
+          stepNumber: 2,
+          type: "concept",
+          title: "Misol: ko‘payish naqshi",
+          content: "2, 4, 8, 16, ... ketma-ketligida har keyingi son oldingisining 2 barobiga teng. Demak, keyingi son 16 × 2 = 32 bo‘ladi.",
+        },
+        {
+          id: "step_3",
+          stepNumber: 3,
+          type: "concept",
+          title: "Shartli xulosa",
+          content: "Agar barcha A guruhiga oid narsalar B xossaga ega bo‘lsa, A guruhidagi har bir narsa B xossaga ega deyilishi mantiqiy jihatdan to‘g‘ri (sillogizm).",
+        },
+        {
+          id: "step_4",
+          stepNumber: 4,
+          type: "interactive_question",
+          title: "O‘zlashtirishni tekshirish",
+          content: "Quyidagi savolga to‘g‘ri javob berib, darsni yakunlang.",
+        },
+      ],
+      questions: [
+        {
+          id: "q_fallback_logic_1",
+          courseId,
+          skillId,
+          text: "2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?",
+          formulaLatex: null,
+          options: ["24", "30", "32", "34"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_logic_2",
+          courseId,
+          skillId,
+          text: "Barcha A → B va B → C bo‘lsa, quyidagilardan qaysi biri to‘g‘ri?",
+          formulaLatex: null,
+          options: ["A → C", "C → A", "B → A", "C → B"],
+          difficulty,
+          isAiGenerated: false,
+        },
+        {
+          id: "q_fallback_logic_3",
+          courseId,
+          skillId,
+          text: "Agar hamma tulki mayin bo‘lsa va Ro‘zi — tulki, unda qandai xulosa chiqariladi?",
+          formulaLatex: null,
+          options: ["Ro‘zi mayin", "Ro‘zi qattiq", "Ma’lum emas", "Bu noto‘g‘ri xulosa"],
+          difficulty,
+          isAiGenerated: false,
+        },
+      ],
+      isAiGenerated: false,
+      isDeterministicFallback: true,
+    };
+  }
+
   return {
     lessonId: `lesson_fallback_${skillId}`,
     courseId,
@@ -890,18 +1129,54 @@ function getDeterministicDiagnosisFallback(payload: DiagnoseMistakeRequest) {
   };
 }
 
-function getDeterministicQuestionFallback(skillId: string, difficulty: string) {
-  return {
+function getDeterministicQuestionFallback(courseId: string, skillId: string, difficulty: string) {
+  const base = {
     id: `q_fallback_${skillId}_${difficulty}`,
-    courseId: "course_math_01",
+    courseId,
     skillId,
-    text: "f(x) = 3x + 2 funksiyasi berilgan. Agar x = 2 bo‘lsa, f(2) ning qiymatini toping:",
-    formulaLatex: "f(2) = 3(2) + 2",
-    options: ["8", "6", "7", "5"],
     difficulty,
     isAiGenerated: false,
     isDeterministicFallback: true,
-  };
+  } as const;
+
+  // Subject-scoped deterministic fallback — must match the requested course.
+  switch (courseId) {
+    case "course_eng_01":
+      return {
+        ...base,
+        text: "Choose the correct word: 'She has a very ___ understanding of the topic.'",
+        formulaLatex: null,
+        options: ["deep", "deeply", "depth", "deepness"],
+      };
+    case "course_it":
+      return {
+        ...base,
+        text: "Python tilida matnli qiymat qaysi belgilar ichida yoziladi?",
+        formulaLatex: null,
+        options: ["Qo‘shtirnoq yoki bittalik tirnoq", "Kvadrat qavslar", "Burchakli qavslar", "Belgisiz"],
+      };
+    case "course_logic":
+      return {
+        ...base,
+        text: "2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?",
+        formulaLatex: null,
+        options: ["24", "30", "32", "34"],
+      };
+    case "course_math_01":
+      return {
+        ...base,
+        text: "f(x) = 3x + 2 funksiyasi berilgan. Agar x = 2 bo‘lsa, f(2) ning qiymatini toping:",
+        formulaLatex: "f(2) = 3(2) + 2",
+        options: ["8", "6", "7", "5"],
+      };
+    default:
+      return {
+        ...base,
+        text: "Ushbu mavzuni qayta ko‘rib chiqish va misollar yechish tavsiya etiladi.",
+        formulaLatex: null,
+        options: ["Tushundim", "Qayta ko‘rish kerak", "Savollarim bor", "Yana mashq qilaman"],
+      };
+  }
 }
 
 // ==========================================

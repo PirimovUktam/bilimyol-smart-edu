@@ -16,6 +16,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'node'
+    environment: 'node',
+    // Ignore gitignored worktree copies (.claude/**) so counts reflect real tests only
+    exclude: ['**/node_modules/**', '**/dist/**', '.claude/**', '**/.claude/**']
   }
 })

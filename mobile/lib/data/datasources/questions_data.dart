@@ -242,6 +242,7 @@ const Map<String, List<Question>> placementQuestionsData = {
     ),
   ],
   'course_eng_01': [
+    // 1. VOCABULARY
     Question(
       id: 'q_eng_p1',
       courseId: 'course_eng_01',
@@ -251,6 +252,38 @@ const Map<String, List<Question>> placementQuestionsData = {
       correctIndex: 0,
       difficulty: QuestionDifficulty.easy,
       explanation: '"Essential" means absolutely necessary or extremely important; its closest synonym is "Crucial".',
+    ),
+    Question(
+      id: 'q_eng_v2',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_vocab',
+      text: 'Choose the word that best completes the sentence: "The researcher conducted a ____ analysis of the survey findings."',
+      options: ['thorough', 'careless', 'shallow', 'random'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.medium,
+      explanation: '"Thorough" means complete with regard to every detail.',
+    ),
+    Question(
+      id: 'q_eng_v3',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_vocab',
+      text: 'Select the exact antonym for "Ambiguous":',
+      options: ['Clear and definite', 'Vague and uncertain', 'Complicated', 'Mysterious'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.hard,
+      explanation: '"Ambiguous" means open to more than one interpretation (unclear). The antonym is "Clear and definite".',
+    ),
+
+    // 2. GRAMMAR
+    Question(
+      id: 'q_eng_g1',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_grammar',
+      text: 'Complete the sentence: "Neither the manager nor the employees ____ informed about the schedule change."',
+      options: ['were', 'was', 'is', 'has been'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.easy,
+      explanation: 'In "neither... nor", the verb agrees with the closer subject ("employees", which is plural => "were").',
     ),
     Question(
       id: 'q_eng_p2',
@@ -263,6 +296,43 @@ const Map<String, List<Question>> placementQuestionsData = {
       explanation: 'Second Conditional structure requires: If + Past Simple ("studied"), would + base verb.',
     ),
     Question(
+      id: 'q_eng_g3',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_grammar',
+      text: 'Choose the grammatically correct inverted structure:',
+      options: [
+        'Rarely have I seen such dedication in a team.',
+        'Rarely I have seen such dedication in a team.',
+        'Rarely saw I such dedication in a team.',
+        'Rarely did I seen such dedication in a team.',
+      ],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.hard,
+      explanation: 'Negative adverbs like "Rarely" at sentence start trigger auxiliary-subject inversion: "Rarely have I seen".',
+    ),
+
+    // 3. LISTENING
+    Question(
+      id: 'q_eng_l1',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_listening',
+      text: 'Audio context: "The flight to London will depart from Gate 14 at three o‘clock sharp." Which gate is announced?',
+      options: ['Gate 14', 'Gate 40', 'Gate 4', 'Gate 30'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.easy,
+      explanation: 'The announcement clearly states "Gate 14".',
+    ),
+    Question(
+      id: 'q_eng_p5',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_listening',
+      text: 'Audio context: "Please submit your homework before midnight, not tomorrow morning." When is the deadline?',
+      options: ['Tonight before 12:00 AM', 'Tomorrow morning', 'Next week', 'Any time tomorrow'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.medium,
+      explanation: 'The speaker emphasizes the deadline is tonight before midnight (12:00 AM).',
+    ),
+    Question(
       id: 'q_eng_p3',
       courseId: 'course_eng_01',
       skillId: 'skill_eng_listening',
@@ -271,6 +341,18 @@ const Map<String, List<Question>> placementQuestionsData = {
       correctIndex: 0,
       difficulty: QuestionDifficulty.hard,
       explanation: 'The speaker explicitly mentions that the conference was postponed to Friday.',
+    ),
+
+    // 4. READING
+    Question(
+      id: 'q_eng_r1',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_reading',
+      text: 'Read the notice: "All visitors must register at the reception desk before entering the laboratory." What must visitors do first?',
+      options: ['Register at the reception desk', 'Enter the laboratory directly', 'Call the laboratory manager', 'Leave their bags outside'],
+      correctIndex: 0,
+      difficulty: QuestionDifficulty.easy,
+      explanation: 'The notice strictly mandates registering at reception prior to entering.',
     ),
     Question(
       id: 'q_eng_p4',
@@ -283,14 +365,19 @@ const Map<String, List<Question>> placementQuestionsData = {
       explanation: '"Cost-effective" means producing good results without costing a lot of money (becoming cheaper).',
     ),
     Question(
-      id: 'q_eng_p5',
+      id: 'q_eng_r3',
       courseId: 'course_eng_01',
-      skillId: 'skill_eng_listening',
-      text: 'Audio context: "Please submit your homework before midnight, not tomorrow morning." When is the deadline?',
-      options: ['Tonight before 12:00 AM', 'Tomorrow morning', 'Next week', 'Any time tomorrow'],
+      skillId: 'skill_eng_reading',
+      text: 'Read the scientific excerpt: "Although initial findings seemed contradictory, subsequent rigorous trials confirmed the original hypothesis." What occurred?',
+      options: [
+        'Later rigorous tests verified the initial theory',
+        'The hypothesis was decisively proven wrong',
+        'The experiments failed completely',
+        'The scientific contradiction was never resolved',
+      ],
       correctIndex: 0,
       difficulty: QuestionDifficulty.hard,
-      explanation: 'The speaker emphasizes the deadline is tonight before midnight.',
+      explanation: 'The excerpt affirms that subsequent rigorous trials confirmed the initial hypothesis.',
     ),
   ],
 };

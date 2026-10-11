@@ -4,7 +4,16 @@
 -- SECURE, SELF-CONTAINED, IDEMPOTENT, ZERO HARDCODED TOKENS
 -- ==============================================================================
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
+
+-- Helper to safely compute SHA-256 hash using extensions schema
+CREATE OR REPLACE FUNCTION public.hash_teacher_code(p_code TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT encode(extensions.digest(UPPER(TRIM(p_code)), 'sha256'), 'hex');
+$$;
 
 -- 1. ENSURE ROLE & DISPLAY NAME COLUMNS EXIST ON PROFILES
 ALTER TABLE public.profiles
@@ -60,7 +69,11 @@ ALTER TABLE public.teacher_invitation_attempts ENABLE ROW LEVEL SECURITY;
 
 -- 4. HELPER FUNCTION: CHECK IF CURRENT AUTHENTICATED CALLER IS ADMIN
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   IF auth.uid() IS NULL THEN
     RETURN false;
@@ -71,11 +84,15 @@ BEGIN
     WHERE id = auth.uid() AND role = 'admin'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 5. PRIVILEGED SERVER-SIDE FUNCTION: PROMOTE USER TO ADMIN
 CREATE OR REPLACE FUNCTION public.promote_user_to_admin(p_email TEXT)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_caller_id UUID := auth.uid();
   v_target_id UUID;
@@ -123,7 +140,7 @@ BEGIN
     'message', 'Foydalanuvchi (' || v_clean_email || ') muvaffaqiyatli Admin roliga o‘tkazildi.'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 6. HARDEN TEACHER INVITATION RPCS: STRICTLY REQUIRE ADMIN ROLE
 CREATE OR REPLACE FUNCTION public.create_teacher_invitation(
@@ -131,7 +148,11 @@ CREATE OR REPLACE FUNCTION public.create_teacher_invitation(
   p_max_uses INT DEFAULT 1,
   p_validity_days INT DEFAULT 7
 )
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_part1 TEXT;
@@ -156,7 +177,7 @@ BEGIN
   v_part2 := UPPER(SUBSTRING(MD5(RANDOM()::TEXT || clock_timestamp()::TEXT) FROM 5 FOR 4));
   v_plain_code := 'USTOZ-' || v_part1 || '-' || v_part2;
   v_prefix := 'USTOZ-' || v_part1 || '-****';
-  v_hash := encode(digest(v_plain_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_plain_code);
   v_expires_at := now() + (v_days || ' days')::INTERVAL;
 
   INSERT INTO public.teacher_invitation_codes (
@@ -196,10 +217,14 @@ BEGIN
     'message', 'O‘qituvchi taklif kodi muvaffaqiyatli yaratildi. Ushbu kodni hozir nusxalab oling!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.list_teacher_invitations()
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_list JSONB;
@@ -231,10 +256,14 @@ BEGIN
 
   RETURN v_list;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.revoke_teacher_invitation(p_id UUID)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
 BEGIN
@@ -253,11 +282,15 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'message', 'Taklif kodi muvaffaqiyatli bekor qilindi.');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 7. HARDENED RPC: REDEEM TEACHER INVITATION CODE
 CREATE OR REPLACE FUNCTION public.redeem_teacher_invitation_code(p_code TEXT)
-RETURNS JSONB AS $$
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_uid UUID := auth.uid();
   v_clean_code TEXT := UPPER(TRIM(p_code));
@@ -288,7 +321,7 @@ BEGIN
     );
   END IF;
 
-  v_hash := encode(digest(v_clean_code, 'sha256'), 'hex');
+  v_hash := public.hash_teacher_code(v_clean_code);
 
   SELECT * INTO v_inv
   FROM public.teacher_invitation_codes
@@ -337,7 +370,7 @@ BEGIN
     'message', 'O‘qituvchi hisobi muvaffaqiyatli tasdiqlandi va faollashtirildi!'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 8. UPDATE RLS ON teacher_invitation_codes
 DROP POLICY IF EXISTS "Teacher invitation codes access control" ON public.teacher_invitation_codes;

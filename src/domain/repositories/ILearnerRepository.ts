@@ -51,15 +51,23 @@ export interface SubmitAnswerAttemptResult {
   alreadyProcessed?: boolean;
 }
 
+export interface ReinforcementCompletionContext {
+  courseId: string;
+  skillId: string;
+  beforeScore: number;
+  afterScore: number;
+  xpAwarded: number;
+}
+
 export interface ILearnerRepository {
   getProfile(): Promise<LearnerProfile>;
   getCurrentProfile(): Promise<LearnerProfile>;
   updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile>;
   saveSkillScores(courseId: string, scores: Record<string, SkillScore>): Promise<void>;
   savePlacementAttempt(data: PlacementAttemptData): Promise<string>;
-  markLessonCompleted(lessonId: string): Promise<void>;
+  markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void>;
   markNodeCompleted(nodeId: string): Promise<void>;
-  markReinforcementCompleted(reinforcementId: string): Promise<void>;
+  markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<void>;
   submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult>;
   recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord>;
   getAnswerAttempts(limit?: number): Promise<AnswerAttemptRecord[]>;

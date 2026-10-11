@@ -2,13 +2,35 @@ import {
   ILearnerRepository,
   AnswerAttemptRecord,
   PlacementAttemptData,
+  ReinforcementCompletionContext,
   SubmitAnswerAttemptRequest,
   SubmitAnswerAttemptResult,
 } from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
+import { supabaseLessonRepository } from './SupabaseLessonRepository';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
+
+/**
+ * Resolves which course a lesson belongs to: explicit caller context first,
+ * then the lesson repository chain (curated lessons → generated lessons →
+ * seeds). Returns null when the lesson is unknown — callers must NOT fall
+ * back to a hardcoded course (that is exactly what caused cross-course mixing).
+ */
+export async function resolveLessonCourseId(
+  lessonId: string,
+  explicitCourseId?: string | null,
+  lessonRepo: { getLessonById(id: string): Promise<{ courseId: string } | null> } = supabaseLessonRepository
+): Promise<string | null> {
+  if (explicitCourseId) return explicitCourseId;
+  try {
+    const lesson = await lessonRepo.getLessonById(lessonId);
+    return lesson?.courseId || null;
+  } catch {
+    return null;
+  }
+}
 
 export class SupabaseLearnerRepository implements ILearnerRepository {
   private fallbackRepo = new InMemoryLearnerRepository();
@@ -288,18 +310,26 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
   }
 
-  async markLessonCompleted(lessonId: string): Promise<void> {
-    await this.fallbackRepo.markLessonCompleted(lessonId);
+  async markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void> {
+    await this.fallbackRepo.markLessonCompleted(lessonId, courseId);
     if (!isSupabaseConfigured) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const resolvedCourseId = await resolveLessonCourseId(lessonId, courseId);
+      if (!resolvedCourseId) {
+        console.warn(
+          `[markLessonCompleted] Cannot resolve course for lesson "${lessonId}" — skipping remote write instead of defaulting to another course.`
+        );
+        return;
+      }
+
       await supabase.from('lesson_progress').upsert({
         user_id: user.id,
         lesson_id: lessonId,
-        course_id: 'course_math_01',
+        course_id: resolvedCourseId,
         status: 'completed',
         progress_percent: 100,
         completed_at: new Date().toISOString(),
@@ -316,9 +346,16 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     return this.fallbackRepo.markNodeCompleted(nodeId);
   }
 
-  async markReinforcementCompleted(reinforcementId: string): Promise<void> {
-    await this.fallbackRepo.markReinforcementCompleted(reinforcementId);
+  async markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<void> {
+    await this.fallbackRepo.markReinforcementCompleted(reinforcementId, context);
     if (!isSupabaseConfigured) return;
+
+    if (!context?.courseId || !context?.skillId) {
+      console.warn(
+        `[markReinforcementCompleted] Missing course/skill context for "${reinforcementId}" — skipping remote write instead of defaulting to another course.`
+      );
+      return;
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -326,13 +363,13 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
       await supabase.from('reinforcement_attempts').upsert({
         user_id: user.id,
-        course_id: 'course_math_01',
-        skill_id: 'skill_math_functions',
+        course_id: context.courseId,
+        skill_id: context.skillId,
         reinforcement_node_id: reinforcementId,
-        before_score: 40,
-        after_score: 60,
+        before_score: context.beforeScore,
+        after_score: context.afterScore,
         is_correct: true,
-        xp_awarded: 15,
+        xp_awarded: context.xpAwarded,
         created_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,reinforcement_node_id',

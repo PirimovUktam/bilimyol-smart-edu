@@ -13,6 +13,7 @@ interface LessonState {
   currentLesson: Lesson | null;
   currentStepIndex: number;
   isLoading: boolean;
+  error: string | null;
   isEvaluatingAnswer: boolean;
   selectedAnswerIndex: number | null;
   lastAnswerResult: LessonAnswerResult | null;
@@ -26,7 +27,8 @@ interface LessonState {
     skillId: string,
     topic: string,
     difficulty?: 'easy' | 'medium' | 'hard' | number
-  ) => Promise<void>;
+  ) => Promise<Lesson | null>;
+  clearError: () => void;
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (index: number) => void;
@@ -41,6 +43,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   currentLesson: null,
   currentStepIndex: 0,
   isLoading: false,
+  error: null,
   isEvaluatingAnswer: false,
   selectedAnswerIndex: null,
   lastAnswerResult: null,
@@ -48,9 +51,19 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   showReinforcementModal: false,
   isCompleted: false,
 
+  clearError: () => set({ error: null }),
+
   loadLesson: async (lessonId: string) => {
+    // If the requested lesson is already loaded and active, don't overwrite it
+    if (get().currentLesson && get().currentLesson?.id === lessonId) {
+      set({ isLoading: false, error: null });
+      return;
+    }
+
     set({
       isLoading: true,
+      error: null,
+      currentLesson: null,
       currentStepIndex: 0,
       selectedAnswerIndex: null,
       lastAnswerResult: null,
@@ -58,8 +71,25 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       showReinforcementModal: false,
       isCompleted: false,
     });
-    const lesson = await supabaseLessonRepository.getLessonById(lessonId);
-    set({ currentLesson: lesson, isLoading: false });
+
+    try {
+      const lesson = await supabaseLessonRepository.getLessonById(lessonId);
+      if (!lesson) {
+        set({
+          currentLesson: null,
+          isLoading: false,
+          error: `Dars topilmadi ("${lessonId}"). Iltimos, boshqa darsni tanlang yoki yangi dars yarating.`,
+        });
+        return;
+      }
+      set({ currentLesson: lesson, isLoading: false, error: null });
+    } catch (err: any) {
+      set({
+        currentLesson: null,
+        isLoading: false,
+        error: `Darsni yuklashda xatolik yuz berdi: ${err?.message || 'Server javob bermadi'}. Qayta urinib ko‘ring.`,
+      });
+    }
   },
 
   generateAILesson: async (
@@ -67,9 +97,10 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     skillId: string,
     topic: string,
     difficulty?: 'easy' | 'medium' | 'hard' | number
-  ) => {
+  ): Promise<Lesson | null> => {
     set({
       isLoading: true,
+      error: null,
       currentStepIndex: 0,
       selectedAnswerIndex: null,
       lastAnswerResult: null,
@@ -85,6 +116,10 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         topic,
         difficulty,
       });
+
+      if (!response || !response.title || !Array.isArray(response.steps) || response.steps.length === 0) {
+        throw new Error('AI xizmatidan yaroqli dars ma’lumotlari kelmadi.');
+      }
 
       const firstQ = response.questions && response.questions.length > 0 ? response.questions[0] : null;
       const mappedInteractiveQuestion = firstQ
@@ -129,13 +164,23 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         summary: response.summary,
         steps: lessonSteps,
         reinforcementExercise: mappedInteractiveQuestion,
+        isAiGenerated: response.isAiGenerated === true,
+        isDeterministicFallback: response.isDeterministicFallback === true,
       };
 
-      set({ currentLesson: lessonEntity, isLoading: false });
-    } catch (err) {
-      console.warn('[useLessonStore] generateAILesson error, falling back:', err);
-      const fallbackLesson = await supabaseLessonRepository.getLessonById('lesson_math_functions_01');
-      set({ currentLesson: fallbackLesson, isLoading: false });
+      // Persist to repository cache so getLessonById can retrieve it
+      await supabaseLessonRepository.saveLesson(lessonEntity);
+
+      set({ currentLesson: lessonEntity, isLoading: false, error: null });
+      return lessonEntity;
+    } catch (err: any) {
+      console.warn('[useLessonStore] generateAILesson error:', err);
+      const errorMessage = err?.message || 'Server javob bermadi yoki cheklovdan oshildi';
+      set({
+        isLoading: false,
+        error: `AI dars yaratishda xatolik yuz berdi: ${errorMessage}. Iltimos, qayta urinib ko‘ring.`,
+      });
+      return null;
     }
   },
 
@@ -181,7 +226,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     );
 
     if (result.isCorrect) {
-      await supabaseLearnerRepository.markLessonCompleted(currentLesson.id);
+      await supabaseLearnerRepository.markLessonCompleted(currentLesson.id, currentLesson.courseId);
       await useLearnerStore.getState().loadProfile();
       set({
         lastAnswerResult: result,

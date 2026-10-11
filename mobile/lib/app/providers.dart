@@ -160,19 +160,38 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
   Future<void> init() async {
     final courseRepo = ref.read(courseRepositoryProvider);
     final allCourses = await courseRepo.getAllCourses();
-    final firstCourse = allCourses.firstOrNull;
+
+    // Restore the persisted course selection (server/local profile truth)
+    // instead of always resetting to courses[0].
+    Course? restored;
+    try {
+      final learnerRepo = ref.read(learnerRepositoryProvider);
+      final profile = await learnerRepo.getProfile();
+      final selectedId = profile.selectedCourseId;
+      if (selectedId.isNotEmpty) {
+        restored = allCourses.where((c) => c.id == selectedId).firstOrNull;
+      }
+    } catch (_) {
+      // Restore is best-effort — fall back to the first course below.
+    }
+
+    final active = restored ?? allCourses.firstOrNull;
 
     List<Skill> skills = [];
-    if (firstCourse != null) {
-      skills = await courseRepo.getSkillsByCourseId(firstCourse.id);
+    if (active != null) {
+      skills = await courseRepo.getSkillsByCourseId(active.id);
     }
 
     state = CourseState(
       courses: allCourses,
-      activeCourse: firstCourse,
+      activeCourse: active,
       activeSkills: skills,
       isLoading: false,
     );
+
+    if (active != null) {
+      ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(active.id);
+    }
   }
 
   Future<void> selectCourse(String courseId) async {
@@ -200,12 +219,20 @@ final courseStateNotifierProvider =
 });
 
 // 3. Placement Test State Notifier
-const targetSkillsMath = [
-  'skill_math_algebra',
-  'skill_math_equations',
-  'skill_math_functions',
-  'skill_math_graphs',
-];
+const courseTargetSkills = <String, List<String>>{
+  'course_math_01': [
+    'skill_math_algebra',
+    'skill_math_equations',
+    'skill_math_functions',
+    'skill_math_graphs',
+  ],
+  'course_eng_01': [
+    'skill_eng_vocab',
+    'skill_eng_grammar',
+    'skill_eng_listening',
+    'skill_eng_reading',
+  ],
+};
 
 class PlacementState {
   final String courseId;
@@ -273,10 +300,12 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
   Future<void> loadQuestions(String courseId) async {
     final courseRepo = ref.read(courseRepositoryProvider);
     final allQuestions = await courseRepo.getPlacementQuestions(courseId);
+    final targetSkills = courseTargetSkills[courseId] ??
+        allQuestions.map((q) => q.skillId).toSet().toList();
 
     final firstQ = AdaptiveQuestionSelector.getNextQuestion(
           allQuestions,
-          targetSkillsMath,
+          targetSkills,
           [],
           2,
         ) ??
@@ -316,9 +345,12 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
     final updatedHistory = List<AnswerHistoryItem>.from(state.history)..add(historyItem);
     final updatedSubmissions = List<QuestionAnswerSubmission>.from(state.submissions)..add(submission);
 
+    final targetSkills = courseTargetSkills[state.courseId] ??
+        state.allQuestions.map((q) => q.skillId).toSet().toList();
+
     final nextQ = AdaptiveQuestionSelector.getNextQuestion(
       state.allQuestions,
-      targetSkillsMath,
+      targetSkills,
       updatedHistory,
       2,
     );
@@ -451,14 +483,21 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
 
   Future<void> startLesson(String lessonId) async {
     final startUseCase = ref.read(startLessonUseCaseProvider);
-    final lesson = await startUseCase.execute(lessonId);
-    state = LessonSessionState(
-      lesson: lesson,
-      currentStepIndex: 0,
-      selectedOptionIndex: null,
-      answerResult: null,
-      isSubmittingAnswer: false,
-    );
+    try {
+      final lesson = await startUseCase.execute(lessonId);
+      state = LessonSessionState(
+        lesson: lesson,
+        currentStepIndex: 0,
+        selectedOptionIndex: null,
+        answerResult: null,
+        isSubmittingAnswer: false,
+      );
+    } catch (_) {
+      // Missing/invalid lesson: expose an empty session so the screen can show
+      // a recoverable Uzbek empty-state instead of crashing or showing
+      // another course's content.
+      state = const LessonSessionState(lesson: null);
+    }
   }
 
   void nextStep() {
@@ -515,11 +554,29 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   Future<ReinforcementResult?> submitReinforcement(int selectedIndex) async {
     if (state.lesson == null) return null;
 
+    final courseId = state.lesson!.courseId;
+    final skillId = state.lesson!.skillId;
+
+    // Derive a course-scoped reinforcement node id — never hardcode another
+    // course's node (the old 'reinf_node_math_func' leaked across courses).
+    String reinforcementNodeId = 'reinf_${courseId}_$skillId';
+    try {
+      final roadmap = ref.read(roadmapStateNotifierProvider).value;
+      if (roadmap != null && roadmap.courseId == courseId) {
+        final node = roadmap.nodes
+            .where((n) => n.isReinforcement && n.skillId == skillId)
+            .firstOrNull;
+        if (node != null) reinforcementNodeId = node.id;
+      }
+    } catch (_) {
+      // Keep the deterministic scoped fallback id.
+    }
+
     final submitReinfUseCase = ref.read(submitReinforcementUseCaseProvider);
     final result = await submitReinfUseCase.execute(
-      courseId: state.lesson!.courseId,
-      skillId: state.lesson!.skillId,
-      reinforcementNodeId: 'reinf_node_math_func',
+      courseId: courseId,
+      skillId: skillId,
+      reinforcementNodeId: reinforcementNodeId,
       reinforcementQuestion: state.lesson!.reinforcementExercise,
       selectedIndex: selectedIndex,
     );

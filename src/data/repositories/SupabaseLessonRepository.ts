@@ -153,6 +153,27 @@ export class SupabaseLessonRepository implements ILessonRepository {
       return this.fallback.getBaseRoadmapNodes(courseId);
     }
   }
+
+  async saveLesson(lesson: Lesson): Promise<void> {
+    await this.fallback.saveLesson(lesson);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('generated_lessons').upsert({
+          id: lesson.id,
+          course_id: lesson.courseId,
+          skill_id: lesson.skillId,
+          title: lesson.title,
+          summary: lesson.summary,
+          estimated_minutes: lesson.estimatedMinutes,
+          steps: lesson.steps,
+          reinforcement_exercise: lesson.reinforcementExercise,
+        });
+      } catch (err) {
+        console.warn('[SupabaseLessonRepository] Failed to persist generated lesson to remote:', err);
+      }
+    }
+  }
 }
 
 export const supabaseLessonRepository = new SupabaseLessonRepository();

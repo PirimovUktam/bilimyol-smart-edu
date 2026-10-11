@@ -34,4 +34,8 @@ export interface Lesson {
   summary: string;
   steps: LessonStep[];
   reinforcementExercise: Question;
+  /** Set when the lesson was produced by the live AI edge function. */
+  isAiGenerated?: boolean;
+  /** Set when AI failed and this is a deterministic demo fallback lesson. */
+  isDeterministicFallback?: boolean;
 }

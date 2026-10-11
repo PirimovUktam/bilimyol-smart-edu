@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../app/providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -31,9 +32,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: const Text('Profilim'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/dashboard'),
         ),
       ),
+      bottomNavigationBar: const BilimYolBottomNav(currentIndex: 4),
       body: SafeArea(
         child: learnerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
