@@ -29,6 +29,7 @@ import {
   Lock,
   Compass,
   GraduationCap,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
 import { Badge } from '@/presentation/components/Badge';
@@ -334,145 +335,168 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="text-cyan-400 text-xs font-black tracking-widest uppercase">2. ASOSIY BOSQICH</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
-              Bizning Jamoa va Texnologik Kuch
+              Bizning Jamoa — 3 Ta Asosiy Ustun
             </h2>
             <p className="text-slate-400 text-sm sm:text-base mt-3">
-              Ta’lim metodologiyasi, ilg‘or AI arxitekturasi va zamonaviy mobil dasturlashni birlashtirgan jamoa.
+              Texnologik arxitektura, biznes o‘sish strategiyasi va pedagogik metodologiyani yagona maqsad atrofida birlashtirgan asoschilar jamoasi.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Member 1: Founder & Architect */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-cyan-500/40 transition-all group">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Member 1: Founder & Lead Developer */}
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-cyan-500/30 backdrop-blur-md flex flex-col justify-between hover:border-cyan-400/60 transition-all group shadow-xl shadow-cyan-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
               <div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-black mb-4 shadow-lg shadow-cyan-500/20">
-                  OP
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="relative">
+                    <img
+                      src="/images/team/oktam_pirimov.jpg"
+                      alt="Pirimov O‘ktam"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-cyan-500/60 shadow-xl shadow-cyan-500/25"
+                    />
+                    <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-md">
+                      👑 Lead
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      Pirimov O‘ktam
+                    </h3>
+                    <p className="text-xs text-cyan-400 font-bold mt-0.5">Founder & Lead Developer</p>
+                    <span className="inline-block mt-1 text-[11px] text-slate-400">Arxitektura & Muhandislik</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">
-                  O‘ktam Pirimov
-                </h3>
-                <p className="text-xs text-cyan-400 font-semibold mb-3">Founder & Lead Systems Architect</p>
+
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Loyiha me’mori, Full-Stack va AI tizimlarining uzviy sinxronligi, pedagogik yo‘l xaritasi muallifi.
+                  BilimYo‘l ekotizimining asoschisi va bosh arxitektori. Web va Mobile ilovalar (React 19, Flutter), server-side anti-cheat scoring (PostgreSQL RPC) hamda Gemini AI (Yo‘lchi) Edge integratsiyasini to‘liq kod darajasida noldan yaratgan.
                 </p>
 
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ko‘nikmalar:</div>
-                  <div className="flex flex-wrap gap-1 text-[10px]">
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Full-Stack Architecture</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">AI Prompt Tuning</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Clean Architecture</span>
+                <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-semibold">Tizim Arxitekturasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">React 19 & TypeScript</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Flutter 3.x (Mobile)</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">PostgreSQL RPC & RLS</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Gemini AI / Deno Edge</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 pt-4 border-t border-white/10 text-xs">
-                <a
-                  href="https://github.com/pirimovuktam"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-white flex items-center gap-1 font-bold"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" /> GitHub
-                </a>
-                <a
-                  href="https://t.me/pirimovuktam"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-cyan-400 hover:underline flex items-center gap-1 font-bold"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" /> Telegram
-                </a>
+              <div className="mt-6 flex items-center justify-between pt-4 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://github.com/pirimovuktam"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-300 hover:text-white flex items-center gap-1 font-bold transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> GitHub
+                  </a>
+                  <a
+                    href="https://t.me/pirimovuktam"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-cyan-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Telegram
+                  </a>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">152 Web • 48 Mob Tests</span>
               </div>
             </div>
 
-            {/* Member 2: AI & LLM Systems */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-purple-500/40 transition-all group">
+            {/* Member 2: Business & Growth Lead */}
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-purple-500/30 backdrop-blur-md flex flex-col justify-between hover:border-purple-400/60 transition-all group shadow-xl shadow-purple-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
               <div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black mb-4 shadow-lg shadow-purple-500/20">
-                  <Bot className="w-8 h-8" />
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-purple-500/25 ring-2 ring-purple-500/60">
+                      <Briefcase className="w-10 h-10 text-purple-200" />
+                    </div>
+                    <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-purple-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md">
+                      🚀 Growth
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">
+                      Abdurauf Normuminov
+                    </h3>
+                    <p className="text-xs text-purple-400 font-bold mt-0.5">Business & Growth Lead</p>
+                    <span className="inline-block mt-1 text-[11px] text-slate-400">Bozor & Hamkorliklar</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
-                  AI & Pedagogical Engine
-                </h3>
-                <p className="text-xs text-purple-400 font-semibold mb-3">Yo‘lchi AI Core Development</p>
+
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Google Gemini 2.5 Flash Edge Function optimizatsiyasi, pedagogik gallyutsinatsiyalarga qarshi qat’iy guardrails.
+                  Biznes modelni shakllantirish, bozorga chiqish (Go-To-Market) strategiyasi, maktablar va o‘quv markazlari bilan B2B hamkorlik hamda foydalanuvchilar oqimini (traction) kengaytirish rahbari.
                 </p>
 
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ko‘nikmalar:</div>
-                  <div className="flex flex-wrap gap-1 text-[10px]">
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Gemini 2.5 API</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Deno Edge Runtime</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Adaptive Scoring Engine</span>
+                <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold">EdTech GTM Strategiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">B2B Maktablar Hamkorligi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Unit Economics & Monetizatsiya</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Marketing Funnels</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Investor Relations</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 pt-4 border-t border-white/10 text-xs">
-                <span className="text-slate-400 font-bold">Latency: &lt;1.5s</span>
-                <span className="text-emerald-400 font-bold">100% Guarded</span>
+              <div className="mt-6 flex items-center justify-between pt-4 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2 text-purple-300 font-bold">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>EdTech Growth Strategy</span>
+                </div>
+                <span className="text-[10px] text-purple-400 font-mono font-bold">B2B & B2C Focus</span>
               </div>
             </div>
 
-            {/* Member 3: Mobile & Frontend */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-blue-500/40 transition-all group">
+            {/* Member 3: Education & Product Lead */}
+            <div className="p-7 rounded-3xl bg-white/[0.03] border border-emerald-500/30 backdrop-blur-md flex flex-col justify-between hover:border-emerald-400/60 transition-all group shadow-xl shadow-emerald-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
               <div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-cyan-600 flex items-center justify-center text-white text-2xl font-black mb-4 shadow-lg shadow-blue-500/20">
-                  <Smartphone className="w-8 h-8" />
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-500/60">
+                      <GraduationCap className="w-10 h-10 text-emerald-200" />
+                    </div>
+                    <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-md">
+                      🎓 EdLead
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                      Hamdamova Dildora
+                    </h3>
+                    <p className="text-xs text-emerald-400 font-bold mt-0.5">Education & Product Lead</p>
+                    <span className="inline-block mt-1 text-[11px] text-slate-400">Pedagogika & Mahsulot</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                  Mobile & Client Engineering
-                </h3>
-                <p className="text-xs text-blue-400 font-semibold mb-3">Flutter & React 19 Development</p>
+
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Web va Mobile platformalari o‘rtasidagi 100% simmetriya, Riverpod va Zustand holat boshqaruvi.
+                  Pedagogik metodika va mahsulot arxitekturasi bo‘yicha yetakchi. Milliy ta’lim standartlari, Bloom taksonomiyasi va adaptiv diagnostika metodikasi bo‘yicha kurikulum rahbari.
                 </p>
 
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ko‘nikmalar:</div>
-                  <div className="flex flex-wrap gap-1 text-[10px]">
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Flutter 3.x</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">React 19 + TypeScript</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Tailwind CSS</span>
+                <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold">Adaptiv Kurikulum</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Bloom Taksonomiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Diagnostik Metodika</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">O‘quvchi UX & Psixologiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 text-slate-300">Math & English Standartlar</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 pt-4 border-t border-white/10 text-xs">
-                <span className="text-slate-400 font-bold">210 Web Tests</span>
-                <span className="text-emerald-400 font-bold">41 Flutter Tests</span>
-              </div>
-            </div>
-
-            {/* Member 4: Methodology & Standards */}
-            <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-emerald-500/40 transition-all group">
-              <div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl font-black mb-4 shadow-lg shadow-emerald-500/20">
-                  <GraduationCap className="w-8 h-8" />
+              <div className="mt-6 flex items-center justify-between pt-4 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2 text-emerald-300 font-bold">
+                  <Brain className="w-3.5 h-3.5" />
+                  <span>Pedagogical Standards</span>
                 </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
-                  Ta’lim & Metodologiya
-                </h3>
-                <p className="text-xs text-emerald-400 font-semibold mb-3">Curriculum & Pedagogical Alignment</p>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Davlat ta’lim standarti, DTM va Milliy sertifikat talablariga mos ko‘nikmalar matritsasi (Knowledge Graph).
-                </p>
-
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ko‘nikmalar:</div>
-                  <div className="flex flex-wrap gap-1 text-[10px]">
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Bloom Taxonomy</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Item Response Theory</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 text-slate-300">Milliy Darsliklar</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-center gap-3 pt-4 border-t border-white/10 text-xs">
-                <span className="text-slate-400 font-bold">Fanlar: Math & Eng</span>
-                <span className="text-emerald-400 font-bold">100% Mos</span>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">100% Moslik</span>
               </div>
             </div>
           </div>
@@ -547,11 +571,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
 
             <div className="p-6 rounded-3xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4">
-                <Globe className="w-6 h-6" />
+                <Users className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">O‘zbekiston Bozoriga Mos</h3>
+              <h3 className="text-lg font-bold text-white mb-2">3 Kishi Kuchli Sinergiyasi</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                O‘zbek tili, milliy darsliklar, DTM standartlari va mahalliy o‘quvchilar mentalitetiga to‘liq moslashtirilgan yagona aqlli EdTech tizimi.
+                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va maktablar bilan B2B hamkorlik (Abdurauf) hamda milliy pedagogik kurikulum metodikasi (Dildora) — bitta jamoada to‘liq uyg‘unlashgan.
               </p>
             </div>
           </div>
