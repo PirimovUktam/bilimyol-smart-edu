@@ -42,8 +42,8 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
   onNavigateApp,
   onNavigateAiTutor,
 }) => {
-  // Roadmap active stage
-  const [activeRoadmapStage, setActiveRoadmapStage] = useState<'idea' | 'prototype' | 'mvp' | 'launched'>('mvp');
+  // Roadmap active stage (Slide 06: Hozir -> 6 oy -> 1 yil -> 3 yil)
+  const [activeRoadmapStage, setActiveRoadmapStage] = useState<'now' | '6months' | '1year' | '3years'>('now');
 
   // Interactive Chatbot Emulator state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; time: string }>>([
@@ -317,7 +317,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <span className="text-cyan-600 font-black">4.</span> Hamyonbop va Har Doim Yoningizda
                   </h4>
                   <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    Oyiga atigi 49,000 so‘m. Web va Flutter Mobile orqali har qanday telefonda 24/7 ishlaydi.
+                    Oyiga atigi 59 900 so‘m. Web va Flutter Mobile orqali har qanday telefonda 24/7 ishlaydi.
                   </p>
                 </div>
               </div>
@@ -582,318 +582,485 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
         </section>
 
-        {/* 6. SECTION 4: YO'L XARITASI (IDEA → PROTOTYPE → MVP → LAUNCHED & SCALE) */}
+        {/* 6. SECTION 4: MILESTONES — MAQSADLAR VA KPI & MONETIZATSIYA (SLIDE 06 & 03) */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200">
-          <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 text-xs font-black tracking-widest uppercase">
-              4. ASOSIY BOSQICH
+              4. ASOSIY BOSQICH: MILESTONES & MONETIZATSIYA
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
-              Yo‘l Xaritasi & Moliyalashtirish Smeta (Roadmap)
+              Milestones — Maqsadlar va KPI
             </h2>
             <p className="text-slate-600 text-sm sm:text-base mt-3">
-              Tahminiy va haddan tashqari shishirilgan raqamlar emas — 2026-yilgi real vaqt, aniq ko‘rsatkichlar (KPI) va $45,000 miqdoridagi to‘liq asoslangan byudjet taqsimoti.
+              <strong className="text-slate-900">Hozir → 6 oy → 1 yil → 3 yil.</strong> Raqamlar konservativ prognoz asosida ishlab chiqilgan.
             </p>
           </div>
 
-          {/* Interactive Stage Selector */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-            {[
-              { id: 'idea', label: '1. IDEA', badge: 'Iyul – Avg 2026 • $800', statusBadge: '100% Bajarildi' },
-              { id: 'prototype', label: '2. PROTOTYPE', badge: 'Avg – Sen 2026 • $1.4K', statusBadge: '100% Bajarildi' },
-              { id: 'mvp', label: '3. MVP (HOZIRGI)', badge: 'Okt 2026 • $2.8K', statusBadge: 'Jonli & Testlangan' },
-              { id: 'launched', label: '4. LAUNCH & SCALE', badge: '6 oy • $45K Pre-Seed', statusBadge: 'Amalga oshirilmoqda' },
-            ].map((stage) => (
+          {/* VISUAL TIMELINE BAR (SLIDE 06 ASOSIDA) */}
+          <div className="max-w-5xl mx-auto mb-10 p-6 sm:p-8 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
+            <div className="text-xs font-mono font-bold text-slate-400 mb-6 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                Vaqt O‘qi: Hozir → 6 oy → 1 yil → 3 yil
+              </span>
+              <span className="text-amber-400 text-[11px]">Konservativ Prognoz</span>
+            </div>
+
+            {/* Connecting Timeline Line */}
+            <div className="hidden lg:block absolute left-12 right-12 top-[125px] h-1 bg-gradient-to-r from-rose-500 via-amber-500 via-blue-500 to-emerald-500 rounded-full" />
+
+            {/* 4 Timeline Stage Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+              {/* STAGE 1: HOZIR */}
               <button
-                key={stage.id}
-                onClick={() => setActiveRoadmapStage(stage.id as any)}
-                className={`px-4 sm:px-5 py-3 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex flex-col sm:flex-row items-center gap-2 ${
-                  activeRoadmapStage === stage.id
-                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20 scale-105'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs'
+                onClick={() => setActiveRoadmapStage('now')}
+                className={`p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                  activeRoadmapStage === 'now'
+                    ? 'bg-rose-950/80 border-rose-500 shadow-lg shadow-rose-950/50 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500 text-slate-300'
                 }`}
               >
-                <span>{stage.label}</span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
-                    activeRoadmapStage === stage.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {stage.badge}
-                </span>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase text-rose-400">1-BOSQICH</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-rose-500 border-2 border-white shadow-sm" />
+                  </div>
+                  <h3 className="text-base font-black text-white">HOZIR</h3>
+                  <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-rose-400">•</span> MVP + pilot bosqich
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-rose-400">•</span> Asosiy o‘rganishning moslashuvchan oqimi
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-rose-400">•</span> Dastlabki foydalanuvchilar
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-rose-300 font-bold flex items-center justify-between">
+                  <span>Jonli Ishlamoqda</span>
+                  <span>Okt 2026</span>
+                </div>
               </button>
-            ))}
+
+              {/* STAGE 2: 6 OY */}
+              <button
+                onClick={() => setActiveRoadmapStage('6months')}
+                className={`p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                  activeRoadmapStage === '6months'
+                    ? 'bg-amber-950/80 border-amber-500 shadow-lg shadow-amber-950/50 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500 text-slate-300'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase text-amber-400">2-BOSQICH</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white shadow-sm" />
+                  </div>
+                  <h3 className="text-base font-black text-white">6 OY</h3>
+                  <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
+                    <div className="flex items-start gap-1.5 font-bold text-amber-300">
+                      <span>•</span> 500–700 pullik foydalanuvchi
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-amber-400">•</span> Mahsulotning bozorga mos kelishi (PMF)
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-amber-400">•</span> Takroriy mijozlarni jalb qilish
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-amber-400">•</span> Birinchi B2B pilot
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-amber-300 font-bold flex items-center justify-between">
+                  <span>Product-Market Fit</span>
+                  <span>Apr 2027</span>
+                </div>
+              </button>
+
+              {/* STAGE 3: 1 YIL */}
+              <button
+                onClick={() => setActiveRoadmapStage('1year')}
+                className={`p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                  activeRoadmapStage === '1year'
+                    ? 'bg-blue-950/80 border-blue-500 shadow-lg shadow-blue-950/50 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500 text-slate-300'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase text-blue-400">3-BOSQICH</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-white shadow-sm" />
+                  </div>
+                  <h3 className="text-base font-black text-white">1 YIL</h3>
+                  <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
+                    <div className="flex items-start gap-1.5 font-bold text-blue-300">
+                      <span>•</span> 2 500 pullik foydalanuvchi
+                    </div>
+                    <div className="flex items-start gap-1.5 font-bold text-emerald-400">
+                      <span>•</span> ≈ 638 mln so‘m gross revenue
+                    </div>
+                    <div className="flex items-start gap-1.5 font-bold text-cyan-300">
+                      <span>•</span> Zararsizlik nuqtasi ≈ 10-oy
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-blue-300 font-bold flex items-center justify-between">
+                  <span>Break-Even (10-oy)</span>
+                  <span>Okt 2027</span>
+                </div>
+              </button>
+
+              {/* STAGE 4: 3 YIL */}
+              <button
+                onClick={() => setActiveRoadmapStage('3years')}
+                className={`p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                  activeRoadmapStage === '3years'
+                    ? 'bg-emerald-950/80 border-emerald-500 shadow-lg shadow-emerald-950/50 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500 text-slate-300'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase text-emerald-400">4-BOSQICH</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
+                  </div>
+                  <h3 className="text-base font-black text-white">3 YIL</h3>
+                  <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-emerald-400">•</span> O‘zbekiston bo‘ylab masshtab
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-emerald-400">•</span> B2B: maktab va o‘quv markazi
+                    </div>
+                    <div className="flex items-start gap-1.5 font-medium">
+                      <span className="text-emerald-400">•</span> Yangi fanlar, regional expansion
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-emerald-300 font-bold flex items-center justify-between">
+                  <span>Respublika & Region</span>
+                  <span>2029-yil</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Footnote */}
+            <div className="mt-6 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 italic">
+              <span>* 1-yil raqamlari konservativ forecast; 3-yil ko‘rsatkichlari — target, fakt emas.</span>
+              <span className="not-italic font-mono text-[10px] text-cyan-400 font-bold">
+                Tugmalarni bosib har bir bosqichning batafsil rejasini oching ↑
+              </span>
+            </div>
           </div>
 
-          {/* Stage Details Card */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 max-w-4xl mx-auto shadow-xl">
-            {activeRoadmapStage === 'idea' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
-                  <div>
-                    <h3 className="text-xl font-black text-slate-900">1-Bosqich: IDEA (G‘oya & Bozor Validatsiyasi)</h3>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> Iyul – Avgust 2026 (2 oy)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $800 Shaxsiy Sarmoya</span>
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold self-start sm:self-auto">
-                    100% Yakunlangan
-                  </span>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  500 dan ortiq maktab o‘quvchilari va ota-onalar o‘rtasida so‘rovnomalar o‘tkazildi. O‘zbekiston maktab ta’limidagi matematika va ingliz tili bo‘yicha tizimli bo‘shliqlar tahlil qilinib, Bloom taksonomiyasiga asoslangan individual bilim daraxti modeli ishlab chiqildi.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> 500+ o‘quvchi va ota-onalar muammo auditi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Bloom taksonomiyasiga asoslangan ko‘nikmalar matritsasi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> EdTech B2B va B2C bozor ehtiyojlari validatsiyasi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $800 tadqiqot xarajatlari bilan to‘liq yakunlandi
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeRoadmapStage === 'prototype' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
-                  <div>
-                    <h3 className="text-xl font-black text-blue-900">2-Bosqich: PROTOTYPE (Algoritm & Dastlabki AI)</h3>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-blue-600" /> Avgust – Sentabr 2026 (1.5 oy)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $1,400 Shaxsiy Sarmoya</span>
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold self-start sm:self-auto">
-                    100% Yakunlangan
-                  </span>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Yo‘lchi AI uchun Google Gemini API prompt muhandisligi va pedagogik cheklovlar sinovdan o‘tkazildi. 50 nafar pilot o‘quvchi ishtirokida adaptiv savollar zanjiri va diagnostik test algoritmlarining ishlashi amalda sinab ko‘rildi.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Gemini API pedagogik prompt arxitekturasi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> 50 nafar pilot o‘quvchi bilan diagnostika testi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Yo‘lchi AI javob to‘g‘rilash va yo‘naltirish mexanizmi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $1,400 AI API va infratuzilma sinovi
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeRoadmapStage === 'mvp' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
-                  <div>
-                    <h3 className="text-xl font-black text-cyan-900">3-Bosqich: MVP (To‘liq Ishlayotgan Tizim — HOZIRDA JONLI)</h3>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> 12-Sentabr – 11-Oktyabr 2026 (Pitch Day 3.0)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $2,800 Sarflangan (Asoschilar)</span>
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-bold self-start sm:self-auto">
-                    100% Jonli & Testlangan
-                  </span>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Web SPA (React 19) va Mobil (Flutter) ilovalari to‘liq ishlab turibdi. Matematika va Ingliz tili kurslari 100% faol. Server-side anti-cheat scoring (PostgreSQL RPC + RLS) va 152 ta Web hamda 48 ta Mobil avtotestlar bilan himoyalangan.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" /> Web (React 19) + Flutter Mobil to‘liq simmetriyasi
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" /> Supabase RLS + Server-side Anti-cheat scoring
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" /> 152 ta Web va 48 ta Mobil avtotestlar (100% Pass)
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" /> Jonli Vercel Production deploymenti
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeRoadmapStage === 'launched' && (
+          {/* DETAILED STAGE EXPLORATION CARD */}
+          <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 max-w-5xl mx-auto shadow-xl mb-12">
+            {activeRoadmapStage === 'now' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
                   <div>
-                    <h3 className="text-xl font-black text-purple-900">
-                      4-Bosqich: LAUNCH & SCALE (Pre-Seed: Bozorga Kirish & Pilot Maktablar)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-3">
-                      <span className="flex items-center gap-1 font-semibold text-purple-800">
-                        <Clock className="w-3.5 h-3.5 text-purple-600" /> Muddat: 6 oy (Noyabr 2026 – Aprel 2027)
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      <h3 className="text-xl font-black text-slate-900">
+                        1-Bosqich: HOZIR (MVP + Pilot Bosqich)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
+                      <span className="flex items-center gap-1 font-semibold text-rose-700">
+                        <Calendar className="w-3.5 h-3.5" /> 12-Sentabr – 11-Oktyabr 2026 (Pitch Day 3.0)
                       </span>
-                      <span className="flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600" /> Talab Qilinayotgan Byudjet: $45,000 Pre-Seed
+                      <span className="flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <DollarSign className="w-3.5 h-3.5" /> Asoschilar Mablag‘i
                       </span>
                     </p>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-bold self-start sm:self-auto border border-purple-200">
-                    Amalga oshirilmoqda
+                  <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black self-start sm:self-auto">
+                    100% Jonli Ishlamoqda
                   </span>
                 </div>
 
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Balandparvoz va noaniq raqamlar emas: <strong className="text-slate-900">$45,000 aniq byudjet</strong> va <strong className="text-slate-900">6 oylik muddat</strong> doirasida 10 ta pilot maktab, 3,000–5,000 nafar faol oylik o‘quvchi va B2C monetizatsiya modelini yo‘lga qo‘yish bo‘yicha professional reja.
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  Platformaning dastlabki <strong>G‘oya (Idea)</strong> va <strong>Prototip (Prototype)</strong> bosqichlari to‘liq muvaffaqiyatli yakunlandi. Bugungi kunda BilimYo‘l Smart Edu to‘liq ishlayotgan <strong>MVP holatida</strong>: Web SPA (React 19) va Mobil (Flutter) ilovalari, adaptiv diagnostika, server-side anti-cheat scoring (PostgreSQL RPC) va Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI mentori amalda sinovdan o‘tmoqda.
                 </p>
 
-                {/* 4 Realistic Target KPIs */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 text-center">
-                    <div className="text-lg sm:text-xl font-black text-purple-700">10 Ta</div>
-                    <div className="text-[11px] text-slate-800 font-bold mt-0.5">Pilot Maktablar</div>
-                    <div className="text-[10px] text-slate-500">B2B Integratsiya</div>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-cyan-50/70 border border-cyan-200 text-center">
-                    <div className="text-lg sm:text-xl font-black text-cyan-700">3,000 – 5,000</div>
-                    <div className="text-[11px] text-slate-800 font-bold mt-0.5">Faol O‘quvchi</div>
-                    <div className="text-[10px] text-slate-500">Haqiqiy oylik MAU</div>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center">
-                    <div className="text-lg sm:text-xl font-black text-emerald-700">12% – 15%</div>
-                    <div className="text-[11px] text-slate-800 font-bold mt-0.5">Pullik Konversiya</div>
-                    <div className="text-[10px] text-slate-500">B2C obuna modeli</div>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-center">
-                    <div className="text-lg sm:text-xl font-black text-amber-700">+28%</div>
-                    <div className="text-[11px] text-slate-800 font-bold mt-0.5">Bilim O‘sishi</div>
-                    <div className="text-[10px] text-slate-500">1 oylik ta’limda</div>
-                  </div>
-                </div>
-
-                {/* Exact Financial Allocation Breakdown ($45,000) */}
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-emerald-600" />
-                      $45,000 Byudjetning Aniq Va Shaffof Taqsimoti (6 Oy):
-                    </span>
-                    <span className="text-[11px] font-mono text-emerald-700 font-bold">100% Balanslangan</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-rose-600" /> MVP + Pilot
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Matematika va Ingliz tili fanlari to‘liq integratsiyalangan, 152 ta avtotestlar bilan himoyalangan.
+                    </p>
                   </div>
 
-                  {/* Multi-color Progress bar */}
-                  <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden flex">
-                    <div style={{ width: '40%' }} className="bg-indigo-600" title="Jamoa & Ishlab chiqish (40%)" />
-                    <div style={{ width: '18%' }} className="bg-emerald-500" title="Metodologiya & Darslar (18%)" />
-                    <div style={{ width: '13%' }} className="bg-purple-500" title="B2B Pilot Maktablar (13%)" />
-                    <div style={{ width: '11%' }} className="bg-cyan-500" title="AI Modellar & Server (11%)" />
-                    <div style={{ width: '11%' }} className="bg-amber-500" title="GTM & Jalb qilish (11%)" />
-                    <div style={{ width: '7%' }} className="bg-rose-500" title="Yuridik & IP (7%)" />
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-rose-600" /> Moslashuvchan Oqim
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Asosiy o‘rganishning moslashuvchan oqimi: diagnostika → bilim matritsasi (0-100%) → individual dars.
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-indigo-600" /> Asosiy Jamoa & Ishlab Chiqish (6 oy)
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">3 nafar mutaxassis (Lead Dev, Fullstack, AI) to‘liq stavka mehnati</div>
-                      </div>
-                      <span className="font-mono font-bold text-indigo-700 shrink-0">$18,000 (40%)</span>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-rose-600" /> Dastlabki Foydalanuvchilar
                     </div>
-
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Metodologiya & Darsliklar Bazasi
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">5–11-sinf matematika, ingliz tili, fizika ekspert metodistlari, 5,000+ test</div>
-                      </div>
-                      <span className="font-mono font-bold text-emerald-700 shrink-0">$8,000 (18%)</span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-purple-500" /> 10 Ta B2B Pilot Maktablar Integratsiyasi
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">O‘qituvchilar paneli, maktablarda o‘qitish va amaliy servis joriy etish</div>
-                      </div>
-                      <span className="font-mono font-bold text-purple-700 shrink-0">$6,000 (13%)</span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-cyan-500" /> AI Modellar & Bulut Infratuzilmasi
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Gemini 2.5 Flash tokenlari, Supabase Pro, Vercel, Audio TTS (~$800/oy)</div>
-                      </div>
-                      <span className="font-mono font-bold text-cyan-700 shrink-0">$5,000 (11%)</span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-amber-500" /> GTM & O‘quvchilarni Jalb Qilish
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Ota-onalar bepul diagnostika oyligi, maktab olimpiadalari, target</div>
-                      </div>
-                      <span className="font-mono font-bold text-amber-700 shrink-0">$5,000 (11%)</span>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
-                      <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-rose-500" /> Yuridik, IT Park & IP Himoyasi
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">MChJ/IT Park rezidentligi, dasturiy patent/guvohnoma, shartnomalar</div>
-                      </div>
-                      <span className="font-mono font-bold text-rose-700 shrink-0">$3,000 (7%)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3 Clear Timeline Sprints */}
-                <div className="pt-2">
-                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                    6 Oylik Bosqichma-Bosqich Reja (Sprints 2026–2027):
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-cyan-700 uppercase">1–2 Oylar (Noyabr – Dekabr 2026)</div>
-                      <div className="text-xs font-bold text-slate-900">B2B Pilot & Maktablar</div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        10 ta pilot maktabga ulanish, o‘qituvchilar monitoring paneli joriy etilishi, 1,000 ta ilk faol o‘quvchi oqimi.
-                      </p>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-purple-700 uppercase">3–4 Oylar (Yanvar – Fevral 2027)</div>
-                      <div className="text-xs font-bold text-slate-900">Kontent & Audio Mentor</div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Prezident maktablari moduli, Fizika kursi, Yo‘lchi ovozli tushuntirish, 3,000 nafar faol o‘quvchi.
-                      </p>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-emerald-700 uppercase">5–6 Oylar (Mart – Aprel 2027)</div>
-                      <div className="text-xs font-bold text-slate-900">B2C Monetizatsiya & Scale</div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Click / Payme to‘lov integratsiyasi, 5,000 nafar MAU va operatsion o‘zini-o‘zi qoplash (breakeven).
-                      </p>
-                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Dastlabki o‘quvchilar va repetitorlar platformani test qilmoqda, haftalik fikr-mulohazalar yig‘ilmoqda.
+                    </p>
                   </div>
                 </div>
               </motion.div>
             )}
+
+            {activeRoadmapStage === '6months' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      <h3 className="text-xl font-black text-slate-900">
+                        2-Bosqich: 6 OY (Bozorga Moslik & Birinchi B2B Pilot)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
+                      <span className="flex items-center gap-1 font-semibold text-amber-700">
+                        <Clock className="w-3.5 h-3.5" /> Muddat: 6 oy (Noyabr 2026 – Aprel 2027)
+                      </span>
+                      <span className="flex items-center gap-1 font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                        Pre-Seed Bosqichi
+                      </span>
+                    </p>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs font-black self-start sm:self-auto">
+                    Keyingi 6 Oylik Reja
+                  </span>
+                </div>
+
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  Asosiy diqqat mahsulotning bozorga to‘liq mos kelishiga (<strong>Product-Market Fit</strong>) qaratiladi. B2C segmentida dastlabki <strong>500–700 nafar pullik faol obunachilar</strong> shakllantiriladi, o‘quvchilarning saqlanib qolish ko‘rsatkichi (Retention) oshiriladi va dastlabki B2B maktablar bilan pilot litsenziyalar yo‘lga qo‘yiladi.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-center">
+                    <div className="text-xl sm:text-2xl font-black text-amber-800">500–700</div>
+                    <div className="text-xs font-bold text-slate-800 mt-0.5">Pullik Foydalanuvchi</div>
+                    <div className="text-[10px] text-slate-500">Oyiga 59 900 so‘m</div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <div className="text-xl sm:text-2xl font-black text-indigo-700">PMF</div>
+                    <div className="text-xs font-bold text-slate-800 mt-0.5">Bozorga Mos Kelish</div>
+                    <div className="text-[10px] text-slate-500">Haftalik o‘sish va tahlil</div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <div className="text-xl sm:text-2xl font-black text-emerald-700">Takroriy Jalb</div>
+                    <div className="text-xs font-bold text-slate-800 mt-0.5">Retention & Streak</div>
+                    <div className="text-[10px] text-slate-500">Muntazam ta’lim odati</div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center">
+                    <div className="text-xl sm:text-2xl font-black text-cyan-700">1-B2B Pilot</div>
+                    <div className="text-xs font-bold text-slate-800 mt-0.5">Maktablar Hamkorligi</div>
+                    <div className="text-[10px] text-slate-500">O‘qituvchilar paneli</div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeRoadmapStage === '1year' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                      <h3 className="text-xl font-black text-slate-900">
+                        3-Bosqich: 1 YIL (Zararsizlik Nuqtasi & 638 Mln Gross Revenue)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
+                      <span className="flex items-center gap-1 font-semibold text-blue-700">
+                        <Calendar className="w-3.5 h-3.5" /> Muddat: 12 oy (Oktabr 2027 gacha)
+                      </span>
+                      <span className="flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        Konservativ Iqtisodiy Prognoz
+                      </span>
+                    </p>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black self-start sm:self-auto">
+                    Zararsizlik: 10-oy
+                  </span>
+                </div>
+
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  Konservativ moliyaviy model asosida 1-yil yakuniga borib platforma <strong>2 500 nafar faol pullik o‘quvchiga</strong> va yil bo‘yicha jami <strong>≈638 million so‘m gross revenue</strong>ga yetadi. Operatsion xarajatlar va daromadlar nisbati bo‘yicha <strong>zararsizlik nuqtasiga (Break-even) taxminan 10-oyda</strong> erishiladi.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-5 rounded-2xl bg-blue-50/70 border border-blue-200 text-center">
+                    <div className="text-2xl sm:text-3xl font-black text-blue-800">2 500</div>
+                    <div className="text-xs font-bold text-slate-900 mt-1">Pullik Foydalanuvchi</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">B2C oylik faol obuna</div>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center">
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-800">≈ 638 Mln</div>
+                    <div className="text-xs font-bold text-slate-900 mt-1">Gross Revenue (So‘m)</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Yillik yalpi tushum</div>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200 text-center">
+                    <div className="text-2xl sm:text-3xl font-black text-purple-800">10-oy</div>
+                    <div className="text-xs font-bold text-slate-900 mt-1">Zararsizlik Nuqtasi</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">O‘zini-o‘zi to‘liq qoplash</div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeRoadmapStage === '3years' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <h3 className="text-xl font-black text-slate-900">
+                        4-Bosqich: 3 YIL (Respublika Masshtabi & Regional Ekspansiya)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
+                      <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                        <Calendar className="w-3.5 h-3.5" /> Uzoq Muddatli Strategik Maqsad (Target)
+                      </span>
+                      <span className="flex items-center gap-1 text-slate-500 text-[11px]">
+                        2028–2029 Yillar
+                      </span>
+                    </p>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black self-start sm:self-auto">
+                    Kengayish Bosqichi
+                  </span>
+                </div>
+
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va ota-onalar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo (Qozog‘iston, Qirg‘iziston) mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-emerald-600" /> O‘zbekiston Bo‘ylab Masshtab
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Barcha viloyatlar va tuman maktablari o‘quvchilariga yetib borish, keng qamrovli B2C auditoriya.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4 text-emerald-600" /> B2B: Maktab & O‘quv Markazi
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Maktab va xususiy o‘quv markazlari uchun o‘quvchilar bilimini avtomatik diagnostika qiluvchi SaaS obunasi.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <Layers className="w-4 h-4 text-emerald-600" /> Yangi Fanlar & Regional
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Fizika, Kimyo, Biologiya, IT fanlari qo‘shilishi hamda Markaziy Osiyo bozorlariga regional chiqish.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* MONETIZATSIYA VA UNIT ECONOMICS BLOKI (SLIDE 03 ASOSIDA) */}
+          <div className="max-w-5xl mx-auto p-8 sm:p-10 rounded-3xl bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6 mb-8">
+              <div>
+                <span className="text-emerald-400 text-xs font-black tracking-widest uppercase flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> BIZNES VA DAROMAD MODELI
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                  Monetizatsiya va Unit Economics
+                </h3>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">
+                  Freemium → Premium obuna. To‘lovchi: o‘quvchi va ota-ona (B2C).
+                </p>
+              </div>
+
+              <div className="self-start md:self-auto">
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                  B2C + B2B SaaS Modeli
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left Pricing Card (Slide 03 style) */}
+              <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-black/60 border-2 border-emerald-500/60 shadow-xl text-center space-y-3 relative group">
+                <div className="text-xs font-black tracking-wider uppercase text-emerald-400">
+                  PREMIUM OBUNA
+                </div>
+                <div className="text-4xl sm:text-5xl font-black text-white tracking-tight">
+                  59 900
+                </div>
+                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                  so‘m / oy
+                </div>
+                <div className="pt-3 border-t border-white/10 text-[11px] text-slate-300">
+                  Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy repetitor va AI yo‘lchi.
+                </div>
+              </div>
+
+              {/* Right Value Propositions (Slide 03 bullet items) */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                    Kim to‘laydi?
+                  </div>
+                  <div className="text-sm font-semibold text-white">
+                    O‘quvchi va ota-ona (B2C)
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Ota-onalar farzandining bilim darajasini real vaqtda ko‘rib, samarasiz repetitor xarajatlarini tejashadi.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                    Nima uchun to‘laydi?
+                  </div>
+                  <div className="text-sm font-semibold text-white">
+                    Individual learning path + AI tavsiyalar + chuqur analitika
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Xatolarni tushuntiruvchi Yo‘lchi AI mentori, zaif nuqtalarni mustahkamlash va shaxsiy o‘quv rejasi uchun.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                    Free (Bepul) Rejada nima bor?
+                  </div>
+                  <div className="text-sm font-semibold text-white">
+                    Asosiy darslar va cheklangan mashqlar — konversiya kanali
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Har bir yangi foydalanuvchi bepul diagnostika va dastlabki darslarni sinab ko‘rib, Premium rejaga oson konvertatsiya bo‘ladi.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -944,7 +1111,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </div>
               <h3 className="text-lg font-bold text-slate-900">Bozor va Monetizatsiya</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                B2C Freemium modeli: 49,000 so‘mlik obuna xarajatlari bitta repetitor darsining 10 dan bir qismiga teng. B2B modeli orqali xususiy va davlat maktablariga monitoring litsenziyasi sotiladi.
+                B2C Freemium modeli: 59 900 so‘mlik obuna xarajatlari bitta repetitor darsining 10 dan bir qismiga teng. B2B modeli orqali xususiy va davlat maktablariga monitoring litsenziyasi sotiladi.
               </p>
               <div className="pt-2 text-[11px] text-emerald-700 font-bold">
                 Asboblar: B2C Freemium, B2B SaaS, Payme/Click
