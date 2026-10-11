@@ -703,9 +703,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div>
                 <div className="flex items-center gap-4 mb-5">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg ring-2 ring-purple-400">
-                      <Briefcase className="w-10 h-10 text-purple-100" />
-                    </div>
+                    <img
+                      src="/images/team/abdurauf_normuminov.jpg"
+                      alt="Abdurauf Normuminov"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-purple-400 shadow-lg"
+                    />
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
                       🚀 Growth
                     </span>
@@ -755,9 +757,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div>
                 <div className="flex items-center gap-4 mb-5">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-lg ring-2 ring-emerald-400">
-                      <GraduationCap className="w-10 h-10 text-emerald-100" />
-                    </div>
+                    <img
+                      src="/images/team/dildora_hamdamova.jpg"
+                      alt="Hamdamova Dildora"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-emerald-400 shadow-lg"
+                    />
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
                       🎓 EdLead
                     </span>
