@@ -333,9 +333,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
         {/* 4. SECTION 2: JAMOA (TEAM) */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="text-cyan-400 text-xs font-black tracking-widest uppercase">2. ASOSIY BOSQICH</span>
+            <span className="text-cyan-400 text-xs font-black tracking-widest uppercase">2. ASOSIY BOSQICH • AXION JAMOA</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
-              Bizning Jamoa — 3 Ta Asosiy Ustun
+              Bizning Jamoa (Axion) — 3 Ta Asosiy Ustun
             </h2>
             <p className="text-slate-400 text-sm sm:text-base mt-3">
               Texnologik arxitektura, biznes o‘sish strategiyasi va pedagogik metodologiyani yagona maqsad atrofida birlashtirgan asoschilar jamoasi.
@@ -575,7 +575,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </div>
               <h3 className="text-lg font-bold text-white mb-2">3 Kishi Kuchli Sinergiyasi</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va maktablar bilan B2B hamkorlik (Abdurauf) hamda milliy pedagogik kurikulum metodikasi (Dildora) — bitta jamoada to‘liq uyg‘unlashgan.
+                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va maktablar bilan B2B hamkorlik (Abdurauf) hamda milliy pedagogik kurikulum metodikasi (Dildora) — Axion jamoasida to‘liq uyg‘unlashgan.
               </p>
             </div>
           </div>
