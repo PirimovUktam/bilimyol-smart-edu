@@ -9,7 +9,7 @@ supabase/
 
 # Tooling and scripts
 scripts/
-public/videos/audio_temp/
+public/videos/*audio_temp/
 public/videos/temp_frames/
 
 # System and dependencies

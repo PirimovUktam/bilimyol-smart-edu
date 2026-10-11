@@ -51,6 +51,9 @@ export type AppView =
 
 const getInitialView = (): AppView => {
   if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view') as AppView | null;
+    if (viewParam) return viewParam;
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
     if (path === '/demo' || hash === '#demo') return 'demo';
@@ -61,7 +64,23 @@ const getInitialView = (): AppView => {
 
 export const AppRouter: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(getInitialView);
-  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('lessonId');
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    (window as any).__navigateToView = (view: AppView, lessonId?: string) => {
+      if (lessonId) setActiveLessonId(lessonId);
+      setCurrentView(view);
+    };
+    return () => {
+      delete (window as any).__navigateToView;
+    };
+  }, []);
 
   const { loadCourses, activeCourse, courses } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();

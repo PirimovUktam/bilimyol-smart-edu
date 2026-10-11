@@ -35,91 +35,99 @@ interface DemoShowcaseViewProps {
 
 const DEMO_CHAPTERS = [
   {
-    title: '1. Kirish va Fan Tanlash',
-    timestamp: '00:00 - 00:16',
+    title: '1. Kirish va Platforma Missiyasi',
+    timestamp: '00:00 - 00:11',
     secondsStart: 0,
-    description: 'O‘quvchi platformaga kiradi, Matematika yoki Ingliz tili fanini tanlaydi va o‘z maqsadini belgilaydi.',
+    description: 'BilimYo‘l Smart Edu — bir xil darslik emas, har bir o‘quvchiga mos shaxsiy ta’lim yo‘lidir.',
+    screen: 'pitch',
+    highlightBadge: 'Platforma Missiyasi',
+  },
+  {
+    title: '2. Fan Tanlash va Kurslar',
+    timestamp: '00:11 - 00:21',
+    secondsStart: 11,
+    description: 'Matematika va Ingliz tili fanlari to‘liq integratsiya qilingan, har biri mustaqil ta’lim traektoriyasiga ega.',
     screen: 'course-selection',
-    highlightBadge: 'Tanlov & Onboarding',
+    highlightBadge: 'Fan Tanlash',
   },
   {
-    title: '2. Shaxsiy Maqsadni Belgilash',
-    timestamp: '00:16 - 00:29',
-    secondsStart: 16,
-    description: 'O‘quvchi o‘zining sinfi va maqsadini tanlaydi: maktab dasturi, olimpiada yoki imtihonga tayyorgarlik.',
+    title: '3. Shaxsiy Maqsadni Belgilash',
+    timestamp: '00:21 - 00:32',
+    secondsStart: 21,
+    description: 'O‘quvchi o‘z sinfi va maqsadini tanlaydi: maktab dasturi, olimpiada yoki imtihonga tayyorgarlik.',
     screen: 'onboarding',
-    highlightBadge: 'O‘quv Maqsadi',
+    highlightBadge: 'Onboarding & Profil',
   },
   {
-    title: '3. Adaptiv Diagnostika Testi',
-    timestamp: '00:29 - 00:41',
-    secondsStart: 29,
-    description: '8 ta aqlli savol orqali barcha ko‘nikmalar xolis skanerlanadi va bilim darajasi aniqlanadi.',
+    title: '4. Adaptiv Diagnostika Testi',
+    timestamp: '00:32 - 00:43',
+    secondsStart: 32,
+    description: '8 ta aqlli diagnostika savoli orqali bilimdagi bo‘shliqlar xolis skanerlanadi va boshlang‘ich daraja aniqlanadi.',
     screen: 'placement',
     highlightBadge: 'Placement Test',
   },
   {
-    title: '4. Ko‘nikmalar Xaritasi (Knowledge Map)',
-    timestamp: '00:41 - 00:54',
-    secondsStart: 41,
-    description: '0-100% shkalada shakllantirilgan bilim xaritasi va o‘quvchining kuchli/zaif nuqtalari ochiladi.',
+    title: '5. Ko‘nikmalar Xaritasi (Knowledge Map)',
+    timestamp: '00:43 - 00:56',
+    secondsStart: 43,
+    description: 'O‘quvchining barcha mavzular bo‘yicha ko‘nikmalari 0% dan 100% gacha interaktiv grafik matritsada namoyon bo‘ladi.',
     screen: 'knowledge-map',
-    highlightBadge: 'Knowledge Graph',
+    highlightBadge: 'Bilim Xaritasi',
   },
   {
-    title: '5. Shaxsiy O‘quv Traektoriyasi',
-    timestamp: '00:54 - 01:06',
-    secondsStart: 54,
-    description: 'Standart kitob emas — aynan shu o‘quvchi o‘rganishi zarur bo‘lgan qadamli o‘quv yo‘li shakllanadi.',
+    title: '6. Shaxsiy O‘quv Yo‘li (Roadmap)',
+    timestamp: '00:56 - 01:08',
+    secondsStart: 56,
+    description: 'Standart kitob ketma-ketligi emas, aynan shu o‘quvchi o‘rganishi zarur bo‘lgan darslar qadamma-qadam ochiladi.',
     screen: 'roadmap',
-    highlightBadge: 'Roadmap',
+    highlightBadge: 'Adaptiv Yo‘l',
   },
   {
-    title: '6. Interaktiv Dars (Nazariya & Misol)',
-    timestamp: '01:06 - 01:17',
-    secondsStart: 66,
-    description: 'Nazariya, formulalar va ko‘rgazmali misollar bilan dars bosqichma-bosqich o‘zlashtiriladi.',
+    title: '7. Interaktiv Nazariya va Tushuncha',
+    timestamp: '01:08 - 01:18',
+    secondsStart: 68,
+    description: 'Boy nazariya, LaTeX formulalar va vizual tushuntirishlar bilan qoidaning mohiyati anglatiladi.',
     screen: 'lesson',
     highlightBadge: 'Nazariya & Formula',
   },
   {
-    title: '7. Amaliy Mashq va Test Yechish',
-    timestamp: '01:17 - 01:27',
-    secondsStart: 77,
-    description: 'Nazariyadan so‘ng darhol interaktiv amaliyot boshlanadi va javob tekshirishga yuboriladi.',
+    title: '8. Amaliyot va Server-Side Scoring',
+    timestamp: '01:18 - 01:30',
+    secondsStart: 78,
+    description: 'Javoblar PostgreSQL RPC orqali serverda xavfsiz tekshiriladi, anti-cheat ball soxtalashtirishni to‘sadi.',
     screen: 'lesson',
-    highlightBadge: 'Amaliy Mashq',
-  },
-  {
-    title: '8. Server-Side Scoring & Anti-Cheat',
-    timestamp: '01:27 - 01:39',
-    secondsStart: 87,
-    description: 'Baholash PostgreSQL RPC orqali serverda mustaqil bajariladi. +20 XP beriladi va ballar yangilanadi.',
-    screen: 'scoring',
-    highlightBadge: 'Anti-Cheat Himoyasi',
+    highlightBadge: 'Amaliyot & Scoring',
   },
   {
     title: '9. Yo‘lchi AI Pedagogik Mentori',
-    timestamp: '01:39 - 01:50',
-    secondsStart: 99,
-    description: 'Gemini bilan integratsiyalashgan Yo‘lchi AI xatolikni pedagogik tahlil qilib, to‘g‘ri fikrlashga yo‘naltiradi.',
+    timestamp: '01:30 - 01:42',
+    secondsStart: 90,
+    description: 'Xato bo‘lganda Yo‘lchi AI tayyor javobni bermasdan, tushunishga yordam beradi va mustahkamlovchi mashq beradi.',
     screen: 'ai-tutor',
     highlightBadge: 'Yo‘lchi AI & Gemini',
   },
   {
-    title: '10. O‘quvchi Dashboardi va Natijalar',
-    timestamp: '01:50 - 02:02',
-    secondsStart: 110,
-    description: 'O‘quvchi o‘sish ko‘rsatkichlarini, kundalik streak va yangi ochilgan darslarini o‘z panelida ko‘radi.',
+    title: '10. O‘quvchi Dashboardi va Doimiy Rivojlanish',
+    timestamp: '01:42 - 01:53',
+    secondsStart: 102,
+    description: 'Bosh sahifada kunlik darslar, to‘plangan XP, streak va o‘zlashtirish foizining yaxlit ko‘rinishi.',
     screen: 'dashboard',
-    highlightBadge: 'O‘quvchi Dashboardi',
+    highlightBadge: 'Dashboard',
   },
   {
-    title: '11. Yakun (Pitch Day 3.0)',
-    timestamp: '02:02 - 02:13',
-    secondsStart: 122,
-    description: 'BilimYo‘l Smart Edu — darslik emas, shaxsiy ta’lim yo‘li. Bilim bilan o‘z yo‘lingizni toping.',
+    title: '11. O‘zlashtirish va Monitoring',
+    timestamp: '01:53 - 02:03',
+    secondsStart: 113,
+    description: 'O‘zlashtirish dinamikasi real vaqtda yangilanadi va ota-onalar/o‘qituvchilar monitoringiga uzatiladi.',
     screen: 'dashboard',
+    highlightBadge: 'Monitoring',
+  },
+  {
+    title: '12. Yakun (Pitch Day 3.0)',
+    timestamp: '02:03 - 02:13',
+    secondsStart: 123,
+    description: 'BilimYo‘l Smart Edu: Darslik emas — shaxsiy ta’lim yo‘li. Har bir o‘quvchiga o‘z imkoniyatlarini ochish uchun ishonchli zanjir.',
+    screen: 'pitch',
     highlightBadge: 'Pitch Day 3.0',
   },
 ];
@@ -310,13 +318,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
               </div>
               <span className="text-xs font-bold text-slate-300">
-                BilimYo‘l Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (2:13 min • O‘zbekcha Ovoz)
+                BilimYo‘l Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (1080p Desktop • O‘zbekcha Ovoz)
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-black border border-cyan-500/40">
-                1080×1920 Full HD
+                1920×1080 Full HD (16:9)
               </span>
               <a
                 href="/videos/bilimyol-pitch-demo.mp4"
@@ -334,7 +342,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           {playerMode === 'video' ? (
             /* 1. Real Video Player with Dual MP4/WebM Fallback */
             <div className="w-full bg-black/90 p-4 sm:p-8 flex flex-col items-center justify-center">
-              <div className="w-full max-w-[420px] rounded-3xl overflow-hidden shadow-2xl border-2 border-cyan-500/30 bg-black aspect-[9/16] max-h-[720px] relative group">
+              <div className="w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border-2 border-cyan-500/30 bg-black aspect-video relative group">
                 <video
                   ref={videoRef}
                   poster="/videos/bilimyol-pitch-demo-poster.jpg"
