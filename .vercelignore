@@ -1,0 +1,20 @@
+# Mobile and Flutter
+mobile/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Backend and database
+supabase/
+.supabase/
+
+# Tooling and scripts
+scripts/
+public/videos/audio_temp/
+public/videos/temp_frames/
+
+# System and dependencies
+node_modules/
+.git/
+.vscode/
+.idea/
+*.log
