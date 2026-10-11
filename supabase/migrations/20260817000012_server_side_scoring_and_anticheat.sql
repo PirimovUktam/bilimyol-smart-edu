@@ -133,9 +133,24 @@ DECLARE
 BEGIN
   -- 1. Security Check: Validate authenticated caller identity
   v_caller_uid := auth.uid();
-  IF v_caller_uid IS NOT NULL AND v_caller_uid <> p_user_id AND NOT public.is_admin() THEN
-    RAISE EXCEPTION 'Xavfsizlik qoidasi: boshqa foydalanuvchi nomidan javob topshirish taqiqlanadi.'
+
+  -- Only authenticated learners and trusted service-role callers may submit answers.
+  -- Reject anon/PUBLIC calls explicitly; auth.uid() being NULL must never bypass ownership checks.
+  IF COALESCE(auth.role(), '') NOT IN ('authenticated', 'service_role') THEN
+    RAISE EXCEPTION 'Autentifikatsiya talab qilinadi.'
       USING ERRCODE = '42501';
+  END IF;
+
+  IF auth.role() = 'authenticated' THEN
+    IF v_caller_uid IS NULL THEN
+      RAISE EXCEPTION 'Foydalanuvchi sessiyasi tasdiqlanmadi.'
+        USING ERRCODE = '42501';
+    END IF;
+
+    IF v_caller_uid <> p_user_id AND NOT public.is_admin() THEN
+      RAISE EXCEPTION 'Xavfsizlik qoidasi: boshqa foydalanuvchi nomidan javob topshirish taqiqlanadi.'
+        USING ERRCODE = '42501';
+    END IF;
   END IF;
 
   -- 2. Idempotency Check: Prevent duplicate attempt processing
@@ -337,6 +352,7 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.submit_answer_attempt(UUID, TEXT, TEXT, TEXT, TEXT, INT, TEXT, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.submit_answer_attempt(UUID, TEXT, TEXT, TEXT, TEXT, INT, TEXT, TEXT) TO authenticated, service_role;
 
 -- 5. SEED INITIAL CURATED LESSONS IF MISSING
