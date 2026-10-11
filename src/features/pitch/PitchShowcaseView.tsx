@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import {
   Sparkles,
   ArrowRight,
   Play,
   Users,
+  Target,
+  Cpu,
+  Layers,
   ShieldCheck,
+  Terminal,
+  Code2,
+  Smartphone,
   Globe,
   Zap,
   GraduationCap,
@@ -17,14 +24,15 @@ import {
   Send,
   Briefcase,
   Calendar,
+  DollarSign,
   Clock,
-  Layers,
-  Check,
-  X,
-  ChevronRight,
-  Rocket,
+  BarChart3,
+  Flame,
   Award,
-  Terminal,
+  ChevronRight,
+  ShieldAlert,
+  Sliders,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
@@ -36,7 +44,7 @@ interface PitchShowcaseViewProps {
   onNavigateAiTutor: () => void;
 }
 
-type RoadmapStageId = 'now' | '6months' | '1year' | '3years';
+type RoadmapStage = 'now' | '6months' | '1year' | '3years';
 
 export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
   onNavigateDemo,
@@ -46,19 +54,19 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
   // Top scroll progress bar
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
+    stiffness: 120,
     damping: 30,
     restDelta: 0.001,
   });
 
   // Roadmap active stage (Slide 06)
-  const [activeRoadmapStage, setActiveRoadmapStage] = useState<RoadmapStageId>('now');
+  const [activeRoadmapStage, setActiveRoadmapStage] = useState<RoadmapStage>('now');
 
   // Interactive Chatbot Emulator state
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; time: string }>>([
     {
       role: 'assistant',
-      text: 'Assalomu alaykum! Men Yo‘lchi AI — sizning shaxsiy repetitoringizman. Har qanday fan, qiyin formula yoki xatolik haqida savol bering!',
+      text: 'Assalomu alaykum! Men Yo‘lchi AI — sizning shaxsiy ta’lim yo‘lboshchingizman. Har qanday fan, formulalar yoki o‘quv qiyinchiliklari bo‘yicha savol bering!',
       time: '18:20',
     },
   ]);
@@ -116,151 +124,180 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
     }, 700);
   };
 
-  // Section scroll helper
+  const triggerCelebration = () => {
+    try {
+      confetti({
+        particleCount: 70,
+        spread: 80,
+        origin: { y: 0.65 },
+        colors: ['#06b6d4', '#6366f1', '#10b981', '#f59e0b', '#ec4899'],
+      });
+    } catch {
+      // safe fallback
+    }
+  };
+
   const scrollToSection = (id: string) => {
-    const elem = document.getElementById(id);
-    if (elem) {
-      elem.scrollIntoView({ behavior: 'smooth' });
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#070b15] text-slate-100 selection:bg-cyan-500 selection:text-white relative overflow-hidden font-sans">
-      {/* 0. TOP ANIMATED SCROLL PROGRESS BAR */}
+    <div className="min-h-screen bg-[#040714] text-slate-100 selection:bg-cyan-500 selection:text-white relative overflow-hidden font-sans">
+      {/* 0. FIXED TOP SCROLL PROGRESS BAR (Glowing Laser Beam) */}
       <motion.div
         style={{ scaleX }}
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 origin-left z-50 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-indigo-500 via-purple-500 to-emerald-400 origin-left z-50 shadow-[0_0_16px_rgba(6,182,212,0.9)]"
       />
 
-      {/* AMBIENT AURORA BACKGROUND GLOWS */}
+      {/* 0. DYNAMIC COSMIC BACKGROUND (Aurora Nebulas & Tech Grid) */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Cyber tech grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_100%)]" />
-
-        {/* Top cyan aurora glow */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.18, 0.28, 0.18] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[550px] bg-gradient-to-b from-cyan-500/25 via-blue-600/15 to-transparent rounded-full blur-[140px]"
+        {/* Subtle Tech Dot Grid */}
+        <div
+          className="absolute inset-0 opacity-[0.14]"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.25) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+          }}
         />
 
-        {/* Mid-section violet ambient blob */}
-        <motion.div
-          animate={{ y: [0, 40, 0], opacity: [0.15, 0.25, 0.15] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[160px]"
-        />
-
-        {/* Bottom emerald glow */}
-        <motion.div
-          animate={{ x: [0, 30, 0], opacity: [0.12, 0.22, 0.12] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-1/4 -left-32 w-[650px] h-[650px] bg-emerald-600/15 rounded-full blur-[170px]"
-        />
+        {/* Floating Animated Ambient Glow Auroras */}
+        <div className="absolute -top-32 left-1/4 w-[600px] h-[600px] bg-cyan-500/12 rounded-full blur-[160px] animate-pulse" />
+        <div className="absolute top-1/3 -right-40 w-[650px] h-[650px] bg-indigo-600/15 rounded-full blur-[180px]" />
+        <div className="absolute top-2/3 -left-40 w-[550px] h-[550px] bg-emerald-500/10 rounded-full blur-[170px]" />
+        <div className="absolute -bottom-20 right-1/4 w-[600px] h-[600px] bg-purple-600/12 rounded-full blur-[180px]" />
       </div>
 
       <div className="relative z-10">
-        {/* 1. TOP PITCH DAY 3.0 BANNER */}
-        <div className="sticky top-0 z-40 bg-[#070b15]/85 backdrop-blur-xl border-b border-white/10 py-2.5 px-4 text-center text-white shadow-lg shadow-black/40">
+        {/* 1. TOP PITCH DAY 3.0 ANNOUNCEMENT BANNER */}
+        <div className="bg-gradient-to-r from-indigo-950 via-purple-950 to-slate-950 border-b border-indigo-500/20 py-2.5 px-4 text-center text-white backdrop-blur-md">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 mx-auto sm:mx-0">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-black tracking-wide uppercase text-[10px] shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-                <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" /> PITCH DAY 3.0
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black tracking-wide uppercase text-[10px] shadow-sm">
+                <Sparkles className="w-3 h-3 text-white" /> PITCH DAY 3.0
               </span>
               <span className="text-slate-300 font-medium">
                 AIFU • IT Park • Alibaba • Inno Technopark Saralash Bosqichi
               </span>
             </div>
-            <div className="flex items-center gap-3 mx-auto sm:mx-0">
-              <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+            <div className="flex items-center gap-2 mx-auto sm:mx-0">
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
                 1-Bosqich: Onlayn Saralash
               </span>
               <button
-                onClick={onNavigateDemo}
-                className="px-3 py-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold hover:brightness-110 cursor-pointer shadow-md shadow-cyan-500/20 text-[11px] flex items-center gap-1 transition-all"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateDemo();
+                }}
+                className="text-cyan-400 hover:text-cyan-300 underline font-black cursor-pointer ml-2 flex items-center gap-1"
               >
-                /demo sahifasi <ChevronRight className="w-3 h-3" />
+                /demo sahifasi →
               </button>
             </div>
           </div>
         </div>
 
-        {/* QUICK FLOATING SECTION JUMPER (Interactive Navigation Pill) */}
-        <div className="max-w-5xl mx-auto px-4 pt-4 hidden md:block">
-          <div className="p-1.5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl flex items-center justify-center gap-1 text-[11px] text-slate-300 shadow-2xl">
-            <span className="text-slate-500 font-mono font-bold px-2 uppercase tracking-wider text-[10px]">
-              Tezkor O‘tish:
-            </span>
-            <button
-              onClick={() => scrollToSection('muammo-yechim')}
-              className="px-3 py-1 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer font-semibold"
-            >
-              1. Muammo → Yechim
-            </button>
-            <button
-              onClick={() => scrollToSection('axion-jamoa')}
-              className="px-3 py-1 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer font-semibold"
-            >
-              2. Jamoa
-            </button>
-            <button
-              onClick={() => scrollToSection('nega-biz')}
-              className="px-3 py-1 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer font-semibold"
-            >
-              3. Nega Biz?
-            </button>
-            <button
-              onClick={() => scrollToSection('milestones-monetizatsiya')}
-              className="px-3 py-1 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors cursor-pointer font-bold"
-            >
-              4. Milestones & Monetizatsiya
-            </button>
-            <button
-              onClick={() => scrollToSection('strategiya')}
-              className="px-3 py-1 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer font-semibold"
-            >
-              5. Strategiya
-            </button>
-            <button
-              onClick={() => scrollToSection('ai-mentor')}
-              className="px-3 py-1 rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-pointer font-semibold"
-            >
-              6. AI Chatbot
-            </button>
-          </div>
+        {/* 2. FLOATING QUICK-HUD NAVIGATION (Scroll-Aware) */}
+        <div className="sticky top-4 z-40 px-4">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-5xl mx-auto backdrop-blur-2xl bg-slate-900/85 border border-white/10 rounded-2xl px-4 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3 overflow-x-auto no-scrollbar"
+          >
+            <div className="flex items-center gap-3 shrink-0">
+              <BilimYolLogo size="sm" />
+              <span className="hidden sm:inline-block text-[11px] font-mono font-bold text-cyan-400 bg-cyan-950/70 border border-cyan-800/60 px-2 py-0.5 rounded-md">
+                PITCH SHOWCASE
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] font-bold text-slate-300 shrink-0">
+              <button
+                onClick={() => scrollToSection('problem-solution')}
+                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Flame className="w-3 h-3 text-rose-400" /> Muammo & Yechim
+              </button>
+              <button
+                onClick={() => scrollToSection('team-section')}
+                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Users className="w-3 h-3 text-purple-400" /> Jamoa
+              </button>
+              <button
+                onClick={() => scrollToSection('milestones-section')}
+                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Target className="w-3 h-3 text-cyan-400" /> Milestones
+              </button>
+              <button
+                onClick={() => scrollToSection('monetization-section')}
+                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-emerald-400"
+              >
+                <DollarSign className="w-3 h-3" /> 59 900 so‘m
+              </button>
+              <button
+                onClick={() => scrollToSection('tech-architecture')}
+                className="hidden md:flex px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer items-center gap-1"
+              >
+                <Terminal className="w-3 h-3 text-amber-400" /> Arxitektura
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateDemo();
+                }}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+              >
+                <Play className="w-3 h-3 fill-current" /> Demo Video
+              </Button>
+            </div>
+          </motion.div>
         </div>
 
-        {/* 2. HERO SECTION */}
-        <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        {/* 3. HERO SECTION */}
+        <section className="pt-16 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center relative">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6 max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-purple-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>O‘zbekiston EdTech Bozorida 1-Raqamli AI Ta’lim Platformasi</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 text-xs font-bold shadow-[0_0_20px_rgba(6,182,212,0.25)] backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
+              <span>O‘zbekiston EdTech Bozorida 1-Raqamli AI Ta’lim Ekotizimi</span>
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
-              BilimYo‘l{' '}
-              <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
-                Smart Edu
+              BilimYo‘l Smart Edu
+              <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-cyan-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
+                Darslik emas — Shaxsiy Ta’lim Yo‘li
               </span>
             </h1>
 
-            <p className="text-lg sm:text-2xl text-slate-300 font-medium max-w-3xl mx-auto leading-relaxed">
-              Darslik emas — <span className="text-cyan-300 font-bold underline decoration-cyan-500/50 underline-offset-4">shaxsiy ta’lim yo‘li.</span> Har bir o‘quvchiga 24/7 adaptiv AI repetitor va individual rivojlanish traektoriyasi.
+            <p className="text-base sm:text-xl text-slate-300 font-normal max-w-3xl mx-auto leading-relaxed">
+              Har bir o‘quvchi uchun <strong className="text-cyan-300 font-bold">individual sun’iy intellekt repetitori</strong>, bilim bo‘shliqlarini aniqlaydigan adaptiv diagnostika va avtomatik tuziluvchi darslar oqimi.
             </p>
 
+            {/* CTAs */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <Button
                 variant="primary"
                 size="lg"
-                onClick={onNavigateDemo}
-                className="bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:brightness-110 text-white font-extrabold shadow-[0_0_30px_rgba(6,182,212,0.4)] px-8 py-4 text-base rounded-2xl flex items-center gap-3 cursor-pointer transition-all transform hover:-translate-y-0.5 border border-cyan-400/30"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateDemo();
+                }}
+                className="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black shadow-[0_0_30px_rgba(6,182,212,0.4)] px-8 py-4 text-base rounded-2xl flex items-center gap-3 cursor-pointer transition-all transform hover:-translate-y-0.5"
               >
                 <Play className="w-5 h-5 fill-current" />
                 Demo Sahifasini Ko‘rish (/demo)
@@ -269,256 +306,326 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onNavigateApp}
-                className="border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-bold px-8 py-4 text-base rounded-2xl flex items-center gap-2 cursor-pointer shadow-lg backdrop-blur-md hover:border-slate-500 transition-all"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateApp();
+                }}
+                className="border-white/20 bg-slate-900/80 hover:bg-white/10 text-white font-bold px-8 py-4 text-base rounded-2xl flex items-center gap-2 cursor-pointer shadow-lg backdrop-blur-md transition-all hover:border-cyan-400"
               >
-                <Zap className="w-5 h-5 text-amber-400 animate-pulse" />
+                <Zap className="w-5 h-5 text-amber-400" />
                 Jonli Prototipni Ishga Tushirish
               </Button>
             </div>
 
-            {/* Quick Metrics Bar with Glowing High-Tech Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-10 max-w-4xl mx-auto">
+            {/* Quick Metrics Bar (Futuristic HUD Counters) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-12 max-w-5xl mx-auto">
               <motion.div
-                whileHover={{ y: -4 }}
-                className="p-5 rounded-2xl bg-slate-900/70 border border-cyan-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden group"
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="p-5 rounded-2xl bg-white/[0.04] border border-cyan-500/30 backdrop-blur-xl shadow-[0_0_25px_rgba(6,182,212,0.1)] text-left group"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition-all pointer-events-none" />
-                <div className="text-3xl sm:text-4xl font-black text-cyan-400 tracking-tight">6.5M+</div>
-                <div className="text-xs text-slate-300 mt-1 font-semibold">Maktab o‘quvchilari (O‘zbekiston)</div>
+                <div className="text-xs font-mono font-bold text-cyan-400 flex items-center justify-between">
+                  <span>BOZOR AUDITORIYASI</span>
+                  <Users className="w-3.5 h-3.5 text-cyan-400" />
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-cyan-300 transition-colors">
+                  6.5M+
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Maktab o‘quvchilari (O‘zbekiston)</div>
               </motion.div>
 
               <motion.div
-                whileHover={{ y: -4 }}
-                className="p-5 rounded-2xl bg-slate-900/70 border border-emerald-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden group"
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="p-5 rounded-2xl bg-white/[0.04] border border-emerald-500/30 backdrop-blur-xl shadow-[0_0_25px_rgba(16,185,129,0.1)] text-left group"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
-                <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">100%</div>
-                <div className="text-xs text-slate-300 mt-1 font-semibold">Adaptiv Diagnostika & Xarita</div>
+                <div className="text-xs font-mono font-bold text-emerald-400 flex items-center justify-between">
+                  <span>METODIKA</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-emerald-300 transition-colors">
+                  100%
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Adaptiv Diagnostika & Bilim Matritsasi</div>
               </motion.div>
 
               <motion.div
-                whileHover={{ y: -4 }}
-                className="p-5 rounded-2xl bg-slate-900/70 border border-indigo-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden group"
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="p-5 rounded-2xl bg-white/[0.04] border border-indigo-500/30 backdrop-blur-xl shadow-[0_0_25px_rgba(99,102,241,0.1)] text-left group"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all pointer-events-none" />
-                <div className="text-3xl sm:text-4xl font-black text-indigo-400 tracking-tight">&lt;1.5s</div>
-                <div className="text-xs text-slate-300 mt-1 font-semibold">Yo‘lchi AI O‘rtacha Javob Tezligi</div>
+                <div className="text-xs font-mono font-bold text-indigo-400 flex items-center justify-between">
+                  <span>AI TEZLIK</span>
+                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-indigo-300 transition-colors">
+                  &lt;1.5s
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Yo‘lchi AI Deno Edge Javob Vaqti</div>
               </motion.div>
 
               <motion.div
-                whileHover={{ y: -4 }}
-                className="p-5 rounded-2xl bg-slate-900/70 border border-purple-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden group"
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="p-5 rounded-2xl bg-white/[0.04] border border-purple-500/30 backdrop-blur-xl shadow-[0_0_25px_rgba(168,85,247,0.1)] text-left group"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all pointer-events-none" />
-                <div className="text-3xl sm:text-4xl font-black text-purple-400 tracking-tight">MVP</div>
-                <div className="text-xs text-slate-300 mt-1 font-semibold">Ishlayotgan Web & Flutter Ilova</div>
+                <div className="text-xs font-mono font-bold text-purple-400 flex items-center justify-between">
+                  <span>TAYYORLIK</span>
+                  <Award className="w-3.5 h-3.5 text-purple-400" />
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-purple-300 transition-colors">
+                  MVP
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">React 19 & Flutter Mobile Ishlaydi</div>
               </motion.div>
             </div>
           </motion.div>
         </section>
 
-        {/* 3. SECTION 1: MUAMMO → YECHIM (PROBLEM → SOLUTION) - JAW-DROPPING CYBER REDESIGN */}
-        <section id="muammo-yechim" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
+        {/* 4. SECTION 1: MUAMMO → BIZNING YECHIM (CYBERNETIC COMPARISON) */}
+        <section id="problem-solution" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              1. ASOSIY BOSQICH
+            <span className="text-cyan-400 bg-cyan-950/80 px-3.5 py-1 rounded-full border border-cyan-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              1. ASOSIY BOSQICH • PITCH NUKLEUS
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Muammo <span className="text-cyan-400">→</span> Bizning Yechim
+              Kritik Muammo <span className="text-slate-500 font-light">vs</span> Bizning Yechim
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
-              O‘zbekiston ta’lim tizimidagi eng o‘tkir to‘siqlarni sun’iy intellekt va adaptiv pedagogika orqali hal qilamiz.
+            <p className="text-slate-300 text-sm sm:text-base mt-3 max-w-2xl mx-auto">
+              O‘zbekiston ta’lim tizimidagi eng og‘riqli tizimli bo‘shliqlarni sun’iy intellekt va adaptiv pedagogika orqali tubdan hal etamiz.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-            {/* THE PROBLEM SIDE (Crimson Neon Cyber Glassmorphism) */}
+          {/* Side-by-Side Neon Comparison Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch relative">
+            {/* THE PROBLEM SIDE (Crimson Velvet Dark Glass) */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-rose-950/40 via-slate-900/80 to-slate-950/90 border border-rose-500/30 shadow-[0_0_50px_-15px_rgba(244,63,94,0.35)] relative overflow-hidden flex flex-col justify-between group hover:border-rose-500/60 transition-all duration-300 backdrop-blur-2xl"
+              transition={{ duration: 0.6 }}
+              className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-rose-950/35 via-slate-900/90 to-slate-950 border border-rose-500/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(244,63,94,0.12)] relative overflow-hidden flex flex-col justify-between group"
             >
-              {/* Corner ambient orb */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-500/20 transition-all" />
+              {/* Corner ambient danger aura */}
+              <div className="absolute top-0 right-0 w-44 h-44 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
               <div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(244,63,94,0.4)]">
-                    <X className="w-6 h-6 stroke-[3]" />
+                <div className="flex items-center gap-3.5 mb-8 pb-5 border-b border-rose-500/20">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(244,63,94,0.3)]">
+                    ✕
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-white group-hover:text-rose-200 transition-colors">
-                      Kritik Muammo
-                    </h3>
-                    <p className="text-xs text-rose-400 font-semibold tracking-wide">
-                      An’anaviy ta’limdagi tizimli bo‘shliqlar
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <h3 className="text-2xl font-black text-white">Kritik Muammo</h3>
+                    </div>
+                    <p className="text-xs text-rose-300 mt-0.5">An’anaviy ta’limdagi 4 ta tizimli bo‘shliq</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {[
-                    {
-                      num: '1',
-                      title: '35–40 talik ommaviy sinflar',
-                      desc: 'O‘qituvchi 45 daqiqada har bir o‘quvchiga 1 daqiqa ham vaqt ajrata olmaydi. Barcha o‘quvchilar bitta sur’atda o‘qitiladi.',
-                    },
-                    {
-                      num: '2',
-                      title: 'Qimmat repetitorlar (500K – 1.5M so‘m/oy)',
-                      desc: 'Oilalar byudjetiga og‘ir. Qishloq va tumanlarda esa malakali, ixtisoslashgan ustozlar umuman yetishmaydi.',
-                    },
-                    {
-                      num: '3',
-                      title: 'Quruq, tushunarsiz testlar',
-                      desc: 'O‘quvchi xato qilganda nega xato qilganini tushuntiradigan hech kim yo‘q. Faqat quruq "noto‘g‘ri" degan ball qo‘yiladi.',
-                    },
-                    {
-                      num: '4',
-                      title: 'Bo‘shliqlarning to‘planib borishi',
-                      desc: '5-sinfda kasrlarni tushunmagan o‘quvchi 8-sinfda algebra va geometriyani butunlay o‘zlashtira olmay qoladi.',
-                    },
-                  ].map((item, idx) => (
-                    <motion.div
-                      key={item.num}
-                      initial={{ opacity: 0, y: 15 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.1 * idx, duration: 0.5 }}
-                      whileHover={{ x: 4 }}
-                      className="p-4 rounded-2xl bg-slate-900/90 border border-rose-500/20 hover:border-rose-400/50 shadow-sm transition-all"
-                    >
-                      <h4 className="font-bold text-sm text-slate-100 flex items-center gap-2.5">
-                        <span className="w-5 h-5 rounded-md bg-rose-500/20 text-rose-400 font-black text-xs flex items-center justify-center border border-rose-500/40">
-                          {item.num}
-                        </span>
-                        {item.title}
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1.5 pl-7 leading-relaxed">
-                        {item.desc}
-                      </p>
-                    </motion.div>
-                  ))}
+                  {/* Problem Card 1 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.03] border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center border border-rose-500/30">
+                        01
+                      </span>
+                      <h4 className="font-bold text-sm text-white">35–40 talik ommaviy sinflar</h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      O‘qituvchi 45 daqiqada har bir o‘quvchiga hatto 1 daqiqa ham vaqt ajrata olmaydi. Barcha bolalar individual qobiliyatidan qat’i nazar bitta o‘rtacha sur’atda o‘qitiladi.
+                    </p>
+                  </motion.div>
+
+                  {/* Problem Card 2 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.03] border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center border border-rose-500/30">
+                        02
+                      </span>
+                      <h4 className="font-bold text-sm text-white">Qimmat repetitorlar (500K – 1.5M so‘m/oy)</h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      Ota-onalar byudjetiga juda og‘ir moliyaviy yuk. Qishloq va tumanlarda esa ixtisoslashgan malakali ustozlar umuman yetishmaydi yoki topilmaydi.
+                    </p>
+                  </motion.div>
+
+                  {/* Problem Card 3 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.03] border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center border border-rose-500/30">
+                        03
+                      </span>
+                      <h4 className="font-bold text-sm text-white">Quruq, tushunarsiz testlar</h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      O‘quvchi xato qilganda nega xato qilganini pedagogik tushuntiradigan hech kim yo‘q. Faqat quruq "noto‘g‘ri" degan ball qo‘yilib, bolaning qiziqishi so‘nadi.
+                    </p>
+                  </motion.div>
+
+                  {/* Problem Card 4 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.03] border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-950/20 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center border border-rose-500/30">
+                        04
+                      </span>
+                      <h4 className="font-bold text-sm text-white">Bilim bo‘shliqlarining yillar davomida to‘planishi</h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      5-sinfda kasrlarni o‘zlashtirmagan o‘quvchi 8-sinfda algebra va geometriyani mutlaqo tushuna olmay qoladi va ta’limdan ortda qoladi.
+                    </p>
+                  </motion.div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-rose-500/20 flex items-center justify-between text-xs text-rose-300">
-                <span className="font-mono text-[11px]">Natija: 73% o‘quvchi bazaviy formulalarda adashadi</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 text-[10px]">
-                  Eski Metodika
-                </span>
+              <div className="mt-8 pt-4 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-300 font-mono">
+                <span>Natija: Past o‘zlashtirish & Ta’limiy tengsizlik</span>
+                <span className="font-bold">An’anaviy Model</span>
               </div>
             </motion.div>
 
-            {/* THE SOLUTION SIDE (Electric Cyan Cyber Glassmorphism) */}
+            {/* THE SOLUTION SIDE (Cyan-Emerald Hyper-Glass) */}
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
+              initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-cyan-950/40 via-slate-900/80 to-slate-950/90 border border-cyan-500/30 shadow-[0_0_50px_-15px_rgba(6,182,212,0.35)] relative overflow-hidden flex flex-col justify-between group hover:border-cyan-400/60 transition-all duration-300 backdrop-blur-2xl"
+              transition={{ duration: 0.6 }}
+              className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-cyan-950/40 via-slate-900/90 to-slate-950 border-2 border-cyan-500/40 backdrop-blur-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] relative overflow-hidden flex flex-col justify-between group"
             >
-              {/* Corner ambient orb */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
+              {/* Luminous Top Accent Beam */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee]" />
+              <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
               <div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-                    <Check className="w-6 h-6 stroke-[3]" />
+                <div className="flex items-center gap-3.5 mb-8 pb-5 border-b border-cyan-500/25">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 flex items-center justify-center font-black text-xl shadow-[0_0_25px_rgba(6,182,212,0.35)]">
+                    ✓
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
-                      BilimYo‘l Yechimi
-                    </h3>
-                    <p className="text-xs text-cyan-400 font-semibold tracking-wide">
-                      Sun’iy intellektga asoslangan shaxsiy ekotizim
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      <h3 className="text-2xl font-black text-white">BilimYo‘l Yechimi</h3>
+                    </div>
+                    <p className="text-xs text-cyan-300 mt-0.5">Sun’iy intellektga asoslangan shaxsiy ekotizim</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {[
-                    {
-                      num: '1',
-                      title: '100% Adaptiv Diagnostika',
-                      desc: '8 ta moslashuvchan test orqali o‘quvchining har bir ko‘nikmasi (Algebra, Tenglama, Funksiya, Lug‘at va h.k.) 0-100% shkalada aniqlanadi.',
-                    },
-                    {
-                      num: '2',
-                      title: '"Yo‘lchi AI" Do‘stona Mentori',
-                      desc: 'Google Gemini 2.5 Flash bilan qurollangan mentor bolaga tayyor javobni emas, xatoning tub sababini pedagogik uslubda tushuntiradi.',
-                    },
-                    {
-                      num: '3',
-                      title: 'Individual 3 Qadamli Darslar',
-                      desc: 'Zaif nuqta aniqlanishi bilan AI u uchun maxsus dars yaratadi: 1) Qisqa tushuncha; 2) Vizual model / audio to‘lqin; 3) Interaktiv mustahkamlash.',
-                    },
-                    {
-                      num: '4',
-                      title: 'Hamyonbop va Har Doim Yoningizda',
-                      desc: 'Oyiga atigi 59 900 so‘m. Web va Flutter Mobile orqali har qanday telefonda 24/7 ishlaydi.',
-                    },
-                  ].map((item, idx) => (
-                    <motion.div
-                      key={item.num}
-                      initial={{ opacity: 0, y: 15 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.1 * idx, duration: 0.5 }}
-                      whileHover={{ x: 4 }}
-                      className="p-4 rounded-2xl bg-slate-900/90 border border-cyan-500/20 hover:border-cyan-400/50 shadow-sm transition-all"
-                    >
-                      <h4 className="font-bold text-sm text-slate-100 flex items-center gap-2.5">
-                        <span className="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-300 font-black text-xs flex items-center justify-center border border-cyan-500/40">
-                          {item.num}
-                        </span>
-                        {item.title}
+                  {/* Solution Card 1 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.04] border border-cyan-500/25 hover:border-cyan-400/60 hover:bg-cyan-950/20 transition-all shadow-sm"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-black text-xs flex items-center justify-center border border-cyan-500/40">
+                        01
+                      </span>
+                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                        100% Adaptiv Diagnostika
+                        <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-700">0–100% Shkala</span>
                       </h4>
-                      <p className="text-xs text-slate-300 mt-1.5 pl-7 leading-relaxed">
-                        {item.desc}
-                      </p>
-                    </motion.div>
-                  ))}
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      8 ta dinamik moslashuvchan savol orqali o‘quvchining har bir ko‘nikmasi (Algebra, Tenglamalar, Funksiyalar, Lug‘at va h.k.) aniq xaritaga tushiriladi.
+                    </p>
+                  </motion.div>
+
+                  {/* Solution Card 2 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.04] border border-cyan-500/25 hover:border-cyan-400/60 hover:bg-cyan-950/20 transition-all shadow-sm"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-black text-xs flex items-center justify-center border border-cyan-500/40">
+                        02
+                      </span>
+                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                        "Yo‘lchi AI" Do‘stona Mentori
+                        <span className="text-[10px] font-bold text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-700">Gemini 2.5 Flash</span>
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      Google Gemini 2.5 Flash modeli bolaga tayyor javobni emas, xatoning tub ildizini tushuntiradi va o‘z fikrlashini rivojlantirishga yo‘naltiradi.
+                    </p>
+                  </motion.div>
+
+                  {/* Solution Card 3 */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-white/[0.04] border border-cyan-500/25 hover:border-cyan-400/60 hover:bg-cyan-950/20 transition-all shadow-sm"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-black text-xs flex items-center justify-center border border-cyan-500/40">
+                        03
+                      </span>
+                      <h4 className="font-bold text-sm text-white">Individual 3 Qadamli Darslar</h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      Zaif nuqta aniqlanishi bilanoq AI maxsus dars generatsiya qiladi: <strong>1) Tushuncha</strong>; <strong>2) Vizual model & Audio</strong>; <strong>3) Interaktiv mustahkamlash</strong>.
+                    </p>
+                  </motion.div>
+
+                  {/* Solution Card 4 (Monetization highlighted) */}
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    className="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 hover:border-emerald-400 hover:bg-emerald-950/40 transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono font-black text-xs flex items-center justify-center border border-emerald-500/40">
+                        04
+                      </span>
+                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                        Hamyonbop va Har Doim Yoningizda
+                        <span className="text-[10px] font-black text-emerald-300 bg-emerald-900/90 px-2 py-0.5 rounded-full border border-emerald-500">
+                          59 900 so‘m / oy
+                        </span>
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
+                      Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy ta’lim. Web va Flutter Mobile orqali 24/7 ishlaydi.
+                    </p>
+                  </motion.div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-cyan-500/20 flex items-center justify-between text-xs text-cyan-300">
-                <span className="font-mono text-[11px]">Natija: 1 oyda +28% bilim o‘sishi va doimiy streak</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 text-[10px]">
-                  Innovatsion AI Model
-                </span>
+              <div className="mt-8 pt-4 border-t border-cyan-500/25 flex items-center justify-between text-[11px] text-cyan-300 font-mono">
+                <span>Natija: 100% Shaxsiylashtirilgan O‘sish</span>
+                <span className="font-bold text-emerald-400">BilimYo‘l Smart Edu</span>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* 4. SECTION 2: JAMOA (TEAM) • AXION JAMOA */}
-        <section id="axion-jamoa" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+        {/* 5. SECTION 2: JAMOA (AXION TEAM — 3 ASOSIY USTUN) */}
+        <section id="team-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.25)]">
-              <Users className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-purple-400 bg-purple-950/80 px-3.5 py-1 rounded-full border border-purple-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.2)]">
               2. ASOSIY BOSQICH • AXION JAMOA
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Bizning Jamoa (Axion) — 3 Ta Asosiy Ustun
+              Bizning Jamoa — 3 Ta Asosiy Ustun
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
               Texnologik arxitektura, biznes o‘sish strategiyasi va pedagogik metodologiyani yagona maqsad atrofida birlashtirgan asoschilar jamoasi.
             </p>
           </motion.div>
@@ -526,18 +633,17 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Member 1: Founder & Lead Developer */}
             <motion.div
-              whileHover={{ y: -8, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-cyan-500/30 flex flex-col justify-between hover:border-cyan-400/80 shadow-[0_0_35px_-10px_rgba(6,182,212,0.25)] relative overflow-hidden group backdrop-blur-xl"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="p-7 sm:p-8 rounded-3xl bg-slate-900/80 border-2 border-cyan-500/40 backdrop-blur-xl shadow-[0_0_40px_rgba(6,182,212,0.15)] flex flex-col justify-between group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
               <div>
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="relative">
                     <img
                       src="/images/team/oktam_pirimov.jpg"
                       alt="Pirimov O‘ktam"
-                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-cyan-500 shadow-md"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-cyan-400 shadow-lg"
                     />
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-sm">
                       👑 Lead
@@ -553,17 +659,17 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  BilimYo‘l ekotizimining asoschisi va bosh arxitektori. Web va Mobile ilovalar (React 19, Flutter), server-side anti-cheat scoring (PostgreSQL RPC) hamda Gemini AI (Yo‘lchi) Edge integratsiyasini to‘liq noldan yaratgan.
+                  BilimYo‘l ekotizimining asoschisi va bosh arxitektori. Web va Mobile ilovalar (React 19, Flutter), server-side anti-cheat scoring (PostgreSQL RPC) hamda Gemini AI (Yo‘lchi) Edge integratsiyasini to‘liq kod darajasida noldan yaratgan.
                 </p>
 
-                <div className="mt-6 pt-4 border-t border-white/10 space-y-2">
+                <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
                   <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
-                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-semibold">Tizim Arxitekturasi</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">React 19 & TS</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Flutter 3.x</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">PostgreSQL RPC</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Gemini 2.5 Flash</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-cyan-950/80 text-cyan-300 border border-cyan-800 font-semibold">Tizim Arxitekturasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">React 19 & TypeScript</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Flutter 3.x (Mobile)</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">PostgreSQL RPC & RLS</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Gemini AI / Deno Edge</span>
                   </div>
                 </div>
               </div>
@@ -576,7 +682,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     rel="noreferrer"
                     className="text-slate-300 hover:text-white flex items-center gap-1 font-bold transition-colors"
                   >
-                    <ExternalLink className="w-3.5 h-3.5 text-cyan-400" /> GitHub
+                    <ExternalLink className="w-3.5 h-3.5" /> GitHub
                   </a>
                   <a
                     href="https://t.me/pirimovuktam"
@@ -587,7 +693,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <MessageSquare className="w-3.5 h-3.5" /> Telegram
                   </a>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700">
                   152 Web • 48 Mob Tests
                 </span>
               </div>
@@ -595,15 +701,14 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
 
             {/* Member 2: Business & Growth Lead */}
             <motion.div
-              whileHover={{ y: -8, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-purple-500/30 flex flex-col justify-between hover:border-purple-400/80 shadow-[0_0_35px_-10px_rgba(168,85,247,0.25)] relative overflow-hidden group backdrop-blur-xl"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="p-7 sm:p-8 rounded-3xl bg-slate-900/80 border-2 border-purple-500/40 backdrop-blur-xl shadow-[0_0_40px_rgba(168,85,247,0.15)] flex flex-col justify-between group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-purple-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-purple-500/20 transition-all" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
               <div>
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md ring-2 ring-purple-400">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg ring-2 ring-purple-400">
                       <Briefcase className="w-10 h-10 text-purple-100" />
                     </div>
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -623,14 +728,14 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   Biznes modelni shakllantirish, bozorga chiqish (Go-To-Market) strategiyasi, maktablar va o‘quv markazlari bilan B2B hamkorlik hamda foydalanuvchilar oqimini (traction) kengaytirish rahbari.
                 </p>
 
-                <div className="mt-6 pt-4 border-t border-white/10 space-y-2">
+                <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
                   <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
-                    <span className="px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold">EdTech GTM Strategiyasi</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">B2B Maktablar</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Unit Economics</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Marketing Funnels</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Investor Relations</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-purple-950/80 text-purple-300 border border-purple-800 font-semibold">EdTech GTM Strategiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">B2B Maktablar Hamkorligi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Unit Economics & Monetizatsiya</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Marketing Funnels</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Investor Relations</span>
                   </div>
                 </div>
               </div>
@@ -640,7 +745,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <TrendingUp className="w-3.5 h-3.5" />
                   <span>EdTech Growth Strategy</span>
                 </div>
-                <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-500/15 px-2 py-0.5 rounded-md border border-purple-500/30">
+                <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-950/80 px-2 py-0.5 rounded-md border border-purple-700">
                   B2B & B2C Focus
                 </span>
               </div>
@@ -648,15 +753,14 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
 
             {/* Member 3: Education & Product Lead */}
             <motion.div
-              whileHover={{ y: -8, scale: 1.01 }}
-              transition={{ duration: 0.3 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-emerald-500/30 flex flex-col justify-between hover:border-emerald-400/80 shadow-[0_0_35px_-10px_rgba(16,185,129,0.25)] relative overflow-hidden group backdrop-blur-xl"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="p-7 sm:p-8 rounded-3xl bg-slate-900/80 border-2 border-emerald-500/40 backdrop-blur-xl shadow-[0_0_40px_rgba(16,185,129,0.15)] flex flex-col justify-between group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-emerald-500/20 transition-all" />
+              <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
               <div>
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-md ring-2 ring-emerald-400">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-lg ring-2 ring-emerald-400">
                       <GraduationCap className="w-10 h-10 text-emerald-100" />
                     </div>
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -676,14 +780,14 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   Pedagogik metodika va mahsulot arxitekturasi bo‘yicha yetakchi. Milliy ta’lim standartlari, Bloom taksonomiyasi va adaptiv diagnostika metodikasi bo‘yicha kurikulum rahbari.
                 </p>
 
-                <div className="mt-6 pt-4 border-t border-white/10 space-y-2">
+                <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
                   <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">Adaptiv Kurikulum</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Bloom Taksonomiyasi</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Diagnostik Metodika</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">O‘quvchi UX</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Milliy Standartlar</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-semibold">Adaptiv Kurikulum</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Bloom Taksonomiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Diagnostik Metodika</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">O‘quvchi UX & Psixologiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Math & English Standartlar</span>
                   </div>
                 </div>
               </div>
@@ -693,31 +797,31 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <Brain className="w-3.5 h-3.5" />
                   <span>Pedagogical Standards</span>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                <span className="text-[10px] text-emerald-300 font-mono font-bold bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700">
                   100% Moslik
                 </span>
               </div>
             </motion.div>
           </div>
 
-          {/* Technology stack pill carousel */}
-          <div className="mt-12 p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-md flex flex-wrap items-center justify-center gap-3">
-            <span className="text-xs text-slate-400 font-bold">Foydalanilgan texnologiyalar:</span>
+          {/* Technology Stack Carousel */}
+          <div className="mt-12 p-6 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl flex flex-wrap items-center justify-center gap-2.5">
+            <span className="text-xs text-slate-400 font-mono font-bold mr-2">TECH STACK:</span>
             {[
               'Google Gemini 2.5 Flash',
               'React 19',
               'TypeScript',
-              'Flutter (Mobile)',
-              'Supabase PostgreSQL',
+              'Flutter 3.x',
+              'PostgreSQL RPC',
               'Row Level Security (RLS)',
               'Deno Edge Functions',
-              'Tailwind CSS',
-              'Vitest',
+              'Tailwind CSS v4',
+              'Vitest (152 Tests)',
               'Vite 8',
             ].map((tech) => (
               <span
                 key={tech}
-                className="px-3 py-1.5 rounded-xl bg-slate-800/80 border border-white/10 text-xs font-semibold text-slate-200 shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-cyan-400/50 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
               >
                 {tech}
               </span>
@@ -725,99 +829,97 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
         </section>
 
-        {/* 5. SECTION 3: NEGA BIZNING JAMOA BU MUAMMONI HAL QILA OLADI? */}
-        <section id="nega-biz" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+        {/* 6. SECTION 3: NEGA AYNAN BIZNING JAMOA? (MVP USTUNLIGI) */}
+        <section id="why-us-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-              <Award className="w-3.5 h-3.5 text-cyan-400" />
-              3. ASOSIY BOSQICH
+            <span className="text-cyan-400 bg-cyan-950/80 px-3.5 py-1 rounded-full border border-cyan-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              3. ASOSIY BOSQICH • RAXOBATBARDOSH USTUNLIK
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
               Nima Uchun Aynan Bizning Jamoa?
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
-              G‘oya va slaydlar bosqichidan o‘tib, real ishlayotgan mahsulotga ega ekanligimiz — bizning asosiy ustunligimizdir.
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
+              G‘oya va oddiy slaydlar bosqichidan o‘tib, real ishlayotgan mahsulotga ega ekanligimiz — bizning asosiy ustunligimizdir.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div
               whileHover={{ y: -6 }}
-              className="p-6 rounded-3xl bg-slate-900/80 border border-cyan-500/20 hover:border-cyan-400/60 transition-all backdrop-blur-xl shadow-lg"
+              className="p-6 rounded-3xl bg-slate-900/70 border border-cyan-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(6,182,212,0.1)] transition-all"
             >
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 border border-cyan-500/30">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center mb-4 border border-cyan-500/40">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">100% Ishlayotgan MVP</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Biz quruq taqdimot bilan kelmadik. Web va Flutter Mobile ilovamiz to‘liq tayyor, 152 ta test bilan qoplangan va jonli rejimda ishlaydi.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Biz quruq taqdimot bilan kelmadik. Web va Flutter Mobile ilovamiz to‘liq tayyor, testlar bilan qoplangan va jonli rejimda ishlaydi.
               </p>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -6 }}
-              className="p-6 rounded-3xl bg-slate-900/80 border border-indigo-500/20 hover:border-indigo-400/60 transition-all backdrop-blur-xl shadow-lg"
+              className="p-6 rounded-3xl bg-slate-900/70 border border-indigo-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.1)] transition-all"
             >
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mb-4 border border-indigo-500/30">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mb-4 border border-indigo-500/40">
                 <Brain className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Haqiqiy Pedagogik AI</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-300 leading-relaxed">
                 Oddiy ChatGPT wrapper emas. Tizim bolaga tayyor javobni aytib dangasa qilmaydi, balki ko‘nikmalar grafigi bo‘yicha tushuntiradi.
               </p>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -6 }}
-              className="p-6 rounded-3xl bg-slate-900/80 border border-emerald-500/20 hover:border-emerald-400/60 transition-all backdrop-blur-xl shadow-lg"
+              className="p-6 rounded-3xl bg-slate-900/70 border border-emerald-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/30">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mb-4 border border-emerald-500/40">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Server Anti-Cheat Xavfsizligi</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-300 leading-relaxed">
                 Ballar, ko‘nikmalar va XP lar to‘liq server-side hisoblanadi. O‘quvchi brauzer orqali javoblarni ko‘rib ololmaydi yoki ballni soxtalashtira olmaydi.
               </p>
             </motion.div>
 
             <motion.div
               whileHover={{ y: -6 }}
-              className="p-6 rounded-3xl bg-slate-900/80 border border-purple-500/20 hover:border-purple-400/60 transition-all backdrop-blur-xl shadow-lg"
+              className="p-6 rounded-3xl bg-slate-900/70 border border-purple-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-all"
             >
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4 border border-purple-500/30">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-4 border border-purple-500/40">
                 <Users className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">3 Kishi Kuchli Sinergiyasi</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va B2B hamkorlik (Abdurauf) hamda pedagogik metodika (Dildora) to‘liq uyg‘unlashgan.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va maktablar bilan B2B hamkorlik (Abdurauf) hamda milliy kurikulum metodikasi (Dildora) uyg‘unlashgan.
               </p>
             </motion.div>
           </div>
         </section>
 
-        {/* 6. SECTION 4: MILESTONES & MONETIZATSIYA (SLIDE 06 & 03 ASOSIDA) */}
-        <section id="milestones-monetizatsiya" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+        {/* 7. SECTION 4: MILESTONES — MAQSADLAR VA KPI (SLIDE 06) */}
+        <section id="milestones-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.25)]">
-              <Rocket className="w-3.5 h-3.5 text-emerald-400" />
-              4. ASOSIY BOSQICH: MILESTONES & MONETIZATSIYA
+            <span className="text-amber-400 bg-amber-950/80 px-3.5 py-1 rounded-full border border-amber-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+              4. ASOSIY BOSQICH • STRATEGIK XARITA
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
               Milestones — Maqsadlar va KPI
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
               <strong className="text-white">Hozir → 6 oy → 1 yil → 3 yil.</strong> Raqamlar konservativ prognoz asosida ishlab chiqilgan.
             </p>
           </motion.div>
@@ -829,13 +931,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
                 Vaqt O‘qi: Hozir → 6 oy → 1 yil → 3 yil
               </span>
-              <span className="text-amber-400 text-[11px] font-bold">Konservativ Prognoz</span>
+              <span className="text-amber-400 text-[11px] font-mono">Konservativ Prognoz</span>
             </div>
 
             {/* Connecting Timeline Line */}
             <div className="hidden lg:block absolute left-12 right-12 top-[125px] h-1 bg-gradient-to-r from-rose-500 via-amber-500 via-blue-500 to-emerald-500 rounded-full" />
 
-            {/* 4 Timeline Stage Cards */}
+            {/* 4 Timeline Stage Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
               {/* STAGE 1: HOZIR */}
               <button
@@ -983,13 +1085,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
 
           {/* DETAILED STAGE EXPLORATION CARD */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-slate-900/90 border border-white/10 max-w-5xl mx-auto shadow-2xl mb-12 backdrop-blur-2xl">
+          <div className="p-8 sm:p-10 rounded-3xl bg-slate-900/80 border border-white/10 max-w-5xl mx-auto shadow-2xl backdrop-blur-2xl mb-12">
             {activeRoadmapStage === 'now' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                       <h3 className="text-xl font-black text-white">
                         1-Bosqich: HOZIR (MVP + Pilot Bosqich)
                       </h3>
@@ -998,22 +1100,22 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <span className="flex items-center gap-1 font-semibold text-rose-300">
                         <Calendar className="w-3.5 h-3.5" /> 12-Sentabr – 11-Oktyabr 2026 (Pitch Day 3.0)
                       </span>
-                      <span className="flex items-center gap-1 font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">
-                        Asoschilar Mablag‘i
+                      <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
+                        <DollarSign className="w-3.5 h-3.5" /> Asoschilar Mablag‘i
                       </span>
                     </p>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-black self-start sm:self-auto">
+                  <span className="px-3.5 py-1.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800 text-xs font-black self-start sm:self-auto">
                     100% Jonli Ishlamoqda
                   </span>
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Platformaning dastlabki <strong>G‘oya (Idea)</strong> va <strong>Prototip (Prototype)</strong> bosqichlari to‘liq yakunlandi. Bugungi kunda BilimYo‘l Smart Edu to‘liq ishlayotgan <strong>MVP holatida</strong>: Web SPA (React 19) va Mobil (Flutter) ilovalari, adaptiv diagnostika, server-side anti-cheat scoring (PostgreSQL RPC) va Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI mentori amalda sinovdan o‘tmoqda.
+                  Platformaning dastlabki <strong>G‘oya (Idea)</strong> va <strong>Prototip (Prototype)</strong> bosqichlari to‘liq muvaffaqiyatli yakunlandi. Bugungi kunda BilimYo‘l Smart Edu to‘liq ishlayotgan <strong>MVP holatida</strong>: Web SPA (React 19) va Mobil (Flutter) ilovalari, adaptiv diagnostika, server-side anti-cheat scoring (PostgreSQL RPC) va Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI mentori amalda sinovdan o‘tmoqda.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-rose-400" /> MVP + Pilot
                     </div>
@@ -1022,7 +1124,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-rose-400" /> Moslashuvchan Oqim
                     </div>
@@ -1031,7 +1133,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-rose-400" /> Dastlabki Foydalanuvchilar
                     </div>
@@ -1048,7 +1150,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                       <h3 className="text-xl font-black text-white">
                         2-Bosqich: 6 OY (Bozorga Moslik & Birinchi B2B Pilot)
                       </h3>
@@ -1057,12 +1159,12 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <span className="flex items-center gap-1 font-semibold text-amber-300">
                         <Clock className="w-3.5 h-3.5" /> Muddat: 6 oy (Noyabr 2026 – Aprel 2027)
                       </span>
-                      <span className="flex items-center gap-1 font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded border border-indigo-500/30">
+                      <span className="flex items-center gap-1 font-bold text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800">
                         Pre-Seed Bosqichi
                       </span>
                     </p>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black self-start sm:self-auto">
+                  <span className="px-3.5 py-1.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800 text-xs font-black self-start sm:self-auto">
                     Keyingi 6 Oylik Reja
                   </span>
                 </div>
@@ -1072,25 +1174,25 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center">
+                  <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-center">
                     <div className="text-xl sm:text-2xl font-black text-amber-300">500–700</div>
                     <div className="text-xs font-bold text-white mt-0.5">Pullik Foydalanuvchi</div>
                     <div className="text-[10px] text-slate-400">Oyiga 59 900 so‘m</div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 text-center">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-indigo-400">PMF</div>
                     <div className="text-xs font-bold text-white mt-0.5">Bozorga Mos Kelish</div>
                     <div className="text-[10px] text-slate-400">Haftalik o‘sish va tahlil</div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 text-center">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-emerald-400">Takroriy Jalb</div>
                     <div className="text-xs font-bold text-white mt-0.5">Retention & Streak</div>
                     <div className="text-[10px] text-slate-400">Muntazam ta’lim odati</div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-800/80 border border-white/10 text-center">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-cyan-400">1-B2B Pilot</div>
                     <div className="text-xs font-bold text-white mt-0.5">Maktablar Hamkorligi</div>
                     <div className="text-[10px] text-slate-400">O‘qituvchilar paneli</div>
@@ -1104,7 +1206,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                       <h3 className="text-xl font-black text-white">
                         3-Bosqich: 1 YIL (Zararsizlik Nuqtasi & 638 Mln Gross Revenue)
                       </h3>
@@ -1113,12 +1215,12 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <span className="flex items-center gap-1 font-semibold text-blue-300">
                         <Calendar className="w-3.5 h-3.5" /> Muddat: 12 oy (Oktabr 2027 gacha)
                       </span>
-                      <span className="flex items-center gap-1 font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">
+                      <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
                         Konservativ Iqtisodiy Prognoz
                       </span>
                     </p>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-black self-start sm:self-auto">
+                  <span className="px-3.5 py-1.5 rounded-full bg-blue-950/80 text-blue-300 border border-blue-800 text-xs font-black self-start sm:self-auto">
                     Zararsizlik: 10-oy
                   </span>
                 </div>
@@ -1128,19 +1230,19 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-center">
+                  <div className="p-5 rounded-2xl bg-blue-950/40 border border-blue-500/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-blue-300">2 500</div>
                     <div className="text-xs font-bold text-white mt-1">Pullik Foydalanuvchi</div>
                     <div className="text-[11px] text-slate-400 mt-0.5">B2C oylik faol obuna</div>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                  <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-emerald-300">≈ 638 Mln</div>
                     <div className="text-xs font-bold text-white mt-1">Gross Revenue (So‘m)</div>
                     <div className="text-[11px] text-slate-400 mt-0.5">Yillik yalpi tushum</div>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-center">
+                  <div className="p-5 rounded-2xl bg-purple-950/40 border border-purple-500/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-purple-300">10-oy</div>
                     <div className="text-xs font-bold text-white mt-1">Zararsizlik Nuqtasi</div>
                     <div className="text-[11px] text-slate-400 mt-0.5">O‘zini-o‘zi to‘liq qoplash</div>
@@ -1154,7 +1256,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                       <h3 className="text-xl font-black text-white">
                         4-Bosqich: 3 YIL (Respublika Masshtabi & Regional Ekspansiya)
                       </h3>
@@ -1168,17 +1270,17 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       </span>
                     </p>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black self-start sm:self-auto">
+                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800 text-xs font-black self-start sm:self-auto">
                     Kengayish Bosqichi
                   </span>
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va ota-onalar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo (Qozog‘iston, Qirg‘iziston) mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
+                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va ota-onalar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <Globe className="w-4 h-4 text-emerald-400" /> O‘zbekiston Bo‘ylab Masshtab
                     </div>
@@ -1187,7 +1289,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <Briefcase className="w-4 h-4 text-emerald-400" /> B2B: Maktab & O‘quv Markazi
                     </div>
@@ -1196,7 +1298,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
                       <Layers className="w-4 h-4 text-emerald-400" /> Yangi Fanlar & Regional
                     </div>
@@ -1208,81 +1310,108 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </motion.div>
             )}
           </div>
+        </section>
 
-          {/* MONETIZATSIYA VA UNIT ECONOMICS BLOKI (SLIDE 03 ASOSIDA) */}
-          <div className="max-w-5xl mx-auto p-8 sm:p-10 rounded-3xl bg-slate-900/90 border border-emerald-500/30 text-white shadow-[0_0_50px_-15px_rgba(16,185,129,0.3)] relative overflow-hidden backdrop-blur-2xl">
+        {/* 8. SECTION 5: MONETIZATSIYA VA UNIT ECONOMICS (SLIDE 03 ASOSIDA) */}
+        <section id="monetization-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <span className="text-emerald-400 bg-emerald-950/80 px-3.5 py-1 rounded-full border border-emerald-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+              5. BIZNES MODEL • MONETIZATSIYA (SLIDE 03)
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
+              Monetizatsiya va Unit Economics
+            </h2>
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
+              Freemium → Premium obuna. To‘lovchi: o‘quvchi va ota-ona (B2C) hamda maktablar (B2B SaaS).
+            </p>
+          </motion.div>
+
+          {/* Keynote-Grade Pricing Box */}
+          <div className="max-w-5xl mx-auto p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-950 to-black border-2 border-emerald-500/40 text-white shadow-[0_0_60px_rgba(16,185,129,0.18)] relative overflow-hidden backdrop-blur-2xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6 mb-8">
               <div>
-                <span className="text-emerald-400 text-xs font-black tracking-widest uppercase flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> BIZNES VA DAROMAD MODELI
+                <span className="text-emerald-400 text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> BIZNES VA DAROMAD STRUKTURASI
                 </span>
-                <h3 className="text-2xl sm:text-4xl font-black text-white mt-1">
-                  Monetizatsiya va Unit Economics
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                  B2C Freemium → Premium Obuna
                 </h3>
-                <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                  Freemium → Premium obuna. To‘lovchi: o‘quvchi va ota-ona (B2C).
-                </p>
               </div>
-
               <div className="self-start md:self-auto">
-                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black">
                   B2C + B2B SaaS Modeli
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Left Pricing Card (Slide 03 style) */}
-              <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-black/60 border-2 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.25)] text-center space-y-3 relative group">
-                <div className="text-xs font-black tracking-wider uppercase text-emerald-400">
+              {/* Left Keynote Price Card */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="lg:col-span-5 p-8 rounded-3xl bg-black/80 border-2 border-emerald-500/70 shadow-[0_0_35px_rgba(16,185,129,0.25)] text-center space-y-3 relative group"
+              >
+                <div className="text-xs font-mono font-black tracking-widest uppercase text-emerald-400">
                   PREMIUM OBUNA
                 </div>
-                <div className="text-4xl sm:text-6xl font-black text-white tracking-tight">
+                <div className="text-5xl sm:text-6xl font-black text-white tracking-tight">
                   59 900
                 </div>
                 <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                   so‘m / oy
                 </div>
-                <div className="pt-3 border-t border-white/10 text-[11px] text-slate-300">
-                  Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy repetitor va AI yo‘lchi.
+                <div className="pt-4 border-t border-white/10 text-xs text-slate-300 leading-relaxed">
+                  Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy repetitor va Yo‘lchi AI mentori.
                 </div>
-              </div>
+                <div className="pt-2">
+                  <span className="inline-block px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] text-emerald-300 font-bold">
+                    Ota-onalar uchun 10x arzonroq
+                  </span>
+                </div>
+              </motion.div>
 
               {/* Right Value Propositions (Slide 03 bullet items) */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1 hover:bg-white/10 transition-colors">
-                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-mono font-bold text-emerald-400 uppercase">
                     Kim to‘laydi?
                   </div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm sm:text-base font-semibold text-white">
                     O‘quvchi va ota-ona (B2C)
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     Ota-onalar farzandining bilim darajasini real vaqtda ko‘rib, samarasiz repetitor xarajatlarini tejashadi.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1 hover:bg-white/10 transition-colors">
-                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-mono font-bold text-emerald-400 uppercase">
                     Nima uchun to‘laydi?
                   </div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm sm:text-base font-semibold text-white">
                     Individual learning path + AI tavsiyalar + chuqur analitika
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     Xatolarni tushuntiruvchi Yo‘lchi AI mentori, zaif nuqtalarni mustahkamlash va shaxsiy o‘quv rejasi uchun.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white/5 border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1 hover:bg-white/10 transition-colors">
-                  <div className="text-xs font-bold text-emerald-400 uppercase">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border-l-4 border-emerald-500 border-r border-t border-b border-white/10 space-y-1">
+                  <div className="text-xs font-mono font-bold text-emerald-400 uppercase">
                     Free (Bepul) Rejada nima bor?
                   </div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm sm:text-base font-semibold text-white">
                     Asosiy darslar va cheklangan mashqlar — konversiya kanali
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Har bir yangi foydalanuvchi bepul diagnostika va dastlabki darslarni sinab ko‘rib, Premium rejaga oson konvertatsiya bo‘ladi.
+                  <p className="text-xs text-slate-400">
+                    Har bir yangi foydalanuvchi bepul diagnostika va dastlabki darslarni sinab ko‘rib, Premium obunaga oson konvertatsiya bo‘ladi.
                   </p>
                 </div>
               </div>
@@ -1290,302 +1419,131 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
         </section>
 
-        {/* 7. SECTION 5: YECHIMNI QANDAY AMALGA OSHIRISHNI REJALASHTIRYAPSIZ? */}
-        <section id="strategiya" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
+        {/* 9. SECTION 6: TEXNOLOGIK ARXITEKTURA & INTERAKTIV KOD KONSOLE */}
+        <section id="tech-architecture" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-              5. ASOSIY BOSQICH
+            <span className="text-cyan-400 bg-cyan-950/80 px-3.5 py-1 rounded-full border border-cyan-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              6. ASOSIY BOSQICH • TEXNOLOGIK CHUQURLIK
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Yechimni Amalga Oshirish Strategiyasi
+              Arxitektura va Jonli API Konsoli
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
-              Bosqichlar, texnologiyalar, AI vositalari va barqaror masshtablash infratuzilmasi.
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
+              Hakamlar va texnik ekspertlar uchun tizimning server arxitekturasi va real Edge kod namunalari.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-cyan-500/30 shadow-lg space-y-4 hover:border-cyan-400/80 transition-all backdrop-blur-xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-black text-xl border border-cyan-500/30">
-                01
+          <div className="max-w-4xl mx-auto rounded-3xl bg-slate-950 border border-white/10 overflow-hidden shadow-2xl backdrop-blur-2xl">
+            {/* Terminal Header */}
+            <div className="p-4 bg-slate-900/90 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-rose-500" />
+                <span className="w-3 h-3 rounded-full bg-amber-500" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                <span className="ml-2 font-mono text-xs text-slate-300 font-bold">bilimyol-core-api</span>
               </div>
-              <h3 className="text-lg font-bold text-white">AI Arxitekturasi va Dvigateli</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Google Gemini 2.5 Flash modeli Supabase Deno Edge Functions orqali ulangan. Har bir dars o‘quvchining 0-100% ko‘nikma balliga qarab dinamik prompt bilan generatsiya qilinadi.
-              </p>
-              <div className="pt-2 text-[11px] text-cyan-400 font-bold">
-                Asboblar: Gemini Flash, Deno Edge, RLS
-              </div>
-            </motion.div>
 
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-indigo-500/30 shadow-lg space-y-4 hover:border-indigo-400/80 transition-all backdrop-blur-xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-black text-xl border border-indigo-500/30">
-                02
-              </div>
-              <h3 className="text-lg font-bold text-white">Ko‘p Platformali Klient</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Veb brauzerda React 19 va mobil telefonlarda Flutter orqali ishlaydi. O‘quvchi qayerda bo‘lishidan qat’i nazar o‘zining darslari, XP lari va Yo‘lchi AI bilan muloqotini davom ettira oladi.
-              </p>
-              <div className="pt-2 text-[11px] text-indigo-400 font-bold">
-                Asboblar: Flutter, Riverpod, React 19, Tailwind
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="p-8 rounded-3xl bg-slate-900/80 border border-emerald-500/30 shadow-lg space-y-4 hover:border-emerald-400/80 transition-all backdrop-blur-xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xl border border-emerald-500/30">
-                03
-              </div>
-              <h3 className="text-lg font-bold text-white">Bozor va Monetizatsiya</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                B2C Freemium modeli: 59 900 so‘mlik obuna xarajatlari bitta repetitor darsining 10 dan bir qismiga teng. B2B modeli orqali xususiy va davlat maktablariga monitoring litsenziyasi sotiladi.
-              </p>
-              <div className="pt-2 text-[11px] text-emerald-400 font-bold">
-                Asboblar: B2C Freemium, B2B SaaS, Payme/Click
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* 8. SECTION 6: /DEMO SAHIFASI PREVIEW & CTA */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-cyan-900/80 via-indigo-900/80 to-blue-900/80 border border-cyan-400/30 shadow-[0_0_60px_-15px_rgba(6,182,212,0.4)] text-center max-w-4xl mx-auto space-y-6 text-white backdrop-blur-2xl relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-cyan-300 text-xs font-black backdrop-blur-md border border-white/20">
-              <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-              6-TALAB: /demo SAHIFASI TAYYOR
-            </div>
-
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Jonli Demo Video va Interaktiv Prototip
-            </h2>
-
-            <p className="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Hakamlar va investorlar uchun platformaning to‘liq 1–5 daqiqalik dars jarayoni, diagnostikasi va ishlash mexanizmi aks etgan maxsus <strong>/demo</strong> sahifasi tayyorlandi.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={onNavigateDemo}
-                className="bg-white hover:bg-slate-100 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-y-0.5"
-              >
-                /demo Sahifasiga O‘tish <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* 9. BONUS 1: INTERAKTIV AI-CHATBOT EMULATOR (SAVOL-JAVOB NAMUNALARI BILAN) */}
-        <section id="ai-mentor" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-12"
-          >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.25)]">
-              QO‘SHIMCHA BONUS VAZIFA 1
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Savol-Javob Namunalari Bilan AI-Chatbot
-            </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
-              Yo‘lchi AI bilan hoziroq real vaqtda muloqot qilib ko‘ring yoki quyidagi namunaviy savollarni bosing.
-            </p>
-          </motion.div>
-
-          <div className="max-w-3xl mx-auto rounded-3xl bg-slate-900/90 border border-cyan-500/30 overflow-hidden shadow-[0_0_50px_-15px_rgba(6,182,212,0.3)] backdrop-blur-2xl">
-            {/* Chat Header */}
-            <div className="p-4 bg-slate-950/80 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <YolchiAIMascot size="sm" mood="happy" />
-                <div>
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    Yo‘lchi AI Mentori
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  </h4>
-                  <p className="text-[10px] text-slate-400">Google Gemini 2.5 Flash bilan integratsiyalashgan</p>
-                </div>
-              </div>
-              <button
-                onClick={onNavigateAiTutor}
-                className="text-xs text-cyan-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
-              >
-                To‘liq ekranda ochish →
-              </button>
-            </div>
-
-            {/* Chat Body */}
-            <div className="p-5 space-y-4 max-h-80 overflow-y-auto bg-slate-950/40">
-              {chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              {/* API Tabs */}
+              <div className="flex items-center gap-1.5 text-xs font-mono">
+                <button
+                  onClick={() => setActiveApiTab('diagnostics')}
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    activeApiTab === 'diagnostics'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  <div
-                    className={`max-w-[85%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-br-none shadow-md'
-                        : 'bg-slate-800/90 text-slate-100 rounded-bl-none border border-white/10 shadow-md'
-                    }`}
-                  >
-                    {msg.text}
-                    <div
-                      className={`text-[9px] mt-1 text-right ${
-                        msg.role === 'user' ? 'text-cyan-200' : 'text-slate-400'
-                      }`}
-                    >
-                      {msg.time}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {isBotThinking && (
-                <div className="flex justify-start">
-                  <div className="p-3 rounded-2xl bg-slate-800 border border-cyan-500/30 text-xs text-cyan-300 flex items-center gap-2 animate-pulse shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin text-cyan-400" /> Yo‘lchi AI tahlil qilmoqda...
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Sample Prompts */}
-            <div className="p-3 bg-slate-950/60 border-t border-white/10">
-              <div className="text-[11px] text-slate-400 font-bold mb-2">Namunaviy savollar (bir marta bosing):</div>
-              <div className="flex flex-wrap gap-2">
-                {samplePrompts.map((p, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendQuestion(p.q)}
-                    className="text-left text-[11px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-200 shadow-sm transition-colors cursor-pointer"
-                  >
-                    💡 {p.q}
-                  </button>
-                ))}
+                  1. Diagnostika
+                </button>
+                <button
+                  onClick={() => setActiveApiTab('lessons')}
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    activeApiTab === 'lessons'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 font-bold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  2. AI Generator
+                </button>
+                <button
+                  onClick={() => setActiveApiTab('scoring')}
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    activeApiTab === 'scoring'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  3. Anti-Cheat RPC
+                </button>
               </div>
             </div>
 
-            {/* Chat Input */}
-            <div className="p-3 bg-slate-950 border-t border-white/10 flex items-center gap-2">
-              <input
-                type="text"
-                value={inputQuestion}
-                onChange={(e) => setInputQuestion(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendQuestion()}
-                placeholder="Yo‘lchi AI ga ixtiyoriy savol bering..."
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-              />
-              <button
-                onClick={() => handleSendQuestion()}
-                className="p-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 text-white rounded-xl font-bold transition-all cursor-pointer shadow-md"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* 10. REAL BACKEND CONTRACTS & EDGE FUNCTION ARCHITECTURE */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-12"
-          >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-xs font-black tracking-widest uppercase shadow-[0_0_15px_rgba(99,102,241,0.25)]">
-              <Terminal className="w-3.5 h-3.5 text-indigo-400" />
-              XAVFSIZLIK VA ARXITEKTURA
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Supabase Edge Function va Server-Side Scoring
-            </h2>
-            <p className="text-slate-300 text-sm sm:text-base mt-4 max-w-2xl mx-auto leading-relaxed">
-              BilimYo‘l Smart Edu ochiq kodli, server-side baholash va Gemini 2.5 Flash Edge Function himoyasiga ega.
-            </p>
-          </motion.div>
-
-          <div className="max-w-4xl mx-auto rounded-3xl bg-slate-950 border border-white/15 overflow-hidden shadow-2xl backdrop-blur-xl">
-            {/* API Tab switcher */}
-            <div className="flex border-b border-white/10 bg-slate-900/90">
-              <button
-                onClick={() => setActiveApiTab('diagnostics')}
-                className={`flex-1 py-3 px-4 text-xs font-bold transition-colors cursor-pointer ${
-                  activeApiTab === 'diagnostics' ? 'bg-slate-950 text-cyan-400 border-b-2 border-cyan-500 font-black' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Edge Function: yolchi-tutor
-              </button>
-              <button
-                onClick={() => setActiveApiTab('scoring')}
-                className={`flex-1 py-3 px-4 text-xs font-bold transition-colors cursor-pointer ${
-                  activeApiTab === 'scoring' ? 'bg-slate-950 text-cyan-400 border-b-2 border-cyan-500 font-black' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                RPC: submit_answer_attempt()
-              </button>
-              <button
-                onClick={() => setActiveApiTab('lessons')}
-                className={`flex-1 py-3 px-4 text-xs font-bold transition-colors cursor-pointer ${
-                  activeApiTab === 'lessons' ? 'bg-slate-950 text-cyan-400 border-b-2 border-cyan-500 font-black' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                RLS: Anti-Cheat Siyosati
-              </button>
-            </div>
-
-            {/* API Code & Payload */}
-            <div className="p-6 font-mono text-xs space-y-4 bg-slate-950 text-slate-100">
+            {/* Terminal Body */}
+            <div className="p-6 font-mono text-xs space-y-4">
               {activeApiTab === 'diagnostics' && (
                 <>
                   <div className="text-slate-400 text-[11px]">
-                    # Supabase Deno Edge Function — Gemini 2.5 Flash bilan dars/izoh generatsiyasi
+                    # Adaptiv Savol Tanlash Algoritmi (AdaptiveQuestionSelector.ts)
                   </div>
-                  <div className="p-4 rounded-xl bg-black/60 border border-slate-800 text-cyan-300 overflow-x-auto">
-                    <pre>{`curl -X POST "https://<supabase-project>.functions.supabase.co/yolchi-tutor" \\
-  -H "Authorization: Bearer <ANON_KEY>" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "action": "explain_error",
-    "courseId": "course_math_01",
-    "question": "f(x) = 2x + 3 funksiyada x = 4 bo‘lsa, f(x) ni toping.",
-    "userAnswer": "9",
-    "weakestSkill": "Funksiyalar va formulalar",
-    "language": "uz"
-  }'`}</pre>
+                  <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-cyan-300 overflow-x-auto">
+                    <pre>{`// O‘quvchi javobiga qarab qiyinlik darajasi real vaqtda moslashadi
+const nextQuestion = AdaptiveEngine.selectNextQuestion({
+  currentSkillMastery: 42, // Foizda (0-100%)
+  recentAttempts: ['correct', 'wrong', 'correct'],
+  targetDifficulty: 'medium',
+  excludedQuestionIds: ['q_math_01', 'q_math_02']
+});
+
+console.log('Keyingi optimal savol:', nextQuestion.id);`}</pre>
                   </div>
-                  <div className="text-slate-400 text-[11px]">Server Response (Gemini 2.5 Flash Structured JSON):</div>
-                  <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/40 text-emerald-300 overflow-x-auto">
+                  <div className="text-slate-400 text-[11px]">Server Response (JSON):</div>
+                  <div className="p-4 rounded-xl bg-black/60 border border-cyan-500/40 text-emerald-400 overflow-x-auto">
                     <pre>{`{
-  "explanation": "Qadamma-qadam tahlil qilamiz: x o‘rniga 4 qo‘yilganda, birinchi bo‘lib ko‘paytirish bajariladi: 2 * 4 = 8. Keyin 3 qo‘shiladi: 8 + 3 = 11. Siz 9 deb adashganingiz ko‘paytirishdagi ehtiyotsizlik bo‘lishi mumkin.",
-  "pedagogicalHint": "Har doim amallar tartibiga e’tibor bering: avval ko‘paytirish, so‘ng qo‘shish!",
-  "isDeterministicFallback": false,
-  "recommendedStep": "practice_functions_linear"
+  "status": "ready",
+  "skill_id": "skill_math_functions",
+  "recommended_difficulty": "medium",
+  "reason": "O‘quvchi 'Tenglamalar' mavzusini 80% o‘zlashtirgan, endi 'Funksiyalar' ga o‘tildi.",
+  "latency_ms": 48
+}`}</pre>
+                  </div>
+                </>
+              )}
+
+              {activeApiTab === 'lessons' && (
+                <>
+                  <div className="text-slate-400 text-[11px]">
+                    # Gemini 2.5 Flash bilan Dars Generatsiyasi (generate-lesson Edge Function)
+                  </div>
+                  <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-purple-300 overflow-x-auto">
+                    <pre>{`// Deno Edge Function: Google Gemini 2.5 Flash chaqiruvi
+const response = await aiClient.models.generateContent({
+  model: 'gemini-2.5-flash',
+  contents: [
+    { role: 'user', parts: [{ text: generateLessonPrompt(skill, currentScore) }] }
+  ],
+  config: {
+    temperature: 0.3,
+    responseMimeType: 'application/json',
+    responseSchema: LessonJsonSchema
+  }
+});`}</pre>
+                  </div>
+                  <div className="text-slate-400 text-[11px]">Server Response (JSON):</div>
+                  <div className="p-4 rounded-xl bg-black/60 border border-purple-500/40 text-purple-300 overflow-x-auto">
+                    <pre>{`{
+  "lesson_id": "gen_lesson_9210",
+  "title": "Chiziqli Funksiyaning Grafik Modeli",
+  "steps": [
+    { "type": "concept", "summary": "y = kx + b formulasi burchak koeffitsienti bilan ishlaydi" },
+    { "type": "visual", "interactive_model": "linear_graph_builder" },
+    { "type": "reinforcement", "check_question": "k musbat bo‘lsa grafik qaysi choraklardan o‘tadi?" }
+  ]
 }`}</pre>
                   </div>
                 </>
@@ -1594,9 +1552,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               {activeApiTab === 'scoring' && (
                 <>
                   <div className="text-slate-400 text-[11px]">
-                    # PostgreSQL RPC: submit_answer_attempt() — Server-side xolis scoring va XP berish
+                    # PostgreSQL RPC: submit_answer_attempt() — Server-side xolis scoring va Anti-Cheat
                   </div>
-                  <div className="p-4 rounded-xl bg-black/60 border border-slate-800 text-amber-300 overflow-x-auto">
+                  <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-amber-300 overflow-x-auto">
                     <pre>{`-- SQL RPC chaqiruvi (Frontend to‘g‘ri javob indeksini bila olmaydi)
 SELECT public.submit_answer_attempt(
   p_user_id := auth.uid(),
@@ -1620,39 +1578,181 @@ SELECT public.submit_answer_attempt(
                   </div>
                 </>
               )}
-
-              {activeApiTab === 'lessons' && (
-                <>
-                  <div className="text-slate-400 text-[11px]">
-                    # Row Level Security (RLS) & Anti-Cheat Xavfsizlik Siyosati
-                  </div>
-                  <div className="p-4 rounded-xl bg-black/60 border border-slate-800 text-purple-300 overflow-x-auto">
-                    <pre>{`-- answer_attempts jadvali faqat authenticated userlar uchun
-ALTER TABLE public.answer_attempts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can only read their own attempts"
-  ON public.answer_attempts FOR SELECT
-  USING (auth.uid() = user_id);
-
--- O‘quvchi to‘g‘ridan-to‘g‘ri ball yoki XP yozolmaydi: faqat RPC ruxsat berilgan
-REVOKE INSERT, UPDATE ON public.gamification_profiles FROM authenticated;
-GRANT EXECUTE ON FUNCTION public.submit_answer_attempt TO authenticated;`}</pre>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </section>
 
-        {/* 11. FOOTER & FINAL CALL TO ACTION */}
-        <footer className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 text-center space-y-6">
+        {/* 10. SECTION 7: INTERAKTIV AI-CHATBOT (SAVOL-JAVOB EMULATORI) */}
+        <section id="ai-chatbot" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <span className="text-emerald-400 bg-emerald-950/80 px-3.5 py-1 rounded-full border border-emerald-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+              QO‘SHIMCHA BONUS VAZIFA • LIVE DEMO
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
+              Yo‘lchi AI Bilan Jonli Muloqot
+            </h2>
+            <p className="text-slate-300 text-sm sm:text-base mt-3">
+              Yo‘lchi AI bilan hoziroq real vaqtda sinab ko‘ring yoki quyidagi namunaviy savollarni bosing.
+            </p>
+          </motion.div>
+
+          <div className="max-w-3xl mx-auto rounded-3xl bg-slate-900/90 border border-white/15 overflow-hidden shadow-2xl backdrop-blur-2xl">
+            {/* Chat Header */}
+            <div className="p-4 bg-slate-950/80 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <YolchiAIMascot size="sm" mood="happy" />
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    Yo‘lchi AI Mentori
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  </h4>
+                  <p className="text-[10px] text-slate-400">Google Gemini 2.5 Flash bilan integratsiyalashgan</p>
+                </div>
+              </div>
+              <button
+                onClick={onNavigateAiTutor}
+                className="text-xs text-cyan-400 hover:text-cyan-300 underline font-bold flex items-center gap-1 cursor-pointer"
+              >
+                To‘liq ekranda ochish →
+              </button>
+            </div>
+
+            {/* Chat Body */}
+            <div className="p-5 space-y-4 max-h-80 overflow-y-auto bg-black/40">
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium rounded-br-none shadow-md'
+                        : 'bg-slate-800/90 text-slate-200 rounded-bl-none border border-white/10 shadow-md'
+                    }`}
+                  >
+                    {msg.text}
+                    <div
+                      className={`text-[9px] mt-1 text-right ${
+                        msg.role === 'user' ? 'text-cyan-200' : 'text-slate-400'
+                      }`}
+                    >
+                      {msg.time}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {isBotThinking && (
+                <div className="flex justify-start">
+                  <div className="p-3 rounded-2xl bg-slate-800 border border-white/10 text-xs text-cyan-300 flex items-center gap-2 animate-pulse shadow-md">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Yo‘lchi AI tahlil qilmoqda...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Sample Prompts */}
+            <div className="p-3 bg-slate-950/60 border-t border-white/10">
+              <div className="text-[11px] text-slate-400 font-bold mb-2">Namunaviy savollar (bir marta bosing):</div>
+              <div className="flex flex-wrap gap-2">
+                {samplePrompts.map((p, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendQuestion(p.q)}
+                    className="text-left text-[11px] px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white shadow-sm transition-colors cursor-pointer"
+                  >
+                    💡 {p.q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-3 bg-slate-900 border-t border-white/10 flex items-center gap-2">
+              <input
+                type="text"
+                value={inputQuestion}
+                onChange={(e) => setInputQuestion(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendQuestion()}
+                placeholder="Yo‘lchi AI ga ixtiyoriy savol bering..."
+                className="flex-1 bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:bg-black/70"
+              />
+              <button
+                onClick={() => handleSendQuestion()}
+                className="p-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 rounded-xl font-bold transition-colors cursor-pointer shadow-md"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* 11. SECTION 8: /DEMO VIDEO CALLOUT & CTA */}
+        <section id="demo-cta" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/70 to-blue-950/70 border-2 border-cyan-500/40 shadow-[0_0_80px_rgba(6,182,212,0.25)] text-center max-w-4xl mx-auto space-y-6 text-white backdrop-blur-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-cyan-300 text-xs font-black backdrop-blur-md border border-white/15">
+              <Play className="w-3.5 h-3.5 fill-current" />
+              6-TALAB: /demo SAHIFASI TAYYOR
+            </div>
+
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+              Haqiqiy Ekran Yozuvi & Ovozli Demo Video
+            </h2>
+
+            <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+              Hakamlar va investorlar uchun platformaning to‘liq 1–5 daqiqalik dars jarayoni, diagnostikasi va ishlash mexanizmi aks etgan maxsus <strong>/demo</strong> sahifasi tayyorlandi.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateDemo();
+                }}
+                className="bg-white hover:bg-slate-100 text-slate-950 font-black px-8 py-4 text-base rounded-2xl shadow-xl flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-y-0.5"
+              >
+                /demo Sahifasiga O‘tish <ArrowRight className="w-4 h-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  triggerCelebration();
+                  onNavigateApp();
+                }}
+                className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold px-8 py-4 text-base rounded-2xl flex items-center gap-2 cursor-pointer shadow-lg backdrop-blur-md"
+              >
+                <Zap className="w-4 h-4 text-amber-400" />
+                Jonli Prototip
+              </Button>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* 12. FOOTER & FINAL CALL TO ACTION */}
+        <footer className="py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 text-center space-y-4 text-slate-400">
           <div className="flex items-center justify-center gap-2">
             <BilimYolLogo size="md" />
           </div>
           <p className="text-xs text-slate-400 max-w-xl mx-auto">
             BilimYo‘l Smart Edu — Pitch Day 3.0 (AIFU) ishtirokchisi. Barcha huquqlar himoyalangan © 2026.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-bold text-cyan-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-cyan-400">
             <button onClick={onNavigateDemo} className="hover:underline cursor-pointer">
               /demo Sahifasi
             </button>
