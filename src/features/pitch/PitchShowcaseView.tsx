@@ -585,21 +585,23 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
         {/* 6. SECTION 4: YO'L XARITASI (IDEA → PROTOTYPE → MVP → LAUNCHED & SCALE) */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 text-xs font-black tracking-widest uppercase">4. ASOSIY BOSQICH</span>
+            <span className="text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 text-xs font-black tracking-widest uppercase">
+              4. ASOSIY BOSQICH
+            </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
               Yo‘l Xaritasi & Moliyalashtirish Smeta (Roadmap)
             </h2>
             <p className="text-slate-600 text-sm sm:text-base mt-3">
-              Tahminiy va haddan tashqari shishirilgan raqamlar emas — aniq vaqt, real ko‘rsatkichlar (KPI) va $45,000 miqdoridagi shaffof byudjet taqsimoti.
+              Tahminiy va haddan tashqari shishirilgan raqamlar emas — 2026-yilgi real vaqt, aniq ko‘rsatkichlar (KPI) va $45,000 miqdoridagi to‘liq asoslangan byudjet taqsimoti.
             </p>
           </div>
 
           {/* Interactive Stage Selector */}
           <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
             {[
-              { id: 'idea', label: '1. IDEA', badge: 'Avg 2024 • $1.5K', statusBadge: '100% Bajarildi' },
-              { id: 'prototype', label: '2. PROTOTYPE', badge: 'Sen 2024 • $2.5K', statusBadge: '100% Bajarildi' },
-              { id: 'mvp', label: '3. MVP (HOZIRGI)', badge: 'Okt 2024 • $6K', statusBadge: 'Jonli & Testlangan' },
+              { id: 'idea', label: '1. IDEA', badge: 'Iyul – Avg 2026 • $800', statusBadge: '100% Bajarildi' },
+              { id: 'prototype', label: '2. PROTOTYPE', badge: 'Avg – Sen 2026 • $1.4K', statusBadge: '100% Bajarildi' },
+              { id: 'mvp', label: '3. MVP (HOZIRGI)', badge: 'Okt 2026 • $2.8K', statusBadge: 'Jonli & Testlangan' },
               { id: 'launched', label: '4. LAUNCH & SCALE', badge: '6 oy • $45K Pre-Seed', statusBadge: 'Amalga oshirilmoqda' },
             ].map((stage) => (
               <button
@@ -631,8 +633,8 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div>
                     <h3 className="text-xl font-black text-slate-900">1-Bosqich: IDEA (G‘oya & Bozor Validatsiyasi)</h3>
                     <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> Avgust 2024 (1 oy)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $1,500 Bootstrapping</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> Iyul – Avgust 2026 (2 oy)</span>
+                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $800 Shaxsiy Sarmoya</span>
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold self-start sm:self-auto">
@@ -653,7 +655,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> EdTech B2B va B2C bozor ehtiyojlari validatsiyasi
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $1,500 shaxsiy mablag‘ bilan to‘liq yakunlandi
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $800 tadqiqot xarajatlari bilan to‘liq yakunlandi
                   </div>
                 </div>
               </motion.div>
@@ -665,8 +667,8 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div>
                     <h3 className="text-xl font-black text-blue-900">2-Bosqich: PROTOTYPE (Algoritm & Dastlabki AI)</h3>
                     <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-blue-600" /> Sentabr 2024 (1 oy)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $2,500 Bootstrapping</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-blue-600" /> Avgust – Sentabr 2026 (1.5 oy)</span>
+                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $1,400 Shaxsiy Sarmoya</span>
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold self-start sm:self-auto">
@@ -687,7 +689,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> Yo‘lchi AI javob to‘g‘rilash va yo‘naltirish mexanizmi
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $2,500 AI API va dastlabki infratuzilma sinovi
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> $1,400 AI API va infratuzilma sinovi
                   </div>
                 </div>
               </motion.div>
@@ -699,8 +701,8 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div>
                     <h3 className="text-xl font-black text-cyan-900">3-Bosqich: MVP (To‘liq Ishlayotgan Tizim — HOZIRDA JONLI)</h3>
                     <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> Oktabr 2024 (Jonli Holat)</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $6,000 Sarflangan (Asoschilar)</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-cyan-600" /> 12-Sentabr – 11-Oktyabr 2026 (Pitch Day 3.0)</span>
+                      <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-600" /> $2,800 Sarflangan (Asoschilar)</span>
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-bold self-start sm:self-auto">
@@ -736,7 +738,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </h3>
                     <p className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-3">
                       <span className="flex items-center gap-1 font-semibold text-purple-800">
-                        <Clock className="w-3.5 h-3.5 text-purple-600" /> Muddat: 6 oy (Noyabr 2024 – Aprel 2025)
+                        <Clock className="w-3.5 h-3.5 text-purple-600" /> Muddat: 6 oy (Noyabr 2026 – Aprel 2027)
                       </span>
                       <span className="flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                         <DollarSign className="w-3.5 h-3.5 text-emerald-600" /> Talab Qilinayotgan Byudjet: $45,000 Pre-Seed
@@ -781,49 +783,60 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-emerald-600" />
-                      $45,000 Byudjetning Aniq Va Shaffof Taqsimoti:
+                      $45,000 Byudjetning Aniq Va Shaffof Taqsimoti (6 Oy):
                     </span>
                     <span className="text-[11px] font-mono text-emerald-700 font-bold">100% Balanslangan</span>
                   </div>
 
                   {/* Multi-color Progress bar */}
                   <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden flex">
-                    <div style={{ width: '27%' }} className="bg-cyan-500" title="AI & Server (27%)" />
-                    <div style={{ width: '24%' }} className="bg-purple-500" title="B2B Maktablar (24%)" />
-                    <div style={{ width: '22%' }} className="bg-emerald-500" title="Metodologiya (22%)" />
-                    <div style={{ width: '18%' }} className="bg-amber-500" title="Marketing (18%)" />
-                    <div style={{ width: '9%' }} className="bg-rose-500" title="Yuridik & Zaxira (9%)" />
+                    <div style={{ width: '40%' }} className="bg-indigo-600" title="Jamoa & Ishlab chiqish (40%)" />
+                    <div style={{ width: '18%' }} className="bg-emerald-500" title="Metodologiya & Darslar (18%)" />
+                    <div style={{ width: '13%' }} className="bg-purple-500" title="B2B Pilot Maktablar (13%)" />
+                    <div style={{ width: '11%' }} className="bg-cyan-500" title="AI Modellar & Server (11%)" />
+                    <div style={{ width: '11%' }} className="bg-amber-500" title="GTM & Jalb qilish (11%)" />
+                    <div style={{ width: '7%' }} className="bg-rose-500" title="Yuridik & IP (7%)" />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
                       <div>
                         <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-cyan-500" /> AI & Server Infratuzilmasi
+                          <span className="w-2 h-2 rounded-full bg-indigo-600" /> Asosiy Jamoa & Ishlab Chiqish (6 oy)
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Gemini 2.5 tokenlari, Supabase Pro, audio TTS/CDN</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">3 nafar mutaxassis (Lead Dev, Fullstack, AI) to‘liq stavka mehnati</div>
                       </div>
-                      <span className="font-mono font-bold text-cyan-700 shrink-0">$12,000 (27%)</span>
+                      <span className="font-mono font-bold text-indigo-700 shrink-0">$18,000 (40%)</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
                       <div>
                         <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-purple-500" /> B2B Maktablar Integratsiyasi
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Metodologiya & Darsliklar Bazasi
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">10 maktab tahlil paneli, pilot trening va texnik servis</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">5–11-sinf matematika, ingliz tili, fizika ekspert metodistlari, 5,000+ test</div>
                       </div>
-                      <span className="font-mono font-bold text-purple-700 shrink-0">$11,000 (24%)</span>
+                      <span className="font-mono font-bold text-emerald-700 shrink-0">$8,000 (18%)</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
                       <div>
                         <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Metodologiya & Fanlar Kengayishi
+                          <span className="w-2 h-2 rounded-full bg-purple-500" /> 10 Ta B2B Pilot Maktablar Integratsiyasi
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Prezident maktablari moduli, Fizika, ekspert auditi</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">O‘qituvchilar paneli, maktablarda o‘qitish va amaliy servis joriy etish</div>
                       </div>
-                      <span className="font-mono font-bold text-emerald-700 shrink-0">$10,000 (22%)</span>
+                      <span className="font-mono font-bold text-purple-700 shrink-0">$6,000 (13%)</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
+                      <div>
+                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-cyan-500" /> AI Modellar & Bulut Infratuzilmasi
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Gemini 2.5 Flash tokenlari, Supabase Pro, Vercel, Audio TTS (~$800/oy)</div>
+                      </div>
+                      <span className="font-mono font-bold text-cyan-700 shrink-0">$5,000 (11%)</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
@@ -831,19 +844,19 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                         <div className="font-bold text-slate-800 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-amber-500" /> GTM & O‘quvchilarni Jalb Qilish
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Ota-onalar bepul diagnostika oyligi, maqsadli target</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Ota-onalar bepul diagnostika oyligi, maktab olimpiadalari, target</div>
                       </div>
-                      <span className="font-mono font-bold text-amber-700 shrink-0">$8,000 (18%)</span>
+                      <span className="font-mono font-bold text-amber-700 shrink-0">$5,000 (11%)</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between sm:col-span-2 shadow-2xs">
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start justify-between shadow-2xs">
                       <div>
                         <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-rose-500" /> Yuridik Rasmiylashtirish, IP & Favqulodda Zaxira
+                          <span className="w-2 h-2 rounded-full bg-rose-500" /> Yuridik, IT Park & IP Himoyasi
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Dasturiy intellektual mulk (IP), B2B shartnomalar va kutilmagan xarajatlar zaxirasi</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">MChJ/IT Park rezidentligi, dasturiy patent/guvohnoma, shartnomalar</div>
                       </div>
-                      <span className="font-mono font-bold text-rose-700 shrink-0">$4,000 (9%)</span>
+                      <span className="font-mono font-bold text-rose-700 shrink-0">$3,000 (7%)</span>
                     </div>
                   </div>
                 </div>
@@ -851,19 +864,19 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 {/* 3 Clear Timeline Sprints */}
                 <div className="pt-2">
                   <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                    6 Oylik Bosqichma-Bosqich Reja (Sprints):
+                    6 Oylik Bosqichma-Bosqich Reja (Sprints 2026–2027):
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-cyan-700 uppercase">1–2 Oylar (Noyabr – Dekabr)</div>
+                      <div className="text-[11px] font-black text-cyan-700 uppercase">1–2 Oylar (Noyabr – Dekabr 2026)</div>
                       <div className="text-xs font-bold text-slate-900">B2B Pilot & Maktablar</div>
                       <p className="text-[11px] text-slate-600 leading-relaxed">
-                        10 ta pilot maktabga ulanish, o‘qituvchilar paneli joriy etilishi, 1,000 ta ilk faol o‘quvchi oqimi.
+                        10 ta pilot maktabga ulanish, o‘qituvchilar monitoring paneli joriy etilishi, 1,000 ta ilk faol o‘quvchi oqimi.
                       </p>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-purple-700 uppercase">3–4 Oylar (Yanvar – Fevral)</div>
+                      <div className="text-[11px] font-black text-purple-700 uppercase">3–4 Oylar (Yanvar – Fevral 2027)</div>
                       <div className="text-xs font-bold text-slate-900">Kontent & Audio Mentor</div>
                       <p className="text-[11px] text-slate-600 leading-relaxed">
                         Prezident maktablari moduli, Fizika kursi, Yo‘lchi ovozli tushuntirish, 3,000 nafar faol o‘quvchi.
@@ -871,7 +884,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                      <div className="text-[11px] font-black text-emerald-700 uppercase">5–6 Oylar (Mart – Aprel)</div>
+                      <div className="text-[11px] font-black text-emerald-700 uppercase">5–6 Oylar (Mart – Aprel 2027)</div>
                       <div className="text-xs font-bold text-slate-900">B2C Monetizatsiya & Scale</div>
                       <p className="text-[11px] text-slate-600 leading-relaxed">
                         Click / Payme to‘lov integratsiyasi, 5,000 nafar MAU va operatsion o‘zini-o‘zi qoplash (breakeven).
