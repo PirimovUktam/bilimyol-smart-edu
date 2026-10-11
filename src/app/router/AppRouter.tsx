@@ -241,7 +241,7 @@ export const AppRouter: React.FC = () => {
     (currentView === 'admin' && userRole !== 'admin');
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans ${isPitchOrDemo ? 'bg-[#0A0D14] text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
       {/* Main Navigation (Hidden on standalone Auth screens & Pitch/Demo presentations) */}
       {!isAuthView && !isPitchOrDemo && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />

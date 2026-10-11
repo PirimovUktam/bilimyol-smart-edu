@@ -228,21 +228,21 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0D14] text-white selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-cyan-500 selection:text-white">
       {/* Background Decorative Mesh Gradients */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[160px]" />
-        <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-[150px]" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-200/50 rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-200/40 rounded-full blur-[160px]" />
+        <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-emerald-200/30 rounded-full blur-[150px]" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         {/* TOP BAR */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <BilimYolLogo size="md" />
-            <span className="text-slate-600">/</span>
-            <span className="text-xs font-black uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-xl">
+            <span className="text-slate-400">/</span>
+            <span className="text-xs font-black uppercase tracking-wider text-cyan-800 bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-xl">
               Demo Showcase (/demo)
             </span>
           </div>
@@ -250,7 +250,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onNavigatePitch}
-              className="text-xs font-bold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
             >
               ← Pitch Day 3.0 Taqdimotiga Qaytish
             </button>
@@ -258,7 +258,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               variant="primary"
               size="sm"
               onClick={onNavigateCourses}
-              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl cursor-pointer"
+              className="bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
             >
               Jonli Prototipni Ochish <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -267,27 +267,27 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
         {/* DEMO HERO HEADER */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Pitch Day 3.0 — 6-Talab: /demo Sahifasi</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-cyan-300">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
             BilimYo‘l Smart Edu Demo Videosi
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-400">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Haqiqiy ishlayotgan ilovadan 9:16 telefon ekranida yozib olingan 2 daqiqa 13 soniyalik professional ovozli video: diagnostikadan tortib to Yo‘lchi AI orqali darsni mustahkamlashgacha.
           </p>
 
           {/* Mode Switcher Tabs */}
-          <div className="inline-flex p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+          <div className="inline-flex p-1 rounded-2xl bg-slate-200/80 border border-slate-300">
             <button
               onClick={() => setPlayerMode('video')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 playerMode === 'video'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-cyan-600 text-white shadow-md font-black'
+                  : 'text-slate-700 hover:text-slate-900'
               }`}
             >
               <Video className="w-3.5 h-3.5" />
@@ -298,7 +298,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 playerMode === 'simulation'
                   ? 'bg-indigo-600 text-white shadow-md font-black'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-slate-700 hover:text-slate-900'
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -308,28 +308,28 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         </div>
 
         {/* 6.1. DEMO-VIDEO PLAYER CONTAINER */}
-        <div className="rounded-3xl bg-slate-900/90 border-2 border-cyan-500/30 shadow-2xl shadow-cyan-950/50 overflow-hidden backdrop-blur-xl">
+        <div className="rounded-3xl bg-white border border-slate-200 shadow-xl overflow-hidden">
           {/* Top Video Header Bar */}
-          <div className="p-4 bg-slate-950/80 border-b border-white/10 flex items-center justify-between">
+          <div className="p-4 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
               </div>
-              <span className="text-xs font-bold text-slate-300">
+              <span className="text-xs font-bold text-slate-800">
                 BilimYo‘l Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (1080p Desktop • O‘zbekcha Ovoz)
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-black border border-cyan-500/40">
+              <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 text-[10px] font-black border border-cyan-200">
                 1920×1080 Full HD (16:9)
               </span>
               <a
                 href="/videos/bilimyol-pitch-demo.mp4"
                 download="bilimyol-pitch-demo.mp4"
-                className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                className="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold flex items-center gap-1 transition-colors shadow-sm"
                 title="Videoni yuklab olish"
               >
                 <Download className="w-3 h-3" />
@@ -727,10 +727,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               </div>
 
               {/* Scrubber Controls */}
-              <div className="p-4 bg-slate-950/90 border-t border-white/10 space-y-3">
+              <div className="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
                 <div className="space-y-1">
                   <div
-                    className="w-full h-2.5 bg-white/10 hover:h-3.5 rounded-full cursor-pointer relative transition-all"
+                    className="w-full h-2.5 bg-slate-200 hover:h-3.5 rounded-full cursor-pointer relative transition-all"
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const clickX = e.clientX - rect.left;
@@ -739,16 +739,16 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     }}
                   >
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full relative"
+                      className="h-full bg-gradient-to-r from-cyan-600 to-indigo-600 rounded-full relative"
                       style={{ width: `${(currentSeconds / TOTAL_DURATION_SECONDS) * 100}%` }}
                     >
-                      <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md" />
+                      <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md border border-slate-300" />
                     </div>
                   </div>
 
-                  <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+                  <div className="flex justify-between text-[11px] text-slate-500 font-mono">
                     <span>{formatTime(currentSeconds)}</span>
-                    <span className="text-slate-300 font-bold">{currentChapter.title}</span>
+                    <span className="text-slate-800 font-bold">{currentChapter.title}</span>
                     <span>{formatTime(TOTAL_DURATION_SECONDS)}</span>
                   </div>
                 </div>
@@ -757,7 +757,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="p-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition-all cursor-pointer"
+                      className="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all cursor-pointer shadow-sm"
                     >
                       {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
                     </button>
@@ -768,7 +768,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                         setActiveChapterIndex(0);
                         setIsPlaying(true);
                       }}
-                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm transition-colors cursor-pointer"
                       title="Qayta boshlash"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -776,7 +776,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
                     <button
                       onClick={() => setIsMuted(!isMuted)}
-                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm transition-colors cursor-pointer"
                     >
                       {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
@@ -786,7 +786,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     variant="primary"
                     size="sm"
                     onClick={onNavigateCourses}
-                    className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer"
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
                   >
                     ⚡ Bu Qadamni Jonli Sinash
                   </Button>
@@ -798,7 +798,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
         {/* CHAPTERS NAVIGATION CARDS */}
         <div className="space-y-3">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Video Bo‘limlari va Vaqt Belgilari (Timeline)
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
@@ -808,15 +808,15 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 onClick={() => handleJumpToChapter(idx)}
                 className={`p-3 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   activeChapterIndex === idx
-                    ? 'bg-cyan-950/40 border-cyan-500/60 shadow-lg shadow-cyan-950/30'
-                    : 'bg-white/[0.02] border-white/10 hover:bg-white/5 text-slate-400'
+                    ? 'bg-cyan-50 border-cyan-400 shadow-sm text-cyan-950'
+                    : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
                 }`}
               >
                 <div>
-                  <span className="text-[10px] text-cyan-400 font-bold block">{ch.timestamp}</span>
-                  <h4 className="text-xs font-bold text-white mt-1 leading-tight">{ch.title}</h4>
+                  <span className="text-[10px] text-cyan-700 font-bold block">{ch.timestamp}</span>
+                  <h4 className="text-xs font-bold text-slate-900 mt-1 leading-tight">{ch.title}</h4>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-2 block font-medium">
+                <span className="text-[10px] text-slate-500 mt-2 block font-medium">
                   {activeChapterIndex === idx ? '▶ Faol' : 'Ko‘rish →'}
                 </span>
               </button>
@@ -825,52 +825,54 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         </div>
 
         {/* 6.2. DEMO-VIDEONING BATAFSIL TAVSIFI */}
-        <section className="p-8 sm:p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-6">
-          <div className="border-b border-white/10 pb-4">
-            <span className="text-cyan-400 text-xs font-black tracking-widest uppercase">6.2-TALAB: TAVSIF</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+        <section className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+          <div className="border-b border-slate-200 pb-4">
+            <span className="text-cyan-700 bg-cyan-50 border border-cyan-200 px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase">
+              6.2-TALAB: TAVSIF
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
               Demo-videoning Pedagogik va Texnologik Tavsifi
             </h2>
           </div>
 
-          <div className="space-y-4 text-slate-300 text-sm sm:text-base leading-relaxed">
+          <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed">
             <p>
               Ushbu demo-video <strong>BilimYo‘l Smart Edu</strong> platformasining haqiqiy arxitekturasi va o‘quvchi ta’lim traektoriyasini boshidan oxirigacha yaqqol namoyish etadi:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <h3 className="font-bold text-cyan-400 flex items-center gap-2">
-                  <Compass className="w-4 h-4" /> 1. Adaptiv Bo‘shliqni Aniqlash (00:00 - 00:55)
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 className="font-bold text-cyan-800 flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-cyan-600" /> 1. Adaptiv Bo‘shliqni Aniqlash (00:00 - 00:55)
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchi fanni tanlaydi (Matematika yoki Ingliz tili). 8 ta adaptiv savoldan iborat placement test o‘quvchining xatolarini o‘rganib, uning qaysi formulalarda oqsayotganini (masalan, Funksiyalar 38%) aniq bilim xaritasiga tushiradi.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <h3 className="font-bold text-indigo-400 flex items-center gap-2">
-                  <Zap className="w-4 h-4" /> 2. Shaxsiy Ta’lim Yo‘li & Dars (00:55 - 01:55)
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 className="font-bold text-indigo-800 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-indigo-600" /> 2. Shaxsiy Ta’lim Yo‘li & Dars (00:55 - 01:55)
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchiga standart kitobdagi barcha mavzular emas, aynan uning bo‘shlig‘iga mos qadamli yo‘l ochiladi. Dars nazariya, vizual modellar va amaliy mashqlar orqali bosqichma-bosqich o‘zlashtiriladi.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <h3 className="font-bold text-emerald-400 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4" /> 3. Server-Side Scoring & Anti-Cheat (01:55 - 02:25)
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> 3. Server-Side Scoring & Anti-Cheat (01:55 - 02:25)
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchi brauzer konsoli orqali javoblarni ko‘ra olmaydi yoki XP ni soxtalashtira olmaydi. PostgreSQL RPC funksiyasi serverda javobni xolis tekshirib, xavfsiz ball beradi.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                <h3 className="font-bold text-purple-400 flex items-center gap-2">
-                  <Bot className="w-4 h-4" /> 4. Yo‘lchi AI & Natijalar (02:25 - 03:30)
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <h3 className="font-bold text-purple-800 flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-purple-600" /> 4. Yo‘lchi AI & Natijalar (02:25 - 03:30)
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Supabase Edge Function orqali Google Gemini 2.5 Flash mentori xatolikning asl sababini pedagogik uslubda tushuntiradi. O‘quvchi paneli bilim darajasi o‘sganini real vaqtda aks ettiradi.
                 </p>
               </div>
@@ -879,8 +881,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         </section>
 
         {/* 6.3. ISHLAYOTGAN PROTOTIP HAVOLALARI */}
-        <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-blue-950/40 to-indigo-950/40 border-2 border-cyan-500/40 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400 text-slate-950 text-xs font-black">
+        <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-blue-700 text-white shadow-xl text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white text-xs font-black backdrop-blur-md">
             <CheckCircle2 className="w-3.5 h-3.5" />
             6.3-TALAB: ISHLAYOTGAN PROTOTIP HAVOLASI
           </div>
@@ -889,7 +891,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
             Hozirning O‘zida Jonli Prototipni Sinab Ko‘ring
           </h2>
 
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
+          <p className="text-cyan-50 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Hakamlar va investorlar to‘g‘ridan-to‘g‘ri brauzerda yoki mobil ilova orqali real ta’lim jarayonini o‘z ko‘zlari bilan sinab ko‘rishlari mumkin:
           </p>
 
@@ -898,9 +900,9 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               variant="primary"
               size="md"
               onClick={onNavigateCourses}
-              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-8 py-3.5 rounded-2xl shadow-xl shadow-cyan-500/25 flex items-center gap-3 cursor-pointer text-sm"
+              className="bg-white hover:bg-slate-100 text-slate-950 font-black px-8 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 cursor-pointer text-sm transition-all transform hover:-translate-y-0.5"
             >
-              <Zap className="w-4 h-4 fill-current" />
+              <Zap className="w-4 h-4 fill-current text-amber-500" />
               1. Fanni Tanlash va Diagnostika (/courses)
             </Button>
 
@@ -908,9 +910,9 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               variant="outline"
               size="md"
               onClick={onNavigateDashboard}
-              className="bg-white/5 hover:bg-white/10 border-white/20 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
+              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-emerald-300" />
               2. O‘quvchi Dashboardini Ko‘rish (/dashboard)
             </Button>
 
@@ -918,9 +920,9 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               variant="outline"
               size="md"
               onClick={onNavigateAiTutor}
-              className="bg-white/5 hover:bg-white/10 border-white/20 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
+              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
-              <Bot className="w-4 h-4 text-indigo-400" />
+              <Bot className="w-4 h-4 text-indigo-300" />
               3. Yo‘lchi AI Chatini Sinash (/ai-tutor)
             </Button>
 
@@ -928,7 +930,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               href="https://github.com/pirimovuktam/bilimyol-smart-edu"
               target="_blank"
               rel="noreferrer"
-              className="px-6 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/20 text-slate-300 hover:text-white font-bold flex items-center gap-2 text-sm transition-colors"
+              className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold flex items-center gap-2 text-sm transition-colors backdrop-blur-md"
             >
               <ExternalLink className="w-4 h-4" />
               GitHub Repozitoriyasi (Open Source)
