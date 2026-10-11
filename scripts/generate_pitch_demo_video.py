@@ -182,8 +182,9 @@ def create_scene_frame(img_path, scene_info, progress=0.0):
 def main():
     print("Generating official Pitch Day 3.0 Demo Video from real app recording...")
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    temp_raw = OUTPUT_PATH.replace(".mp4", "_raw.mp4")
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    writer = cv2.VideoWriter(OUTPUT_PATH, fourcc, FPS, (WIDTH, HEIGHT))
+    writer = cv2.VideoWriter(temp_raw, fourcc, FPS, (WIDTH, HEIGHT))
 
     total_scenes = len(SCENES)
     for idx, sc in enumerate(SCENES):
@@ -193,12 +194,62 @@ def main():
         base_frame = create_scene_frame(sc['file'], sc)
 
         for f in range(num_frames):
-            # Write frame
             writer.write(base_frame)
 
     writer.release()
-    file_size_mb = os.path.getsize(OUTPUT_PATH) / (1024 * 1024)
-    print(f"SUCCESS! Video written to {OUTPUT_PATH} ({file_size_mb:.2f} MB)")
+    print("Transcoding to universal web-standard H.264 (avc1) + AAC audio with faststart...")
+    
+    try:
+        import imageio_ffmpeg
+        import subprocess
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        
+        # 1. H.264 MP4
+        cmd_mp4 = [
+            exe, '-y',
+            '-i', temp_raw,
+            '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100',
+            '-c:v', 'libx264',
+            '-profile:v', 'main',
+            '-level', '4.0',
+            '-pix_fmt', 'yuv420p',
+            '-crf', '24',
+            '-preset', 'fast',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-shortest',
+            '-movflags', '+faststart',
+            OUTPUT_PATH
+        ]
+        subprocess.run(cmd_mp4, check=True)
+        if os.path.exists(temp_raw):
+            os.remove(temp_raw)
+
+        # 2. WebM Fallback
+        webm_path = OUTPUT_PATH.replace(".mp4", ".webm")
+        cmd_webm = [
+            exe, '-y',
+            '-i', OUTPUT_PATH,
+            '-c:v', 'libvpx-vp9',
+            '-crf', '32',
+            '-b:v', '0',
+            '-deadline', 'realtime',
+            '-cpu-used', '8',
+            '-threads', '8',
+            '-c:a', 'libopus',
+            webm_path
+        ]
+        subprocess.run(cmd_webm, check=True)
+        
+        file_size_mb = os.path.getsize(OUTPUT_PATH) / (1024 * 1024)
+        print(f"SUCCESS! Web-compliant H.264 video written to {OUTPUT_PATH} ({file_size_mb:.2f} MB)")
+        print(f"SUCCESS! WebM fallback written to {webm_path}")
+    except Exception as e:
+        print(f"Notice: ffmpeg transcode error ({e}), keeping raw file.")
+        if os.path.exists(temp_raw):
+            if os.path.exists(OUTPUT_PATH):
+                os.remove(OUTPUT_PATH)
+            os.rename(temp_raw, OUTPUT_PATH)
 
 if __name__ == "__main__":
     main()

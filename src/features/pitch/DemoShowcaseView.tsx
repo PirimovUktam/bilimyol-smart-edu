@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
@@ -19,6 +19,8 @@ import {
   Video,
   Download,
   ExternalLink,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
@@ -31,6 +33,67 @@ interface DemoShowcaseViewProps {
   onNavigatePitch: () => void;
 }
 
+const DEMO_CHAPTERS = [
+  {
+    title: '1. Kirish va Fan Tanlash',
+    timestamp: '00:00 - 00:30',
+    secondsStart: 0,
+    description: 'O‘quvchi platformaga kiradi, Matematika yoki Ingliz tili fanini tanlaydi va o‘z maqsadini belgilaydi.',
+    screen: 'course-selection',
+    highlightBadge: 'Tanlov & Onboarding',
+  },
+  {
+    title: '2. Adaptiv Diagnostika (Placement Test)',
+    timestamp: '00:30 - 00:55',
+    secondsStart: 30,
+    description: '8 ta aqlli savol orqali barcha ko‘nikmalar tekshiriladi. Tizim o‘quvchining zaif nuqtasini xolis skanerlaydi.',
+    screen: 'placement',
+    highlightBadge: 'Ko‘nikmalar Matritsasi',
+  },
+  {
+    title: '3. Bilim Xaritasi va Yo‘l Xaritasi',
+    timestamp: '00:55 - 01:20',
+    secondsStart: 55,
+    description: '0-100% shkalada shakllantirilgan bilim xaritasi va o‘quvchining shaxsiy individual traektoriyasi ochiladi.',
+    screen: 'roadmap',
+    highlightBadge: 'Knowledge Graph',
+  },
+  {
+    title: '4. Interaktiv Dars & Amaliy Mashq',
+    timestamp: '01:20 - 01:55',
+    secondsStart: 80,
+    description: 'Tushuncha, vizual grafik va amaliy savol orqali dars o‘zlashtiriladi va javob topshiriladi.',
+    screen: 'lesson',
+    highlightBadge: 'Interaktiv Dars',
+  },
+  {
+    title: '5. Server-Side Scoring & Anti-Cheat',
+    timestamp: '01:55 - 02:25',
+    secondsStart: 115,
+    description: 'Baholash PostgreSQL RPC orqali serverda mustaqil bajariladi. +20 XP beriladi va natijalar yangilanadi.',
+    screen: 'scoring',
+    highlightBadge: 'Anti-Cheat Himoyasi',
+  },
+  {
+    title: '6. Yo‘lchi AI Shaxsiy Mentori',
+    timestamp: '02:25 - 03:00',
+    secondsStart: 145,
+    description: 'Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI xatolikni pedagogik tahlil qilib, to‘g‘ri fikrlashga yo‘naltiradi.',
+    screen: 'ai-tutor',
+    highlightBadge: 'Yo‘lchi AI & Gemini',
+  },
+  {
+    title: '7. Natijalar, Dashboard va Yakun',
+    timestamp: '03:00 - 03:30',
+    secondsStart: 180,
+    description: 'O‘quvchi o‘sish ko‘rsatkichlarini, streak va yangi ochilgan darslarini o‘z panelida ko‘radi.',
+    screen: 'dashboard',
+    highlightBadge: 'O‘quvchi Dashboardi',
+  },
+];
+
+const TOTAL_DURATION_SECONDS = 210; // 3 minutes 30 seconds
+
 export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
   onNavigateCourses,
   onNavigateDashboard,
@@ -40,72 +103,16 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
   // Player mode: real MP4 video or interactive simulation
   const [playerMode, setPlayerMode] = useState<'video' | 'simulation'>('video');
 
+  // Video element ref and playback state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+
   // Simulation state
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentSeconds, setCurrentSeconds] = useState(25);
   const [isMuted, setIsMuted] = useState(false);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
-
-  const totalDurationSeconds = 210; // 3 minutes 30 seconds
-
-  const chapters = [
-    {
-      title: '1. Kirish va Fan Tanlash',
-      timestamp: '00:00 - 00:30',
-      secondsStart: 0,
-      description: 'O‘quvchi platformaga kiradi, Matematika yoki Ingliz tili fanini tanlaydi va o‘z maqsadini belgilaydi.',
-      screen: 'course-selection',
-      highlightBadge: 'Tanlov & Onboarding',
-    },
-    {
-      title: '2. Adaptiv Diagnostika (Placement Test)',
-      timestamp: '00:30 - 00:55',
-      secondsStart: 30,
-      description: '8 ta aqlli savol orqali barcha ko‘nikmalar tekshiriladi. Tizim o‘quvchining zaif nuqtasini xolis skanerlaydi.',
-      screen: 'placement',
-      highlightBadge: 'Ko‘nikmalar Matritsasi',
-    },
-    {
-      title: '3. Bilim Xaritasi va Yo‘l Xaritasi',
-      timestamp: '00:55 - 01:20',
-      secondsStart: 55,
-      description: '0-100% shkalada shakllantirilgan bilim xaritasi va o‘quvchining shaxsiy individual traektoriyasi ochiladi.',
-      screen: 'roadmap',
-      highlightBadge: 'Knowledge Graph',
-    },
-    {
-      title: '4. Interaktiv Dars & Amaliy Mashq',
-      timestamp: '01:20 - 01:55',
-      secondsStart: 80,
-      description: 'Tushuncha, vizual grafik va amaliy savol orqali dars o‘zlashtiriladi va javob topshiriladi.',
-      screen: 'lesson',
-      highlightBadge: 'Interaktiv Dars',
-    },
-    {
-      title: '5. Server-Side Scoring & Anti-Cheat',
-      timestamp: '01:55 - 02:25',
-      secondsStart: 115,
-      description: 'Baholash PostgreSQL RPC orqali serverda mustaqil bajariladi. +20 XP beriladi va natijalar yangilanadi.',
-      screen: 'scoring',
-      highlightBadge: 'Anti-Cheat Himoyasi',
-    },
-    {
-      title: '6. Yo‘lchi AI Shaxsiy Mentori',
-      timestamp: '02:25 - 03:00',
-      secondsStart: 145,
-      description: 'Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI xatolikni pedagogik tahlil qilib, to‘g‘ri fikrlashga yo‘naltiradi.',
-      screen: 'ai-tutor',
-      highlightBadge: 'Yo‘lchi AI & Gemini',
-    },
-    {
-      title: '7. Natijalar, Dashboard va Yakun',
-      timestamp: '03:00 - 03:30',
-      secondsStart: 180,
-      description: 'O‘quvchi o‘sish ko‘rsatkichlarini, streak va yangi ochilgan darslarini o‘z panelida ko‘radi.',
-      screen: 'dashboard',
-      highlightBadge: 'O‘quvchi Dashboardi',
-    },
-  ];
 
   // Simulation timer
   useEffect(() => {
@@ -113,11 +120,11 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
     if (playerMode === 'simulation' && isPlaying) {
       interval = setInterval(() => {
         setCurrentSeconds((prev) => {
-          if (prev >= totalDurationSeconds) {
+          if (prev >= TOTAL_DURATION_SECONDS) {
             return 0;
           }
           const next = prev + 1;
-          const foundIndex = chapters.findLastIndex((c) => next >= c.secondsStart);
+          const foundIndex = DEMO_CHAPTERS.findLastIndex((c) => next >= c.secondsStart);
           if (foundIndex !== -1 && foundIndex !== activeChapterIndex) {
             setActiveChapterIndex(foundIndex);
           }
@@ -128,7 +135,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [playerMode, isPlaying, activeChapterIndex, chapters, totalDurationSeconds]);
+  }, [playerMode, isPlaying, activeChapterIndex]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -136,11 +143,48 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const currentChapter = chapters[activeChapterIndex] || chapters[0];
+  const currentChapter = DEMO_CHAPTERS[activeChapterIndex] || DEMO_CHAPTERS[0];
+
+  const handleToggleVideoPlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current
+        .play()
+        .then(() => {
+          setIsVideoPlaying(true);
+          setVideoError(null);
+        })
+        .catch((err) => {
+          console.warn('Video playback trigger:', err);
+          // If browser blocked unmuted autoplay, try with muted
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().then(() => {
+              setIsVideoPlaying(true);
+              setVideoError(null);
+            }).catch(() => {
+              setVideoError("Videoni ijro etishda xatolik yuz berdi. Iltimos quyidagi 'Alohida oynada ochish' havolasidan foydalaning.");
+            });
+          }
+        });
+    } else {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  };
 
   const handleJumpToChapter = (idx: number) => {
     setActiveChapterIndex(idx);
-    setCurrentSeconds(chapters[idx].secondsStart);
+    const targetSeconds = DEMO_CHAPTERS[idx].secondsStart;
+    setCurrentSeconds(targetSeconds);
+
+    if (playerMode === 'video' && videoRef.current) {
+      videoRef.current.currentTime = targetSeconds;
+      videoRef.current.play().then(() => {
+        setIsVideoPlaying(true);
+        setVideoError(null);
+      }).catch(() => {});
+    }
   };
 
   return (
@@ -256,36 +300,120 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
           {/* MAIN PLAYER AREA */}
           {playerMode === 'video' ? (
-            /* 1. Real MP4 Video Player */
+            /* 1. Real Video Player with Dual MP4/WebM Fallback */
             <div className="w-full bg-black/90 p-4 sm:p-8 flex flex-col items-center justify-center">
-              <div className="w-full max-w-[420px] rounded-3xl overflow-hidden shadow-2xl border-2 border-cyan-500/30 bg-black aspect-[9/16] max-h-[720px] relative">
+              <div className="w-full max-w-[420px] rounded-3xl overflow-hidden shadow-2xl border-2 border-cyan-500/30 bg-black aspect-[9/16] max-h-[720px] relative group">
                 <video
-                  src="/videos/bilimyol-pitch-demo.mp4"
+                  ref={videoRef}
                   poster="/videos/bilimyol-pitch-demo-poster.jpg"
                   controls
                   playsInline
-                  preload="metadata"
-                  className="w-full h-full object-contain bg-black"
+                  preload="auto"
+                  className="w-full h-full object-contain bg-black cursor-pointer"
+                  onClick={handleToggleVideoPlay}
+                  onPlay={() => {
+                    setIsVideoPlaying(true);
+                    setVideoError(null);
+                  }}
+                  onPause={() => setIsVideoPlaying(false)}
+                  onError={() => {
+                    setVideoError('Video formatini avtomatik yuklashda cheklov yuz berdi. Quyidagi havolalar orqali to‘g‘ridan-to‘g‘ri oching.');
+                  }}
                 >
                   <source src="/videos/bilimyol-pitch-demo.mp4" type="video/mp4" />
+                  <source src="/videos/bilimyol-pitch-demo.webm" type="video/webm" />
                   Sizning brauzeringiz HTML5 videoni qo‘llab-quvvatlamaydi.
                 </video>
+
+                {/* Big Center Play Overlay Button when paused */}
+                {!isVideoPlaying && !videoError && (
+                  <button
+                    onClick={handleToggleVideoPlay}
+                    className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-cyan-500/95 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/50 transition-all hover:scale-110 cursor-pointer z-20 backdrop-blur-sm"
+                    title="Videoni qo‘yish"
+                    aria-label="Videoni ijro etish"
+                  >
+                    <Play className="w-9 h-9 fill-current ml-1" />
+                  </button>
+                )}
+
+                {/* Error Banner Fallback if decoding error occurs */}
+                {videoError && (
+                  <div className="absolute inset-0 bg-slate-950/95 p-6 flex flex-col items-center justify-center text-center space-y-4 z-30">
+                    <AlertCircle className="w-12 h-12 text-amber-400" />
+                    <p className="text-xs text-slate-200 max-w-xs">{videoError}</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={handleToggleVideoPlay}
+                        className="bg-cyan-500 text-slate-950 font-bold text-xs"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" /> Qayta urinish
+                      </Button>
+                      <a
+                        href="/videos/bilimyol-pitch-demo.mp4"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white font-bold inline-flex items-center gap-1"
+                      >
+                        Alohida ochish ↗
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Sub-bar below video */}
-              <div className="w-full max-w-xl mt-4 flex items-center justify-between text-xs text-slate-400 px-2">
-                <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Haqiqiy repo ilovasining mobil ekran yozuvi
-                </span>
-                <a
-                  href="/videos/bilimyol-pitch-demo.mp4"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-white underline"
-                >
-                  Alohida oynada ochish ↗
-                </a>
+              {/* Direct Playback Action Bar */}
+              <div className="w-full max-w-xl mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleVideoPlay}
+                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
+                  >
+                    {isVideoPlaying ? (
+                      <>
+                        <Pause className="w-4 h-4 fill-current" />
+                        <span>To‘xtatish</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-current" />
+                        <span>▶ Videoni Qo‘yish</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = 0;
+                        videoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                      }
+                    }}
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Boshidan ijro etish"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Boshiga</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                  <span className="flex items-center gap-1 text-cyan-300 font-bold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    H.264 & WebM HD
+                  </span>
+                  <span>•</span>
+                  <a
+                    href="/videos/bilimyol-pitch-demo.mp4"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-white underline text-slate-300 font-semibold"
+                  >
+                    Yangi tabda ochish ↗
+                  </a>
+                </div>
               </div>
             </div>
           ) : (
@@ -489,12 +617,12 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       const rect = e.currentTarget.getBoundingClientRect();
                       const clickX = e.clientX - rect.left;
                       const ratio = clickX / rect.width;
-                      setCurrentSeconds(Math.floor(ratio * totalDurationSeconds));
+                      setCurrentSeconds(Math.floor(ratio * TOTAL_DURATION_SECONDS));
                     }}
                   >
                     <div
                       className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full relative"
-                      style={{ width: `${(currentSeconds / totalDurationSeconds) * 100}%` }}
+                      style={{ width: `${(currentSeconds / TOTAL_DURATION_SECONDS) * 100}%` }}
                     >
                       <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md" />
                     </div>
@@ -503,7 +631,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <div className="flex justify-between text-[11px] text-slate-400 font-mono">
                     <span>{formatTime(currentSeconds)}</span>
                     <span className="text-slate-300 font-bold">{currentChapter.title}</span>
-                    <span>{formatTime(totalDurationSeconds)}</span>
+                    <span>{formatTime(TOTAL_DURATION_SECONDS)}</span>
                   </div>
                 </div>
 
@@ -556,7 +684,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
             Video Bo‘limlari va Vaqt Belgilari (Timeline)
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
-            {chapters.map((ch, idx) => (
+            {DEMO_CHAPTERS.map((ch, idx) => (
               <button
                 key={idx}
                 onClick={() => handleJumpToChapter(idx)}

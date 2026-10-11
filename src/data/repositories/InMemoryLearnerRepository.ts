@@ -32,8 +32,14 @@ const DEFAULT_PROFILE: LearnerProfile = {
   createdAt: Date.now(),
 };
 
+// Deep clone: DEFAULT_PROFILE's nested objects/arrays must NEVER be shared
+// between repository instances (shallow spreads leaked completed-node and
+// score state across instances — a cross-profile data leak).
+const createDefaultProfile = (): LearnerProfile =>
+  JSON.parse(JSON.stringify(DEFAULT_PROFILE)) as LearnerProfile;
+
 export class InMemoryLearnerRepository implements ILearnerRepository {
-  private profile: LearnerProfile = { ...DEFAULT_PROFILE };
+  private profile: LearnerProfile = createDefaultProfile();
   private answerAttempts: AnswerAttemptRecord[] = [];
   private processedActionKeys: Set<string> = new Set();
   private recordedActivityDates: Set<string> = new Set();
@@ -298,13 +304,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   async resetAll(): Promise<LearnerProfile> {
-    this.profile = {
-      ...DEFAULT_PROFILE,
-      scoresByCourse: {},
-      completedLessonIds: [],
-      completedNodeIds: [],
-      completedReinforcementIds: [],
-    };
+    this.profile = createDefaultProfile();
     this.answerAttempts = [];
     this.processedActionKeys.clear();
     this.recordedActivityDates.clear();
