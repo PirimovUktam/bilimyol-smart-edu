@@ -4,12 +4,14 @@ interface BilimYolLogoProps {
   size?: 'sm' | 'md' | 'lg';
   showSubtitle?: boolean;
   className?: string;
+  variant?: 'light' | 'dark';
 }
 
 export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
   size = 'md',
   showSubtitle = true,
   className = '',
+  variant = 'light',
 }) => {
   const iconSizes = {
     sm: 'w-8 h-8',
@@ -22,6 +24,8 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
     md: 'text-lg sm:text-xl',
     lg: 'text-2xl',
   };
+
+  const isDark = variant === 'dark';
 
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
@@ -57,15 +61,21 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
 
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5 leading-tight">
-          <span className={`font-black tracking-tight text-slate-900 ${titleSizes[size]}`}>
-            Bilim<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Yo‘l</span>
+          <span className={`font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'} ${titleSizes[size]}`}>
+            Bilim<span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Yo‘l</span>
           </span>
-          <span className="px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border border-indigo-200/80 rounded-md shadow-2xs">
+          <span
+            className={`px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-md shadow-2xs ${
+              isDark
+                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40'
+                : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border border-indigo-200/80'
+            }`}
+          >
             Smart Edu
           </span>
         </div>
         {showSubtitle && (
-          <span className="text-[11px] font-semibold text-slate-500 tracking-tight">
+          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             AI yordamida shaxsiylashtirilgan ta’lim
           </span>
         )}

@@ -172,18 +172,18 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
 
       <div className="relative z-10">
         {/* 1. TOP PITCH DAY 3.0 ANNOUNCEMENT BANNER */}
-        <div className="bg-gradient-to-r from-indigo-950 via-purple-950 to-slate-950 border-b border-indigo-500/20 py-2.5 px-4 text-center text-white backdrop-blur-md">
+        <div className="bg-gradient-to-r from-indigo-950 via-slate-950 to-purple-950 border-b border-white/10 py-2 px-4 text-center text-white backdrop-blur-md">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 mx-auto sm:mx-0">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black tracking-wide uppercase text-[10px] shadow-sm">
-                <Sparkles className="w-3 h-3 text-white" /> PITCH DAY 3.0
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-500 text-slate-950 font-black tracking-wide uppercase text-[10px] shadow-sm">
+                <Sparkles className="w-3 h-3 text-slate-950" /> PITCH DAY 3.0
               </span>
-              <span className="text-slate-300 font-medium">
+              <span className="text-slate-300 font-medium hidden sm:inline">
                 AIFU • IT Park • Alibaba • Inno Technopark Saralash Bosqichi
               </span>
             </div>
             <div className="flex items-center gap-2 mx-auto sm:mx-0">
-              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
                 1-Bosqich: Onlayn Saralash
               </span>
@@ -192,7 +192,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   triggerCelebration();
                   onNavigateDemo();
                 }}
-                className="text-cyan-400 hover:text-cyan-300 underline font-black cursor-pointer ml-2 flex items-center gap-1"
+                className="text-cyan-400 hover:text-cyan-300 underline font-black cursor-pointer ml-1 text-[11px]"
               >
                 /demo sahifasi →
               </button>
@@ -200,68 +200,67 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
         </div>
 
-        {/* 2. FLOATING QUICK-HUD NAVIGATION (Scroll-Aware) */}
-        <div className="sticky top-4 z-40 px-4">
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-5xl mx-auto backdrop-blur-2xl bg-slate-900/85 border border-white/10 rounded-2xl px-4 py-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3 overflow-x-auto no-scrollbar"
-          >
+        {/* 2. STICKY TOP NAVIGATION BAR (Clean, responsive, NO horizontal scrollbars) */}
+        <div className="sticky top-0 z-40 bg-[#040714]/90 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-6 lg:px-8 py-3 shadow-2xl">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 shrink-0">
-              <BilimYolLogo size="sm" />
-              <span className="hidden sm:inline-block text-[11px] font-mono font-bold text-cyan-400 bg-cyan-950/70 border border-cyan-800/60 px-2 py-0.5 rounded-md">
-                PITCH SHOWCASE
+              <BilimYolLogo size="sm" showSubtitle={false} variant="dark" />
+              <span className="hidden xl:inline-block text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/70 border border-cyan-800/60 px-2 py-0.5 rounded-md">
+                PITCH DAY 3.0
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] font-bold text-slate-300 shrink-0">
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2 text-[12px] font-bold text-slate-300">
               <button
                 onClick={() => scrollToSection('problem-solution')}
-                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Flame className="w-3 h-3 text-rose-400" /> Muammo & Yechim
+                <Flame className="w-3.5 h-3.5 text-rose-400" /> Muammo & Yechim
               </button>
               <button
                 onClick={() => scrollToSection('team-section')}
-                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Users className="w-3 h-3 text-purple-400" /> Jamoa
+                <Users className="w-3.5 h-3.5 text-purple-400" /> Jamoa
               </button>
               <button
                 onClick={() => scrollToSection('milestones-section')}
-                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Target className="w-3 h-3 text-cyan-400" /> Milestones
+                <Target className="w-3.5 h-3.5 text-cyan-400" /> Milestones
               </button>
               <button
                 onClick={() => scrollToSection('monetization-section')}
-                className="px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-emerald-400"
+                className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1.5 text-emerald-400"
               >
-                <DollarSign className="w-3 h-3" /> 59 900 so‘m
+                <DollarSign className="w-3.5 h-3.5" /> 59 900 so‘m
               </button>
               <button
                 onClick={() => scrollToSection('tech-architecture')}
-                className="hidden md:flex px-2.5 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all cursor-pointer items-center gap-1"
+                className="hidden lg:flex px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer items-center gap-1.5"
               >
-                <Terminal className="w-3 h-3 text-amber-400" /> Arxitektura
+                <Terminal className="w-3.5 h-3.5 text-amber-400" /> Arxitektura
               </button>
-            </div>
+              <button
+                onClick={() => scrollToSection('ai-chatbot')}
+                className="hidden xl:flex px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> AI Bot
+              </button>
+            </nav>
 
             <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="primary"
-                size="sm"
+              <button
                 onClick={() => {
                   triggerCelebration();
                   onNavigateDemo();
                 }}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-lg shadow-cyan-500/25 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 active:scale-95"
               >
-                <Play className="w-3 h-3 fill-current" /> Demo Video
-              </Button>
+                <Play className="w-3.5 h-3.5 fill-current" /> Demo Video
+              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* 3. HERO SECTION */}
@@ -290,31 +289,27 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-              <Button
-                variant="primary"
-                size="lg"
+              <button
                 onClick={() => {
                   triggerCelebration();
                   onNavigateDemo();
                 }}
-                className="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black shadow-[0_0_30px_rgba(6,182,212,0.4)] px-8 py-4 text-base rounded-2xl flex items-center gap-3 cursor-pointer transition-all transform hover:-translate-y-0.5"
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-base shadow-[0_0_30px_rgba(6,182,212,0.4)] flex items-center gap-3 cursor-pointer transition-all transform hover:-translate-y-0.5 active:scale-[0.98]"
               >
-                <Play className="w-5 h-5 fill-current" />
-                Demo Sahifasini Ko‘rish (/demo)
-              </Button>
+                <Play className="w-5 h-5 fill-current text-slate-950" />
+                <span className="text-slate-950 font-black">Demo Sahifasini Ko‘rish (/demo)</span>
+              </button>
 
-              <Button
-                variant="outline"
-                size="lg"
+              <button
                 onClick={() => {
                   triggerCelebration();
                   onNavigateApp();
                 }}
-                className="border-white/20 bg-slate-900/80 hover:bg-white/10 text-white font-bold px-8 py-4 text-base rounded-2xl flex items-center gap-2 cursor-pointer shadow-lg backdrop-blur-md transition-all hover:border-cyan-400"
+                className="px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-base border-2 border-white/20 hover:border-cyan-400 shadow-xl backdrop-blur-md flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
               >
-                <Zap className="w-5 h-5 text-amber-400" />
-                Jonli Prototipni Ishga Tushirish
-              </Button>
+                <Zap className="w-5 h-5 text-amber-400 fill-amber-400/30" />
+                <span className="text-white font-bold">Jonli Prototipni Ishga Tushirish</span>
+              </button>
             </div>
 
             {/* Quick Metrics Bar (Futuristic HUD Counters) */}
@@ -1716,30 +1711,27 @@ SELECT public.submit_answer_attempt(
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-              <Button
-                variant="primary"
-                size="lg"
+              <button
                 onClick={() => {
                   triggerCelebration();
                   onNavigateDemo();
                 }}
-                className="bg-white hover:bg-slate-100 text-slate-950 font-black px-8 py-4 text-base rounded-2xl shadow-xl flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-y-0.5"
+                className="px-8 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-base shadow-2xl flex items-center gap-2.5 cursor-pointer transition-all transform hover:-translate-y-0.5 active:scale-[0.98]"
               >
-                /demo Sahifasiga O‘tish <ArrowRight className="w-4 h-4" />
-              </Button>
+                <span className="text-slate-950 font-black">/demo Sahifasiga O‘tish</span>
+                <ArrowRight className="w-4 h-4 text-slate-950" />
+              </button>
 
-              <Button
-                variant="outline"
-                size="lg"
+              <button
                 onClick={() => {
                   triggerCelebration();
                   onNavigateApp();
                 }}
-                className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold px-8 py-4 text-base rounded-2xl flex items-center gap-2 cursor-pointer shadow-lg backdrop-blur-md"
+                className="px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-base border border-white/25 hover:border-cyan-400 shadow-xl backdrop-blur-md flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
               >
-                <Zap className="w-4 h-4 text-amber-400" />
-                Jonli Prototip
-              </Button>
+                <Zap className="w-4 h-4 text-amber-400 fill-amber-400/30" />
+                <span className="text-white font-bold">Jonli Prototip</span>
+              </button>
             </div>
           </motion.div>
         </section>
@@ -1747,7 +1739,7 @@ SELECT public.submit_answer_attempt(
         {/* 12. FOOTER & FINAL CALL TO ACTION */}
         <footer className="py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 text-center space-y-4 text-slate-400">
           <div className="flex items-center justify-center gap-2">
-            <BilimYolLogo size="md" />
+            <BilimYolLogo size="md" variant="dark" />
           </div>
           <p className="text-xs text-slate-400 max-w-xl mx-auto">
             BilimYo‘l Smart Edu — Pitch Day 3.0 (AIFU) ishtirokchisi. Barcha huquqlar himoyalangan © 2026.
