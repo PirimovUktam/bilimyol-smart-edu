@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import {
   resolveContinuationLessonId,
   isLessonCourseMismatch,
+  decideCourseReconciliation,
 } from '../app/router/lessonResolution';
 import {
   useCourseStore,
@@ -432,6 +433,93 @@ describe('Cross-course content isolation regression', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Regression: the profile→course reconciliation used to react to BOTH the
+  // profile value and the active course object, so an async profile write and
+  // an active-course change undid each other forever (math⇄english ping-pong
+  // that froze the app on course selection — caught by the E2E watchdog).
+  // -------------------------------------------------------------------------
+  describe('course reconciliation is one-way and terminating', () => {
+    it('the first profile value after courses load only sets the baseline', () => {
+      const d = decideCourseReconciliation(null, 'course_math_01', 4);
+      expect(d.shouldReconcile).toBe(false);
+      expect(d.nextLastSeenId).toBe('course_math_01');
+    });
+
+    it('does not establish a baseline while courses are still loading', () => {
+      const d = decideCourseReconciliation(null, 'course_math_01', 0);
+      expect(d.shouldReconcile).toBe(false);
+      expect(d.nextLastSeenId).toBeNull();
+    });
+
+    it('ignores a missing profile value', () => {
+      const d = decideCourseReconciliation('course_math_01', undefined, 4);
+      expect(d.shouldReconcile).toBe(false);
+      expect(d.nextLastSeenId).toBe('course_math_01');
+    });
+
+    it('an unchanged value never reconciles (write-back cannot retrigger)', () => {
+      const d = decideCourseReconciliation('course_eng_01', 'course_eng_01', 4);
+      expect(d.shouldReconcile).toBe(false);
+      expect(d.nextLastSeenId).toBe('course_eng_01');
+    });
+
+    it('a genuine profile change reconciles exactly once and then quiesces', () => {
+      const first = decideCourseReconciliation('course_eng_01', 'course_math_01', 4);
+      expect(first.shouldReconcile).toBe(true);
+      expect(first.nextLastSeenId).toBe('course_math_01');
+      // selectCourseById writes the SAME profile value back → no retrigger
+      const second = decideCourseReconciliation(first.nextLastSeenId, 'course_math_01', 4);
+      expect(second.shouldReconcile).toBe(false);
+      expect(second.nextLastSeenId).toBe('course_math_01');
+    });
+
+    it('two-store simulation terminates instead of ping-ponging math⇄english', async () => {
+      await useCourseStore.getState().loadCourses();
+      await useLearnerStore.getState().loadProfile();
+
+      let lastSeen: string | null = null;
+      let reconciles = 0;
+
+      // Drive the decision the way the React effect does: after every profile
+      // value change, reconcile (if due) by selecting that same course, which
+      // writes the same profile value back.
+      const runEffect = () => {
+        const profileId = useLearnerStore.getState().profile?.selectedCourseId;
+        const d = decideCourseReconciliation(
+          lastSeen,
+          profileId,
+          useCourseStore.getState().courses.length
+        );
+        lastSeen = d.nextLastSeenId;
+        if (d.shouldReconcile && profileId) {
+          reconciles += 1;
+          return profileId;
+        }
+        return null;
+      };
+
+      // Baseline: initial profile value (default math) must NOT reconcile.
+      expect(runEffect()).toBeNull();
+
+      // User picks English exactly like CourseSelectionView.handleChoose does.
+      await useCourseStore.getState().selectCourseById('course_eng_01');
+      expect(useCourseStore.getState().activeCourse?.id).toBe('course_eng_01');
+      expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_eng_01');
+
+      // The effect reacting to that profile change must settle immediately.
+      const target = runEffect();
+      if (target) await useCourseStore.getState().selectCourseById(target);
+      expect(reconciles).toBeLessThanOrEqual(1);
+
+      // And no further profile changes may appear out of thin air.
+      expect(runEffect()).toBeNull();
+      expect(reconciles).toBeLessThanOrEqual(1);
+      expect(useCourseStore.getState().activeCourse?.id).toBe('course_eng_01');
+      expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_eng_01');
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Source-level guards: hardcodes removed from the P0 paths
   // -------------------------------------------------------------------------
   describe('hardcoded cross-course values removed (source audit)', () => {
@@ -467,6 +555,14 @@ describe('Cross-course content isolation regression', () => {
       const src = read('src/app/store/useCourseStore.ts');
       expect(src).not.toMatch(/activeCourse\s*=\s*courses\[0\]/);
       expect(src).toContain('resolveInitialCourse');
+    });
+
+    it('AppRouter reconciles via the one-way helper (no activeCourse-reactive loop)', () => {
+      const src = read('src/app/router/AppRouter.tsx');
+      expect(src).toContain('decideCourseReconciliation');
+      expect(src).toContain('lastSeenCourseIdRef');
+      // The loop-prone dependency shape must not come back.
+      expect(src).not.toContain('activeCourse?.id, activeCourse]');
     });
 
     it('edge function outer catch no longer fabricates math diagnosis', () => {

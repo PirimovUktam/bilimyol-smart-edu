@@ -30,6 +30,7 @@
         "npm:framer-motion@^13.1.0",
         "npm:lucide-react@^1.31.0",
         "npm:oxlint@^1.75.0",
+        "npm:playwright@^1.64.0",
         "npm:postcss@^8.5.26",
         "npm:react-dom@^19.2.8",
         "npm:react@^19.2.8",

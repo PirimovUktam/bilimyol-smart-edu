@@ -39,3 +39,40 @@ export function isLessonCourseMismatch(
   if (!lesson || !activeCourse) return false;
   return lesson.courseId !== activeCourse.id;
 }
+
+export interface CourseReconciliationDecision {
+  shouldReconcile: boolean;
+  nextLastSeenId: string | null;
+}
+
+/**
+ * One-way reconciliation decision between the learner profile's selected
+ * course and the active course store.
+ *
+ * The FIRST observed profile value (once courses are loaded) is only recorded
+ * as a baseline — never reconciled — so the localStorage-restored course is
+ * not stomped by a still-default profile during startup. Afterwards only a
+ * genuine profile VALUE change may reconcile, and the caller must react by
+ * selecting that same course (which writes back the SAME value), so the
+ * effect's trigger can never change again: no math⇄english ping-pong loop.
+ */
+export function decideCourseReconciliation(
+  lastSeenId: string | null,
+  selectedCourseId: string | null | undefined,
+  coursesCount: number
+): CourseReconciliationDecision {
+  if (!selectedCourseId) {
+    return { shouldReconcile: false, nextLastSeenId: lastSeenId };
+  }
+  if (coursesCount === 0) {
+    // Courses not loaded yet: keep waiting for a proper baseline.
+    return { shouldReconcile: false, nextLastSeenId: lastSeenId };
+  }
+  if (lastSeenId === null) {
+    return { shouldReconcile: false, nextLastSeenId: selectedCourseId };
+  }
+  if (lastSeenId === selectedCourseId) {
+    return { shouldReconcile: false, nextLastSeenId: lastSeenId };
+  }
+  return { shouldReconcile: true, nextLastSeenId: selectedCourseId };
+}

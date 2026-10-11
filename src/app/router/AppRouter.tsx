@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -17,7 +17,7 @@ import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { resolveContinuationLessonId } from '@/app/router/lessonResolution';
+import { resolveContinuationLessonId, decideCourseReconciliation } from '@/app/router/lessonResolution';
 import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
@@ -63,7 +63,7 @@ export const AppRouter: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(getInitialView);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
-  const { loadCourses, activeCourse } = useCourseStore();
+  const { loadCourses, activeCourse, courses } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
   const { profile: authProfile } = useAuth();
@@ -76,14 +76,26 @@ export const AppRouter: React.FC = () => {
     loadProfile();
   }, [loadCourses, loadProfile]);
 
-  // Reconcile active course with the persisted learner profile (server truth).
+  // One-way reconcile: active course follows GENUINE profile changes only.
+  // The initial profile value is a baseline (never reconciled) so it cannot
+  // undo the localStorage-restored course, and the effect only reacts to the
+  // profile value — a reconcile that writes back the same value can never
+  // re-trigger itself (previously this looped math⇄english forever).
+  const lastSeenCourseIdRef = useRef<string | null>(null);
   useEffect(() => {
     const selectedId = learnerProfile?.selectedCourseId;
-    if (!selectedId) return;
-    if (activeCourse && activeCourse.id === selectedId) return;
+    const decision = decideCourseReconciliation(
+      lastSeenCourseIdRef.current,
+      selectedId,
+      courses.length
+    );
+    lastSeenCourseIdRef.current = decision.nextLastSeenId;
+    if (!decision.shouldReconcile || !selectedId) return;
+    const active = useCourseStore.getState().activeCourse;
+    if (active && active.id === selectedId) return;
     if (useCourseStore.getState().courses.length === 0) return;
     void useCourseStore.getState().selectCourseById(selectedId);
-  }, [learnerProfile?.selectedCourseId, activeCourse?.id, activeCourse]);
+  }, [learnerProfile?.selectedCourseId, courses.length]);
 
   useEffect(() => {
     // Start active learning tracker if user is student
