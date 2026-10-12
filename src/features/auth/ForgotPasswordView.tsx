@@ -48,34 +48,34 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
       >
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
-            <BilimYolLogo size="lg" variant="dark" />
+            <BilimYolLogo size="lg" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-extrabold text-slate-900">
             Parolni tiklash
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Email manzilingizga parolni tiklash havolasini yuboramiz
           </p>
         </div>
 
-        <Card variant="cosmicGlow" className="p-7 sm:p-8 bg-slate-900/90 shadow-2xl">
+        <Card className="p-7 shadow-xl border-slate-200">
           {isSent ? (
             <div className="text-center py-4 space-y-4">
-              <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto text-emerald-400 shadow-sm shadow-emerald-500/30">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-slate-900">
                   Havola yuborildi!
                 </h3>
-                <p className="text-xs text-slate-300 mt-1">
-                  <strong className="text-cyan-300">{email}</strong> manziliga parolni tiklash bo‘yicha ko‘rsatmalar yuborildi.
+                <p className="text-xs text-slate-600 mt-1">
+                  <strong>{email}</strong> manziliga parolni tiklash bo‘yicha ko‘rsatmalar yuborildi.
                 </p>
               </div>
               <Button
                 variant="outline"
                 size="md"
-                className="w-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700"
+                className="w-full"
                 onClick={onNavigateLogin}
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
               >
@@ -85,14 +85,14 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
           ) : (
             <form onSubmit={handleReset} className="space-y-4">
               {errorMsg && (
-                <div className="p-3.5 bg-rose-950/60 border border-rose-500/40 rounded-xl flex items-start gap-2.5 text-rose-300 text-xs font-semibold">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Email manzilingiz
                 </label>
                 <div className="relative">
@@ -102,7 +102,7 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nomingiz@misol.uz"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                     required
                   />
                 </div>
@@ -110,9 +110,9 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
 
               <Button
                 type="submit"
-                variant="cyan"
+                variant="primary"
                 size="lg"
-                className="w-full mt-2 font-black"
+                className="w-full mt-2"
                 isLoading={isSubmitting}
                 rightIcon={<Send className="w-4 h-4" />}
               >
@@ -123,7 +123,7 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="w-full text-slate-400 hover:text-white"
+                className="w-full text-slate-600 hover:text-slate-900"
                 onClick={onNavigateLogin}
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
               >

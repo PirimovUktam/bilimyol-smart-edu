@@ -6,7 +6,6 @@ interface YolchiAIMascotProps {
   showSpeechBubble?: boolean;
   speechText?: string;
   className?: string;
-  variant?: 'light' | 'dark';
 }
 
 export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
@@ -15,7 +14,6 @@ export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
   showSpeechBubble = false,
   speechText,
   className = '',
-  variant = 'dark',
 }) => {
   const sizeMap = {
     xs: 'w-8 h-8',
@@ -274,32 +272,14 @@ export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
 
       {/* Optional Speech Bubble */}
       {showSpeechBubble && speechText && (
-        <div
-          className={
-            variant === 'dark'
-              ? 'relative p-3.5 bg-slate-900/90 border border-cyan-500/30 rounded-2xl rounded-tl-xs shadow-lg shadow-cyan-500/10 backdrop-blur-xl max-w-sm'
-              : 'relative p-3.5 bg-white border border-indigo-100 rounded-2xl rounded-tl-xs shadow-md shadow-indigo-500/5 max-w-sm'
-          }
-        >
+        <div className="relative p-3.5 bg-white border border-indigo-100 rounded-2xl rounded-tl-xs shadow-md shadow-indigo-500/5 max-w-sm">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <span
-              className={
-                variant === 'dark'
-                  ? 'text-[11px] font-extrabold text-cyan-300 uppercase tracking-wider'
-                  : 'text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider'
-              }
-            >
+            <span className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider">
               Yo‘lchi AI
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
           </div>
-          <p
-            className={
-              variant === 'dark'
-                ? 'text-xs sm:text-sm font-semibold text-slate-200 leading-snug'
-                : 'text-xs sm:text-sm font-semibold text-slate-800 leading-snug'
-            }
-          >
+          <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
             {speechText}
           </p>
         </div>

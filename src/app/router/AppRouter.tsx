@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -30,6 +29,8 @@ import { ShieldAlert } from 'lucide-react';
 import { PitchShowcaseView } from '@/features/pitch/PitchShowcaseView';
 import { DemoShowcaseView } from '@/features/pitch/DemoShowcaseView';
 
+import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
+
 export type AppView =
   | 'pitch'
   | 'demo'
@@ -59,8 +60,11 @@ const getInitialView = (): AppView => {
     const hash = window.location.hash.toLowerCase();
     if (path === '/demo' || hash === '#demo') return 'demo';
     if (path === '/pitch' || hash === '#pitch') return 'pitch';
+    if (path === '/register' || hash === '#register') return 'register';
+    if (path === '/forgot-password' || hash === '#forgot-password') return 'forgot-password';
+    if (path === '/login' || hash === '#login') return 'login';
   }
-  return 'course-selection';
+  return 'login';
 };
 
 export const AppRouter: React.FC = () => {
@@ -86,7 +90,7 @@ export const AppRouter: React.FC = () => {
   const { loadCourses, activeCourse, courses } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
-  const { profile: authProfile } = useAuth();
+  const { profile: authProfile, isLoading: isAuthLoading } = useAuth();
   const monitoringRole = useMonitoringStore((s) => s.currentRole);
 
   const userRole = authProfile?.role || monitoringRole || 'student';
@@ -175,22 +179,57 @@ export const AppRouter: React.FC = () => {
     };
   }, []);
 
-  // Adjust landing view when role is resolved (preserve pitch / demo if user explicitly opened them)
+  // Route Guard & Role Routing
+  // 1. Never block public showcases ('pitch' and 'demo').
+  // 2. If session is still loading (isAuthLoading), wait.
+  // 3. For unauthenticated visitors: any protected screen redirects to 'login'.
+  // 4. For authenticated users on auth forms ('login', 'register', 'forgot-password'): route to their role dashboard.
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    // Public showcase presentations never require login
     if (currentView === 'pitch' || currentView === 'demo') {
       return;
     }
-    const effectiveRole = authProfile?.role || monitoringRole;
-    if (effectiveRole) {
-      if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
-        setCurrentView('admin');
-      } else if (effectiveRole === 'parent' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
-        setCurrentView('parent');
-      } else if (effectiveRole === 'teacher' && (currentView === 'course-selection' || currentView === 'login' || currentView === 'register' || currentView === 'dashboard')) {
-        setCurrentView('teacher');
+
+    const isAuthForm =
+      currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
+
+    if (!authProfile) {
+      // Unauthenticated visitor trying to access protected screens -> force to 'login'
+      if (!isAuthForm) {
+        setCurrentView('login');
       }
+      return;
     }
-  }, [authProfile?.role, monitoringRole, currentView]);
+
+    // Authenticated user
+    const effectiveRole = authProfile.role || monitoringRole || 'student';
+
+    // If already logged in and on an auth form, send to appropriate dashboard
+    if (isAuthForm) {
+      if (effectiveRole === 'admin') setCurrentView('admin');
+      else if (effectiveRole === 'parent') setCurrentView('parent');
+      else if (effectiveRole === 'teacher') setCurrentView('teacher');
+      else setCurrentView('dashboard');
+      return;
+    }
+
+    // Role-based view guards for non-student roles landing on student views
+    if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
+      setCurrentView('admin');
+    } else if (
+      effectiveRole === 'parent' &&
+      (currentView === 'course-selection' || currentView === 'dashboard')
+    ) {
+      setCurrentView('parent');
+    } else if (
+      effectiveRole === 'teacher' &&
+      (currentView === 'course-selection' || currentView === 'dashboard')
+    ) {
+      setCurrentView('teacher');
+    }
+  }, [isAuthLoading, authProfile, currentView, monitoringRole]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');
@@ -241,48 +280,35 @@ export const AppRouter: React.FC = () => {
     (currentView === 'teacher' && userRole !== 'teacher') ||
     (currentView === 'admin' && userRole !== 'admin');
 
-  // Top scroll laser progress
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  // Prevent flicker during initial session resolution
+  if (isAuthLoading && !isPitchOrDemo) {
+    return (
+      <div className="min-h-screen w-full bg-[#0a0f2c] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <BilimYolLogo size="lg" />
+          <div className="flex items-center gap-2 mt-2">
+            <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-indigo-200">Tizim yuklanmoqda...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-[#030712] text-slate-100 relative selection:bg-cyan-500 selection:text-slate-950 overflow-x-hidden">
-      {/* Top Cosmic Laser Progress Bar */}
-      <motion.div
-        style={{ scaleX }}
-        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 origin-left z-50 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
-      />
-
-      {/* Ambient Cosmic Background Lights */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[130px]" />
-        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[140px]" />
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-[130px]" />
-      </div>
-
+    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
       {/* Main Navigation (Hidden on standalone Auth screens & Pitch/Demo presentations) */}
       {!isAuthView && !isPitchOrDemo && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />
       )}
 
       {/* Main Content View Switcher */}
-      <main className="flex-1 relative z-10">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="w-full"
-          >
-            {/* Access Denied Guard UI */}
-            {isAccessDenied ? (
-              <div className="max-w-md mx-auto px-4 py-16 text-center">
+      <main className="flex-1">
+        {/* Access Denied Guard UI */}
+        {isAccessDenied ? (
+          <div className="max-w-md mx-auto px-4 py-16 text-center">
             <Card className="p-8 border-rose-200 bg-rose-50/50 shadow-lg">
               <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
                 <ShieldAlert className="w-8 h-8" />
@@ -305,16 +331,16 @@ export const AppRouter: React.FC = () => {
             {currentView === 'pitch' && (
               <PitchShowcaseView
                 onNavigateDemo={() => setCurrentView('demo')}
-                onNavigateApp={() => setCurrentView('dashboard')}
-                onNavigateAiTutor={() => setCurrentView('ai-tutor')}
+                onNavigateApp={() => setCurrentView(authProfile ? 'dashboard' : 'login')}
+                onNavigateAiTutor={() => setCurrentView(authProfile ? 'ai-tutor' : 'login')}
               />
             )}
 
             {currentView === 'demo' && (
               <DemoShowcaseView
-                onNavigateCourses={() => setCurrentView('course-selection')}
-                onNavigateDashboard={() => setCurrentView('dashboard')}
-                onNavigateAiTutor={() => setCurrentView('ai-tutor')}
+                onNavigateCourses={() => setCurrentView(authProfile ? 'course-selection' : 'login')}
+                onNavigateDashboard={() => setCurrentView(authProfile ? 'dashboard' : 'login')}
+                onNavigateAiTutor={() => setCurrentView(authProfile ? 'ai-tutor' : 'login')}
                 onNavigatePitch={() => setCurrentView('pitch')}
               />
             )}
@@ -378,11 +404,11 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'lesson' && !activeLessonId && (
               <div className="max-w-md mx-auto px-4 py-16 text-center">
-                <Card variant="cosmic" className="p-8 bg-slate-900/90 shadow-2xl space-y-4">
-                  <p className="text-sm text-slate-300">
+                <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
+                  <p className="text-sm text-slate-600 mb-4">
                     Dars topilmadi. Iltimos, yo‘nalishingizdan qayta tanlang.
                   </p>
-                  <Button variant="cyan" onClick={() => setCurrentView('roadmap')} className="font-bold">
+                  <Button variant="primary" onClick={() => setCurrentView('roadmap')}>
                     Yo‘nalishga qaytish
                   </Button>
                 </Card>
@@ -424,18 +450,16 @@ export const AppRouter: React.FC = () => {
             {currentView === 'admin' && <AdminDashboardView />}
           </>
         )}
-          </motion.div>
-        </AnimatePresence>
       </main>
 
       {/* Footer (Hidden on Pitch/Demo pages which have their own rich pitch footer) */}
       {!isPitchOrDemo && (
-        <footer className="relative z-10 bg-[#030712]/90 border-t border-white/10 py-6 text-center text-xs text-slate-400 mt-auto backdrop-blur-xl">
+        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>
-              <strong className="text-white">BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
+              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
             </span>
-            <span className="text-cyan-400 font-mono text-[11px]">
+            <span className="text-slate-400">
               {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
             </span>
           </div>

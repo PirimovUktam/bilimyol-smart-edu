@@ -58,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch {}
       }
-      setProfile(defaultDemoProfile);
-      return defaultDemoProfile;
+      setProfile(null);
+      return null;
     }
 
     try {
@@ -179,16 +179,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.warn('[AUTH] Running in local development fallback mode.');
           const cached = localStorage.getItem('bilimyol_auth_session');
           if (cached) {
-            const parsed = JSON.parse(cached);
-            if (mounted) {
-              setProfile(parsed.profile);
-              setIsDemoMode(true);
-              useMonitoringStore.setState({ currentRole: (parsed?.profile?.role as any) || 'student' });
+            try {
+              const parsed = JSON.parse(cached);
+              const isExplicitDemo = Boolean(parsed?.isDemoMode);
+              const isDefaultDemo = parsed?.profile?.id === defaultDemoProfile.id;
+              if (mounted && parsed?.profile && (!isDefaultDemo || isExplicitDemo)) {
+                setProfile(parsed.profile);
+                setIsDemoMode(isExplicitDemo);
+                useMonitoringStore.setState({ currentRole: (parsed?.profile?.role as any) || 'student' });
+              } else if (mounted) {
+                setProfile(null);
+                setIsDemoMode(false);
+                localStorage.removeItem('bilimyol_auth_session');
+              }
+            } catch {
+              if (mounted) {
+                setProfile(null);
+                setIsDemoMode(false);
+              }
             }
           } else {
             if (mounted) {
-              setProfile(defaultDemoProfile);
-              setIsDemoMode(true);
+              setProfile(null);
+              setIsDemoMode(false);
             }
           }
           if (mounted) setIsLoading(false);
@@ -202,19 +215,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data.session?.user) {
             await fetchProfile(data.session.user.id, data.session.user.email ?? '');
           } else {
+            // Also check if an explicit demo session was stored in localStorage
+            const cached = localStorage.getItem('bilimyol_auth_session');
+            if (cached) {
+              try {
+                const parsed = JSON.parse(cached);
+                if (parsed?.profile && parsed?.isDemoMode) {
+                  setProfile(parsed.profile);
+                  setIsDemoMode(true);
+                  useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
+                } else {
+                  setProfile(null);
+                  setIsDemoMode(false);
+                }
+              } catch {
+                setProfile(null);
+                setIsDemoMode(false);
+              }
+            } else {
+              setProfile(null);
+              setIsDemoMode(false);
+            }
             setIsLoading(false);
           }
         }
       } catch (err) {
         console.warn('Auth initialization error:', err);
         if (mounted) {
-          if (import.meta.env.PROD) {
-            setProfile(null);
-            setIsDemoMode(false);
-          } else {
-            setProfile(defaultDemoProfile);
-            setIsDemoMode(true);
-          }
+          setProfile(null);
+          setIsDemoMode(false);
           setIsLoading(false);
         }
       }
@@ -231,6 +260,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await fetchProfile(newSession.user.id, newSession.user.email ?? '');
         } else {
           setProfile(null);
+          setIsDemoMode(false);
           setIsLoading(false);
         }
       });
@@ -346,6 +376,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setSession(null);
     setProfile(null);
+    setIsDemoMode(false);
     useMonitoringStore.getState().resetAll();
   };
 
@@ -366,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = { ...profile, ...data };
     setProfile(updated);
-    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated }));
+    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
 
     if (!isSupabaseConfigured) {
       return { error: null };
@@ -389,7 +420,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setDemoUser = () => {
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
-    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile }));
+    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile, isDemoMode: true }));
     useMonitoringStore.setState({ currentRole: 'student' });
   };
 

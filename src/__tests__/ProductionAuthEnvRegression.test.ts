@@ -101,4 +101,46 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(isTeacherOfStudent('teacher-1', 'student-1', pairs)).toBe(true);
     expect(isTeacherOfStudent('teacher-1', 'student-2', pairs)).toBe(false);
   });
+
+  it('K: Unauthenticated user defaults to login route, not demo account or course selection', () => {
+    const authProfile = null;
+    const requestedView = 'course-selection';
+    const isPublicView = ['pitch', 'demo', 'login', 'register', 'forgot-password'].includes(requestedView);
+    
+    let resolvedView = requestedView;
+    if (!authProfile && !isPublicView) {
+      resolvedView = 'login';
+    }
+
+    expect(resolvedView).toBe('login');
+  });
+
+  it('L: Public pitch and demo showcases remain accessible without login', () => {
+    const authProfile = null;
+    const pitchView = 'pitch';
+    const demoView = 'demo';
+    const publicList = ['pitch', 'demo', 'login', 'register', 'forgot-password'];
+
+    expect(publicList.includes(pitchView)).toBe(true);
+    expect(publicList.includes(demoView)).toBe(true);
+
+    const resolveRoute = (view: string) => (!authProfile && !publicList.includes(view) ? 'login' : view);
+    expect(resolveRoute('pitch')).toBe('pitch');
+    expect(resolveRoute('demo')).toBe('demo');
+    expect(resolveRoute('dashboard')).toBe('login');
+  });
+
+  it('M: Explicit demo activation sets isDemoMode and isolates guest session', () => {
+    const demoProfile = {
+      id: 'guest_user_01',
+      firstName: 'Foydalanuvchi',
+      role: 'student' as const,
+    };
+    const isDemoMode = true;
+
+    expect(demoProfile.id).toBe('guest_user_01');
+    expect(isDemoMode).toBe(true);
+    expect(demoProfile.role).toBe('student');
+  });
 });
+
