@@ -3,20 +3,12 @@ import { motion } from 'framer-motion';
 import {
   Send,
   Sparkles,
-  Bot,
-  Lightbulb,
   ArrowRight,
-  BookOpen,
-  HelpCircle,
-  RefreshCw,
-  CheckCircle2,
 } from 'lucide-react';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
-import { Badge } from '@/presentation/components/Badge';
 import { useCourseStore } from '@/app/store/useCourseStore';
-import { useLessonStore } from '@/app/store/useLessonStore';
 
 interface Message {
   id: string;
@@ -104,22 +96,22 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      {/* Header bar matching Reference 2 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 relative">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-4">
-          <YolchiAIMascot size="sm" mood="explaining" />
+          <YolchiAIMascot size="sm" mood="explaining" variant="dark" />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight">
                 Yo‘lchi AI
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Online
+              <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Online • Gemini 2.5
               </span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400 mt-0.5">
               {activeCourse?.title || 'Matematika'} bo‘yicha individual yordamchi
             </p>
           </div>
@@ -131,6 +123,7 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
             size="sm"
             onClick={onStartLesson}
             rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="font-black shadow-lg"
           >
             Interaktiv darsga o‘tish
           </Button>
@@ -138,7 +131,7 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
       </div>
 
       {/* Main Chat Box Container */}
-      <Card className="p-4 sm:p-6 border-slate-200 shadow-md min-h-[500px] flex flex-col justify-between bg-gradient-to-b from-slate-50/50 via-white to-indigo-50/30">
+      <Card className="p-4 sm:p-6 border-white/10 shadow-2xl min-h-[500px] flex flex-col justify-between bg-slate-900/90 backdrop-blur-2xl">
         {/* Messages Stream */}
         <div className="space-y-4 overflow-y-auto max-h-[520px] pr-2">
           {messages.map((msg) => (
@@ -152,50 +145,52 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
               <div
                 className={`max-w-xl p-4 rounded-3xl text-sm leading-relaxed ${
                   msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-xs shadow-md shadow-indigo-600/20'
-                    : 'bg-white border border-indigo-100/80 text-slate-800 rounded-tl-xs shadow-sm'
+                    ? 'bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 text-white rounded-tr-xs shadow-[0_0_20px_rgba(99,102,241,0.35)] font-medium'
+                    : 'bg-slate-950/85 border border-cyan-500/30 text-slate-200 rounded-tl-xs shadow-[0_0_15px_rgba(6,182,212,0.15)]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-3 mb-1 text-[11px] font-bold opacity-80">
-                  <span>{msg.sender === 'ai' ? 'Yo‘lchi AI' : 'Siz'}</span>
-                  <span className="text-[10px]">{msg.time}</span>
+                  <span className={msg.sender === 'ai' ? 'text-cyan-300' : 'text-white'}>
+                    {msg.sender === 'ai' ? 'Yo‘lchi AI' : 'Siz'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">{msg.time}</span>
                 </div>
 
-                <p className="font-medium whitespace-pre-line">{msg.text}</p>
+                <p className="font-medium whitespace-pre-line leading-relaxed">{msg.text}</p>
 
-                {/* Visual Mathematical Diagram inside Bubble (Reference 2 style) */}
+                {/* Visual Mathematical Diagram inside Bubble */}
                 {msg.hasVisualDiagram && (
-                  <div className="mt-3 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-slate-900">
-                    <div className="text-xs font-extrabold text-indigo-900 mb-2 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <div className="mt-3 p-3.5 rounded-2xl bg-slate-900 border border-cyan-500/30 text-white shadow-inner">
+                    <div className="text-xs font-black text-cyan-300 mb-2 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                       Vizual Taqqoslash:
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-2">
                       {/* Fraction 1/2 */}
-                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-indigo-200 shadow-2xs">
-                        <span className="text-base font-black text-indigo-700">1 / 2</span>
-                        <div className="w-16 h-8 rounded-md border border-indigo-300 grid grid-cols-2 overflow-hidden">
-                          <div className="bg-indigo-500" />
-                          <div className="bg-slate-100" />
+                      <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-white/10 shadow-md">
+                        <span className="text-base font-black text-cyan-400">1 / 2</span>
+                        <div className="w-16 h-8 rounded-md border border-cyan-500/40 grid grid-cols-2 overflow-hidden">
+                          <div className="bg-cyan-500" />
+                          <div className="bg-slate-800" />
                         </div>
                       </div>
 
-                      <span className="text-lg font-black text-slate-400">=</span>
+                      <span className="text-lg font-black text-slate-500">=</span>
 
                       {/* Fraction 2/4 */}
-                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-indigo-200 shadow-2xs">
-                        <span className="text-base font-black text-indigo-700">2 / 4</span>
-                        <div className="w-16 h-8 rounded-md border border-indigo-300 grid grid-cols-4 overflow-hidden">
+                      <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-white/10 shadow-md">
+                        <span className="text-base font-black text-indigo-400">2 / 4</span>
+                        <div className="w-16 h-8 rounded-md border border-indigo-500/40 grid grid-cols-4 overflow-hidden">
                           <div className="bg-indigo-500 border-r border-indigo-400" />
                           <div className="bg-indigo-500" />
-                          <div className="bg-slate-100 border-r border-slate-200" />
-                          <div className="bg-slate-100" />
+                          <div className="bg-slate-800 border-r border-slate-700" />
+                          <div className="bg-slate-800" />
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-[11px] font-bold text-slate-600 text-center mt-1">
+                    <p className="text-[11px] font-bold text-slate-300 text-center mt-1">
                       Har ikkala to‘rtburchakning yarmi bo‘yalgan! ✅
                     </p>
                   </div>
@@ -206,17 +201,17 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
 
           {/* Typing indicator */}
           {isTyping && (
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 p-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
-              <span>Yo‘lchi AI yozmoqda...</span>
+            <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 p-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" />
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]" />
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.4s]" />
+              <span>Yo‘lchi AI o‘ylamoqda...</span>
             </div>
           )}
         </div>
 
         {/* Bottom Actions & Input */}
-        <div className="pt-4 mt-4 border-t border-slate-100 space-y-3">
+        <div className="pt-4 mt-4 border-t border-white/10 space-y-3">
           {/* Quick Prompts Chips */}
           <div className="flex flex-wrap items-center gap-2">
             {quickPrompts.map((chip, idx) => (
@@ -224,7 +219,7 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
                 key={idx}
                 type="button"
                 onClick={() => handleSend(chip)}
-                className="px-3 py-1.5 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-xs font-bold text-indigo-700 transition-all shadow-2xs hover:scale-102 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl border border-cyan-500/30 bg-slate-950 hover:bg-cyan-950/80 text-xs font-bold text-cyan-300 transition-all shadow-md hover:scale-102 cursor-pointer"
               >
                 {chip}
               </button>
@@ -237,21 +232,21 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center gap-2 bg-white p-1.5 pl-4 rounded-2xl border border-slate-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200"
+            className="flex items-center gap-2 bg-slate-950 p-2 pl-4 rounded-2xl border border-white/10 shadow-lg focus-within:border-cyan-400 focus-within:ring-4 focus-within:ring-cyan-500/10"
           >
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Yo‘lchi AI ga savol bering yoki formulani so‘rang..."
-              className="flex-1 text-sm bg-transparent border-0 outline-none text-slate-900 placeholder:text-slate-400 font-medium"
+              className="flex-1 text-sm bg-transparent border-0 outline-none text-white placeholder:text-slate-500 font-medium"
             />
             <Button
               type="submit"
               variant="gradient"
               size="sm"
               disabled={!inputText.trim() || isTyping}
-              className="rounded-xl px-4 py-2"
+              className="rounded-xl px-4 py-2 font-black cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </Button>

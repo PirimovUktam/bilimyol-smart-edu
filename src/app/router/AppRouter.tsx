@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -240,18 +241,48 @@ export const AppRouter: React.FC = () => {
     (currentView === 'teacher' && userRole !== 'teacher') ||
     (currentView === 'admin' && userRole !== 'admin');
 
+  // Top scroll laser progress
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex flex-col font-sans bg-[#030712] text-slate-100 relative selection:bg-cyan-500 selection:text-slate-950 overflow-x-hidden">
+      {/* Top Cosmic Laser Progress Bar */}
+      <motion.div
+        style={{ scaleX }}
+        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 origin-left z-50 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+      />
+
+      {/* Ambient Cosmic Background Lights */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[130px]" />
+        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-[130px]" />
+      </div>
+
       {/* Main Navigation (Hidden on standalone Auth screens & Pitch/Demo presentations) */}
       {!isAuthView && !isPitchOrDemo && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />
       )}
 
       {/* Main Content View Switcher */}
-      <main className="flex-1">
-        {/* Access Denied Guard UI */}
-        {isAccessDenied ? (
-          <div className="max-w-md mx-auto px-4 py-16 text-center">
+      <main className="flex-1 relative z-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="w-full"
+          >
+            {/* Access Denied Guard UI */}
+            {isAccessDenied ? (
+              <div className="max-w-md mx-auto px-4 py-16 text-center">
             <Card className="p-8 border-rose-200 bg-rose-50/50 shadow-lg">
               <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
                 <ShieldAlert className="w-8 h-8" />
@@ -347,11 +378,11 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'lesson' && !activeLessonId && (
               <div className="max-w-md mx-auto px-4 py-16 text-center">
-                <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
-                  <p className="text-sm text-slate-600 mb-4">
+                <Card variant="cosmic" className="p-8 bg-slate-900/90 shadow-2xl space-y-4">
+                  <p className="text-sm text-slate-300">
                     Dars topilmadi. Iltimos, yo‘nalishingizdan qayta tanlang.
                   </p>
-                  <Button variant="primary" onClick={() => setCurrentView('roadmap')}>
+                  <Button variant="cyan" onClick={() => setCurrentView('roadmap')} className="font-bold">
                     Yo‘nalishga qaytish
                   </Button>
                 </Card>
@@ -393,16 +424,18 @@ export const AppRouter: React.FC = () => {
             {currentView === 'admin' && <AdminDashboardView />}
           </>
         )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Footer (Hidden on Pitch/Demo pages which have their own rich pitch footer) */}
       {!isPitchOrDemo && (
-        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+        <footer className="relative z-10 bg-[#030712]/90 border-t border-white/10 py-6 text-center text-xs text-slate-400 mt-auto backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>
-              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
+              <strong className="text-white">BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
             </span>
-            <span className="text-slate-400">
+            <span className="text-cyan-400 font-mono text-[11px]">
               {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
             </span>
           </div>

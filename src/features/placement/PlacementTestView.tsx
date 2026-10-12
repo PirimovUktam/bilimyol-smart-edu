@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ArrowRight, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ShieldAlert, Sparkles, Brain } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
 import { Button } from '@/presentation/components/Button';
@@ -66,9 +66,12 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
   if (!currentQuestion || hasFinished) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-600">
+        <div className="text-center space-y-4">
+          <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+            <Brain className="w-6 h-6 text-cyan-400 animate-pulse" />
+          </div>
+          <p className="text-sm font-semibold text-slate-300">
             {hasFinished ? 'Real bilim darajangiz hisoblanmoqda...' : 'Savol tayyorlanmoqda...'}
           </p>
         </div>
@@ -83,29 +86,30 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="blue" size="sm">
+              <Badge variant="blue" size="sm" className="bg-cyan-950/80 text-cyan-300 border-cyan-500/40 shadow-xs shadow-cyan-500/20">
+                <Brain className="w-3.5 h-3.5 mr-1 text-cyan-400" />
                 Adaptiv Diagnostika • {activeCourse?.title || 'Matematika'}
               </Badge>
-              <Badge variant="slate" size="sm">
+              <Badge variant="slate" size="sm" className="bg-slate-800/80 text-slate-300 border-slate-700">
                 {getDifficultyLabel(currentQuestion.difficulty)}
               </Badge>
-              <span className="text-xs font-semibold text-slate-500">
+              <span className="text-xs font-semibold text-slate-400">
                 Savol {questionNumber} / {totalQuestionsToAsk}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mt-1">
+            <h1 className="text-xl sm:text-2xl font-black text-white mt-1.5 tracking-tight">
               Bilim darajangizni aniqlash
             </h1>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-6">
+        <div className="h-2.5 w-full bg-slate-800/90 rounded-full overflow-hidden mb-6 border border-slate-700/60">
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-600 to-teal-500"
+            className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 shadow-sm shadow-cyan-500/40"
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.4 }}
           />
         </div>
 
@@ -118,19 +122,19 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.25 }}
           >
-            <Card className="p-7 sm:p-9 shadow-xl border-slate-200/90 space-y-6">
+            <Card variant="cosmicGlow" className="p-7 sm:p-9 bg-slate-900/90 space-y-6">
               {/* Question Text */}
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-extrabold text-sm flex items-center justify-center shrink-0 mt-0.5">
+                <div className="flex items-start gap-3.5">
+                  <span className="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-black text-sm flex items-center justify-center shrink-0 mt-0.5 shadow-sm shadow-cyan-500/20">
                     {questionNumber}
                   </span>
-                  <div className="space-y-2 flex-1">
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                  <div className="space-y-2.5 flex-1">
+                    <h2 className="text-lg sm:text-xl font-bold text-white leading-relaxed">
                       {currentQuestion.text}
                     </h2>
                     {currentQuestion.formulaLatex && (
-                      <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100 font-mono text-sm text-blue-900 inline-block">
+                      <div className="p-3 bg-slate-950/80 rounded-xl border border-cyan-500/30 font-mono text-sm text-cyan-300 inline-block shadow-inner">
                         {currentQuestion.formulaLatex}
                       </div>
                     )}
@@ -152,24 +156,24 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
                       disabled={isSubmitting}
                       className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-3.5 cursor-pointer disabled:pointer-events-none ${
                         isSelected
-                          ? 'border-blue-600 bg-blue-50/70 shadow-xs'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                          ? 'border-cyan-400 bg-cyan-950/60 text-white shadow-md shadow-cyan-500/25 ring-1 ring-cyan-400/50'
+                          : 'border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80 hover:text-white'
                       }`}
                     >
                       <span
-                        className={`w-7 h-7 rounded-xl font-bold text-xs flex items-center justify-center transition-colors ${
+                        className={`w-7 h-7 rounded-xl font-black text-xs flex items-center justify-center transition-colors ${
                           isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-xs'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                       >
                         {optionLetters[idx]}
                       </span>
-                      <span className="font-semibold text-slate-800 text-sm flex-1">
+                      <span className="font-semibold text-sm flex-1">
                         {option}
                       </span>
                       {isSelected && (
-                        <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
                       )}
                     </button>
                   );
@@ -177,19 +181,20 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
               </div>
 
               {/* Action Button */}
-              <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />
                   Har bir javob real ko‘nikma foiziga ta’sir qiladi
                 </span>
 
                 <Button
-                  variant="primary"
+                  variant="cyan"
                   size="md"
                   disabled={selectedOption === null || isSubmitting}
                   isLoading={isSubmitting}
                   onClick={handleConfirmAnswer}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
+                  className="font-black px-6"
                 >
                   {questionNumber >= totalQuestionsToAsk ? 'Natijani Ko‘rish' : 'Keyingi Savol'}
                 </Button>
