@@ -82,7 +82,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Header Brand */}
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <BilimYolLogo size="lg" />
+                <BilimYolLogo size="lg" variant="dark" showSubtitle={false} />
               </div>
               <p className="text-xs sm:text-sm font-semibold text-indigo-300/90 tracking-wide pl-1">
                 AI yordamida shaxsiylashtirilgan ta’lim platformasi

@@ -4,7 +4,8 @@ interface BilimYolLogoProps {
   size?: 'sm' | 'md' | 'lg';
   showSubtitle?: boolean;
   className?: string;
-  variant?: 'light' | 'dark';
+  variant?: 'light' | 'dark' | 'auto';
+  textColor?: string;
 }
 
 export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
@@ -12,6 +13,7 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
   showSubtitle = true,
   className = '',
   variant = 'light',
+  textColor,
 }) => {
   const iconSizes = {
     sm: 'w-8 h-8',
@@ -26,6 +28,19 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
   };
 
   const isDark = variant === 'dark';
+
+  // Universal text color resolution:
+  // 1. Explicit textColor prop if provided
+  // 2. White for dark variant
+  // 3. Adaptive for auto variant
+  // 4. Slate-900 for light variant
+  const resolvedTextColor = textColor
+    ? textColor
+    : variant === 'dark'
+    ? 'text-white'
+    : variant === 'auto'
+    ? 'text-slate-900 dark:text-white'
+    : 'text-slate-900';
 
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
@@ -61,7 +76,7 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
 
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5 leading-tight">
-          <span className={`font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'} ${titleSizes[size]}`}>
+          <span className={`font-black tracking-tight ${resolvedTextColor} ${titleSizes[size]}`}>
             Bilim<span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Yo‘l</span>
           </span>
           <span
@@ -75,7 +90,7 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
           </span>
         </div>
         {showSubtitle && (
-          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-indigo-200/80' : 'text-slate-500'}`}>
             AI yordamida shaxsiylashtirilgan ta’lim
           </span>
         )}

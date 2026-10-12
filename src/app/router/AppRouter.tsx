@@ -287,7 +287,7 @@ export const AppRouter: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="relative z-10 flex flex-col items-center gap-4">
-          <BilimYolLogo size="lg" />
+          <BilimYolLogo size="lg" variant="dark" />
           <div className="flex items-center gap-2 mt-2">
             <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
             <span className="text-xs font-semibold text-indigo-200">Tizim yuklanmoqda...</span>

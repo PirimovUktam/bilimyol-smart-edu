@@ -27,12 +27,40 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
 
   async setUserRole(role: UserRole): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    }
 
-    await supabase
-      .from('profiles')
-      .update({ role, updated_at: new Date().toISOString() })
-      .eq('id', user.id);
+    // Direct role updates on public.profiles are blocked by column-level permissions.
+    // Server-side RPC admin_update_user_role verifies that the caller is an administrator.
+    const { data, error } = await supabase.rpc('admin_update_user_role', {
+      p_user_id: user.id,
+      p_new_role: role,
+    });
+
+    if (error || !data?.success) {
+      const message = error?.message || data?.message || 'Rolni o‘zgartirish huquqi mavjud emas.';
+      throw new Error(`Rolni o‘zgartirish rad etildi: ${message}`);
+    }
+  }
+
+  async adminUpdateUserRole(targetUserId: string, newRole: UserRole): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await supabase.rpc('admin_update_user_role', {
+      p_user_id: targetUserId,
+      p_new_role: newRole,
+    });
+
+    if (error || !data) {
+      return {
+        success: false,
+        message: error?.message || 'Rolni o‘zgartirishda server xatoligi yuz berdi.',
+      };
+    }
+
+    return {
+      success: Boolean(data.success),
+      message: data.message || 'Muvaffaqiyatli bajarildi.',
+    };
   }
 
   async redeemTeacherInvitationCode(code: string): Promise<{ success: boolean; schoolName?: string; message: string }> {
