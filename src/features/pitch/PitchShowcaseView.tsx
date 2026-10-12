@@ -33,6 +33,8 @@ import {
   ShieldAlert,
   Sliders,
   Check,
+  Info,
+  ArrowUp,
 } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
@@ -1074,12 +1076,32 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </button>
             </div>
 
-            {/* Footnote */}
-            <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 italic">
-              <span>* 1-yil raqamlari konservativ forecast; 3-yil ko‘rsatkichlari — target, fakt emas.</span>
-              <span className="not-italic font-mono text-[10px] text-cyan-400 font-bold">
-                Tugmalarni bosib har bir bosqichning batafsil rejasini oching ↑
-              </span>
+            {/* Creative Footnote & Interactive Navigation Bar */}
+            <div className="mt-8 pt-5 border-t border-white/10 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+              {/* Left Pill: Financial Forecast Disclaimer */}
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-800/80 to-amber-950/20 border border-slate-700/80 shadow-lg shadow-black/30 backdrop-blur-md group hover:border-amber-500/40 transition-all">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400 shadow-sm shadow-amber-500/10 group-hover:scale-105 transition-transform">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">
+                  <span className="text-amber-300 font-bold">1-yil raqamlari</span> — konservativ forecast;{' '}
+                  <span className="text-cyan-300 font-bold">3-yil ko‘rsatkichlari</span> — strategik target (fakt emas).
+                </div>
+              </div>
+
+              {/* Right Pill: Interactive Stage Exploration Callout */}
+              <div className="flex items-center justify-between sm:justify-start gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-950/50 via-blue-950/40 to-indigo-950/50 border border-cyan-400/40 shadow-lg shadow-cyan-950/30 backdrop-blur-md group hover:border-cyan-300 transition-all">
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-cyan-200">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400" />
+                  </span>
+                  <span>Tugmalarni bosib, har bir bosqichning batafsil rejasini oching</span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0 text-cyan-300 shadow-sm shadow-cyan-500/20 animate-bounce">
+                  <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                </div>
+              </div>
             </div>
           </div>
 
