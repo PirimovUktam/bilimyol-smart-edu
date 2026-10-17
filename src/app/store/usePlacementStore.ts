@@ -8,6 +8,9 @@ import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRe
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
 import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
 
+/** Minimum interval between answer submissions (ms) to prevent rapid-fire abuse. */
+const MIN_SUBMIT_INTERVAL_MS = 800;
+
 interface PlacementState {
   allQuestions: Question[];
   currentQuestion: Question | null;
@@ -20,6 +23,10 @@ interface PlacementState {
   isLoading: boolean;
   error: string | null;
   hasFinished: boolean;
+  /** Timestamp when the current question was first displayed (ms). */
+  _questionStartedAt: number;
+  /** Timestamp of the last successful submission (ms) — for rate limiting. */
+  _lastSubmittedAt: number;
 
   initPlacement: (courseId: string) => Promise<void>;
   submitAnswer: (selectedIndex: number) => Promise<boolean>;
@@ -72,6 +79,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   isLoading: false,
   error: null,
   hasFinished: false,
+  _questionStartedAt: 0,
+  _lastSubmittedAt: 0,
 
   initPlacement: async (courseId: string) => {
     set({ isLoading: true, error: null, currentQuestion: null, hasFinished: false });
@@ -102,6 +111,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         isLoading: false,
         error: firstQ ? null : 'Ushbu fan uchun diagnostika savollari topilmadi.',
         hasFinished: false,
+        _questionStartedAt: firstQ ? Date.now() : 0,
+        _lastSubmittedAt: 0,
       });
     } catch (err) {
       set({
@@ -126,9 +137,27 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       history,
       submissions,
       isSubmitting,
+      _questionStartedAt,
+      _lastSubmittedAt,
     } = get();
 
     if (isSubmitting || !currentQuestion || totalQuestionsToAsk === 0) return false;
+
+    // Rate limiting: prevent rapid-fire submission abuse
+    const now = Date.now();
+    if (_lastSubmittedAt && now - _lastSubmittedAt < MIN_SUBMIT_INTERVAL_MS) {
+      return false;
+    }
+
+    // Input validation: selectedIndex must be an integer within valid option bounds
+    if (
+      typeof selectedIndex !== 'number' ||
+      !Number.isInteger(selectedIndex) ||
+      selectedIndex < 0 ||
+      (currentQuestion.options && selectedIndex >= currentQuestion.options.length)
+    ) {
+      return false;
+    }
 
     set({ isSubmitting: true, error: null });
 
@@ -139,7 +168,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         currentQuestion.id,
         selectedIndex
       );
-      isCorrect = evaluation.isCorrect;
+      isCorrect = Boolean(evaluation?.isCorrect);
     } catch (err) {
       set({
         isSubmitting: false,
@@ -159,11 +188,15 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
     const updatedHistory = [...history, newHistoryItem];
 
+    // Compute real elapsed time; clamp to a sane range [1, 600] seconds.
+    const elapsedMs = _questionStartedAt > 0 ? now - _questionStartedAt : 0;
+    const timeSpentSeconds = Math.max(1, Math.min(600, Math.round(elapsedMs / 1000)));
+
     const newSubmission: QuestionAnswerSubmission = {
       questionId: currentQuestion.id,
       selectedIndex,
       isCorrect,
-      timeSpentSeconds: 5,
+      timeSpentSeconds,
     };
 
     const updatedSubmissions = [...submissions, newSubmission];
@@ -197,6 +230,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
           hasFinished: true,
           isSubmitting: false,
           error: null,
+          _questionStartedAt: 0,
+          _lastSubmittedAt: now,
         });
         return true;
       } catch (err) {
@@ -215,6 +250,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         currentQuestion: nextQ,
         questionNumber: questionNumber + 1,
         isSubmitting: false,
+        _questionStartedAt: Date.now(),
+        _lastSubmittedAt: Date.now(),
       });
       return false;
     }
@@ -233,6 +270,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       isLoading: false,
       error: null,
       hasFinished: false,
+      _questionStartedAt: 0,
+      _lastSubmittedAt: 0,
     });
   },
 }));

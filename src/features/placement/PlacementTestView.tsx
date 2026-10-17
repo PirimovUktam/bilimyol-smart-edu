@@ -46,10 +46,10 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
   const handleConfirmAnswer = async () => {
     if (selectedOption === null || isSubmitting) return;
 
-    sounds.playSuccess();
     const isDone = await submitAnswer(selectedOption);
     setSelectedOption(null);
     if (isDone) {
+      sounds.playSuccess();
       onComplete();
     }
   };

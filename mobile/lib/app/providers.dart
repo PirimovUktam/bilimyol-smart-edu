@@ -290,6 +290,8 @@ class PlacementState {
   final bool isSubmitting;
   final AssessmentResult? result;
   final bool hasLoaded;
+  final DateTime? questionStartedAt;
+  final DateTime? lastSubmittedAt;
 
   const PlacementState({
     required this.courseId,
@@ -302,6 +304,8 @@ class PlacementState {
     this.isSubmitting = false,
     this.result,
     this.hasLoaded = false,
+    this.questionStartedAt,
+    this.lastSubmittedAt,
   });
 
   // Backward-compatible getters
@@ -319,6 +323,8 @@ class PlacementState {
     bool? isSubmitting,
     AssessmentResult? result,
     bool? hasLoaded,
+    DateTime? questionStartedAt,
+    DateTime? lastSubmittedAt,
   }) {
     return PlacementState(
       courseId: courseId ?? this.courseId,
@@ -331,6 +337,8 @@ class PlacementState {
       isSubmitting: isSubmitting ?? this.isSubmitting,
       result: result ?? this.result,
       hasLoaded: hasLoaded ?? this.hasLoaded,
+      questionStartedAt: questionStartedAt ?? this.questionStartedAt,
+      lastSubmittedAt: lastSubmittedAt ?? this.lastSubmittedAt,
     );
   }
 }
@@ -374,12 +382,27 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       submissions: [],
       isSubmitting: false,
       hasLoaded: true,
+      questionStartedAt: firstQ != null ? DateTime.now() : null,
+      lastSubmittedAt: null,
     );
   }
 
   Future<bool> submitAnswer(int selectedIndex) async {
     final currentQ = state.currentQuestion;
     if (currentQ == null || state.isSubmitting) return true;
+
+    // Rate limiting: prevent rapid-fire submission abuse
+    final now = DateTime.now();
+    if (state.lastSubmittedAt != null &&
+        now.difference(state.lastSubmittedAt!).inMilliseconds < 800) {
+      return false;
+    }
+
+    // Input validation: selectedIndex must be within options range
+    if (selectedIndex < 0 ||
+        (currentQ.options.isNotEmpty && selectedIndex >= currentQ.options.length)) {
+      return false;
+    }
 
     state = state.copyWith(isSubmitting: true);
     final learnerRepository = ref.read(learnerRepositoryProvider);
@@ -396,6 +419,11 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
     }
     final isCorrect = evaluation.isCorrect;
 
+    final elapsed = state.questionStartedAt != null
+        ? now.difference(state.questionStartedAt!).inSeconds
+        : 5;
+    final timeSpentSeconds = elapsed.clamp(1, 600);
+
     final historyItem = AnswerHistoryItem(
       questionId: currentQ.id,
       skillId: currentQ.skillId,
@@ -407,6 +435,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       questionId: currentQ.id,
       selectedIndex: selectedIndex,
       isCorrect: isCorrect,
+      timeSpentSeconds: timeSpentSeconds,
     );
 
     final updatedHistory = List<AnswerHistoryItem>.from(state.history)
@@ -435,6 +464,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         submissions: updatedSubmissions,
         currentQuestion: null,
         isSubmitting: true,
+        lastSubmittedAt: now,
       );
 
       final submitUseCase = ref.read(submitPlacementTestUseCaseProvider);
@@ -452,7 +482,11 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         rethrow;
       }
 
-      state = state.copyWith(isSubmitting: false, result: result);
+      state = state.copyWith(
+        isSubmitting: false,
+        result: result,
+        lastSubmittedAt: DateTime.now(),
+      );
 
       await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
       await ref
@@ -467,6 +501,8 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         currentQuestion: nextQ,
         questionNumber: state.questionNumber + 1,
         isSubmitting: false,
+        questionStartedAt: DateTime.now(),
+        lastSubmittedAt: now,
       );
       return false;
     }
