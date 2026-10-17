@@ -28,15 +28,53 @@ class SubmitPlacementTestUseCase {
 
   const SubmitPlacementTestUseCase(this.courseRepository, this.learnerRepository);
 
-  Future<AssessmentResult> execute(String courseId, List<QuestionAnswerSubmission> submissions) async {
+  Future<AssessmentResult> execute(
+    String courseId,
+    List<QuestionAnswerSubmission> submissions,
+  ) async {
     final questions = await courseRepository.getPlacementQuestions(courseId);
 
-    // Record answer attempts in repository
+    if (submissions.isEmpty) {
+      throw ArgumentError('Placement javoblari bo‘sh bo‘lishi mumkin emas.');
+    }
+    final questionsById = {
+      for (final question in questions) question.id: question,
+    };
+    final seenQuestionIds = <String>{};
+    // Validate the entire adaptive submission before recording any answers.
+    for (final submission in submissions) {
+      final question = questionsById[submission.questionId];
+      if (question == null || question.courseId != courseId) {
+        throw ArgumentError.value(submission.questionId, 'questionId');
+      }
+      if (!seenQuestionIds.add(submission.questionId)) {
+        throw ArgumentError(
+          'Duplicate placement question: ${submission.questionId}',
+        );
+      }
+      if (submission.selectedIndex < 0 ||
+          submission.selectedIndex >= question.options.length) {
+        throw ArgumentError.value(submission.selectedIndex, 'selectedIndex');
+      }
+    }
+
+    // The repository returns the server-authoritative result in online mode;
+    // online placement never trusts the UI-provided isCorrect value for scoring.
+    // It uses read-only evaluation plus one atomic save RPC.
+    final verifiedSubmissions = <QuestionAnswerSubmission>[];
     for (final sub in submissions) {
-      final q = questions.where((item) => item.id == sub.questionId).firstOrNull;
-      if (q != null) {
-        final optionText = sub.selectedIndex < q.options.length ? q.options[sub.selectedIndex] : '';
-        await learnerRepository.recordAnswerAttempt(
+      final q = questionsById[sub.questionId]!;
+      final optionText = q.options[sub.selectedIndex];
+      final bool verifiedIsCorrect;
+      if (learnerRepository.supportsServerPlacementPersistence) {
+        final evaluation = await learnerRepository.evaluatePlacementAnswer(
+          courseId: courseId,
+          questionId: q.id,
+          selectedIndex: sub.selectedIndex,
+        );
+        verifiedIsCorrect = evaluation.isCorrect;
+      } else {
+        final attempt = await learnerRepository.recordAnswerAttempt(
           courseId: courseId,
           skillId: q.skillId,
           lessonId: 'placement_test',
@@ -45,11 +83,24 @@ class SubmitPlacementTestUseCase {
           selectedAnswer: optionText,
           isCorrect: sub.isCorrect,
         );
+        verifiedIsCorrect = attempt.isCorrect;
       }
+      verifiedSubmissions.add(
+        QuestionAnswerSubmission(
+          questionId: sub.questionId,
+          selectedIndex: sub.selectedIndex,
+          isCorrect: verifiedIsCorrect,
+          timeSpentSeconds: sub.timeSpentSeconds,
+        ),
+      );
     }
 
     // Real statistical placement scoring
-    final computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, submissions);
+    var computedScores = SkillScoringEngine.computePlacementScores(
+      courseId,
+      questions,
+      verifiedSubmissions,
+    );
 
     // Save to learner profile
     // Identify weakest skill dynamically
@@ -70,7 +121,7 @@ class SubmitPlacementTestUseCase {
         courseId: courseId,
         score: overallScore,
         weakestSkillId: weakestSkillId,
-        submissions: submissions
+        submissions: verifiedSubmissions
             .map((s) => PlacementAttemptSubmission(
                   questionId: s.questionId,
                   selectedIndex: s.selectedIndex,
@@ -80,17 +131,32 @@ class SubmitPlacementTestUseCase {
       ),
     );
 
-    // Save to learner profile
-    await learnerRepository.saveSkillScores(courseId, computedScores);
-
-    // Award +20 XP for completing placement test (idempotent)
-    await learnerRepository.addXp(20, 'placement_completed_$courseId');
-    await learnerRepository.recordDailyActivity();
+    // The production placement RPC already awards XP and activity atomically.
+    if (learnerRepository.supportsServerPlacementPersistence) {
+      final persistedProfile = await learnerRepository.getProfile();
+      computedScores = persistedProfile.scoresByCourse[courseId] ?? {};
+      weakestSkillId = '';
+      minScore = 101;
+      for (final score in computedScores.values) {
+        if (score.isWeakestFocus) {
+          weakestSkillId = score.skillId;
+          break;
+        }
+        if (score.score < minScore) {
+          minScore = score.score;
+          weakestSkillId = score.skillId;
+        }
+      }
+    } else {
+      await learnerRepository.saveSkillScores(courseId, computedScores);
+      await learnerRepository.addXp(20, 'placement_completed_$courseId');
+      await learnerRepository.recordDailyActivity();
+    }
 
     return AssessmentResult(
       assessmentId: attemptId.isNotEmpty ? attemptId : 'placement_$courseId',
       courseId: courseId,
-      submissions: submissions,
+      submissions: verifiedSubmissions,
       computedScores: computedScores,
       weakestSkillId: weakestSkillId,
       timestamp: DateTime.now().millisecondsSinceEpoch,

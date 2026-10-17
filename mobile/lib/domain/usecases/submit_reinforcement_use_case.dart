@@ -27,7 +27,10 @@ class SubmitReinforcementUseCase {
   final ILearnerRepository learnerRepository;
   final ILessonRepository lessonRepository;
 
-  const SubmitReinforcementUseCase(this.learnerRepository, this.lessonRepository);
+  const SubmitReinforcementUseCase(
+    this.learnerRepository,
+    this.lessonRepository,
+  );
 
   Future<ReinforcementResult> execute({
     required String courseId,
@@ -36,51 +39,114 @@ class SubmitReinforcementUseCase {
     required Question reinforcementQuestion,
     required int selectedIndex,
   }) async {
-    final isCorrect = selectedIndex == reinforcementQuestion.correctIndex;
+    if (courseId.isEmpty ||
+        skillId.isEmpty ||
+        reinforcementNodeId.isEmpty ||
+        reinforcementQuestion.id.isEmpty ||
+        reinforcementQuestion.courseId != courseId ||
+        reinforcementQuestion.skillId != skillId) {
+      throw ArgumentError('Mustahkamlash savoli kontekstga mos emas.');
+    }
+    if (selectedIndex < 0 ||
+        selectedIndex >= reinforcementQuestion.options.length) {
+      throw ArgumentError.value(selectedIndex, 'selectedIndex');
+    }
     final profile = await learnerRepository.getProfile();
     final courseScores = profile.scoresByCourse[courseId] ?? {};
     final currentSkillScore = courseScores[skillId]?.score ?? 0;
 
-    // Record answer attempt
-    await learnerRepository.recordAnswerAttempt(
+    // Correctness is deliberately absent from this call. The repository owns
+    // the source of truth (server RPC when authenticated, demo data offline).
+    final answerAttempt = await learnerRepository.submitAnswerAttempt(
       courseId: courseId,
       skillId: skillId,
       lessonId: reinforcementNodeId,
       questionId: reinforcementQuestion.id,
       selectedIndex: selectedIndex,
       selectedAnswer: reinforcementQuestion.options[selectedIndex],
-      isCorrect: isCorrect,
     );
+    final isCorrect = answerAttempt.isCorrect;
 
     if (!isCorrect) {
+      final currentProfile =
+          learnerRepository.supportsServerReinforcementPersistence
+          ? await learnerRepository.getProfile()
+          : profile;
+      final currentScores = currentProfile.scoresByCourse[courseId] ?? {};
+      final actualScore = currentScores[skillId]?.score ??
+          answerAttempt.newSkillScore ??
+          currentSkillScore;
       final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
       final currentRoadmap = RouteEngine.adaptRoadmap(
         courseId: courseId,
         baseNodes: baseNodes,
-        skillScores: courseScores,
-        completedNodeIds: profile.completedNodeIds,
-        completedReinforcementIds: profile.completedReinforcementIds,
+        skillScores: currentScores,
+        completedNodeIds: currentProfile.completedNodeIds,
+        completedReinforcementIds: currentProfile.completedReinforcementIds,
       );
       return ReinforcementResult(
         isCorrect: false,
         oldScore: currentSkillScore,
-        newScore: currentSkillScore,
+        newScore: actualScore,
         xpAwarded: 0,
         updatedRoadmap: currentRoadmap,
       );
     }
 
-    // 1. Calculate new score deterministically
-    final newScore = SkillScoringEngine.calculateReinforcementScore(currentSkillScore);
+    // Calculate all persistence context before writing the completion row.
+    final newScore = SkillScoringEngine.calculateReinforcementScore(
+      currentSkillScore,
+    );
+    final xpCalc = ProgressEngine.calculateNewXP(
+      currentXP: profile.xp,
+      actionType: 'reinforcement_completion',
+      actionId: reinforcementNodeId,
+      completedActionIds: profile.completedReinforcementIds,
+    );
+    final xpAwarded = xpCalc.wasAwarded ? xpCalc.newXP - profile.xp : 0;
 
-    // 2. Mark reinforcement node as completed
-    await learnerRepository.markReinforcementCompleted(reinforcementNodeId);
+    // The repository must persist the remote row or throw; success is not
+    // reported when the Supabase write fails.
+    final completion = await learnerRepository.markReinforcementCompleted(
+      reinforcementId: reinforcementNodeId,
+      courseId: courseId,
+      skillId: skillId,
+      questionId: reinforcementQuestion.id,
+      beforeScore: currentSkillScore,
+      afterScore: newScore,
+      xpAwarded: xpAwarded,
+    );
 
-    // Also mark target node as completed
+    if (learnerRepository.supportsServerReinforcementPersistence) {
+      if (completion == null) {
+        throw StateError('Server reinforcement completion result is missing.');
+      }
+      final persistedProfile = await learnerRepository.getProfile();
+      final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
+      return ReinforcementResult(
+        isCorrect: true,
+        oldScore: completion.oldScore,
+        newScore: completion.newScore,
+        xpAwarded: completion.alreadyProcessed ? 0 : completion.xpAwarded,
+        updatedRoadmap: RouteEngine.adaptRoadmap(
+          courseId: courseId,
+          baseNodes: baseNodes,
+          skillScores: persistedProfile.scoresByCourse[courseId] ?? {},
+          completedNodeIds: persistedProfile.completedNodeIds,
+          completedReinforcementIds: persistedProfile.completedReinforcementIds,
+        ),
+      );
+    }
+
+    // Demo repositories can persist roadmap-node completion locally. The
+    // production repository must not manufacture a local success after a
+    // remote reinforcement write; the server owns that state.
     final targetNodeId = reinforcementNodeId.replaceAll('reinf_', '');
-    await learnerRepository.markNodeCompleted(targetNodeId);
+    if (learnerRepository.supportsNodeCompletion) {
+      await learnerRepository.markNodeCompleted(targetNodeId, courseId: courseId);
+    }
 
-    // 3. Save new score
+    // Save the new skill score.
     final updatedSkillScore = SkillScore(
       skillId: skillId,
       courseId: courseId,
@@ -94,17 +160,12 @@ class SubmitReinforcementUseCase {
       skillId: updatedSkillScore,
     });
 
-    // 4. Calculate XP idempotently
-    final xpCalc = ProgressEngine.calculateNewXP(
-      currentXP: profile.xp,
-      actionType: 'reinforcement_completion',
-      actionId: reinforcementNodeId,
-      completedActionIds: profile.completedReinforcementIds,
-    );
-
     if (xpCalc.wasAwarded) {
-      final updatedProfile = await learnerRepository.getProfile();
-      await learnerRepository.updateProfile(updatedProfile.copyWith(xp: xpCalc.newXP));
+      // Preserve completion/score changes made by the repositories above.
+      final currentProfile = await learnerRepository.getProfile();
+      await learnerRepository.updateProfile(
+        currentProfile.copyWith(xp: xpCalc.newXP),
+      );
     }
 
     // 5. Adapt updated roadmap
@@ -124,7 +185,7 @@ class SubmitReinforcementUseCase {
       isCorrect: true,
       oldScore: currentSkillScore,
       newScore: newScore,
-      xpAwarded: xpCalc.wasAwarded ? 30 : 0,
+      xpAwarded: xpAwarded,
       updatedRoadmap: updatedRoadmap,
     );
   }

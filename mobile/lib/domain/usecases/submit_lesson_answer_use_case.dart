@@ -1,5 +1,6 @@
 import '../../data/services/i_ai_tutor_service.dart';
 import '../entities/question.dart';
+import '../repositories/i_learner_repository.dart';
 
 class LessonAnswerResult {
   final bool isCorrect;
@@ -17,17 +18,30 @@ class LessonAnswerResult {
 
 class SubmitLessonAnswerUseCase {
   final IAITutorService aiTutorService;
+  final ILearnerRepository learnerRepository;
 
-  const SubmitLessonAnswerUseCase(this.aiTutorService);
+  const SubmitLessonAnswerUseCase(this.aiTutorService, this.learnerRepository);
 
   Future<LessonAnswerResult> execute({
     required Question question,
+    required String lessonId,
     required int selectedIndex,
     String? learnerName,
   }) async {
-    final isCorrect = selectedIndex == question.correctIndex;
     final selectedOption = question.options[selectedIndex];
-    final correctOption = question.options[question.correctIndex];
+    final attempt = await learnerRepository.recordAnswerAttempt(
+      courseId: question.courseId,
+      skillId: question.skillId,
+      lessonId: lessonId,
+      questionId: question.id,
+      selectedIndex: selectedIndex,
+      selectedAnswer: selectedOption,
+      // Used only by the offline repository. Authenticated scoring is returned
+      // by the server RPC and is read from `attempt.isCorrect` below.
+      isCorrect: selectedIndex == question.correctIndex,
+    );
+    final isCorrect = attempt.isCorrect;
+    final correctOption = attempt.correctOption ?? (isCorrect ? selectedOption : '');
 
     if (isCorrect) {
       return LessonAnswerResult(
@@ -45,7 +59,7 @@ class SubmitLessonAnswerUseCase {
         questionId: question.id,
         questionText: question.text,
         selectedOption: selectedOption,
-        correctOption: correctOption,
+        correctOption: correctOption.isEmpty ? 'to‘g‘ri javob' : correctOption,
         learnerName: learnerName,
       ),
     );

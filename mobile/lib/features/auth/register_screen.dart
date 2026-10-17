@@ -73,18 +73,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         },
       );
 
-      if (res.user != null) {
-        final displayName = lastName.isNotEmpty ? '$firstName $lastName' : firstName;
-        try {
-          await client.from('profiles').upsert({
-            'id': res.user!.id,
-            'first_name': firstName,
-            'last_name': lastName,
-            'display_name': displayName,
-            'email': email,
-            'updated_at': DateTime.now().toIso8601String(),
-          });
-        } catch (_) {}
+      // The auth trigger provisions the profile. With email confirmation there
+      // is no session yet: do not attempt an anonymous profile write/read.
+      if (res.session == null) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Hisob yaratildi. Emaildagi tasdiqlash havolasini oching va tizimga kiring.'),
+        ));
+        context.go('/login');
+        return;
       }
 
       final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);

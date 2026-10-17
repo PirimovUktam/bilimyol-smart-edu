@@ -4,8 +4,6 @@ import '../datasources/demo_ai_data.dart';
 class DemoAITutorService implements IAITutorService {
   @override
   Future<AIExplanationResponse> explainMistake(AIExplanationRequest request) async {
-    // Artificial minimal delay (100ms) for natural feel without slowing tests
-    await Future.delayed(const Duration(milliseconds: 100));
 
     final matched = demoAiResponsesData[request.questionId];
 
@@ -32,7 +30,6 @@ class DemoAITutorService implements IAITutorService {
 
   @override
   Future<GeneratedLessonResponse> generateLesson(GenerateLessonRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 100));
     final topic = request.topic ?? request.skillId;
     return GeneratedLessonResponse(
       lessonId: 'lesson_fallback_${request.skillId}',
@@ -49,6 +46,18 @@ class DemoAITutorService implements IAITutorService {
       questions: const [],
       isAiGenerated: false,
       model: 'gemini-3.6-flash',
+    );
+  }
+
+  @override
+  Future<AskTutorResponse> askTutor(AskTutorRequest request) async {
+    final topic = request.topic ?? 'bu mavzu';
+    return AskTutorResponse(
+      tutorName: 'Yo‘lchi AI',
+      answer:
+          '$topic bo‘yicha savolingiz juda yaxshi! Keling, birgalikda qadam-baqadam ko‘rib chiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qo‘llab ko‘ramiz.',
+      isAiGenerated: false,
+      isDeterministicFallback: true,
     );
   }
 }

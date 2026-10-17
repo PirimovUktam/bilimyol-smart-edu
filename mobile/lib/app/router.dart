@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config/supabase_config.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
@@ -14,8 +17,56 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/progress/progress_screen.dart';
 import '../features/ai_tutor/ai_tutor_screen.dart';
 
+/// Bridges Supabase auth state changes into a [Listenable] so GoRouter can
+/// re-evaluate its redirect guard whenever the session appears or disappears.
+class _AuthRefreshNotifier extends ChangeNotifier {
+  StreamSubscription<AuthState>? _sub;
+
+  _AuthRefreshNotifier() {
+    if (SupabaseConfig.isConfigured) {
+      try {
+        _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+          notifyListeners();
+        });
+      } catch (_) {
+        // Supabase not available: guard falls back to demo (always signed-in) mode.
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+}
+
+const Set<String> _publicRoutes = {
+  '/login',
+  '/register',
+  '/forgot-password',
+};
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/courses',
+  refreshListenable: _AuthRefreshNotifier(),
+  redirect: (context, state) {
+    // When Supabase is not configured the app runs in local demo mode:
+    // demo users are treated as authenticated so they can explore the platform.
+    if (!SupabaseConfig.isConfigured) return null;
+
+    final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
+    final path = state.matchedLocation;
+    final isPublic = _publicRoutes.contains(path);
+
+    if (!isLoggedIn && !isPublic) {
+      return '/login';
+    }
+    if (isLoggedIn && isPublic) {
+      return '/dashboard';
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/',

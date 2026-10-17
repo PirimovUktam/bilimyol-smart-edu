@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
@@ -27,6 +28,7 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
   int? _selectedOption;
   bool _isSubmitting = false;
   ReinforcementResult? _result;
+  String? _error;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,11 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                         color: AppColors.warningLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.bolt_rounded, color: AppColors.warning, size: 22),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: AppColors.warning,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -74,9 +80,15 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                         children: [
                           Row(
                             children: const [
-                              AppBadge(text: 'Mustahkamlash Mashqi', variant: AppBadgeVariant.amber),
+                              AppBadge(
+                                text: 'Mustahkamlash Mashqi',
+                                variant: AppBadgeVariant.amber,
+                              ),
                               SizedBox(width: 6),
-                              AppBadge(text: '+30 XP', variant: AppBadgeVariant.emerald),
+                              AppBadge(
+                                text: '+30 XP',
+                                variant: AppBadgeVariant.emerald,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 2),
@@ -140,17 +152,29 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Material(
-                      color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.7) : AppColors.surface,
+                      color: isSelected
+                          ? AppColors.primaryLight.withValues(alpha: 0.7)
+                          : AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
-                        onTap: () => setState(() => _selectedOption = idx),
+                        onTap: _isSubmitting
+                            ? null
+                            : () => setState(() {
+                                _selectedOption = idx;
+                                _error = null;
+                              }),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.cardBorder,
                               width: isSelected ? 2 : 1.2,
                             ),
                           ),
@@ -160,7 +184,9 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                                 width: 24,
                                 height: 24,
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Center(
@@ -169,7 +195,9 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w800,
-                                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -186,7 +214,11 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                                 ),
                               ),
                               if (isSelected)
-                                const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
                             ],
                           ),
                         ),
@@ -205,13 +237,45 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                       ? null
                       : () async {
                           setState(() => _isSubmitting = true);
-                          final res = await widget.onSubmit(_selectedOption!);
+                          ReinforcementResult? res;
+                          try {
+                            res = await widget.onSubmit(_selectedOption!);
+                          } catch (_) {
+                            if (!mounted) return;
+                            setState(() {
+                              _isSubmitting = false;
+                              _error =
+                                  'Natijani saqlab bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.';
+                            });
+                            return;
+                          }
+                          if (!mounted) return;
+                          // Micro-win feedback: haptic on the outcome.
+                          if (res?.isCorrect == true) {
+                            HapticFeedback.mediumImpact();
+                          } else {
+                            HapticFeedback.heavyImpact();
+                          }
                           setState(() {
                             _isSubmitting = false;
                             _result = res;
+                            _error = res == null
+                                ? 'Natijani olishning imkoni bo‘lmadi. Qayta urinib ko‘ring.'
+                                : null;
                           });
                         },
                 ),
+                if (_error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _error!,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ] else ...[
                 // SUCCESS CELEBRATION MODAL VIEW
                 Center(
@@ -223,7 +287,11 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.success, width: 2),
                     ),
-                    child: const Icon(Icons.celebration_rounded, color: AppColors.success, size: 32),
+                    child: const Icon(
+                      Icons.celebration_rounded,
+                      color: AppColors.success,
+                      size: 32,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -264,7 +332,10 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                             children: [
                               Text(
                                 'Eski Bal',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  color: const Color(0xFF94A3B8),
+                                ),
                               ),
                               Text(
                                 '${_result!.oldScore}%',
@@ -277,13 +348,20 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                             ],
                           ),
                           const SizedBox(width: 20),
-                          const Icon(Icons.arrow_forward_rounded, color: Color(0xFF38BDF8), size: 24),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Color(0xFF38BDF8),
+                            size: 24,
+                          ),
                           const SizedBox(width: 20),
                           Column(
                             children: [
                               Text(
                                 'Yangi Bal',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  color: const Color(0xFF94A3B8),
+                                ),
                               ),
                               Text(
                                 '${_result!.newScore}%',
@@ -299,7 +377,10 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                       ),
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E293B),
                           borderRadius: BorderRadius.circular(8),
@@ -308,7 +389,11 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFFBBF24)),
+                            const Icon(
+                              Icons.bolt_rounded,
+                              size: 16,
+                              color: Color(0xFFFBBF24),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '+30 XP mukofoti qo‘shildi!',
@@ -328,12 +413,18 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
 
                 // Unlocked route notification
                 AppCard(
-                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
+                  backgroundColor: AppColors.primaryLight.withValues(
+                    alpha: 0.5,
+                  ),
                   borderColor: AppColors.primary.withValues(alpha: 0.3),
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      const Icon(Icons.lock_open_rounded, color: AppColors.primary, size: 20),
+                      const Icon(
+                        Icons.lock_open_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -354,7 +445,11 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                   text: 'Dashboardga O‘tish',
                   isFullWidth: true,
                   size: AppButtonSize.large,
-                  rightIcon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                  rightIcon: const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   onPressed: widget.onGoToDashboard,
                 ),
               ],

@@ -7,6 +7,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/learning_path_node.dart';
 
@@ -22,9 +23,12 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final activeCourse = ref.read(courseStateNotifierProvider).activeCourse;
       if (activeCourse != null) {
-        ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(activeCourse.id);
+        ref
+            .read(roadmapStateNotifierProvider.notifier)
+            .loadRoadmap(activeCourse.id);
       }
     });
   }
@@ -118,12 +122,27 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             Expanded(
               child: roadmapAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Xatolik: $e')),
+                error: (_, _) => FriendlyErrorState(
+                  message: 'Ta’lim yo‘lini yuklab bo‘lmadi.',
+                  onRetry: () {
+                    final course = ref
+                        .read(courseStateNotifierProvider)
+                        .activeCourse;
+                    if (course != null) {
+                      ref
+                          .read(roadmapStateNotifierProvider.notifier)
+                          .loadRoadmap(course.id);
+                    }
+                  },
+                ),
                 data: (roadmap) {
                   final nodes = roadmap.nodes;
 
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -132,7 +151,12 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           final node = nodes[index];
                           final isLast = index == nodes.length - 1;
 
-                          return _buildTimelineItem(context, node, isLast, index + 1);
+                          return _buildTimelineItem(
+                            context,
+                            node,
+                            isLast,
+                            index + 1,
+                          );
                         }),
 
                         const SizedBox(height: 24),
@@ -148,11 +172,19 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     );
   }
 
-  Widget _buildTimelineItem(BuildContext context, LearningPathNode node, bool isLast, int stepNum) {
+  Widget _buildTimelineItem(
+    BuildContext context,
+    LearningPathNode node,
+    bool isLast,
+    int stepNum,
+  ) {
     final isCompleted = node.status == NodeStatus.completed;
-    final isReinforcement = node.status == NodeStatus.reinforcement || node.isReinforcement;
+    final isReinforcement =
+        node.status == NodeStatus.reinforcement || node.isReinforcement;
     final isLocked = node.status == NodeStatus.locked;
-    final isAvailable = node.status == NodeStatus.available || node.status == NodeStatus.inProgress;
+    final isAvailable =
+        node.status == NodeStatus.available ||
+        node.status == NodeStatus.inProgress;
 
     Color iconBg;
     IconData iconData;
@@ -191,17 +223,18 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                 boxShadow: isAvailable || isCompleted
                     ? [
                         BoxShadow(
-                          color: (isCompleted ? const Color(0xFF10B981) : AppColors.primary)
-                              .withValues(alpha: 0.3),
+                          color:
+                              (isCompleted
+                                      ? const Color(0xFF10B981)
+                                      : AppColors.primary)
+                                  .withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
                       ]
                     : null,
               ),
-              child: Center(
-                child: Icon(iconData, color: iconColor, size: 20),
-              ),
+              child: Center(child: Icon(iconData, color: iconColor, size: 20)),
             ),
             if (!isLast)
               Container(
@@ -210,8 +243,8 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                 color: isCompleted
                     ? const Color(0xFF10B981)
                     : isAvailable
-                        ? AppColors.primary
-                        : AppColors.cardBorder,
+                    ? AppColors.primary
+                    : AppColors.cardBorder,
               ),
           ],
         ),
@@ -226,10 +259,10 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
               borderColor: isReinforcement
                   ? const Color(0xFFFFCCBC)
                   : isAvailable
-                      ? AppColors.primary.withValues(alpha: 0.4)
-                      : isCompleted
-                          ? const Color(0xFFA7F3D0)
-                          : AppColors.cardBorder,
+                  ? AppColors.primary.withValues(alpha: 0.4)
+                  : isCompleted
+                  ? const Color(0xFFA7F3D0)
+                  : AppColors.cardBorder,
               borderWidth: isAvailable ? 1.5 : 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,13 +280,25 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                         ),
                       ),
                       if (isReinforcement)
-                        const AppBadge(text: 'Mustahkamlash', variant: AppBadgeVariant.amber)
+                        const AppBadge(
+                          text: 'Mustahkamlash',
+                          variant: AppBadgeVariant.amber,
+                        )
                       else if (isCompleted)
-                        const AppBadge(text: 'Bajarildi (100%)', variant: AppBadgeVariant.emerald)
+                        const AppBadge(
+                          text: 'Bajarildi (100%)',
+                          variant: AppBadgeVariant.emerald,
+                        )
                       else if (isAvailable)
-                        const AppBadge(text: 'Faol dars', variant: AppBadgeVariant.blue)
+                        const AppBadge(
+                          text: 'Faol dars',
+                          variant: AppBadgeVariant.blue,
+                        )
                       else
-                        const AppBadge(text: 'Bloklangan', variant: AppBadgeVariant.slate),
+                        const AppBadge(
+                          text: 'Bloklangan',
+                          variant: AppBadgeVariant.slate,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -262,7 +307,9 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: isLocked ? AppColors.textMuted : AppColors.textPrimary,
+                      color: isLocked
+                          ? AppColors.textMuted
+                          : AppColors.textPrimary,
                     ),
                   ),
                   if (node.description.isNotEmpty) ...[
@@ -282,7 +329,11 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.timer_outlined, size: 14, color: AppColors.textMuted),
+                          const Icon(
+                            Icons.timer_outlined,
+                            size: 14,
+                            color: AppColors.textMuted,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${node.estimatedMinutes} daqiqa',
@@ -298,11 +349,19 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                         AppButton(
                           text: isReinforcement ? 'Mashq qilish' : 'Boshlash',
                           size: AppButtonSize.small,
-                          variant: isReinforcement ? AppButtonVariant.primary : AppButtonVariant.primary,
-                          rightIcon: const Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
-                          onPressed: () {
-                            ref.read(lessonSessionNotifierProvider.notifier).startLesson(node.id);
-                            context.push('/lesson');
+                          variant: isReinforcement
+                              ? AppButtonVariant.primary
+                              : AppButtonVariant.primary,
+                          rightIcon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          onPressed: () async {
+                            await ref
+                                .read(lessonSessionNotifierProvider.notifier)
+                                .startLesson(node.id);
+                            if (context.mounted) context.push('/lesson');
                           },
                         )
                       else if (isCompleted)
@@ -310,9 +369,11 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           text: 'Takrorlash',
                           size: AppButtonSize.small,
                           variant: AppButtonVariant.outline,
-                          onPressed: () {
-                            ref.read(lessonSessionNotifierProvider.notifier).startLesson(node.id);
-                            context.push('/lesson');
+                          onPressed: () async {
+                            await ref
+                                .read(lessonSessionNotifierProvider.notifier)
+                                .startLesson(node.id);
+                            if (context.mounted) context.push('/lesson');
                           },
                         ),
                     ],

@@ -90,7 +90,38 @@ class GeneratedLessonResponse {
   });
 }
 
+class AskTutorRequest {
+  final String message;
+  final String? courseId;
+  final String? topic;
+  final String? learnerName;
+  final int? learnerScore;
+
+  const AskTutorRequest({
+    required this.message,
+    this.courseId,
+    this.topic,
+    this.learnerName,
+    this.learnerScore,
+  });
+}
+
+class AskTutorResponse {
+  final String tutorName;
+  final String answer;
+  final bool isAiGenerated;
+  final bool isDeterministicFallback;
+
+  const AskTutorResponse({
+    required this.tutorName,
+    required this.answer,
+    this.isAiGenerated = true,
+    this.isDeterministicFallback = false,
+  });
+}
+
 abstract class IAITutorService {
   Future<AIExplanationResponse> explainMistake(AIExplanationRequest request);
   Future<GeneratedLessonResponse> generateLesson(GenerateLessonRequest request);
+  Future<AskTutorResponse> askTutor(AskTutorRequest request);
 }

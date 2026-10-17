@@ -51,7 +51,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     final qNumber = placementState.questionNumber;
     final totalQ = placementState.totalQuestionsToAsk;
 
-    if (placementState.isSubmitting || currentQ == null) {
+    if (placementState.isSubmitting) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
@@ -77,6 +77,74 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      );
+    }
+
+    if (currentQ == null) {
+      final isLoadingQuestions = !placementState.hasLoaded;
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isLoadingQuestions ? Icons.hourglass_top_rounded : Icons.error_outline_rounded,
+                  size: 44,
+                  color: AppColors.textMuted,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isLoadingQuestions
+                      ? 'Savollar tayyorlanmoqda...'
+                      : 'Savollarni yuklab bo‘lmadi',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  isLoadingQuestions
+                      ? 'Bilim darajasini aniqlash uchun savollar yuklanmoqda.'
+                      : 'Internet aloqasini tekshirib, qayta urinib ko‘ring.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                if (isLoadingQuestions)
+                  const CircularProgressIndicator(color: AppColors.primary)
+                else ...[
+                  AppButton(
+                    text: 'Qayta urinish',
+                    isFullWidth: true,
+                    leftIcon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                    onPressed: () {
+                      final active = activeCourse ?? courseState.activeCourse;
+                      if (active != null) {
+                        ref.read(placementStateNotifierProvider.notifier).loadQuestions(active.id);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  AppButton(
+                    text: 'Orqaga',
+                    isFullWidth: true,
+                    variant: AppButtonVariant.outline,
+                    onPressed: () => context.go('/courses'),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       );

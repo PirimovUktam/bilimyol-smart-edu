@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/app_button.dart';
@@ -17,6 +19,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isSent = false;
   bool _isLoading = false;
+  String? _errorMsg;
 
   @override
   void dispose() {
@@ -24,17 +27,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _handleReset() async {
+  Future<void> _handleReset() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty) return;
+    if (email.isEmpty) {
+      setState(() => _errorMsg = 'Iltimos, email manzilingizni kiriting.');
+      return;
+    }
 
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _isSent = true;
-      });
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      if (SupabaseConfig.isConfigured) {
+        await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      } else {
+        // Local demo mode has no real mail backend; keep behavior graceful.
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isSent = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMsg = e.toString().replaceFirst('AuthApiException: ', '');
+        });
+      }
     }
   }
 
@@ -135,6 +159,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
+                            if (_errorMsg != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.errorLight,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMsg!,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
                             AppButton(
                               text: 'Tiklash havolasini yuborish',
                               isFullWidth: true,

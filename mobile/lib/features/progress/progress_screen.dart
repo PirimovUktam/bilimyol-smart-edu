@@ -6,34 +6,66 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
+import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
+import '../../domain/repositories/i_learner_repository.dart';
 
-class ProgressScreen extends ConsumerWidget {
+const _dayNames = ['Yak', 'Dsh', 'Ssh', 'Chor', 'Pay', 'Jum', 'Shan'];
+
+class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
+}
+
+class _ProgressScreenState extends ConsumerState<ProgressScreen> {
+  String _timeframe = 'week';
+  List<DailyActivitySummary> _activity = [];
+  bool _isLoadingActivity = true;
+  String? _activityError;
+  int _activityGeneration = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActivity();
+  }
+
+  Future<void> _loadActivity() async {
+    final generation = ++_activityGeneration;
+    if (!mounted) return;
+    setState(() => _isLoadingActivity = true);
+    final days = _timeframe == 'week' ? 7 : 30;
+    try {
+      final repo = ref.read(learnerRepositoryProvider);
+      final data = await repo.getDailyActivity(days);
+      if (mounted && generation == _activityGeneration) {
+        setState(() {
+          _activity = data;
+          _activityError = null;
+        });
+      }
+    } catch (_) {
+      if (mounted && generation == _activityGeneration) {
+        setState(() {
+          _activity = [];
+          _activityError = 'Faollik ma’lumotlarini yuklab bo‘lmadi.';
+        });
+      }
+    } finally {
+      if (mounted && generation == _activityGeneration) {
+        setState(() => _isLoadingActivity = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final courseState = ref.watch(courseStateNotifierProvider);
     final learnerAsync = ref.watch(learnerStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
-
-    final weeklyHours = [
-      {'day': 'Dsh', 'hours': 1.2, 'peak': false},
-      {'day': 'Ssh', 'hours': 0.8, 'peak': false},
-      {'day': 'Chor', 'hours': 1.5, 'peak': false},
-      {'day': 'Pay', 'hours': 2.1, 'peak': true},
-      {'day': 'Jum', 'hours': 1.8, 'peak': false},
-      {'day': 'Shan', 'hours': 1.0, 'peak': false},
-      {'day': 'Yak', 'hours': 1.3, 'peak': false},
-    ];
-
-    final badges = [
-      {'title': 'Muntazam O‘quvchi', 'icon': '🏆', 'desc': '7 kun uzluksiz o‘qish'},
-      {'title': 'Tushunish Chempioni', 'icon': '🎯', 'desc': '90%+ to‘g‘ri javoblar'},
-      {'title': 'Mavzu Master', 'icon': '⭐', 'desc': 'Modul 100% bajarildi'},
-      {'title': 'Yo‘lchi AI Do‘sti', 'icon': '🤖', 'desc': 'AI bilan o‘rganish'},
-    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -46,26 +78,40 @@ class ProgressScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Bu oy',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+          GestureDetector(
+            onTap: () {
+              setState(
+                () => _timeframe = _timeframe == 'week' ? 'month' : 'week',
+              );
+              _loadActivity();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    _timeframe == 'week' ? 'Bu hafta' : 'Bu oy',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    size: 16,
                     color: AppColors.primary,
                   ),
-                ),
-                const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.primary),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -74,10 +120,26 @@ class ProgressScreen extends ConsumerWidget {
       body: SafeArea(
         child: learnerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Xatolik: $e')),
+          error: (_, _) => FriendlyErrorState(
+            message: 'Profil natijalarini yuklab bo‘lmadi.',
+            onRetry: () =>
+                ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
+          ),
           data: (profile) {
-            final courseScores = profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
-            final overallScore = SkillScoringEngine.computeOverallScore(courseScores);
+            final courseScores =
+                profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
+            final overallScore = SkillScoringEngine.computeOverallScore(
+              courseScores,
+            );
+            final completedLessons = profile.completedLessonIds.length;
+            final totalMinutes = _activity.fold<int>(
+              0,
+              (acc, d) => acc + d.activeMinutes,
+            );
+            final maxMinutes = _activity.fold<int>(
+              1,
+              (acc, d) => d.activeMinutes > acc ? d.activeMinutes : acc,
+            );
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -92,7 +154,7 @@ class ProgressScreen extends ConsumerWidget {
                           icon: Icons.check_circle_rounded,
                           iconColor: const Color(0xFF10B981),
                           bgColor: const Color(0xFFECFDF5),
-                          value: '28',
+                          value: '$completedLessons',
                           label: 'Bajarilgan dars',
                         ),
                       ),
@@ -102,8 +164,8 @@ class ProgressScreen extends ConsumerWidget {
                           icon: Icons.percent_rounded,
                           iconColor: const Color(0xFF06B6D4),
                           bgColor: const Color(0xFFECFEFF),
-                          value: '92%',
-                          label: 'To‘g‘ri javoblar',
+                          value: '$overallScore%',
+                          label: 'O‘zlashtirish',
                         ),
                       ),
                     ],
@@ -164,53 +226,89 @@ class ProgressScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         SizedBox(
                           height: 130,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: weeklyHours.map((wh) {
-                              final hrs = wh['hours'] as double;
-                              final peak = wh['peak'] as bool;
-                              final heightRatio = hrs / 2.1;
+                          child: _isLoadingActivity
+                              ? const Center(child: CircularProgressIndicator())
+                              : _activityError != null
+                              ? _buildActivityError()
+                              : (_activity.isEmpty || totalMinutes == 0)
+                              ? Center(
+                                  child: Text(
+                                    'Hali o‘quv faoliyati qayd etilmagan.',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: _activity.map((d) {
+                                    final hrs = d.activeMinutes / 60;
+                                    final peak =
+                                        d.activeMinutes == maxMinutes &&
+                                        maxMinutes > 0;
+                                    final heightRatio = maxMinutes == 0
+                                        ? 0.0
+                                        : d.activeMinutes / maxMinutes;
+                                    final date = DateTime.tryParse(d.date);
+                                    final dayLabel = date != null
+                                        ? _dayNames[date.weekday % 7]
+                                        : '';
 
-                              return Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    hrs.toString(),
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: peak ? AppColors.primary : AppColors.textMuted,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    width: 26,
-                                    height: 80 * heightRatio,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: peak
-                                            ? [const Color(0xFF4F46E5), const Color(0xFF06B6D4)]
-                                            : [const Color(0xFF38BDF8), const Color(0xFF0284C7)],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    wh['day'] as String,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
+                                    return Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          hrs.toStringAsFixed(1),
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            color: peak
+                                                ? AppColors.primary
+                                                : AppColors.textMuted,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          width: _timeframe == 'week' ? 26 : 8,
+                                          height:
+                                              80 * heightRatio +
+                                              (d.activeMinutes > 0 ? 6 : 0),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: peak
+                                                  ? [
+                                                      const Color(0xFF4F46E5),
+                                                      const Color(0xFF06B6D4),
+                                                    ]
+                                                  : [
+                                                      const Color(0xFF38BDF8),
+                                                      const Color(0xFF0284C7),
+                                                    ],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            ),
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(8),
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          _timeframe == 'week' ? dayLabel : '',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
                         ),
                       ],
                     ),
@@ -234,28 +332,47 @@ class ProgressScreen extends ConsumerWidget {
                         const SizedBox(height: 14),
                         _SubjectBar(
                           title: 'Matematika',
-                          percent: overallScore > 0 ? overallScore : 85,
+                          percent:
+                              (profile.scoresByCourse['course_math_01'] != null)
+                              ? SkillScoringEngine.computeOverallScore(
+                                  profile.scoresByCourse['course_math_01']!,
+                                )
+                              : 0,
                           color: AppColors.primary,
                           iconText: '📐',
                         ),
                         const SizedBox(height: 12),
                         _SubjectBar(
                           title: 'Ingliz tili',
-                          percent: 70,
+                          percent:
+                              (profile.scoresByCourse['course_eng_01'] != null)
+                              ? SkillScoringEngine.computeOverallScore(
+                                  profile.scoresByCourse['course_eng_01']!,
+                                )
+                              : 0,
                           color: const Color(0xFFF43F5E),
                           iconText: '🇬🇧',
                         ),
                         const SizedBox(height: 12),
                         _SubjectBar(
                           title: 'IT & Algoritmlar',
-                          percent: 90,
+                          percent: (profile.scoresByCourse['course_it'] != null)
+                              ? SkillScoringEngine.computeOverallScore(
+                                  profile.scoresByCourse['course_it']!,
+                                )
+                              : 0,
                           color: const Color(0xFF06B6D4),
                           iconText: '💻',
                         ),
                         const SizedBox(height: 12),
                         _SubjectBar(
                           title: 'Mantiqiy fikrlash',
-                          percent: 65,
+                          percent:
+                              (profile.scoresByCourse['course_logic'] != null)
+                              ? SkillScoringEngine.computeOverallScore(
+                                  profile.scoresByCourse['course_logic']!,
+                                )
+                              : 0,
                           color: const Color(0xFFF59E0B),
                           iconText: '🧩',
                         ),
@@ -264,80 +381,128 @@ class ProgressScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Gamified Badges
-                  AppCard(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Yutuqlar va nishonlar',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
+                  // Gamified Badges (derived from real learner metrics)
+                  (() {
+                    final realBadges = <Map<String, dynamic>>[
+                      {
+                        'title': 'Muntazam O‘quvchi',
+                        'icon': '🏆',
+                        'desc': '7 kun uzluksiz o‘qish',
+                        'earned': profile.streakDays >= 7,
+                      },
+                      {
+                        'title': 'Tushunish Chempioni',
+                        'icon': '🎯',
+                        'desc': '90%+ o‘zlashtirish',
+                        'earned': overallScore >= 90,
+                      },
+                      {
+                        'title': 'Mavzu Master',
+                        'icon': '⭐',
+                        'desc': '5+ dars tugatilgan',
+                        'earned': completedLessons >= 5,
+                      },
+                      {
+                        'title': 'Ilk Qadam',
+                        'icon': '🤖',
+                        'desc': 'Birinchi dars yakunlandi',
+                        'earned': completedLessons >= 1,
+                      },
+                    ];
+                    final earnedCount = realBadges
+                        .where((b) => b['earned'] == true)
+                        .length;
+
+                    return AppCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Yutuqlar va nishonlar',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
-                            ),
-                            const AppBadge(text: '4/4 Olingan', variant: AppBadgeVariant.emerald),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: badges.map((b) {
-                            return Container(
-                              width: (MediaQuery.of(context).size.width - 72) / 2,
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.cardBorder),
+                              AppBadge(
+                                text:
+                                    '$earnedCount/${realBadges.length} Olingan',
+                                variant: AppBadgeVariant.emerald,
                               ),
-                              child: Row(
-                                children: [
-                                  Text(b['icon']!, style: const TextStyle(fontSize: 22)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          b['title']!,
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          b['desc']!,
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 9.5,
-                                            color: AppColors.textMuted,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: realBadges.map((b) {
+                              final earned = b['earned'] == true;
+                              return Container(
+                                width:
+                                    (MediaQuery.of(context).size.width - 72) /
+                                    2,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: AppColors.cardBorder,
                                   ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Opacity(
+                                      opacity: earned ? 1.0 : 0.4,
+                                      child: Text(
+                                        earned ? b['icon']! : '🔒',
+                                        style: const TextStyle(fontSize: 22),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            b['title']!,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            b['desc']!,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 9.5,
+                                              color: AppColors.textMuted,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    );
+                  })(),
                   const SizedBox(height: 20),
 
-                  // Yo'lchi AI Mascot Tip Banner
+                  // Yo'lchi AI Mascot Tip Banner (honest, data-driven)
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -346,14 +511,19 @@ class ProgressScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const YolchiAIMascot(size: 52, mood: YolchiMood.celebrating),
+                        const YolchiAIMascot(
+                          size: 52,
+                          mood: YolchiMood.celebrating,
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Ajoyib natija! 🚀',
+                                completedLessons > 0
+                                    ? 'Ajoyib natija! 🚀'
+                                    : 'Boshlashga tayyormisiz? 🚀',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -362,7 +532,9 @@ class ProgressScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Tenglamalar bo‘yicha ko‘nikmangiz 22% ga oshdi. Darslarni davom ettiring!',
+                                completedLessons > 0
+                                    ? 'Siz $completedLessons ta darsni yakunlab, ${profile.xp} XP to‘pladingiz. Shu sur’atda davom eting!'
+                                    : 'Birinchi darsni yakunlab, XP yig‘ishni boshlang!',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11.5,
                                   color: Colors.white.withValues(alpha: 0.9),
@@ -381,6 +553,32 @@ class ProgressScreen extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildActivityError() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.cloud_off_rounded,
+          size: 28,
+          color: AppColors.textMuted,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _activityError!,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11.5,
+            color: AppColors.textMuted,
+          ),
+        ),
+        TextButton(
+          onPressed: _loadActivity,
+          child: const Text('Qayta urinish'),
+        ),
+      ],
     );
   }
 }

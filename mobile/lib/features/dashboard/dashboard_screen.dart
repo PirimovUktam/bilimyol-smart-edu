@@ -8,6 +8,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
+import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
 import '../../domain/entities/learning_path_node.dart';
@@ -48,17 +49,32 @@ class DashboardScreen extends ConsumerWidget {
       body: SafeArea(
         child: learnerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Xatolik: $e')),
+          error: (_, _) => FriendlyErrorState(
+            message: 'Profil ma’lumotlarini yuklab bo‘lmadi.',
+            onRetry: () =>
+                ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
+          ),
           data: (profile) {
-            final courseScores = profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
-            final overallScore = SkillScoringEngine.computeOverallScore(courseScores);
+            final courseScores =
+                profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
+            final overallScore = SkillScoringEngine.computeOverallScore(
+              courseScores,
+            );
 
             // Find weakest and strongest skills dynamically
-            final defaultWeak = activeCourse?.id == 'course_eng_01' ? 'Listening' : 'Funksiyalar';
-            final defaultStrong = activeCourse?.id == 'course_eng_01' ? 'Vocabulary' : 'Algebra';
-            String weakestSkillName = courseState.activeSkills.isNotEmpty ? courseState.activeSkills.first.name : defaultWeak;
+            final defaultWeak = activeCourse?.id == 'course_eng_01'
+                ? 'Listening'
+                : 'Funksiyalar';
+            final defaultStrong = activeCourse?.id == 'course_eng_01'
+                ? 'Vocabulary'
+                : 'Algebra';
+            String weakestSkillName = courseState.activeSkills.isNotEmpty
+                ? courseState.activeSkills.first.name
+                : defaultWeak;
             int weakestScore = 100;
-            String strongestSkillName = courseState.activeSkills.isNotEmpty ? courseState.activeSkills.first.name : defaultStrong;
+            String strongestSkillName = courseState.activeSkills.isNotEmpty
+                ? courseState.activeSkills.first.name
+                : defaultStrong;
             int strongestScore = 0;
 
             for (final sk in courseState.activeSkills) {
@@ -73,7 +89,17 @@ class DashboardScreen extends ConsumerWidget {
               }
             }
 
-            final currentUserName = profile.name.isNotEmpty ? profile.name : 'O‘ktam';
+            final currentUserName = profile.name.trim().isNotEmpty
+                ? profile.name
+                : 'O‘quvchi';
+
+            // Goal & streak-risk are derived from the real profile + local day.
+            final dailyGoal = profile.dailyMinutes > 0
+                ? profile.dailyMinutes
+                : 15;
+            final today = DateTime.now().toIso8601String().split('T').first;
+            final didActivityToday = profile.lastActiveDate == today;
+            final atRiskStreak = profile.streakDays > 0 && !didActivityToday;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -95,7 +121,9 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             child: Center(
                               child: Text(
-                                currentUserName.isNotEmpty ? currentUserName.substring(0, 1) : 'O',
+                                currentUserName.isNotEmpty
+                                    ? currentUserName.substring(0, 1)
+                                    : 'O',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
@@ -130,7 +158,10 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                       // Streak pill
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF7ED),
                           borderRadius: BorderRadius.circular(14),
@@ -138,7 +169,11 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.local_fire_department_rounded, size: 16, color: Color(0xFFEA580C)),
+                            const Icon(
+                              Icons.local_fire_department_rounded,
+                              size: 16,
+                              color: Color(0xFFEA580C),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${profile.streakDays} kun',
@@ -157,7 +192,10 @@ class DashboardScreen extends ConsumerWidget {
 
                   // Goal pill banner
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -168,10 +206,14 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.track_changes_rounded, size: 16, color: AppColors.primary),
+                            const Icon(
+                              Icons.track_changes_rounded,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 8),
                             Text(
-                              'Bugungi maqsad: 3/5 dars',
+                              'Bugungi maqsad: ${didActivityToday ? dailyGoal : 0}/$dailyGoal daq.',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -193,6 +235,55 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 18),
 
+                  // AT_RISK: loss-aversion streak reminder
+                  if (atRiskStreak) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFFDBA74)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.local_fire_department_rounded,
+                            color: Color(0xFFEA580C),
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '🔥 ${profile.streakDays} kunlik seriyangiz xavf ostida!',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF7C2D12),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Seriyani saqlab qolish uchun bugun kamida 1 ta dars bajaring.',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF9A3412),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+
                   // 2. Reference 2 Subject Selector Chips
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -202,28 +293,36 @@ class DashboardScreen extends ConsumerWidget {
                           title: 'Matematika',
                           icon: '📐',
                           isSelected: activeCourse?.id == 'course_math_01',
-                          onTap: () => ref.read(courseStateNotifierProvider.notifier).selectCourse('course_math_01'),
+                          onTap: () => ref
+                              .read(courseStateNotifierProvider.notifier)
+                              .selectCourse('course_math_01'),
                         ),
                         const SizedBox(width: 8),
                         _SubjectChip(
                           title: 'Ingliz tili',
                           icon: '🇬🇧',
                           isSelected: activeCourse?.id == 'course_eng_01',
-                          onTap: () => ref.read(courseStateNotifierProvider.notifier).selectCourse('course_eng_01'),
+                          onTap: () => ref
+                              .read(courseStateNotifierProvider.notifier)
+                              .selectCourse('course_eng_01'),
                         ),
                         const SizedBox(width: 8),
                         _SubjectChip(
                           title: 'IT & Kod',
                           icon: '💻',
                           isSelected: activeCourse?.id == 'course_it',
-                          onTap: () => ref.read(courseStateNotifierProvider.notifier).selectCourse('course_it'),
+                          onTap: () => ref
+                              .read(courseStateNotifierProvider.notifier)
+                              .selectCourse('course_it'),
                         ),
                         const SizedBox(width: 8),
                         _SubjectChip(
                           title: 'Mantiq',
                           icon: '🧩',
                           isSelected: activeCourse?.id == 'course_logic',
-                          onTap: () => ref.read(courseStateNotifierProvider.notifier).selectCourse('course_logic'),
+                          onTap: () => ref
+                              .read(courseStateNotifierProvider.notifier)
+                              .selectCourse('course_logic'),
                         ),
                       ],
                     ),
@@ -232,25 +331,46 @@ class DashboardScreen extends ConsumerWidget {
 
                   // 3. Dynamic Centerpiece: Hero "Davom etish" Card
                   () {
-                    final roadmapAsync = ref.watch(roadmapStateNotifierProvider);
+                    final roadmapAsync = ref.watch(
+                      roadmapStateNotifierProvider,
+                    );
                     final roadmapNodes = roadmapAsync.value?.nodes ?? [];
-                    final activeNode = roadmapNodes.where((n) => n.status == NodeStatus.reinforcement || n.status == NodeStatus.available).firstOrNull ?? (roadmapNodes.isNotEmpty ? roadmapNodes.first : null);
-                    final targetLessonId = activeNode?.targetLessonId ?? (activeCourse?.lessons.isNotEmpty == true ? activeCourse!.lessons.first : null);
+                    final activeNode =
+                        roadmapNodes
+                            .where(
+                              (n) =>
+                                  n.status == NodeStatus.reinforcement ||
+                                  n.status == NodeStatus.available,
+                            )
+                            .firstOrNull ??
+                        (roadmapNodes.isNotEmpty ? roadmapNodes.first : null);
+                    final targetLessonId =
+                        activeNode?.targetLessonId ??
+                        (activeCourse?.lessons.isNotEmpty == true
+                            ? activeCourse!.lessons.first
+                            : null);
                     final hasLessons = targetLessonId != null;
 
-                    final completedCount = roadmapNodes.where((n) => n.status == NodeStatus.completed).length;
+                    final completedCount = roadmapNodes
+                        .where((n) => n.status == NodeStatus.completed)
+                        .length;
                     final totalCount = roadmapNodes.length;
-                    final heroProgress = totalCount > 0 ? (completedCount / totalCount) : 0.0;
-                    final lessonCountStr = totalCount > 0 ? '${completedCount + (activeNode != null ? 1 : 0)}/$totalCount dars' : (hasLessons ? '1/1 dars' : '0 dars');
+                    final heroProgress = totalCount > 0
+                        ? (completedCount / totalCount)
+                        : 0.0;
+                    final lessonCountStr = totalCount > 0
+                        ? '${completedCount + (activeNode != null ? 1 : 0)}/$totalCount dars'
+                        : (hasLessons ? '1/1 dars' : '0 dars');
 
                     final heroTitle = hasLessons
                         ? (activeCourse?.id == 'course_eng_01'
-                            ? 'Ingliz tili: ${activeNode?.title ?? "Listening ko‘nikmasi"}'
-                            : '${activeCourse?.title ?? "Matematika"}: ${activeNode?.title ?? "Funksiyalar va formulalar"}')
+                              ? 'Ingliz tili: ${activeNode?.title ?? "Listening ko‘nikmasi"}'
+                              : '${activeCourse?.title ?? "Matematika"}: ${activeNode?.title ?? "Funksiyalar va formulalar"}')
                         : '${activeCourse?.title ?? "Tanlangan fan"}: Darslar tayyorlanmoqda';
 
                     final heroSubtitle = hasLessons
-                        ? (activeNode?.description ?? 'Yo‘lchi AI sizning bilim darajangizga moslashtirgan dars')
+                        ? (activeNode?.description ??
+                              'Yo‘lchi AI sizning bilim darajangizga moslashtirgan dars')
                         : 'Ushbu fan bo‘yicha darslar tayyorlanmoqda. Yo‘lchi AI yordamida yangi dars yaratishingiz mumkin.';
 
                     return Container(
@@ -261,7 +381,9 @@ class DashboardScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4338CA).withValues(alpha: 0.35),
+                            color: const Color(
+                              0xFF4338CA,
+                            ).withValues(alpha: 0.35),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -274,7 +396,10 @@ class DashboardScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
@@ -324,8 +449,13 @@ class DashboardScreen extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(6),
                                   child: LinearProgressIndicator(
                                     value: heroProgress,
-                                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF38BDF8)),
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Color(0xFF38BDF8),
+                                        ),
                                     minHeight: 8,
                                   ),
                                 ),
@@ -334,7 +464,12 @@ class DashboardScreen extends ConsumerWidget {
                               InkWell(
                                 onTap: () async {
                                   if (targetLessonId != null) {
-                                    await ref.read(lessonSessionNotifierProvider.notifier).startLesson(targetLessonId);
+                                    await ref
+                                        .read(
+                                          lessonSessionNotifierProvider
+                                              .notifier,
+                                        )
+                                        .startLesson(targetLessonId);
                                     if (context.mounted) {
                                       context.push('/lesson');
                                     }
@@ -351,7 +486,9 @@ class DashboardScreen extends ConsumerWidget {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    hasLessons ? Icons.play_arrow_rounded : Icons.auto_awesome_rounded,
+                                    hasLessons
+                                        ? Icons.play_arrow_rounded
+                                        : Icons.auto_awesome_rounded,
                                     color: const Color(0xFF4F46E5),
                                     size: 26,
                                   ),
@@ -400,60 +537,60 @@ class DashboardScreen extends ConsumerWidget {
                       final rec1Title = isEng
                           ? 'Essential Vocabulary'
                           : isIt
-                              ? 'Python asoslari'
-                              : isLog
-                                  ? 'Mantiqiy fikrlash'
-                                  : 'Algebra formulalari';
+                          ? 'Python asoslari'
+                          : isLog
+                          ? 'Mantiqiy fikrlash'
+                          : 'Algebra formulalari';
                       final rec1Desc = isEng
                           ? '10 dars • Lug‘at boyligi'
                           : isIt
-                              ? '8 dars • Dasturlash'
-                              : isLog
-                                  ? '12 dars • Deduksiya'
-                                  : '8 dars • Qisqa ko‘paytirish';
+                          ? '8 dars • Dasturlash'
+                          : isLog
+                          ? '12 dars • Deduksiya'
+                          : '8 dars • Qisqa ko‘paytirish';
                       final rec1Icon = isEng
                           ? '📖'
                           : isIt
-                              ? '🐍'
-                              : isLog
-                                  ? '🧩'
-                                  : '📐';
+                          ? '🐍'
+                          : isLog
+                          ? '🧩'
+                          : '📐';
                       final rec1Bg = isEng
                           ? const Color(0xFFFFE4E6)
                           : isIt
-                              ? const Color(0xFFECFEFF)
-                              : isLog
-                                  ? const Color(0xFFFEF3C7)
-                                  : const Color(0xFFEFF6FF);
+                          ? const Color(0xFFECFEFF)
+                          : isLog
+                          ? const Color(0xFFFEF3C7)
+                          : const Color(0xFFEFF6FF);
 
                       final rec2Title = isEng
                           ? 'Grammar & Rules'
                           : isIt
-                              ? 'Algoritmik mantiq'
-                              : isLog
-                                  ? 'Boshqotirmalar'
-                                  : 'Chiziqli tenglamalar';
+                          ? 'Algoritmik mantiq'
+                          : isLog
+                          ? 'Boshqotirmalar'
+                          : 'Chiziqli tenglamalar';
                       final rec2Desc = isEng
                           ? '8 dars • Conditionals'
                           : isIt
-                              ? '10 dars • Sikllar'
-                              : isLog
-                                  ? '8 dars • Zanjirlar'
-                                  : '10 dars • Tenglamalar';
+                          ? '10 dars • Sikllar'
+                          : isLog
+                          ? '8 dars • Zanjirlar'
+                          : '10 dars • Tenglamalar';
                       final rec2Icon = isEng
                           ? '✍️'
                           : isIt
-                              ? '💻'
-                              : isLog
-                                  ? '💡'
-                                  : '⚖️';
+                          ? '💻'
+                          : isLog
+                          ? '💡'
+                          : '⚖️';
                       final rec2Bg = isEng
                           ? const Color(0xFFEEF2FF)
                           : isIt
-                              ? const Color(0xFFE0F2FE)
-                              : isLog
-                                  ? const Color(0xFFECFDF5)
-                                  : const Color(0xFFEEF2FF);
+                          ? const Color(0xFFE0F2FE)
+                          : isLog
+                          ? const Color(0xFFECFDF5)
+                          : const Color(0xFFEEF2FF);
 
                       return Row(
                         children: [
@@ -470,7 +607,10 @@ class DashboardScreen extends ConsumerWidget {
                                       color: rec1Bg,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(rec1Icon, style: const TextStyle(fontSize: 18)),
+                                    child: Text(
+                                      rec1Icon,
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
@@ -506,7 +646,10 @@ class DashboardScreen extends ConsumerWidget {
                                       color: rec2Bg,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(rec2Icon, style: const TextStyle(fontSize: 18)),
+                                    child: Text(
+                                      rec2Icon,
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
@@ -544,7 +687,10 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            const YolchiAIMascot(size: 44, mood: YolchiMood.waving),
+                            const YolchiAIMascot(
+                              size: 44,
+                              mood: YolchiMood.waving,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -561,7 +707,11 @@ class DashboardScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       const SizedBox(width: 6),
-                                      const AppBadge(text: 'Online', variant: AppBadgeVariant.emerald, fontSize: 10),
+                                      const AppBadge(
+                                        text: 'Online',
+                                        variant: AppBadgeVariant.emerald,
+                                        fontSize: 10,
+                                      ),
                                     ],
                                   ),
                                   Text(
@@ -599,9 +749,18 @@ class DashboardScreen extends ConsumerWidget {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
-                            _PromptChip(title: 'Tushuntirish', onTap: () => context.go('/ai-tutor')),
-                            _PromptChip(title: 'Misollar', onTap: () => context.go('/ai-tutor')),
-                            _PromptChip(title: 'Mashq qilish', onTap: () => context.push('/lesson')),
+                            _PromptChip(
+                              title: 'Tushuntirish',
+                              onTap: () => context.go('/ai-tutor'),
+                            ),
+                            _PromptChip(
+                              title: 'Misollar',
+                              onTap: () => context.go('/ai-tutor'),
+                            ),
+                            _PromptChip(
+                              title: 'Mashq qilish',
+                              onTap: () => context.push('/lesson'),
+                            ),
                           ],
                         ),
                       ],
@@ -616,7 +775,11 @@ class DashboardScreen extends ConsumerWidget {
                         child: AppButton(
                           text: 'Bilim Xaritasi',
                           variant: AppButtonVariant.outline,
-                          leftIcon: const Icon(Icons.hub_rounded, size: 16, color: AppColors.primary),
+                          leftIcon: const Icon(
+                            Icons.hub_rounded,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
                           onPressed: () => context.push('/knowledge-map'),
                         ),
                       ),
@@ -625,7 +788,11 @@ class DashboardScreen extends ConsumerWidget {
                         child: AppButton(
                           text: 'Ta’lim Yo‘li',
                           variant: AppButtonVariant.primary,
-                          rightIcon: const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+                          rightIcon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                           onPressed: () => context.push('/roadmap'),
                         ),
                       ),

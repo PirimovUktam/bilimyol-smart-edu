@@ -89,6 +89,34 @@ flutter test
 flutter run
 ```
 
+### Supabase konfiguratsiyasi
+
+Supabase credentials are read only from compile-time Dart defines. A clean
+checkout and the offline/demo launch above do not require a credentials file;
+when no defines are supplied, the app keeps its intentional demo fallback.
+
+For a connected local run, create the ignored credentials file from the safe
+example and replace its placeholders with the Supabase project values:
+
+```powershell
+Copy-Item supabase_env.example.json supabase_env.json
+```
+
+The local `.vscode/launch.json` connected configuration passes that file with
+`--dart-define-from-file=supabase_env.json`. The offline/demo configuration
+passes no defines. The credentials file is ignored and must not be committed.
+
+You can also provide defines directly for any run or build:
+
+```powershell
+flutter run `
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co `
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key
+```
+
+Use `supabase_env.example.json` only as a template; it contains placeholders,
+not usable credentials.
+
 ### Android APK yig‘ish:
 ```powershell
 # Debug APK:

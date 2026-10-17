@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -19,6 +22,43 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _darkMode = false;
   bool _notifications = true;
+  bool _isLoggingOut = false;
+
+  Future<void> _handleLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+    Object? signOutError;
+    try {
+      if (SupabaseConfig.isConfigured) {
+        await Supabase.instance.client.auth.signOut();
+      }
+    } catch (error) {
+      signOutError = error;
+    } finally {
+      // Clear the shared repository cache even when the auth request fails.
+      // Otherwise a subsequent user can briefly see the previous profile.
+      try {
+        await ref.read(learnerRepositoryProvider).clearLocalState();
+      } finally {
+        ref.invalidate(learnerStateNotifierProvider);
+        ref.invalidate(courseStateNotifierProvider);
+        ref.invalidate(roadmapStateNotifierProvider);
+        ref.invalidate(placementStateNotifierProvider);
+        ref.invalidate(lessonSessionNotifierProvider);
+        if (mounted) {
+          setState(() => _isLoggingOut = false);
+          context.go('/login');
+          if (signOutError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Hisobdan chiqildi, server bilan aloqa uzildi.'),
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +79,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: SafeArea(
         child: learnerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Xatolik: $e')),
+          error: (_, _) => FriendlyErrorState(
+            message: 'Profilni yuklab bo‘lmadi.',
+            onRetry: () =>
+                ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
+          ),
           data: (profile) {
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -62,7 +106,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'A',
+                              profile.name.isNotEmpty
+                                  ? profile.name[0].toUpperCase()
+                                  : 'A',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
@@ -87,7 +133,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const AppBadge(text: 'Faol', variant: AppBadgeVariant.emerald),
+                                  const AppBadge(
+                                    text: 'Faol',
+                                    variant: AppBadgeVariant.emerald,
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 2),
@@ -115,7 +164,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.bolt_rounded, color: Color(0xFFFBBF24), size: 18),
+                              const Icon(
+                                Icons.bolt_rounded,
+                                color: Color(0xFFFBBF24),
+                                size: 18,
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 '${profile.xp} XP',
@@ -125,7 +178,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   color: AppColors.textPrimary,
                                 ),
                               ),
-                              Text('Tajriba', style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.textMuted)),
+                              Text(
+                                'Tajriba',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -137,7 +196,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.local_fire_department_rounded, color: Color(0xFFEA580C), size: 18),
+                              const Icon(
+                                Icons.local_fire_department_rounded,
+                                color: Color(0xFFEA580C),
+                                size: 18,
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 '${profile.streakDays} kun',
@@ -147,7 +210,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   color: AppColors.textPrimary,
                                 ),
                               ),
-                              Text('Streak', style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.textMuted)),
+                              Text(
+                                'Streak',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -159,7 +228,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.school_rounded, color: AppColors.primary, size: 18),
+                              const Icon(
+                                Icons.school_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 activeCourse?.title ?? 'Fan',
@@ -170,7 +243,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Text('Joriy fan', style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: AppColors.textMuted)),
+                              Text(
+                                'Joriy fan',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -199,7 +278,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.dark_mode_outlined, size: 20, color: AppColors.textSecondary),
+                                const Icon(
+                                  Icons.dark_mode_outlined,
+                                  size: 20,
+                                  color: AppColors.textSecondary,
+                                ),
                                 const SizedBox(width: 10),
                                 Text(
                                   'Qorong‘i rejim',
@@ -213,7 +296,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             Switch(
                               value: _darkMode,
-                              onChanged: (val) => setState(() => _darkMode = val),
+                              onChanged: (val) =>
+                                  setState(() => _darkMode = val),
                               activeThumbColor: AppColors.primary,
                             ),
                           ],
@@ -224,7 +308,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.notifications_none_rounded, size: 20, color: AppColors.textSecondary),
+                                const Icon(
+                                  Icons.notifications_none_rounded,
+                                  size: 20,
+                                  color: AppColors.textSecondary,
+                                ),
                                 const SizedBox(width: 10),
                                 Text(
                                   'Eslatmalar',
@@ -238,7 +326,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             Switch(
                               value: _notifications,
-                              onChanged: (val) => setState(() => _notifications = val),
+                              onChanged: (val) =>
+                                  setState(() => _notifications = val),
                               activeThumbColor: AppColors.secondary,
                             ),
                           ],
@@ -253,12 +342,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     text: 'Demo Holatiga Qaytarish',
                     isFullWidth: true,
                     variant: AppButtonVariant.outline,
-                    leftIcon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFF59E0B)),
+                    leftIcon: const Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: Color(0xFFF59E0B),
+                    ),
                     onPressed: () async {
-                      await ref.read(learnerStateNotifierProvider.notifier).resetAll();
+                      await ref
+                          .read(learnerStateNotifierProvider.notifier)
+                          .resetAll();
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Demo muvaffaqiyatli tiklandi.')),
+                          const SnackBar(
+                            content: Text('Demo muvaffaqiyatli tiklandi.'),
+                          ),
                         );
                         context.go('/courses');
                       }
@@ -270,10 +367,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     text: 'Hisobdan Chiqish',
                     isFullWidth: true,
                     variant: AppButtonVariant.danger,
-                    leftIcon: const Icon(Icons.logout_rounded, size: 16, color: Colors.white),
-                    onPressed: () {
-                      context.go('/login');
-                    },
+                    leftIcon: const Icon(
+                      Icons.logout_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    isLoading: _isLoggingOut,
+                    onPressed: _handleLogout,
                   ),
                   const SizedBox(height: 20),
                 ],

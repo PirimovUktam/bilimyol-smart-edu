@@ -2,9 +2,22 @@ import 'dart:math';
 import '../../domain/repositories/i_learner_repository.dart';
 import '../../domain/entities/learner_profile.dart';
 import '../../domain/entities/skill_score.dart';
+import '../../domain/entities/question.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
+import '../datasources/questions_data.dart';
+import '../datasources/lessons_data.dart';
+import '../datasources/roadmaps_data.dart';
 
 class InMemoryLearnerRepository implements ILearnerRepository {
+  @override
+  bool get supportsNodeCompletion => true;
+
+  @override
+  bool get supportsServerPlacementPersistence => false;
+
+  @override
+  bool get supportsServerReinforcementPersistence => false;
+
   final List<AnswerAttemptRecord> _answerAttempts = [];
   final Set<String> _processedActionKeys = {};
   final Set<String> _recordedActivityDates = {};
@@ -43,9 +56,16 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
-  Future<void> saveSkillScores(String courseId, Map<String, SkillScore> scores) async {
-    final currentScores = Map<String, Map<String, SkillScore>>.from(_profile.scoresByCourse);
-    final courseMap = Map<String, SkillScore>.from(currentScores[courseId] ?? {});
+  Future<void> saveSkillScores(
+    String courseId,
+    Map<String, SkillScore> scores,
+  ) async {
+    final currentScores = Map<String, Map<String, SkillScore>>.from(
+      _profile.scoresByCourse,
+    );
+    final courseMap = Map<String, SkillScore>.from(
+      currentScores[courseId] ?? {},
+    );
     courseMap.addAll(scores);
     currentScores[courseId] = courseMap;
 
@@ -58,17 +78,43 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
-  Future<void> markLessonCompleted(String lessonId) async {
+  Future<PlacementAnswerEvaluation> evaluatePlacementAnswer({
+    required String courseId,
+    required String questionId,
+    required int selectedIndex,
+  }) async {
+    final question = placementQuestionsData[courseId]
+        ?.where((item) => item.id == questionId)
+        .firstOrNull;
+    return PlacementAnswerEvaluation(
+      isCorrect: question?.correctIndex == selectedIndex,
+    );
+  }
+
+  @override
+  Future<void> markLessonCompleted(String lessonId, {String? courseId}) async {
     if (!_profile.completedLessonIds.contains(lessonId)) {
-      final list = List<String>.from(_profile.completedLessonIds)..add(lessonId);
-      _profile = _profile.copyWith(completedLessonIds: list);
+      final list = List<String>.from(_profile.completedLessonIds)
+        ..add(lessonId);
+      final roadmapNodes = courseId != null
+          ? (seedRoadmapNodes[courseId] ?? const [])
+          : seedRoadmapNodes.values.expand((nodes) => nodes).toList();
+      final targetNodeIds = roadmapNodes
+          .where((node) => node.targetLessonId == lessonId)
+          .map((node) => node.id);
+      _profile = _profile.copyWith(
+        completedLessonIds: list,
+        completedNodeIds: [
+          ...<String>{..._profile.completedNodeIds, ...targetNodeIds},
+        ],
+      );
       await addXp(20, 'lesson_completed_$lessonId');
       await recordDailyActivity();
     }
   }
 
   @override
-  Future<void> markNodeCompleted(String nodeId) async {
+  Future<void> markNodeCompleted(String nodeId, {String? courseId}) async {
     if (!_profile.completedNodeIds.contains(nodeId)) {
       final list = List<String>.from(_profile.completedNodeIds)..add(nodeId);
       _profile = _profile.copyWith(completedNodeIds: list);
@@ -76,13 +122,22 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
-  Future<void> markReinforcementCompleted(String reinforcementId) async {
+  Future<ReinforcementCompletionResult?> markReinforcementCompleted({
+    required String reinforcementId,
+    required String courseId,
+    required String skillId,
+    required String questionId,
+    required int beforeScore,
+    required int afterScore,
+    required int xpAwarded,
+  }) async {
     if (!_profile.completedReinforcementIds.contains(reinforcementId)) {
-      final list = List<String>.from(_profile.completedReinforcementIds)..add(reinforcementId);
+      final list = List<String>.from(_profile.completedReinforcementIds)
+        ..add(reinforcementId);
       _profile = _profile.copyWith(completedReinforcementIds: list);
-      await addXp(15, 'reinforcement_completed_$reinforcementId');
       await recordDailyActivity();
     }
+    return null;
   }
 
   @override
@@ -105,6 +160,7 @@ class InMemoryLearnerRepository implements ILearnerRepository {
       selectedAnswer: selectedAnswer,
       isCorrect: isCorrect,
       timestamp: DateTime.now().millisecondsSinceEpoch,
+      correctOption: isCorrect ? selectedAnswer : null,
     );
     _answerAttempts.add(record);
 
@@ -118,10 +174,17 @@ class InMemoryLearnerRepository implements ILearnerRepository {
         .where((a) => a.courseId == courseId && a.skillId == skillId)
         .toList();
     final correctCount = skillAttempts.where((a) => a.isCorrect).length;
-    final newScoreVal = SkillScoringEngine.computeSkillScore(correctCount, skillAttempts.length);
+    final newScoreVal = SkillScoringEngine.computeSkillScore(
+      correctCount,
+      skillAttempts.length,
+    );
 
-    final currentScores = Map<String, Map<String, SkillScore>>.from(_profile.scoresByCourse);
-    final courseMap = Map<String, SkillScore>.from(currentScores[courseId] ?? {});
+    final currentScores = Map<String, Map<String, SkillScore>>.from(
+      _profile.scoresByCourse,
+    );
+    final courseMap = Map<String, SkillScore>.from(
+      currentScores[courseId] ?? {},
+    );
     courseMap[skillId] = SkillScore(
       skillId: skillId,
       courseId: courseId,
@@ -136,11 +199,86 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
+  Future<AnswerAttemptRecord> submitAnswerAttempt({
+    required String courseId,
+    required String skillId,
+    required String lessonId,
+    required String questionId,
+    required int selectedIndex,
+    required String selectedAnswer,
+  }) async {
+    Question? question;
+    for (final candidate in placementQuestionsData.values.expand((items) => items)) {
+      if (candidate.id == questionId) {
+        question = candidate;
+        break;
+      }
+    }
+    if (question == null) {
+      for (final lesson in seedLessons.values) {
+        for (final step in lesson.steps) {
+          if (step.interactiveQuestion?.id == questionId) {
+            question = step.interactiveQuestion;
+            break;
+          }
+        }
+        if (lesson.reinforcementExercise.id == questionId) {
+          question = lesson.reinforcementExercise;
+        }
+        if (question != null) break;
+      }
+    }
+    if (question == null ||
+        question.courseId != courseId ||
+        question.skillId != skillId ||
+        selectedIndex < 0 ||
+        selectedIndex >= question.options.length) {
+      throw StateError('Demo savoli topilmadi yoki kontekstga mos emas.');
+    }
+
+    return recordAnswerAttempt(
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: lessonId,
+      questionId: questionId,
+      selectedIndex: selectedIndex,
+      selectedAnswer: selectedAnswer,
+      isCorrect: selectedIndex == question.correctIndex,
+    );
+  }
+
+  @override
   Future<List<AnswerAttemptRecord>> getAnswerAttempts([int limit = 10]) async {
     if (_answerAttempts.length <= limit) {
       return List.from(_answerAttempts);
     }
     return _answerAttempts.sublist(_answerAttempts.length - limit);
+  }
+
+  @override
+  Future<List<DailyActivitySummary>> getDailyActivity([int days = 7]) async {
+    final result = <DailyActivitySummary>[];
+    final now = DateTime.now();
+    for (int i = days - 1; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dateStr = day.toIso8601String().split('T').first;
+      final dayAttempts = _answerAttempts.where((a) {
+        return DateTime.fromMillisecondsSinceEpoch(
+              a.timestamp,
+            ).toIso8601String().split('T').first ==
+            dateStr;
+      }).toList();
+      final correct = dayAttempts.where((a) => a.isCorrect).length;
+      result.add(
+        DailyActivitySummary(
+          date: dateStr,
+          activeMinutes: (dayAttempts.length * 1.5).round(),
+          xpEarned: correct * 2,
+          lessonsCompleted: 0,
+        ),
+      );
+    }
+    return result;
   }
 
   @override
@@ -212,5 +350,10 @@ class InMemoryLearnerRepository implements ILearnerRepository {
     _processedActionKeys.clear();
     _recordedActivityDates.clear();
     return _profile;
+  }
+
+  @override
+  Future<void> clearLocalState() async {
+    await resetAll();
   }
 }

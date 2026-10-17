@@ -5,6 +5,7 @@ import '../../domain/entities/question.dart';
 import '../datasources/courses_data.dart';
 import '../datasources/skills_data.dart';
 import '../datasources/questions_data.dart';
+import '../../core/config/supabase_config.dart';
 
 class InMemoryCourseRepository implements ICourseRepository {
   @override
@@ -24,6 +25,9 @@ class InMemoryCourseRepository implements ICourseRepository {
 
   @override
   Future<List<Question>> getPlacementQuestions(String courseId) async {
+    // Placement seed rows carry correctIndex. Never use them as a fallback in
+    // configured/online mode when the learner should receive server content.
+    if (SupabaseConfig.hasRemoteConfiguration) return const [];
     return List.unmodifiable(placementQuestionsData[courseId] ?? []);
   }
 }

@@ -1,26 +1,25 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
-  /// Reads configuration dynamically via `--dart-define=SUPABASE_URL=...`
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://jlqbenwojcgbloamfyis.supabase.co',
-  );
-
-  /// Reads anon key dynamically via `--dart-define=SUPABASE_ANON_KEY=...`
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
+  /// Values are supplied at compile time with `--dart-define` or
+  /// `--dart-define-from-file`.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY');
 
   static bool isConfigured = false;
+  /// True when real backend credentials were supplied, even if client
+  /// initialization failed. This prevents an online outage from being treated
+  /// as demo mode and exposing bundled answer keys or accepting local scores.
+  static bool hasRemoteConfiguration = false;
 
   static Future<void> initialize() async {
-    // Only attempt Supabase initialization when valid production/staging credentials are provided
-    if (supabaseUrl.isEmpty ||
-        supabaseAnonKey.isEmpty ||
-        supabaseUrl.contains('bilimyol-demo') ||
-        supabaseAnonKey.contains('demo-anon-key')) {
+    hasRemoteConfiguration = supabaseUrl.isNotEmpty &&
+        supabaseAnonKey.isNotEmpty &&
+        !supabaseUrl.contains('bilimyol-demo') &&
+        !supabaseAnonKey.contains('demo-anon-key');
+
+    if (!hasRemoteConfiguration) {
       isConfigured = false;
       return;
     }

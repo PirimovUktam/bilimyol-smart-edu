@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import 'math_function_graph_widget.dart';
 import 'audio_sim_wave_widget.dart';
@@ -16,14 +18,35 @@ class InteractiveLessonScreen extends ConsumerStatefulWidget {
   const InteractiveLessonScreen({super.key});
 
   @override
-  ConsumerState<InteractiveLessonScreen> createState() => _InteractiveLessonScreenState();
+  ConsumerState<InteractiveLessonScreen> createState() =>
+      _InteractiveLessonScreenState();
 }
 
-class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScreen> {
+class _InteractiveLessonScreenState
+    extends ConsumerState<InteractiveLessonScreen> {
   @override
   Widget build(BuildContext context) {
     final lessonState = ref.watch(lessonSessionNotifierProvider);
     final lesson = lessonState.lesson;
+
+    if (lessonState.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Dars')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (lesson == null && lessonState.lessonError != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Dars')),
+        body: FriendlyErrorState(
+          message: lessonState.lessonError!,
+          onRetry: () => ref
+              .read(lessonSessionNotifierProvider.notifier)
+              .retryStartLesson(),
+        ),
+      );
+    }
 
     if (lesson == null) {
       return Scaffold(
@@ -121,7 +144,9 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                       value: progress,
                       minHeight: 5,
                       backgroundColor: AppColors.cardBorder,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -131,7 +156,10 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
             // Step Content Body
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -181,7 +209,11 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primary),
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
@@ -205,7 +237,9 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                     // Formula Card
                     if (currentStep.formulaData != null) ...[
                       AppCard(
-                        backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
+                        backgroundColor: AppColors.primaryLight.withValues(
+                          alpha: 0.5,
+                        ),
                         borderColor: AppColors.primary.withValues(alpha: 0.3),
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -222,11 +256,18 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                             const SizedBox(height: 10),
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
                               ),
                               child: Center(
                                 child: Text(
@@ -260,7 +301,8 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                     ],
 
                     // Visual model: Math function graph
-                    if (currentStep.visualModelData?.type == 'function_graph') ...[
+                    if (currentStep.visualModelData?.type ==
+                        'function_graph') ...[
                       const MathFunctionGraphWidget(),
                       const SizedBox(height: 16),
                     ],
@@ -268,17 +310,25 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                     // Visual model: Audio wave simulation
                     if (currentStep.visualModelData?.type == 'audio_wave') ...[
                       AudioSimWaveWidget(
-                        transcript: currentStep.visualModelData?.audioTranscript ?? '',
-                        speakerName: currentStep.visualModelData?.speakerName ?? 'Speaker',
+                        transcript:
+                            currentStep.visualModelData?.audioTranscript ?? '',
+                        speakerName:
+                            currentStep.visualModelData?.speakerName ??
+                            'Speaker',
                       ),
                       const SizedBox(height: 16),
                     ],
 
                     // Interactive Quiz Step
                     if (currentStep.interactiveQuestion != null) ...[
-                      _buildInteractiveQuizCard(context, currentStep.interactiveQuestion!),
+                      _buildInteractiveQuizCard(
+                        context,
+                        currentStep.interactiveQuestion!,
+                      ),
                       const SizedBox(height: 16),
                     ],
+                    if (lessonState.answerError != null)
+                      _buildAnswerError(lessonState.answerError!),
                   ],
                 ),
               ),
@@ -293,9 +343,13 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                     AppButton(
                       text: 'Orqaga',
                       variant: AppButtonVariant.outline,
-                      onPressed: () {
-                        ref.read(lessonSessionNotifierProvider.notifier).previousStep();
-                      },
+                      onPressed: lessonState.isSubmittingAnswer
+                          ? null
+                          : () {
+                              ref
+                                  .read(lessonSessionNotifierProvider.notifier)
+                                  .previousStep();
+                            },
                     ),
                     const SizedBox(width: 10),
                   ],
@@ -306,17 +360,24 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               elevation: 2,
                             ),
-                            onPressed: lessonState.selectedOptionIndex == null || lessonState.isSubmittingAnswer
+                            onPressed:
+                                lessonState.selectedOptionIndex == null ||
+                                    lessonState.isSubmittingAnswer
                                 ? null
                                 : () => _handleQuizSubmit(context),
                             child: lessonState.isSubmittingAnswer
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(
                                     'TEKSHIRISH',
@@ -328,13 +389,20 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                                   ),
                           )
                         : AppButton(
-                            text: currentStepIndex < totalSteps - 1 ? 'Keyingi qadam' : 'Yakunlash',
+                            text: currentStepIndex < totalSteps - 1
+                                ? 'Keyingi qadam'
+                                : 'Yakunlash',
                             isFullWidth: true,
+                            isLoading: lessonState.isSubmittingAnswer,
                             size: AppButtonSize.large,
-                            rightIcon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
-                            onPressed: () {
-                              ref.read(lessonSessionNotifierProvider.notifier).nextStep();
-                            },
+                            rightIcon: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            onPressed: lessonState.isSubmittingAnswer
+                                ? null
+                                : () => _handleNextStep(context),
                           ),
                   ),
                 ],
@@ -357,7 +425,10 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
         children: [
           const Align(
             alignment: Alignment.centerLeft,
-            child: AppBadge(text: 'Interaktiv Savol', variant: AppBadgeVariant.blue),
+            child: AppBadge(
+              text: 'Interaktiv Savol',
+              variant: AppBadgeVariant.blue,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
@@ -381,22 +452,33 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                 color: isSelected ? const Color(0xFFEEF2FF) : AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
-                  onTap: () {
-                    ref.read(lessonSessionNotifierProvider.notifier).selectOption(idx);
-                  },
+                  onTap: lessonState.isSubmittingAnswer
+                      ? null
+                      : () {
+                          ref
+                              .read(lessonSessionNotifierProvider.notifier)
+                              .selectOption(idx);
+                        },
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected ? const Color(0xFF2563EB) : AppColors.cardBorder,
+                        color: isSelected
+                            ? const Color(0xFF2563EB)
+                            : AppColors.cardBorder,
                         width: isSelected ? 2 : 1.2,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFF2563EB,
+                                ).withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -410,7 +492,10 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                           Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF2563EB),
                                 borderRadius: BorderRadius.circular(8),
@@ -431,7 +516,9 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                               width: 26,
                               height: 26,
                               decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
+                                color: isSelected
+                                    ? const Color(0xFF2563EB)
+                                    : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
@@ -440,7 +527,9 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w800,
-                                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -451,13 +540,21 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
                                 opt,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 14,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                  color: isSelected ? const Color(0xFF1E293B) : AppColors.textPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                  color: isSelected
+                                      ? const Color(0xFF1E293B)
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             ),
                             if (isSelected)
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF2563EB), size: 20),
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: Color(0xFF2563EB),
+                                size: 20,
+                              ),
                           ],
                         ),
                       ],
@@ -473,13 +570,26 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
   }
 
   Future<void> _handleQuizSubmit(BuildContext context) async {
-    await ref.read(lessonSessionNotifierProvider.notifier).submitInteractiveQuiz();
+    final notifier = ref.read(lessonSessionNotifierProvider.notifier);
+    final session = notifier.sessionGeneration;
+    final step = notifier.stepGeneration;
+    await notifier.submitInteractiveQuiz();
+    if (!context.mounted ||
+        !identical(
+          ref.read(lessonSessionNotifierProvider.notifier),
+          notifier,
+        ) ||
+        notifier.sessionGeneration != session ||
+        notifier.stepGeneration != step) {
+      return;
+    }
     final lessonState = ref.read(lessonSessionNotifierProvider);
     final answerResult = lessonState.answerResult;
 
-    if (!context.mounted) return;
-
-    if (answerResult != null && !answerResult.isCorrect && answerResult.aiExplanation != null) {
+    if (answerResult != null &&
+        !answerResult.isCorrect &&
+        answerResult.aiExplanation != null) {
+      HapticFeedback.heavyImpact();
       // Trigger Yo'lchi AI bottom sheet
       showModalBottomSheet(
         context: context,
@@ -489,22 +599,94 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
           explanation: answerResult.aiExplanation!,
           onStartReinforcement: () {
             Navigator.pop(ctx);
+            if (!context.mounted ||
+                !identical(
+                  ref.read(lessonSessionNotifierProvider.notifier),
+                  notifier,
+                ) ||
+                notifier.sessionGeneration != session ||
+                notifier.stepGeneration != step) {
+              return;
+            }
             _openReinforcementModal(context);
           },
         ),
       );
     } else if (answerResult != null && answerResult.isCorrect) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('To‘g‘ri javob! Dars muvaffaqiyatli yakunlandi.'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      context.go('/roadmap');
+      HapticFeedback.lightImpact();
+      if (lessonState.isCompleted) {
+        _showLessonCompleted(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('To‘g‘ri javob!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        await notifier.nextStep();
+      }
     }
   }
 
+  Future<void> _handleNextStep(BuildContext context) async {
+    final notifier = ref.read(lessonSessionNotifierProvider.notifier);
+    final session = notifier.sessionGeneration;
+    await notifier.nextStep();
+    if (!context.mounted ||
+        !identical(
+          ref.read(lessonSessionNotifierProvider.notifier),
+          notifier,
+        ) ||
+        notifier.sessionGeneration != session) {
+      return;
+    }
+    if (ref.read(lessonSessionNotifierProvider).isCompleted) {
+      _showLessonCompleted(context);
+    }
+  }
+
+  void _showLessonCompleted(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('To‘g‘ri javob! Dars muvaffaqiyatli yakunlandi.'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+    context.go('/roadmap');
+  }
+
+  Widget _buildAnswerError(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.errorLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 18, color: AppColors.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openReinforcementModal(BuildContext context) {
+    final notifier = ref.read(lessonSessionNotifierProvider.notifier);
+    final session = notifier.sessionGeneration;
+    final step = notifier.stepGeneration;
     final lesson = ref.read(lessonSessionNotifierProvider).lesson;
     if (lesson == null) return;
 
@@ -515,10 +697,28 @@ class _InteractiveLessonScreenState extends ConsumerState<InteractiveLessonScree
       builder: (ctx) => ReinforcementSheet(
         question: lesson.reinforcementExercise,
         onSubmit: (selectedIndex) async {
-          return await ref.read(lessonSessionNotifierProvider.notifier).submitReinforcement(selectedIndex);
+          if (!context.mounted ||
+              !identical(
+                ref.read(lessonSessionNotifierProvider.notifier),
+                notifier,
+              ) ||
+              notifier.sessionGeneration != session ||
+              notifier.stepGeneration != step) {
+            return null;
+          }
+          return await notifier.submitReinforcement(selectedIndex);
         },
         onGoToDashboard: () {
           Navigator.pop(ctx);
+          if (!context.mounted ||
+              !identical(
+                ref.read(lessonSessionNotifierProvider.notifier),
+                notifier,
+              ) ||
+              notifier.sessionGeneration != session ||
+              notifier.stepGeneration != step) {
+            return;
+          }
           context.go('/dashboard');
         },
       ),
