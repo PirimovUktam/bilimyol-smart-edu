@@ -4,6 +4,8 @@ import {
   AIExplanationResponse,
   GenerateLessonRequest,
   GeneratedLessonResponse,
+  AskTutorRequest,
+  AskTutorResponse,
 } from './IAITutorService';
 import { DEMO_AI_RESPONSES } from '../datasources/demoAiResponses';
 
@@ -295,6 +297,16 @@ export class DemoAITutorService implements IAITutorService {
           isDeterministicFallback: true,
         },
       ],
+      isAiGenerated: false,
+      isDeterministicFallback: true,
+    };
+  }
+
+  async askTutor(request: AskTutorRequest): Promise<AskTutorResponse> {
+    const topic = request.topic || 'bu mavzu';
+    return {
+      tutorName: 'Yo‘lchi AI',
+      answer: `${topic} bo‘yicha savolingiz juda yaxshi! Keling, birgalikda qadam-baqadam ko‘rib chiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qo‘llab ko‘ramiz.`,
       isAiGenerated: false,
       isDeterministicFallback: true,
     };

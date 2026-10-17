@@ -21,7 +21,6 @@ import { deriveReinforcementNodeId } from '../features/reinforcement/reinforceme
 import { GeminiAITutorService } from '../data/services/GeminiAITutorService';
 import { GetRoadmapUseCase } from '../domain/usecases/GetRoadmapUseCase';
 import { SubmitReinforcementUseCase } from '../domain/usecases/SubmitReinforcementUseCase';
-import { supabaseLessonRepository } from '../data/repositories/SupabaseLessonRepository';
 import { inMemoryLessonRepository } from '../data/repositories/InMemoryLessonRepository';
 import { InMemoryLearnerRepository } from '../data/repositories/InMemoryLearnerRepository';
 import { SkillScoringEngine } from '../domain/personalization/SkillScoringEngine';
@@ -250,6 +249,13 @@ describe('Cross-course content isolation regression', () => {
 
       const markSpy = vi.spyOn(learnerRepo, 'markReinforcementCompleted');
       const saveSpy = vi.spyOn(learnerRepo, 'saveSkillScores');
+      vi.spyOn(learnerRepo, 'submitAnswerAttempt').mockResolvedValue({
+        isCorrect: true,
+        explanation: 'Server verified',
+        newSkillScore: 100,
+        overallScore: 100,
+        xpAwarded: 2,
+      });
 
       const useCase = new SubmitReinforcementUseCase(learnerRepo, inMemoryLessonRepository);
       const result = await useCase.execute(

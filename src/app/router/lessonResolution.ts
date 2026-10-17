@@ -1,5 +1,5 @@
 import { Course } from '@/domain/entities/Course';
-import { LearningPath } from '@/domain/entities/LearningPathNode';
+import { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 
 /**
  * Resolves which lesson "Continue" should open for the ACTIVE course only.
@@ -38,6 +38,18 @@ export function isLessonCourseMismatch(
 ): boolean {
   if (!lesson || !activeCourse) return false;
   return lesson.courseId !== activeCourse.id;
+}
+
+/**
+ * A completed roadmap node can only be reviewed through its own lesson.
+ * Generic continuation lessons are valid for active nodes, never for review.
+ */
+export function resolveRoadmapNodeLessonId(
+  node: Pick<LearningPathNode, 'status' | 'targetLessonId'>,
+  continuationLessonId: string | null
+): string | null {
+  if (node.targetLessonId) return node.targetLessonId;
+  return node.status === 'completed' ? null : continuationLessonId;
 }
 
 export interface CourseReconciliationDecision {

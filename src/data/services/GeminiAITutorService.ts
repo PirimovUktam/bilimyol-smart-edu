@@ -7,6 +7,8 @@ import {
   GenerateReinforcementRequest,
   GenerateLessonRequest,
   GeneratedLessonResponse,
+  AskTutorRequest,
+  AskTutorResponse,
 } from './IAITutorService';
 import { DemoAITutorService } from './DemoAITutorService';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
@@ -39,7 +41,8 @@ export class GeminiAITutorService implements IAITutorService {
 
   async explainMistake(request: AIExplanationRequest): Promise<AIExplanationResponse> {
     if (!isSupabaseConfigured) {
-      return this.fallbackService.explainMistake(request);
+      const fb = await this.fallbackService.explainMistake(request);
+      return { ...fb, isFallback: true };
     }
 
     try {
@@ -52,8 +55,9 @@ export class GeminiAITutorService implements IAITutorService {
       });
 
       if (error || !data) {
-        console.warn('Edge function returned error, using reliable fallback:', error);
-        return this.fallbackService.explainMistake(request);
+        throw new GeminiAIServiceError(
+          error ? describeEdgeError(extractStatus(error) || 500) : 'Yo‘lchi AI hozircha javob bera olmadi.'
+        );
       }
 
       return {
@@ -65,10 +69,11 @@ export class GeminiAITutorService implements IAITutorService {
         motivation: data.motivation,
         reinforcementNeeded: data.reinforcementNeeded ?? true,
         isDeterministicFallback: Boolean(data.isDeterministicFallback),
+        isFallback: Boolean(data.isDeterministicFallback),
       };
     } catch (err) {
-      console.warn('Gemini AI service network error, using fallback:', err);
-      return this.fallbackService.explainMistake(request);
+      if (err instanceof GeminiAIServiceError) throw err;
+      throw new GeminiAIServiceError('Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.');
     }
   }
 
@@ -86,7 +91,9 @@ export class GeminiAITutorService implements IAITutorService {
       });
 
       if (error || !data || !data.text) {
-        return this.getFallbackQuestion(request, request.difficulty);
+        throw new GeminiAIServiceError(
+          error ? describeEdgeError(extractStatus(error) || 500) : 'Savol generatsiya qilinmadi.'
+        );
       }
 
       return {
@@ -99,8 +106,9 @@ export class GeminiAITutorService implements IAITutorService {
         difficulty: request.difficulty,
         isAiGenerated: Boolean(data.isAiGenerated),
       };
-    } catch {
-      return this.getFallbackQuestion(request, request.difficulty);
+    } catch (err) {
+      if (err instanceof GeminiAIServiceError) throw err;
+      throw new GeminiAIServiceError('Savol generatsiyasi xizmatiga ulanib bo‘lmadi.');
     }
   }
 
@@ -118,7 +126,9 @@ export class GeminiAITutorService implements IAITutorService {
       });
 
       if (error || !data || !data.text) {
-        return this.getFallbackQuestion(request, 'easy');
+        throw new GeminiAIServiceError(
+          error ? describeEdgeError(extractStatus(error) || 500) : 'Mustahkamlash savoli generatsiya qilinmadi.'
+        );
       }
 
       return {
@@ -131,8 +141,9 @@ export class GeminiAITutorService implements IAITutorService {
         difficulty: 'easy',
         isAiGenerated: Boolean(data.isAiGenerated),
       };
-    } catch {
-      return this.getFallbackQuestion(request, 'easy');
+    } catch (err) {
+      if (err instanceof GeminiAIServiceError) throw err;
+      throw new GeminiAIServiceError('Mustahkamlash savoli xizmatiga ulanib bo‘lmadi.');
     }
   }
 
@@ -156,13 +167,11 @@ export class GeminiAITutorService implements IAITutorService {
           // so the UI can offer retry instead of showing fake AI success.
           throw new GeminiAIServiceError(describeEdgeError(status));
         }
-        console.warn('[Gemini AI] Edge Function network error for generate_lesson, using fallback:', error);
-        return this.fallbackService.generateLesson(request);
+        throw new GeminiAIServiceError(describeEdgeError(status || 500));
       }
 
       if (!data || !data.title || !Array.isArray(data.steps)) {
-        console.warn('[Gemini AI] Edge Function returned invalid generate_lesson payload, using fallback');
-        return this.fallbackService.generateLesson(request);
+        throw new GeminiAIServiceError('Dars kontenti noto‘g‘ri formatda qaytdi. Qayta urinib ko‘ring.');
       }
 
       // Edge returns a deterministic fallback (isDeterministicFallback: true,
@@ -187,8 +196,55 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      console.warn('[Gemini AI] Network error during generate_lesson, using fallback:', err);
-      return this.fallbackService.generateLesson(request);
+      throw new GeminiAIServiceError('Dars generatsiyasi xizmatiga ulanib bo‘lmadi.');
+    }
+  }
+
+  async askTutor(request: AskTutorRequest): Promise<AskTutorResponse> {
+    const message = request.message.trim();
+    if (!message) {
+      return {
+        tutorName: 'Yo‘lchi AI',
+        answer: 'Iltimos, savolingizni yozing.',
+        isAiGenerated: false,
+        isDeterministicFallback: true,
+      };
+    }
+
+    if (!isSupabaseConfigured) {
+      return this.fallbackService.askTutor(request);
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('yolchi-tutor', {
+        body: {
+          action: 'askTutor',
+          ...request,
+          message,
+        },
+      });
+
+      if (error || !data || typeof data.answer !== 'string') {
+        throw new GeminiAIServiceError(
+          'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.'
+        );
+      }
+
+      return {
+        tutorName: data.tutorName || 'Yo‘lchi AI',
+        answer: data.answer,
+        isAiGenerated: Boolean(data.isAiGenerated),
+        isDeterministicFallback: Boolean(data.isDeterministicFallback),
+      };
+    } catch (err) {
+      if (err instanceof GeminiAIServiceError) throw err;
+      const status = extractStatus(err);
+      if (status !== null && status >= 400) {
+        throw new GeminiAIServiceError(describeEdgeError(status));
+      }
+      throw new GeminiAIServiceError(
+        'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internet aloqasini tekshirib qayta urinib ko‘ring.'
+      );
     }
   }
 

@@ -2,9 +2,12 @@ import {
   ILearnerRepository,
   AnswerAttemptRecord,
   PlacementAttemptData,
+  PlacementAnswerEvaluation,
   ReinforcementCompletionContext,
+  ReinforcementCompletionResult,
   SubmitAnswerAttemptRequest,
   SubmitAnswerAttemptResult,
+  DailyActivitySummary,
 } from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
@@ -34,6 +37,24 @@ export async function resolveLessonCourseId(
 
 export class SupabaseLearnerRepository implements ILearnerRepository {
   private fallbackRepo = new InMemoryLearnerRepository();
+  get supportsNodeCompletion(): boolean {
+    return !isSupabaseConfigured;
+  }
+
+  get supportsServerPlacementPersistence(): boolean {
+    return isSupabaseConfigured;
+  }
+
+  get supportsServerReinforcementPersistence(): boolean {
+    return isSupabaseConfigured;
+  }
+
+  private async requireAuthenticatedUser() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    if (!data.user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    return data.user;
+  }
 
   async getCurrentProfile(): Promise<LearnerProfile> {
     return this.getProfile();
@@ -45,17 +66,15 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.getProfile();
-      }
+      const user = await this.requireAuthenticatedUser();
 
       // Fetch user profile from public.profiles table
-      let { data: userProfileData } = await supabase
+      let { data: userProfileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, display_name, email, avatar_url, created_at, updated_at')
         .eq('id', user.id)
         .maybeSingle();
+      if (profileError) throw profileError;
 
       // If public.profiles row is missing or empty, provision it
       if (!userProfileData || !userProfileData.first_name) {
@@ -64,58 +83,85 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         const resolvedFirst = metaFirst || (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
         const resolvedDisplay = metaLast ? `${resolvedFirst} ${metaLast}` : resolvedFirst;
 
-        const { data: provisioned } = await supabase
-          .from('profiles')
-          .upsert({
-            id: user.id,
+        const editableProfile = {
             first_name: resolvedFirst,
             last_name: metaLast,
             display_name: resolvedDisplay,
-            email: user.email || '',
             avatar_url: user.user_metadata?.avatar_url || null,
             updated_at: new Date().toISOString(),
-          })
-          .select()
-          .maybeSingle();
-
-        if (provisioned) {
-          userProfileData = provisioned;
-        }
+        };
+        // Existing profiles permit only safe-column UPDATE. A normal upsert
+        // also updates id/email and fails the anti-escalation column grants.
+        const provision = userProfileData
+          ? supabase.from('profiles').update(editableProfile).eq('id', user.id)
+          : supabase.from('profiles').upsert(
+              { id: user.id, email: user.email || '', ...editableProfile },
+              { onConflict: 'id', ignoreDuplicates: true }
+            );
+        const { error: provisionError } = await provision;
+        if (provisionError) throw provisionError;
+        const { data: provisioned, error: readError } = await supabase.from('profiles')
+          .select('id, first_name, last_name, display_name, email, avatar_url, created_at, updated_at')
+          .eq('id', user.id).single();
+        if (readError) throw readError;
+        userProfileData = provisioned;
       }
 
       // Fetch learner profile
-      const { data: learnerData } = await supabase
+      const { data: learnerData, error: learnerError } = await supabase
         .from('learner_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      if (learnerError) throw learnerError;
 
       // Fetch gamification profile
-      const { data: gamifyData } = await supabase
+      const { data: gamifyData, error: gamifyError } = await supabase
         .from('gamification_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      if (gamifyError) throw gamifyError;
 
       // Fetch skill scores
-      const { data: scoreRows } = await supabase
+      const { data: scoreRows, error: scoresError } = await supabase
         .from('learner_skill_scores')
         .select('*')
         .eq('user_id', user.id);
+      if (scoresError) throw scoresError;
 
       // Fetch completed lessons
-      const { data: progressRows } = await supabase
+      const { data: progressRows, error: progressError } = await supabase
         .from('lesson_progress')
         .select('lesson_id, status')
         .eq('user_id', user.id)
         .eq('status', 'completed');
+      if (progressError) throw progressError;
+
+      const completedLessonIds = (progressRows || []).map((row) => row.lesson_id);
+      let completedNodeIds = [...completedLessonIds];
+      if (completedLessonIds.length > 0) {
+        const { data: nodeRows, error: nodeError } = await supabase
+          .from('roadmap_nodes')
+          .select('id, target_lesson_id')
+          .in('target_lesson_id', completedLessonIds)
+          .eq('is_active', true);
+        if (nodeError) throw nodeError;
+        completedNodeIds = [
+          ...new Set([
+            ...completedNodeIds,
+            ...(nodeRows || []).map((row) => row.id),
+          ]),
+        ];
+      }
 
       // Fetch completed reinforcements
-      const { data: reinfRows } = await supabase
+      const { data: reinfRows, error: reinfError } = await supabase
         .from('reinforcement_attempts')
         .select('reinforcement_node_id, is_correct')
         .eq('user_id', user.id)
         .eq('is_correct', true);
+      if (reinfError) throw reinfError;
 
       const scoresByCourse: Record<string, Record<string, SkillScore>> = {};
       if (scoreRows) {
@@ -144,7 +190,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         lastName,
         email: user.email || userProfileData?.email || '',
         avatarUrl: userProfileData?.avatar_url || '',
-        selectedCourseId: learnerData?.selected_course_id || 'course_math_01',
+         selectedCourseId: learnerData?.selected_course_id || '',
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,
         initialLevel: learnerData?.initial_level || 'intermediate',
@@ -152,14 +198,14 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         streakDays: gamifyData?.streak_days || 1,
         lastActiveDate: gamifyData?.last_activity_date || new Date().toISOString().split('T')[0],
         scoresByCourse,
-        completedLessonIds: (progressRows || []).map((r) => r.lesson_id),
-        completedNodeIds: [],
+        completedLessonIds,
+        completedNodeIds,
         completedReinforcementIds: (reinfRows || []).map((r) => r.reinforcement_node_id),
         createdAt: new Date(learnerData?.created_at || Date.now()).getTime(),
       };
     } catch (err) {
-      console.warn('Error fetching Supabase learner profile, using local state:', err);
-      return this.fallbackRepo.getProfile();
+      console.warn('Error fetching Supabase learner profile:', err);
+      throw err;
     }
   }
 
@@ -169,10 +215,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.updateProfile(updates);
-      }
+      const user = await this.requireAuthenticatedUser();
 
       const currentProfile = await this.getProfile();
       const merged: LearnerProfile = {
@@ -187,17 +230,17 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         const newLast = updates.lastName ?? currentProfile.lastName ?? '';
         const newDisplay = newLast ? `${newFirst} ${newLast}` : newFirst;
 
-        await supabase.from('profiles').upsert({
-          id: user.id,
+        const { error: profileUpdateError } = await supabase.from('profiles').update({
           first_name: newFirst,
           last_name: newLast,
           display_name: newDisplay,
           avatar_url: updates.avatarUrl ?? currentProfile.avatarUrl ?? null,
           updated_at: new Date().toISOString(),
-        });
+        }).eq('id', user.id);
+        if (profileUpdateError) throw profileUpdateError;
       }
 
-      await supabase.from('learner_profiles').upsert({
+      const { error: learnerUpdateError } = await supabase.from('learner_profiles').upsert({
         user_id: user.id,
         selected_course_id: merged.selectedCourseId,
         goal: merged.goal,
@@ -205,21 +248,12 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         initial_level: merged.initialLevel,
         updated_at: new Date().toISOString(),
       });
-
-      if (updates.xp !== undefined || updates.streakDays !== undefined || updates.lastActiveDate !== undefined) {
-        await supabase.from('gamification_profiles').upsert({
-          user_id: user.id,
-          xp: merged.xp,
-          streak_days: merged.streakDays,
-          last_activity_date: merged.lastActiveDate,
-          updated_at: new Date().toISOString(),
-        });
-      }
+      if (learnerUpdateError) throw learnerUpdateError;
 
       return merged;
     } catch (err) {
-      console.warn('Error updating Supabase learner profile, using local state:', err);
-      return this.fallbackRepo.updateProfile(updates);
+      console.warn('Error updating Supabase learner profile:', err);
+      throw err;
     }
   }
 
@@ -229,27 +263,15 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.saveSkillScores(courseId, scores);
-      }
+       await this.requireAuthenticatedUser();
 
-      const rows = Object.values(scores).map((s) => ({
-        user_id: user.id,
-        course_id: courseId,
-        skill_id: s.skillId,
-        score: s.score,
-        mastery_level: s.masteryLevel,
-        is_weakest_focus: Boolean(s.isWeakestFocus),
-        last_updated: new Date().toISOString(),
-      }));
-
-      await supabase.from('learner_skill_scores').upsert(rows, {
-        onConflict: 'user_id,course_id,skill_id',
+      const { error } = await supabase.rpc('recalculate_skill_scores', {
+        p_course_id: courseId,
       });
+      if (error) throw error;
     } catch (err) {
-      console.warn('Error saving skill scores to Supabase, saving locally:', err);
-      return this.fallbackRepo.saveSkillScores(courseId, scores);
+      console.warn('Error recalculating skill scores in Supabase:', err);
+      throw err;
     }
   }
 
@@ -259,123 +281,118 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.savePlacementAttempt(data);
+       await this.requireAuthenticatedUser();
+
+      const { data: result, error } = await supabase.rpc('save_placement_attempt', {
+        p_course_id: data.courseId,
+        p_submissions: data.submissions.map((submission) => ({
+          question_id: submission.questionId,
+          selected_index: submission.selectedIndex,
+        })),
+        p_idempotency_key: `placement_${data.courseId}_${new Date().toISOString().slice(0, 10)}`,
+      });
+
+      if (error || !result?.attempt_id) {
+        throw new Error(error?.message || 'Placement natijasini serverga saqlab bo‘lmadi.');
       }
 
-      const { data: attemptRow, error: attemptErr } = await supabase
-        .from('placement_attempts')
-        .insert({
-          user_id: user.id,
-          course_id: data.courseId,
-          score: data.score,
-          weakest_skill_id: data.weakestSkillId || null,
-          started_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
-
-      if (attemptErr || !attemptRow) {
-        console.warn('Error inserting placement attempt to Supabase:', attemptErr);
-        return this.fallbackRepo.savePlacementAttempt(data);
-      }
-
-      const attemptId = attemptRow.id;
-
-      if (data.submissions && data.submissions.length > 0) {
-        const answerRows = data.submissions.map((sub) => ({
-          attempt_id: attemptId,
-          user_id: user.id,
-          question_id: sub.questionId,
-          selected_index: sub.selectedIndex,
-          is_correct: sub.isCorrect,
-          created_at: new Date().toISOString(),
-        }));
-
-        const { error: answersErr } = await supabase
-          .from('placement_answers')
-          .insert(answerRows);
-
-        if (answersErr) {
-          console.warn('Error inserting placement answers to Supabase:', answersErr);
-        }
-      }
-
-      return attemptId;
+      return String(result.attempt_id);
     } catch (err) {
       console.warn('Exception saving placement attempt to Supabase:', err);
-      return this.fallbackRepo.savePlacementAttempt(data);
+      throw err;
     }
+  }
+
+  async evaluatePlacementAnswer(
+    courseId: string,
+    questionId: string,
+    selectedIndex: number
+  ): Promise<PlacementAnswerEvaluation> {
+    if (!isSupabaseConfigured) {
+      return this.fallbackRepo.evaluatePlacementAnswer(courseId, questionId, selectedIndex);
+    }
+
+    const { data, error } = await supabase.rpc('evaluate_placement_answer', {
+      p_course_id: courseId,
+      p_question_id: questionId,
+      p_selected_index: selectedIndex,
+    });
+
+    if (error || !data || typeof data.is_correct !== 'boolean') {
+      throw new Error(error?.message || 'Javobni serverda tekshirib bo‘lmadi.');
+    }
+
+    return { isCorrect: Boolean(data.is_correct) };
   }
 
   async markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void> {
-    await this.fallbackRepo.markLessonCompleted(lessonId, courseId);
-    if (!isSupabaseConfigured) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const resolvedCourseId = await resolveLessonCourseId(lessonId, courseId);
-      if (!resolvedCourseId) {
-        console.warn(
-          `[markLessonCompleted] Cannot resolve course for lesson "${lessonId}" — skipping remote write instead of defaulting to another course.`
-        );
-        return;
-      }
-
-      await supabase.from('lesson_progress').upsert({
-        user_id: user.id,
-        lesson_id: lessonId,
-        course_id: resolvedCourseId,
-        status: 'completed',
-        progress_percent: 100,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,lesson_id',
-      });
-    } catch (err) {
-      console.warn('Error marking lesson completed in Supabase:', err);
-    }
-  }
-
-  async markNodeCompleted(nodeId: string): Promise<void> {
-    return this.fallbackRepo.markNodeCompleted(nodeId);
-  }
-
-  async markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<void> {
-    await this.fallbackRepo.markReinforcementCompleted(reinforcementId, context);
-    if (!isSupabaseConfigured) return;
-
-    if (!context?.courseId || !context?.skillId) {
-      console.warn(
-        `[markReinforcementCompleted] Missing course/skill context for "${reinforcementId}" — skipping remote write instead of defaulting to another course.`
-      );
+    if (!isSupabaseConfigured) {
+      await this.fallbackRepo.markLessonCompleted(lessonId, courseId);
       return;
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      await this.requireAuthenticatedUser();
 
-      await supabase.from('reinforcement_attempts').upsert({
-        user_id: user.id,
-        course_id: context.courseId,
-        skill_id: context.skillId,
-        reinforcement_node_id: reinforcementId,
-        before_score: context.beforeScore,
-        after_score: context.afterScore,
-        is_correct: true,
-        xp_awarded: context.xpAwarded,
-        created_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,reinforcement_node_id',
+      const resolvedCourseId = await resolveLessonCourseId(lessonId, courseId);
+      if (!resolvedCourseId) {
+        throw new Error(`Dars kursi aniqlanmadi: ${lessonId}`);
+      }
+
+      const { data, error } = await supabase.rpc('complete_lesson', {
+        p_lesson_id: lessonId,
+        p_course_id: resolvedCourseId,
       });
+      if (error || data?.completed !== true) throw error || new Error('Dars yakuni serverda tasdiqlanmadi.');
+    } catch (err) {
+      console.warn('Error marking lesson completed in Supabase:', err);
+      throw err;
+    }
+  }
+
+  async markNodeCompleted(nodeId: string): Promise<void> {
+    if (!isSupabaseConfigured) return this.fallbackRepo.markNodeCompleted(nodeId);
+    throw new Error(`Roadmap node completion is not available through the production contract: ${nodeId}`);
+  }
+
+  async markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<ReinforcementCompletionResult | void> {
+    if (!isSupabaseConfigured) {
+      await this.fallbackRepo.markReinforcementCompleted(reinforcementId, context);
+      return;
+    }
+
+    if (!context?.courseId || !context?.skillId || !context?.questionId) {
+      throw new Error(`Mustahkamlash uchun course/skill/question konteksti yetishmaydi: ${reinforcementId}`);
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('complete_reinforcement', {
+        p_reinforcement_node_id: reinforcementId,
+        p_course_id: context.courseId,
+        p_skill_id: context.skillId,
+        p_question_id: context.questionId,
+        p_xp_awarded: context.xpAwarded,
+      });
+      if (error || !data) throw error || new Error('Mustahkamlash serverda saqlanmadi.');
+      if (
+        typeof data.old_score !== 'number' || !Number.isFinite(data.old_score) ||
+        data.old_score < 0 || data.old_score > 100 ||
+        typeof data.new_score !== 'number' || !Number.isFinite(data.new_score) ||
+        data.new_score < 0 || data.new_score > 100 ||
+        typeof data.xp_awarded !== 'number' || !Number.isInteger(data.xp_awarded) ||
+        data.xp_awarded < 0 || typeof data.already_processed !== 'boolean'
+      ) {
+        throw new Error('Mustahkamlash server natijasi noto‘g‘ri.');
+      }
+      return {
+        oldScore: data.old_score,
+        newScore: data.new_score,
+        xpAwarded: data.xp_awarded,
+        alreadyProcessed: data.already_processed,
+      };
     } catch (err) {
       console.warn('Error marking reinforcement completed in Supabase:', err);
+      throw err;
     }
   }
 
@@ -385,10 +402,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return this.fallbackRepo.submitAnswerAttempt(request);
-      }
+      const user = await this.requireAuthenticatedUser();
 
       const { data, error } = await supabase.rpc('submit_answer_attempt', {
         p_user_id: user.id,
@@ -402,14 +416,11 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       });
 
       if (error || !data) {
-        console.warn('RPC submit_answer_attempt error, falling back to local evaluation:', error);
-        return this.fallbackRepo.submitAnswerAttempt(request);
+        throw new Error(error?.message || 'Javob serverda saqlanmadi.');
       }
 
       const result: SubmitAnswerAttemptResult = {
         isCorrect: Boolean(data.is_correct),
-        correctIndex: typeof data.correct_index === 'number' ? data.correct_index : undefined,
-        correctOption: data.correct_option || undefined,
         explanation: data.explanation || 'To‘g‘ri yechim.',
         newSkillScore: typeof data.new_skill_score === 'number' ? data.new_skill_score : 50,
         overallScore: typeof data.overall_score === 'number' ? data.overall_score : 50,
@@ -420,34 +431,22 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         alreadyProcessed: Boolean(data.already_processed),
       };
 
-      // Sync local fallback repository state with verified evaluation
-      await this.fallbackRepo.recordAnswerAttempt({
-        courseId: request.courseId,
-        skillId: request.skillId,
-        lessonId: request.lessonId,
-        questionId: request.questionId,
-        selectedIndex: request.selectedIndex,
-        selectedAnswer: request.selectedAnswer,
-        isCorrect: result.isCorrect,
-      });
-
-      return result;
+       return result;
     } catch (err) {
       console.warn('Exception during submitAnswerAttempt RPC:', err);
-      return this.fallbackRepo.submitAnswerAttempt(request);
+      throw err;
     }
   }
 
   async recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord> {
-    const record = await this.fallbackRepo.recordAnswerAttempt(attempt);
-    if (!isSupabaseConfigured) return record;
+    if (!isSupabaseConfigured) return this.fallbackRepo.recordAnswerAttempt(attempt);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return record;
+      if (!user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
 
       // Invoke server-side RPC if available
-      await supabase.rpc('submit_answer_attempt', {
+      const { data, error } = await supabase.rpc('submit_answer_attempt', {
         p_user_id: user.id,
         p_course_id: attempt.courseId,
         p_skill_id: attempt.skillId,
@@ -455,28 +454,115 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         p_question_id: attempt.questionId,
         p_selected_index: attempt.selectedIndex,
         p_selected_text: attempt.selectedAnswer,
+        p_idempotency_key: `${attempt.lessonId || 'general'}:${attempt.questionId}:${attempt.selectedIndex}`,
       });
-    } catch (err) {
-      console.warn('Error recording answer attempt to Supabase, logged locally:', err);
-    }
 
-    return record;
+      if (error || !data) throw new Error(error?.message || 'Javob serverda saqlanmadi.');
+
+      return {
+        ...attempt,
+        id: `server_${Date.now()}`,
+        timestamp: Date.now(),
+        isCorrect: Boolean(data.is_correct),
+      };
+    } catch (err) {
+      console.warn('Error recording answer attempt to Supabase:', err);
+      throw err;
+    }
   }
 
   async getAnswerAttempts(limit: number = 10): Promise<AnswerAttemptRecord[]> {
-    return this.fallbackRepo.getAnswerAttempts(limit);
+    if (!isSupabaseConfigured) return this.fallbackRepo.getAnswerAttempts(limit);
+    const user = await this.requireAuthenticatedUser();
+    const { data, error } = await supabase
+      .from('answer_attempts')
+      .select('id, user_id, course_id, skill_id, lesson_id, question_id, selected_index, selected_answer, is_correct, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data || []).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      courseId: row.course_id,
+      skillId: row.skill_id,
+      lessonId: row.lesson_id,
+      questionId: row.question_id,
+      selectedIndex: row.selected_index,
+      selectedAnswer: row.selected_answer,
+      isCorrect: row.is_correct,
+      timestamp: new Date(row.created_at).getTime(),
+    }));
+  }
+
+  async getDailyActivity(days: number = 7): Promise<DailyActivitySummary[]> {
+    if (!isSupabaseConfigured) {
+      return this.fallbackRepo.getDailyActivity(days);
+    }
+
+    try {
+      const user = await this.requireAuthenticatedUser();
+
+      const since = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+
+       const { data, error } = await supabase
+        .from('daily_learning_stats')
+        .select('activity_date, active_seconds, xp_earned, lessons_completed')
+        .eq('user_id', user.id)
+        .gte('activity_date', since)
+        .order('activity_date', { ascending: true });
+      if (error) throw error;
+
+      const byDate = new Map<string, DailyActivitySummary>();
+      for (const row of data || []) {
+        byDate.set(row.activity_date, {
+          date: row.activity_date,
+          activeMinutes: Math.round((row.active_seconds || 0) / 60),
+          xpEarned: row.xp_earned || 0,
+          lessonsCompleted: row.lessons_completed || 0,
+        });
+      }
+
+      // Pad missing days with zeroes so the chart always has `days` columns.
+      const result: DailyActivitySummary[] = [];
+      const dayMs = 24 * 60 * 60 * 1000;
+      for (let i = days - 1; i >= 0; i--) {
+        const dateStr = new Date(Date.now() - i * dayMs).toISOString().split('T')[0];
+        result.push(
+          byDate.get(dateStr) || { date: dateStr, activeMinutes: 0, xpEarned: 0, lessonsCompleted: 0 }
+        );
+      }
+      return result;
+    } catch (err) {
+      console.warn('Error fetching daily activity:', err);
+      throw err;
+    }
   }
 
   async addXp(amount: number, actionIdempotencyKey?: string): Promise<number> {
-    return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
+    if (!isSupabaseConfigured) return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
+    const { data, error } = await supabase.rpc('award_xp', {
+      p_amount: amount,
+      p_action_key: actionIdempotencyKey || `xp_${Date.now()}`,
+    });
+    if (error || !data) throw error || new Error('XP serverda saqlanmadi.');
+    return Number(data.xp || 0);
   }
 
   async recordDailyActivity(dateStr?: string): Promise<number> {
-    return this.fallbackRepo.recordDailyActivity(dateStr);
+    if (!isSupabaseConfigured) return this.fallbackRepo.recordDailyActivity(dateStr);
+    const { data, error } = await supabase.rpc('record_learning_activity', {
+      p_activity_date: dateStr || null,
+    });
+    if (error || !data) throw error || new Error('Kunlik faollik serverda saqlanmadi.');
+    return Number(data.streak_days || 0);
   }
 
   async resetAll(): Promise<LearnerProfile> {
-    return this.fallbackRepo.resetAll();
+    if (!isSupabaseConfigured) return this.fallbackRepo.resetAll();
+    throw new Error('Production learner reset is not supported by the server contract.');
   }
 }
 

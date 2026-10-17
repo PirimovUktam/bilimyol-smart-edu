@@ -5,12 +5,14 @@ import {
   ReinforcementCompletionContext,
   SubmitAnswerAttemptRequest,
   SubmitAnswerAttemptResult,
+  DailyActivitySummary,
 } from '@/domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '@/domain/entities/LearnerProfile';
 import { SkillScore } from '@/domain/entities/SkillScore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
 import { SEED_LESSONS } from '@/data/datasources/lessons';
+import { SEED_ROADMAP_NODES } from '@/data/datasources/roadmaps';
 
 const DEFAULT_PROFILE: LearnerProfile = {
   id: 'learner_default_01',
@@ -39,6 +41,7 @@ const createDefaultProfile = (): LearnerProfile =>
   JSON.parse(JSON.stringify(DEFAULT_PROFILE)) as LearnerProfile;
 
 export class InMemoryLearnerRepository implements ILearnerRepository {
+  readonly supportsNodeCompletion = true;
   private profile: LearnerProfile = createDefaultProfile();
   private answerAttempts: AnswerAttemptRecord[] = [];
   private processedActionKeys: Set<string> = new Set();
@@ -50,6 +53,27 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
 
   async getProfile(): Promise<LearnerProfile> {
     return JSON.parse(JSON.stringify(this.profile));
+  }
+
+  /**
+   * Mirrors the server-side anti-cheat scoring: a skill score is computed over
+   * UNIQUE questions only, using each question's LATEST attempt. Re-solving or
+   * deliberately failing the same question can no longer inflate/deflate the
+   * score, keeping the client cache consistent with `submit_answer_attempt`.
+   */
+  private computeUniqueSkillScore(courseId: string, skillId: string): { score: number; total: number; correct: number } {
+    const latestByQuestion = new Map<string, boolean>();
+    for (const a of this.answerAttempts) {
+      if (a.courseId === courseId && a.skillId === skillId) {
+        latestByQuestion.set(a.questionId, a.isCorrect);
+      }
+    }
+    let correct = 0;
+    latestByQuestion.forEach((isCorrect) => {
+      if (isCorrect) correct += 1;
+    });
+    const total = latestByQuestion.size;
+    return { score: SkillScoringEngine.computeSkillScore(correct, total), total, correct };
   }
 
   async updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile> {
@@ -76,9 +100,27 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     return attemptId;
   }
 
-  async markLessonCompleted(lessonId: string, _courseId?: string | null): Promise<void> {
+  async evaluatePlacementAnswer(
+    courseId: string,
+    questionId: string,
+    selectedIndex: number
+  ): Promise<{ isCorrect: boolean }> {
+    const question = PLACEMENT_QUESTIONS[courseId]?.find((item) => item.id === questionId);
+    return { isCorrect: question?.correctIndex === selectedIndex };
+  }
+
+  async markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void> {
     if (!this.profile.completedLessonIds.includes(lessonId)) {
       this.profile.completedLessonIds.push(lessonId);
+      const roadmapNodes = courseId
+        ? SEED_ROADMAP_NODES[courseId] || []
+        : Object.values(SEED_ROADMAP_NODES).flat();
+      const targetNodeIds = roadmapNodes
+        .filter((node) => node.targetLessonId === lessonId)
+        .map((node) => node.id);
+      this.profile.completedNodeIds = [
+        ...new Set([...this.profile.completedNodeIds, ...targetNodeIds]),
+      ];
       await this.addXp(20, `lesson_completed_${lessonId}`);
       await this.recordDailyActivity();
     }
@@ -186,12 +228,9 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     }
     await this.recordDailyActivity();
 
-    // Recalculate skill score
-    const skillAttempts = this.answerAttempts.filter(
-      (a) => a.courseId === request.courseId && a.skillId === request.skillId
-    );
-    const correctCount = skillAttempts.filter((a) => a.isCorrect).length;
-    const newScoreVal = SkillScoringEngine.computeSkillScore(correctCount, skillAttempts.length);
+    // Recalculate skill score over unique questions (latest attempt each).
+    const { score: newScoreVal, total: uniqueTotal, correct: uniqueCorrect } =
+      this.computeUniqueSkillScore(request.courseId, request.skillId);
 
     if (!this.profile.scoresByCourse[request.courseId]) {
       this.profile.scoresByCourse[request.courseId] = {};
@@ -216,8 +255,8 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       overallScore,
       xpAwarded,
       totalXp: this.profile.xp,
-      totalAttempts: skillAttempts.length,
-      correctAttempts: correctCount,
+      totalAttempts: uniqueTotal,
+      correctAttempts: uniqueCorrect,
       alreadyProcessed: false,
     };
   }
@@ -236,12 +275,8 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     }
     await this.recordDailyActivity();
 
-    // Recalculate cumulative skill score for this skill
-    const skillAttempts = this.answerAttempts.filter(
-      (a) => a.courseId === attempt.courseId && a.skillId === attempt.skillId
-    );
-    const correctCount = skillAttempts.filter((a) => a.isCorrect).length;
-    const newScoreVal = SkillScoringEngine.computeSkillScore(correctCount, skillAttempts.length);
+    // Recalculate cumulative unique-question skill score for this skill.
+    const { score: newScoreVal } = this.computeUniqueSkillScore(attempt.courseId, attempt.skillId);
 
     if (!this.profile.scoresByCourse[attempt.courseId]) {
       this.profile.scoresByCourse[attempt.courseId] = {};
@@ -260,6 +295,28 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
 
   async getAnswerAttempts(limit: number = 10): Promise<AnswerAttemptRecord[]> {
     return [...this.answerAttempts].slice(-limit);
+  }
+
+  async getDailyActivity(days: number = 7): Promise<DailyActivitySummary[]> {
+    const result: DailyActivitySummary[] = [];
+    const dayMs = 1000 * 60 * 60 * 24;
+    const now = Date.now();
+
+    for (let i = days - 1; i >= 0; i--) {
+      const dateStr = new Date(now - i * dayMs).toISOString().split('T')[0];
+      const dayAttempts = this.answerAttempts.filter(
+        (a) => new Date(a.timestamp).toISOString().split('T')[0] === dateStr
+      );
+      const correct = dayAttempts.filter((a) => a.isCorrect).length;
+      result.push({
+        date: dateStr,
+        activeMinutes: Math.round(dayAttempts.length * 1.5),
+        xpEarned: correct * 2,
+        lessonsCompleted: 0,
+      });
+    }
+
+    return result;
   }
 
   async addXp(amount: number, actionIdempotencyKey?: string): Promise<number> {

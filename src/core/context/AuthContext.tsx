@@ -1,7 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 import { useMonitoringStore } from '@/app/store/useMonitoringStore';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourseStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useLessonStore } from '@/app/store/useLessonStore';
+import { usePlacementStore } from '@/app/store/usePlacementStore';
 
 export interface UserProfile {
   id: string;
@@ -19,7 +24,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher' | 'admin') => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher' | 'admin') => Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
@@ -44,8 +49,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const profileRequest = useRef(0);
+  const authRevision = useRef(0);
+  const authAction = useRef(0);
+  const activeUserId = useRef<string | null>(null);
+  const pendingAuth = useRef<{ request: number; email: string; userId?: string } | null>(null);
+  // Entries live only until their action settles, including canceled SDK calls.
+  const authOperations = useRef(new Map<number, string>());
+  const signingOut = useRef<number | null>(null);
+
+  const clearSessionStores = useCallback(() => {
+    useLearnerStore.getState().clearSession();
+    useCourseStore.getState().clearSession();
+    useRoadmapStore.getState().clearSession();
+    useLessonStore.getState().clearSession();
+    usePlacementStore.getState().resetPlacement();
+    useMonitoringStore.getState().resetAll();
+    localStorage.removeItem('bilimyol_auth_session');
+    localStorage.removeItem(ACTIVE_COURSE_STORAGE_KEY);
+  }, []);
+
+  const invalidatePendingAuth = useCallback(() => {
+    authRevision.current++;
+    authAction.current++;
+    profileRequest.current++;
+    pendingAuth.current = null;
+  }, []);
+
+  const clearAuthState = useCallback(() => {
+    invalidatePendingAuth();
+    activeUserId.current = null;
+    clearSessionStores();
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsDemoMode(false);
+    setIsLoading(false);
+  }, [clearSessionStores, invalidatePendingAuth]);
+
+  const beginAuthAction = (email: string) => {
+    const request = ++authAction.current;
+    authRevision.current++;
+    profileRequest.current++;
+    pendingAuth.current = { request, email: email.toLowerCase().trim() };
+    authOperations.current.set(request, pendingAuth.current.email);
+    // A previous account's data must not render while another login is pending.
+    if (activeUserId.current || profile) clearSessionStores();
+    activeUserId.current = null;
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsDemoMode(false);
+    localStorage.removeItem('bilimyol_auth_session');
+    setIsLoading(true);
+    return request;
+  };
+
+  const staleActionError = () => new Error('Sessiya o‘zgardi. Qayta urinib ko‘ring.');
 
   const fetchProfile = useCallback(async (userId: string, email: string) => {
+    const request = ++profileRequest.current;
+    const isCurrent = () => request === profileRequest.current;
     if (!isSupabaseConfigured) {
       const cached = localStorage.getItem('bilimyol_auth_session');
       if (cached) {
@@ -70,13 +134,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.warn('Error querying public.profiles in AuthContext:', error);
-      }
+      if (!isCurrent()) return null;
+      if (error) throw error;
 
-      if (data) {
+      if (data && data.id === userId && ['student', 'parent', 'teacher', 'admin'].includes(data.role)) {
         // Authoritative role from public.profiles
-        const userRole = (data.role as UserProfile['role']) || 'student';
+        const userRole = data.role as NonNullable<UserProfile['role']>;
         const resolvedFirst = data.first_name || (email ? email.split('@')[0] : 'Foydalanuvchi');
         const userProfile: UserProfile = {
           id: data.id,
@@ -87,53 +150,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: userRole,
         };
 
-        console.log('[AUTH] Loaded authoritative public.profiles record:', {
-          userId,
-          email,
-          databaseRole: data.role,
-          resolvedRole: userRole,
-        });
-
         setProfile(userProfile);
         localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
         useMonitoringStore.setState({ currentRole: userRole as any });
         return userProfile;
       }
 
-      // If no row exists yet in public.profiles (e.g. fresh signup before trigger)
-      const { data: userData } = await supabase.auth.getUser();
-      const metaFirst = (userData.user?.user_metadata?.first_name || '').trim();
-      const metaLast = (userData.user?.user_metadata?.last_name || '').trim();
-      const metaRole = (userData.user?.user_metadata?.role as UserProfile['role']) || 'student';
-      const resolvedFirst = metaFirst || (email ? email.split('@')[0] : 'Foydalanuvchi');
-      const resolvedLast = metaLast || '';
-
-      const userProfile: UserProfile = {
-        id: userId,
-        firstName: resolvedFirst,
-        lastName: resolvedLast,
-        email: email || userData.user?.email || '',
-        avatarUrl: userData.user?.user_metadata?.avatar_url || '',
-        role: metaRole,
-      };
-
-      setProfile(userProfile);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
-      useMonitoringStore.setState({ currentRole: metaRole as any });
-      return userProfile;
+      // Missing/unavailable DB role is not permission to trust signup metadata.
+      throw new Error('Profil serverda topilmadi. Qayta urinib ko‘ring.');
     } catch (err) {
+      if (!isCurrent()) return null;
       console.warn('Error resolving authenticated profile from Supabase:', err);
-      const fallback: UserProfile = {
-        id: userId,
-        firstName: email ? email.split('@')[0] : 'Foydalanuvchi',
-        lastName: '',
-        email,
-        role: 'student',
-      };
-      setProfile(fallback);
-      return fallback;
+      setProfile(null);
+      localStorage.removeItem('bilimyol_auth_session');
+      useMonitoringStore.setState({ currentRole: 'student' });
+      return null;
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
   }, []);
 
@@ -153,8 +186,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return profile;
     }
 
+    const revision = authRevision.current;
+    const userId = activeUserId.current;
+    if (!userId) return null;
     const { data: userData } = await supabase.auth.getUser();
-    if (userData.user) {
+    if (revision !== authRevision.current || userId !== activeUserId.current) return null;
+    if (userData.user?.id === userId) {
       return await fetchProfile(userData.user.id, userData.user.email ?? '');
     }
     return null;
@@ -162,6 +199,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    const startupRevision = authRevision.current;
+    const isCurrentStartup = () => mounted && startupRevision === authRevision.current;
 
     async function initAuth() {
       try {
@@ -209,7 +248,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const { data } = await supabase.auth.getSession();
-        if (mounted) {
+        if (isCurrentStartup()) {
+          activeUserId.current = data.session?.user.id ?? null;
           setSession(data.session);
           setUser(data.session?.user ?? null);
           if (data.session?.user) {
@@ -241,7 +281,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (err) {
         console.warn('Auth initialization error:', err);
-        if (mounted) {
+        if (isCurrentStartup()) {
           setProfile(null);
           setIsDemoMode(false);
           setIsLoading(false);
@@ -252,31 +292,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
 
     if (isSupabaseConfigured) {
-      const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
         if (!mounted) return;
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        if (newSession?.user) {
-          await fetchProfile(newSession.user.id, newSession.user.email ?? '');
-        } else {
-          setProfile(null);
-          setIsDemoMode(false);
-          setIsLoading(false);
+        if (event === 'INITIAL_SESSION' && startupRevision !== authRevision.current) return;
+        if (signingOut.current !== null && newSession?.user) return;
+        const eventEmail = newSession?.user.email?.toLowerCase();
+        const pending = pendingAuth.current;
+        const isOwnAuthEvent = Boolean(pending && pending.email === eventEmail);
+        if (eventEmail && !isOwnAuthEvent && [...authOperations.current].some(
+          ([request, email]) => request !== authAction.current && email === eventEmail
+        )) return;
+        authRevision.current++;
+        if (event === 'SIGNED_OUT' || !newSession?.user) {
+          clearAuthState();
+          return;
         }
+
+        if (pending && !isOwnAuthEvent) {
+          authAction.current++;
+          pendingAuth.current = null;
+        }
+        const changedAccount = activeUserId.current !== newSession.user.id;
+        if (changedAccount) {
+          profileRequest.current++;
+          if (activeUserId.current) clearSessionStores();
+          setProfile(null);
+        }
+        activeUserId.current = newSession.user.id;
+        setSession(newSession);
+        setUser(newSession.user);
+        setIsDemoMode(false);
+        if (isOwnAuthEvent && pending) {
+          // The action owns the authoritative read. Do not invalidate its result
+          // simply because Supabase emitted SIGNED_IN for that same action.
+          pending.userId = newSession.user.id;
+          return;
+        }
+        profileRequest.current++;
+        const revision = authRevision.current;
+        setIsLoading(true);
+        // Keep this callback synchronous; DB reads can need the auth session lock.
+        queueMicrotask(() => {
+          if (mounted && revision === authRevision.current && activeUserId.current === newSession.user.id) {
+            void fetchProfile(newSession.user.id, newSession.user.email ?? '');
+          }
+        });
       });
 
       return () => {
         mounted = false;
+        invalidatePendingAuth();
         authListener.subscription.unsubscribe();
       };
     }
 
     return () => {
       mounted = false;
+      invalidatePendingAuth();
     };
-  }, [fetchProfile]);
+  }, [clearAuthState, clearSessionStores, fetchProfile, invalidatePendingAuth]);
 
   const signIn = async (email: string, password: string) => {
+    if (signingOut.current !== null) return { error: staleActionError() };
     if (!isSupabaseConfigured) {
       if (import.meta.env.PROD) {
         return {
@@ -299,16 +376,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null, profile: demoProf };
     }
 
-    setIsLoading(true);
-    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !authData.user) {
-      setIsLoading(false);
-      return { error: error ? new Error(error.message) : new Error('Kirishda xatolik yuz berdi.') };
+    const request = beginAuthAction(email);
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (request !== authAction.current) return { error: staleActionError() };
+      if (error || !authData.user || !authData.session) {
+        return { error: error ? new Error(error.message) : new Error('Kirishda xatolik yuz berdi.') };
+      }
+      if (pendingAuth.current?.userId && pendingAuth.current.userId !== authData.user.id) {
+        return { error: staleActionError() };
+      }
+      activeUserId.current = authData.user.id;
+      setUser(authData.user);
+      setSession(authData.session);
+      const resolved = await fetchProfile(authData.user.id, authData.user.email ?? email);
+      if (request !== authAction.current) return { error: staleActionError() };
+      return resolved
+        ? { error: null, profile: resolved }
+        : { error: new Error('Profilni serverdan yuklab bo‘lmadi. Qayta urinib ko‘ring.') };
+    } catch (err) {
+      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new Error('Kirishda xatolik yuz berdi.') };
+    } finally {
+      authOperations.current.delete(request);
+      if (request === authAction.current) {
+        pendingAuth.current = null;
+        setIsLoading(false);
+      }
     }
-
-    const resolved = await fetchProfile(authData.user.id, authData.user.email ?? email);
-    setIsLoading(false);
-    return { error: null, profile: resolved };
   };
 
   const signUp = async (
@@ -317,8 +411,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     firstName: string,
     lastName: string,
     role: 'student' | 'parent' | 'teacher' | 'admin' = 'student'
-  ) => {
+  ): Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }> => {
+    if (signingOut.current !== null) return { error: staleActionError() };
     if (!isSupabaseConfigured) {
+      if (import.meta.env.PROD) {
+        return { error: new Error('Server konfiguratsiyasi topilmadi. VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY sozlanishi kerak.') };
+      }
       const newProf: UserProfile = {
         id: 'user_' + Date.now(),
         firstName,
@@ -333,51 +431,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     }
 
-    setIsLoading(true);
-    const { data: signUpData, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role,
-        },
-      },
-    });
-
-    if (error) {
-      setIsLoading(false);
-      return { error: new Error(error.message) };
-    }
-
-    if (signUpData.user) {
-      const initialProf: UserProfile = {
-        id: signUpData.user.id,
-        firstName,
-        lastName,
+    const request = beginAuthAction(email);
+    try {
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
-        role,
-      };
-      setProfile(initialProf);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: initialProf }));
-      useMonitoringStore.setState({ currentRole: role as any });
-    }
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role,
+          },
+        },
+      });
 
-    setIsLoading(false);
-    return { error: null };
+      if (request !== authAction.current) return { error: staleActionError() };
+      if (error) return { error: new Error(error.message) };
+      if (!signUpData.user) return { error: new Error('Hisob yaratishda xatolik yuz berdi.') };
+      if (!signUpData.session) {
+        authRevision.current++;
+        profileRequest.current++;
+        activeUserId.current = null;
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        localStorage.removeItem('bilimyol_auth_session');
+        return { error: null, requiresEmailConfirmation: true };
+      }
+      if (pendingAuth.current?.userId && pendingAuth.current.userId !== signUpData.user.id) {
+        return { error: staleActionError() };
+      }
+      activeUserId.current = signUpData.user.id;
+      setUser(signUpData.user);
+      setSession(signUpData.session);
+      const resolved = await fetchProfile(signUpData.user.id, signUpData.user.email ?? email);
+      if (request !== authAction.current) return { error: staleActionError() };
+      return resolved
+        ? { error: null }
+        : { error: new Error('Profilni serverdan yuklab bo‘lmadi. Qayta urinib ko‘ring.') };
+    } catch (err) {
+      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new Error('Hisob yaratishda xatolik yuz berdi.') };
+    } finally {
+      authOperations.current.delete(request);
+      if (request === authAction.current) {
+        pendingAuth.current = null;
+        setIsLoading(false);
+      }
+    }
   };
 
   const signOut = async () => {
-    if (isSupabaseConfigured) {
-      await supabase.auth.signOut();
+    clearAuthState();
+    const request = authAction.current;
+    signingOut.current = request;
+    try {
+      if (isSupabaseConfigured) {
+        await supabase.auth.signOut();
+      }
+    } finally {
+      if (signingOut.current === request) signingOut.current = null;
     }
-    localStorage.removeItem('bilimyol_auth_session');
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setIsDemoMode(false);
-    useMonitoringStore.getState().resetAll();
   };
 
   const resetPassword = async (email: string) => {
@@ -394,30 +507,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!profile) return { error: new Error('Profil topilmadi') };
+    if (isSupabaseConfigured && profile.id !== activeUserId.current) return { error: staleActionError() };
 
-    const updated = { ...profile, ...data };
-    setProfile(updated);
-    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
+    const updated = {
+      ...profile,
+      firstName: data.firstName ?? profile.firstName,
+      lastName: data.lastName ?? profile.lastName,
+      avatarUrl: data.avatarUrl ?? profile.avatarUrl,
+    };
 
     if (!isSupabaseConfigured) {
+      setProfile(updated);
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
       return { error: null };
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        first_name: updated.firstName,
-        last_name: updated.lastName,
-        display_name: updated.lastName ? `${updated.firstName} ${updated.lastName}` : updated.firstName,
-        avatar_url: updated.avatarUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', profile.id);
+    const request = profileRequest.current;
+    const action = authAction.current;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: updated.firstName,
+          last_name: updated.lastName,
+          display_name: updated.lastName ? `${updated.firstName} ${updated.lastName}` : updated.firstName,
+          avatar_url: updated.avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
 
-    return { error: error ? new Error(error.message) : null };
+      if (error) return { error: new Error(error.message) };
+      if (request !== profileRequest.current || action !== authAction.current || profile.id !== activeUserId.current) {
+        return { error: staleActionError() };
+      }
+      setProfile(updated);
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
+      return { error: null };
+    } catch {
+      return { error: new Error('Profil serverda saqlanmadi. Qayta urinib ko‘ring.') };
+    }
   };
 
   const setDemoUser = () => {
+    clearAuthState();
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
     localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile, isDemoMode: true }));

@@ -1,9 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, TrendingUp, Sparkles, ArrowRight, CheckCircle2, Play, BookOpen, Clock } from 'lucide-react';
+import { Trophy, TrendingUp, Sparkles, ArrowRight, Play } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { Badge } from '@/presentation/components/Badge';
 
 interface SkillProgressItem {
   skillName: string;
@@ -174,7 +173,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
                 rightIcon={<ArrowRight className="w-5 h-5" />}
                 className="w-full text-center justify-center py-4 text-base font-bold shadow-xl shadow-blue-600/25"
               >
-                Keyingi darsga o‘tish
+                Dashboardga qaytish
               </Button>
             </div>
           </Card>

@@ -19,6 +19,7 @@ export interface AIExplanationResponse {
   motivation?: string;
   reinforcementNeeded?: boolean;
   isDeterministicFallback: boolean;
+  isFallback?: boolean;
 }
 
 export interface GenerateQuestionRequest {
@@ -62,6 +63,21 @@ export interface GenerateLessonRequest {
   recentMistakes?: string[];
 }
 
+export interface AskTutorRequest {
+  message: string;
+  courseId?: string;
+  topic?: string;
+  learnerName?: string;
+  learnerScore?: number;
+}
+
+export interface AskTutorResponse {
+  tutorName: string;
+  answer: string;
+  isAiGenerated: boolean;
+  isDeterministicFallback: boolean;
+}
+
 export interface GeneratedLessonResponse {
   lessonId: string;
   courseId: string;
@@ -85,4 +101,5 @@ export interface IAITutorService {
   generateQuestion?(request: GenerateQuestionRequest): Promise<GeneratedQuestionResponse>;
   generateReinforcement?(request: GenerateReinforcementRequest): Promise<GeneratedQuestionResponse>;
   generateLesson?(request: GenerateLessonRequest): Promise<GeneratedLessonResponse>;
+  askTutor?(request: AskTutorRequest): Promise<AskTutorResponse>;
 }

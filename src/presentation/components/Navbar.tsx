@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BilimYolLogo } from './BilimYolLogo';
-import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useAuth } from '@/core/context/AuthContext';
 import {
@@ -8,7 +7,6 @@ import {
   Award,
   Map,
   Compass,
-  BookOpen,
   LayoutDashboard,
   Users,
   GraduationCap,
@@ -29,7 +27,6 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
-  const { activeCourse } = useCourseStore();
   const { profile } = useLearnerStore();
   const { profile: authProfile } = useAuth();
   const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
@@ -204,12 +201,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     <>
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200/80 text-xs font-black text-orange-800">
                         <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-                        <span>{profile?.streakDays ?? 5} kun</span>
+                        <span>{profile?.streakDays ?? 0} kun</span>
                       </div>
 
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200/80 text-xs font-black text-indigo-700">
                         <Award className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{profile?.xp ?? 1200} XP</span>
+                        <span>{profile?.xp ?? 0} XP</span>
                       </div>
                     </>
                   )}
@@ -247,7 +244,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 <button
                   key={link.id}
                   onClick={() => onNavigate(link.id)}
-                  className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                  aria-label={link.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
                     isActive ? 'text-indigo-600 font-black' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >

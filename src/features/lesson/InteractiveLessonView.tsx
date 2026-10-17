@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import {
   BookOpen,
   ArrowRight,
@@ -10,7 +11,6 @@ import {
   Lightbulb,
   FileText,
   HelpCircle,
-  XCircle,
   RotateCcw,
   AlertTriangle,
 } from 'lucide-react';
@@ -48,11 +48,14 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     isLoading,
     error,
     isEvaluatingAnswer,
+    isCompletingLesson,
     lastAnswerResult,
     showAIPanel,
     showReinforcementModal,
     isCompleted,
+    correctAnswerCount,
     loadLesson,
+    clearSession,
     nextStep,
     prevStep,
     goToStep,
@@ -69,7 +72,17 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     loadLesson(lessonId);
     setPickedOption(null);
     setHasSubmittedCurrent(false);
-  }, [lessonId, loadLesson]);
+    // Leaving the lesson invalidates pending completion/profile work as well
+    // as answer evaluation, even when no other lesson is opened next.
+    return () => clearSession();
+  }, [lessonId, loadLesson, clearSession]);
+
+  useEffect(() => {
+    // Each step owns its answer controls; a previous step must not disable or
+    // carry its selection into the next question.
+    setPickedOption(null);
+    setHasSubmittedCurrent(false);
+  }, [currentStepIndex]);
 
   if (isLoading) {
     return (
@@ -82,7 +95,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     );
   }
 
-  if (error || !currentLesson) {
+  if (!currentLesson) {
     return (
       <AILessonGeneratingCard
         error={error || 'Ushbu dars topilmadi yoki yuklashda xatolik yuz berdi.'}
@@ -115,6 +128,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   }
 
   const currentStep = currentLesson.steps[currentStepIndex];
+  const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
   const isMath = currentLesson.courseId === 'course_math_01';
 
   // Infographic 2 Step 8 category tabs mapping
@@ -133,9 +147,18 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   const handleAnswerSubmit = async () => {
     if (pickedOption === null || isEvaluatingAnswer) return;
     const res = await submitAnswer(pickedOption);
+    const activeSession = useLessonStore.getState();
+    if (!res || activeSession.currentLesson !== currentLesson || activeSession.currentStepIndex !== currentStepIndex) return;
     setHasSubmittedCurrent(true);
     if (res?.isCorrect) {
       sounds.playSuccess();
+      // Micro-win: celebrate every correct answer instantly.
+      confetti({
+        particleCount: 70,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B'],
+      });
     } else {
       sounds.playMistake();
     }
@@ -151,6 +174,12 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             AI xizmati hozircha javob bera olmayapti — namunaviy (demo) dars ko‘rsatilmoqda.
             Mavzular haqiqiy AI bilan yaratilganda avtomatik ravishda yangilanadi.
           </div>
+        </div>
+      )}
+
+      {error && (
+        <div role="alert" className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-900">
+          {error}
         </div>
       )}
 
@@ -387,11 +416,13 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           {lastAnswerResult.isCorrect ? 'To‘g‘ri javob! 🎉' : 'Error Diagnosis: Yo‘lchi AI'}
                         </span>
                       </div>
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                        lastAnswerResult.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
-                      }`}>
-                        {lastAnswerResult.isCorrect ? '+10 XP' : 'Mustahkamlash tavsiya etiladi'}
-                      </span>
+<span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                          lastAnswerResult.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
+                        }`}>
+                          {lastAnswerResult.isCorrect
+                            ? `+${lastAnswerResult.xpAwarded ?? 2} XP`
+                            : 'Mustahkamlash tavsiya etiladi'}
+                        </span>
                     </div>
 
                     {lastAnswerResult.isCorrect ? (
@@ -494,9 +525,12 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   variant="primary"
                   size="md"
                   onClick={nextStep}
+                  disabled={isCompletingLesson || isEvaluatingAnswer || isCompleted}
+                  isLoading={isCompletingLesson}
+                  aria-busy={isCompletingLesson}
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                 >
-                  Keyingi qadam
+                  {isCompletingLesson ? 'Saqlanmoqda…' : isFinalStep ? (error ? 'Qayta urinish' : 'Darsni yakunlash') : 'Keyingi qadam'}
                 </Button>
               </div>
             )}
@@ -566,9 +600,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         return (
           <LessonCompletionModal
             isOpen={isCompleted}
-            scorePercentage={lastAnswerResult?.isCorrect ? 100 : (lastAnswerResult?.overallScore || 80)}
-            correctCount={lastAnswerResult?.isCorrect ? 1 : 0}
-            totalCount={1}
+            scorePercentage={Math.round((correctAnswerCount / Math.max(currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length, 1)) * 100)}
+            correctCount={correctAnswerCount}
+            totalCount={Math.max(currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length, 1)}
             courseTitle={activeCourse?.title || 'Fan'}
             lessonTitle={currentLesson.title}
             skillProgressList={dynamicSkillProgressList}

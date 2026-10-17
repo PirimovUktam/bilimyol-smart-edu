@@ -14,10 +14,33 @@ export interface LessonAnswerResult {
 }
 
 export class SubmitLessonAnswerUseCase {
+  /**
+   * Throttle map: prevents identical mistake-diagnosis requests from hitting the
+   * AI backend repeatedly (e.g. a learner re-submitting the same wrong option).
+   * Keyed by question + selected option, kept for a short window.
+   */
+  private static readonly explanationCache = new Map<string, { at: number; value: AIExplanationResponse }>();
+  private static readonly EXPLANATION_TTL_MS = 60_000;
+
   constructor(
     private aiTutorService: IAITutorService,
     private learnerRepo?: ILearnerRepository
   ) {}
+
+  private async getThrottledExplanation(
+    cacheKey: string,
+    request: Parameters<IAITutorService['explainMistake']>[0]
+  ): Promise<AIExplanationResponse> {
+    const cached = SubmitLessonAnswerUseCase.explanationCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.at < SubmitLessonAnswerUseCase.EXPLANATION_TTL_MS) {
+      return cached.value;
+    }
+
+    const fresh = await this.aiTutorService.explainMistake(request);
+    SubmitLessonAnswerUseCase.explanationCache.set(cacheKey, { at: now, value: fresh });
+    return fresh;
+  }
 
   async execute(
     question: Question,
@@ -87,8 +110,9 @@ export class SubmitLessonAnswerUseCase {
       };
     }
 
-    // Call AI Tutor service for diagnostic feedback on error
-    const aiExplanation = await this.aiTutorService.explainMistake({
+    // Call AI Tutor service for diagnostic feedback on error (throttled per question+option)
+    const cacheKey = `${question.id}::${selectedIndex}`;
+    const aiExplanation = await this.getThrottledExplanation(cacheKey, {
       courseId: question.courseId,
       skillId: question.skillId,
       questionId: question.id,

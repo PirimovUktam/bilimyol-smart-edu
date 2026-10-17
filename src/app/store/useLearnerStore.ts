@@ -7,38 +7,69 @@ interface LearnerState {
   profile: LearnerProfile | null;
   isLoading: boolean;
   loadProfile: () => Promise<void>;
-  setSelectedCourse: (courseId: string) => Promise<void>;
+  setSelectedCourse: (courseId: string, isCurrent?: () => boolean) => Promise<void>;
   setOnboardingData: (goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment, initialLevel: InitialLevel) => Promise<void>;
+  clearSession: () => void;
   resetAll: () => Promise<void>;
 }
 
-export const useLearnerStore = create<LearnerState>((set) => ({
-  profile: null,
-  isLoading: false,
+export const useLearnerStore = create<LearnerState>((set) => {
+  // Replacing the identity invalidates every older read or write continuation.
+  let currentOperation: object | null = null;
+  const applyProfile = async (
+    request: () => Promise<LearnerProfile>,
+    isLoading = false,
+    isCurrent = () => true
+  ) => {
+    if (!isCurrent()) return;
+    const operation = {};
+    currentOperation = operation;
+    set({ isLoading });
+    if (currentOperation !== operation || !isCurrent()) return;
+    try {
+      const profile = await request();
+      if (currentOperation !== operation) return;
+      if (!isCurrent()) {
+        set({ isLoading: false });
+        return;
+      }
+      set({ profile, isLoading: false });
+    } catch (err) {
+      if (currentOperation !== operation) return;
+      set({ isLoading: false });
+      if (!isCurrent()) return;
+      throw err;
+    }
+  };
 
-  loadProfile: async () => {
-    set({ isLoading: true });
-    const profile = await supabaseLearnerRepository.getProfile();
-    set({ profile, isLoading: false });
-  },
+  return {
+    profile: null,
+    isLoading: false,
 
-  setSelectedCourse: async (courseId: string) => {
-    const updated = await supabaseLearnerRepository.updateProfile({ selectedCourseId: courseId });
-    set({ profile: updated });
-  },
+    loadProfile: async () => {
+      await applyProfile(() => supabaseLearnerRepository.getProfile(), true);
+    },
 
-  setOnboardingData: async (goal, dailyMinutes, initialLevel) => {
-    const updated = await supabaseLearnerRepository.updateProfile({
-      goal,
-      dailyMinutes,
-      initialLevel,
-    });
-    set({ profile: updated });
-  },
+    setSelectedCourse: async (courseId: string, isCurrent) => {
+      // Course selection can be replaced while its profile write is in flight.
+      await applyProfile(() => supabaseLearnerRepository.updateProfile({ selectedCourseId: courseId }), false, isCurrent);
+    },
 
-  resetAll: async () => {
-    const resetted = await supabaseLearnerRepository.resetAll();
-    set({ profile: resetted });
-  },
-}));
+    setOnboardingData: async (goal, dailyMinutes, initialLevel) => {
+      await applyProfile(() => supabaseLearnerRepository.updateProfile({
+        goal,
+        dailyMinutes,
+        initialLevel,
+      }));
+    },
 
+    clearSession: () => {
+      currentOperation = null;
+      set({ profile: null, isLoading: false });
+    },
+
+    resetAll: async () => {
+      await applyProfile(() => supabaseLearnerRepository.resetAll());
+    },
+  };
+});

@@ -96,9 +96,10 @@ export const AppRouter: React.FC = () => {
   const userRole = authProfile?.role || monitoringRole || 'student';
 
   useEffect(() => {
-    loadCourses();
-    loadProfile();
-  }, [loadCourses, loadProfile]);
+    if (!authProfile) return;
+    void loadCourses();
+    void loadProfile();
+  }, [authProfile, loadCourses, loadProfile]);
 
   // One-way reconcile: active course follows GENUINE profile changes only.
   // The initial profile value is a baseline (never reconciled) so it cannot

@@ -26,7 +26,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   onSuccess,
   onClose,
 }) => {
-  const { completeReinforcement, isUpdating, roadmap } = useRoadmapStore();
+  const { completeReinforcement, isUpdating, roadmap, error: submissionError } = useRoadmapStore();
 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [feedbackState, setFeedbackState] = useState<'answering' | 'success' | 'incorrect'>('answering');
@@ -39,13 +39,19 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
     const reinforcementNodeId = deriveReinforcementNodeId(roadmap, courseId, skillId);
 
-    const result = await completeReinforcement(
-      courseId,
-      skillId,
-      reinforcementNodeId,
-      question,
-      selectedIdx
-    );
+    let result: Awaited<ReturnType<typeof completeReinforcement>>;
+    try {
+      result = await completeReinforcement(
+        courseId,
+        skillId,
+        reinforcementNodeId,
+        question,
+        selectedIdx
+      );
+    } catch {
+      setFeedbackState('answering');
+      return;
+    }
 
     if (result.isCorrect) {
       sounds.playSuccess();
@@ -143,6 +149,11 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
               {feedbackState === 'incorrect' && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
                   Javob to‘g‘ri emas. E'tibor bering: avval ko‘paytirish, so‘ng qo‘shish bajariladi.
+                </div>
+              )}
+              {submissionError && (
+                <div role="alert" className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
+                  Javob serverda saqlanmadi: {submissionError}. Qayta urinib ko‘ring.
                 </div>
               )}
 

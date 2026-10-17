@@ -1,9 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowRight, X, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
+import { AlertCircle, ArrowRight, X, CheckCircle2 } from 'lucide-react';
 import { AIExplanationResponse } from '@/data/services/IAITutorService';
 import { Button } from '@/presentation/components/Button';
-import { Card } from '@/presentation/components/Card';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
 interface YolchiAIPanelProps {
@@ -44,6 +43,7 @@ export const YolchiAIPanel: React.FC<YolchiAIPanelProps> = ({
 
               <button
                 onClick={onClose}
+                aria-label="Yopish"
                 className="p-1.5 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -61,39 +61,50 @@ export const YolchiAIPanel: React.FC<YolchiAIPanelProps> = ({
               </div>
             </div>
 
+            {/* Honest disclosure when the AI edge function failed and a deterministic
+                explanation is being shown instead of a real model answer. */}
+            {explanation.isFallback && (
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span className="text-[11px] sm:text-xs font-semibold text-amber-900 leading-relaxed">
+                  AI xizmati hozircha javob bera olmayapti — namunaviy tahlil ko‘rsatilmoqda.
+                </span>
+              </div>
+            )}
+
             {/* Step-by-Step Visual Solution Breakdown (Reference 4) */}
             <div className="space-y-3">
-              {/* Step 1 */}
+              {/* Step 1: Diagnosis title */}
               <div className="p-4 rounded-2xl bg-white/90 border border-[#FFAB91] shadow-2xs space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-[#FF7043] text-white font-black text-xs flex items-center justify-center shrink-0">
                     1
                   </span>
                   <span className="text-xs font-extrabold text-slate-900">
-                    Har bir hadni alohida ko‘paytiring
+                    Xatoning mohiyati
                   </span>
                 </div>
-                <div className="pl-8 text-xs text-slate-700 font-mono font-bold bg-slate-50 p-2 rounded-xl border border-slate-200">
-                  {explanation.title || '(3x + 5)(x - 2) = 3x·x + 3x·(-2) + 5·x + 5·(-2)'}
+                <div className="pl-8 text-xs text-slate-700 font-semibold bg-slate-50 p-2 rounded-xl border border-slate-200 whitespace-pre-line">
+                  {explanation.title}
                 </div>
               </div>
 
-              {/* Step 2 */}
+              {/* Step 2: Explanation */}
               <div className="p-4 rounded-2xl bg-white/90 border border-[#FFAB91] shadow-2xs space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-[#FF7043] text-white font-black text-xs flex items-center justify-center shrink-0">
                     2
                   </span>
                   <span className="text-xs font-extrabold text-slate-900">
-                    O‘xshash hadlarni birlashtiring
+                    Nima uchun adashdingiz?
                   </span>
                 </div>
-                <div className="pl-8 text-xs text-slate-700 font-mono font-bold bg-slate-50 p-2 rounded-xl border border-slate-200">
-                  {explanation.explanation || '3x² - 6x + 5x - 10  →  -6x va 5x hadlari qo‘shiladi'}
+                <div className="pl-8 text-xs text-slate-700 font-medium bg-slate-50 p-2 rounded-xl border border-slate-200 whitespace-pre-line">
+                  {explanation.explanation}
                 </div>
               </div>
 
-              {/* Step 3: Correct Result */}
+              {/* Step 3: Correct remediation */}
               <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 shadow-2xs space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -101,13 +112,13 @@ export const YolchiAIPanel: React.FC<YolchiAIPanelProps> = ({
                       3
                     </span>
                     <span className="text-xs font-extrabold text-emerald-950">
-                      Yakuniy to‘g‘ri natija
+                      To‘g‘ri qoida
                     </span>
                   </div>
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 </div>
-                <div className="pl-8 text-sm font-mono font-black text-emerald-900">
-                  {explanation.remediationStep || '3x² - x - 10'}
+                <div className="pl-8 text-sm font-semibold text-emerald-900 whitespace-pre-line">
+                  {explanation.remediationStep}
                 </div>
               </div>
             </div>

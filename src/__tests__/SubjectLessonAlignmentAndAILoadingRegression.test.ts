@@ -4,8 +4,6 @@ import { InMemoryLessonRepository } from '../data/repositories/InMemoryLessonRep
 import { supabaseLessonRepository } from '../data/repositories/SupabaseLessonRepository';
 import { DemoAITutorService } from '../data/services/DemoAITutorService';
 import { useLessonStore } from '../app/store/useLessonStore';
-import { SEED_COURSES } from '../data/datasources/courses';
-import { SEED_LESSONS } from '../data/datasources/lessons';
 
 describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
   let courseRepo: InMemoryCourseRepository;
@@ -113,8 +111,6 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     const store = useLessonStore.getState();
 
     // Mock supabaseLessonRepository.saveLesson or simulate generation failure
-    const originalGenerate = (useLessonStore as any).aiService?.generateLesson;
-
     // Simulate an API 429 Rate Limit / Quota exceeded error
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     

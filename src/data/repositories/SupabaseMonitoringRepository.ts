@@ -156,32 +156,7 @@ export class SupabaseMonitoringRepository implements IMonitoringRepository {
         expiresAt: data.expires_at,
       };
     }
-
-    // Direct fallback with user check
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Autentifikatsiyadan o‘tilmagan.');
-    }
-
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-
-    const { data: inserted, error: insErr } = await supabase
-      .from('parent_student_links')
-      .insert({
-        parent_user_id: user.id,
-        link_code: code,
-        status: 'pending',
-        expires_at: expiresAt,
-      })
-      .select('id, link_code, expires_at')
-      .single();
-
-    if (insErr || !inserted) {
-      throw new Error(data?.message || insErr?.message || 'Bog‘lanish kodini yaratib bo‘lmadi.');
-    }
-
-    return { id: inserted.id, linkCode: inserted.link_code, expiresAt: inserted.expires_at };
+    throw new Error(error?.message || data?.message || 'Bog‘lanish kodini serverda yaratib bo‘lmadi.');
   }
 
   async getParentChildren(): Promise<ChildSummary[]> {

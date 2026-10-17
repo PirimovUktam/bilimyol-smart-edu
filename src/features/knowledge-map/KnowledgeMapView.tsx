@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Compass, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, Map, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Compass, AlertTriangle, ArrowRight, Map, ShieldCheck } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { GetKnowledgeMapUseCase, KnowledgeMapData } from '@/domain/usecases/GetKnowledgeMapUseCase';
@@ -10,7 +10,6 @@ import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine'
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
-import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
 interface KnowledgeMapViewProps {
   onProceedToRoadmap: () => void;
@@ -41,6 +40,16 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
     ? activeCourseSkills.find((s) => s.id === weakest.skillId)?.name || 'Ko‘nikma'
     : 'Ko‘nikma';
   const overallScore = mapData.overallScore;
+  const skillBandCounts = mapData.skills.reduce(
+    (counts, skill) => {
+      const score = mapData.scores[skill.id]?.score ?? 0;
+      if (score >= 80) counts.strong += 1;
+      else if (score >= 50) counts.medium += 1;
+      else counts.weak += 1;
+      return counts;
+    },
+    { strong: 0, medium: 0, weak: 0 }
+  );
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-7">
@@ -152,15 +161,15 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
           <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center">
             <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
               <div className="text-[10px] font-bold text-emerald-800 uppercase">Yaxshi</div>
-              <div className="text-lg font-black text-emerald-900">6 ta mavzu</div>
+              <div className="text-lg font-black text-emerald-900">{skillBandCounts.strong} ta mavzu</div>
             </div>
             <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
               <div className="text-[10px] font-bold text-amber-800 uppercase">O‘rta</div>
-              <div className="text-lg font-black text-amber-900">3 ta mavzu</div>
+              <div className="text-lg font-black text-amber-900">{skillBandCounts.medium} ta mavzu</div>
             </div>
             <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200">
               <div className="text-[10px] font-bold text-rose-800 uppercase">Past</div>
-              <div className="text-lg font-black text-rose-900">1 ta mavzu</div>
+              <div className="text-lg font-black text-rose-900">{skillBandCounts.weak} ta mavzu</div>
             </div>
           </div>
         </Card>

@@ -28,6 +28,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   const [teacherCode, setTeacherCode] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -57,8 +58,8 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
 
     setIsSubmitting(true);
     try {
-      // 1. Initial secure registration (Parent or Student)
-      const { error } = await signUp(
+      // The server provisions the initial role; form metadata is not authority.
+      const { error, requiresEmailConfirmation } = await signUp(
         email.trim(),
         password,
         firstName.trim(),
@@ -79,6 +80,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         return;
       }
 
+      if (requiresEmailConfirmation) {
+        setConfirmationEmail(email.trim());
+        return;
+      }
+
       // 2. If Teacher, perform server-side token validation & role upgrade
       if (role === 'teacher') {
         const teacherRes = await redeemTeacherInvitationCode(teacherCode.trim());
@@ -88,19 +94,24 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           return;
         }
 
-        // Immediately refresh profile so AuthContext and Router adopt role='teacher'
-        await refreshProfile();
-        useMonitoringStore.setState({ currentRole: 'teacher' });
+        // Only the authoritative profile can confirm the upgraded role.
+        const refreshed = await refreshProfile();
+        if (refreshed?.role !== 'teacher') {
+          setErrorMsg('O‘qituvchi roli serverdan tasdiqlanmadi. Qayta tizimga kiring.');
+          return;
+        }
 
         setSuccessMsg(`Hisob tasdiqlandi (${teacherRes.schoolName || 'O‘qituvchi'}). Yo‘naltirilmoqda...`);
       } else {
-        await refreshProfile();
+        const refreshed = await refreshProfile();
+        if (!refreshed) {
+          setErrorMsg('Profilni serverdan yuklab bo‘lmadi. Qayta tizimga kiring.');
+          return;
+        }
         setSuccessMsg('Hisob muvaffaqiyatli yaratildi! Tizimga yo‘naltirilmoqda...');
       }
 
-      setTimeout(() => {
-        onSuccess();
-      }, 1000);
+      onSuccess();
     } catch (err: unknown) {
       console.error('[AUTH] Unexpected registration catch:', err);
       setErrorMsg(err instanceof Error ? err.message : 'Ro‘yxatdan o‘tishda kutilmagan xatolik.');
@@ -129,6 +140,21 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         </div>
 
         <Card className="p-7 shadow-xl border-slate-200">
+          {confirmationEmail ? (
+            <div role="status" className="space-y-3 text-center">
+              <Mail className="w-10 h-10 mx-auto text-blue-600" />
+              <h2 className="text-lg font-bold text-slate-900">Email manzilingizni tasdiqlang</h2>
+              <p className="text-sm text-slate-600">
+                <strong>{confirmationEmail}</strong> manziliga tasdiqlash havolasi yuborildi.
+                Emaildagi havolani oching, so‘ng tizimga kiring.
+              </p>
+              {role === 'teacher' && (
+                <p className="text-xs text-slate-500">
+                  O‘qituvchi taklif kodi hali ishlatilmadi. Emailni tasdiqlab, tizimga kirgandan keyin kodni faollashtiring.
+                </p>
+              )}
+            </div>
+          ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             {errorMsg && (
               <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
@@ -309,6 +335,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </form>
+          )}
 
           <div className="mt-6 pt-5 border-t border-slate-100 text-center">
             <p className="text-xs text-slate-500">

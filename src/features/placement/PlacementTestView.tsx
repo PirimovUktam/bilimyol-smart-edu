@@ -19,6 +19,8 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
     questionNumber,
     totalQuestionsToAsk,
     isSubmitting,
+    isLoading,
+    error,
     initPlacement,
     submitAnswer,
     hasFinished,
@@ -32,7 +34,9 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
     }
   }, [activeCourse, initPlacement]);
 
-  const progressPercent = (questionNumber / totalQuestionsToAsk) * 100;
+  const progressPercent = totalQuestionsToAsk > 0
+    ? (questionNumber / totalQuestionsToAsk) * 100
+    : 0;
 
   const handleSelectOption = (index: number) => {
     if (isSubmitting) return;
@@ -63,15 +67,70 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
     }
   };
 
-  if (!currentQuestion || hasFinished) {
+  if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-sm font-semibold text-slate-600">
-            {hasFinished ? 'Real bilim darajangiz hisoblanmoqda...' : 'Savol tayyorlanmoqda...'}
+            Savollar tayyorlanmoqda...
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-7 text-center border-rose-200 bg-rose-50/50 space-y-4">
+          <ShieldAlert className="w-10 h-10 text-rose-500 mx-auto" />
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Diagnostika yuklanmadi</h2>
+            <p className="text-sm text-slate-600 mt-1">{error}</p>
+          </div>
+          {activeCourse && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                setSelectedOption(null);
+                void initPlacement(activeCourse.id);
+              }}
+            >
+              Qayta urinish
+            </Button>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  if (hasFinished) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-7 text-center border-emerald-200 bg-emerald-50/50 space-y-4">
+          <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Diagnostika yakunlandi</h2>
+            <p className="text-sm text-slate-600 mt-1">Real bilim darajangiz hisoblandi.</p>
+          </div>
+          <Button variant="primary" onClick={onComplete}>Natijani ko‘rish</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentQuestion || totalQuestionsToAsk === 0) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-7 text-center border-slate-200 space-y-4">
+          <p className="text-sm font-semibold text-slate-600">Diagnostika uchun savollar mavjud emas.</p>
+          {activeCourse && (
+            <Button variant="outline" onClick={() => void initPlacement(activeCourse.id)}>
+              Qayta yuklash
+            </Button>
+          )}
+        </Card>
       </div>
     );
   }

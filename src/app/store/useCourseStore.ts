@@ -45,34 +45,67 @@ interface CourseState {
   isLoading: boolean;
   loadCourses: () => Promise<void>;
   selectCourseById: (courseId: string) => Promise<void>;
+  clearSession: () => void;
 }
 
-export const useCourseStore = create<CourseState>((set, get) => ({
-  courses: [],
-  activeCourse: null,
-  activeCourseSkills: [],
-  isLoading: false,
+export const useCourseStore = create<CourseState>((set, get) => {
+  let currentOperation: object | null = null;
 
-  loadCourses: async () => {
-    set({ isLoading: true });
-    const courses = await supabaseCourseRepository.getAllCourses();
-    const preferredId = readPersistedCourseId();
-    const activeCourse = resolveInitialCourse(courses, preferredId);
-    const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
-    set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
-  },
+  return {
+    courses: [],
+    activeCourse: null,
+    activeCourseSkills: [],
+    isLoading: false,
 
-  selectCourseById: async (courseId: string) => {
-    const courses = get().courses.length > 0 ? get().courses : await supabaseCourseRepository.getAllCourses();
-    const activeCourse = courses.find((c) => c.id === courseId) || courses[0];
-    if (!activeCourse) return;
-    const skills = await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id);
-    set({ courses, activeCourse, activeCourseSkills: skills });
-    persistCourseId(activeCourse.id);
-    try {
-      await useLearnerStore.getState().setSelectedCourse(activeCourse.id);
-    } catch (err) {
-      console.warn('[useCourseStore] selected course persistence failed:', err);
-    }
-  },
-}));
+    clearSession: () => {
+      currentOperation = null;
+      set({ courses: [], activeCourse: null, activeCourseSkills: [], isLoading: false });
+    },
+
+    loadCourses: async () => {
+      const operation = {};
+      currentOperation = operation;
+      set({ isLoading: true });
+      if (currentOperation !== operation) return;
+      try {
+        const courses = await supabaseCourseRepository.getAllCourses();
+        if (currentOperation !== operation) return;
+        const preferredId = readPersistedCourseId();
+        const activeCourse = resolveInitialCourse(courses, preferredId);
+        const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
+        if (currentOperation !== operation) return;
+        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
+      } catch (err) {
+        if (currentOperation !== operation) return;
+        set({ isLoading: false });
+        throw err;
+      }
+    },
+
+    selectCourseById: async (courseId: string) => {
+      const operation = {};
+      currentOperation = operation;
+      try {
+        const courses = get().courses.length > 0 ? get().courses : await supabaseCourseRepository.getAllCourses();
+        if (currentOperation !== operation) return;
+        const activeCourse = courses.find((c) => c.id === courseId) || courses[0];
+        if (!activeCourse) {
+          set({ isLoading: false });
+          return;
+        }
+        const skills = await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id);
+        if (currentOperation !== operation) return;
+        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
+        if (currentOperation !== operation) return;
+        persistCourseId(activeCourse.id);
+        if (currentOperation !== operation) return;
+        await useLearnerStore.getState().setSelectedCourse(activeCourse.id, () => currentOperation === operation);
+        if (currentOperation !== operation) return;
+      } catch (err) {
+        if (currentOperation !== operation) return;
+        set({ isLoading: false });
+        throw err;
+      }
+    },
+  };
+});

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, Headphones, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Clock } from 'lucide-react';
+import { Calculator, Headphones, ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { Button } from '@/presentation/components/Button';
@@ -44,7 +44,6 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
         {courses.filter((c) => c.id === 'course_math_01' || c.id === 'course_eng_01').map((course, index) => {
           const isMath = course.subject === 'mathematics';
-          const isEnglish = course.subject === 'english';
           const Icon = isMath ? Calculator : Headphones;
           const iconBg = isMath
             ? 'bg-blue-100 text-blue-700'

@@ -10,8 +10,6 @@ import {
   Ban,
   Clock,
   School,
-  Users,
-  Sparkles,
   RefreshCw,
   BookOpen,
   Target,

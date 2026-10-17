@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Map,
@@ -7,7 +6,6 @@ import {
   Bot,
   TrendingUp,
   User,
-  Settings,
   Search,
   Bell,
   Flame,
@@ -38,7 +36,7 @@ import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
-import { AnswerAttemptRecord } from '@/domain/repositories/ILearnerRepository';
+import { AnswerAttemptRecord, DailyActivitySummary } from '@/domain/repositories/ILearnerRepository';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
@@ -71,22 +69,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const { profile: authProfile } = useAuth();
   const { loadRoadmap, roadmap } = useRoadmapStore();
   const [recentAttempts, setRecentAttempts] = useState<AnswerAttemptRecord[]>([]);
+  const [weeklyActivity, setWeeklyActivity] = useState<DailyActivitySummary[]>([]);
+  const [activityError, setActivityError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingAILesson, setIsGeneratingAILesson] = useState(false);
   const [aiLessonError, setAiLessonError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    setActivityError(null);
     if (activeCourse) {
       loadRoadmap(activeCourse.id);
     }
-    supabaseLearnerRepository.getAnswerAttempts(5).then(setRecentAttempts);
+    supabaseLearnerRepository
+      .getAnswerAttempts(5)
+      .then((attempts) => {
+        if (cancelled) return;
+        setRecentAttempts(attempts);
+      })
+      .catch(() => {
+        if (!cancelled) setRecentAttempts([]);
+      });
+    supabaseLearnerRepository
+      .getDailyActivity(7)
+      .then((activity) => {
+        if (!cancelled) setWeeklyActivity(activity);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setWeeklyActivity([]);
+          setActivityError(err instanceof Error ? err.message : 'Faollik ma’lumotlari yuklanmadi.');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [activeCourse, loadRoadmap, profile]);
 
   const scores = (profile?.scoresByCourse && activeCourse) ? (profile.scoresByCourse[activeCourse.id] || {}) : {};
   const overallScore = SkillScoringEngine.computeOverallScore(scores);
 
   // Dynamic weak/strong skills
-  let strongestSkillName = activeCourseSkills[0]?.name || 'Boshlang‘ich';
   let strongestScore = 0;
   let weakestSkillId = activeCourseSkills[0]?.id || `skill_${activeCourse?.id || 'gen'}_01`;
   let weakestSkillName = activeCourseSkills[0]?.name || 'Asosiy mavzu';
@@ -96,7 +120,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const sc = scores[sk.id]?.score ?? 0;
     if (sc > strongestScore) {
       strongestScore = sc;
-      strongestSkillName = sk.name;
     }
     if (sc <= weakestScore) {
       weakestScore = sc;
@@ -184,8 +207,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   const studentName = authProfile?.firstName || profile?.firstName || profile?.name || 'O‘quvchi';
-  const currentXP = profile?.xp || 120;
-  const streakDays = profile?.streakDays || 5;
+  const currentXP = profile?.xp ?? 0;
+  const streakDays = profile?.streakDays ?? 0;
+
+  // Use the daily aggregate rather than the latest in-memory attempt page.
+  const DAILY_GOAL_MINUTES = profile?.dailyMinutes ?? 15;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayActivity = weeklyActivity.find((d) => d.date === todayStr);
+  const dailyGoalDone = Math.min(todayActivity?.activeMinutes ?? 0, DAILY_GOAL_MINUTES);
+
+  // Loss-aversion: a streak is at risk when the learner has an active streak
+  // but has not done any activity today yet.
+  const didActivityToday = Boolean(todayActivity?.activeMinutes);
+  const atRiskStreak = streakDays > 0 && !didActivityToday;
 
   const subjectCategories = [
     { id: 'course_math_01', label: 'Matematika', icon: '📐', active: activeCourse?.id === 'course_math_01', pillColor: 'bg-indigo-600 text-white' },
@@ -194,15 +228,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     { id: 'course_logic', label: 'Mantiq', icon: '🧩', active: activeCourse?.id === 'course_logic', pillColor: 'bg-emerald-500 text-white' },
   ];
 
-  const weeklyStudyHours = [
-    { day: 'Dsh', hours: 1.2 },
-    { day: 'Ssh', hours: 0.8 },
-    { day: 'Chor', hours: 1.5 },
-    { day: 'Pay', hours: 2.1, peak: true },
-    { day: 'Jum', hours: 1.8 },
-    { day: 'Shan', hours: 1.0 },
-    { day: 'Yak', hours: 1.3 },
-  ];
+  // Weekly study hours derived from real daily activity (minutes → hours).
+  const dayNames = ['Yak', 'Dsh', 'Ssh', 'Chor', 'Pay', 'Jum', 'Shan'];
+  const totalMinutes = weeklyActivity.reduce((acc, d) => acc + d.activeMinutes, 0);
+  const weeklyStudyHours = weeklyActivity.map((d) => {
+    const hours = Math.round((d.activeMinutes / 60) * 10) / 10;
+    return {
+      day: dayNames[new Date(d.date + 'T00:00:00').getDay()] || '',
+      hours,
+      peak: false as boolean,
+    };
+  });
+  const maxWeeklyHours = Math.max(...weeklyStudyHours.map((d) => d.hours), 1);
+  weeklyStudyHours.forEach((d) => {
+    if (d.hours === maxWeeklyHours && d.hours > 0) d.peak = true;
+  });
 
   // Dynamic Recommendations strictly isolated by subject
   const recommendations = activeCourse?.id === 'course_eng_01'
@@ -301,30 +341,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         },
       ];
 
-  // Dynamic Recent Results strictly isolated by subject
-  const subjectRecentResults = activeCourse?.id === 'course_eng_01'
-    ? [
-        { title: 'Listening: Audio xabarlar testi', xp: '+20 XP' },
-        { title: 'Vocabulary: Oxford 3000 mashqi', xp: '+15 XP' },
-        { title: 'Grammar: Second Conditional', xp: '+20 XP' },
-      ]
-    : activeCourse?.id === 'course_it'
-    ? [
-        { title: 'Python sintaksisi testi', xp: '+20 XP' },
-        { title: 'O‘zgaruvchilar va tiplar', xp: '+15 XP' },
-        { title: 'Algoritmik sikllar', xp: '+20 XP' },
-      ]
-    : activeCourse?.id === 'course_logic'
-    ? [
-        { title: 'Deduktiv xulosa testi', xp: '+20 XP' },
-        { title: 'Mantiqiy zanjirlar tahlili', xp: '+15 XP' },
-        { title: 'Boshqotirma yechish', xp: '+20 XP' },
-      ]
-    : [
-        { title: 'Funksiya qiymatini hisoblash', xp: '+20 XP' },
-        { title: 'Qisqa ko‘paytirish amallari', xp: '+15 XP' },
-        { title: 'Chiziqli tenglama yechish', xp: '+20 XP' },
-      ];
+  // Real recent results derived from actual answer attempts (latest first).
+  const subjectRecentResults = recentAttempts
+    .slice()
+    .reverse()
+    .slice(0, 3)
+    .map((a) => ({
+      title: a.questionId.replace(/_/g, ' '),
+      xp: a.isCorrect ? '+2 XP' : '0 XP',
+      isCorrect: a.isCorrect,
+    }));
+
+  // Search filters the recommendation cards by title.
+  const filteredRecommendations = searchQuery.trim()
+    ? recommendations.filter((r) =>
+        r.title.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+        r.desc.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : recommendations;
 
   return (
     <div className="min-h-screen bg-[#f5f7fc] text-slate-900 flex flex-col lg:flex-row">
@@ -339,7 +373,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Navigation Links matching Reference */}
           <nav className="space-y-1.5">
             <button
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black bg-blue-600 text-white shadow-md shadow-blue-600/25 transition-all cursor-pointer"
+              type="button"
+              aria-current="page"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black bg-blue-600 text-white shadow-md shadow-blue-600/25 transition-all cursor-default"
             >
               <LayoutDashboard className="w-4 h-4 text-white" />
               <span>Bosh sahifa</span>
@@ -417,13 +453,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <span className="text-xs font-black text-amber-900">{currentXP} XP</span>
               </div>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                3-daraja
+                {Math.floor(currentXP / 100) + 1}-daraja
               </span>
             </div>
             <div className="h-1.5 w-full bg-amber-100 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full w-[65%]" />
+              <div
+                className="h-full bg-amber-500 rounded-full transition-all"
+                style={{ width: `${currentXP % 100}%` }}
+              />
             </div>
-            <p className="text-[10px] text-amber-800/80 font-medium">Keyingi nishongacha +35 XP</p>
+            <p className="text-[10px] text-amber-800/80 font-medium">
+              Keyingi darajaga {100 - (currentXP % 100)} XP
+            </p>
           </div>
 
           <button
@@ -449,6 +490,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Dars, mavzu yoki savolni qidirish..."
+              aria-label="Kurslar va mavzularni qidirish"
               className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all shadow-2xs"
             />
           </div>
@@ -458,10 +500,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <button
               onClick={onOpenProgress}
               className="p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-200/90 text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs relative cursor-pointer"
-              title="Bildirishnomalar"
+              title="Natijalar va bildirishnomalar"
+              aria-label="Natijalar va bildirishnomalar"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+              {(atRiskStreak || recentAttempts.length > 0) && (
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+              )}
             </button>
 
             <button
@@ -504,7 +549,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
               <div>
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Bugungi maqsad</div>
-                <div className="text-xs font-black text-slate-900">3/5 dars</div>
+                <div className="text-xs font-black text-slate-900">{dailyGoalDone}/{DAILY_GOAL_MINUTES} daqiqa</div>
               </div>
             </div>
 
@@ -531,6 +576,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
         </div>
+
+        {/* AT_RISK: loss-aversion streak reminder */}
+        {atRiskStreak && (
+          <div className="flex items-center justify-between gap-4 p-4 rounded-3xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5 fill-orange-500 text-orange-500" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-black text-orange-950">
+                  🔥 {streakDays} kunlik seriyangiz xavf ostida!
+                </div>
+                <div className="text-[11px] sm:text-xs font-semibold text-orange-800">
+                  Seriyani saqlab qolish uchun bugun kamida 1 ta dars yoki savol bajaring.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => onContinueLesson(targetLessonId || undefined)}
+              className="shrink-0 px-4 py-2 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-md shadow-orange-500/25 transition-colors cursor-pointer"
+            >
+              Boshlash
+            </button>
+          </div>
+        )}
 
         {/* ROW 2: Subject Category Chips */}
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -687,26 +757,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {recommendations.map((rec) => (
-              <div
-                key={rec.id}
-                onClick={onOpenRoadmap}
-                className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between gap-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${rec.colorClass}`}>
-                    {rec.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
-                      {rec.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 font-semibold">{rec.desc}</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+            {filteredRecommendations.length === 0 ? (
+              <div className="sm:col-span-3 p-6 rounded-3xl bg-white border border-slate-200/90 text-center">
+                <p className="text-xs font-semibold text-slate-500">
+                  “{searchQuery}” bo‘yicha hech narsa topilmadi.
+                </p>
               </div>
-            ))}
+            ) : (
+              filteredRecommendations.map((rec) => (
+                <div
+                  key={rec.id}
+                  onClick={onOpenRoadmap}
+                  className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${rec.colorClass}`}>
+                      {rec.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+                        {rec.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-semibold">{rec.desc}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -799,28 +877,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </button>
               </div>
 
-              {/* Bar chart matching Reference (Dsh, Ssh, Chor, Pay, Jum, Shan, Yak) */}
+              {/* Bar chart derived from real daily activity */}
               <div className="h-24 pt-3 flex items-end justify-between gap-1 border-b border-slate-100">
-                {weeklyStudyHours.map((d, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-                    <span className="text-[8px] font-bold text-slate-400">{d.hours}s</span>
-                    <div
-                      className={`w-full max-w-[14px] rounded-t-md transition-all ${
-                        d.peak
-                          ? 'bg-blue-600 shadow-xs'
-                          : 'bg-cyan-400/80 hover:bg-cyan-500'
-                      }`}
-                      style={{ height: `${(d.hours / 2.1) * 100}%` }}
-                    />
-                    <span className="text-[9px] font-extrabold text-slate-500">{d.day}</span>
+                {weeklyStudyHours.length === 0 ? (
+                  <div className="w-full text-center text-[10px] font-semibold text-slate-400 self-center">
+                    Ma’lumot yo‘q
                   </div>
-                ))}
+                ) : (
+                  weeklyStudyHours.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                      <span className="text-[8px] font-bold text-slate-400">{d.hours}s</span>
+                      <div
+                        className={`w-full max-w-[14px] rounded-t-md transition-all ${
+                          d.peak
+                            ? 'bg-blue-600 shadow-xs'
+                            : 'bg-cyan-400/80 hover:bg-cyan-500'
+                        }`}
+                        style={{ height: `${Math.max((d.hours / maxWeeklyHours) * 100, d.hours > 0 ? 8 : 2)}%` }}
+                      />
+                      <span className="text-[9px] font-extrabold text-slate-500">{d.day}</span>
+                    </div>
+                  ))
+                )}
               </div>
+              {activityError && (
+                <p role="alert" className="text-[10px] font-semibold text-rose-600">
+                  Faollik ma’lumotlari yuklanmadi: {activityError}
+                </p>
+              )}
             </div>
 
             <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1">
-              <span>Umumiy: <strong>9.7 soat</strong></span>
-              <span className="text-emerald-600 font-black">92%</span>
+              <span>Umumiy: <strong>{(totalMinutes / 60).toFixed(1)} soat</strong></span>
+              <span className="text-emerald-600 font-black">{overallScore}%</span>
             </div>
           </div>
 
@@ -837,17 +926,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </button>
               </div>
 
-              {/* Result items strictly isolated by subject */}
+              {/* Result items derived from real attempts */}
               <div className="space-y-2">
-                {subjectRecentResults.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 truncate max-w-[150px]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-bold text-slate-800 text-[11px] truncate">{item.title}</span>
+                {subjectRecentResults.length === 0 ? (
+                  <p className="text-[11px] font-semibold text-slate-400 py-2">
+                    Hali natijalar yo‘q. Birinchi darsni boshlang!
+                  </p>
+                ) : (
+                  subjectRecentResults.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 truncate max-w-[150px]">
+                        {item.isCorrect ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        )}
+                        <span className="font-bold text-slate-800 text-[11px] truncate">{item.title}</span>
+                      </div>
+                      <span className={`text-[11px] font-black shrink-0 ${item.isCorrect ? 'text-emerald-600' : 'text-slate-400'}`}>{item.xp}</span>
                     </div>
-                    <span className="text-[11px] font-black text-emerald-600 shrink-0">{item.xp}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 

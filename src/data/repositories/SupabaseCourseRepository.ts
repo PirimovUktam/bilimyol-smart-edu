@@ -52,33 +52,34 @@ const mapCourseRow = (c: Record<string, unknown>): Course => ({
 export class SupabaseCourseRepository implements ICourseRepository {
   private fallback = inMemoryCourseRepository;
 
+  private async requireAuthenticatedUser(): Promise<void> {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    if (!data.user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+  }
+
   async getAllCourses(): Promise<Course[]> {
     if (!isSupabaseConfigured) {
       return this.fallback.getAllCourses();
     }
 
     try {
+      await this.requireAuthenticatedUser();
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .order('title', { ascending: true });
 
-      if (error || !data || data.length === 0) {
-        return this.fallback.getAllCourses();
-      }
+      if (error) throw error;
+      if (!data) return [];
 
       const activeRows = data.filter((c) => c.is_active !== false);
       const mapped = activeRows.map(mapCourseRow);
 
-      // Add seed courses (IT / logic) that have NO row at all yet, so pills
-      // and flows stay consistent. A course that exists but was deliberately
-      // deactivated by an admin is never re-added from the seed.
-      const seedCourses = await this.fallback.getAllCourses();
-      const missingSeeds = seedCourses.filter((seed) => !data.some((row) => row.id === seed.id));
-
-      return [...mapped, ...missingSeeds];
-    } catch {
-      return this.fallback.getAllCourses();
+      return mapped;
+    } catch (error) {
+      console.warn('Error fetching Supabase courses:', error);
+      throw error;
     }
   }
 
@@ -88,19 +89,20 @@ export class SupabaseCourseRepository implements ICourseRepository {
     }
 
     try {
+      await this.requireAuthenticatedUser();
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .eq('id', courseId)
         .maybeSingle();
 
-      if (error || !data) {
-        return this.fallback.getCourseById(courseId);
-      }
+      if (error) throw error;
+      if (!data) return null;
 
       return mapCourseRow(data);
-    } catch {
-      return this.fallback.getCourseById(courseId);
+    } catch (error) {
+      console.warn(`Error fetching Supabase course "${courseId}":`, error);
+      throw error;
     }
   }
 
@@ -110,15 +112,15 @@ export class SupabaseCourseRepository implements ICourseRepository {
     }
 
     try {
+      await this.requireAuthenticatedUser();
       const { data, error } = await supabase
         .from('skills')
         .select('*')
         .eq('course_id', courseId)
         .order('order_index', { ascending: true });
 
-      if (error || !data || data.length === 0) {
-        return this.fallback.getSkillsByCourseId(courseId);
-      }
+      if (error) throw error;
+      if (!data) return [];
 
       return data.map((s) => ({
         id: s.id,
@@ -130,8 +132,9 @@ export class SupabaseCourseRepository implements ICourseRepository {
         orderIndex: s.order_index,
         iconName: s.icon_name || 'Target',
       }));
-    } catch {
-      return this.fallback.getSkillsByCourseId(courseId);
+    } catch (error) {
+      console.warn(`Error fetching Supabase skills for course "${courseId}":`, error);
+      throw error;
     }
   }
 
@@ -141,15 +144,18 @@ export class SupabaseCourseRepository implements ICourseRepository {
     }
 
     try {
+      // Placement content is read only from the learner-safe view. In a
+      // configured deployment an auth/query failure is an error, never a
+      // fallback to seed questions containing answer keys.
+      await this.requireAuthenticatedUser();
       const { data, error } = await supabase
-        .from('questions')
-        .select('*')
+        .from('learner_questions')
+        .select('id, course_id, skill_id, text, context_snippet, options, difficulty, formula_latex, audio_sim_text, audio_sim_speaker')
         .eq('course_id', courseId)
         .eq('is_placement', true);
 
-      if (error || !data || data.length === 0) {
-        return this.fallback.getPlacementQuestions(courseId);
-      }
+      if (error) throw error;
+      if (!data) return [];
 
       return data.map((q) => ({
         id: q.id,
@@ -158,15 +164,17 @@ export class SupabaseCourseRepository implements ICourseRepository {
         text: q.text,
         contextSnippet: q.context_snippet || undefined,
         options: Array.isArray(q.options) ? q.options : [],
-        correctIndex: q.correct_index,
+        // The answer key is intentionally not exposed to the learner client.
+        correctIndex: undefined,
         difficulty: q.difficulty || 'medium',
-        explanation: q.explanation || '',
+        explanation: '',
         formulaLatex: q.formula_latex || undefined,
         audioSimText: q.audio_sim_text || undefined,
         audioSimSpeaker: q.audio_sim_speaker || undefined,
       }));
-    } catch {
-      return this.fallback.getPlacementQuestions(courseId);
+    } catch (error) {
+      console.warn(`Error fetching Supabase placement questions for course "${courseId}":`, error);
+      throw error;
     }
   }
 }

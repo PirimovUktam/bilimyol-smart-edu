@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { Question, QuestionAnswerSubmission } from '@/domain/entities/Question';
 import { AssessmentResult } from '@/domain/entities/Assessment';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
+import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
+import { isSupabaseConfigured } from '@/core/config/supabase';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
 import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
@@ -15,6 +17,8 @@ interface PlacementState {
   submissions: QuestionAnswerSubmission[];
   assessmentResult: AssessmentResult | null;
   isSubmitting: boolean;
+  isLoading: boolean;
+  error: string | null;
   hasFinished: boolean;
 
   initPlacement: (courseId: string) => Promise<void>;
@@ -37,6 +41,25 @@ const COURSE_TARGET_SKILLS: Record<string, string[]> = {
   ],
 };
 
+const QUESTIONS_PER_SKILL = 2;
+
+/** The displayed total is derived from the configured target coverage and bank. */
+export const getPlacementQuestionCount = (
+  allQuestions: Question[],
+  targetSkills: string[],
+  questionsPerSkill = QUESTIONS_PER_SKILL
+): number => {
+  const configuredCount = targetSkills.reduce(
+    (count, skillId) => count + Math.min(
+      questionsPerSkill,
+      allQuestions.filter((question) => question.skillId === skillId).length
+    ),
+    0
+  );
+
+  return Math.min(configuredCount, allQuestions.length);
+};
+
 export const usePlacementStore = create<PlacementState>((set, get) => ({
   allQuestions: [],
   currentQuestion: null,
@@ -46,29 +69,52 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   submissions: [],
   assessmentResult: null,
   isSubmitting: false,
+  isLoading: false,
+  error: null,
   hasFinished: false,
 
   initPlacement: async (courseId: string) => {
-    const allQuestions = await inMemoryCourseRepository.getPlacementQuestions(courseId);
-    const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
-    const firstQ = AdaptiveQuestionSelector.getNextQuestion(
-      allQuestions,
-      targetSkills,
-      [],
-      2
-    ) || allQuestions[0];
+    set({ isLoading: true, error: null, currentQuestion: null, hasFinished: false });
 
-    set({
-      allQuestions,
-      currentQuestion: firstQ,
-      questionNumber: 1,
-      totalQuestionsToAsk: 8,
-      history: [],
-      submissions: [],
-      assessmentResult: null,
-      isSubmitting: false,
-      hasFinished: false,
-    });
+    try {
+      const courseRepository = isSupabaseConfigured
+        ? supabaseCourseRepository
+        : inMemoryCourseRepository;
+      const allQuestions = await courseRepository.getPlacementQuestions(courseId);
+      const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
+      const totalQuestionsToAsk = getPlacementQuestionCount(allQuestions, targetSkills);
+      const firstQ = AdaptiveQuestionSelector.getNextQuestion(
+        allQuestions,
+        targetSkills,
+        [],
+        QUESTIONS_PER_SKILL
+      );
+
+      set({
+        allQuestions,
+        currentQuestion: firstQ,
+        questionNumber: firstQ ? 1 : 0,
+        totalQuestionsToAsk,
+        history: [],
+        submissions: [],
+        assessmentResult: null,
+        isSubmitting: false,
+        isLoading: false,
+        error: firstQ ? null : 'Ushbu fan uchun diagnostika savollari topilmadi.',
+        hasFinished: false,
+      });
+    } catch (err) {
+      set({
+        allQuestions: [],
+        currentQuestion: null,
+        questionNumber: 0,
+        totalQuestionsToAsk: 0,
+        isLoading: false,
+        isSubmitting: false,
+        hasFinished: false,
+        error: err instanceof Error ? err.message : 'Diagnostika savollarini yuklashda xatolik yuz berdi.',
+      });
+    }
   },
 
   submitAnswer: async (selectedIndex: number) => {
@@ -82,10 +128,27 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       isSubmitting,
     } = get();
 
-    if (isSubmitting || !currentQuestion) return false;
+    if (isSubmitting || !currentQuestion || totalQuestionsToAsk === 0) return false;
 
-    set({ isSubmitting: true });
-    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+    set({ isSubmitting: true, error: null });
+
+    let isCorrect: boolean;
+    try {
+      const evaluation = await supabaseLearnerRepository.evaluatePlacementAnswer(
+        currentQuestion.courseId,
+        currentQuestion.id,
+        selectedIndex
+      );
+      isCorrect = evaluation.isCorrect;
+    } catch (err) {
+      set({
+        isSubmitting: false,
+        error: err instanceof Error
+          ? err.message
+          : 'Javobni serverda tekshirib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
+      });
+      return false;
+    }
 
     const newHistoryItem: AnswerHistoryItem = {
       questionId: currentQuestion.id,
@@ -119,21 +182,32 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     if (isDone) {
       // Evaluate full placement test using UseCase
       const useCase = new SubmitPlacementTestUseCase(
-        inMemoryCourseRepository,
+        isSupabaseConfigured ? supabaseCourseRepository : inMemoryCourseRepository,
         supabaseLearnerRepository
       );
 
-      const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions);
+      try {
+        const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions);
 
-      set({
-        history: updatedHistory,
-        submissions: updatedSubmissions,
-        currentQuestion: null,
-        assessmentResult: result,
-        hasFinished: true,
-        isSubmitting: false,
-      });
-      return true;
+        set({
+          history: updatedHistory,
+          submissions: updatedSubmissions,
+          currentQuestion: null,
+          assessmentResult: result,
+          hasFinished: true,
+          isSubmitting: false,
+          error: null,
+        });
+        return true;
+      } catch (err) {
+        set({
+          isSubmitting: false,
+          error: err instanceof Error
+            ? err.message
+            : 'Diagnostika natijasini serverga saqlab bo‘lmadi. Qayta urinib ko‘ring.',
+        });
+        return false;
+      }
     } else {
       set({
         history: updatedHistory,
@@ -151,10 +225,13 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       allQuestions: [],
       currentQuestion: null,
       questionNumber: 1,
+      totalQuestionsToAsk: 0,
       history: [],
       submissions: [],
       assessmentResult: null,
       isSubmitting: false,
+      isLoading: false,
+      error: null,
       hasFinished: false,
     });
   },

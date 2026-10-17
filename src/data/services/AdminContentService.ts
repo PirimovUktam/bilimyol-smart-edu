@@ -204,16 +204,16 @@ export class AdminContentService {
     if (!isSupabaseConfigured) {
       return courseId ? inMemoryLessons.filter((l) => l.courseId === courseId) : [...inMemoryLessons];
     }
-    try {
-      let query = supabase.from('lessons').select('*').order('created_at', { ascending: false });
-      if (courseId) {
-        query = query.eq('course_id', courseId);
-      }
-      const { data, error } = await query;
-      if (error || !data || data.length === 0) {
-        return courseId ? inMemoryLessons.filter((l) => l.courseId === courseId) : [...inMemoryLessons];
-      }
-      return data.map((l) => ({
+    // Learner access uses learner_lessons; CMS reads use the role-gated view
+    // so answer-key JSON never travels to ordinary authenticated clients.
+    let query = supabase.from('admin_lessons').select('*').order('created_at', { ascending: false });
+    if (courseId) {
+      query = query.eq('course_id', courseId);
+    }
+    const { data, error } = await query;
+    if (error) throw new Error(`Darslarni yuklashda xatolik: ${error.message}`);
+    if (!data) return [];
+    return data.map((l) => ({
         id: l.id,
         courseId: l.course_id,
         skillId: l.skill_id,
@@ -234,10 +234,7 @@ export class AdminContentService {
         isArchived: l.is_archived ?? false,
         createdAt: l.created_at,
         updatedAt: l.updated_at,
-      }));
-    } catch {
-      return courseId ? inMemoryLessons.filter((l) => l.courseId === courseId) : [...inMemoryLessons];
-    }
+    }));
   }
 
   async saveLesson(lesson: Partial<AdminLessonRecord>): Promise<AdminLessonRecord> {
@@ -273,7 +270,7 @@ export class AdminContentService {
     };
 
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('lessons').upsert({
+      const { data, error } = await supabase.rpc('admin_save_lesson', { p_lesson: {
         id: newLesson.id,
         course_id: newLesson.courseId,
         skill_id: newLesson.skillId,
@@ -285,8 +282,8 @@ export class AdminContentService {
         is_published: newLesson.isPublished,
         is_archived: newLesson.isArchived,
         updated_at: newLesson.updatedAt,
-      });
-      if (error) throw new Error(`Darsni saqlashda xatolik: ${error.message}`);
+      } });
+      if (error || data?.saved !== true) throw new Error(`Darsni saqlashda xatolik: ${error?.message || 'Server saqlashni tasdiqlamadi.'}`);
     }
 
     const idx = inMemoryLessons.findIndex((l) => l.id === id);
@@ -339,21 +336,17 @@ export class AdminContentService {
         return true;
       });
     }
-    try {
-      let query = supabase.from('questions').select('*').order('created_at', { ascending: false });
-      if (courseId) query = query.eq('course_id', courseId);
-      if (skillId) query = query.eq('skill_id', skillId);
+    // Answer keys are exposed only through the admin-only security-definer
+    // view; learner-facing question reads never receive correct_index.
+    let query = supabase.from('admin_questions').select('*').order('created_at', { ascending: false });
+    if (courseId) query = query.eq('course_id', courseId);
+    if (skillId) query = query.eq('skill_id', skillId);
 
-      const { data, error } = await query;
-      if (error || !data || data.length === 0) {
-        return inMemoryQuestions.filter((q) => {
-          if (courseId && q.courseId !== courseId) return false;
-          if (skillId && q.skillId !== skillId) return false;
-          return true;
-        });
-      }
+    const { data, error } = await query;
+    if (error) throw new Error(`Savollarni yuklashda xatolik: ${error.message}`);
+    if (!data) return [];
 
-      return data.map((q) => ({
+    return data.map((q) => ({
         id: q.id,
         courseId: q.course_id,
         skillId: q.skill_id,
@@ -365,14 +358,7 @@ export class AdminContentService {
         formulaLatex: q.formula_latex || undefined,
         isPlacement: q.is_placement ?? false,
         createdAt: q.created_at,
-      }));
-    } catch {
-      return inMemoryQuestions.filter((q) => {
-        if (courseId && q.courseId !== courseId) return false;
-        if (skillId && q.skillId !== skillId) return false;
-        return true;
-      });
-    }
+    }));
   }
 
   async saveQuestion(question: Partial<AdminQuestionRecord>): Promise<AdminQuestionRecord> {
@@ -391,7 +377,7 @@ export class AdminContentService {
     };
 
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('questions').upsert({
+      const { data, error } = await supabase.rpc('admin_save_question', { p_question: {
         id: newQuestion.id,
         course_id: newQuestion.courseId,
         skill_id: newQuestion.skillId,
@@ -402,8 +388,8 @@ export class AdminContentService {
         explanation: newQuestion.explanation,
         formula_latex: newQuestion.formulaLatex || null,
         is_placement: newQuestion.isPlacement,
-      });
-      if (error) throw new Error(`Savolni saqlashda xatolik: ${error.message}`);
+      } });
+      if (error || data?.saved !== true) throw new Error(`Savolni saqlashda xatolik: ${error?.message || 'Server saqlashni tasdiqlamadi.'}`);
     }
 
     const idx = inMemoryQuestions.findIndex((q) => q.id === id);

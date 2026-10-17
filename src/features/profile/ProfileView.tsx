@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Award, Flame, BookOpen, Moon, Sun, Bell, LogOut, CheckCircle2, Save } from 'lucide-react';
+import { User, Mail, Award, Flame, BookOpen, LogOut, CheckCircle2, AlertCircle, Save } from 'lucide-react';
 import { useAuth } from '../../core/context/AuthContext';
 import { useLearnerStore } from '../../app/store/useLearnerStore';
 import { useCourseStore } from '../../app/store/useCourseStore';
@@ -19,18 +19,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
 
   const [firstName, setFirstName] = useState(profile?.firstName || '');
   const [lastName, setLastName] = useState(profile?.lastName || '');
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Keep the form in sync when the authoritative profile arrives asynchronously
+  // (avoids showing empty inputs and editing stale values).
+  useEffect(() => {
+    setFirstName(profile?.firstName || '');
+    setLastName(profile?.lastName || '');
+  }, [profile?.firstName, profile?.lastName]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSavedSuccess(false);
+    setSaveError(null);
     setIsSaving(true);
-    await updateProfile({ firstName, lastName });
-    setIsSaving(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+    try {
+      const result = await updateProfile({ firstName, lastName });
+      if (result?.error) {
+        setSaveError(result.error.message || 'Saqlashda xatolik yuz berdi.');
+      } else {
+        setSavedSuccess(true);
+        setTimeout(() => setSavedSuccess(false), 2500);
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Saqlashda xatolik yuz berdi.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -102,7 +119,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
           </div>
           <div>
             <div className="text-xl font-extrabold text-slate-900">
-              {learnerProfile?.xp ?? 120} XP
+              {learnerProfile?.xp ?? 0} XP
             </div>
             <div className="text-xs text-slate-500 font-semibold">Umumiy Tajriba</div>
           </div>
@@ -114,7 +131,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
           </div>
           <div>
             <div className="text-xl font-extrabold text-slate-900">
-              {learnerProfile?.streakDays ?? 3} kun
+              {learnerProfile?.streakDays ?? 0} kun
             </div>
             <div className="text-xs text-slate-500 font-semibold">Uzluksiz Streak</div>
           </div>
@@ -126,7 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
           </div>
           <div>
             <div className="text-xl font-extrabold text-slate-900">
-              {activeCourse?.title || 'Matematika'}
+              {activeCourse?.title || 'Tanlanmagan'}
             </div>
             <div className="text-xs text-slate-500 font-semibold">Joriy Fan</div>
           </div>
@@ -147,6 +164,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-700 text-xs font-semibold">
                 <CheckCircle2 className="w-4 h-4" />
                 Ma’lumotlar muvaffaqiyatli saqlandi!
+              </div>
+            )}
+
+            {saveError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {saveError}
               </div>
             )}
 
@@ -199,59 +223,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
           </form>
         </Card>
 
-        {/* System Settings & Preferences */}
+        {/* System Info */}
         <Card className="p-6 border-slate-200 space-y-5">
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <Sun className="w-4 h-4 text-amber-500" />
-            Tizim Sozlamalari
+            <Award className="w-4 h-4 text-amber-500" />
+            Hisob Ma’lumotlari
           </h2>
 
           <div className="space-y-4">
-            {/* Dark mode switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="flex items-center gap-3">
-                {darkMode ? (
-                  <Moon className="w-5 h-5 text-indigo-600" />
-                ) : (
-                  <Sun className="w-5 h-5 text-amber-500" />
-                )}
-                <div>
-                  <div className="text-sm font-bold text-slate-900">Qorong‘i rejim</div>
-                  <div className="text-xs text-slate-500">Kechki payt ko‘zni charchatmaslik uchun</div>
-                </div>
+            {[
+              { label: 'Hisob turi', value: profile?.role === 'admin' ? 'Administrator' : profile?.role === 'teacher' ? 'O‘qituvchi' : profile?.role === 'parent' ? 'Ota-ona' : 'O‘quvchi' },
+              { label: 'Email', value: profile?.email || '—' },
+              { label: 'Joriy kurs', value: activeCourse?.title || 'Tanlanmagan' },
+              { label: 'Umumiy XP', value: `${learnerProfile?.xp ?? 0} XP` },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-sm font-bold text-slate-700">{row.label}</span>
+                <span className="text-sm font-extrabold text-slate-900 text-right break-all pl-3">{row.value}</span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setDarkMode(!darkMode)}
-                className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                  darkMode ? 'bg-blue-600 justify-end' : 'bg-slate-300 justify-start'
-                }`}
-              >
-                <div className="w-4 h-4 bg-white rounded-full shadow-xs" />
-              </button>
-            </div>
-
-            {/* Notifications switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-teal-600" />
-                <div>
-                  <div className="text-sm font-bold text-slate-900">Kunlik eslatmalar</div>
-                  <div className="text-xs text-slate-500">15 daqiqalik o‘quv vaqtini eslatish</div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setNotifications(!notifications)}
-                className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                  notifications ? 'bg-teal-600 justify-end' : 'bg-slate-300 justify-start'
-                }`}
-              >
-                <div className="w-4 h-4 bg-white rounded-full shadow-xs" />
-              </button>
-            </div>
+            ))}
 
             <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-100 text-xs text-blue-800 space-y-1">
               <div className="font-bold">Cross-Platform Sinxronizatsiya</div>

@@ -27,37 +27,80 @@ export class SubmitReinforcementUseCase {
     reinforcementQuestion: Question,
     selectedIndex: number
   ): Promise<ReinforcementResult> {
-    const isCorrect = selectedIndex === reinforcementQuestion.correctIndex;
+    if (reinforcementQuestion.courseId !== courseId || reinforcementQuestion.skillId !== skillId) {
+      throw new Error('Mustahkamlash savoli kurs va ko‘nikma bilan mos emas.');
+    }
+    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= reinforcementQuestion.options.length) {
+      throw new Error('Tanlangan javob indeksi noto‘g‘ri.');
+    }
+
+    // The learner payload is intentionally answer-key-free. Evaluation must
+    // go through the repository's server-authoritative contract; never trust a
+    // client-side correctIndex (or default to one when it is absent).
     const profile = await this.learnerRepo.getProfile();
     const courseScores = profile.scoresByCourse[courseId] || {};
     const currentSkillScore = courseScores[skillId]?.score ?? 0;
-
-    // Record answer attempt in audit log
-    await this.learnerRepo.recordAnswerAttempt({
+    const answerResult = await this.learnerRepo.submitAnswerAttempt({
       courseId,
       skillId,
       lessonId: reinforcementNodeId,
       questionId: reinforcementQuestion.id,
       selectedIndex,
       selectedAnswer: reinforcementQuestion.options[selectedIndex] || '',
-      isCorrect,
+      idempotencyKey: `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${selectedIndex}`,
     });
+    const isCorrect = answerResult.isCorrect;
 
     if (!isCorrect) {
+      const currentProfile = this.learnerRepo.supportsServerReinforcementPersistence
+        ? await this.learnerRepo.getProfile()
+        : profile;
+      const currentScores = currentProfile.scoresByCourse[courseId] || {};
       const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
       const currentRoadmap = RouteEngine.adaptRoadmap(
         courseId,
         baseNodes,
-        courseScores,
-        profile.completedNodeIds,
-        profile.completedReinforcementIds
+        currentScores,
+        currentProfile.completedNodeIds,
+        currentProfile.completedReinforcementIds
       );
       return {
         isCorrect: false,
         oldScore: currentSkillScore,
-        newScore: currentSkillScore,
+        newScore: currentScores[skillId]?.score ?? 0,
         xpAwarded: 0,
         updatedRoadmap: currentRoadmap,
+      };
+    }
+
+    if (this.learnerRepo.supportsServerReinforcementPersistence) {
+      // The server ignores legacy score/XP hints and persists the complete
+      // transaction. Only its result may describe the awarded score and XP.
+      const completion = await this.learnerRepo.markReinforcementCompleted(reinforcementNodeId, {
+        courseId,
+        skillId,
+        questionId: reinforcementQuestion.id,
+        beforeScore: currentSkillScore,
+        afterScore: currentSkillScore,
+        xpAwarded: 0,
+      });
+      if (!completion) {
+        throw new Error('Mustahkamlash server natijasi yetishmaydi.');
+      }
+      const updatedProfile = await this.learnerRepo.getProfile();
+      const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
+      return {
+        isCorrect: true,
+        oldScore: completion.oldScore,
+        newScore: completion.newScore,
+        xpAwarded: completion.alreadyProcessed ? 0 : completion.xpAwarded,
+        updatedRoadmap: RouteEngine.adaptRoadmap(
+          courseId,
+          baseNodes,
+          updatedProfile.scoresByCourse[courseId] || {},
+          updatedProfile.completedNodeIds,
+          updatedProfile.completedReinforcementIds
+        ),
       };
     }
 
@@ -77,6 +120,7 @@ export class SubmitReinforcementUseCase {
     await this.learnerRepo.markReinforcementCompleted(reinforcementNodeId, {
       courseId,
       skillId,
+      questionId: reinforcementQuestion.id,
       beforeScore: currentSkillScore,
       afterScore: newScore,
       xpAwarded,
@@ -84,7 +128,12 @@ export class SubmitReinforcementUseCase {
 
     // Also mark the target node as completed so downstream unlocks
     const targetNodeId = reinforcementNodeId.replace('reinf_', '');
-    await this.learnerRepo.markNodeCompleted(targetNodeId);
+    // The server completion RPC is authoritative in production. Do not mark a
+    // roadmap node as completed in an in-memory cache after a remote success;
+    // that would make the UI report a state the server cannot reproduce.
+    if (this.learnerRepo.supportsNodeCompletion !== false) {
+      await this.learnerRepo.markNodeCompleted(targetNodeId);
+    }
 
     // 4. Save new score
     const updatedSkillScore = {

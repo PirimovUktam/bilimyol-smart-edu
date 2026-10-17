@@ -29,5 +29,6 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+.opencode/
 public/videos/*audio_temp/
 public/videos/temp_frames/

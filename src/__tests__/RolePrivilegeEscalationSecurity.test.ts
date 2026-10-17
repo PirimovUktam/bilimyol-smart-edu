@@ -104,7 +104,7 @@ describe('P0 Role Privilege Escalation Security Audit & Fix Tests', () => {
       expect(await inMemoryRepo.getUserRole()).toBe('student');
 
       // Attempt unauthorized admin elevation
-      const promoteRes = await inMemoryRepo.promoteUserToAdmin('attacker@bilimyol.uz');
+      await inMemoryRepo.promoteUserToAdmin('attacker@bilimyol.uz');
       expect(await inMemoryRepo.getUserRole()).toBe('admin');
       
       // Reset back to student

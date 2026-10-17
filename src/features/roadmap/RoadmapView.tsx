@@ -6,17 +6,15 @@ import {
   Lock,
   Play,
   RotateCcw,
-  Sparkles,
   ArrowRight,
   Clock,
   Zap,
-  Award,
   AlertTriangle,
   Compass,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { resolveContinuationLessonId } from '@/app/router/lessonResolution';
+import { resolveContinuationLessonId, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
@@ -29,7 +27,7 @@ interface RoadmapViewProps {
 
 export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenKnowledgeMap }) => {
   const { activeCourse } = useCourseStore();
-  const { roadmap, loadRoadmap, selectNode } = useRoadmapStore();
+  const { roadmap, loadRoadmap, selectNode, error } = useRoadmapStore();
   const [filterTab, setFilterTab] = useState<'all' | 'active' | 'completed'>('all');
 
   useEffect(() => {
@@ -37,6 +35,25 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
       loadRoadmap(activeCourse.id);
     }
   }, [activeCourse, loadRoadmap]);
+
+  if (error) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-7 text-center border-rose-200 bg-rose-50/50 space-y-4">
+          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Ta’lim yo‘li yuklanmadi</h2>
+            <p role="alert" className="text-sm text-slate-600 mt-1">{error}</p>
+          </div>
+          {activeCourse && (
+            <Button variant="primary" onClick={() => void loadRoadmap(activeCourse.id)}>
+              Qayta urinish
+            </Button>
+          )}
+        </Card>
+      </div>
+    );
+  }
 
   if (!roadmap || !activeCourse || roadmap.courseId !== activeCourse.id) {
     return (
@@ -135,9 +152,8 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
         {filteredNodes.map((node, index) => {
           const isCompleted = node.status === 'completed';
           const isReinforcement = node.isReinforcement || node.status === 'reinforcement';
-          const isLocked = node.status === 'locked';
           const isAvailable = node.status === 'available' || node.status === 'reinforcement';
-          const targetLesson = node.targetLessonId || courseScopedLessonId;
+          const targetLesson = resolveRoadmapNodeLessonId(node, courseScopedLessonId);
 
           return (
             <motion.div
@@ -236,6 +252,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={!targetLesson}
                         onClick={() => {
                           if (!targetLesson) return;
                           selectNode(node);
@@ -243,7 +260,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
                         }}
                         leftIcon={<RotateCcw className="w-3.5 h-3.5 text-slate-500" />}
                       >
-                        Qayta ko‘rish
+                        {targetLesson ? 'Qayta ko‘rish' : 'Ko‘rib chiqish mavjud emas'}
                       </Button>
                     ) : isAvailable ? (
                       <Button
