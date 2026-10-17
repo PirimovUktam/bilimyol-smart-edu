@@ -22,6 +22,7 @@ const generalRateLimitMap = new Map<string, { count: number; resetTime: number }
 const lessonRateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_TEXT_LENGTH = 4000;
+const MAX_ID_LENGTH = 128;
 
 function checkRateLimit(rateMap: Map<string, { count: number; resetTime: number }>, userId: string, limit = 30, windowMs = 60000): boolean {
   const now = Date.now();
@@ -167,10 +168,25 @@ serve(async (req: Request) => {
       (payload as any).correctOption,
       (payload as any).previousQuestionText,
       (payload as any).learnerName,
+      // Prompt-injection surface: these values are interpolated into AI prompts
+      // and were previously unbounded.
+      (payload as any).topic,
+      (payload as any).skillName,
+      (payload as any).misconceptionTitle,
     ];
     if (textFields.some((value) => typeof value === "string" && value.length > MAX_TEXT_LENGTH)) {
       return new Response(
         JSON.stringify({ error: "Matn hajmi juda katta.", status: 413 }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Identifier fields are also interpolated into prompts; keep them short so
+    // they cannot smuggle a large injection payload.
+    const idFields = [(payload as any).courseId, (payload as any).skillId];
+    if (idFields.some((value) => typeof value === "string" && value.length > MAX_ID_LENGTH)) {
+      return new Response(
+        JSON.stringify({ error: "So‘rov maydoni juda uzun.", status: 413 }),
         { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -230,7 +246,12 @@ serve(async (req: Request) => {
     }
 
     // Default action: diagnose_mistake
-    const res = await handleDiagnoseMistake(payload as DiagnoseMistakeRequest, geminiApiKey);
+    const res = await handleDiagnoseMistake(
+      payload as DiagnoseMistakeRequest,
+      geminiApiKey,
+      supabaseUrl,
+      supabaseServiceKey,
+    );
     logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
     return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -567,9 +588,34 @@ Talab etiladigan savollar soni: ${questionCount}`;
 // ==========================================
 // ACTION: DIAGNOSE MISTAKE
 // ==========================================
-async function handleDiagnoseMistake(payload: DiagnoseMistakeRequest, geminiApiKey?: string) {
+async function handleDiagnoseMistake(
+  payload: DiagnoseMistakeRequest,
+  geminiApiKey?: string,
+  supabaseUrl?: string,
+  supabaseServiceKey?: string,
+) {
   if (!geminiApiKey) {
     return getDeterministicDiagnosisFallback(payload);
+  }
+
+  // Do not trust the client-supplied `correctOption`. When a questionId is
+  // provided, resolve the authoritative correct answer server-side from the
+  // questions table so a client cannot poison the diagnosis.
+  let authoritativeCorrect = payload.correctOption;
+  if (payload.questionId && supabaseUrl && supabaseServiceKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: q } = await supabase
+        .from("questions")
+        .select("correct_index, options")
+        .eq("id", payload.questionId)
+        .maybeSingle();
+      if (q && Array.isArray(q.options) && Number.isInteger(q.correct_index)) {
+        authoritativeCorrect = q.options[q.correct_index] ?? authoritativeCorrect;
+      }
+    } catch (lookupErr) {
+      console.warn("[Yo‘lchi AI] correctOption lookup notice:", lookupErr);
+    }
   }
 
   const systemPrompt = `Sen BilimYo‘l Smart Edu platformasining Yo‘lchi AI nomli intellektual pedagogik ustozisan.
@@ -590,7 +636,7 @@ Javobingni FAQAT quyidagi JSON formatida qaytar:
 Ko‘nikma: ${payload.skillId}
 Savol: "${payload.questionText}"
 O‘quvchi tanlagan noto‘g‘ri javob: "${payload.selectedOption}"
-To‘g‘ri javob: "${payload.correctOption || 'Noma‘lum'}"
+To‘g‘ri javob: "${authoritativeCorrect || 'Noma‘lum'}"
 O‘quvchi ismi: ${payload.learnerName || 'O‘quvchi'}`;
 
   const rawJson = await callGeminiAPI(systemPrompt, userPrompt, geminiApiKey);
@@ -783,7 +829,8 @@ Oldingi savol: ${payload.previousQuestionText || ''}`;
       parsed.options.length !== 4 ||
       !Number.isInteger(parsed.correctIndex) ||
       parsed.correctIndex < 0 ||
-      parsed.correctIndex > 3
+      parsed.correctIndex > 3 ||
+      !parsed.explanation
     ) {
       return getPersistedDeterministicQuestionFallback(
         payload.courseId,
@@ -953,7 +1000,9 @@ async function callGeminiAPI(systemPrompt: string, userPrompt: string, apiKey: s
   }
 
   if (!res.ok) {
-    console.warn(`[Yo‘lchi AI] Gemini API returned status ${res.status}:`, await res.text());
+    // Do not log the full response body — it may echo request details or the
+    // API-keyed URL back into logs. Status only.
+    console.warn(`[Yo‘lchi AI] Gemini API returned status ${res.status}`);
     return null;
   }
 
@@ -1049,7 +1098,16 @@ async function getDeterministicLessonForClient(
     text: q.text,
     formula_latex: q.formulaLatex || null,
     options: q.options,
-    correct_index: FALLBACK_CORRECT_INDEX[q.id] ?? 0,
+    // A fallback question whose template id is not in the map must surface an
+    // error instead of silently keying option 0 (which would mis-score every
+    // server-verified answer for that question). -1 is rejected by validation.
+    correct_index: (() => {
+      const idx = FALLBACK_CORRECT_INDEX[q.id];
+      if (!Number.isInteger(idx)) {
+        throw new Error(`Fallback savol '${q.id}' uchun javob kaliti topilmadi.`);
+      }
+      return idx;
+    })(),
     difficulty: q.difficulty || difficulty,
     explanation: q.explanation || "To‘g‘ri yechim.",
   }));
@@ -1486,7 +1544,12 @@ async function getPersistedDeterministicQuestionFallback(
   }
 
   const fallback = getDeterministicQuestionFallback(courseId, skillId, difficulty);
-  const correctIndex = FALLBACK_QUESTION_CORRECT_INDEX[courseId] ?? 0;
+  // See FALLBACK_CORRECT_INDEX note: an unmapped course id must not default to
+  // option 0; a missing key throws so the mis-scoring bug cannot hide.
+  const correctIndex = FALLBACK_QUESTION_CORRECT_INDEX[courseId];
+  if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex > 3) {
+    throw new Error(`Fallback kurs '${courseId}' uchun javob kaliti topilmadi.`);
+  }
   const client = createClient(supabaseUrl, supabaseServiceKey);
   const { error } = await client.from('questions').upsert({
     id: fallback.id,
