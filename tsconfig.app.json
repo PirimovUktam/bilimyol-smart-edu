@@ -26,5 +26,9 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "supabase/functions/yolchi-tutor/learner-content.ts"]
+  // The production app build must not type-check test files — tests import the
+  // Deno-only edge-function module (supabase/functions/...) which is outside the
+  // app rootDir and fails under `tsc -b`. Vitest still compiles and runs them.
+  "include": ["src"],
+  "exclude": ["src/__tests__/**", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }
