@@ -49,4 +49,13 @@ describe('yolchi-tutor edge function hardening', () => {
     const s = src();
     expect(s).not.toMatch(/returned status \$\{res\.status\}.*await res\.text\(\)/);
   });
+
+  it('supports a comma-separated APP_ORIGINS allowlist for prod+staging origins', () => {
+    const s = src();
+    expect(s).toContain('APP_ORIGINS');
+    expect(s).toMatch(/split\(","\)/);
+    // request-scoped CORS: echoes an allowed Origin, not a static single value
+    expect(s).toMatch(/corsHeaders\(req/);
+    expect(s).not.toMatch(/"Access-Control-Allow-Origin":\s*"?\*"?/);
+  });
 });

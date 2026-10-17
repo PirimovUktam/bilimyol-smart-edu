@@ -6,10 +6,23 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { scopeFallbackQuestionId, stripAnswerKeys } from "./learner-content.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") || "https://app.bilimyol.uz",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Allowed web origins. `APP_ORIGINS` is a comma-separated allowlist so staging
+// and production frontends can both call the function without opening CORS to
+// `*` or every `*.vercel.app` deployment. `APP_ORIGIN` (singular) is kept for
+// backward compatibility. Falls back to the production marketing origin.
+const allowedOrigins = (() => {
+  const raw = Deno.env.get("APP_ORIGINS") || Deno.env.get("APP_ORIGIN") || "https://app.bilimyol.uz";
+  return new Set(raw.split(",").map((o) => o.trim().replace(/\/$/, "")).filter(Boolean));
+})();
+
+function corsHeaders(req?: Request) {
+  const origin = req?.headers.get("Origin")?.replace(/\/$/, "");
+  const allowOrigin = origin && allowedOrigins.has(origin) ? origin : [...allowedOrigins][0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 // Central Model Configuration (Default: Google Gemini 3.6 Flash)
 // Docs: https://ai.google.dev/gemini-api/docs/models (gemini-3.6-flash = stable).
@@ -106,7 +119,7 @@ type TutorPayload =
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   const startTime = Date.now();
@@ -117,7 +130,7 @@ serve(async (req: Request) => {
     if (declaredLength > MAX_REQUEST_BYTES) {
       return new Response(
         JSON.stringify({ error: "So‘rov hajmi juda katta.", status: 413 }),
-        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 413, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
 
@@ -144,7 +157,7 @@ serve(async (req: Request) => {
     if (JSON.stringify(payload).length > MAX_REQUEST_BYTES) {
       return new Response(
         JSON.stringify({ error: "So‘rov hajmi juda katta.", status: 413 }),
-        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 413, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
     const action = payload.action || "diagnose_mistake";
@@ -157,7 +170,7 @@ serve(async (req: Request) => {
           error: "Autentifikatsiyadan o‘tilmagan. Yo‘lchi AI uchun tizimga kiring.",
           status: 401,
         }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
       );
     }
 
@@ -177,7 +190,7 @@ serve(async (req: Request) => {
     if (textFields.some((value) => typeof value === "string" && value.length > MAX_TEXT_LENGTH)) {
       return new Response(
         JSON.stringify({ error: "Matn hajmi juda katta.", status: 413 }),
-        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 413, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
 
@@ -187,7 +200,7 @@ serve(async (req: Request) => {
     if (idFields.some((value) => typeof value === "string" && value.length > MAX_ID_LENGTH)) {
       return new Response(
         JSON.stringify({ error: "So‘rov maydoni juda uzun.", status: 413 }),
-        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 413, headers: { ...corsHeaders(req), "Content-Type": "application/json" } },
       );
     }
 
@@ -199,7 +212,7 @@ serve(async (req: Request) => {
             error: "Dars yaratish bo‘yicha so‘rovlar chegarasidan oshildi. Iltimos, 1 daqiqadan so‘ng qayta urinib ko‘ring.",
             status: 429,
           }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
         );
       }
     } else {
@@ -209,7 +222,7 @@ serve(async (req: Request) => {
             error: "So‘rovlar soni oshib ketdi. Iltimos, 1 daqiqadan so‘ng qayta urinib ko‘ring.",
             status: 429,
           }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
         );
       }
     }
@@ -224,25 +237,25 @@ serve(async (req: Request) => {
         supabaseServiceKey
       );
       logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
-      return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(res), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
     }
 
     if (action === "generate_question") {
       const res = await handleGenerateQuestion(payload as GenerateQuestionRequest, geminiApiKey, supabaseUrl, supabaseServiceKey);
       logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
-      return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(res), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
     }
 
     if (action === "generate_reinforcement") {
       const res = await handleGenerateReinforcement(payload as GenerateReinforcementRequest, geminiApiKey, supabaseUrl, supabaseServiceKey);
       logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
-      return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(res), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
     }
 
     if (action === "askTutor") {
       const res = await handleAskTutor(payload as AskTutorRequest, geminiApiKey);
       logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
-      return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(res), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
     }
 
     // Default action: diagnose_mistake
@@ -253,7 +266,7 @@ serve(async (req: Request) => {
       supabaseServiceKey,
     );
     logAudit({ requestId, userId, action, latency: Date.now() - startTime, status: 200 });
-    return new Response(JSON.stringify(res), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(res), { headers: { ...corsHeaders(req), "Content-Type": "application/json" } });
 
   } catch (error: any) {
     console.error(`[Yo‘lchi AI] Error (Request: ${requestId}):`, error?.message || error);
@@ -265,7 +278,7 @@ serve(async (req: Request) => {
         error: "Serverda kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.",
         status: 500,
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders(req), "Content-Type": "application/json" } }
     );
   }
 });
