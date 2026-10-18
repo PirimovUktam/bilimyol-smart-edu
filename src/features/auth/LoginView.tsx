@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/core/context/AuthContext';
+import { canUseHostedDemoMode } from '@/core/utils/authGuards';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
 
 interface LoginViewProps {
@@ -29,6 +30,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onNavigateForgotPassword,
 }) => {
   const { signIn, setDemoUser } = useAuth();
+  const demoAvailable = canUseHostedDemoMode();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -59,6 +61,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   };
 
   const handleQuickDemo = () => {
+    if (!demoAvailable) return;
     setIsSuccess(true);
     setDemoUser();
     setTimeout(() => {
@@ -299,11 +302,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <button
                 type="button"
                 onClick={handleQuickDemo}
-                className="w-full py-3 px-4 rounded-2xl border border-slate-200 hover:border-indigo-300 bg-white hover:bg-slate-50 text-slate-800 hover:text-indigo-600 text-xs font-black flex items-center justify-center gap-2 shadow-2xs hover:shadow-sm transition-all cursor-pointer"
+                disabled={!demoAvailable || isSuccess}
+                aria-describedby="demo-login-explanation"
+                className="w-full py-3 px-4 rounded-2xl border border-slate-200 hover:border-indigo-300 bg-white hover:bg-slate-50 text-slate-800 hover:text-indigo-600 text-xs font-black flex items-center justify-center gap-2 shadow-2xs hover:shadow-sm transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-slate-800"
               >
                 <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
                 <span>Namuna hisobi bilan kirish</span>
               </button>
+              <p id="demo-login-explanation" className="mt-2 text-center text-[11px] font-semibold text-slate-500">
+                Xavfsiz namuna rejimi: ma’lumotlar faqat shu brauzerda ishlaydi va serverga yozilmaydi.
+              </p>
 
               {/* Register Navigation Link */}
               <div className="mt-6 text-center text-xs text-slate-500 font-semibold">

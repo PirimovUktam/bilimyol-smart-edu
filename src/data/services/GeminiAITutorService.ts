@@ -11,6 +11,7 @@ import {
   AskTutorResponse,
 } from './IAITutorService';
 import { DemoAITutorService } from './DemoAITutorService';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 
 /**
@@ -40,7 +41,7 @@ export class GeminiAITutorService implements IAITutorService {
   private fallbackService = new DemoAITutorService();
 
   async explainMistake(request: AIExplanationRequest): Promise<AIExplanationResponse> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       const fb = await this.fallbackService.explainMistake(request);
       return { ...fb, isFallback: true };
     }
@@ -78,7 +79,7 @@ export class GeminiAITutorService implements IAITutorService {
   }
 
   async generateQuestion(request: GenerateQuestionRequest): Promise<GeneratedQuestionResponse> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.getFallbackQuestion(request, request.difficulty);
     }
 
@@ -113,7 +114,7 @@ export class GeminiAITutorService implements IAITutorService {
   }
 
   async generateReinforcement(request: GenerateReinforcementRequest): Promise<GeneratedQuestionResponse> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.getFallbackQuestion(request, 'easy');
     }
 
@@ -148,7 +149,7 @@ export class GeminiAITutorService implements IAITutorService {
   }
 
   async generateLesson(request: GenerateLessonRequest): Promise<GeneratedLessonResponse> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackService.generateLesson(request);
     }
 
@@ -211,7 +212,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     }
 
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackService.askTutor(request);
     }
 

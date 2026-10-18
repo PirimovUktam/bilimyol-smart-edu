@@ -3,6 +3,7 @@ import { Question, QuestionAnswerSubmission } from '@/domain/entities/Question';
 import { AssessmentResult } from '@/domain/entities/Assessment';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
 import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { isSupabaseConfigured } from '@/core/config/supabase';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
@@ -49,6 +50,7 @@ const COURSE_TARGET_SKILLS: Record<string, string[]> = {
 };
 
 const QUESTIONS_PER_SKILL = 2;
+let placementRequestToken: object = {};
 
 /** The displayed total is derived from the configured target coverage and bank. */
 export const getPlacementQuestionCount = (
@@ -83,13 +85,15 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   _lastSubmittedAt: 0,
 
   initPlacement: async (courseId: string) => {
+    const requestToken = placementRequestToken = {};
+    const isCurrent = () => placementRequestToken === requestToken;
     set({ isLoading: true, error: null, currentQuestion: null, hasFinished: false });
 
     try {
-      const courseRepository = isSupabaseConfigured
-        ? supabaseCourseRepository
-        : inMemoryCourseRepository;
+      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
+      const courseRepository = useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository;
       const allQuestions = await courseRepository.getPlacementQuestions(courseId);
+      if (!isCurrent()) return;
       const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
       const totalQuestionsToAsk = getPlacementQuestionCount(allQuestions, targetSkills);
       const firstQ = AdaptiveQuestionSelector.getNextQuestion(
@@ -98,6 +102,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         [],
         QUESTIONS_PER_SKILL
       );
+      if (!isCurrent()) return;
 
       set({
         allQuestions,
@@ -115,6 +120,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         _lastSubmittedAt: 0,
       });
     } catch (err) {
+      if (!isCurrent()) return;
       set({
         allQuestions: [],
         currentQuestion: null,
@@ -214,8 +220,9 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
     if (isDone) {
       // Evaluate full placement test using UseCase
+      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
       const useCase = new SubmitPlacementTestUseCase(
-        isSupabaseConfigured ? supabaseCourseRepository : inMemoryCourseRepository,
+        useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository,
         supabaseLearnerRepository
       );
 
@@ -258,6 +265,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   },
 
   resetPlacement: () => {
+    placementRequestToken = {};
     set({
       allQuestions: [],
       currentQuestion: null,

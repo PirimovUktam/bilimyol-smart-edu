@@ -61,12 +61,10 @@ export interface CourseReconciliationDecision {
  * One-way reconciliation decision between the learner profile's selected
  * course and the active course store.
  *
- * The FIRST observed profile value (once courses are loaded) is only recorded
- * as a baseline — never reconciled — so the localStorage-restored course is
- * not stomped by a still-default profile during startup. Afterwards only a
- * genuine profile VALUE change may reconcile, and the caller must react by
- * selecting that same course (which writes back the SAME value), so the
- * effect's trigger can never change again: no math⇄english ping-pong loop.
+ * The first profile value is a real server preference, not merely a baseline:
+ * it must be allowed to replace a local-storage restore during startup. The
+ * caller records the value before selecting it, so the profile write-back of
+ * that same value cannot trigger another reconciliation (or a ping-pong loop).
  */
 export function decideCourseReconciliation(
   lastSeenId: string | null,
@@ -77,11 +75,11 @@ export function decideCourseReconciliation(
     return { shouldReconcile: false, nextLastSeenId: lastSeenId };
   }
   if (coursesCount === 0) {
-    // Courses not loaded yet: keep waiting for a proper baseline.
+    // Courses not loaded yet: keep waiting until the id can be validated.
     return { shouldReconcile: false, nextLastSeenId: lastSeenId };
   }
   if (lastSeenId === null) {
-    return { shouldReconcile: false, nextLastSeenId: selectedCourseId };
+    return { shouldReconcile: true, nextLastSeenId: selectedCourseId };
   }
   if (lastSeenId === selectedCourseId) {
     return { shouldReconcile: false, nextLastSeenId: lastSeenId };

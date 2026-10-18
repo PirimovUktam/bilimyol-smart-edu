@@ -13,6 +13,7 @@ import { LearnerProfile } from '../../domain/entities/LearnerProfile';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
 import { supabaseLessonRepository } from './SupabaseLessonRepository';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 
 /**
@@ -38,15 +39,15 @@ export async function resolveLessonCourseId(
 export class SupabaseLearnerRepository implements ILearnerRepository {
   private fallbackRepo = new InMemoryLearnerRepository();
   get supportsNodeCompletion(): boolean {
-    return !isSupabaseConfigured;
+    return isDemoRuntimeActive() || !isSupabaseConfigured;
   }
 
   get supportsServerPlacementPersistence(): boolean {
-    return isSupabaseConfigured;
+    return isSupabaseConfigured && !isDemoRuntimeActive();
   }
 
   get supportsServerReinforcementPersistence(): boolean {
-    return isSupabaseConfigured;
+    return isSupabaseConfigured && !isDemoRuntimeActive();
   }
 
   private async requireAuthenticatedUser() {
@@ -61,7 +62,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async getProfile(): Promise<LearnerProfile> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.getProfile();
     }
 
@@ -210,7 +211,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.updateProfile(updates);
     }
 
@@ -258,7 +259,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async saveSkillScores(courseId: string, scores: Record<string, SkillScore>): Promise<void> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.saveSkillScores(courseId, scores);
     }
 
@@ -276,7 +277,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async savePlacementAttempt(data: PlacementAttemptData): Promise<string> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.savePlacementAttempt(data);
     }
 
@@ -308,7 +309,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     questionId: string,
     selectedIndex: number
   ): Promise<PlacementAnswerEvaluation> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.evaluatePlacementAnswer(courseId, questionId, selectedIndex);
     }
 
@@ -326,7 +327,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       await this.fallbackRepo.markLessonCompleted(lessonId, courseId);
       return;
     }
@@ -351,12 +352,12 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async markNodeCompleted(nodeId: string): Promise<void> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.markNodeCompleted(nodeId);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.markNodeCompleted(nodeId);
     throw new Error(`Roadmap node completion is not available through the production contract: ${nodeId}`);
   }
 
   async markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<ReinforcementCompletionResult | void> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       await this.fallbackRepo.markReinforcementCompleted(reinforcementId, context);
       return;
     }
@@ -397,7 +398,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.submitAnswerAttempt(request);
     }
 
@@ -439,7 +440,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.recordAnswerAttempt(attempt);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.recordAnswerAttempt(attempt);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -472,7 +473,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async getAnswerAttempts(limit: number = 10): Promise<AnswerAttemptRecord[]> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.getAnswerAttempts(limit);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.getAnswerAttempts(limit);
     const user = await this.requireAuthenticatedUser();
     const { data, error } = await supabase
       .from('answer_attempts')
@@ -496,7 +497,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async getDailyActivity(days: number = 7): Promise<DailyActivitySummary[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallbackRepo.getDailyActivity(days);
     }
 
@@ -542,7 +543,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async addXp(amount: number, actionIdempotencyKey?: string): Promise<number> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
     const { data, error } = await supabase.rpc('award_xp', {
       p_amount: amount,
       p_action_key: actionIdempotencyKey || `xp_${Date.now()}`,
@@ -552,7 +553,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async recordDailyActivity(dateStr?: string): Promise<number> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.recordDailyActivity(dateStr);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.recordDailyActivity(dateStr);
     const { data, error } = await supabase.rpc('record_learning_activity', {
       p_activity_date: dateStr || null,
     });
@@ -561,7 +562,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async resetAll(): Promise<LearnerProfile> {
-    if (!isSupabaseConfigured) return this.fallbackRepo.resetAll();
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.resetAll();
     throw new Error('Production learner reset is not supported by the server contract.');
   }
 }

@@ -17,20 +17,12 @@ import {
   BookOpen,
   CheckCircle2,
   XCircle,
-  Lightbulb,
-  Code2,
   Clock,
   RotateCcw,
-  Calculator,
-  Equal,
-  LineChart,
-  FileText,
-  Headphones,
-  Cpu,
-  Globe,
   Play,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
+import { SubjectSelector } from '@/features/course-selection/SubjectSelector';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
@@ -64,7 +56,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenDemo,
   onResetDemo,
 }) => {
-  const { activeCourse, selectCourseById, activeCourseSkills } = useCourseStore();
+  const {
+    courses,
+    activeCourse,
+    selectCourseById,
+    activeCourseSkills,
+    isLoading: isCourseLoading,
+    error: courseError,
+  } = useCourseStore();
   const { profile } = useLearnerStore();
   const { profile: authProfile } = useAuth();
   const { loadRoadmap, roadmap } = useRoadmapStore();
@@ -74,12 +73,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingAILesson, setIsGeneratingAILesson] = useState(false);
   const [aiLessonError, setAiLessonError] = useState<string | null>(null);
+  const activeCourseId = activeCourse?.id || null;
 
   useEffect(() => {
     let cancelled = false;
     setActivityError(null);
-    if (activeCourse) {
-      loadRoadmap(activeCourse.id);
+    if (activeCourseId) {
+      void loadRoadmap(activeCourseId);
     }
     supabaseLearnerRepository
       .getAnswerAttempts(5)
@@ -105,7 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [activeCourse, loadRoadmap, profile]);
+  }, [activeCourseId, loadRoadmap]);
 
   const scores = (profile?.scoresByCourse && activeCourse) ? (profile.scoresByCourse[activeCourse.id] || {}) : {};
   const overallScore = SkillScoringEngine.computeOverallScore(scores);
@@ -144,6 +144,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const moduleProgress = totalNodesCount > 0
     ? Math.round((completedNodesCount / totalNodesCount) * 100)
     : (overallScore > 0 ? overallScore : 0);
+  const courseProgress = activeCourse && totalNodesCount > 0
+    ? { [activeCourse.id]: moduleProgress }
+    : undefined;
 
   const lessonCountLabel = totalNodesCount > 0
     ? `${completedNodesCount + (activeNode ? 1 : 0)}/${totalNodesCount} dars`
@@ -159,21 +162,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     ? (activeNode?.description || activeCourse?.description || 'Interaktiv darslar va amaliy mashqlar orqali oson o‘rganing.')
     : 'Ushbu fan bo‘yicha o‘quv rejasi ishlab chiqilmoqda. Yo‘lchi AI yordamida o‘zingizga mos maxsus individual dars yaratishingiz mumkin.';
 
-  const heroBadge1 = activeCourse?.subject === 'english'
-    ? { icon: '🎧', label: 'Listening' }
-    : activeCourse?.subject === 'it'
-    ? { icon: '💻', label: 'Kodlash' }
-    : activeCourse?.subject === 'logic'
-    ? { icon: '🧩', label: 'Mantiq' }
-    : { icon: '½', label: 'Funksiya' };
+  const heroBadge1 = activeCourse
+    ? { icon: <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />, label: activeCourse.title }
+    : { icon: <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />, label: 'Kurs tanlanmagan' };
 
-  const heroBadge2 = activeCourse?.subject === 'english'
-    ? { icon: '🇬🇧', label: 'Interaktiv' }
-    : activeCourse?.subject === 'it'
-    ? { icon: '⚡', label: 'Python' }
-    : activeCourse?.subject === 'logic'
-    ? { icon: '🎯', label: 'Deduksiya' }
-    : { icon: '📐', label: 'Interaktiv' };
+  const heroBadge2 = activeCourse
+    ? {
+        icon: <Compass className="h-3.5 w-3.5" aria-hidden="true" />,
+        label: {
+          mathematics: 'Matematika',
+          english: 'Ingliz tili',
+          it: 'IT va kodlash',
+          logic: 'Mantiq',
+          other: 'Boshqa fan',
+        }[activeCourse.subject],
+      }
+    : { icon: <Compass className="h-3.5 w-3.5" aria-hidden="true" />, label: 'Mavjud kurslar' };
 
   const handleCreateAILesson = async () => {
     if (!activeCourse) return;
@@ -206,6 +210,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
+  const handleCourseSelect = (courseId: string) => {
+    void selectCourseById(courseId).catch(() => undefined);
+  };
+
   const studentName = authProfile?.firstName || profile?.firstName || profile?.name || 'O‘quvchi';
   const currentXP = profile?.xp ?? 0;
   const streakDays = profile?.streakDays ?? 0;
@@ -220,13 +228,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // but has not done any activity today yet.
   const didActivityToday = Boolean(todayActivity?.activeMinutes);
   const atRiskStreak = streakDays > 0 && !didActivityToday;
-
-  const subjectCategories = [
-    { id: 'course_math_01', label: 'Matematika', icon: '📐', active: activeCourse?.id === 'course_math_01', pillColor: 'bg-indigo-600 text-white' },
-    { id: 'course_eng_01', label: 'Ingliz tili', icon: '🇬🇧', active: activeCourse?.id === 'course_eng_01', pillColor: 'bg-rose-500 text-white' },
-    { id: 'course_it', label: 'IT & Kodlash', icon: '💻', active: activeCourse?.id === 'course_it', pillColor: 'bg-cyan-500 text-white' },
-    { id: 'course_logic', label: 'Mantiq', icon: '🧩', active: activeCourse?.id === 'course_logic', pillColor: 'bg-emerald-500 text-white' },
-  ];
 
   // Weekly study hours derived from real daily activity (minutes → hours).
   const dayNames = ['Yak', 'Dsh', 'Ssh', 'Chor', 'Pay', 'Jum', 'Shan'];
@@ -244,102 +245,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (d.hours === maxWeeklyHours && d.hours > 0) d.peak = true;
   });
 
-  // Dynamic Recommendations strictly isolated by subject
-  const recommendations = activeCourse?.id === 'course_eng_01'
-    ? [
-        {
-          id: 'rec_eng_1',
-          title: 'Essential Vocabulary',
-          desc: '10 dars • Lug‘at boyligi',
-          icon: <BookOpen className="w-5 h-5" />,
-          colorClass: 'bg-rose-50 border-rose-200/80 text-rose-600',
-        },
-        {
-          id: 'rec_eng_2',
-          title: 'Grammar & Conditionals',
-          desc: '8 dars • Grammatika',
-          icon: <FileText className="w-5 h-5" />,
-          colorClass: 'bg-indigo-50 border-indigo-200/80 text-indigo-600',
-        },
-        {
-          id: 'rec_eng_3',
-          title: 'Listening & Pronunciation',
-          desc: '12 dars • Tinglab tushunish',
-          icon: <Headphones className="w-5 h-5" />,
-          colorClass: 'bg-amber-50 border-amber-200/80 text-amber-600',
-        },
-      ]
-    : activeCourse?.id === 'course_it'
-    ? [
-        {
-          id: 'rec_it_1',
-          title: 'Python asoslari',
-          desc: '8 dars • Dasturlash',
-          icon: <Code2 className="w-5 h-5" />,
-          colorClass: 'bg-cyan-50 border-cyan-200/80 text-cyan-600',
-        },
-        {
-          id: 'rec_it_2',
-          title: 'Algoritmik mantiq',
-          desc: '10 dars • Algoritmlar',
-          icon: <Cpu className="w-5 h-5" />,
+  // Keep recommendations grounded in the loaded course catalog. Lesson counts
+  // are shown only when the course relation actually provides them.
+  const recommendations = activeCourse
+    ? [{
+        id: activeCourse.id,
+        title: activeCourse.title,
+        desc: activeCourse.lessons.length > 0
+          ? `${activeCourse.lessons.length} ta dars mavjud`
+          : 'Darslar haqida ma’lumot yo‘q',
+        icon: <BookOpen className="h-5 w-5" aria-hidden="true" />,
           colorClass: 'bg-blue-50 border-blue-200/80 text-blue-600',
-        },
-        {
-          id: 'rec_it_3',
-          title: 'Veb texnologiyalari',
-          desc: '6 dars • Frontend',
-          icon: <Globe className="w-5 h-5" />,
-          colorClass: 'bg-emerald-50 border-emerald-200/80 text-emerald-600',
-        },
-      ]
-    : activeCourse?.id === 'course_logic'
-    ? [
-        {
-          id: 'rec_log_1',
-          title: 'Mantiqiy fikrlash',
-          desc: '12 dars • Deduksiya',
-          icon: <Lightbulb className="w-5 h-5" />,
-          colorClass: 'bg-amber-50 border-amber-200/80 text-amber-600',
-        },
-        {
-          id: 'rec_log_2',
-          title: 'Kombinatorika asoslari',
-          desc: '8 dars • Boshqotirma',
-          icon: <Sparkles className="w-5 h-5" />,
-          colorClass: 'bg-purple-50 border-purple-200/80 text-purple-600',
-        },
-        {
-          id: 'rec_log_3',
-          title: 'Mantiqiy zanjirlar',
-          desc: '10 dars • Tahlil',
-          icon: <Compass className="w-5 h-5" />,
-          colorClass: 'bg-emerald-50 border-emerald-200/80 text-emerald-600',
-        },
-      ]
-    : [
-        {
-          id: 'rec_math_1',
-          title: 'Algebra: Qisqa ko‘paytirish',
-          desc: '8 dars • Algebra formulalari',
-          icon: <Calculator className="w-5 h-5" />,
-          colorClass: 'bg-blue-50 border-blue-200/80 text-blue-600',
-        },
-        {
-          id: 'rec_math_2',
-          title: 'Chiziqli tenglamalar',
-          desc: '10 dars • Tenglamalar',
-          icon: <Equal className="w-5 h-5" />,
-          colorClass: 'bg-indigo-50 border-indigo-200/80 text-indigo-600',
-        },
-        {
-          id: 'rec_math_3',
-          title: 'Funksiyalar va grafiklar',
-          desc: '12 dars • Grafik tahlili',
-          icon: <LineChart className="w-5 h-5" />,
-          colorClass: 'bg-emerald-50 border-emerald-200/80 text-emerald-600',
-        },
-      ];
+      }]
+    : [];
 
   // Real recent results derived from actual answer attempts (latest first).
   const subjectRecentResults = recentAttempts
@@ -602,32 +520,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         )}
 
-        {/* ROW 2: Subject Category Chips */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <div className="flex items-center gap-2.5">
-            {subjectCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => selectCourseById(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all shrink-0 cursor-pointer ${
-                  cat.active
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-500/30'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5'
-                }`}
-              >
-                <span className="text-sm">{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
+        {/* ROW 2: Loaded course selector */}
+        <section className="space-y-3" aria-labelledby="dashboard-course-selector-heading">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Tezkor almashtirish</p>
+              <h2 id="dashboard-course-selector-heading" className="mt-1 text-base font-black text-slate-950">
+                O‘rganish yo‘nalishi
+              </h2>
           </div>
-
           <button
+              type="button"
             onClick={onOpenRoadmap}
-            className="text-xs font-black text-blue-600 hover:text-blue-800 flex items-center gap-1 shrink-0 px-2 cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1 self-start rounded-lg px-2 py-1 text-xs font-black text-blue-600 outline-none transition-colors hover:text-blue-800 focus-visible:ring-4 focus-visible:ring-blue-100 sm:self-auto"
           >
-            Barcha fanlar →
+              Yo‘l xaritasini ko‘rish
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
+          <SubjectSelector
+            courses={courses}
+            selectedCourseId={activeCourseId}
+            isLoading={isCourseLoading}
+            error={courseError}
+            progressByCourseId={courseProgress}
+            onSelect={handleCourseSelect}
+            layout="horizontal"
+            ariaLabel="Yuklangan kurslar bo‘yicha tezkor tanlov"
+          />
+        </section>
 
         {/* ROW 3: HERO CARD "DAVOM ETISH" OR EMPTY STATE WITH "DARS YARATISH" */}
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#172554] via-[#1e1b4b] to-[#312e81] text-white p-6 sm:p-8 lg:p-10 shadow-xl shadow-indigo-950/20 border border-indigo-400/20">
@@ -760,29 +681,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {filteredRecommendations.length === 0 ? (
               <div className="sm:col-span-3 p-6 rounded-3xl bg-white border border-slate-200/90 text-center">
                 <p className="text-xs font-semibold text-slate-500">
-                  “{searchQuery}” bo‘yicha hech narsa topilmadi.
+                  {activeCourse
+                    ? `“${searchQuery}” bo‘yicha hech narsa topilmadi.`
+                    : 'Kurs tanlang — tavsiyalar shu yerda ko‘rinadi.'}
                 </p>
               </div>
             ) : (
               filteredRecommendations.map((rec) => (
-                <div
+                <button
                   key={rec.id}
+                  type="button"
                   onClick={onOpenRoadmap}
-                  className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-between gap-3"
+                  className="flex w-full items-center justify-between gap-3 rounded-3xl border border-slate-200/90 bg-white p-4 text-left shadow-2xs outline-none transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                  aria-label={`${rec.title} yo‘l xaritasini ochish`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${rec.colorClass}`}>
+                  <span className="flex items-center gap-3">
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${rec.colorClass}`}>
                       {rec.icon}
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+                    </span>
+                    <span>
+                      <span className="block text-xs font-black leading-snug text-slate-900 sm:text-sm">
                         {rec.title}
-                      </h4>
-                      <p className="text-[11px] text-slate-400 font-semibold">{rec.desc}</p>
-                    </div>
-                  </div>
+                      </span>
+                      <span className="block text-[11px] font-semibold text-slate-400">{rec.desc}</span>
+                    </span>
+                  </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
-                </div>
+                </button>
               ))
             )}
           </div>

@@ -7,6 +7,8 @@ import { SEED_COURSES } from '../datasources/courses';
 import { SEED_SKILLS } from '../datasources/skills';
 import { SEED_LESSONS } from '../datasources/lessons';
 import { PLACEMENT_QUESTIONS } from '../datasources/questions';
+import { mapCourseSubject } from '@/data/repositories/SupabaseCourseRepository';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
 export interface AdminLessonRecord extends Lesson {
   isPublished: boolean;
@@ -44,7 +46,7 @@ export class AdminContentService {
   // 1. COURSES MANAGEMENT (FANLAR)
   // =========================================================================
   async getCourses(): Promise<Course[]> {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return [...inMemoryCourses];
     }
     try {
@@ -60,7 +62,7 @@ export class AdminContentService {
       return data.map((c) => ({
         id: c.id,
         title: c.title,
-        subject: (c.id.includes('eng') ? 'english' : 'mathematics') as 'english' | 'mathematics',
+        subject: mapCourseSubject({ id: c.id, subject: c.subject }),
         description: c.description || '',
         iconName: c.icon_name || 'BookOpen',
         primaryColor: c.primary_color_hex || '#4F46E5',
@@ -82,7 +84,7 @@ export class AdminContentService {
     const newCourse: Course = {
       id,
       title: course.title || 'Yangi Fan',
-      subject: course.subject || 'mathematics',
+      subject: course.subject || 'other',
       description: course.description || '',
       iconName: course.iconName || 'BookOpen',
       primaryColor: course.primaryColor || course.primaryColorHex || '#4F46E5',
@@ -95,7 +97,7 @@ export class AdminContentService {
       isActive: course.isActive ?? true,
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('courses').upsert({
         id: newCourse.id,
         title: newCourse.title,
@@ -118,7 +120,7 @@ export class AdminContentService {
   }
 
   async deleteCourse(courseId: string): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw new Error(`Fanni o‘chirishda xatolik: ${error.message}`);
     }
@@ -129,7 +131,7 @@ export class AdminContentService {
   // 2. SKILLS MANAGEMENT (KO‘NIKMALAR VA MAVZULAR)
   // =========================================================================
   async getSkills(courseId?: string): Promise<Skill[]> {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return courseId ? inMemorySkills.filter((s) => s.courseId === courseId) : [...inMemorySkills];
     }
     try {
@@ -169,7 +171,7 @@ export class AdminContentService {
       iconName: skill.iconName || 'Target',
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('skills').upsert({
         id: newSkill.id,
         course_id: newSkill.courseId,
@@ -190,7 +192,7 @@ export class AdminContentService {
   }
 
   async deleteSkill(skillId: string): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('skills').delete().eq('id', skillId);
       if (error) throw new Error(`Ko‘nikmani o‘chirishda xatolik: ${error.message}`);
     }
@@ -201,7 +203,7 @@ export class AdminContentService {
   // 3. LESSONS MANAGEMENT (DARSLAR VA MATERIALLAR)
   // =========================================================================
   async getLessons(courseId?: string): Promise<AdminLessonRecord[]> {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return courseId ? inMemoryLessons.filter((l) => l.courseId === courseId) : [...inMemoryLessons];
     }
     // Learner access uses learner_lessons; CMS reads use the role-gated view
@@ -269,7 +271,7 @@ export class AdminContentService {
       updatedAt: new Date().toISOString(),
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { data, error } = await supabase.rpc('admin_save_lesson', { p_lesson: {
         id: newLesson.id,
         course_id: newLesson.courseId,
@@ -294,7 +296,7 @@ export class AdminContentService {
   }
 
   async toggleLessonPublish(lessonId: string, isPublished: boolean): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase
         .from('lessons')
         .update({ is_published: isPublished, updated_at: new Date().toISOString() })
@@ -306,7 +308,7 @@ export class AdminContentService {
   }
 
   async toggleLessonArchive(lessonId: string, isArchived: boolean): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase
         .from('lessons')
         .update({ is_archived: isArchived, updated_at: new Date().toISOString() })
@@ -318,7 +320,7 @@ export class AdminContentService {
   }
 
   async deleteLesson(lessonId: string): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
       if (error) throw new Error(`Darsni o‘chirishda xatolik: ${error.message}`);
     }
@@ -329,7 +331,7 @@ export class AdminContentService {
   // 4. QUESTIONS MANAGEMENT (SAVOLLAR VA TESTLAR)
   // =========================================================================
   async getQuestions(courseId?: string, skillId?: string): Promise<AdminQuestionRecord[]> {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return inMemoryQuestions.filter((q) => {
         if (courseId && q.courseId !== courseId) return false;
         if (skillId && q.skillId !== skillId) return false;
@@ -376,7 +378,7 @@ export class AdminContentService {
       isPlacement: question.isPlacement ?? false,
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { data, error } = await supabase.rpc('admin_save_question', { p_question: {
         id: newQuestion.id,
         course_id: newQuestion.courseId,
@@ -400,7 +402,7 @@ export class AdminContentService {
   }
 
   async deleteQuestion(questionId: string): Promise<void> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('questions').delete().eq('id', questionId);
       if (error) throw new Error(`Savolni o‘chirishda xatolik: ${error.message}`);
     }

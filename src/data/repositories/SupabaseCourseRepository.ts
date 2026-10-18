@@ -3,6 +3,7 @@ import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
 import { Question } from '@/domain/entities/Question';
 import { SubjectType } from '@/core/types/common';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { inMemoryCourseRepository } from './InMemoryCourseRepository';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
@@ -30,10 +31,15 @@ export function mapCourseSubject(row: { id: string; subject?: string | null }): 
   if (id.includes('logic') || id.includes('mantiq')) return 'logic';
   if (id.includes('it') || id.includes('code') || id.includes('program')) return 'it';
   if (id.includes('math')) return 'mathematics';
-  return 'mathematics';
+  return 'other';
 }
 
-const mapCourseRow = (c: Record<string, unknown>): Course => ({
+/**
+ * Course rows are catalog metadata. Lesson ids are deliberately not inferred
+ * here: the roadmap/lesson repositories are the source of truth for content,
+ * so a Supabase course with no lesson relation stays an honest empty course.
+ */
+export const mapCourseRow = (c: Record<string, unknown>): Course => ({
   id: c.id as string,
   title: c.title as string,
   subject: mapCourseSubject({ id: c.id as string, subject: (c.subject as string | null) ?? null }),
@@ -59,7 +65,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getAllCourses(): Promise<Course[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getAllCourses();
     }
 
@@ -84,7 +90,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getCourseById(courseId: string): Promise<Course | null> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getCourseById(courseId);
     }
 
@@ -107,7 +113,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getSkillsByCourseId(courseId: string): Promise<Skill[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getSkillsByCourseId(courseId);
     }
 
@@ -139,7 +145,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getPlacementQuestions(courseId: string): Promise<Question[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getPlacementQuestions(courseId);
     }
 

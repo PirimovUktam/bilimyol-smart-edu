@@ -11,6 +11,20 @@ describe('CourseSwitching', () => {
     lessonRepo = new InMemoryLessonRepository();
   });
 
+  it('should expose every available course instead of selecting a hard-coded subject', async () => {
+    const courses = await courseRepo.getAllCourses();
+
+    expect(courses.map((course) => course.id)).toEqual([
+      'course_math_01',
+      'course_eng_01',
+      'course_it',
+      'course_logic',
+    ]);
+    expect(new Set(courses.map((course) => course.subject))).toEqual(
+      new Set(['mathematics', 'english', 'it', 'logic'])
+    );
+  });
+
   it('should return correct distinct skills for Mathematics and English', async () => {
     const mathSkills = await courseRepo.getSkillsByCourseId('course_math_01');
     const engSkills = await courseRepo.getSkillsByCourseId('course_eng_01');

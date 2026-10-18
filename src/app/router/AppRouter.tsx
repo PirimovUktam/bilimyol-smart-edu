@@ -17,6 +17,8 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { resolveContinuationLessonId, decideCourseReconciliation } from '@/app/router/lessonResolution';
 import { useAuth } from '@/core/context/AuthContext';
+import { isSupabaseConfigured } from '@/core/config/supabase';
+import { isProtectedAuthReady } from '@/core/utils/authGuards';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { YolchiAIChatView } from '@/features/ai-tutor/YolchiAIChatView';
 import { ProgressView } from '@/features/progress/ProgressView';
@@ -100,23 +102,29 @@ export const AppRouter: React.FC = () => {
     };
   }, []);
 
-  const { loadCourses, activeCourse, courses } = useCourseStore();
+  const { loadCourses, activeCourse, courses, isLoading: isCourseLoading } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
-  const { profile: authProfile, isLoading: isAuthLoading } = useAuth();
+  const { profile: authProfile, session, isDemoMode, isLoading: isAuthLoading } = useAuth();
+  const hasUsableAuth = isProtectedAuthReady(
+    isSupabaseConfigured,
+    import.meta.env.PROD,
+    session,
+    authProfile,
+    isDemoMode,
+  );
 
   const userRole = authProfile?.role || 'student';
 
   useEffect(() => {
-    if (!authProfile) return;
-    void loadCourses();
-    void loadProfile();
-  }, [authProfile, loadCourses, loadProfile]);
+    if (!hasUsableAuth) return;
+    void loadCourses().catch(() => undefined);
+    void loadProfile().catch(() => undefined);
+  }, [hasUsableAuth, loadCourses, loadProfile]);
 
-  // One-way reconcile: active course follows GENUINE profile changes only.
-  // The initial profile value is a baseline (never reconciled) so it cannot
-  // undo the localStorage-restored course, and the effect only reacts to the
-  // profile value — a reconcile that writes back the same value can never
+  // One-way reconcile: the server profile is allowed to replace a local
+  // storage restore on startup, and later genuine profile changes follow the
+  // same path. A selection writes the same profile value back, so it cannot
   // re-trigger itself (previously this looped math⇄english forever).
   const lastSeenCourseIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -127,32 +135,45 @@ export const AppRouter: React.FC = () => {
       courses.length
     );
     lastSeenCourseIdRef.current = decision.nextLastSeenId;
-    if (!decision.shouldReconcile || !selectedId) return;
+    if (!decision.shouldReconcile || !selectedId || isCourseLoading) return;
     const active = useCourseStore.getState().activeCourse;
     if (active && active.id === selectedId) return;
     if (useCourseStore.getState().courses.length === 0) return;
-    void useCourseStore.getState().selectCourseById(selectedId);
-  }, [learnerProfile?.selectedCourseId, courses.length]);
+    void useCourseStore.getState().selectCourseById(selectedId).catch(() => undefined);
+  }, [learnerProfile?.selectedCourseId, courses.length, isCourseLoading, activeCourse?.id]);
+
+  // A lesson and roadmap belong to one active course. The course store clears
+  // their backing stores on a successful switch; the router must also discard
+  // the route-local lesson id so a stale URL cannot render foreign content.
+  const previousActiveCourseIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const currentCourseId = activeCourse?.id || null;
+    const previousCourseId = previousActiveCourseIdRef.current;
+    if (previousCourseId !== undefined && previousCourseId !== currentCourseId) {
+      setActiveLessonId(null);
+    }
+    previousActiveCourseIdRef.current = currentCourseId;
+  }, [activeCourse?.id]);
 
   useEffect(() => {
     // Start active learning tracker if user is student
-    if (authProfile && userRole === 'student' && activeCourse) {
+    if (hasUsableAuth && userRole === 'student' && activeCourse) {
       activeLearningTracker.start(activeCourse.id, activeLessonId ?? undefined);
     }
 
     return () => {
       activeLearningTracker.stop();
     };
-  }, [authProfile, userRole, activeCourse, activeLessonId]);
+  }, [hasUsableAuth, userRole, activeCourse, activeLessonId]);
 
   const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'admin') => {
-    const role = resolvedRole || authProfile?.role || 'student';
+    const role = resolvedRole || (hasUsableAuth ? authProfile?.role : undefined) || 'student';
     if (role === 'admin') {
       setCurrentView('admin');
     } else {
       setCurrentView('dashboard');
     }
-  }, [authProfile?.role]);
+  }, [authProfile?.role, hasUsableAuth]);
 
   // Synchronize browser URL bar with currentView
   useEffect(() => {
@@ -204,7 +225,7 @@ export const AppRouter: React.FC = () => {
     const isAuthForm =
       currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
 
-    if (!authProfile) {
+    if (!hasUsableAuth) {
       // Unauthenticated visitor trying to access protected screens -> force to 'login'
       if (!isAuthForm) {
         setCurrentView('login');
@@ -213,7 +234,7 @@ export const AppRouter: React.FC = () => {
     }
 
     // Authenticated user
-    const effectiveRole = authProfile.role || 'student';
+    const effectiveRole = authProfile?.role || 'student';
 
     // If already logged in and on an auth form, send to appropriate dashboard
     if (isAuthForm) {
@@ -226,7 +247,7 @@ export const AppRouter: React.FC = () => {
     if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
       setCurrentView('admin');
     }
-  }, [isAuthLoading, authProfile, currentView]);
+  }, [isAuthLoading, hasUsableAuth, authProfile, currentView]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');
@@ -272,8 +293,7 @@ export const AppRouter: React.FC = () => {
   const isAuthView = currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
 
   // Role Guard validation
-  const isAccessDenied =
-    (currentView === 'admin' && userRole !== 'admin');
+  const isAccessDenied = currentView === 'admin' && (!hasUsableAuth || userRole !== 'admin');
 
   // Prevent flicker during initial session resolution
   if (isAuthLoading && !isPitchOrDemo) {
@@ -326,16 +346,16 @@ export const AppRouter: React.FC = () => {
             {currentView === 'pitch' && (
               <PitchShowcaseView
                 onNavigateDemo={() => setCurrentView('demo')}
-                onNavigateApp={() => setCurrentView(authProfile ? 'dashboard' : 'login')}
-                onNavigateAiTutor={() => setCurrentView(authProfile ? 'ai-tutor' : 'login')}
+                onNavigateApp={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
+                onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
               />
             )}
 
             {currentView === 'demo' && (
               <DemoShowcaseView
-                onNavigateCourses={() => setCurrentView(authProfile ? 'course-selection' : 'login')}
-                onNavigateDashboard={() => setCurrentView(authProfile ? 'dashboard' : 'login')}
-                onNavigateAiTutor={() => setCurrentView(authProfile ? 'ai-tutor' : 'login')}
+                onNavigateCourses={() => setCurrentView(hasUsableAuth ? 'course-selection' : 'login')}
+                onNavigateDashboard={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
+                onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
                 onNavigatePitch={() => setCurrentView('pitch')}
               />
             )}
@@ -451,7 +471,7 @@ export const AppRouter: React.FC = () => {
               <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi va Ma’muriyat uchun yagona ta’lim platformasi
             </span>
             <span className="text-slate-400">
-              {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
+              {hasUsableAuth ? `Hisob: ${authProfile?.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
             </span>
           </div>
         </footer>
