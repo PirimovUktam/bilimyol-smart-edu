@@ -6,6 +6,7 @@ import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourse
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
+import { canUseLocalDemoMode } from '@/core/utils/authGuards';
 
 export interface UserProfile {
   id: string;
@@ -251,26 +252,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data.session?.user) {
             await fetchProfile(data.session.user.id, data.session.user.email ?? '');
           } else {
-            // Also check if an explicit demo session was stored in localStorage
-            const cached = localStorage.getItem('bilimyol_auth_session');
-            if (cached) {
-              try {
-                const parsed = JSON.parse(cached);
-                if (parsed?.profile && isSupportedRole(parsed.profile.role) && parsed?.isDemoMode) {
-                  setProfile(parsed.profile);
-                  setIsDemoMode(true);
-                } else {
-                  setProfile(null);
-                  setIsDemoMode(false);
-                }
-              } catch {
-                setProfile(null);
-                setIsDemoMode(false);
-              }
-            } else {
-              setProfile(null);
-              setIsDemoMode(false);
-            }
+            // A configured backend is authoritative. Never restore a cached
+            // demo/profile without a real Supabase session.
+            clearSessionStores();
+            setProfile(null);
+            setIsDemoMode(false);
             setIsLoading(false);
           }
         }
@@ -540,6 +526,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const setDemoUser = () => {
+    if (!canUseLocalDemoMode()) {
+      clearAuthState();
+      return;
+    }
     clearAuthState();
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);

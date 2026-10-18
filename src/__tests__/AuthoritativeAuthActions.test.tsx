@@ -108,4 +108,23 @@ describe('authoritative configured authentication actions', () => {
     expect(result.error).toBeInstanceOf(Error);
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
+
+  it('does not activate the demo user when Supabase is configured', () => {
+    const auth = actions();
+    auth.setDemoUser();
+
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
+  });
+
+  it('keeps the demo user available in local development without Supabase', () => {
+    backend.configured = false;
+    vi.stubEnv('PROD', false);
+    const auth = actions();
+    auth.setDemoUser();
+
+    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!)).toMatchObject({
+      isDemoMode: true,
+      profile: { id: 'guest_user_01' },
+    });
+  });
 });
