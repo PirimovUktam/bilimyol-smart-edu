@@ -11,14 +11,11 @@ import { LoginView } from '@/features/auth/LoginView';
 import { RegisterView } from '@/features/auth/RegisterView';
 import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
 import { ProfileView } from '@/features/profile/ProfileView';
-import { ParentDashboardView } from '@/features/parent/ParentDashboardView';
-import { TeacherDashboardView } from '@/features/teacher/TeacherDashboardView';
 import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { resolveContinuationLessonId, decideCourseReconciliation } from '@/app/router/lessonResolution';
-import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { YolchiAIChatView } from '@/features/ai-tutor/YolchiAIChatView';
@@ -47,15 +44,31 @@ export type AppView =
   | 'register'
   | 'forgot-password'
   | 'profile'
-  | 'parent'
-  | 'teacher'
   | 'admin';
 
 const getInitialView = (): AppView => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
-    const viewParam = params.get('view') as AppView | null;
-    if (viewParam) return viewParam;
+    const viewParam = params.get('view');
+    const validViews: AppView[] = [
+      'pitch',
+      'demo',
+      'course-selection',
+      'onboarding',
+      'placement',
+      'knowledge-map',
+      'roadmap',
+      'lesson',
+      'dashboard',
+      'ai-tutor',
+      'progress',
+      'login',
+      'register',
+      'forgot-password',
+      'profile',
+      'admin',
+    ];
+    if (viewParam && validViews.includes(viewParam as AppView)) return viewParam as AppView;
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
     if (path === '/demo' || hash === '#demo') return 'demo';
@@ -91,9 +104,8 @@ export const AppRouter: React.FC = () => {
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
   const { profile: authProfile, isLoading: isAuthLoading } = useAuth();
-  const monitoringRole = useMonitoringStore((s) => s.currentRole);
 
-  const userRole = authProfile?.role || monitoringRole || 'student';
+  const userRole = authProfile?.role || 'student';
 
   useEffect(() => {
     if (!authProfile) return;
@@ -133,18 +145,14 @@ export const AppRouter: React.FC = () => {
     };
   }, [authProfile, userRole, activeCourse, activeLessonId]);
 
-  const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'parent' | 'teacher' | 'admin') => {
-    const role = resolvedRole || authProfile?.role || monitoringRole || 'student';
+  const handleRoleRouting = useCallback((resolvedRole?: 'student' | 'admin') => {
+    const role = resolvedRole || authProfile?.role || 'student';
     if (role === 'admin') {
       setCurrentView('admin');
-    } else if (role === 'parent') {
-      setCurrentView('parent');
-    } else if (role === 'teacher') {
-      setCurrentView('teacher');
     } else {
       setCurrentView('dashboard');
     }
-  }, [authProfile?.role, monitoringRole]);
+  }, [authProfile?.role]);
 
   // Synchronize browser URL bar with currentView
   useEffect(() => {
@@ -205,13 +213,11 @@ export const AppRouter: React.FC = () => {
     }
 
     // Authenticated user
-    const effectiveRole = authProfile.role || monitoringRole || 'student';
+    const effectiveRole = authProfile.role || 'student';
 
     // If already logged in and on an auth form, send to appropriate dashboard
     if (isAuthForm) {
       if (effectiveRole === 'admin') setCurrentView('admin');
-      else if (effectiveRole === 'parent') setCurrentView('parent');
-      else if (effectiveRole === 'teacher') setCurrentView('teacher');
       else setCurrentView('dashboard');
       return;
     }
@@ -219,18 +225,8 @@ export const AppRouter: React.FC = () => {
     // Role-based view guards for non-student roles landing on student views
     if (effectiveRole === 'admin' && currentView !== 'admin' && currentView !== 'profile') {
       setCurrentView('admin');
-    } else if (
-      effectiveRole === 'parent' &&
-      (currentView === 'course-selection' || currentView === 'dashboard')
-    ) {
-      setCurrentView('parent');
-    } else if (
-      effectiveRole === 'teacher' &&
-      (currentView === 'course-selection' || currentView === 'dashboard')
-    ) {
-      setCurrentView('teacher');
     }
-  }, [isAuthLoading, authProfile, currentView, monitoringRole]);
+  }, [isAuthLoading, authProfile, currentView]);
 
   const handleSelectCourse = () => {
     setCurrentView('onboarding');
@@ -277,8 +273,6 @@ export const AppRouter: React.FC = () => {
 
   // Role Guard validation
   const isAccessDenied =
-    (currentView === 'parent' && userRole !== 'parent') ||
-    (currentView === 'teacher' && userRole !== 'teacher') ||
     (currentView === 'admin' && userRole !== 'admin');
 
   // Prevent flicker during initial session resolution
@@ -316,12 +310,12 @@ export const AppRouter: React.FC = () => {
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">Ruxsat Cheklangan</h2>
               <p className="text-sm text-slate-600 mb-6">
-                Ushbu panelga kirish faqat {currentView === 'parent' ? 'ota-onalar' : currentView === 'teacher' ? 'o‘qituvchilar' : 'administratorlar'} uchun ruxsat etilgan.
-                Sizning joriy hisob turingiz: <strong>{userRole === 'student' ? 'O‘quvchi' : userRole === 'parent' ? 'Ota-ona' : userRole === 'teacher' ? 'O‘qituvchi' : 'Administrator'}</strong>.
+                Ushbu panelga kirish faqat administratorlar uchun ruxsat etilgan.
+                Sizning joriy hisob turingiz: <strong>O‘quvchi</strong>.
               </p>
               <Button
                 variant="primary"
-                onClick={() => setCurrentView(userRole === 'admin' ? 'admin' : userRole === 'parent' ? 'parent' : userRole === 'teacher' ? 'teacher' : 'dashboard')}
+                onClick={() => setCurrentView('dashboard')}
               >
                 O‘z panelingizga qaytish
               </Button>
@@ -444,10 +438,6 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
-            {currentView === 'parent' && <ParentDashboardView />}
-
-            {currentView === 'teacher' && <TeacherDashboardView />}
-
             {currentView === 'admin' && <AdminDashboardView />}
           </>
         )}
@@ -458,7 +448,7 @@ export const AppRouter: React.FC = () => {
         <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>
-              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi, Ota-ona, O‘qituvchi va Ma’muriyat Yagona Ekotizimi
+              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi va Ma’muriyat uchun yagona ta’lim platformasi
             </span>
             <span className="text-slate-400">
               {authProfile ? `Hisob: ${authProfile.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}

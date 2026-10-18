@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BilimYolLogo } from './BilimYolLogo';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useAuth } from '@/core/context/AuthContext';
@@ -8,9 +8,6 @@ import {
   Map,
   Compass,
   LayoutDashboard,
-  Users,
-  GraduationCap,
-  Link2,
   ShieldAlert,
   Bot,
   TrendingUp,
@@ -19,7 +16,6 @@ import {
   Play,
   ArrowRight,
 } from 'lucide-react';
-import { StudentConnectionsModal } from '@/features/student/StudentConnectionsModal';
 
 interface NavbarProps {
   currentView: string;
@@ -29,7 +25,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
   const { profile } = useLearnerStore();
   const { profile: authProfile } = useAuth();
-  const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
 
   const userRole = authProfile?.role || 'student';
 
@@ -62,10 +57,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   onNavigate(
                     userRole === 'admin'
                       ? 'admin'
-                      : userRole === 'parent'
-                      ? 'parent'
-                      : userRole === 'teacher'
-                      ? 'teacher'
                       : 'dashboard'
                   )
                 }
@@ -95,26 +86,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                       </button>
                     );
                   })}
-
-                {userRole === 'parent' && (
-                  <button
-                    onClick={() => onNavigate('parent')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Ota-ona Paneli</span>
-                  </button>
-                )}
-
-                {userRole === 'teacher' && (
-                  <button
-                    onClick={() => onNavigate('teacher')}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700"
-                  >
-                    <GraduationCap className="w-4 h-4" />
-                    <span>O‘qituvchi Paneli</span>
-                  </button>
-                )}
 
                 {userRole === 'admin' && (
                   <button
@@ -168,34 +139,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                         🎓 O‘quvchi
                       </span>
                     )}
-                    {userRole === 'parent' && (
-                      <span className="text-emerald-700 bg-emerald-50 border-emerald-200 px-2 py-0.5 rounded-lg border">
-                        👨‍👩‍👧 Ota-ona
-                      </span>
-                    )}
-                    {userRole === 'teacher' && (
-                      <span className="text-indigo-700 bg-indigo-50 border-indigo-200 px-2 py-0.5 rounded-lg border">
-                        👨‍🏫 O‘qituvchi
-                      </span>
-                    )}
                     {userRole === 'admin' && (
                       <span className="text-purple-700 bg-purple-50 border-purple-200 px-2 py-0.5 rounded-lg border flex items-center gap-1 font-bold">
                         ⚡ Administrator
                       </span>
                     )}
                   </div>
-
-                  {/* Student Connection Trigger */}
-                  {userRole === 'student' && (
-                    <button
-                      onClick={() => setIsConnectionsModalOpen(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-700 transition-colors shadow-2xs cursor-pointer"
-                      title="Ota-ona yoki Sinfga Ulanish"
-                    >
-                      <Link2 className="w-3.5 h-3.5 text-indigo-600" />
-                      <span className="hidden sm:inline">Ulanish</span>
-                    </button>
-                  )}
 
                   {userRole === 'student' && (
                     <>
@@ -258,11 +207,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         </div>
       </nav>
 
-      {/* Student Connections Modal */}
-      <StudentConnectionsModal
-        isOpen={isConnectionsModalOpen}
-        onClose={() => setIsConnectionsModalOpen(false)}
-      />
     </>
   );
 };

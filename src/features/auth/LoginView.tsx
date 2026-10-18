@@ -18,7 +18,7 @@ import { useAuth } from '@/core/context/AuthContext';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
 
 interface LoginViewProps {
-  onSuccess: (role?: 'student' | 'parent' | 'teacher' | 'admin') => void;
+  onSuccess: (role?: 'student' | 'admin') => void;
   onNavigateRegister: () => void;
   onNavigateForgotPassword: () => void;
 }

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
-import { useMonitoringStore } from '@/app/store/useMonitoringStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourseStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
@@ -14,7 +13,7 @@ export interface UserProfile {
   lastName: string;
   email: string;
   avatarUrl?: string;
-  role?: 'student' | 'parent' | 'teacher' | 'admin';
+  role?: 'student' | 'admin';
 }
 
 interface AuthContextType {
@@ -24,7 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: 'student' | 'parent' | 'teacher' | 'admin') => Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
@@ -40,6 +39,9 @@ const defaultDemoProfile: UserProfile = {
   avatarUrl: '',
   role: 'student',
 };
+
+const isSupportedRole = (role: unknown): role is NonNullable<UserProfile['role']> =>
+  role === 'student' || role === 'admin';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -64,7 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useRoadmapStore.getState().clearSession();
     useLessonStore.getState().clearSession();
     usePlacementStore.getState().resetPlacement();
-    useMonitoringStore.getState().resetAll();
     localStorage.removeItem('bilimyol_auth_session');
     localStorage.removeItem(ACTIVE_COURSE_STORAGE_KEY);
   }, []);
@@ -115,9 +116,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (parsed.profile) {
+          if (parsed.profile && isSupportedRole(parsed.profile.role)) {
             setProfile(parsed.profile);
-            useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
             return parsed.profile;
           }
         } catch {}
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isCurrent()) return null;
       if (error) throw error;
 
-      if (data && data.id === userId && ['student', 'parent', 'teacher', 'admin'].includes(data.role)) {
+      if (data && data.id === userId && ['student', 'admin'].includes(data.role)) {
         // Authoritative role from public.profiles
         const userRole = data.role as NonNullable<UserProfile['role']>;
         const resolvedFirst = data.first_name || (email ? email.split('@')[0] : 'Foydalanuvchi');
@@ -152,7 +152,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setProfile(userProfile);
         localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
-        useMonitoringStore.setState({ currentRole: userRole as any });
         return userProfile;
       }
 
@@ -163,7 +162,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('Error resolving authenticated profile from Supabase:', err);
       setProfile(null);
       localStorage.removeItem('bilimyol_auth_session');
-      useMonitoringStore.setState({ currentRole: 'student' });
       return null;
     } finally {
       if (isCurrent()) setIsLoading(false);
@@ -176,9 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (parsed.profile) {
+          if (parsed.profile && isSupportedRole(parsed.profile.role)) {
             setProfile(parsed.profile);
-            useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
             return parsed.profile;
           }
         } catch {}
@@ -222,10 +219,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const parsed = JSON.parse(cached);
               const isExplicitDemo = Boolean(parsed?.isDemoMode);
               const isDefaultDemo = parsed?.profile?.id === defaultDemoProfile.id;
-              if (mounted && parsed?.profile && (!isDefaultDemo || isExplicitDemo)) {
+              if (mounted && parsed?.profile && isSupportedRole(parsed.profile.role) && (!isDefaultDemo || isExplicitDemo)) {
                 setProfile(parsed.profile);
                 setIsDemoMode(isExplicitDemo);
-                useMonitoringStore.setState({ currentRole: (parsed?.profile?.role as any) || 'student' });
               } else if (mounted) {
                 setProfile(null);
                 setIsDemoMode(false);
@@ -260,10 +256,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (cached) {
               try {
                 const parsed = JSON.parse(cached);
-                if (parsed?.profile && parsed?.isDemoMode) {
+                if (parsed?.profile && isSupportedRole(parsed.profile.role) && parsed?.isDemoMode) {
                   setProfile(parsed.profile);
                   setIsDemoMode(true);
-                  useMonitoringStore.setState({ currentRole: (parsed.profile.role as any) || 'student' });
                 } else {
                   setProfile(null);
                   setIsDemoMode(false);
@@ -367,12 +362,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName: email.split('@')[0],
         lastName: '',
         email,
-        role: email.includes('admin') ? 'admin' : email.includes('parent') ? 'parent' : email.includes('teacher') ? 'teacher' : 'student',
+        role: email.includes('admin') ? 'admin' : 'student',
       };
       setProfile(demoProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf }));
-      useMonitoringStore.setState({ currentRole: demoProf.role as any });
       return { error: null, profile: demoProf };
     }
 
@@ -409,8 +403,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     firstName: string,
-    lastName: string,
-    role: 'student' | 'parent' | 'teacher' | 'admin' = 'student'
+    lastName: string
   ): Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }> => {
     if (signingOut.current !== null) return { error: staleActionError() };
     if (!isSupabaseConfigured) {
@@ -422,12 +415,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         firstName,
         lastName,
         email,
-        role,
+        role: 'student',
       };
       setProfile(newProf);
       setIsDemoMode(true);
       localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: newProf }));
-      useMonitoringStore.setState({ currentRole: role as any });
       return { error: null };
     }
 
@@ -440,7 +432,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             first_name: firstName,
             last_name: lastName,
-            role,
           },
         },
       });
@@ -553,7 +544,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
     localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile, isDemoMode: true }));
-    useMonitoringStore.setState({ currentRole: 'student' });
   };
 
   return (

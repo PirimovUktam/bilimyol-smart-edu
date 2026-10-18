@@ -75,20 +75,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
                   variant={
                     profile?.role === 'admin'
                       ? 'purple'
-                      : profile?.role === 'teacher'
-                      ? 'blue'
-                      : profile?.role === 'parent'
-                      ? 'emerald'
                       : 'blue'
                   }
                   size="sm"
                 >
                   {profile?.role === 'admin'
                     ? '⚡ Administrator'
-                    : profile?.role === 'teacher'
-                    ? '👨‍🏫 O‘qituvchi'
-                    : profile?.role === 'parent'
-                    ? '👨‍👩‍👧 Ota-ona'
                     : '🎓 Faol O‘quvchi'}
                 </Badge>
               </div>
@@ -232,7 +224,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
 
           <div className="space-y-4">
             {[
-              { label: 'Hisob turi', value: profile?.role === 'admin' ? 'Administrator' : profile?.role === 'teacher' ? 'O‘qituvchi' : profile?.role === 'parent' ? 'Ota-ona' : 'O‘quvchi' },
+              { label: 'Hisob turi', value: profile?.role === 'admin' ? 'Administrator' : 'O‘quvchi' },
               { label: 'Email', value: profile?.email || '—' },
               { label: 'Joriy kurs', value: activeCourse?.title || 'Tanlanmagan' },
               { label: 'Umumiy XP', value: `${learnerProfile?.xp ?? 0} XP` },

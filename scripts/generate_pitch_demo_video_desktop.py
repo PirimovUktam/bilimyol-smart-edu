@@ -98,7 +98,7 @@ SCENES = [
         "screen": "10_student_dashboard.png",
         "title": "10. Bosh Sahifa va Doimiy Rivojlanish",
         "badge": "9-BOSQICH • O‘QUVCHI DASHBOARD",
-        "voiceover": "O‘quvchi o‘zining boshqaruv panelida kunlik darslarni davom ettiradi, to‘plangan XP, streak va o‘zlashtirish foizini ko‘radi. Ota-onalar esa natijalarni doimiy kuzatishi mumkin."
+        "voiceover": "O‘quvchi o‘zining boshqaruv panelida kunlik darslarni davom ettiradi, to‘plangan XP, streak va o‘zlashtirish foizini ko‘radi. Keyingi darslar shaxsiy natijalarga qarab avtomatik moslashadi."
     },
     {
         "id": "11",

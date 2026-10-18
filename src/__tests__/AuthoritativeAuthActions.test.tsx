@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from '../core/context/AuthContext';
 
 const backend = vi.hoisted(() => ({
   configured: true, query: vi.fn(), from: vi.fn(), signIn: vi.fn(), signUp: vi.fn(),
-  signOut: vi.fn(), getUser: vi.fn(), role: vi.fn(), reset: vi.fn(),
+  signOut: vi.fn(), getUser: vi.fn(),
 }));
 vi.mock('../core/config/supabase', () => ({
   get isSupabaseConfigured() { return backend.configured; },
@@ -14,10 +14,6 @@ vi.mock('../core/config/supabase', () => ({
     auth: { signInWithPassword: backend.signIn, signUp: backend.signUp, signOut: backend.signOut, getUser: backend.getUser },
   },
 }));
-vi.mock('../app/store/useMonitoringStore', () => ({
-  useMonitoringStore: { setState: backend.role, getState: () => ({ resetAll: backend.reset }) },
-}));
-
 // Exercise the provider's real public auth actions without introducing a DOM
 // dependency. SSR does not run its startup effect; browser lifecycle is a
 // separate smoke-check concern, not coverage claimed by these action tests.
@@ -67,17 +63,15 @@ describe('authoritative configured authentication actions', () => {
     expect(result.error).toBeInstanceOf(Error);
     expect(result.profile).toBeUndefined();
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
-    expect(backend.role).not.toHaveBeenCalledWith({ currentRole: 'admin' });
   });
 
   it('does not query or cache a profile while email confirmation is pending', async () => {
     backend.signUp.mockResolvedValueOnce({ data: { user, session: null }, error: null });
-    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali', 'admin');
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
     expect(result.error).toBeNull();
     expect(result.requiresEmailConfirmation).toBe(true);
     expect(backend.from).not.toHaveBeenCalled();
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
-    expect(backend.role).not.toHaveBeenCalled();
   });
 
   it('reports unavailable authoritative provisioning instead of successful signed-in signup', async () => {
@@ -98,7 +92,6 @@ describe('authoritative configured authentication actions', () => {
     resolve({ data: row, error: null });
     expect((await login).error).toBeInstanceOf(Error);
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
-    expect(backend.reset).toHaveBeenCalledOnce();
   });
 
   it('turns a rejected auth transport into an actionable failure', async () => {
@@ -111,9 +104,8 @@ describe('authoritative configured authentication actions', () => {
   it('does not create a mock signup session in production without Supabase configuration', async () => {
     backend.configured = false;
     vi.stubEnv('PROD', true);
-    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali', 'admin');
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
     expect(result.error).toBeInstanceOf(Error);
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
-    expect(backend.role).not.toHaveBeenCalled();
   });
 });

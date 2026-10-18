@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { isSupabaseConfigured, supabaseProjectRef } from '../core/config/supabase';
-import { useMonitoringStore } from '../app/store/useMonitoringStore';
 
 describe('Production Auth & Supabase Env Regression Tests', () => {
   beforeEach(() => {
-    useMonitoringStore.getState().resetAll();
     vi.restoreAllMocks();
   });
 
@@ -58,31 +56,12 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(targetView).toBe('dashboard');
   });
 
-  it('F: Logout resets monitoring store role and state', () => {
-    useMonitoringStore.setState({ currentRole: 'admin' });
-
-    // Perform logout reset
-    useMonitoringStore.getState().resetAll();
-
-    expect(useMonitoringStore.getState().currentRole).toBe('student');
-  });
-
-  it('G: Login with a different user does not leak previous user role', () => {
-    useMonitoringStore.setState({ currentRole: 'admin' });
-    useMonitoringStore.getState().resetAll();
-
-    const newProfile = { id: 'user-2', role: 'student' as const };
-    useMonitoringStore.setState({ currentRole: newProfile.role });
-
-    expect(useMonitoringStore.getState().currentRole).toBe('student');
-  });
-
-  it('H: Config fingerprint exports valid metadata', () => {
+  it('F: Config fingerprint exports valid metadata', () => {
     expect(typeof supabaseProjectRef).toBe('string');
     expect(typeof isSupabaseConfigured).toBe('boolean');
   });
 
-  it('I: Self-profile query uses direct identity predicate without circular table dependencies', () => {
+  it('G: Self-profile query uses direct identity predicate without circular table dependencies', () => {
     const authUid = 'user-uuid-123';
     const profileRow = { id: 'user-uuid-123', email: 'user@bilimyol.uz', role: 'admin' };
 
@@ -91,18 +70,7 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(canRead).toBe(true);
   });
 
-  it('J: Teacher-student and parent-student authorization decouple from classes policy loop', () => {
-    // Helper function simulates decoupled check
-    const isTeacherOfStudent = (teacherId: string, studentId: string, activePairs: Array<{ teacherId: string; studentId: string }>) => {
-      return activePairs.some(p => p.teacherId === teacherId && p.studentId === studentId);
-    };
-
-    const pairs = [{ teacherId: 'teacher-1', studentId: 'student-1' }];
-    expect(isTeacherOfStudent('teacher-1', 'student-1', pairs)).toBe(true);
-    expect(isTeacherOfStudent('teacher-1', 'student-2', pairs)).toBe(false);
-  });
-
-  it('K: Unauthenticated user defaults to login route, not demo account or course selection', () => {
+  it('H: Unauthenticated user defaults to login route, not demo account or course selection', () => {
     const authProfile = null;
     const requestedView = 'course-selection';
     const isPublicView = ['pitch', 'demo', 'login', 'register', 'forgot-password'].includes(requestedView);
@@ -115,7 +83,7 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(resolvedView).toBe('login');
   });
 
-  it('L: Public pitch and demo showcases remain accessible without login', () => {
+  it('I: Public pitch and demo showcases remain accessible without login', () => {
     const authProfile = null;
     const pitchView = 'pitch';
     const demoView = 'demo';
@@ -130,7 +98,7 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(resolveRoute('dashboard')).toBe('login');
   });
 
-  it('M: Explicit demo activation sets isDemoMode and isolates guest session', () => {
+  it('J: Explicit demo activation sets isDemoMode and isolates guest session', () => {
     const demoProfile = {
       id: 'guest_user_01',
       firstName: 'Foydalanuvchi',
@@ -143,4 +111,3 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
     expect(demoProfile.role).toBe('student');
   });
 });
-

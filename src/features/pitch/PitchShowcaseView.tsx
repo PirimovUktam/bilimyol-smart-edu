@@ -435,7 +435,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <h4 className="font-bold text-sm text-white">35–40 talik ommaviy sinflar</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      O‘qituvchi 45 daqiqada har bir o‘quvchiga hatto 1 daqiqa ham vaqt ajrata olmaydi. Barcha bolalar individual qobiliyatidan qat’i nazar bitta o‘rtacha sur’atda o‘qitiladi.
+                      An’anaviy 45 daqiqalik darsda har bir o‘quvchiga hatto 1 daqiqa ham individual vaqt ajratilmaydi. Barcha bolalar qobiliyatidan qat’i nazar bitta o‘rtacha sur’atda o‘qiydi.
                     </p>
                   </motion.div>
 
@@ -451,7 +451,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <h4 className="font-bold text-sm text-white">Qimmat repetitorlar (500K – 1.5M so‘m/oy)</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Ota-onalar byudjetiga juda og‘ir moliyaviy yuk. Qishloq va tumanlarda esa ixtisoslashgan malakali ustozlar umuman yetishmaydi yoki topilmaydi.
+                      Oilalar byudjetiga juda og‘ir moliyaviy yuk. Qishloq va tumanlarda esa ixtisoslashgan malakali mutaxassislar umuman yetishmaydi yoki topilmaydi.
                     </p>
                   </motion.div>
 
@@ -1216,7 +1216,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-cyan-400">1-B2B Pilot</div>
                     <div className="text-xs font-bold text-white mt-0.5">Maktablar Hamkorligi</div>
-                    <div className="text-[10px] text-slate-400">O‘qituvchilar paneli</div>
+                    <div className="text-[10px] text-slate-400">O‘quvchi progressi</div>
                   </div>
                 </div>
               </motion.div>
@@ -1297,7 +1297,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va ota-onalar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
+                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va o‘quvchilar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1349,7 +1349,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               Monetizatsiya va Unit Economics
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Freemium → Premium obuna. To‘lovchi: o‘quvchi va ota-ona (B2C) hamda maktablar (B2B SaaS).
+              Freemium → Premium obuna. To‘lovchi: o‘quvchi va oilalar (B2C) hamda maktablar (B2B SaaS).
             </p>
           </motion.div>
 
@@ -1393,7 +1393,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
                 <div className="pt-2">
                   <span className="inline-block px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] text-emerald-300 font-bold">
-                    Ota-onalar uchun 10x arzonroq
+                    Foydalanuvchilar uchun 10x arzonroq
                   </span>
                 </div>
               </motion.div>
@@ -1405,10 +1405,10 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     Kim to‘laydi?
                   </div>
                   <div className="text-sm sm:text-base font-semibold text-white">
-                    O‘quvchi va ota-ona (B2C)
+                    O‘quvchi va oilalar (B2C)
                   </div>
                   <p className="text-xs text-slate-400">
-                    Ota-onalar farzandining bilim darajasini real vaqtda ko‘rib, samarasiz repetitor xarajatlarini tejashadi.
+                    O‘quvchi bilim darajasini real vaqtda ko‘rib, samarasiz repetitor xarajatlarini tejaydi.
                   </p>
                 </div>
 

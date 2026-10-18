@@ -97,7 +97,7 @@ SCENES = [
         "screen": "09_dashboard.png",
         "title": "10. Dashboard va Doimiy Rivojlanish",
         "badge": "10-QADAM • DASHBOARD VA NATIJA",
-        "voiceover": "O‘quvchi o‘zining boshqaruv panelida kunlik streak, umumiy to‘plangan XP va o‘zlashtirish foizini ko‘rib boradi. Ota-onalar va ustozlar esa natijalarni doimiy kuzatishi mumkin."
+        "voiceover": "O‘quvchi o‘zining boshqaruv panelida kunlik streak, umumiy to‘plangan XP va o‘zlashtirish foizini ko‘rib boradi. Keyingi darslar shaxsiy natijalarga qarab avtomatik moslashadi."
     },
     {
         "id": "11",

@@ -77,7 +77,7 @@ export class DemoAITutorService implements IAITutorService {
             content: 'Quyidagi audio to‘lqin va talaffuz ifodasini tinglang:',
             visualModelData: {
               type: 'audio_wave',
-              speakerName: 'Sarah (English Teacher)',
+              speakerName: 'Sarah (Speaker)',
               audioTranscript: 'Consistent daily practice is the key to mastering English vocabulary.',
             },
           },

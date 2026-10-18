@@ -115,12 +115,12 @@ const DEMO_CHAPTERS = [
     highlightBadge: 'Dashboard',
   },
   {
-    title: '11. O‘zlashtirish va Monitoring',
+    title: '11. O‘zlashtirish dinamikasi',
     timestamp: '01:53 - 02:03',
     secondsStart: 113,
-    description: 'O‘zlashtirish dinamikasi real vaqtda yangilanadi va ota-onalar/o‘qituvchilar monitoringiga uzatiladi.',
+    description: 'O‘quvchi natijalari real vaqtda yangilanadi va shaxsiy rivojlanish dinamikasida aks etadi.',
     screen: 'dashboard',
-    highlightBadge: 'Monitoring',
+    highlightBadge: 'Progress',
   },
   {
     title: '12. Yakun (Pitch Day 3.0)',
@@ -687,7 +687,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                           Bilim O‘sishi, Streak va Natijalar
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Har bir darsdan so‘ng bilim darajasi real vaqtda yangilanadi va ota-onalar nazorat qila oladi.
+                          Har bir darsdan so‘ng o‘quvchining bilim darajasi real vaqtda yangilanadi.
                         </p>
                       </div>
                     </motion.div>

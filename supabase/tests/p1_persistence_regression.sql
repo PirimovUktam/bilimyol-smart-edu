@@ -12,11 +12,8 @@ $$;
 
 INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
   ('00000000-0000-0000-0000-000000000101', 'p1-student@example.invalid', '{}'),
-  ('00000000-0000-0000-0000-000000000102', 'p1-parent@example.invalid', '{}'),
+  ('00000000-0000-0000-0000-000000000102', 'p1-admin@example.invalid', '{}'),
   ('00000000-0000-0000-0000-000000000103', 'p1-other@example.invalid', '{}');
-SELECT set_config('bilimyol.authorized_role_change', 'true', true);
-UPDATE public.profiles SET role = 'parent' WHERE id = '00000000-0000-0000-0000-000000000102';
-SELECT set_config('bilimyol.authorized_role_change', 'false', true);
 
 INSERT INTO public.questions (
   id, course_id, skill_id, text, options, correct_index, difficulty, explanation, is_placement
@@ -198,24 +195,6 @@ BEGIN
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
 END; $$;
 
--- Parent can see their pending/active links but cannot forge consent.
-RESET ROLE;
-INSERT INTO public.parent_student_links (parent_user_id, link_code, status, expires_at) VALUES
-  ('00000000-0000-0000-0000-000000000102', 'P1ONLY', 'pending', now() + interval '1 hour');
-SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
-SET LOCAL ROLE authenticated;
-SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM public.parent_student_links WHERE link_code = 'P1ONLY'),
-  'parent retains own pending-link read access');
-DO $$ BEGIN
-  BEGIN
-    INSERT INTO public.parent_student_links (parent_user_id, student_user_id, link_code, status)
-      VALUES (auth.uid(), '00000000-0000-0000-0000-000000000101', 'FORGED', 'active');
-    RAISE EXCEPTION 'ASSERT: parent forged child consent';
-  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-END; $$;
-SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000103', true);
-SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.parent_student_links WHERE link_code = 'P1ONLY'),
-  'unrelated student cannot enumerate pending parent codes');
 SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.answer_attempts), 'answer evidence remains user-isolated');
 RESET ROLE;
 

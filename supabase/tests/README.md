@@ -20,6 +20,7 @@ supabase migration up --local
 supabase db lint --local --level error --fail-on error
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/profile_bootstrap_regression.sql
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/p1_persistence_regression.sql
+psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/retired_relationship_absence.sql
 ```
 
 If the database has already applied a different version of one of these
@@ -38,10 +39,12 @@ an automatic reset.
   are not a writable bypass. Catalogue, profile and settings reads have explicit
   API-role privileges rather than depending on default `GRANT ALL`.
 - Placement validation, atomic persistence, idempotency, score read-back,
-  fixed XP, reinforcement score preservation, lesson completion and parent
-  consent boundaries.
+  fixed XP, reinforcement score preservation, lesson completion and derived
+  learner-state access boundaries.
 - Service-role question/generated-content access needed by Edge persistence,
   with client-derived writes and anonymous profile access still forbidden.
+- Forward migration removes retired relationship/invitation tables and RPCs,
+  narrows profiles to student/admin, and preserves learner heartbeat storage.
 
 Also verify the migration chain in both legacy-default-grant and default-revoked
 environments when changing privileges. PostgreSQL-WASM can help verify SQL in

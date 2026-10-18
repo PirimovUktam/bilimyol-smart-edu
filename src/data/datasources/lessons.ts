@@ -260,7 +260,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
         content: 'Quyidagi audio to‘lqinni ko‘zdan kechiring va suhbatdagi asosiy vaqt ko‘rsatkichini eshitib oling.',
         visualModelData: {
           type: 'audio_wave',
-          speakerName: 'Sarah (O‘qituvchi)',
+          speakerName: 'Sarah (Spiker)',
           audioTranscript: 'Excuse me, the university lecture starts at quarter past three in hall B.',
         },
       },

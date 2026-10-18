@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2, GraduationCap, Users, BookOpen, KeyRound } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../core/context/AuthContext';
-import { useMonitoringStore } from '../../app/store/useMonitoringStore';
 import { BilimYolLogo } from '../../presentation/components/BilimYolLogo';
 import { Button } from '../../presentation/components/Button';
 import { Card } from '../../presentation/components/Card';
@@ -17,15 +16,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   onNavigateLogin,
 }) => {
   const { signUp, refreshProfile } = useAuth();
-  const { redeemTeacherInvitationCode } = useMonitoringStore();
 
-  const [role, setRole] = useState<'student' | 'parent' | 'teacher'>('student');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [teacherCode, setTeacherCode] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
@@ -51,11 +47,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
       return;
     }
 
-    if (role === 'teacher' && !teacherCode.trim()) {
-      setErrorMsg('O‘qituvchi sifatida ro‘yxatdan o‘tish uchun tasdiqlash kodini kiritish majburiy.');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       // The server provisions the initial role; form metadata is not authority.
@@ -63,8 +54,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         email.trim(),
         password,
         firstName.trim(),
-        lastName.trim(),
-        role === 'parent' ? 'parent' : 'student'
+        lastName.trim()
       );
 
       if (error) {
@@ -85,31 +75,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         return;
       }
 
-      // 2. If Teacher, perform server-side token validation & role upgrade
-      if (role === 'teacher') {
-        const teacherRes = await redeemTeacherInvitationCode(teacherCode.trim());
-        if (!teacherRes.success) {
-          setErrorMsg(teacherRes.message || 'O‘qituvchi tasdiqlash kodi noto‘g‘ri yoki muddati o‘tgan.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Only the authoritative profile can confirm the upgraded role.
-        const refreshed = await refreshProfile();
-        if (refreshed?.role !== 'teacher') {
-          setErrorMsg('O‘qituvchi roli serverdan tasdiqlanmadi. Qayta tizimga kiring.');
-          return;
-        }
-
-        setSuccessMsg(`Hisob tasdiqlandi (${teacherRes.schoolName || 'O‘qituvchi'}). Yo‘naltirilmoqda...`);
-      } else {
-        const refreshed = await refreshProfile();
-        if (!refreshed) {
-          setErrorMsg('Profilni serverdan yuklab bo‘lmadi. Qayta tizimga kiring.');
-          return;
-        }
-        setSuccessMsg('Hisob muvaffaqiyatli yaratildi! Tizimga yo‘naltirilmoqda...');
+      const refreshed = await refreshProfile();
+      if (!refreshed) {
+        setErrorMsg('Profilni serverdan yuklab bo‘lmadi. Qayta tizimga kiring.');
+        return;
       }
+      setSuccessMsg('Hisob muvaffaqiyatli yaratildi! Tizimga yo‘naltirilmoqda...');
 
       onSuccess();
     } catch (err: unknown) {
@@ -135,7 +106,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
             Hisob yaratish
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            BilimYo‘l platformasida hisob turini tanlang va boshlang
+            BilimYo‘l platformasida o‘quvchi hisobingizni yarating
           </p>
         </div>
 
@@ -148,11 +119,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                 <strong>{confirmationEmail}</strong> manziliga tasdiqlash havolasi yuborildi.
                 Emaildagi havolani oching, so‘ng tizimga kiring.
               </p>
-              {role === 'teacher' && (
-                <p className="text-xs text-slate-500">
-                  O‘qituvchi taklif kodi hali ishlatilmadi. Emailni tasdiqlab, tizimga kirgandan keyin kodni faollashtiring.
-                </p>
-              )}
             </div>
           ) : (
           <form onSubmit={handleRegister} className="space-y-4">
@@ -168,78 +134,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{successMsg}</span>
               </div>
-            )}
-
-            {/* Role Selection */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Hisob turi *
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRole('student')}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold cursor-pointer ${
-                    role === 'student'
-                      ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm ring-1 ring-blue-600'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>O‘quvchi</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setRole('parent')}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold cursor-pointer ${
-                    role === 'parent'
-                      ? 'bg-emerald-50 border-emerald-600 text-emerald-700 shadow-sm ring-1 ring-emerald-600'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <Users className="w-4 h-4" />
-                  <span>Ota-ona</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setRole('teacher')}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-semibold cursor-pointer ${
-                    role === 'teacher'
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-sm ring-1 ring-indigo-600'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  <span>O‘qituvchi</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Teacher Verification Code field if role is teacher */}
-            {role === 'teacher' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2"
-              >
-                <div className="flex items-center gap-2 text-indigo-900 text-xs font-bold">
-                  <KeyRound className="w-4 h-4 text-indigo-600" />
-                  <span>O‘qituvchi Tasdiqlash Kodi *</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Masalan: USTOZ-2026-ALPHA"
-                  value={teacherCode}
-                  onChange={(e) => setTeacherCode(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 bg-white border border-indigo-300 rounded-lg text-xs font-mono uppercase text-indigo-950 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  required
-                />
-                <p className="text-[11px] text-indigo-700">
-                  Maktab ma’muriyati yoki BilimYo‘l markazi tomonidan berilgan maxsus o‘qituvchi kodini kiriting.
-                </p>
-              </motion.div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
