@@ -100,7 +100,7 @@ export const AppRouter: React.FC = () => {
     };
   }, []);
 
-  const { loadCourses, activeCourse, courses } = useCourseStore();
+  const { loadCourses, activeCourse, courses, isLoading: isCourseLoading } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
   const { profile: authProfile, isLoading: isAuthLoading } = useAuth();
@@ -109,14 +109,13 @@ export const AppRouter: React.FC = () => {
 
   useEffect(() => {
     if (!authProfile) return;
-    void loadCourses();
-    void loadProfile();
+    void loadCourses().catch(() => undefined);
+    void loadProfile().catch(() => undefined);
   }, [authProfile, loadCourses, loadProfile]);
 
-  // One-way reconcile: active course follows GENUINE profile changes only.
-  // The initial profile value is a baseline (never reconciled) so it cannot
-  // undo the localStorage-restored course, and the effect only reacts to the
-  // profile value — a reconcile that writes back the same value can never
+  // One-way reconcile: the server profile is allowed to replace a local
+  // storage restore on startup, and later genuine profile changes follow the
+  // same path. A selection writes the same profile value back, so it cannot
   // re-trigger itself (previously this looped math⇄english forever).
   const lastSeenCourseIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -127,12 +126,25 @@ export const AppRouter: React.FC = () => {
       courses.length
     );
     lastSeenCourseIdRef.current = decision.nextLastSeenId;
-    if (!decision.shouldReconcile || !selectedId) return;
+    if (!decision.shouldReconcile || !selectedId || isCourseLoading) return;
     const active = useCourseStore.getState().activeCourse;
     if (active && active.id === selectedId) return;
     if (useCourseStore.getState().courses.length === 0) return;
-    void useCourseStore.getState().selectCourseById(selectedId);
-  }, [learnerProfile?.selectedCourseId, courses.length]);
+    void useCourseStore.getState().selectCourseById(selectedId).catch(() => undefined);
+  }, [learnerProfile?.selectedCourseId, courses.length, isCourseLoading, activeCourse?.id]);
+
+  // A lesson and roadmap belong to one active course. The course store clears
+  // their backing stores on a successful switch; the router must also discard
+  // the route-local lesson id so a stale URL cannot render foreign content.
+  const previousActiveCourseIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const currentCourseId = activeCourse?.id || null;
+    const previousCourseId = previousActiveCourseIdRef.current;
+    if (previousCourseId !== undefined && previousCourseId !== currentCourseId) {
+      setActiveLessonId(null);
+    }
+    previousActiveCourseIdRef.current = currentCourseId;
+  }, [activeCourse?.id]);
 
   useEffect(() => {
     // Start active learning tracker if user is student

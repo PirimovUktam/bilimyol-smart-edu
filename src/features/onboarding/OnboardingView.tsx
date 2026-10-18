@@ -21,19 +21,40 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
   const [dailyMinutes, setDailyMinutes] = useState<DailyTimeCommitment>(15);
   const [initialLevel, setInitialLevel] = useState<InitialLevel>('intermediate');
 
-  const isMath = activeCourse?.subject === 'mathematics';
-
-  const goalOptions = isMath
-    ? [
+  const goalOptions = (() => {
+    switch (activeCourse?.subject) {
+      case 'mathematics':
+        return [
         { id: 'mastery' as OnboardingGoal, title: 'Mavzuni mustahkamlash', desc: 'Asosiy formulalar va tushunchalarni chuqurroq o‘zlashtirish' },
         { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'DTM va milliy sertifikat testlariga qat’iy tayyorgarlik' },
         { id: 'skills_boost' as OnboardingGoal, title: 'Bilim darajasini oshirish', desc: 'Mantiqiy fikrlash va masalalar yechish tezligini oshirish' },
-      ]
-    : [
+        ];
+      case 'english':
+        return [
         { id: 'mastery' as OnboardingGoal, title: 'Umumiy ingliz tilini yaxshilash', desc: 'Kundalik suhbat va erkin fikr bayon qilish' },
         { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'IELTS / CEFR imtihonlariga yo‘naltirilgan intensiv reja' },
         { id: 'skills_boost' as OnboardingGoal, title: 'Til ko‘nikmalarini rivojlantirish', desc: 'Listening va Reading ko‘nikmalarini mustahkamlash' },
       ];
+      case 'it':
+        return [
+          { id: 'mastery' as OnboardingGoal, title: 'Dasturlash asoslarini egallash', desc: 'Kod yozish, sintaksis va amaliy loyihalar bilan mustahkamlash' },
+          { id: 'exam_prep' as OnboardingGoal, title: 'Texnik suhbatga tayyorlanish', desc: 'Algoritmlar va muammolarni yechish ko‘nikmalarini sinash' },
+          { id: 'skills_boost' as OnboardingGoal, title: 'Amaliy loyiha yaratish', desc: 'Veb, avtomatlashtirish yoki dasturiy loyiha uchun poydevor qurish' },
+        ];
+      case 'logic':
+        return [
+          { id: 'mastery' as OnboardingGoal, title: 'Mantiqiy fikrlashni mustahkamlash', desc: 'Deduksiya va xulosalash usullarini chuqurroq o‘rganish' },
+          { id: 'exam_prep' as OnboardingGoal, title: 'Test va olimpiadaga tayyorlanish', desc: 'Vaqt chegarasida murakkab boshqotirmalarni yechish' },
+          { id: 'skills_boost' as OnboardingGoal, title: 'Tezkor tahlilni rivojlantirish', desc: 'Qonuniyatlar, zanjirlar va strategik fikrlashni mashq qilish' },
+        ];
+      default:
+        return [
+          { id: 'mastery' as OnboardingGoal, title: 'Asosiy mavzularni o‘zlashtirish', desc: 'Tanlangan kursning muhim tushunchalarini izchil o‘rganish' },
+          { id: 'exam_prep' as OnboardingGoal, title: 'Baholashga tayyorlanish', desc: 'Kurs bo‘yicha diagnostika va amaliy topshiriqlarni bajarish' },
+          { id: 'skills_boost' as OnboardingGoal, title: 'Amaliy ko‘nikmalarni rivojlantirish', desc: 'Bilimni mashqlar va real vazifalarda qo‘llash' },
+        ];
+    }
+  })();
 
   const timeOptions: { value: DailyTimeCommitment; label: string; desc: string }[] = [
     { value: 15, label: '15 daqiqa', desc: 'Engil va barqaror kunlik odat' },

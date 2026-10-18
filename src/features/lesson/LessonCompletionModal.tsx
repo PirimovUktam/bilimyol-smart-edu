@@ -27,7 +27,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   scorePercentage,
   correctCount,
   totalCount,
-  courseTitle = 'Matematika',
+  courseTitle = 'Tanlangan fan',
   lessonTitle = 'Chiziqli tenglamalar',
   skillProgressList = [],
   aiRecommendation = 'Siz ushbu dars mavzusini yaxshi o‘zlashtirdingiz. Keyingi mavzularni o‘rganishni tavsiya qilamiz.',

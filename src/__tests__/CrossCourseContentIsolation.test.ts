@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -13,8 +13,9 @@ import {
   ACTIVE_COURSE_STORAGE_KEY,
 } from '../app/store/useCourseStore';
 import { useLearnerStore } from '../app/store/useLearnerStore';
+import { useRoadmapStore } from '../app/store/useRoadmapStore';
 import { useLessonStore } from '../app/store/useLessonStore';
-import { mapCourseSubject } from '../data/repositories/SupabaseCourseRepository';
+import { mapCourseRow, mapCourseSubject, supabaseCourseRepository } from '../data/repositories/SupabaseCourseRepository';
 import { resolveLessonCourseId } from '../data/repositories/SupabaseLearnerRepository';
 import { supabaseLearnerRepository } from '../data/repositories/SupabaseLearnerRepository';
 import { deriveReinforcementNodeId } from '../features/reinforcement/reinforcementNodeId';
@@ -39,13 +40,19 @@ const storageMap = new Map<string, string>();
 
 const resetStores = () => {
   storageMap.clear();
-  useCourseStore.setState({ courses: [], activeCourse: null, activeCourseSkills: [], isLoading: false });
+  useCourseStore.setState({ courses: [], activeCourse: null, activeCourseSkills: [], isLoading: false, error: null });
   useLearnerStore.setState({ profile: null, isLoading: false });
+  useRoadmapStore.getState().clearSession();
+  useLessonStore.getState().clearSession();
 };
 
 describe('Cross-course content isolation regression', () => {
   beforeEach(() => {
     resetStores();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   // -------------------------------------------------------------------------
@@ -59,7 +66,7 @@ describe('Cross-course content isolation regression', () => {
       ];
       expect(resolveInitialCourse(courses, 'course_math_01')?.id).toBe('course_math_01');
       expect(resolveInitialCourse(courses, null)?.id).toBe('course_eng_01');
-      expect(resolveInitialCourse(courses, 'course_missing')?.id).toBe('course_eng_01');
+      expect(resolveInitialCourse(courses, 'course_missing')).toBeNull();
       expect(resolveInitialCourse([], 'course_math_01')).toBeNull();
     });
 
@@ -73,6 +80,73 @@ describe('Cross-course content isolation regression', () => {
       const repoProfile = await supabaseLearnerRepository.getProfile();
       expect(repoProfile.selectedCourseId).toBe('course_eng_01');
       expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_eng_01');
+    });
+
+    it('rejects an unknown id without falling back to the first course', async () => {
+      await useCourseStore.getState().loadCourses();
+      await useCourseStore.getState().selectCourseById('course_eng_01');
+
+      await expect(useCourseStore.getState().selectCourseById('course_does_not_exist')).rejects.toThrow(
+        'Kurs topilmadi'
+      );
+      expect(useCourseStore.getState().activeCourse?.id).toBe('course_eng_01');
+      expect(useCourseStore.getState().activeCourseSkills.map((skill) => skill.code)).toContain('ENG-LIST');
+      expect(storageMap.get(ACTIVE_COURSE_STORAGE_KEY)).toBe('course_eng_01');
+      expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_eng_01');
+      expect(useCourseStore.getState().error).toContain('course_does_not_exist');
+    });
+
+    it('uses the learner profile selection during startup reconciliation', async () => {
+      storageMap.set(ACTIVE_COURSE_STORAGE_KEY, 'course_it');
+      useLearnerStore.setState({ profile: { selectedCourseId: 'course_eng_01' } as never });
+
+      await useCourseStore.getState().loadCourses();
+
+      expect(useCourseStore.getState().activeCourse?.id).toBe('course_eng_01');
+      expect(storageMap.get(ACTIVE_COURSE_STORAGE_KEY)).toBe('course_eng_01');
+    });
+
+    it('latest rapid selection wins and stale skill responses cannot overwrite it', async () => {
+      await useCourseStore.getState().loadCourses();
+      const originalGetSkills = supabaseCourseRepository.getSkillsByCourseId.bind(supabaseCourseRepository);
+      vi.spyOn(supabaseCourseRepository, 'getSkillsByCourseId').mockImplementation(async (courseId: string) => {
+        if (courseId === 'course_eng_01') {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+        }
+        return originalGetSkills(courseId);
+      });
+
+      const englishSelection = useCourseStore.getState().selectCourseById('course_eng_01');
+      const itSelection = useCourseStore.getState().selectCourseById('course_it');
+      await Promise.all([englishSelection, itSelection]);
+
+      expect(useCourseStore.getState().activeCourse?.id).toBe('course_it');
+      expect(useCourseStore.getState().activeCourseSkills.every((skill) => skill.courseId === 'course_it')).toBe(true);
+      expect(storageMap.get(ACTIVE_COURSE_STORAGE_KEY)).toBe('course_it');
+      expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_it');
+    });
+
+    it('keeps the canonical course and skills aligned across every available subject', async () => {
+      await useCourseStore.getState().loadCourses();
+
+      for (const courseId of ['course_math_01', 'course_eng_01', 'course_it', 'course_logic']) {
+        await useCourseStore.getState().selectCourseById(courseId);
+        expect(useCourseStore.getState().activeCourse?.id).toBe(courseId);
+        expect(useCourseStore.getState().activeCourseSkills.every((skill) => skill.courseId === courseId)).toBe(true);
+        expect(useLearnerStore.getState().profile?.selectedCourseId).toBe(courseId);
+      }
+    });
+
+    it('invalidates roadmap and lesson state when the canonical course changes', async () => {
+      await useCourseStore.getState().loadCourses();
+      useCourseStore.setState({ activeCourse: (await supabaseCourseRepository.getCourseById('course_math_01')) });
+      useRoadmapStore.setState({ roadmap: { courseId: 'course_math_01', nodes: [] } as never });
+      useLessonStore.setState({ currentLesson: { courseId: 'course_math_01' } as never });
+
+      await useCourseStore.getState().selectCourseById('course_eng_01');
+
+      expect(useRoadmapStore.getState().roadmap).toBeNull();
+      expect(useLessonStore.getState().currentLesson).toBeNull();
     });
 
     it('reload restores the previously selected course instead of courses[0]', async () => {
@@ -165,6 +239,18 @@ describe('Cross-course content isolation regression', () => {
   // RC3: subject mapping from DB column
   // -------------------------------------------------------------------------
   describe('course subject mapping', () => {
+    it('keeps Supabase catalog rows honest when they have no lesson relation', () => {
+      const course = mapCourseRow({
+        id: 'course_custom_1',
+        title: 'Custom course',
+        subject: 'english',
+      });
+
+      expect(course.subject).toBe('english');
+      expect(course.lessons).toEqual([]);
+      expect(course.skills).toEqual([]);
+    });
+
     it('uses the DB subject column as the source of truth', () => {
       expect(mapCourseSubject({ id: 'course_custom_1', subject: 'english' })).toBe('english');
       expect(mapCourseSubject({ id: 'course_custom_1', subject: 'it' })).toBe('it');
@@ -178,6 +264,8 @@ describe('Cross-course content isolation regression', () => {
       expect(mapCourseSubject({ id: 'course_logic', subject: null })).toBe('logic');
       expect(mapCourseSubject({ id: 'course_eng_01', subject: null })).toBe('english');
       expect(mapCourseSubject({ id: 'course_math_01', subject: null })).toBe('mathematics');
+      expect(mapCourseSubject({ id: 'course_physics_01', subject: null })).toBe('other');
+      expect(mapCourseSubject({ id: 'course_custom_1', subject: 'physics' })).toBe('other');
     });
   });
 
@@ -445,9 +533,9 @@ describe('Cross-course content isolation regression', () => {
   // that froze the app on course selection — caught by the E2E watchdog).
   // -------------------------------------------------------------------------
   describe('course reconciliation is one-way and terminating', () => {
-    it('the first profile value after courses load only sets the baseline', () => {
+    it('the first profile value after courses load requests startup reconciliation', () => {
       const d = decideCourseReconciliation(null, 'course_math_01', 4);
-      expect(d.shouldReconcile).toBe(false);
+      expect(d.shouldReconcile).toBe(true);
       expect(d.nextLastSeenId).toBe('course_math_01');
     });
 
@@ -497,15 +585,21 @@ describe('Cross-course content isolation regression', () => {
           useCourseStore.getState().courses.length
         );
         lastSeen = d.nextLastSeenId;
-        if (d.shouldReconcile && profileId) {
+        if (
+          d.shouldReconcile &&
+          profileId &&
+          useCourseStore.getState().activeCourse?.id !== profileId
+        ) {
           reconciles += 1;
           return profileId;
         }
         return null;
       };
 
-      // Baseline: initial profile value (default math) must NOT reconcile.
-      expect(runEffect()).toBeNull();
+      // The first profile value may be different from the local restore; the
+      // router reconciles it once, then the same value becomes quiescent.
+      const initialTarget = runEffect();
+      if (initialTarget) await useCourseStore.getState().selectCourseById(initialTarget);
 
       // User picks English exactly like CourseSelectionView.handleChoose does.
       await useCourseStore.getState().selectCourseById('course_eng_01');
@@ -515,11 +609,11 @@ describe('Cross-course content isolation regression', () => {
       // The effect reacting to that profile change must settle immediately.
       const target = runEffect();
       if (target) await useCourseStore.getState().selectCourseById(target);
-      expect(reconciles).toBeLessThanOrEqual(1);
+      expect(reconciles).toBeLessThanOrEqual(2);
 
       // And no further profile changes may appear out of thin air.
       expect(runEffect()).toBeNull();
-      expect(reconciles).toBeLessThanOrEqual(1);
+      expect(reconciles).toBeLessThanOrEqual(2);
       expect(useCourseStore.getState().activeCourse?.id).toBe('course_eng_01');
       expect(useLearnerStore.getState().profile?.selectedCourseId).toBe('course_eng_01');
     });

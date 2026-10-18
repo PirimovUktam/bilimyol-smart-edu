@@ -9,6 +9,12 @@ import {
   ArrowRight,
   Compass,
   Trophy,
+  Brain,
+  Calculator,
+  Code2,
+  Headphones,
+  BookOpen,
+  type LucideIcon,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
@@ -33,7 +39,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   onOpenRoadmap,
   onOpenKnowledgeMap,
 }) => {
-  const { activeCourse } = useCourseStore();
+  const { activeCourse, courses } = useCourseStore();
   const { profile } = useLearnerStore();
   const [timeframe, setTimeframe] = useState<'week' | 'month'>('week');
   const [activity, setActivity] = useState<DailyActivitySummary[]>([]);
@@ -96,15 +102,23 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   ];
   const earnedCount = badgeDefs.filter((b) => b.earned).length;
 
-  const subjectProgress = [
-    { id: 'course_math_01', name: 'Matematika', color: 'bg-indigo-600', icon: '📐' },
-    { id: 'course_eng_01', name: 'Ingliz tili', color: 'bg-rose-500', icon: '🇬🇧' },
-    { id: 'course_it', name: 'IT & Algoritmlar', color: 'bg-cyan-500', icon: '💻' },
-    { id: 'course_logic', name: 'Mantiqiy fikrlash', color: 'bg-amber-500', icon: '🧩' },
-  ].map((meta) => {
-    const courseScores = profile?.scoresByCourse?.[meta.id];
+  const courseIcons: Record<string, LucideIcon> = {
+    Calculator,
+    Headphones,
+    Code2,
+    Brain,
+    BookOpen,
+  };
+  const subjectProgress = courses.map((course) => {
+    const courseScores = profile?.scoresByCourse?.[course.id];
     const score = courseScores ? SkillScoringEngine.computeOverallScore(courseScores) : null;
-    return { ...meta, score };
+    return {
+      id: course.id,
+      name: course.title,
+      icon: courseIcons[course.iconName] || BookOpen,
+      color: course.primaryColorHex || course.primaryColor || '#4F46E5',
+      score,
+    };
   });
 
   return (
@@ -334,11 +348,17 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
           </div>
 
           <div className="space-y-4 pt-1">
-            {subjectProgress.map((subj, idx) => (
-              <div key={idx} className="space-y-1.5">
+            {subjectProgress.length === 0 ? (
+              <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500">
+                Hozircha fanlar bo‘yicha ma’lumot mavjud emas.
+              </p>
+            ) : subjectProgress.map((subj, idx) => {
+              const Icon = subj.icon;
+              return (
+                <div key={subj.id} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                   <span className="flex items-center gap-2">
-                    <span>{subj.icon}</span>
+                      <Icon className="h-4 w-4 text-indigo-600" aria-hidden="true" />
                     <span>{subj.name}</span>
                   </span>
                   <span className="font-extrabold text-slate-900">
@@ -350,11 +370,13 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                     initial={{ width: 0 }}
                     animate={{ width: `${subj.score ?? 0}%` }}
                     transition={{ duration: 0.8, delay: idx * 0.1 }}
-                    className={`h-full rounded-full ${subj.color}`}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: subj.color }}
                   />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 

@@ -1,144 +1,64 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Calculator, Headphones, ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
-import { useLearnerStore } from '@/app/store/useLearnerStore';
-import { Button } from '@/presentation/components/Button';
-import { Badge } from '@/presentation/components/Badge';
+import { SubjectSelector } from './SubjectSelector';
 
 interface CourseSelectionViewProps {
   onSelectCourse: (courseId: string) => void;
 }
 
 export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSelectCourse }) => {
-  const { courses, selectCourseById } = useCourseStore();
-  const { setSelectedCourse } = useLearnerStore();
+  const {
+    courses,
+    activeCourse,
+    selectCourseById,
+    isLoading,
+    error,
+  } = useCourseStore();
 
   const handleChoose = async (courseId: string) => {
+    try {
     await selectCourseById(courseId);
-    await setSelectedCourse(courseId);
     onSelectCourse(courseId);
+    } catch {
+      // The store exposes the canonical error to the selector; keep the view mounted
+      // so the learner can choose another loaded course or retry.
+    }
   };
 
   return (
-    <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="max-w-4xl w-full text-center space-y-4 mb-10"
-      >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Haqiqiy Moslashuvchan Ta’lim Tizimi</span>
+    <div className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50/60 via-white to-indigo-50/40 px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
+        <header className="mb-10 max-w-3xl space-y-4 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white px-3 py-1 text-xs font-bold text-blue-700 shadow-sm">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{courses.length > 0 ? `${courses.length} ta mavjud kurs` : 'Kurslar katalogi'}</span>
         </div>
-
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl md:text-5xl">
           O‘rganishni istagan fanni tanlang
         </h1>
-        <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
-          BilimYo‘l sun'iy intellekti darajangizni aniqlaydi va sizga individual, qadamma-qadam o‘quv traektoriyasini tuzib beradi.
-        </p>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
-        {courses.filter((c) => c.id === 'course_math_01' || c.id === 'course_eng_01').map((course, index) => {
-          const isMath = course.subject === 'mathematics';
-          const Icon = isMath ? Calculator : Headphones;
-          const iconBg = isMath
-            ? 'bg-blue-100 text-blue-700'
-            : 'bg-rose-100 text-rose-600';
-
-          return (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className={`group relative bg-white border-2 rounded-3xl p-7 shadow-sm transition-all duration-300 flex flex-col justify-between ${
-                isMath
-                  ? 'border-blue-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1'
-                  : 'border-rose-200 hover:border-rose-500 hover:shadow-xl hover:-translate-y-1'
-              }`}
-            >
-              <div className="space-y-5">
-                <div className="flex items-start justify-between">
-                  <div className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center shadow-inner`}>
-                    <Icon className="w-7 h-7" />
-                  </div>
-                  <Badge variant={isMath ? 'blue' : 'rose'} size="sm">
-                    Faol Kurs (Full Adaptive)
-                  </Badge>
-                </div>
-
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    {course.title}
-                  </h2>
-                  <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-                    {course.description}
+          <p className="mx-auto max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
+            Sizga mavjud kurslardan birini tanlang. BilimYo‘l tanlovingiz asosida individual o‘quv yo‘lini tayyorlaydi.
                   </p>
-                </div>
+        </header>
 
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
-                    Asosiy ko‘nikmalar:
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {isMath ? (
-                      <>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Algebra asoslari
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Tenglamalar
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Funksiyalar
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> Grafiklar
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Vocabulary
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Grammar
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Listening
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-500" /> Reading
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
+        <section className="w-full" aria-labelledby="course-selection-heading">
+          <h2 id="course-selection-heading" className="sr-only">Mavjud kurslar</h2>
+          <SubjectSelector
+            courses={courses}
+            selectedCourseId={activeCourse?.id}
+            isLoading={isLoading}
+            error={error}
+            onSelect={handleChoose}
+            ariaLabel="Mavjud kurslar"
+            className="w-full"
+          />
+        </section>
 
-              <div className="mt-8 pt-4">
-                <Button
-                  onClick={() => handleChoose(course.id)}
-                  variant={isMath ? 'primary' : 'coral'}
-                  size="lg"
-                  className="w-full justify-between group-hover:shadow-lg font-bold"
-                  rightIcon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-                >
-                  Kursni Tanlash va Boshlash
-                </Button>
-              </div>
-            </motion.div>
-          );
-        })}
+        <div className="mt-12 flex max-w-xl items-center gap-2 text-center text-xs font-semibold text-slate-500">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <span>Natijalar va o‘quv yo‘li faqat tanlangan kursning mavjud ma’lumotlari asosida hisoblanadi.</span>
       </div>
-
-      <div className="mt-12 flex items-center gap-2 text-xs text-slate-500">
-        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-        <span>Barcha natijalar va o‘quv yo‘li real statistik hisob-kitoblarga asoslangan</span>
       </div>
     </div>
   );

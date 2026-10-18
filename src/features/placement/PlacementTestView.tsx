@@ -143,7 +143,7 @@ export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete
           <div>
             <div className="flex items-center gap-2">
               <Badge variant="blue" size="sm">
-                Adaptiv Diagnostika • {activeCourse?.title || 'Matematika'}
+                 Adaptiv Diagnostika • {activeCourse?.title || 'Tanlangan fan'}
               </Badge>
               <Badge variant="slate" size="sm">
                 {getDifficultyLabel(currentQuestion.difficulty)}

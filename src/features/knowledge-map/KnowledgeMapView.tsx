@@ -4,7 +4,7 @@ import { Compass, AlertTriangle, ArrowRight, Map, ShieldCheck } from 'lucide-rea
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { GetKnowledgeMapUseCase, KnowledgeMapData } from '@/domain/usecases/GetKnowledgeMapUseCase';
-import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
+import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
@@ -19,15 +19,53 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
   const { activeCourse, activeCourseSkills } = useCourseStore();
   const { profile } = useLearnerStore();
   const [mapData, setMapData] = useState<KnowledgeMapData | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    if (activeCourse) {
-      const useCase = new GetKnowledgeMapUseCase(inMemoryCourseRepository, supabaseLearnerRepository);
-      useCase.execute(activeCourse.id).then(setMapData);
+    const courseId = activeCourse?.id;
+    if (!courseId) {
+      setMapData(null);
+      setMapError(null);
+      return;
     }
-  }, [activeCourse, profile]);
 
-  if (!mapData || !activeCourse) {
+    let cancelled = false;
+    setMapData(null);
+    setMapError(null);
+    const useCase = new GetKnowledgeMapUseCase(supabaseCourseRepository, supabaseLearnerRepository);
+    void useCase.execute(courseId).then((nextMap) => {
+      if (!cancelled) setMapData(nextMap);
+    }).catch((err) => {
+      if (!cancelled) {
+        setMapData(null);
+        setMapError(err instanceof Error ? err.message : 'Bilim xaritasi yuklanmadi.');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCourse?.id, profile, reloadKey]);
+
+  if (mapError && activeCourse) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <Card className="max-w-md w-full p-7 text-center border-rose-200 bg-rose-50/50 space-y-4">
+          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Bilim xaritasi yuklanmadi</h2>
+            <p role="alert" className="text-sm text-slate-600 mt-1">{mapError}</p>
+          </div>
+          <Button variant="primary" onClick={() => setReloadKey((key) => key + 1)}>
+            Qayta urinish
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!mapData || !activeCourse || mapData.courseId !== activeCourse.id) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />

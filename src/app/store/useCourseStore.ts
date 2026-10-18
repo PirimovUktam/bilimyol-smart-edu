@@ -3,6 +3,9 @@ import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
 import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useLessonStore } from '@/app/store/useLessonStore';
+import { usePlacementStore } from '@/app/store/usePlacementStore';
 
 /**
  * Single source of truth for the active course:
@@ -31,9 +34,9 @@ const persistCourseId = (courseId: string): void => {
 };
 
 export const resolveInitialCourse = (courses: Course[], preferredId: string | null): Course | null => {
-  if (preferredId) {
+  if (preferredId !== null) {
     const preferred = courses.find((c) => c.id === preferredId);
-    if (preferred) return preferred;
+    return preferred || null;
   }
   return courses[0] || null;
 };
@@ -43,10 +46,20 @@ interface CourseState {
   activeCourse: Course | null;
   activeCourseSkills: Skill[];
   isLoading: boolean;
+  error: string | null;
   loadCourses: () => Promise<void>;
   selectCourseById: (courseId: string) => Promise<void>;
   clearSession: () => void;
 }
+
+const courseSelectionError = (courseId: string): Error =>
+  new Error(`Kurs topilmadi: "${courseId}". Mavjud kurslardan birini tanlang.`);
+
+const invalidateCourseScopedState = (): void => {
+  useRoadmapStore.getState().clearSession();
+  useLessonStore.getState().clearSession();
+  usePlacementStore.getState().resetPlacement();
+};
 
 export const useCourseStore = create<CourseState>((set, get) => {
   let currentOperation: object | null = null;
@@ -56,28 +69,36 @@ export const useCourseStore = create<CourseState>((set, get) => {
     activeCourse: null,
     activeCourseSkills: [],
     isLoading: false,
+    error: null,
 
     clearSession: () => {
       currentOperation = null;
-      set({ courses: [], activeCourse: null, activeCourseSkills: [], isLoading: false });
+      set({ courses: [], activeCourse: null, activeCourseSkills: [], isLoading: false, error: null });
     },
 
     loadCourses: async () => {
       const operation = {};
       currentOperation = operation;
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
       if (currentOperation !== operation) return;
       try {
         const courses = await supabaseCourseRepository.getAllCourses();
         if (currentOperation !== operation) return;
-        const preferredId = readPersistedCourseId();
+        // The server profile is authoritative once it is available. Local
+        // storage is only the reload/offline fallback while the profile loads.
+        const preferredId = useLearnerStore.getState().profile?.selectedCourseId || readPersistedCourseId();
         const activeCourse = resolveInitialCourse(courses, preferredId);
         const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
         if (currentOperation !== operation) return;
-        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
+        const previousCourseId = get().activeCourse?.id || null;
+        if (previousCourseId !== (activeCourse?.id || null) && previousCourseId !== null) {
+          invalidateCourseScopedState();
+        }
+        if (activeCourse) persistCourseId(activeCourse.id);
+        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false, error: null });
       } catch (err) {
         if (currentOperation !== operation) return;
-        set({ isLoading: false });
+        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kurslarni yuklashda xatolik yuz berdi.' });
         throw err;
       }
     },
@@ -85,25 +106,36 @@ export const useCourseStore = create<CourseState>((set, get) => {
     selectCourseById: async (courseId: string) => {
       const operation = {};
       currentOperation = operation;
+      set({ isLoading: true, error: null });
       try {
         const courses = get().courses.length > 0 ? get().courses : await supabaseCourseRepository.getAllCourses();
         if (currentOperation !== operation) return;
-        const activeCourse = courses.find((c) => c.id === courseId) || courses[0];
+        // A selection is valid only when it resolves to the exact canonical
+        // course returned by the repository. Never silently substitute the
+        // first course (which used to turn unknown ids into mathematics).
+        const activeCourse = courses.find((course) => course.id === courseId);
         if (!activeCourse) {
-          set({ isLoading: false });
-          return;
+          const error = courseSelectionError(courseId);
+          set({ courses, isLoading: false, error: error.message });
+          throw error;
         }
         const skills = await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id);
         if (currentOperation !== operation) return;
-        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false });
+
+        // Persist before committing the new active course. This keeps a
+        // profile read that is already in flight from reverting a newer user
+        // choice; the learner store also drops stale writes by operation.
+        await useLearnerStore.getState().setSelectedCourse(activeCourse.id, () => currentOperation === operation);
         if (currentOperation !== operation) return;
         persistCourseId(activeCourse.id);
         if (currentOperation !== operation) return;
-        await useLearnerStore.getState().setSelectedCourse(activeCourse.id, () => currentOperation === operation);
-        if (currentOperation !== operation) return;
+
+        const previousCourseId = get().activeCourse?.id || null;
+        if (previousCourseId !== activeCourse.id) invalidateCourseScopedState();
+        set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false, error: null });
       } catch (err) {
         if (currentOperation !== operation) return;
-        set({ isLoading: false });
+        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kursni tanlashda xatolik yuz berdi.' });
         throw err;
       }
     },

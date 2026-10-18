@@ -7,6 +7,7 @@ import { SEED_COURSES } from '../datasources/courses';
 import { SEED_SKILLS } from '../datasources/skills';
 import { SEED_LESSONS } from '../datasources/lessons';
 import { PLACEMENT_QUESTIONS } from '../datasources/questions';
+import { mapCourseSubject } from '@/data/repositories/SupabaseCourseRepository';
 
 export interface AdminLessonRecord extends Lesson {
   isPublished: boolean;
@@ -60,7 +61,7 @@ export class AdminContentService {
       return data.map((c) => ({
         id: c.id,
         title: c.title,
-        subject: (c.id.includes('eng') ? 'english' : 'mathematics') as 'english' | 'mathematics',
+        subject: mapCourseSubject({ id: c.id, subject: c.subject }),
         description: c.description || '',
         iconName: c.icon_name || 'BookOpen',
         primaryColor: c.primary_color_hex || '#4F46E5',
@@ -82,7 +83,7 @@ export class AdminContentService {
     const newCourse: Course = {
       id,
       title: course.title || 'Yangi Fan',
-      subject: course.subject || 'mathematics',
+      subject: course.subject || 'other',
       description: course.description || '',
       iconName: course.iconName || 'BookOpen',
       primaryColor: course.primaryColor || course.primaryColorHex || '#4F46E5',
