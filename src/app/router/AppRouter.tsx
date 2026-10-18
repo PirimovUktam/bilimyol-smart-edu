@@ -105,12 +105,13 @@ export const AppRouter: React.FC = () => {
   const { loadCourses, activeCourse, courses, isLoading: isCourseLoading } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();
-  const { profile: authProfile, session, isLoading: isAuthLoading } = useAuth();
+  const { profile: authProfile, session, isDemoMode, isLoading: isAuthLoading } = useAuth();
   const hasUsableAuth = isProtectedAuthReady(
     isSupabaseConfigured,
     import.meta.env.PROD,
     session,
     authProfile,
+    isDemoMode,
   );
 
   const userRole = authProfile?.role || 'student';

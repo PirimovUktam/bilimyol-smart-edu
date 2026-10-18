@@ -14,6 +14,7 @@ import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { GeminiAITutorService, GeminiAIServiceError } from '@/data/services/GeminiAITutorService';
 import { isSupabaseConfigured } from '@/core/config/supabase';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 
 interface Message {
@@ -45,7 +46,7 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
   const [isTyping, setIsTyping] = useState(false);
   const [lastFailedPrompt, setLastFailedPrompt] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<'unknown' | 'ready' | 'fallback' | 'unavailable'>(
-    isSupabaseConfigured ? 'unknown' : 'fallback'
+    isSupabaseConfigured && !isDemoRuntimeActive() ? 'unknown' : 'fallback'
   );
   const mountedRef = useRef(true);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);

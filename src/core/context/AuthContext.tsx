@@ -6,7 +6,7 @@ import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourse
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
-import { canUseLocalDemoMode } from '@/core/utils/authGuards';
+import { setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
 export interface UserProfile {
   id: string;
@@ -43,6 +43,14 @@ const defaultDemoProfile: UserProfile = {
 
 const isSupportedRole = (role: unknown): role is NonNullable<UserProfile['role']> =>
   role === 'student' || role === 'admin';
+
+interface ProfileFetchOptions {
+  provisionIfMissing?: {
+    firstName: string;
+    lastName: string;
+  };
+  throwOnError?: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -81,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearAuthState = useCallback(() => {
     invalidatePendingAuth();
     activeUserId.current = null;
+    setDemoRuntimeActive(false);
     clearSessionStores();
     setUser(null);
     setSession(null);
@@ -93,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const request = ++authAction.current;
     authRevision.current++;
     profileRequest.current++;
+    setDemoRuntimeActive(false);
     pendingAuth.current = { request, email: email.toLowerCase().trim() };
     authOperations.current.set(request, pendingAuth.current.email);
     // A previous account's data must not render while another login is pending.
@@ -109,7 +119,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const staleActionError = () => new Error('Sessiya o‘zgardi. Qayta urinib ko‘ring.');
 
-  const fetchProfile = useCallback(async (userId: string, email: string) => {
+  const fetchProfile = useCallback(async (
+    userId: string,
+    email: string,
+    options: ProfileFetchOptions = {},
+  ) => {
     const request = ++profileRequest.current;
     const isCurrent = () => request === profileRequest.current;
     if (!isSupabaseConfigured) {
@@ -128,15 +142,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // Query authoritative public.profiles
-      const { data, error } = await supabase
+      // Query authoritative public.profiles. Signup may recover from a missing
+      // trigger-created row, but the role is always read from the database.
+      let { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, display_name, email, avatar_url, role')
         .eq('id', userId)
         .maybeSingle();
 
       if (!isCurrent()) return null;
-      if (error) throw error;
+      if (error) {
+        throw new Error('Profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+      }
+
+      if (!data && options.provisionIfMissing) {
+        const firstName = options.provisionIfMissing.firstName.trim()
+          || (email ? email.split('@')[0] : 'Foydalanuvchi');
+        const lastName = options.provisionIfMissing.lastName.trim();
+        const displayName = lastName ? `${firstName} ${lastName}` : firstName;
+
+        // The trigger is authoritative for role. This fallback deliberately
+        // inserts only self-owned, non-privileged profile columns.
+        const { error: provisionError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            display_name: displayName,
+            email: email || '',
+          });
+
+        if (provisionError) {
+          throw new Error('Profilni yaratib bo‘lmadi. Qayta urinib ko‘ring.');
+        }
+
+        const { data: provisioned, error: readError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, display_name, email, avatar_url, role')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (readError) {
+          throw new Error('Yaratilgan profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+        }
+        if (!isCurrent()) return null;
+        data = provisioned;
+      }
 
       if (data && data.id === userId && ['student', 'admin'].includes(data.role)) {
         // Authoritative role from public.profiles
@@ -157,12 +209,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Missing/unavailable DB role is not permission to trust signup metadata.
-      throw new Error('Profil serverda topilmadi. Qayta urinib ko‘ring.');
+      throw new Error(options.provisionIfMissing
+        ? 'Profil serverda yaratildi, ammo authoritative roli o‘qilmadi. Qayta urinib ko‘ring.'
+        : 'Profil serverda topilmadi. Qayta urinib ko‘ring.');
     } catch (err) {
       if (!isCurrent()) return null;
       console.warn('Error resolving authenticated profile from Supabase:', err);
       setProfile(null);
       localStorage.removeItem('bilimyol_auth_session');
+      if (options.throwOnError) {
+        throw err instanceof Error
+          ? err
+          : new Error('Profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+      }
       return null;
     } finally {
       if (isCurrent()) setIsLoading(false);
@@ -206,6 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (import.meta.env.PROD) {
             console.error('[CONFIG] Production missing Supabase configuration: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
             if (mounted) {
+              setDemoRuntimeActive(false);
               setProfile(null);
               setIsDemoMode(false);
               setIsLoading(false);
@@ -214,6 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           console.warn('[AUTH] Running in local development fallback mode.');
+          setDemoRuntimeActive(false);
           const cached = localStorage.getItem('bilimyol_auth_session');
           if (cached) {
             try {
@@ -221,21 +282,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const isExplicitDemo = Boolean(parsed?.isDemoMode);
               const isDefaultDemo = parsed?.profile?.id === defaultDemoProfile.id;
               if (mounted && parsed?.profile && isSupportedRole(parsed.profile.role) && (!isDefaultDemo || isExplicitDemo)) {
+                setDemoRuntimeActive(isExplicitDemo);
                 setProfile(parsed.profile);
                 setIsDemoMode(isExplicitDemo);
               } else if (mounted) {
+                setDemoRuntimeActive(false);
                 setProfile(null);
                 setIsDemoMode(false);
                 localStorage.removeItem('bilimyol_auth_session');
               }
             } catch {
               if (mounted) {
+                setDemoRuntimeActive(false);
                 setProfile(null);
                 setIsDemoMode(false);
               }
             }
           } else {
             if (mounted) {
+              setDemoRuntimeActive(false);
               setProfile(null);
               setIsDemoMode(false);
             }
@@ -252,17 +317,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data.session?.user) {
             await fetchProfile(data.session.user.id, data.session.user.email ?? '');
           } else {
-            // A configured backend is authoritative. Never restore a cached
-            // demo/profile without a real Supabase session.
+            // A configured backend is authoritative for real accounts. An
+            // explicit bundled demo session is the only session allowed to
+            // run without Supabase auth, and its data plane is local-only.
+            const cached = localStorage.getItem('bilimyol_auth_session');
+            let cachedDemoProfile: UserProfile | null = null;
+            if (cached) {
+              try {
+                const parsed = JSON.parse(cached);
+                if (
+                  parsed?.isDemoMode === true &&
+                  parsed?.profile?.id === defaultDemoProfile.id &&
+                  parsed?.profile?.role === defaultDemoProfile.role
+                ) {
+                  cachedDemoProfile = parsed.profile;
+                }
+              } catch {}
+            }
+
             clearSessionStores();
-            setProfile(null);
-            setIsDemoMode(false);
+            if (cachedDemoProfile) {
+              localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: cachedDemoProfile, isDemoMode: true }));
+              setDemoRuntimeActive(true);
+              setProfile(cachedDemoProfile);
+              setIsDemoMode(true);
+            } else {
+              setDemoRuntimeActive(false);
+              setProfile(null);
+              setIsDemoMode(false);
+            }
             setIsLoading(false);
           }
         }
       } catch (err) {
         console.warn('Auth initialization error:', err);
         if (isCurrentStartup()) {
+          setDemoRuntimeActive(false);
           setProfile(null);
           setIsDemoMode(false);
           setIsLoading(false);
@@ -276,6 +366,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
         if (!mounted) return;
         if (event === 'INITIAL_SESSION' && startupRevision !== authRevision.current) return;
+        if (event === 'INITIAL_SESSION' && !newSession?.user) {
+          const cached = localStorage.getItem('bilimyol_auth_session');
+          try {
+            const parsed = cached ? JSON.parse(cached) : null;
+            if (
+              parsed?.isDemoMode === true &&
+              parsed?.profile?.id === defaultDemoProfile.id &&
+              parsed?.profile?.role === defaultDemoProfile.role
+            ) {
+              setDemoRuntimeActive(true);
+              setSession(null);
+              setUser(null);
+              setProfile(parsed.profile);
+              setIsDemoMode(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch {}
+        }
         if (signingOut.current !== null && newSession?.user) return;
         const eventEmail = newSession?.user.email?.toLowerCase();
         const pending = pendingAuth.current;
@@ -300,6 +409,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         activeUserId.current = newSession.user.id;
+        setDemoRuntimeActive(false);
         setSession(newSession);
         setUser(newSession.user);
         setIsDemoMode(false);
@@ -350,9 +460,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         role: email.includes('admin') ? 'admin' : 'student',
       };
+      setDemoRuntimeActive(true);
       setProfile(demoProf);
       setIsDemoMode(true);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf }));
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf, isDemoMode: true }));
       return { error: null, profile: demoProf };
     }
 
@@ -403,9 +514,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         role: 'student',
       };
+      setDemoRuntimeActive(true);
       setProfile(newProf);
       setIsDemoMode(true);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: newProf }));
+      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: newProf, isDemoMode: true }));
       return { error: null };
     }
 
@@ -441,7 +553,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       activeUserId.current = signUpData.user.id;
       setUser(signUpData.user);
       setSession(signUpData.session);
-      const resolved = await fetchProfile(signUpData.user.id, signUpData.user.email ?? email);
+      const resolved = await fetchProfile(
+        signUpData.user.id,
+        signUpData.user.email ?? email,
+        {
+          provisionIfMissing: { firstName, lastName },
+          throwOnError: true,
+        },
+      );
       if (request !== authAction.current) return { error: staleActionError() };
       return resolved
         ? { error: null }
@@ -526,11 +645,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const setDemoUser = () => {
-    if (!canUseLocalDemoMode()) {
-      clearAuthState();
-      return;
-    }
     clearAuthState();
+    setDemoRuntimeActive(true);
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
     localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile, isDemoMode: true }));

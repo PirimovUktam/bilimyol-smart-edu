@@ -2,10 +2,11 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '../core/context/AuthContext';
+import { isDemoRuntimeActive, setDemoRuntimeActive } from '../core/runtime/demoRuntime';
 
 const backend = vi.hoisted(() => ({
   configured: true, query: vi.fn(), from: vi.fn(), signIn: vi.fn(), signUp: vi.fn(),
-  signOut: vi.fn(), getUser: vi.fn(),
+  insert: vi.fn(), signOut: vi.fn(), getUser: vi.fn(),
 }));
 vi.mock('../core/config/supabase', () => ({
   get isSupabaseConfigured() { return backend.configured; },
@@ -28,6 +29,7 @@ const row = { id: user.id, email: user.email, first_name: 'Ali', last_name: 'Val
 
 beforeEach(() => {
   vi.resetAllMocks();
+  setDemoRuntimeActive(false);
   backend.configured = true;
   const storage = new Map<string, string>();
   vi.stubGlobal('localStorage', {
@@ -35,14 +37,23 @@ beforeEach(() => {
     setItem: (key: string, value: string) => storage.set(key, value),
     removeItem: (key: string) => storage.delete(key),
   });
-  backend.from.mockReturnValue({ select: () => ({ eq: () => ({ maybeSingle: backend.query }) }) });
+  backend.from.mockReturnValue({
+    select: () => ({ eq: () => ({ maybeSingle: backend.query }) }),
+    insert: backend.insert,
+  });
   backend.signIn.mockResolvedValue({ data: { user, session: { user } }, error: null });
   backend.signOut.mockResolvedValue({ error: null });
   backend.getUser.mockResolvedValue({ data: { user }, error: null });
   backend.query.mockResolvedValue({ data: row, error: null });
+  backend.insert.mockResolvedValue({ error: null });
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+afterEach(() => {
+  setDemoRuntimeActive(false);
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe('authoritative configured authentication actions', () => {
   it('uses the database role, never signup metadata, after sign-in', async () => {
@@ -74,12 +85,70 @@ describe('authoritative configured authentication actions', () => {
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
-  it('reports unavailable authoritative provisioning instead of successful signed-in signup', async () => {
+  it('resolves the authoritative profile after a signed-in signup', async () => {
+    backend.signUp.mockResolvedValueOnce({ data: { user, session: { user } }, error: null });
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+
+    expect(result.error).toBeNull();
+    expect(result.requiresEmailConfirmation).toBeUndefined();
+    expect(backend.query).toHaveBeenCalledOnce();
+    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile).toMatchObject({
+      id: user.id,
+      role: 'student',
+    });
+  });
+
+  it('self-provisions a missing profile with safe columns, then reads its server role', async () => {
+    backend.signUp.mockResolvedValueOnce({ data: { user, session: { user } }, error: null });
+    backend.query
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: row, error: null });
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+
+    expect(result.error).toBeNull();
+    expect(backend.insert).toHaveBeenCalledWith({
+      id: user.id,
+      first_name: 'Ali',
+      last_name: 'Vali',
+      display_name: 'Ali Vali',
+      email: user.email,
+    });
+    expect(backend.insert.mock.calls[0][0]).not.toHaveProperty('role');
+    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile.role).toBe('student');
+  });
+
+  it('reports provisioning failure instead of successful signed-in signup', async () => {
     backend.signUp.mockResolvedValueOnce({ data: { user, session: { user } }, error: null });
     backend.query.mockResolvedValueOnce({ data: null, error: null });
+    backend.insert.mockResolvedValueOnce({ error: { message: 'permission denied' } });
     const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+
     expect(result.error).toBeInstanceOf(Error);
+    expect(result.error?.message).toContain('Profilni yaratib bo‘lmadi');
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
+  });
+
+  it('reports authoritative profile read failure after provisioning instead of success', async () => {
+    backend.signUp.mockResolvedValueOnce({ data: { user, session: { user } }, error: null });
+    backend.query
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error?.message).toContain('Yaratilgan profilni serverdan o‘qib bo‘lmadi');
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
+  });
+
+  it('never sends role metadata or treats forged role metadata as authoritative on signup', async () => {
+    backend.signUp.mockResolvedValueOnce({ data: { user, session: { user } }, error: null });
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+    const signupPayload = backend.signUp.mock.calls[0][0];
+
+    expect(result.error).toBeNull();
+    expect(signupPayload.options.data).toEqual({ first_name: 'Ali', last_name: 'Vali' });
+    expect(signupPayload.options.data).not.toHaveProperty('role');
+    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile.role).toBe('student');
   });
 
   it('discards an authoritative profile response after explicit sign-out', async () => {
@@ -109,11 +178,17 @@ describe('authoritative configured authentication actions', () => {
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
-  it('does not activate the demo user when Supabase is configured', () => {
+  it('activates a safe local demo user even when Supabase is configured', () => {
     const auth = actions();
     auth.setDemoUser();
 
-    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
+    expect(isDemoRuntimeActive()).toBe(true);
+    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!)).toMatchObject({
+      isDemoMode: true,
+      profile: { id: 'guest_user_01' },
+    });
+    expect(backend.from).not.toHaveBeenCalled();
+    expect(backend.getUser).not.toHaveBeenCalled();
   });
 
   it('keeps the demo user available in local development without Supabase', () => {

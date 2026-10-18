@@ -3,6 +3,7 @@ import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
 import { Question } from '@/domain/entities/Question';
 import { SubjectType } from '@/core/types/common';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { inMemoryCourseRepository } from './InMemoryCourseRepository';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
@@ -64,7 +65,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getAllCourses(): Promise<Course[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getAllCourses();
     }
 
@@ -89,7 +90,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getCourseById(courseId: string): Promise<Course | null> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getCourseById(courseId);
     }
 
@@ -112,7 +113,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getSkillsByCourseId(courseId: string): Promise<Skill[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getSkillsByCourseId(courseId);
     }
 
@@ -144,7 +145,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getPlacementQuestions(courseId: string): Promise<Question[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getPlacementQuestions(courseId);
     }
 

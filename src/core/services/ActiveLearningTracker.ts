@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
 class ActiveLearningTracker {
   private sessionId: string = '';
@@ -19,6 +20,11 @@ class ActiveLearningTracker {
     this.currentLessonId = lessonId || null;
     this.lastActivityTimestamp = Date.now();
     this.isPaused = false;
+
+    if (isDemoRuntimeActive()) {
+      this.stop();
+      return;
+    }
 
     if (!this.sessionId) {
       this.sessionId = this.generateSessionId();
@@ -84,7 +90,7 @@ class ActiveLearningTracker {
   }
 
   private async sendHeartbeat(): Promise<void> {
-    if (this.isPaused) return;
+    if (this.isPaused || isDemoRuntimeActive()) return;
 
     // Check if idle for more than 5 minutes
     const now = Date.now();

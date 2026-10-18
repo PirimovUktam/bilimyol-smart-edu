@@ -2,6 +2,7 @@ import { ILessonRepository } from '@/domain/repositories/ILessonRepository';
 import { Lesson } from '@/domain/entities/Lesson';
 import { Question } from '@/domain/entities/Question';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { inMemoryLessonRepository } from './InMemoryLessonRepository';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
@@ -75,7 +76,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
   }
 
   async getLessonById(lessonId: string): Promise<Lesson | null> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getLessonById(lessonId);
     }
 
@@ -114,7 +115,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
   }
 
   async getLessonByCourseAndSkill(courseId: string, skillId: string): Promise<Lesson | null> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getLessonByCourseAndSkill(courseId, skillId);
     }
 
@@ -140,7 +141,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
   }
 
   async getBaseRoadmapNodes(courseId: string): Promise<LearningPathNode[]> {
-    if (!isSupabaseConfigured) {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
       return this.fallback.getBaseRoadmapNodes(courseId);
     }
 

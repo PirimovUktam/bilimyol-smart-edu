@@ -3,6 +3,7 @@ import { Question, QuestionAnswerSubmission } from '@/domain/entities/Question';
 import { AssessmentResult } from '@/domain/entities/Assessment';
 import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
 import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { isSupabaseConfigured } from '@/core/config/supabase';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
@@ -89,9 +90,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     set({ isLoading: true, error: null, currentQuestion: null, hasFinished: false });
 
     try {
-      const courseRepository = isSupabaseConfigured
-        ? supabaseCourseRepository
-        : inMemoryCourseRepository;
+      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
+      const courseRepository = useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository;
       const allQuestions = await courseRepository.getPlacementQuestions(courseId);
       if (!isCurrent()) return;
       const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
@@ -220,8 +220,9 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
     if (isDone) {
       // Evaluate full placement test using UseCase
+      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
       const useCase = new SubmitPlacementTestUseCase(
-        isSupabaseConfigured ? supabaseCourseRepository : inMemoryCourseRepository,
+        useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository,
         supabaseLearnerRepository
       );
 
