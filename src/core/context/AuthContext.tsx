@@ -523,15 +523,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const request = beginAuthAction(email);
     try {
+      const signUpOptions: {
+        data: { first_name: string; last_name: string };
+        emailRedirectTo?: string;
+      } = {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+        },
+      };
+      if (typeof window !== 'undefined') {
+        signUpOptions.emailRedirectTo = window.location.origin;
+      }
+
       const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-          },
-        },
+        options: signUpOptions,
       });
 
       if (request !== authAction.current) return { error: staleActionError() };
