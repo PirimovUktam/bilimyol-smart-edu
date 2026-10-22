@@ -39,7 +39,8 @@ describe('approved web audit regressions', () => {
   });
 
   it('terminates an empty placement load with an actionable error state', async () => {
-    await usePlacementStore.getState().initPlacement('course_it');
+    // A course id with no placement bank — exercises the honest empty path.
+    await usePlacementStore.getState().initPlacement('course_nonexistent_99');
     const state = usePlacementStore.getState();
 
     expect(state.isLoading).toBe(false);
