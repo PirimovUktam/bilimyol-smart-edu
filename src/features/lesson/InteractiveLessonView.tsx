@@ -421,7 +421,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       <div className="flex items-center gap-2">
                         <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-emerald-600' : 'text-rose-600'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
-                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob! 🎉' : 'Error Diagnosis: Yo‘lchi AI'}
+                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Xato tahlili: Yo‘lchi AI'}
                         </span>
                       </div>
 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${

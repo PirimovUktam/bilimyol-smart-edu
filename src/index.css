@@ -1,34 +1,75 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   BilimYo'l Design System — "Yo'l / Journey" theme
+   Direction: deep-space indigo hero surfaces + crisp white learning cards,
+   teal→emerald progress accents, amber gamification (XP/streak),
+   rounded-3xl soft cards, motion only for comprehension/feedback.
+   ========================================================================== */
+
 @layer base {
   :root {
+    /* Typography */
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
-    --primary: #4f46e5;
-    --primary-hover: #4338ca;
-    --secondary: #06b6d4;
+
+    /* Brand palette */
+    --primary: #4f46e5;        /* indigo-600 — main brand, primary actions */
+    --primary-hover: #4338ca;  /* indigo-700 */
+    --primary-deep: #312e81;   /* indigo-900 — hero depth */
+    --secondary: #06b6d4;      /* cyan-500 — journey/progress accent */
     --secondary-hover: #0891b2;
-    --accent-coral: #f43f5e;
-    --accent-mint: #10b981;
-    --accent-amber: #f59e0b;
+    --accent-coral: #f43f5e;   /* rose-500 — errors, reinforcement */
+    --accent-mint: #10b981;    /* emerald-500 — success, mastery */
+    --accent-amber: #f59e0b;   /* amber-500 — XP, streak, gamification */
+
+    /* Surface + ink */
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;   /* slate-50 */
+    --surface-muted: #f1f5f9;  /* slate-100 */
+    --ink: #0f172a;            /* slate-900 */
+    --ink-soft: #475569;       /* slate-600 */
+    --ink-faint: #94a3b8;      /* slate-400 */
+
+    /* Elevation (soft, indigo-tinted shadows) */
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(79, 70, 229, 0.10);
+    --shadow-raised: 0 10px 30px -10px rgba(79, 70, 229, 0.16), 0 4px 10px -4px rgba(15, 23, 42, 0.08);
+    --shadow-pop: 0 24px 60px -20px rgba(49, 46, 129, 0.35);
+
+    /* Radius scale */
+    --radius-card: 1.5rem;   /* rounded-3xl */
+    --radius-control: 1rem;  /* rounded-2xl */
+    --radius-chip: 0.75rem;  /* rounded-xl */
   }
 
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: var(--surface-soft);
+    color: var(--ink);
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible, consistent focus ring for keyboard nav (WCAG) */
+  :focus-visible {
+    outline: 3px solid rgba(79, 70, 229, 0.5);
+    outline-offset: 2px;
+    border-radius: var(--radius-chip);
   }
 }
 
-/* EdTech Card & Glassmorphism Utilities */
+/* ============================================================================
+   Utilities
+   ========================================================================== */
+
+/* Glass panels */
 .glass-panel {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-raised);
 }
 
 .glass-panel-dark {
@@ -39,9 +80,13 @@
   box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.35);
 }
 
+/* Deep-space indigo hero (journey surface) */
 .hero-gradient-card {
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 45%, #6366f1 85%, #8b5cf6 100%);
-  box-shadow: 0 20px 40px -15px rgba(67, 56, 202, 0.45);
+  background:
+    radial-gradient(90% 120% at 8% 0%, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0) 55%),
+    radial-gradient(70% 100% at 95% 100%, rgba(139, 92, 246, 0.28) 0%, rgba(139, 92, 246, 0) 60%),
+    linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 80%, #4f46e5 100%);
+  box-shadow: var(--shadow-pop);
 }
 
 .coral-gradient-card {
@@ -55,40 +100,46 @@
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.15), inset 0 0 20px rgba(56, 189, 248, 0.05);
 }
 
-/* Animations */
-@keyframes floatSlow {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+/* Journey track: a subtle vertical "path" used by roadmap + knowledge map */
+.journey-track {
+  background-image: linear-gradient(
+    to bottom,
+    var(--accent-mint) 0%,
+    var(--secondary) 40%,
+    var(--primary) 70%,
+    #cbd5e1 100%
+  );
 }
 
-.animate-float {
-  animation: floatSlow 4s ease-in-out infinite;
+/* ============================================================================
+   Motion — only where it aids comprehension/feedback. Honors reduced-motion.
+   ========================================================================== */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
+.animate-float { animation: floatSlow 4s ease-in-out infinite; }
 
 @keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 12px rgba(79, 70, 229, 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5); }
+  50% { box-shadow: 0 0 0 12px rgba(79, 70, 229, 0); }
 }
-
-.pulse-glow {
-  animation: pulseGlow 2.5s infinite;
-}
+.pulse-glow { animation: pulseGlow 2.5s infinite; }
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
 .shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
   background-size: 200% 100%;
   animation: shimmer 2.5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .pulse-glow,
+  .shimmer {
+    animation: none !important;
+  }
 }

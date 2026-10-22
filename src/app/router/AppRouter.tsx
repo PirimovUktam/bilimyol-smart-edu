@@ -114,6 +114,12 @@ export const AppRouter: React.FC = () => {
     };
   }, []);
 
+  // Each new view starts at the top — the view router never preserved scroll
+  // position, so deep pages could open already scrolled to their footer.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [currentView]);
+
   const { loadCourses, activeCourse, courses, isLoading: isCourseLoading } = useCourseStore();
   const { loadProfile, profile: learnerProfile } = useLearnerStore();
   const { loadRoadmap } = useRoadmapStore();

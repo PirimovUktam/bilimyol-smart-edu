@@ -21,12 +21,12 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const variantStyles = {
-    default: 'bg-white border border-slate-200/90 shadow-sm rounded-3xl',
+    default: 'bg-white border border-slate-200/90 rounded-3xl shadow-[var(--shadow-card)]',
     glass: 'glass-panel rounded-3xl',
     interactive:
-      'bg-white border border-slate-200/90 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 rounded-3xl cursor-pointer',
+      'bg-white border border-slate-200/90 hover:border-indigo-400 hover:shadow-[var(--shadow-raised)] hover:-translate-y-0.5 transition-all duration-200 rounded-3xl cursor-pointer motion-reduce:transition-none motion-reduce:hover:translate-y-0',
     active:
-      'bg-indigo-50/50 border-2 border-indigo-600 shadow-md shadow-indigo-500/15 rounded-3xl',
+      'bg-indigo-50/50 border-2 border-indigo-600 shadow-[var(--shadow-raised)] rounded-3xl',
     hero:
       'hero-gradient-card text-white rounded-3xl relative overflow-hidden',
     coral:

@@ -553,8 +553,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           />
         </section>
 
-        {/* ROW 3: HERO CARD "DAVOM ETISH" OR EMPTY STATE WITH "DARS YARATISH" */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#172554] via-[#1e1b4b] to-[#312e81] text-white p-6 sm:p-8 lg:p-10 shadow-xl shadow-indigo-950/20 border border-indigo-400/20">
+        {/* ROW 3: HERO CARD "DAVOM ETISH" — deep-space journey surface */}
+        <div className="relative rounded-3xl overflow-hidden hero-gradient-card text-white p-6 sm:p-8 lg:p-10 border border-indigo-400/20">
           {/* Subtle cosmic glow orbs in background */}
           <div className="absolute top-0 right-1/3 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 right-0 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />

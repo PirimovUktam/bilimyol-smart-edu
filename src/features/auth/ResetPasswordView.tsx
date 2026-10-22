@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Lock, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../core/context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
-import { BilimYolLogo } from '../../presentation/components/BilimYolLogo';
 import { Button } from '../../presentation/components/Button';
-import { Card } from '../../presentation/components/Card';
+import { AuthLayout } from './AuthLayout';
 
 interface ResetPasswordViewProps {
   onNavigateLogin: () => void;
@@ -72,25 +70,10 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({
   const expiredOrMissing = sessionReady === false;
 
   return (
-    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
-      >
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <BilimYolLogo size="lg" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-900">
-            Yangi parol o‘rnating
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Hisobingiz uchun yangi xavfsiz parol kiriting
-          </p>
-        </div>
-
-        <Card className="p-7 shadow-xl border-slate-200">
+    <AuthLayout
+      title="Yangi parol o‘rnating"
+      subtitle="Hisobingiz uchun yangi xavfsiz parol kiriting"
+    >
           {sessionReady === null && (
             <div className="py-8 text-center">
               <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -222,8 +205,6 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({
               </Button>
             </form>
           )}
-        </Card>
-      </motion.div>
-    </div>
+    </AuthLayout>
   );
 };

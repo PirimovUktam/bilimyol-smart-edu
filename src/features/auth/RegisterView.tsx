@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../core/context/AuthContext';
-import { BilimYolLogo } from '../../presentation/components/BilimYolLogo';
 import { Button } from '../../presentation/components/Button';
-import { Card } from '../../presentation/components/Card';
+import { AuthLayout } from './AuthLayout';
 
 interface RegisterViewProps {
   onSuccess: () => void;
@@ -92,27 +90,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   };
 
   return (
-    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
-      >
-        <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
-            <BilimYolLogo size="lg" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-900">
-            Hisob yaratish
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            BilimYo‘l platformasida o‘quvchi hisobingizni yarating
-          </p>
-        </div>
-
-        <Card className="p-7 shadow-xl border-slate-200">
-          {confirmationEmail ? (
-            <div role="status" className="space-y-3 text-center">
+    <AuthLayout
+      title="Hisob yaratish"
+      subtitle="BilimYo‘l platformasida o‘quvchi hisobingizni yarating"
+    >
+      {confirmationEmail ? (
+            <div role="status" className="space-y-3 text-center py-2">
               <Mail className="w-10 h-10 mx-auto text-blue-600" />
               <h2 className="text-lg font-bold text-slate-900">Email manzilingizni tasdiqlang</h2>
               <p className="text-sm text-slate-600">
@@ -243,8 +226,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
               </button>
             </p>
           </div>
-        </Card>
-      </motion.div>
-    </div>
+    </AuthLayout>
   );
 };

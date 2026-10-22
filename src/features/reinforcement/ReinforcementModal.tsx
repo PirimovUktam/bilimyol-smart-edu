@@ -30,7 +30,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [feedbackState, setFeedbackState] = useState<'answering' | 'success' | 'incorrect'>('answering');
-  const [scoreTransition, setScoreTransition] = useState<{ oldScore: number; newScore: number } | null>(null);
+  const [scoreTransition, setScoreTransition] = useState<{ oldScore: number; newScore: number; xpAwarded?: number } | null>(null);
 
   if (!isOpen) return null;
 
@@ -64,7 +64,11 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
         origin: { y: 0.6 },
       });
 
-      setScoreTransition({ oldScore: result.oldScore, newScore: result.newScore });
+      setScoreTransition({
+        oldScore: result.oldScore,
+        newScore: result.newScore,
+        xpAwarded: result.xpAwarded ?? 0,
+      });
       setFeedbackState('success');
     } else {
       sounds.playMistake();
@@ -227,7 +231,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
                   <span className="flex items-center gap-1.5 text-amber-300 font-bold">
-                    <Award className="w-4 h-4" /> +30 XP mukofoti
+                    <Award className="w-4 h-4" /> +{scoreTransition?.xpAwarded ?? 0} XP mukofoti
                   </span>
                   <span className="flex items-center gap-1.5 text-teal-300 font-bold">
                     <Unlock className="w-4 h-4" /> Keyingi mavzu ochildi
