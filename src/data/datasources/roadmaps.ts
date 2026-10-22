@@ -122,4 +122,72 @@ export const SEED_ROADMAP_NODES: Record<string, LearningPathNode[]> = {
       order: 4,
     },
   ],
+
+  // =========================================================================
+  // IT & CODING — adaptive learning path
+  // =========================================================================
+  course_it: [
+    {
+      id: 'node_it_python',
+      courseId: 'course_it',
+      skillId: 'skill_it_python',
+      title: 'Python asoslari',
+      description: 'O‘zgaruvchilar, ma’lumot turlari va oddiy algoritmlar.',
+      prerequisites: [],
+      requiredScore: 50,
+      status: 'available',
+      isReinforcement: false,
+      targetLessonId: 'lesson_it_python_01',
+      estimatedMinutes: 15,
+      order: 1,
+    },
+    {
+      id: 'node_it_web',
+      courseId: 'course_it',
+      skillId: 'skill_it_web',
+      title: 'Veb sahifa tuzilishi',
+      description: 'HTML teglar, CSS uslublar va sahifa elementlarini joylashtirish.',
+      prerequisites: ['node_it_python'],
+      requiredScore: 50,
+      status: 'locked',
+      isReinforcement: false,
+      targetLessonId: 'lesson_it_web_01',
+      estimatedMinutes: 20,
+      order: 2,
+    },
+  ],
+
+  // =========================================================================
+  // LOGIC — adaptive learning path
+  // =========================================================================
+  course_logic: [
+    {
+      id: 'node_logic_puzzles',
+      courseId: 'course_logic',
+      skillId: 'skill_logic_puzzles',
+      title: 'Mantiqiy boshqotirmalar',
+      description: 'Deduktiv xulosalar va shartli mulohazalarni yechish.',
+      prerequisites: [],
+      requiredScore: 50,
+      status: 'available',
+      isReinforcement: false,
+      targetLessonId: 'lesson_logic_puzzles_01',
+      estimatedMinutes: 15,
+      order: 1,
+    },
+    {
+      id: 'node_logic_patterns',
+      courseId: 'course_logic',
+      skillId: 'skill_logic_patterns',
+      title: 'Qonuniyatlar',
+      description: 'Sonli va shakl qonuniyatlarini topish va davom ettirish.',
+      prerequisites: ['node_logic_puzzles'],
+      requiredScore: 50,
+      status: 'locked',
+      isReinforcement: false,
+      targetLessonId: 'lesson_logic_patterns_01',
+      estimatedMinutes: 18,
+      order: 2,
+    },
+  ],
 };
