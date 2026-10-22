@@ -75,3 +75,31 @@
 - #13 admin demo-state note; #11 continuation hardening; #12 lazy marketing pages
 
 **Discrepancies (PDF ↔ code) to log:** PDF sells "Yo'lchi AI rebuilds the path" — implemented via roadmap nodes + reinforcement, verified. Freemium/premium (59 900 so'm) is PDF-only; no paywall code exists (correct for MVP — not a defect).
+
+---
+
+## Status update (this session — committed)
+
+**SHIPPED (P0/P1):**
+- ✅ #1 password-reset completion: `ResetPasswordView` + `/reset-password` route + `AuthContext.updatePassword` (recovery-session `updateUser`). Was a hard dead end.
+- ✅ #3 decoupled course logic: placement targets skills from the loaded bank (`getTargetSkillsForCourse`), lesson badge keys off `course.subject` — `course_math_01` magic strings gone.
+- ✅ #5 "Davom etish" now gated on a resolved lesson id; #10 config log → DEV-only `console.debug`.
+- ✅ #9 every emoji-as-icon in learner surfaces replaced with lucide icons.
+- ✅ Env audit: `.env`/`.env.local` are gitignored, NOT tracked (`.env.example` tracked).
+
+**SHIPPED (P2 — Phase D "Yo'l / Journey" design system):**
+- `src/index.css` named tokens: brand palette, elevation (`--shadow-card/raised/pop`), radius scale, `journey-track` path, unified `:focus-visible`, reduced-motion guards on all animations.
+- New primitives: `Modal` (Escape/overlay dismiss, scroll-lock) and `Progress` (accessible 0–100 bar, WCAG). `Card` variants use token shadows.
+- `AuthLayout` shared deep-space shell for register / forgot / reset (matches login).
+- Honesty fixes: hardcoded `+50 XP`/`+30 XP` → generic "XP mukofoti" / real `xpAwarded`; view router scrolls to top on navigation.
+- Code-splitting: pitch (92kB) / demo (32kB) / admin (44kB) lazy; main 1.03MB → 0.88MB.
+- Dead assets removed: `vite.svg`, `react.svg`, `hero.png`, 10 unused pitch imports.
+
+**VERIFIED LIVE (browser):** demo login → dashboard → math lesson (4 steps) → quiz → correct answer → confetti + real XP + completion modal + progress tracking; wrong answer → Yo'lchi AI diagnosis panel → reinforcement modal. All 226 tests + typecheck + lint + build green.
+
+**REMAINING:**
+- #7 bundle still 0.88MB — lazy `roadmap`/`lesson`/`knowledge-map` for <500kB (P3).
+- IT/Logic seed content empty in DEMO mode (honest "Diagnostika yuklanmadi", no crash); production `learner_questions`/`roadmap_nodes` are server-sourced — **UNVERIFIED** without Supabase creds.
+- `?view=lesson&lessonId=` deep-link resets when unauthenticated (route-guard) — by design.
+- `AdminContentService` uses module-level `inMemory*` in demo mode (acceptable).
+- Premium/paywall: PDF-only, intentionally absent.
