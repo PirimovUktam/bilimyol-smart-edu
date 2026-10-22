@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Navbar } from '@/presentation/components/Navbar';
 import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
 import { OnboardingView } from '@/features/onboarding/OnboardingView';
@@ -10,8 +10,8 @@ import { DashboardView } from '@/features/dashboard/DashboardView';
 import { LoginView } from '@/features/auth/LoginView';
 import { RegisterView } from '@/features/auth/RegisterView';
 import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
+import { ResetPasswordView } from '@/features/auth/ResetPasswordView';
 import { ProfileView } from '@/features/profile/ProfileView';
-import { AdminDashboardView } from '@/features/admin/AdminDashboardView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
@@ -25,10 +25,19 @@ import { ProgressView } from '@/features/progress/ProgressView';
 import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
 import { ShieldAlert } from 'lucide-react';
-import { PitchShowcaseView } from '@/features/pitch/PitchShowcaseView';
-import { DemoShowcaseView } from '@/features/pitch/DemoShowcaseView';
-
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
+
+// Route-level code-splitting for heavy, rarely-opened surfaces. The marketing
+// slides (~2.7k lines) and the admin panel only load when actually visited.
+const LazyPitchShowcaseView = lazy(() =>
+  import('@/features/pitch/PitchShowcaseView').then((m) => ({ default: m.PitchShowcaseView }))
+);
+const LazyDemoShowcaseView = lazy(() =>
+  import('@/features/pitch/DemoShowcaseView').then((m) => ({ default: m.DemoShowcaseView }))
+);
+const LazyAdminDashboardView = lazy(() =>
+  import('@/features/admin/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView }))
+);
 
 export type AppView =
   | 'pitch'
@@ -45,6 +54,7 @@ export type AppView =
   | 'login'
   | 'register'
   | 'forgot-password'
+  | 'reset-password'
   | 'profile'
   | 'admin';
 
@@ -67,6 +77,7 @@ const getInitialView = (): AppView => {
       'login',
       'register',
       'forgot-password',
+      'reset-password',
       'profile',
       'admin',
     ];
@@ -77,6 +88,7 @@ const getInitialView = (): AppView => {
     if (path === '/pitch' || hash === '#pitch') return 'pitch';
     if (path === '/register' || hash === '#register') return 'register';
     if (path === '/forgot-password' || hash === '#forgot-password') return 'forgot-password';
+    if (path === '/reset-password' || hash === '#reset-password') return 'reset-password';
     if (path === '/login' || hash === '#login') return 'login';
   }
   return 'login';
@@ -223,7 +235,10 @@ export const AppRouter: React.FC = () => {
     }
 
     const isAuthForm =
-      currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
+      currentView === 'login' ||
+      currentView === 'register' ||
+      currentView === 'forgot-password' ||
+      currentView === 'reset-password';
 
     if (!hasUsableAuth) {
       // Unauthenticated visitor trying to access protected screens -> force to 'login'
@@ -290,7 +305,11 @@ export const AppRouter: React.FC = () => {
   };
 
   const isPitchOrDemo = currentView === 'pitch' || currentView === 'demo';
-  const isAuthView = currentView === 'login' || currentView === 'register' || currentView === 'forgot-password';
+  const isAuthView =
+    currentView === 'login' ||
+    currentView === 'register' ||
+    currentView === 'forgot-password' ||
+    currentView === 'reset-password';
 
   // Role Guard validation
   const isAccessDenied = currentView === 'admin' && (!hasUsableAuth || userRole !== 'admin');
@@ -344,20 +363,24 @@ export const AppRouter: React.FC = () => {
         ) : (
           <>
             {currentView === 'pitch' && (
-              <PitchShowcaseView
-                onNavigateDemo={() => setCurrentView('demo')}
-                onNavigateApp={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
-                onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
-              />
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+                <LazyPitchShowcaseView
+                  onNavigateDemo={() => setCurrentView('demo')}
+                  onNavigateApp={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
+                  onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
+                />
+              </Suspense>
             )}
 
             {currentView === 'demo' && (
-              <DemoShowcaseView
-                onNavigateCourses={() => setCurrentView(hasUsableAuth ? 'course-selection' : 'login')}
-                onNavigateDashboard={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
-                onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
-                onNavigatePitch={() => setCurrentView('pitch')}
-              />
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+                <LazyDemoShowcaseView
+                  onNavigateCourses={() => setCurrentView(hasUsableAuth ? 'course-selection' : 'login')}
+                  onNavigateDashboard={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
+                  onNavigateAiTutor={() => setCurrentView(hasUsableAuth ? 'ai-tutor' : 'login')}
+                  onNavigatePitch={() => setCurrentView('pitch')}
+                />
+              </Suspense>
             )}
 
             {currentView === 'login' && (
@@ -377,6 +400,10 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'forgot-password' && (
               <ForgotPasswordView onNavigateLogin={() => setCurrentView('login')} />
+            )}
+
+            {currentView === 'reset-password' && (
+              <ResetPasswordView onNavigateLogin={() => setCurrentView('login')} />
             )}
 
             {currentView === 'profile' && (
@@ -458,7 +485,11 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
-            {currentView === 'admin' && <AdminDashboardView />}
+            {currentView === 'admin' && (
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+                <LazyAdminDashboardView />
+              </Suspense>
+            )}
           </>
         )}
       </main>

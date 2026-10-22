@@ -27,6 +27,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<UserProfile | null>;
   setDemoUser: () => void;
@@ -609,6 +610,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: error ? new Error(error.message) : null };
   };
 
+  // Sets the new password on the recovery session Supabase establishes after
+  // the emailed link is opened. Without this, the reset email is a dead end.
+  const updatePassword = async (newPassword: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: null };
+    }
+    const trimmed = newPassword.trim();
+    if (trimmed.length < 6) {
+      return { error: new Error('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.') };
+    }
+    const { error } = await supabase.auth.updateUser({ password: trimmed });
+    return { error: error ? new Error(error.message) : null };
+  };
+
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!profile) return { error: new Error('Profil topilmadi') };
     if (isSupabaseConfigured && profile.id !== activeUserId.current) return { error: staleActionError() };
@@ -672,6 +687,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         resetPassword,
+        updatePassword,
         updateProfile,
         refreshProfile,
         setDemoUser,

@@ -15,6 +15,7 @@ import {
   Sparkles,
   Play,
   ArrowRight,
+  GraduationCap,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -135,13 +136,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   {/* Role Indicator Badge */}
                   <div className="hidden sm:flex items-center px-2 py-0.5 rounded-xl text-xs font-bold border">
                     {userRole === 'student' && (
-                      <span className="text-indigo-700 bg-indigo-50 border-indigo-200 px-2 py-0.5 rounded-lg border">
-                        🎓 O‘quvchi
+                      <span className="text-indigo-700 bg-indigo-50 border-indigo-200 px-2 py-0.5 rounded-lg border flex items-center gap-1">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        O‘quvchi
                       </span>
                     )}
                     {userRole === 'admin' && (
                       <span className="text-purple-700 bg-purple-50 border-purple-200 px-2 py-0.5 rounded-lg border flex items-center gap-1 font-bold">
-                        ⚡ Administrator
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        Administrator
                       </span>
                     )}
                   </div>

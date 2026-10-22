@@ -80,8 +80,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
                   size="sm"
                 >
                   {profile?.role === 'admin'
-                    ? '⚡ Administrator'
-                    : '🎓 Faol O‘quvchi'}
+                    ? 'Administrator'
+                    : 'Faol O‘quvchi'}
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 flex items-center justify-center sm:justify-start gap-1.5 font-medium">

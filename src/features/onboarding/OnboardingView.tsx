@@ -25,16 +25,16 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
     switch (activeCourse?.subject) {
       case 'mathematics':
         return [
-        { id: 'mastery' as OnboardingGoal, title: 'Mavzuni mustahkamlash', desc: 'Asosiy formulalar va tushunchalarni chuqurroq o‘zlashtirish' },
-        { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'DTM va milliy sertifikat testlariga qat’iy tayyorgarlik' },
-        { id: 'skills_boost' as OnboardingGoal, title: 'Bilim darajasini oshirish', desc: 'Mantiqiy fikrlash va masalalar yechish tezligini oshirish' },
+          { id: 'mastery' as OnboardingGoal, title: 'Mavzuni mustahkamlash', desc: 'Asosiy formulalar va tushunchalarni chuqurroq o‘zlashtirish' },
+          { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'DTM va milliy sertifikat testlariga qat’iy tayyorgarlik' },
+          { id: 'skills_boost' as OnboardingGoal, title: 'Bilim darajasini oshirish', desc: 'Mantiqiy fikrlash va masalalar yechish tezligini oshirish' },
         ];
       case 'english':
         return [
-        { id: 'mastery' as OnboardingGoal, title: 'Umumiy ingliz tilini yaxshilash', desc: 'Kundalik suhbat va erkin fikr bayon qilish' },
-        { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'IELTS / CEFR imtihonlariga yo‘naltirilgan intensiv reja' },
-        { id: 'skills_boost' as OnboardingGoal, title: 'Til ko‘nikmalarini rivojlantirish', desc: 'Listening va Reading ko‘nikmalarini mustahkamlash' },
-      ];
+          { id: 'mastery' as OnboardingGoal, title: 'Umumiy ingliz tilini yaxshilash', desc: 'Kundalik suhbat va erkin fikr bayon qilish' },
+          { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'IELTS / CEFR imtihonlariga yo‘naltirilgan intensiv reja' },
+          { id: 'skills_boost' as OnboardingGoal, title: 'Til ko‘nikmalarini rivojlantirish', desc: 'Listening va Reading ko‘nikmalarini mustahkamlash' },
+        ];
       case 'it':
         return [
           { id: 'mastery' as OnboardingGoal, title: 'Dasturlash asoslarini egallash', desc: 'Kod yozish, sintaksis va amaliy loyihalar bilan mustahkamlash' },

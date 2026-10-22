@@ -20,6 +20,8 @@ import {
   Clock,
   RotateCcw,
   Play,
+  Target,
+  Lock,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { SubjectSelector } from '@/features/course-selection/SubjectSelector';
@@ -255,7 +257,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ? `${activeCourse.lessons.length} ta dars mavjud`
           : 'Darslar haqida ma’lumot yo‘q',
         icon: <BookOpen className="h-5 w-5" aria-hidden="true" />,
-          colorClass: 'bg-blue-50 border-blue-200/80 text-blue-600',
+        colorClass: 'bg-blue-50 border-blue-200/80 text-blue-600',
       }]
     : [];
 
@@ -453,7 +455,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <div className="text-xs font-semibold text-slate-500">Assalomu alaykum,</div>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {studentName}! 👋
+                {studentName}!
               </h1>
             </div>
           </div>
@@ -463,7 +465,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Bugungi maqsad */}
             <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/80">
               <div className="w-7 h-7 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                🎯
+                <Target className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-[10px] text-slate-500 font-bold uppercase">Bugungi maqsad</div>
@@ -503,8 +505,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Flame className="w-5 h-5 fill-orange-500 text-orange-500" />
               </div>
               <div>
-                <div className="text-xs sm:text-sm font-black text-orange-950">
-                  🔥 {streakDays} kunlik seriyangiz xavf ostida!
+                <div className="text-xs sm:text-sm font-black text-orange-950 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+                  {streakDays} kunlik seriyangiz xavf ostida!
                 </div>
                 <div className="text-[11px] sm:text-xs font-semibold text-orange-800">
                   Seriyani saqlab qolish uchun bugun kamida 1 ta dars yoki savol bajaring.
@@ -528,16 +531,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <h2 id="dashboard-course-selector-heading" className="mt-1 text-base font-black text-slate-950">
                 O‘rganish yo‘nalishi
               </h2>
-          </div>
-          <button
+            </div>
+            <button
               type="button"
-            onClick={onOpenRoadmap}
+              onClick={onOpenRoadmap}
               className="inline-flex items-center gap-1 self-start rounded-lg px-2 py-1 text-xs font-black text-blue-600 outline-none transition-colors hover:text-blue-800 focus-visible:ring-4 focus-visible:ring-blue-100 sm:self-auto"
-          >
+            >
               Yo‘l xaritasini ko‘rish
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        </div>
+            </button>
+          </div>
           <SubjectSelector
             courses={courses}
             selectedCourseId={activeCourseId}
@@ -771,7 +774,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     3
                   </div>
                   <div className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white text-[9px]">
-                    🔒
+                    <Lock className="w-3 h-3" />
                   </div>
                 </div>
               </div>

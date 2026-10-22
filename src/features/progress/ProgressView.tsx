@@ -14,6 +14,10 @@ import {
   Code2,
   Headphones,
   BookOpen,
+  Target,
+  Star,
+  Bot,
+  Lock,
   type LucideIcon,
 } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -94,11 +98,11 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   const peakEntry = chartData.find((d) => d.isPeak);
 
   // Achievements are computed from real learner metrics — never hardcoded.
-  const badgeDefs = [
-    { id: 1, title: 'Muntazam O‘quvchi', desc: '7 kun uzluksiz o‘qish', icon: '🏆', earned: (profile?.streakDays ?? 0) >= 7, bg: 'from-amber-400 to-amber-600' },
-    { id: 2, title: 'Tushunish Chempioni', desc: '90%+ o‘zlashtirish', icon: '🎯', earned: overallScore >= 90, bg: 'from-cyan-400 to-blue-600' },
-    { id: 3, title: 'Mavzu Master', desc: '5+ dars tugatilgan', icon: '⭐', earned: completedLessons >= 5, bg: 'from-indigo-500 to-purple-600' },
-    { id: 4, title: 'Ilk Qadam', desc: 'Birinchi dars yakunlandi', icon: '🤖', earned: completedLessons >= 1, bg: 'from-emerald-400 to-teal-600' },
+  const badgeDefs: { id: number; title: string; desc: string; icon: LucideIcon; earned: boolean; bg: string }[] = [
+    { id: 1, title: 'Muntazam O‘quvchi', desc: '7 kun uzluksiz o‘qish', icon: Trophy, earned: (profile?.streakDays ?? 0) >= 7, bg: 'from-amber-400 to-amber-600' },
+    { id: 2, title: 'Tushunish Chempioni', desc: '90%+ o‘zlashtirish', icon: Target, earned: overallScore >= 90, bg: 'from-cyan-400 to-blue-600' },
+    { id: 3, title: 'Mavzu Master', desc: '5+ dars tugatilgan', icon: Star, earned: completedLessons >= 5, bg: 'from-indigo-500 to-purple-600' },
+    { id: 4, title: 'Ilk Qadam', desc: 'Birinchi dars yakunlandi', icon: Bot, earned: completedLessons >= 1, bg: 'from-emerald-400 to-teal-600' },
   ];
   const earnedCount = badgeDefs.filter((b) => b.earned).length;
 
@@ -194,7 +198,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             <div className="text-2xl font-black text-slate-900">
               {profile?.streakDays ?? 0} kun
             </div>
-            <div className="text-xs font-bold text-slate-500">Ketma-ketlik 🔥</div>
+            <div className="text-xs font-bold text-slate-500">Ketma-ketlik</div>
           </div>
         </Card>
 
@@ -206,7 +210,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             <div className="text-2xl font-black text-slate-900">
               {profile?.xp ?? 0}
             </div>
-            <div className="text-xs font-bold text-slate-500">Umumiy XP ✨</div>
+            <div className="text-xs font-bold text-slate-500">Umumiy XP</div>
           </div>
         </Card>
       </div>
@@ -356,25 +360,25 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
               const Icon = subj.icon;
               return (
                 <div key={subj.id} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span className="flex items-center gap-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                    <span className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-indigo-600" aria-hidden="true" />
-                    <span>{subj.name}</span>
-                  </span>
-                  <span className="font-extrabold text-slate-900">
-                    {subj.score !== null ? `${subj.score}%` : '—'}
-                  </span>
-                </div>
-                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${subj.score ?? 0}%` }}
-                    transition={{ duration: 0.8, delay: idx * 0.1 }}
+                      <span>{subj.name}</span>
+                    </span>
+                    <span className="font-extrabold text-slate-900">
+                      {subj.score !== null ? `${subj.score}%` : '—'}
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${subj.score ?? 0}%` }}
+                      transition={{ duration: 0.8, delay: idx * 0.1 }}
                       className="h-full rounded-full"
                       style={{ backgroundColor: subj.color }}
-                  />
+                    />
+                  </div>
                 </div>
-              </div>
               );
             })}
           </div>
@@ -404,7 +408,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                 }`}
               >
                 <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center text-lg shrink-0 shadow-sm ${b.earned ? `bg-gradient-to-tr ${b.bg}` : 'bg-slate-300'}`}>
-                  {b.earned ? b.icon : '🔒'}
+                  {b.earned ? <b.icon className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-xs font-extrabold text-slate-900 truncate">
@@ -433,7 +437,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                 <span className="text-xs text-blue-200 font-semibold">Bugun</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-white">
-                {completedLessons > 0 ? 'Ajoyib sur’at! 🚀' : 'Boshlashga tayyormisiz? 🚀'}
+                {completedLessons > 0 ? 'Ajoyib sur’at!' : 'Boshlashga tayyormisiz?'}
               </h3>
               <p className="text-xs sm:text-sm text-indigo-100 max-w-lg leading-relaxed">
                 {completedLessons > 0
