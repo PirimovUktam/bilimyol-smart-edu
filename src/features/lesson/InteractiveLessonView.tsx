@@ -129,7 +129,15 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const currentStep = currentLesson.steps[currentStepIndex];
   const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
-  const isMath = currentLesson.courseId === 'course_math_01';
+  // Badge tone follows the course's declared subject, never a hardcoded id.
+  const badgeVariant =
+    activeCourse?.subject === 'english'
+      ? 'teal'
+      : activeCourse?.subject === 'it'
+      ? 'indigo'
+      : activeCourse?.subject === 'logic'
+      ? 'emerald'
+      : 'blue';
 
   // Infographic 2 Step 8 category tabs mapping
   const stepCategoryLabels = [
@@ -196,7 +204,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             Yo‘l xaritasiga qaytish
           </Button>
           <div className="h-4 w-px bg-slate-200" />
-          <Badge variant={isMath ? 'blue' : 'teal'} size="sm">
+          <Badge variant={badgeVariant} size="sm">
             <BookOpen className="w-3.5 h-3.5 mr-1" />
             {currentLesson.title}
           </Badge>
@@ -413,7 +421,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       <div className="flex items-center gap-2">
                         <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-emerald-600' : 'text-rose-600'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
-                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob! 🎉' : 'Error Diagnosis: Yo‘lchi AI'}
+                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Xato tahlili: Yo‘lchi AI'}
                         </span>
                       </div>
 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${

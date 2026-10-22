@@ -34,20 +34,14 @@ interface PlacementState {
   resetPlacement: () => void;
 }
 
-const COURSE_TARGET_SKILLS: Record<string, string[]> = {
-  course_math_01: [
-    'skill_math_algebra',
-    'skill_math_equations',
-    'skill_math_functions',
-    'skill_math_graphs',
-  ],
-  course_eng_01: [
-    'skill_eng_vocab',
-    'skill_eng_grammar',
-    'skill_eng_listening',
-    'skill_eng_reading',
-  ],
-};
+/**
+ * Placement targets every skill that actually has bank questions for the
+ * course — derived from the loaded question set, not a hardcoded course map.
+ * That keeps IT / logic / newly-added courses on the same targeted coverage
+ * instead of silently falling back to "all questions".
+ */
+export const getTargetSkillsForCourse = (allQuestions: Question[]): string[] =>
+  Array.from(new Set(allQuestions.map((q) => q.skillId).filter(Boolean)));
 
 const QUESTIONS_PER_SKILL = 2;
 let placementRequestToken: object = {};
@@ -94,7 +88,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       const courseRepository = useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository;
       const allQuestions = await courseRepository.getPlacementQuestions(courseId);
       if (!isCurrent()) return;
-      const targetSkills = COURSE_TARGET_SKILLS[courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
+      const targetSkills = getTargetSkillsForCourse(allQuestions);
       const totalQuestionsToAsk = getPlacementQuestionCount(allQuestions, targetSkills);
       const firstQ = AdaptiveQuestionSelector.getNextQuestion(
         allQuestions,
@@ -208,7 +202,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     const updatedSubmissions = [...submissions, newSubmission];
 
     // Find next adaptive question
-    const targetSkills = COURSE_TARGET_SKILLS[currentQuestion.courseId] || Array.from(new Set(allQuestions.map((q) => q.skillId)));
+    const targetSkills = getTargetSkillsForCourse(allQuestions);
     const nextQ = AdaptiveQuestionSelector.getNextQuestion(
       allQuestions,
       targetSkills,

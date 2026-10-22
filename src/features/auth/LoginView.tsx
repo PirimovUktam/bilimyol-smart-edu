@@ -133,8 +133,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 
                 {/* Floating pill badge on image */}
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-bold">
-                  <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-cyan-300 border border-cyan-400/30">
-                    ✨ Yo‘lchi AI intellektual mentori
+                  <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Yo‘lchi AI intellektual mentori
                   </span>
                   <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-indigo-600/80 backdrop-blur-md text-white border border-indigo-400/30 text-[11px]">
                     24/7 Shaxsiy repetitor

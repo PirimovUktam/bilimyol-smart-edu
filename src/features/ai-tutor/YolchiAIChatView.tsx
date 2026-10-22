@@ -39,7 +39,7 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
     {
       id: 'welcome',
       sender: 'ai',
-      text: 'Salom! Men sizning shaxsiy ta’lim yo‘ldoshingiz — Yo‘lchi AI man. Savollaringizga tushunarli javob beraman, xatolaringizni pedagogik tahlil qilaman va sizga mos misollar yechib beraman. 🤖✨',
+      text: 'Salom! Men sizning shaxsiy ta’lim yo‘ldoshingiz — Yo‘lchi AI man. Savollaringizga tushunarli javob beraman, xatolaringizni pedagogik tahlil qilaman va sizga mos misollar yechib beraman.',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -70,10 +70,10 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
   }, [messages, isTyping, scrollToBottom]);
 
   const quickPrompts = [
-    'Qoidani sodda tushuntir 💡',
-    'Yana bitta misol ber ✍️',
-    'Mavzuni test qilib ko‘r 🎯',
-    'Formulani ko‘rsat 📐',
+    'Qoidani sodda tushuntir',
+    'Yana bitta misol ber',
+    'Mavzuni test qilib ko‘r',
+    'Formulani ko‘rsat',
   ];
 
   const currentCourseScore = activeCourse && profile?.scoresByCourse

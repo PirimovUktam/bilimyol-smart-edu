@@ -7,15 +7,11 @@ import {
   Play,
   Users,
   Target,
-  Cpu,
   Layers,
   ShieldCheck,
   Terminal,
-  Code2,
-  Smartphone,
   Globe,
   Zap,
-  GraduationCap,
   MessageSquare,
   ExternalLink,
   CheckCircle2,
@@ -26,17 +22,11 @@ import {
   Calendar,
   DollarSign,
   Clock,
-  BarChart3,
   Flame,
   Award,
-  ChevronRight,
-  ShieldAlert,
-  Sliders,
-  Check,
   Info,
   ArrowUp,
 } from 'lucide-react';
-import { Button } from '@/presentation/components/Button';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 

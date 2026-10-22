@@ -35,11 +35,13 @@ export const buildFingerprint = {
 
 if (typeof window !== 'undefined') {
   (window as unknown as { __BILIMYOL_CONFIG__: typeof buildFingerprint }).__BILIMYOL_CONFIG__ = buildFingerprint;
-  console.log('[CONFIG] Supabase status:', {
-    isProduction,
-    isSupabaseConfigured,
-    projectRef: supabaseProjectRef,
-  });
+  if (import.meta.env.DEV) {
+    console.debug('[CONFIG] Supabase status:', {
+      isProduction,
+      isSupabaseConfigured,
+      projectRef: supabaseProjectRef,
+    });
+  }
 }
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {

@@ -10,6 +10,7 @@ import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine'
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Badge } from '@/presentation/components/Badge';
+import { Progress } from '@/presentation/components/Progress';
 
 interface KnowledgeMapViewProps {
   onProceedToRoadmap: () => void;
@@ -296,16 +297,12 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                   </span>
                 </div>
 
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-3">
-                  <div
-                    className={`h-full rounded-full ${
-                      isWeak
-                        ? 'bg-rose-500'
-                        : isStrong
-                        ? 'bg-emerald-500'
-                        : 'bg-indigo-600'
-                    }`}
-                    style={{ width: `${skillScore}%` }}
+                <div className="mt-3">
+                  <Progress
+                    value={skillScore}
+                    tone={isWeak ? 'rose' : isStrong ? 'emerald' : 'indigo'}
+                    size="md"
+                    ariaLabel={`${skill.name} o‘zlashtirish`}
                   />
                 </div>
               </Card>

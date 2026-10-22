@@ -147,8 +147,8 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
         </button>
       </div>
 
-      {/* 3. Node-based Gamified Learning Map (Reference 2 style) */}
-      <div className="relative pl-6 sm:pl-10 space-y-7 before:absolute before:left-[22px] sm:before:left-[38px] before:top-6 before:bottom-6 before:w-1.5 before:bg-gradient-to-b before:from-emerald-500 before:via-indigo-600 before:to-slate-300 before:rounded-full">
+      {/* 3. Node-based Gamified Learning Map — journey track */}
+      <div className="relative pl-6 sm:pl-10 space-y-7 before:absolute before:left-[22px] sm:before:left-[38px] before:top-6 before:bottom-6 before:w-1.5 before:journey-track before:rounded-full before:content-['']">
         {filteredNodes.map((node, index) => {
           const isCompleted = node.status === 'completed';
           const isReinforcement = node.isReinforcement || node.status === 'reinforcement';
@@ -236,7 +236,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
                       </span>
                       <span className="flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        +50 XP
+                        XP mukofoti
                       </span>
                       {node.score !== undefined && (
                         <span className="text-indigo-600 font-bold">
