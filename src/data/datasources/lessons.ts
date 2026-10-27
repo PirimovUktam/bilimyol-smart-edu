@@ -1,6 +1,10 @@
 import { Lesson } from '@/domain/entities/Lesson';
+import { permuteQuestionOptions } from '@/core/utils/questionOptionOrder';
 
-export const SEED_LESSONS: Record<string, Lesson> = {
+// Raw authored lessons. The correct option is written first for readability,
+// then deterministically permuted below. Both the learner UI and the
+// in-memory scorer import the transformed SEED_LESSONS, so they always agree.
+const SEED_LESSONS_RAW: Record<string, Lesson> = {
   lesson_math_functions_01: {
     id: 'lesson_math_functions_01',
     courseId: 'course_math_01',
@@ -65,7 +69,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
         subtitle: 'Bilimingizni sinab ko‘ring',
         content: 'f(x) = 2x + 3 funksiyasi berilgan. Agar x = 4 bo‘lsa, f(x) ning qiymati nechaga teng?',
         interactiveQuestion: {
-          id: 'q_math_func_01',
+          id: 'q_math_func_01_lesson',
           courseId: 'course_math_01',
           skillId: 'skill_math_functions',
           text: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) ni toping:',
@@ -78,7 +82,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
       },
     ],
     reinforcementExercise: {
-      id: 'q_math_func_02',
+      id: 'q_math_func_02_lesson',
       courseId: 'course_math_01',
       skillId: 'skill_math_functions',
       text: 'Mustahkamlash: f(x) = 3x + 2 funksiya berilgan. Agar x = 2 bo‘lsa, f(x) nechaga teng bo‘ladi?',
@@ -135,7 +139,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
         subtitle: 'Teskari qiymatni toping',
         content: 'f(x) = 5 - 2x funksiyasi berilgan. Agar f(x) = 1 bo‘lsa, x nechaga teng?',
         interactiveQuestion: {
-          id: 'q_math_func_04',
+          id: 'q_math_func_04_lesson',
           courseId: 'course_math_01',
           skillId: 'skill_math_functions',
           text: '5 - 2x = 1 tenglamani yeching:',
@@ -148,7 +152,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
       },
     ],
     reinforcementExercise: {
-      id: 'q_math_func_03',
+      id: 'q_math_func_03_lesson',
       courseId: 'course_math_01',
       skillId: 'skill_math_functions',
       text: 'Mustahkamlash: f(x) = 4x + 1 berilgan. f(x) = 13 bo‘lsa, x ni toping.',
@@ -206,7 +210,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
         subtitle: 'Nuqtani aniqlang',
         content: 'y = 3x - 6 to‘g‘ri chizig‘i Ox o‘qini qaysi nuqtada kesib o‘tadi?',
         interactiveQuestion: {
-          id: 'q_math_graph_02',
+          id: 'q_math_graph_02_lesson',
           courseId: 'course_math_01',
           skillId: 'skill_math_graphs',
           text: 'y = 3x - 6 funksiyaning Ox o‘qi bilan kesishish nuqtasi:',
@@ -219,7 +223,7 @@ export const SEED_LESSONS: Record<string, Lesson> = {
       },
     ],
     reinforcementExercise: {
-      id: 'q_math_graph_01',
+      id: 'q_math_graph_01_lesson',
       courseId: 'course_math_01',
       skillId: 'skill_math_graphs',
       text: 'Mustahkamlash: y = 2x - 4 funksiyasi Oy o‘qini qaysi nuqtada kesadi?',
@@ -674,7 +678,23 @@ export const SEED_LESSONS: Record<string, Lesson> = {
       options: ['36', '30', '35', '49'],
       correctIndex: 0,
       difficulty: 'medium',
-      explanation: 'n² qonuniyati: 6² = 36.',
+      explanation: 'n2 qonuniyati: 62 = 36.',
     },
   },
 };
+
+const permuteLesson = (lesson: Lesson): Lesson => ({
+  ...lesson,
+  steps: lesson.steps.map((step) =>
+    step.interactiveQuestion
+      ? { ...step, interactiveQuestion: permuteQuestionOptions(step.interactiveQuestion) }
+      : step
+  ),
+  reinforcementExercise: lesson.reinforcementExercise
+    ? permuteQuestionOptions(lesson.reinforcementExercise)
+    : lesson.reinforcementExercise,
+});
+
+export const SEED_LESSONS: Record<string, Lesson> = Object.fromEntries(
+  Object.entries(SEED_LESSONS_RAW).map(([id, lesson]) => [id, permuteLesson(lesson)])
+);

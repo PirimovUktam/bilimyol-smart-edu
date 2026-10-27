@@ -3,11 +3,29 @@ import { SubmitLessonAnswerUseCase } from '../domain/usecases/SubmitLessonAnswer
 import { InMemoryLearnerRepository } from '../data/repositories/InMemoryLearnerRepository';
 import { DemoAITutorService } from '../data/services/DemoAITutorService';
 import { Question } from '../domain/entities/Question';
+import { PLACEMENT_QUESTIONS } from '../data/datasources/questions';
 
 describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
   let learnerRepo: InMemoryLearnerRepository;
   let aiService: DemoAITutorService;
   let useCase: SubmitLessonAnswerUseCase;
+
+  const mathBank = PLACEMENT_QUESTIONS['course_math_01'];
+  const serverCorrectIndex = (id: string): number => {
+    const question = mathBank.find((item) => item.id === id);
+    if (!question || question.correctIndex === undefined) throw new Error(`Missing bank question ${id}`);
+    return question.correctIndex;
+  };
+  const serverCorrectOption = (id: string): string => {
+    const question = mathBank.find((item) => item.id === id);
+    if (!question || question.correctIndex === undefined) throw new Error(`Missing bank question ${id}`);
+    return question.options[question.correctIndex];
+  };
+  const serverWrongIndex = (id: string): number => {
+    const question = mathBank.find((item) => item.id === id);
+    if (!question || question.correctIndex === undefined) throw new Error(`Missing bank question ${id}`);
+    return (question.correctIndex + 1) % question.options.length;
+  };
 
   beforeEach(() => {
     learnerRepo = new InMemoryLearnerRepository();
@@ -30,9 +48,10 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     // Client has no idea what correctIndex is
     expect(sanitizedQuestion.correctIndex).toBeUndefined();
 
-    // Selecting option 0 (which is mathematically correct in datasource)
-    const result = await useCase.execute(sanitizedQuestion, 0, 'Ali', 'lesson_01');
+    // Selecting the server-side correct option (the answer key lives only in the bank)
+    const result = await useCase.execute(sanitizedQuestion, serverCorrectIndex('q_math_alg_01'), 'Ali', 'lesson_01');
     expect(result.isCorrect).toBe(true);
+    expect(result.correctOption).toBe(serverCorrectOption('q_math_alg_01'));
     expect(result.xpAwarded).toBe(2);
     expect(result.newSkillScore).toBeDefined();
 
@@ -52,9 +71,10 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
       explanation: 'Formula yechimi.',
     };
 
-    // Student selects option 1 (wrong)
-    const result = await useCase.execute(sanitizedQuestion, 1, 'Ali', 'lesson_01');
+    // Student selects a wrong option
+    const result = await useCase.execute(sanitizedQuestion, serverWrongIndex('q_math_alg_01'), 'Ali', 'lesson_01');
     expect(result.isCorrect).toBe(false);
+    expect(result.correctOption).toBe(serverCorrectOption('q_math_alg_01'));
     expect(result.xpAwarded).toBe(0);
     expect(result.aiExplanation).toBeDefined();
     expect(result.aiExplanation?.explanation).toBeDefined();
@@ -90,7 +110,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     };
 
     // First attempt
-    const res1 = await useCase.execute(question, 0, 'Ali', 'lesson_02');
+    const res1 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'Ali', 'lesson_02');
     expect(res1.isCorrect).toBe(true);
     expect(res1.xpAwarded).toBe(2);
 
@@ -98,7 +118,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     expect(profile1.xp).toBe(2);
 
     // Replay attempt with same parameters
-    const res2 = await useCase.execute(question, 0, 'Ali', 'lesson_02');
+    const res2 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'Ali', 'lesson_02');
     expect(res2.isCorrect).toBe(true);
     expect(res2.xpAwarded).toBe(0); // No double XP awarded!
 
@@ -117,7 +137,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
       explanation: '',
     };
 
-    await useCase.execute(q1, 0, 'Ali', 'lesson_stat');
+    await useCase.execute(q1, serverCorrectIndex('q_math_alg_01'), 'Ali', 'lesson_stat');
     const profile = await learnerRepo.getProfile();
     const algScore = profile.scoresByCourse['course_math_01']?.['skill_math_algebra'];
 

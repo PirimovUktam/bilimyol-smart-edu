@@ -4,10 +4,18 @@ import {
   AIExplanationResponse,
   GenerateLessonRequest,
   GeneratedLessonResponse,
+  GeneratedQuestionResponse,
   AskTutorRequest,
   AskTutorResponse,
 } from './IAITutorService';
 import { DEMO_AI_RESPONSES } from '../datasources/demoAiResponses';
+import { publishQuestionWithRegisteredKey } from '@/core/runtime/questionAnswerKeys';
+
+/** An authored AI question: the answer key is registered server-side, then stripped. */
+type AuthoredQuestion = GeneratedQuestionResponse & { correctIndex: number; explanation: string };
+
+const publishAll = (questions: AuthoredQuestion[]): GeneratedQuestionResponse[] =>
+  questions.map((question) => publishQuestionWithRegisteredKey(question));
 
 export class DemoAITutorService implements IAITutorService {
   /**
@@ -31,11 +39,14 @@ export class DemoAITutorService implements IAITutorService {
     }
 
     // Generic pedagogical fallback for any other question
+    const correctLine = request.correctOption
+      ? `To‘g‘ri javob: ${request.correctOption}.`
+      : '';
     return {
       tutorName: 'Yo‘lchi AI',
       title: 'Xatoni tahlil qilish',
-      explanation: `Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas. To‘g‘ri javob: ${request.correctOption}.`,
-      remediationStep: 'Mavzuni to‘liq o‘zlashtirish uchun formulani qadamma-qadam tekshirib chiqing.',
+      explanation: `Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas. ${correctLine}`.trim(),
+      remediationStep: 'Mavzuni to‘liq o‘zlashtirish uchun yechimni qadamma-qadam tekshirib chiqing.',
       suggestedAction: 'Keling, ushbu ko‘nikmani mustahkamlash mashqi bilan tekshiramiz.',
       isDeterministicFallback: true,
     };
@@ -96,13 +107,15 @@ export class DemoAITutorService implements IAITutorService {
             content: 'O‘rgangan ko‘nikmangizni quyidagi savol bilan sinab ko‘ring.',
           },
         ],
-        questions: [
+        questions: publishAll([
           {
             id: 'q_demo_eng_1',
             courseId: request.courseId,
             skillId: request.skillId,
             text: 'What does "consistent daily practice" lead to according to the lesson?',
             options: ['Mastering vocabulary', 'Forgetting words', 'Reducing fluency', 'Changing grammar rules'],
+            correctIndex: 0,
+            explanation: 'Darsga ko‘ra, doimiy mashq so‘z boyligini mukammal egallashga olib keladi.',
             difficulty: 'medium',
             isAiGenerated: false,
             isDeterministicFallback: true,
@@ -113,11 +126,13 @@ export class DemoAITutorService implements IAITutorService {
             skillId: request.skillId,
             text: 'Choose the correct word: "She has a very ___ understanding of the topic."',
             options: ['deep', 'deeply', 'depth', 'deepness'],
+            correctIndex: 0,
+            explanation: 'Otdan oldin sifat keladi: "deep understanding" — "juda chuqur tushuncha".',
             difficulty: 'medium',
             isAiGenerated: false,
             isDeterministicFallback: true,
           },
-        ],
+        ]),
         isAiGenerated: false,
         isDeterministicFallback: true,
       };
@@ -159,18 +174,20 @@ export class DemoAITutorService implements IAITutorService {
             content: 'Quyidagi kod natijasini aniqlang.',
           },
         ],
-        questions: [
+        questions: publishAll([
           {
             id: 'q_demo_it_1',
             courseId: request.courseId,
             skillId: request.skillId,
             text: 'Python tilida matnli qiymat (string) qaysi belgilar ichida yoziladi?',
             options: ['Qo‘shtirnoq yoki bittalik tirnoq', 'Kvadrat qavslar', 'Katta-kichik belgilari', 'Hech qanday belgisiz'],
+            correctIndex: 0,
+            explanation: 'Python’da satr (string) qo‘shtirnoq ("...") yoki bittalik tirnoq (\'...\') ichida yoziladi.',
             difficulty: 'easy',
             isAiGenerated: false,
             isDeterministicFallback: true,
           },
-        ],
+        ]),
         isAiGenerated: false,
         isDeterministicFallback: true,
       };
@@ -205,18 +222,20 @@ export class DemoAITutorService implements IAITutorService {
             content: 'Ketma-ketlikdagi keyingi sonni toping.',
           },
         ],
-        questions: [
+        questions: publishAll([
           {
             id: 'q_demo_logic_1',
             courseId: request.courseId,
             skillId: request.skillId,
             text: 'Ketma-ketlikni davom ettiring: 2, 4, 8, 16, ?',
             options: ['32', '24', '30', '64'],
+            correctIndex: 0,
+            explanation: 'Har bir had oldingisidan 2 baravar katta: 16 × 2 = 32.',
             difficulty: 'medium',
             isAiGenerated: false,
             isDeterministicFallback: true,
           },
-        ],
+        ]),
         isAiGenerated: false,
         isDeterministicFallback: true,
       };
@@ -273,7 +292,7 @@ export class DemoAITutorService implements IAITutorService {
           content: 'O‘rganganlaringizni sinab ko‘ring.',
         },
       ],
-      questions: [
+      questions: publishAll([
         {
           id: 'q_demo_1',
           courseId: request.courseId,
@@ -281,6 +300,8 @@ export class DemoAITutorService implements IAITutorService {
           text: 'f(x) = 2x + 3 funksiya berilgan. x = 4 bo‘lganda f(4) nechaga teng?',
           formulaLatex: 'f(4) = 2(4) + 3',
           options: ['11', '8', '14', '9'],
+          correctIndex: 0,
+          explanation: 'Argument o‘rniga qo‘yamiz: f(4) = 2×4 + 3 = 8 + 3 = 11.',
           difficulty: 'medium',
           isAiGenerated: false,
           isDeterministicFallback: true,
@@ -292,11 +313,13 @@ export class DemoAITutorService implements IAITutorService {
           text: 'f(x) = 3x - 1 funksiya berilgan. x = 3 bo‘lganda f(3) nechaga teng?',
           formulaLatex: 'f(3) = 3(3) - 1',
           options: ['8', '10', '6', '9'],
+          correctIndex: 0,
+          explanation: 'f(3) = 3×3 − 1 = 9 − 1 = 8.',
           difficulty: 'medium',
           isAiGenerated: false,
           isDeterministicFallback: true,
         },
-      ],
+      ]),
       isAiGenerated: false,
       isDeterministicFallback: true,
     };

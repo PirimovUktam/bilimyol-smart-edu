@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
+  XCircle,
   Sparkles,
   Clock,
   Lightbulb,
@@ -59,6 +60,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     prevStep,
     goToStep,
     submitAnswer,
+    clearAnswerResult,
+    openAIPanel,
     openReinforcement,
     closeReinforcement,
     closeAIPanel,
@@ -128,6 +131,11 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const currentStep = currentLesson.steps[currentStepIndex];
   const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
+
+  // Answer reveal: after submission we always show which option was correct and
+  // (on a mistake) which option the learner picked, so feedback is never blind.
+  const revealedCorrectOption = lastAnswerResult?.correctOption || '';
+  const revealAnswers = hasSubmittedCurrent && Boolean(lastAnswerResult);
 
   // Infographic 2 Step 8 category tabs mapping
   const stepCategoryLabels = [
@@ -361,6 +369,16 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   {currentStep.interactiveQuestion.options.map((opt, idx) => {
                     const isSelected = pickedOption === idx;
                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
+                    const isCorrectOption = revealAnswers && revealedCorrectOption !== '' && opt === revealedCorrectOption;
+                    const isWrongPick = revealAnswers && isSelected && lastAnswerResult?.isCorrect === false;
+
+                    const optionTone = isCorrectOption
+                      ? 'border-mint/50 bg-mint/10 ring-2 ring-mint/30'
+                      : isWrongPick
+                      ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25'
+                      : isSelected
+                      ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-sm'
+                      : 'border-[#e4ddce] bg-white hover:border-slate-400 hover:bg-[#fbf9f4]';
 
                     return (
                       <button
@@ -368,16 +386,16 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         type="button"
                         onClick={() => handleSelectQuizOption(idx)}
                         disabled={isEvaluatingAnswer || hasSubmittedCurrent}
-                        className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-sm'
-                            : 'border-[#e4ddce] bg-white hover:border-slate-400 hover:bg-[#fbf9f4]'
-                        }`}
+                        className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${optionTone}`}
                       >
                         <div className="flex items-center gap-3">
                           <span
                             className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
-                              isSelected
+                              isCorrectOption
+                                ? 'bg-mint text-white'
+                                : isWrongPick
+                                ? 'bg-coral text-white'
+                                : isSelected
                                 ? 'bg-[#10151f] text-white shadow-xs'
                                 : 'bg-[#f5efe4] text-slate-700 border border-[#e4ddce]'
                             }`}
@@ -386,11 +404,19 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           </span>
                           <span className="font-mono font-bold text-slate-900 text-sm">{opt}</span>
                         </div>
-                        {isSelected && (
+                        {isCorrectOption ? (
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-mint/15 text-[#046b4a] border border-mint/30 shrink-0 uppercase tracking-wider flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> To‘g‘ri javob
+                          </span>
+                        ) : isWrongPick ? (
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-coral/10 text-[#a51c1c] border border-coral/30 shrink-0 uppercase tracking-wider flex items-center gap-1">
+                            <XCircle className="w-3 h-3" /> Siz tanladingiz
+                          </span>
+                        ) : isSelected ? (
                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 shrink-0 uppercase tracking-wider">
                             tanlangan ✓
                           </span>
-                        )}
+                        ) : null}
                       </button>
                     );
                   })}
@@ -424,38 +450,70 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                     </div>
 
                     {lastAnswerResult.isCorrect ? (
-                      <div className="space-y-1.5 text-xs sm:text-sm">
-                        <p className="font-bold text-mint">
-                          To‘g‘ri javob tanlandi!
-                        </p>
+                      <div className="space-y-2 text-xs sm:text-sm">
+                        <p className="font-bold text-mint">To‘g‘ri javob tanlandi!</p>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Javob: {lastAnswerResult.selectedOption || lastAnswerResult.correctOption}
+                        </div>
                         <p className="text-slate-700">
-                          {lastAnswerResult.explanation || 'Ajoyib! Mavzu bo‘yicha tushunchangiz mustahkamlandi va bilim foizingiz oshirildi.'}
+                          {lastAnswerResult.explanation || 'Ajoyib! Mavzu bo‘yicha tushunchangiz mustahkamlandi.'}
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 text-xs sm:text-sm">
-                        <p className="font-bold text-coral">
-                          {lastAnswerResult.explanation || 'Hisoblashda hadlarni birlashtirishda xatolik yuz berdi.'}
+                      <div className="space-y-3 text-xs sm:text-sm">
+                        {/* Explicit answer reveal: what was chosen vs what is correct */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-coral/10 border border-coral/30 font-mono text-[11px] font-bold text-[#a51c1c]">
+                            <XCircle className="w-3.5 h-3.5" />
+                            Siz tanladingiz: {lastAnswerResult.selectedOption || '—'}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            To‘g‘ri javob: {lastAnswerResult.correctOption || '—'}
+                          </span>
+                        </div>
+
+                        <p className="font-medium text-slate-800">
+                          {lastAnswerResult.explanation ||
+                            (lastAnswerResult.correctOption
+                              ? `Nima uchun xato? To‘g‘ri javob — "${lastAnswerResult.correctOption}". Yechimni qadam-baqadam tekshirib ko‘ring.`
+                              : 'Javob xato. Yechimni qadam-baqadam tekshirib ko‘ring.')}
                         </p>
+
                         {lastAnswerResult.aiExplanation && (
                           <div className="p-3 bg-white/90 rounded-2xl border border-coral/25 text-slate-800 space-y-1">
                             <span className="text-[11px] font-black uppercase text-brand-dark block">
                               Yo‘lchi AI maslahati:
                             </span>
-                            <p className="font-medium">
-                              {lastAnswerResult.aiExplanation.remediationStep}
-                            </p>
+                            {lastAnswerResult.aiExplanation.explanation && (
+                              <p className="font-medium">{lastAnswerResult.aiExplanation.explanation}</p>
+                            )}
+                            {lastAnswerResult.aiExplanation.remediationStep && (
+                              <p className="text-slate-600">{lastAnswerResult.aiExplanation.remediationStep}</p>
+                            )}
                           </div>
                         )}
-                        <Button
-                          variant="coral"
-                          size="sm"
-                          onClick={openReinforcement}
-                          rightIcon={<ArrowRight className="w-4 h-4" />}
-                          className="mt-2 font-bold"
-                        >
-                          Mavzuni mustahkamlash mashqi
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={openAIPanel}
+                            leftIcon={<Sparkles className="w-4 h-4 text-brand" />}
+                            className="font-bold"
+                          >
+                            Yo‘lchi AI tahlili
+                          </Button>
+                          <Button
+                            variant="coral"
+                            size="sm"
+                            onClick={openReinforcement}
+                            rightIcon={<ArrowRight className="w-4 h-4" />}
+                            className="font-bold"
+                          >
+                            Mavzuni mustahkamlash mashqi
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </motion.div>
@@ -482,6 +540,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           variant="outline"
                           size="md"
                           onClick={() => {
+                            clearAnswerResult();
                             setPickedOption(null);
                             setHasSubmittedCurrent(false);
                           }}

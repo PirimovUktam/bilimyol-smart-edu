@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, Award, ArrowRight, Unlock, Zap, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Award, ArrowRight, Unlock, Zap, X } from 'lucide-react';
 import { Question } from '@/domain/entities/Question';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { deriveReinforcementNodeId } from './reinforcementNodeId';
@@ -30,6 +30,16 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [feedbackState, setFeedbackState] = useState<'answering' | 'success' | 'incorrect'>('answering');
   const [scoreTransition, setScoreTransition] = useState<{ oldScore: number; newScore: number; xpAwarded?: number } | null>(null);
+  const [failureFeedback, setFailureFeedback] = useState<{ correctOption?: string; explanation?: string } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedIdx(null);
+      setFeedbackState('answering');
+      setScoreTransition(null);
+      setFailureFeedback(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -68,9 +78,14 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
         newScore: result.newScore,
         xpAwarded: result.xpAwarded ?? 0,
       });
+      setFailureFeedback(null);
       setFeedbackState('success');
     } else {
       sounds.playMistake();
+      setFailureFeedback({
+        correctOption: result.correctOption,
+        explanation: result.explanation,
+      });
       setFeedbackState('incorrect');
     }
   };
@@ -133,6 +148,10 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                 {question.options.map((opt, idx) => {
                   const isSelected = selectedIdx === idx;
                   const letter = String.fromCharCode(65 + idx);
+                  const showResult = feedbackState === 'incorrect';
+                  const correctText = failureFeedback?.correctOption || '';
+                  const isCorrectOption = showResult && correctText !== '' && opt === correctText;
+                  const isWrongPick = showResult && isSelected && !isCorrectOption;
 
                   return (
                     <button
@@ -141,29 +160,64 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                       onClick={() => {
                         setSelectedIdx(idx);
                         setFeedbackState('answering');
+                        setFailureFeedback(null);
                       }}
                       disabled={isUpdating}
                       className={`p-4 rounded-xl border text-left font-mono font-bold text-sm transition-all cursor-pointer flex items-center justify-between ${
-                        isSelected
+                        isCorrectOption
+                          ? 'border-mint/50 bg-mint/10 ring-2 ring-mint/30 text-[#046b4a]'
+                          : isWrongPick
+                          ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25 text-[#a51c1c]'
+                          : isSelected
                           ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-xs'
                           : 'border-[#e4ddce] bg-[#fbf9f4] hover:border-slate-400 hover:bg-white text-slate-800'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded flex items-center justify-center text-xs ${isSelected ? 'bg-[#10151f] text-white' : 'bg-[#e4ddce] text-slate-700'}`}>
+                        <span className={`w-6 h-6 rounded flex items-center justify-center text-xs ${
+                          isCorrectOption
+                            ? 'bg-mint text-white'
+                            : isWrongPick
+                            ? 'bg-coral text-white'
+                            : isSelected
+                            ? 'bg-[#10151f] text-white'
+                            : 'bg-[#e4ddce] text-slate-700'
+                        }`}>
                           {letter}
                         </span>
                         <span>{opt}</span>
                       </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-[#10151f]" />}
+                      {isCorrectOption ? (
+                        <CheckCircle2 className="w-4 h-4 text-mint" />
+                      ) : isWrongPick ? (
+                        <XCircle className="w-4 h-4 text-coral" />
+                      ) : isSelected ? (
+                        <CheckCircle2 className="w-4 h-4 text-[#10151f]" />
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
 
               {feedbackState === 'incorrect' && (
-                <div className="p-3 bg-coral/5 border border-coral/25 rounded-xl text-xs font-mono font-bold text-coral">
-                  Javob noto‘g‘ri. E’tibor bering: amallar tartibini qayta tahlil qiling.
+                <div className="p-3.5 bg-coral/5 border border-coral/25 rounded-xl space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    {selectedIdx !== null && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-coral/10 border border-coral/30 font-mono text-[11px] font-bold text-[#a51c1c]">
+                        <XCircle className="w-3.5 h-3.5" />
+                        Siz tanladingiz: {question.options[selectedIdx]}
+                      </span>
+                    )}
+                    {failureFeedback?.correctOption && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        To‘g‘ri javob: {failureFeedback.correctOption}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                    {failureFeedback?.explanation || 'Javob xato. Yechimni qadam-baqadam tekshirib, qayta urinib ko‘ring.'}
+                  </p>
                 </div>
               )}
               {submissionError && (

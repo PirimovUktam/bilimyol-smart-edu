@@ -1,6 +1,10 @@
 import { Question } from '@/domain/entities/Question';
+import { permuteQuestionOptions } from '@/core/utils/questionOptionOrder';
 
-export const PLACEMENT_QUESTIONS: Record<string, Question[]> = {
+// Raw authored bank. Options are written with the correct answer first for
+// readability, then deterministically permuted below so learners never see a
+// fixed "correct answer is always A" pattern.
+const PLACEMENT_QUESTIONS_RAW: Record<string, Question[]> = {
   course_math_01: [
     // ALGEBRA (5 questions)
     {
@@ -554,3 +558,10 @@ export const PLACEMENT_QUESTIONS: Record<string, Question[]> = {
     },
   ],
 };
+
+export const PLACEMENT_QUESTIONS: Record<string, Question[]> = Object.fromEntries(
+  Object.entries(PLACEMENT_QUESTIONS_RAW).map(([courseId, questions]) => [
+    courseId,
+    questions.map(permuteQuestionOptions),
+  ])
+);

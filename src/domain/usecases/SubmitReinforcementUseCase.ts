@@ -12,6 +12,9 @@ export interface ReinforcementResult {
   newScore: number;
   xpAwarded: number;
   updatedRoadmap: LearningPath;
+  /** Present when the attempt was wrong — surfaced to the learner as feedback. */
+  correctOption?: string;
+  explanation?: string;
 }
 
 export class SubmitReinforcementUseCase {
@@ -70,6 +73,8 @@ export class SubmitReinforcementUseCase {
         newScore: currentScores[skillId]?.score ?? 0,
         xpAwarded: 0,
         updatedRoadmap: currentRoadmap,
+        correctOption: answerResult.correctOption,
+        explanation: answerResult.explanation,
       };
     }
 

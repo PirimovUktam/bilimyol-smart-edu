@@ -84,6 +84,8 @@ interface LessonState {
   prevStep: () => void;
   goToStep: (index: number) => void;
   submitAnswer: (selectedIndex: number) => Promise<LessonAnswerResult | null>;
+  clearAnswerResult: () => void;
+  openAIPanel: () => void;
   openReinforcement: () => void;
   closeReinforcement: () => void;
   closeAIPanel: () => void;
@@ -425,11 +427,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       } else {
         await refreshProfile();
         if (!isCurrent()) return null;
-        // Wrong answer -> Show Yo'lchi AI Feedback panel
+        // Wrong answer -> the inline feedback card already reveals the correct
+        // answer + explanation. The detailed AI panel is opt-in so a blocking
+        // modal never hides the answer from the learner.
         set({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
-          showAIPanel: true,
+          showAIPanel: false,
           error: null,
         });
       }
@@ -445,6 +449,14 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       });
       return null;
     }
+  },
+
+  clearAnswerResult: () => {
+    set({ lastAnswerResult: null, showAIPanel: false, error: null });
+  },
+
+  openAIPanel: () => {
+    set({ showAIPanel: true });
   },
 
   openReinforcement: () => {

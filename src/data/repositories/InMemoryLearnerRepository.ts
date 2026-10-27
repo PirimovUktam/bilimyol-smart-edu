@@ -13,6 +13,7 @@ import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine'
 import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
 import { SEED_LESSONS } from '@/data/datasources/lessons';
 import { SEED_ROADMAP_NODES } from '@/data/datasources/roadmaps';
+import { getQuestionAnswerKey } from '@/core/runtime/questionAnswerKeys';
 
 const DEFAULT_PROFILE: LearnerProfile = {
   id: 'learner_default_01',
@@ -199,6 +200,19 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
           }
         }
         if (correctIndex !== undefined) break;
+      }
+    }
+
+    // 3. Check runtime-registered answer keys (AI / deterministic-fallback
+    // questions that are not part of the static seed banks). The key is
+    // registered by the AI service that produced the question, never carried in
+    // the client payload.
+    if (correctIndex === undefined) {
+      const runtimeKey = getQuestionAnswerKey(request.questionId);
+      if (runtimeKey) {
+        correctIndex = runtimeKey.correctIndex;
+        if (runtimeKey.explanation) explanation = runtimeKey.explanation;
+        correctOption = runtimeKey.options[correctIndex];
       }
     }
 
