@@ -58,15 +58,15 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
           <div
             className={`absolute top-0 left-0 right-0 h-1.5 ${
               hasError
-                ? 'bg-rose-500'
-                : 'bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-400'
+                ? 'bg-coral'
+                : 'bg-gradient-to-r from-blue-600 via-brand to-path'
             }`}
           />
 
           {hasError ? (
             /* Error & Timeout State */
             <div className="space-y-6 text-center pt-2">
-              <div className="w-16 h-16 mx-auto rounded-3xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shadow-lg shadow-rose-500/10">
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-coral/5 text-coral border border-coral/25 flex items-center justify-center shadow-lg shadow-rose-500/10">
                 <AlertCircle className="w-8 h-8" />
               </div>
 
@@ -77,7 +77,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                 <p className="text-xs font-semibold text-slate-500">
                   {courseTitle} • <span className="text-slate-700">{topic}</span>
                 </p>
-                <div className="p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200/90 text-rose-950 text-xs font-medium text-left leading-relaxed">
+                <div className="p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200/90 text-coral text-xs font-medium text-left leading-relaxed">
                   {displayErrorMessage}
                 </div>
               </div>
@@ -110,7 +110,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
             <div className="space-y-6">
               {/* Top Robot / AI Sparkle Icon */}
               <div className="text-center space-y-3 pt-2">
-                <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-teal-500 text-white flex items-center justify-center shadow-xl shadow-blue-500/25 relative">
+                <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-blue-600 via-brand to-path text-white flex items-center justify-center shadow-xl shadow-blue-500/25 relative">
                   <Sparkles className="w-8 h-8 animate-pulse text-amber-200" />
                 </div>
                 <div>
@@ -134,7 +134,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                 </div>
                 <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden relative">
                   <motion.div
-                    className="absolute top-0 bottom-0 w-1/3 bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-400 rounded-full"
+                    className="absolute top-0 bottom-0 w-1/3 bg-gradient-to-r from-blue-600 via-brand to-path rounded-full"
                     animate={{
                       left: ['-35%', '100%'],
                     }}
@@ -153,7 +153,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
               {/* Pedagogical Feature Pills */}
               <div className="pt-4 border-t border-slate-100 grid grid-cols-1 gap-2 text-xs font-semibold text-slate-700">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <Target className="w-4 h-4 text-mint shrink-0" />
                   <span>Siz tanlagan fanga mos interaktiv kontent</span>
                 </div>
                 <div className="flex items-center gap-2">

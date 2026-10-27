@@ -20,7 +20,6 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { isLessonCourseMismatch } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { Badge } from '@/presentation/components/Badge';
 import { MathFunctionGraph } from './MathFunctionGraph';
 import { AudioSimWave } from './AudioSimWave';
 import { AILessonGeneratingCard } from './AILessonGeneratingCard';
@@ -129,15 +128,6 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const currentStep = currentLesson.steps[currentStepIndex];
   const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
-  // Badge tone follows the course's declared subject, never a hardcoded id.
-  const badgeVariant =
-    activeCourse?.subject === 'english'
-      ? 'teal'
-      : activeCourse?.subject === 'it'
-      ? 'indigo'
-      : activeCourse?.subject === 'logic'
-      ? 'emerald'
-      : 'blue';
 
   // Infographic 2 Step 8 category tabs mapping
   const stepCategoryLabels = [
@@ -192,26 +182,26 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       )}
 
       {/* Top Breadcrumb & Progress */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBackToRoadmap}
             leftIcon={<ArrowLeft className="w-4 h-4" />}
-            className="text-slate-500 hover:text-slate-800"
+            className="text-slate-600 hover:text-slate-950 font-bold"
           >
             Yo‘l xaritasiga qaytish
           </Button>
-          <div className="h-4 w-px bg-slate-200" />
-          <Badge variant={badgeVariant} size="sm">
-            <BookOpen className="w-3.5 h-3.5 mr-1" />
+          <div className="h-4 w-px bg-[#e4ddce]" />
+          <span className="font-mono text-xs font-bold text-slate-800 bg-white border border-[#e4ddce] px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+            <BookOpen className="w-3.5 h-3.5 text-brand" />
             {currentLesson.title}
-          </Badge>
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-          <Clock className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2 font-mono text-xs text-slate-500 font-medium">
+          <Clock className="w-3.5 h-3.5 text-slate-400" />
           <span>{currentLesson.estimatedMinutes} daqiqa</span>
           <span>•</span>
           <span>
@@ -220,7 +210,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         </div>
       </div>
 
-      {/* Step Category Navigation Tabs matching Infographic 2 Step 8 */}
+      {/* Step Category Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {currentLesson.steps.map((st, idx) => {
           const isActive = currentStepIndex === idx;
@@ -234,15 +224,15 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
               onClick={() => goToStep(idx)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                 isActive
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                  ? 'bg-[#10151f] text-white border-[#10151f] shadow-xs'
                   : isPassed
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                  ? 'bg-mint/10 text-mint border-mint/25 hover:bg-mint/10'
+                  : 'bg-white text-slate-600 border-[#e4ddce] hover:bg-[#fbf9f4] hover:border-slate-400'
               }`}
             >
-              <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-white' : isPassed ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-path' : isPassed ? 'text-mint' : 'text-slate-400'}`} />
               <span>{catInfo.label}</span>
-              {isPassed && <CheckCircle2 className="w-3 h-3 text-emerald-600 ml-0.5" />}
+              {isPassed && <CheckCircle2 className="w-3 h-3 text-mint ml-0.5" />}
             </button>
           );
         })}
@@ -258,10 +248,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
               key={st.id}
               className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                 isActive
-                  ? 'bg-blue-600 shadow-xs'
+                  ? 'bg-[#10151f]'
                   : isPassed
-                  ? 'bg-emerald-500'
-                  : 'bg-slate-200'
+                  ? 'bg-mint'
+                  : 'bg-[#ece5d8]'
               }`}
             />
           );
@@ -272,42 +262,42 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep.id}
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.2 }}
         >
-          <Card className="p-7 sm:p-9 shadow-xl border-slate-200/90 space-y-6">
+          <div className="p-7 sm:p-9 bg-white border border-[#e4ddce] rounded-2xl shadow-sm space-y-6">
             {/* Step Header */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-blue-600 uppercase tracking-wider">
+                <span className="editorial-kicker">
                   Qadam {currentStep.stepNumber}
                 </span>
                 {currentStep.subtitle && (
-                  <span className="text-xs font-semibold text-slate-400">
-                    • {currentStep.subtitle}
+                  <span className="font-mono text-xs text-slate-500 font-medium">
+                    // {currentStep.subtitle}
                   </span>
                 )}
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">{currentStep.title}</h2>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{currentStep.title}</h2>
             </div>
 
             {/* Step Content Description */}
-            <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line">
+            <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line font-medium">
               {currentStep.content}
             </p>
 
             {/* Highlights */}
             {currentStep.highlightNotes && currentStep.highlightNotes.length > 0 && (
-              <div className="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-2">
-                <span className="text-xs font-bold text-blue-800 uppercase tracking-wider block">
+              <div className="p-4 bg-[#fbf9f4] border-l-4 border-brand border-y border-r border-[#e4ddce] rounded-xl space-y-2">
+                <span className="font-mono text-[10px] font-bold text-brand-dark uppercase tracking-widest block">
                   Asosiy Qoidalar:
                 </span>
                 <ul className="space-y-1.5">
                   {currentStep.highlightNotes.map((note, i) => (
-                    <li key={i} className="text-xs sm:text-sm text-slate-800 flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <li key={i} className="text-xs sm:text-sm text-slate-800 flex items-start gap-2 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-mint shrink-0 mt-0.5" />
                       <span>{note}</span>
                     </li>
                   ))}
@@ -317,10 +307,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
             {/* Step Formula Data (if any) */}
             {currentStep.formulaData && (
-              <div className="p-6 bg-slate-900 text-white rounded-2xl space-y-4">
+              <div className="p-6 bg-[#10151f] text-white rounded-xl border border-slate-700/80 space-y-4 shadow-md">
                 <div className="text-center space-y-1">
-                  <span className="text-xs text-slate-400 font-medium">Chiziqli Funksiya Ko‘rinishi:</span>
-                  <div className="text-2xl sm:text-3xl font-mono font-bold text-teal-400 py-1">
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest font-bold">Chiziqli Funksiya Ko‘rinishi:</span>
+                  <div className="text-2xl sm:text-3xl font-mono font-bold text-path py-1">
                     {currentStep.formulaData.latex}
                   </div>
                   <p className="text-xs text-slate-300">{currentStep.formulaData.description}</p>
@@ -328,7 +318,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-800">
                   {currentStep.formulaData.variables.map((v, i) => (
-                    <div key={i} className="p-3 bg-slate-800/80 rounded-xl border border-slate-700/80">
+                    <div key={i} className="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80">
                       <span className="font-mono font-bold text-amber-300 text-sm">{v.symbol}</span>
                       <p className="text-xs text-slate-300 mt-0.5">{v.meaning}</p>
                     </div>
@@ -348,26 +338,26 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
               />
             )}
 
-            {/* Step Interactive Question (Quiz) matching Infographic 2 Step 9 */}
+            {/* Step Interactive Question (Quiz) */}
             {currentStep.interactiveQuestion && (
-              <div className="pt-4 border-t border-slate-200 space-y-5">
-                <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-indigo-700 uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4" />
+              <div className="pt-4 border-t border-[#e4ddce] space-y-5">
+                <div className="p-4 bg-[#fbf9f4] border border-[#e4ddce] rounded-xl space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-mono font-bold text-brand-dark uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-brand" />
                     <span>Darsni Yakunlovchi Sinov Savoli</span>
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                  <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
                     {currentStep.interactiveQuestion.text}
                   </h3>
                   {currentStep.interactiveQuestion.formulaLatex && (
-                    <div className="p-2 bg-white rounded-lg border border-indigo-200 font-mono font-bold text-blue-700 text-sm inline-block">
+                    <div className="p-2 bg-white rounded-lg border border-[#e4ddce] font-mono font-bold text-brand-dark text-sm inline-block">
                       {currentStep.interactiveQuestion.formulaLatex}
                     </div>
                   )}
                 </div>
 
-                {/* Option buttons with A, B, C, D indicators and 2x2 grid (Reference 4) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Option buttons with A, B, C, D indicators and 2x2 grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {currentStep.interactiveQuestion.options.map((opt, idx) => {
                     const isSelected = pickedOption === idx;
                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
@@ -378,26 +368,26 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         type="button"
                         onClick={() => handleSelectQuizOption(idx)}
                         disabled={isEvaluatingAnswer || hasSubmittedCurrent}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
+                        className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'border-indigo-600 bg-indigo-50/80 shadow-md ring-2 ring-indigo-500/20'
-                            : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50/80'
+                            ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-sm'
+                            : 'border-[#e4ddce] bg-white hover:border-slate-400 hover:bg-[#fbf9f4]'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0 ${
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                               isSelected
-                                ? 'bg-indigo-600 text-white shadow-xs'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-[#10151f] text-white shadow-xs'
+                                : 'bg-[#f5efe4] text-slate-700 border border-[#e4ddce]'
                             }`}
                           >
                             {letter}
                           </span>
-                          <span className="font-bold text-slate-800 text-sm font-mono">{opt}</span>
+                          <span className="font-mono font-bold text-slate-900 text-sm">{opt}</span>
                         </div>
                         {isSelected && (
-                          <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200 shrink-0">
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 shrink-0 uppercase tracking-wider">
                             tanlangan ✓
                           </span>
                         )}
@@ -413,19 +403,19 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     className={`p-5 rounded-3xl border-2 space-y-3 ${
                       lastAnswerResult.isCorrect
-                        ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
-                        : 'bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border-rose-300 text-rose-950 shadow-sm'
+                        ? 'bg-emerald-50/90 border-mint/30 text-mint'
+                        : 'bg-gradient-to-r from-coral/5 via-amber-50 to-orange-50 border-coral/30 text-coral shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-emerald-600' : 'text-rose-600'}`} />
+                        <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-mint' : 'text-coral'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
                           {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Xato tahlili: Yo‘lchi AI'}
                         </span>
                       </div>
 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                          lastAnswerResult.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
+                          lastAnswerResult.isCorrect ? 'bg-mint/25 text-mint' : 'bg-coral/25 text-coral'
                         }`}>
                           {lastAnswerResult.isCorrect
                             ? `+${lastAnswerResult.xpAwarded ?? 2} XP`
@@ -435,7 +425,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
                     {lastAnswerResult.isCorrect ? (
                       <div className="space-y-1.5 text-xs sm:text-sm">
-                        <p className="font-bold text-emerald-800">
+                        <p className="font-bold text-mint">
                           To‘g‘ri javob tanlandi!
                         </p>
                         <p className="text-slate-700">
@@ -444,12 +434,12 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       </div>
                     ) : (
                       <div className="space-y-2 text-xs sm:text-sm">
-                        <p className="font-bold text-rose-950">
+                        <p className="font-bold text-coral">
                           {lastAnswerResult.explanation || 'Hisoblashda hadlarni birlashtirishda xatolik yuz berdi.'}
                         </p>
                         {lastAnswerResult.aiExplanation && (
-                          <div className="p-3 bg-white/90 rounded-2xl border border-rose-200 text-slate-800 space-y-1">
-                            <span className="text-[11px] font-black uppercase text-indigo-700 block">
+                          <div className="p-3 bg-white/90 rounded-2xl border border-coral/25 text-slate-800 space-y-1">
+                            <span className="text-[11px] font-black uppercase text-brand-dark block">
                               Yo‘lchi AI maslahati:
                             </span>
                             <p className="font-medium">
@@ -542,7 +532,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                 </Button>
               </div>
             )}
-          </Card>
+          </div>
         </motion.div>
       </AnimatePresence>
 

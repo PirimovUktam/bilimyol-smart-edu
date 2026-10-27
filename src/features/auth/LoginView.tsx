@@ -69,265 +69,232 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }, 300);
   };
 
+  const inputClass =
+    'w-full pl-10 pr-4 py-3 bg-canvas border border-hairline rounded-[var(--radius-control)] text-sm text-ink placeholder:text-faint font-medium focus:bg-paper focus:border-ink focus:ring-4 focus:ring-ink/5 outline-none transition-all';
+
   return (
-    <div className="min-h-screen w-full bg-[#0a0f2c] text-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden">
-      {/* Dynamic Cosmic Gradient Orbs in Background */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-10 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 left-10 w-[400px] h-[400px] bg-cyan-400/15 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen w-full bg-canvas text-ink flex items-center justify-center p-3 sm:p-6 lab-grid-bg">
+      {/* Editorial split dossier */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 rounded-[var(--radius-panel)] overflow-hidden border border-hairline bg-paper shadow-[var(--shadow-pop)]">
+        {/* LEFT: Brand dossier on deep ink */}
+        <div className="lg:col-span-7 ink-panel p-7 sm:p-9 lg:p-12 flex flex-col gap-7">
+          <div className="flex items-center justify-between gap-4">
+            <BilimYolLogo size="lg" variant="dark" showSubtitle={false} />
+            <span className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime lab-pulse" />
+              NEO-LAB v3.0
+            </span>
+          </div>
 
-      {/* Main Container Card: Reference-Driven Split Experience */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto rounded-[36px] bg-gradient-to-br from-slate-900/90 via-[#0f1738]/95 to-[#171e4d]/90 border border-indigo-500/20 shadow-2xl shadow-indigo-950/60 backdrop-blur-2xl overflow-hidden p-6 sm:p-8 lg:p-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
-          {/* LEFT COLUMN: Hero Brand, Values, 3D Yo'lchi AI Artwork & Social Proof */}
-          <div className="lg:col-span-7 flex flex-col justify-between space-y-8">
-            {/* Header Brand */}
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <BilimYolLogo size="lg" variant="dark" showSubtitle={false} />
-              </div>
-              <p className="text-xs sm:text-sm font-semibold text-indigo-300/90 tracking-wide pl-1">
-                AI yordamida shaxsiylashtirilgan ta’lim platformasi
-              </p>
-            </div>
+          <div className="space-y-4">
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
+              Intellektual ta’lim platformasi <span className="text-white/25">//</span> Est. 2026
+            </p>
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-[3.25rem] font-bold text-white tracking-tight leading-[1.05]">
+              Darslik emas —<br />
+              <span className="mark-underline text-white">shaxsiy ta’lim yo‘li.</span>
+            </h1>
+            <p className="text-sm sm:text-base text-white/70 font-medium max-w-xl leading-relaxed">
+              Har bir o‘quvchining haqiqiy bilim foizini real vaqtda hisoblovchi,
+              xatolarni pedagogik tahlil qiluvchi va yo‘lni qayta quradigan AI tizim.
+            </p>
+          </div>
 
-            {/* Big Catchy Hero Headline matching Reference */}
-            <div className="space-y-3">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                Kelajagingni{' '}
-                <span className="bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 bg-clip-text text-transparent">
-                  bilim bilan yarat!
-                </span>
-              </h1>
-              <p className="text-sm sm:text-base text-indigo-200/90 font-medium max-w-xl leading-relaxed">
-                Har bir o‘quvchi uchun individual ta’lim yo‘lini shakllantiruvchi intellektual tizim. O‘rganish jarayonini biz bilan boshlang.
-              </p>
-            </div>
+          {/* Feature chips */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-chip)] bg-white/5 border border-white/10 text-[11px] font-mono font-bold text-white/85">
+              <GraduationCap className="w-4 h-4 text-path" />
+              ADAPTIV YO‘LCHI
+            </span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-chip)] bg-white/5 border border-white/10 text-[11px] font-mono font-bold text-white/85">
+              <BarChart3 className="w-4 h-4 text-mint" />
+              REAL-TIME DB
+            </span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-chip)] bg-white/5 border border-white/10 text-[11px] font-mono font-bold text-white/85">
+              <Star className="w-4 h-4 text-amber" />
+              DAVLAT STANDARTLARI
+            </span>
+          </div>
 
-            {/* 3 Key Feature Badges */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md transition-colors text-xs font-bold text-white shadow-sm">
-                <GraduationCap className="w-4 h-4 text-cyan-300 shrink-0" />
-                <span>Shaxsiy ta’lim yo‘li</span>
-              </div>
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md transition-colors text-xs font-bold text-white shadow-sm">
-                <BarChart3 className="w-4 h-4 text-emerald-300 shrink-0" />
-                <span>AI yordamchi Yo‘lchi</span>
-              </div>
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md transition-colors text-xs font-bold text-white shadow-sm">
-                <Star className="w-4 h-4 text-amber-300 shrink-0" />
-                <span>Real natijalar va progress</span>
-              </div>
-            </div>
-
-            {/* Middle Feature Graphic: 3D Yo'lchi AI & Knowledge Book */}
-            <div className="relative rounded-3xl overflow-hidden border border-indigo-400/25 bg-gradient-to-b from-indigo-950/60 to-slate-950/80 p-2 sm:p-3 group shadow-xl">
-              <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-2xl overflow-hidden bg-slate-950">
-                <img
-                  src="/images/login_hero_yolchi.jpg"
-                  alt="Yo'lchi AI & BilimYo'l Smart Edu"
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-                
-                {/* Floating pill badge on image */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-bold">
-                  <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Yo‘lchi AI intellektual mentori
-                  </span>
-                  <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-indigo-600/80 backdrop-blur-md text-white border border-indigo-400/30 text-[11px]">
-                    24/7 Shaxsiy repetitor
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Proof Strip matching Reference */}
-            <div className="space-y-3 pt-2 border-t border-indigo-500/20">
-              <p className="text-xs italic text-indigo-300 font-semibold tracking-wide">
-                “Har bir o‘quvchi uchun yorqin kelajak!”
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 shrink-0">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-white">Minglab</div>
-                    <div className="text-[10px] text-slate-400">interaktiv darslar</div>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shrink-0">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-white">Shaxsiylashtirilgan</div>
-                    <div className="text-[10px] text-slate-400">o‘quv yo‘li</div>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300 shrink-0">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-extrabold text-white">Xavfsiz va ishonchli</div>
-                    <div className="text-[10px] text-slate-400">platforma</div>
-                  </div>
-                </div>
-              </div>
+          {/* Hero artwork */}
+          <div className="relative rounded-[var(--radius-card)] overflow-hidden border border-white/10 bg-black/30 group flex-1 min-h-[9rem]">
+            <img
+              src="/images/login_hero_yolchi.jpg"
+              alt="Yo‘lchi AI & BilimYo‘l Smart Edu"
+              className="w-full h-full min-h-[9rem] object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-transparent pointer-events-none" />
+            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 text-[11px] font-mono font-bold">
+              <span className="px-3 py-1 rounded-[var(--radius-chip)] bg-black/50 backdrop-blur-md text-path border border-path/30 inline-flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                Yo‘lchi AI Shaxsiy Mentori
+              </span>
+              <span className="hidden sm:inline-block px-2.5 py-1 rounded-[var(--radius-chip)] bg-white/10 backdrop-blur-md text-white/80 border border-white/15 text-[10px]">
+                24/7 INTERAKTIV TAHLIL
+              </span>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Modern White / Glassmorphic Login Card */}
-          <div className="lg:col-span-5 flex justify-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-md bg-white text-slate-900 rounded-[32px] p-7 sm:p-9 shadow-2xl shadow-indigo-950/50 border border-slate-100"
-            >
-              {/* Card Top Brand */}
-              <div className="text-center mb-6">
-                <div className="flex justify-center mb-2.5">
-                  <BilimYolLogo size="md" />
+          {/* Proof strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { icon: Users, tone: 'text-brand', title: '4 Fan Yo‘nalishi', sub: 'Mat · Eng · Dev · Log', bg: 'bg-brand/15' },
+              { icon: TrendingUp, tone: 'text-mint', title: 'Shaxsiy Matritsa', sub: 'Dinamik tahlil', bg: 'bg-mint/15' },
+              { icon: ShieldCheck, tone: 'text-amber', title: 'Xavfsiz Kirish', sub: 'Server tekshiruvi', bg: 'bg-amber/15' },
+            ].map(({ icon: Icon, tone, title, sub, bg }) => (
+              <div key={title} className="p-3 rounded-[var(--radius-control)] bg-white/5 border border-white/10 flex items-center gap-3">
+                <span className={`w-8 h-8 rounded-[var(--radius-chip)] ${bg} flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-4 h-4 ${tone}`} />
+                </span>
+                <div className="min-w-0">
+                  <div className="font-display text-xs font-bold text-white truncate">{title}</div>
+                  <div className="font-mono text-[10px] text-white/50 truncate">{sub}</div>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                  Xush kelibsiz!
-                </h2>
-                <p className="text-xs text-slate-500 font-semibold mt-1 max-w-xs mx-auto">
-                  Shaxsiy ta’lim yo‘lingizni davom ettirish uchun tizimga kiring
-                </p>
               </div>
+            ))}
+          </div>
+        </div>
 
-              {/* Form Component */}
-              <form onSubmit={handleLogin} className="space-y-4">
-                {errorMsg && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold"
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-                    <span>{errorMsg}</span>
-                  </motion.div>
-                )}
+        {/* RIGHT: Form on porcelain paper */}
+        <div className="lg:col-span-5 flex items-center justify-center bg-canvas p-6 sm:p-9 lg:p-12">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-sm"
+          >
+            <div className="mb-6">
+              <div className="lg:hidden mb-4">
+                <BilimYolLogo size="md" />
+              </div>
+              <span className="editorial-kicker">
+                Tizimga kirish <span className="sep">//</span> Shaxsiy profil
+              </span>
+              <h2 className="mt-1.5 font-display text-2xl font-bold text-ink tracking-tight">
+                Xush kelibsiz!
+              </h2>
+              <p className="text-xs text-slatefine font-medium mt-1.5">
+                Shaxsiy ta’lim yo‘lingizni davom ettirish uchun profilingizga kiring.
+              </p>
+            </div>
 
-                {isSuccess && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-emerald-700 text-xs font-bold">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Muvaffaqiyatli kirildi! Sahifa ochilmoqda...</span>
-                  </div>
-                )}
-
-                {/* Email input field */}
-                <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Email manzilingiz
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nomingiz@misol.uz"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200/90 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Password input field */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider">
-                      Parol
-                    </label>
-                    <button
-                      type="button"
-                      onClick={onNavigateForgotPassword}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
-                    >
-                      Parolni unutdingizmi?
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200/90 rounded-2xl text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Main Submit Button: Electric Blue / Indigo Gradient */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isSuccess}
-                  className="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black text-sm tracking-wide shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
+            <form onSubmit={handleLogin} className="space-y-4">
+              {errorMsg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  role="alert"
+                  className="p-3 bg-coral/5 border border-coral/25 rounded-[var(--radius-control)] flex items-start gap-2.5 text-[#a51c1c] text-xs font-medium"
                 >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Kirish</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-coral" />
+                  <span>{errorMsg}</span>
+                </motion.div>
+              )}
 
-              {/* Divider */}
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
+              {isSuccess && (
+                <div className="p-3 bg-mint/10 border border-mint/25 rounded-[var(--radius-control)] flex items-center gap-2.5 text-[#046b4a] text-xs font-bold font-mono">
+                  <CheckCircle2 className="w-4 h-4 text-mint" />
+                  <span>TASDIQLANDI! SAHIFA OCHILMOQDA...</span>
                 </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-3 bg-white text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                    yoki
-                  </span>
+              )}
+
+              <div>
+                <label htmlFor="login-email" className="block font-mono text-[10px] font-bold text-slatefine uppercase tracking-wider mb-1.5">
+                  Email manzilingiz
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-faint absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="talaba@bilimyol.uz"
+                    className={inputClass}
+                    required
+                  />
                 </div>
               </div>
 
-              {/* Demo Login Button */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="login-password" className="block font-mono text-[10px] font-bold text-slatefine uppercase tracking-wider">
+                    Parol
+                  </label>
+                  <button
+                    type="button"
+                    onClick={onNavigateForgotPassword}
+                    className="font-mono text-[11px] font-bold text-brand-dark hover:text-ink transition-colors cursor-pointer"
+                  >
+                    Unutdingizmi?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-faint absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || isSuccess}
+                className="w-full mt-1 py-3 px-6 rounded-[var(--radius-control)] bg-ink hover:bg-graphite text-white font-bold text-sm tracking-wide shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:pointer-events-none transition-all active:scale-[0.99]"
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Kirish</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-hairline" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-canvas text-faint font-mono font-bold uppercase tracking-wider text-[10px]">
+                  yoki
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleQuickDemo}
+              disabled={!demoAvailable || isSuccess}
+              aria-describedby="demo-login-explanation"
+              className="w-full py-2.5 px-4 rounded-[var(--radius-control)] border border-hairline hover:border-ink bg-paper hover:bg-canvas text-ink text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Sparkles className="w-4 h-4 text-amber fill-amber" />
+              <span>Namuna hisobi bilan kirish</span>
+            </button>
+            <p id="demo-login-explanation" className="mt-2 text-center font-mono text-[10px] text-faint">
+              Xavfsiz namuna rejimi: ma’lumotlar lokal xotirada saqlanadi.
+            </p>
+
+            <div className="mt-6 text-center text-xs text-slatefine font-medium">
+              Hisobingiz yo‘qmi?{' '}
               <button
                 type="button"
-                onClick={handleQuickDemo}
-                disabled={!demoAvailable || isSuccess}
-                aria-describedby="demo-login-explanation"
-                className="w-full py-3 px-4 rounded-2xl border border-slate-200 hover:border-indigo-300 bg-white hover:bg-slate-50 text-slate-800 hover:text-indigo-600 text-xs font-black flex items-center justify-center gap-2 shadow-2xs hover:shadow-sm transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-slate-800"
+                onClick={onNavigateRegister}
+                className="font-bold text-ink hover:text-brand-dark hover:underline cursor-pointer transition-colors"
               >
-                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span>Namuna hisobi bilan kirish</span>
+                Ro‘yxatdan o‘tish
               </button>
-              <p id="demo-login-explanation" className="mt-2 text-center text-[11px] font-semibold text-slate-500">
-                Xavfsiz namuna rejimi: ma’lumotlar faqat shu brauzerda ishlaydi va serverga yozilmaydi.
-              </p>
-
-              {/* Register Navigation Link */}
-              <div className="mt-6 text-center text-xs text-slate-500 font-semibold">
-                Hisobingiz yo‘qmi?{' '}
-                <button
-                  type="button"
-                  onClick={onNavigateRegister}
-                  className="font-black text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer transition-colors"
-                >
-                  Ro‘yxatdan o‘tish
-                </button>
-              </div>
-            </motion.div>
-          </div>
-
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

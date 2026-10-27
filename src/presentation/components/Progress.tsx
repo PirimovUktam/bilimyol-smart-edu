@@ -16,11 +16,11 @@ interface ProgressProps {
 }
 
 const toneStyles = {
-  indigo: 'bg-indigo-600',
-  cyan: 'bg-gradient-to-r from-cyan-400 to-teal-500',
-  emerald: 'bg-emerald-500',
-  amber: 'bg-amber-500',
-  rose: 'bg-rose-500',
+  indigo: 'bg-brand',
+  cyan: 'bg-gradient-to-r from-path to-mint',
+  emerald: 'bg-mint',
+  amber: 'bg-amber',
+  rose: 'bg-coral',
 };
 
 const heights = { sm: 'h-1.5', md: 'h-2.5' };
@@ -38,13 +38,13 @@ export const Progress: React.FC<ProgressProps> = ({
   return (
     <div className={cn('w-full', className)}>
       {showLabel && (
-        <div className="mb-1 flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="mb-1 flex items-center justify-between text-xs font-bold text-slatefine">
           <span>{ariaLabel}</span>
-          <span className="text-slate-900">{pct}%</span>
+          <span className="font-mono-num text-ink">{pct}%</span>
         </div>
       )}
       <div
-        className={cn('w-full overflow-hidden rounded-full bg-slate-100', heights[size])}
+        className={cn('w-full overflow-hidden rounded-full bg-muted', heights[size])}
         role="progressbar"
         aria-label={ariaLabel}
         aria-valuemin={0}

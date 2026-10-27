@@ -32,7 +32,7 @@ export const MathFunctionGraph: React.FC = () => {
         </div>
         <div className="text-right">
           <span className="text-xs text-slate-400 block">Joriy qiymat:</span>
-          <span className="text-sm font-bold text-teal-400 font-mono">
+          <span className="text-sm font-bold text-path font-mono">
             f({sliderX}) = 2 × {sliderX} + 3 = <strong className="text-white text-base">{currentY}</strong>
           </span>
         </div>

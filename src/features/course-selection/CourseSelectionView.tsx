@@ -56,7 +56,7 @@ export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSele
         </section>
 
         <div className="mt-12 flex max-w-xl items-center gap-2 text-center text-xs font-semibold text-slate-500">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <ShieldCheck className="h-4 w-4 shrink-0 text-mint" aria-hidden="true" />
           <span>Natijalar va o‘quv yo‘li faqat tanlangan kursning mavjud ma’lumotlari asosida hisoblanadi.</span>
         </div>
       </div>

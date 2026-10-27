@@ -38,7 +38,7 @@ export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
       {/* 3D-effect Glowing Robot Container */}
       <div className={`relative ${sizeMap[size]} shrink-0 transition-transform duration-300 hover:scale-105`}>
         {/* Ambient Glow */}
-        <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-cyan-400/30 via-indigo-500/25 to-purple-500/30 blur-md pointer-events-none" />
+        <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-brand/30 via-path/25 to-brand/20 blur-md pointer-events-none" />
 
         <svg
           viewBox="0 0 120 120"
@@ -272,14 +272,14 @@ export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
 
       {/* Optional Speech Bubble */}
       {showSpeechBubble && speechText && (
-        <div className="relative p-3.5 bg-white border border-indigo-100 rounded-2xl rounded-tl-xs shadow-md shadow-indigo-500/5 max-w-sm">
+        <div className="relative p-3.5 bg-paper border border-hairline rounded-2xl rounded-tl-xs shadow-md shadow-brand/5 max-w-sm">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider">
+            <span className="text-[11px] font-extrabold text-brand-dark uppercase tracking-wider">
               Yo‘lchi AI
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-path lab-pulse" />
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+          <p className="text-xs sm:text-sm font-semibold text-graphite leading-snug">
             {speechText}
           </p>
         </div>

@@ -323,14 +323,22 @@ export const AppRouter: React.FC = () => {
   // Prevent flicker during initial session resolution
   if (isAuthLoading && !isPitchOrDemo) {
     return (
-      <div className="min-h-screen w-full bg-[#0a0f2c] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="relative z-10 flex flex-col items-center gap-4">
+      <div className="min-h-screen w-full bg-ink text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+        <div className="relative z-10 flex flex-col items-center gap-5 rise-in">
           <BilimYolLogo size="lg" variant="dark" />
-          <div className="flex items-center gap-2 mt-2">
-            <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-indigo-200">Tizim yuklanmoqda...</span>
+          <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+            <div className="w-4 h-4 border-2 border-path border-t-transparent rounded-full animate-spin" />
+            <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-white/60">
+              Tizim yuklanmoqda
+            </span>
           </div>
         </div>
       </div>
@@ -338,7 +346,7 @@ export const AppRouter: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex flex-col font-sans bg-canvas text-ink">
       {/* Main Navigation (Hidden on standalone Auth screens & Pitch/Demo presentations) */}
       {!isAuthView && !isPitchOrDemo && (
         <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as AppView)} />
@@ -349,12 +357,12 @@ export const AppRouter: React.FC = () => {
         {/* Access Denied Guard UI */}
         {isAccessDenied ? (
           <div className="max-w-md mx-auto px-4 py-16 text-center">
-            <Card className="p-8 border-rose-200 bg-rose-50/50 shadow-lg">
-              <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <Card className="p-8 border-coral/25 bg-coral/5 shadow-lg">
+              <div className="w-14 h-14 rounded-2xl bg-coral/10 text-coral flex items-center justify-center mx-auto mb-4">
                 <ShieldAlert className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Ruxsat Cheklangan</h2>
-              <p className="text-sm text-slate-600 mb-6">
+              <h2 className="font-display text-xl font-bold text-ink mb-2">Ruxsat Cheklangan</h2>
+              <p className="text-sm text-slatefine mb-6">
                 Ushbu panelga kirish faqat administratorlar uchun ruxsat etilgan.
                 Sizning joriy hisob turingiz: <strong>O‘quvchi</strong>.
               </p>
@@ -369,7 +377,7 @@ export const AppRouter: React.FC = () => {
         ) : (
           <>
             {currentView === 'pitch' && (
-              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" /></div>}>
                 <LazyPitchShowcaseView
                   onNavigateDemo={() => setCurrentView('demo')}
                   onNavigateApp={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
@@ -379,7 +387,7 @@ export const AppRouter: React.FC = () => {
             )}
 
             {currentView === 'demo' && (
-              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" /></div>}>
                 <LazyDemoShowcaseView
                   onNavigateCourses={() => setCurrentView(hasUsableAuth ? 'course-selection' : 'login')}
                   onNavigateDashboard={() => setCurrentView(hasUsableAuth ? 'dashboard' : 'login')}
@@ -452,8 +460,8 @@ export const AppRouter: React.FC = () => {
 
             {currentView === 'lesson' && !activeLessonId && (
               <div className="max-w-md mx-auto px-4 py-16 text-center">
-                <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
-                  <p className="text-sm text-slate-600 mb-4">
+                <Card className="p-8 border-amber/30 bg-amber/5 shadow-lg">
+                  <p className="text-sm text-slatefine mb-4">
                     Dars topilmadi. Iltimos, yo‘nalishingizdan qayta tanlang.
                   </p>
                   <Button variant="primary" onClick={() => setCurrentView('roadmap')}>
@@ -492,7 +500,7 @@ export const AppRouter: React.FC = () => {
             )}
 
             {currentView === 'admin' && (
-              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+              <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" /></div>}>
                 <LazyAdminDashboardView />
               </Suspense>
             )}
@@ -502,12 +510,12 @@ export const AppRouter: React.FC = () => {
 
       {/* Footer (Hidden on Pitch/Demo pages which have their own rich pitch footer) */}
       {!isPitchOrDemo && (
-        <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+        <footer className="bg-paper border-t border-hairline py-6 text-center mt-auto">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>
-              <strong>BilimYo‘l Smart Edu</strong> © 2026 — O‘quvchi va Ma’muriyat uchun yagona ta’lim platformasi
+            <span className="font-mono text-[11px] font-medium text-slatefine">
+              <strong className="text-ink">BilimYo‘l Smart Edu</strong> © 2026 — Darslik emas, shaxsiy ta’lim yo‘li
             </span>
-            <span className="text-slate-400">
+            <span className="font-mono text-[11px] text-faint">
               {hasUsableAuth ? `Hisob: ${authProfile?.email} (${userRole})` : 'Yo‘lchi AI • Real Adaptive Learning'}
             </span>
           </div>

@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
             onClick={dismissable ? onClose : undefined}
             aria-hidden="true"
           />
@@ -86,7 +86,7 @@ export const Modal: React.FC<ModalProps> = ({
                     type="button"
                     onClick={onClose}
                     aria-label="Yopish"
-                    className="shrink-0 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    className="shrink-0 p-2 rounded-xl text-faint hover:text-ink hover:bg-sand transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>

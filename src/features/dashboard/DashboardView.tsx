@@ -281,29 +281,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     : recommendations;
 
   return (
-    <div className="min-h-screen bg-[#f5f7fc] text-slate-900 flex flex-col lg:flex-row">
-      {/* 1. LEFT SIDEBAR: Reference 2 Dashboard Desktop Navigation */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/80 flex-col justify-between shrink-0 p-5 sticky top-0 h-screen overflow-y-auto">
+    <div className="min-h-screen bg-[#fbf9f4] text-slate-900 flex flex-col lg:flex-row lab-grid-bg">
+      {/* 1. LEFT SIDEBAR: Neo-Editorial Lab Navigation Console */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-[#e4ddce] flex-col justify-between shrink-0 p-5 sticky top-0 h-screen overflow-y-auto">
         <div className="space-y-6">
-          {/* Logo at top of sidebar */}
-          <div className="px-2">
+          {/* Logo with clean editorial subtitle */}
+          <div className="px-1 pt-1">
             <BilimYolLogo size="md" />
           </div>
 
-          {/* Navigation Links matching Reference */}
-          <nav className="space-y-1.5">
+          {/* Navigation Links */}
+          <nav className="space-y-1">
+            <div className="px-3 pb-1 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
+              Menyu
+            </div>
+
             <button
               type="button"
               aria-current="page"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black bg-blue-600 text-white shadow-md shadow-blue-600/25 transition-all cursor-default"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-[#10151f] text-white shadow-xs transition-all cursor-default"
             >
-              <LayoutDashboard className="w-4 h-4 text-white" />
+              <LayoutDashboard className="w-4 h-4 text-path" />
               <span>Bosh sahifa</span>
             </button>
 
             <button
               onClick={onOpenRoadmap}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#f5efe4] transition-all cursor-pointer"
             >
               <Map className="w-4 h-4 text-slate-400" />
               <span>Ta’lim yo‘li</span>
@@ -311,7 +315,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onOpenKnowledgeMap}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#f5efe4] transition-all cursor-pointer"
             >
               <Compass className="w-4 h-4 text-slate-400" />
               <span>Bilim xaritasi</span>
@@ -319,7 +323,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onOpenAITutor}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#f5efe4] transition-all cursor-pointer"
             >
               <Bot className="w-4 h-4 text-slate-400" />
               <span>Yo‘lchi AI</span>
@@ -327,7 +331,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onOpenProgress}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#f5efe4] transition-all cursor-pointer"
             >
               <TrendingUp className="w-4 h-4 text-slate-400" />
               <span>Natijalar</span>
@@ -335,61 +339,65 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onOpenProfile || onOpenProgress}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all cursor-pointer"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-[#f5efe4] transition-all cursor-pointer"
             >
               <User className="w-4 h-4 text-slate-400" />
-              <span>Profile</span>
+              <span>Profil</span>
             </button>
 
             {/* Pitch Day 3.0 & /demo links */}
-            {onOpenPitch && (
-              <button
-                onClick={onOpenPitch}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-xs hover:opacity-95 transition-all cursor-pointer mt-2"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>Pitch Day 3.0</span>
-              </button>
-            )}
+            {(onOpenPitch || onOpenDemo) && (
+              <div className="pt-3 mt-2 border-t border-[#f0ece3] space-y-1">
+                {onOpenPitch && (
+                  <button
+                    onClick={onOpenPitch}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold bg-brand/8 text-brand-dark border border-brand/25 hover:bg-brand/10 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-brand" />
+                    <span>Pitch Day 3.0</span>
+                  </button>
+                )}
 
-            {onOpenDemo && (
-              <button
-                onClick={onOpenDemo}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 transition-all cursor-pointer mt-1"
-              >
-                <Play className="w-4 h-4 text-emerald-600 fill-emerald-600" />
-                <span>/demo Sahifasi</span>
-              </button>
+                {onOpenDemo && (
+                  <button
+                    onClick={onOpenDemo}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold bg-mint/10 hover:bg-mint/10 text-mint border border-mint/30 transition-all cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 text-mint fill-mint" />
+                    <span>/demo Sahifasi</span>
+                  </button>
+                )}
+              </div>
             )}
           </nav>
         </div>
 
-        {/* Sidebar Bottom: XP Card & Settings matching Reference */}
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-200/80 text-slate-900 space-y-2">
+        {/* Sidebar Bottom: Lab Level & XP Ledger */}
+        <div className="space-y-3 pt-4 border-t border-[#f0ece3]">
+          <div className="p-3.5 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-slate-900 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Crown className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-xs font-black text-amber-900">{currentXP} XP</span>
+                <span className="font-mono text-xs font-bold text-slate-900">{currentXP} XP</span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                {Math.floor(currentXP / 100) + 1}-daraja
+              <span className="font-mono text-[9px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-[#e4ddce]">
+                {Math.floor(currentXP / 100) + 1}-DARAJA
               </span>
             </div>
-            <div className="h-1.5 w-full bg-amber-100 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-[#ece5d8] rounded-full overflow-hidden">
               <div
-                className="h-full bg-amber-500 rounded-full transition-all"
+                className="h-full bg-[#10151f] rounded-full transition-all"
                 style={{ width: `${currentXP % 100}%` }}
               />
             </div>
-            <p className="text-[10px] text-amber-800/80 font-medium">
-              Keyingi darajaga {100 - (currentXP % 100)} XP
+            <p className="font-mono text-[10px] text-slate-500 font-medium">
+              Keyingi darajaga: {100 - (currentXP % 100)} XP
             </p>
           </div>
 
           <button
             onClick={onResetDemo}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-[#f5efe4] transition-colors cursor-pointer"
           >
             <RotateCcw className="w-4 h-4 text-slate-400" />
             <span>Kursni qayta boshlash</span>
@@ -400,7 +408,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 2. MAIN CONTENT AREA */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
         
-        {/* TOP BAR: Search Input, Notifications & Profile Avatar */}
+        {/* TOP COMMAND BAR: Search Input, Notifications & Profile Avatar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           {/* Search bar */}
           <div className="relative flex-1 max-w-xl">
@@ -411,87 +419,86 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Dars, mavzu yoki savolni qidirish..."
               aria-label="Kurslar va mavzularni qidirish"
-              className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all shadow-2xs"
+              className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white border border-[#e4ddce] rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all shadow-2xs"
             />
           </div>
 
           {/* Right side notifications & avatar */}
-          <div className="flex items-center justify-end gap-3 shrink-0">
+          <div className="flex items-center justify-end gap-2.5 shrink-0">
             <button
               onClick={onOpenProgress}
-              className="p-2.5 sm:p-3 rounded-2xl bg-white border border-slate-200/90 text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs relative cursor-pointer"
+              className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#e4ddce] text-slate-700 hover:bg-[#f5efe4] transition-colors shadow-2xs relative cursor-pointer"
               title="Natijalar va bildirishnomalar"
               aria-label="Natijalar va bildirishnomalar"
             >
               <Bell className="w-4 h-4" />
               {(atRiskStreak || recentAttempts.length > 0) && (
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-coral ring-2 ring-white" />
               )}
             </button>
 
             <button
               onClick={onOpenProfile || onOpenProgress}
-              className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-2xl bg-white border border-slate-200/90 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-white border border-[#e4ddce] hover:bg-[#f5efe4] transition-colors shadow-2xs cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-xs">
+              <div className="w-7 h-7 rounded-lg bg-[#10151f] flex items-center justify-center text-white font-mono font-bold text-xs">
                 {studentName.charAt(0)}
               </div>
               <div className="text-left hidden sm:block">
-                <div className="text-xs font-black text-slate-900 leading-none">{studentName}</div>
-                <div className="text-[10px] font-semibold text-slate-400 mt-0.5">O‘quvchi</div>
+                <div className="text-xs font-bold text-slate-900 leading-none">{studentName}</div>
+                <div className="text-[10px] font-mono text-slate-500 mt-0.5">O‘quvchi</div>
               </div>
             </button>
           </div>
         </div>
 
-        {/* ROW 1: Greeting + Goals + Streak + XP Header matching Reference */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-2xs">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-0.5 shadow-md shadow-indigo-600/20 shrink-0">
-              <div className="w-full h-full rounded-[14px] bg-slate-900 flex items-center justify-center text-white font-extrabold text-lg">
-                {studentName.charAt(0)}
-              </div>
+        {/* ROW 1: Learner Welcome Docket + Goals + Streak + XP Telemetry */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white p-6 rounded-2xl border border-[#e4ddce] shadow-sm">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="editorial-kicker">Laboratoriya // Shaxsiy ta’lim yo‘li</span>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-mint lab-pulse" />
             </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-500">Assalomu alaykum,</div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {studentName}!
-              </h1>
-            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Assalomu alaykum, {studentName}!
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium">
+              Darslik emas — shaxsiy ta’lim yo‘li. Bugungi mashg‘ulotlarni davom ettiring.
+            </p>
           </div>
 
-          {/* 3 Metric Pills matching Reference */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* 3 Metric Tablets */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* Bugungi maqsad */}
-            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <div className="w-7 h-7 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+            <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#fbf9f4] border border-[#e4ddce]">
+              <div className="w-8 h-8 rounded-lg bg-brand/8 border border-brand/25 flex items-center justify-center text-brand shrink-0">
                 <Target className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase">Bugungi maqsad</div>
-                <div className="text-xs font-black text-slate-900">{dailyGoalDone}/{DAILY_GOAL_MINUTES} daqiqa</div>
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">Bugungi maqsad</div>
+                <div className="font-mono text-xs font-bold text-slate-900">{dailyGoalDone}/{DAILY_GOAL_MINUTES} daqiqa</div>
               </div>
             </div>
 
             {/* Streak */}
-            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-orange-50 border border-orange-200/80">
-              <div className="w-7 h-7 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
-                <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+            <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#fff8ed] border border-[#f59f00]/30">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
               </div>
               <div>
-                <div className="text-[10px] text-orange-800 font-bold uppercase">{streakDays} kun</div>
-                <div className="text-xs font-black text-orange-950">ketma-ket</div>
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-800">{streakDays} kun</div>
+                <div className="font-mono text-xs font-bold text-amber-950">Ketma-ketlik</div>
               </div>
             </div>
 
             {/* XP */}
-            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-amber-50 border border-amber-200/80">
-              <div className="w-7 h-7 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                <Award className="w-4 h-4 text-amber-600" />
+            <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#eef2ff] border border-[#3550d6]/30">
+              <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center text-brand shrink-0">
+                <Award className="w-4 h-4 text-brand" />
               </div>
               <div>
-                <div className="text-[10px] text-amber-800 font-bold uppercase">{currentXP} XP</div>
-                <div className="text-xs font-black text-amber-950">Umumiy XP</div>
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-dark">{currentXP} XP</div>
+                <div className="font-mono text-xs font-bold text-brand-dark">Umumiy Ball</div>
               </div>
             </div>
           </div>
@@ -499,43 +506,43 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* AT_RISK: loss-aversion streak reminder */}
         {atRiskStreak && (
-          <div className="flex items-center justify-between gap-4 p-4 rounded-3xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 shadow-2xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#fff8ed] border border-[#f59f00]/40 shadow-2xs">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0">
-                <Flame className="w-5 h-5 fill-orange-500 text-orange-500" />
+              <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5 fill-amber-500 text-amber-500" />
               </div>
               <div>
-                <div className="text-xs sm:text-sm font-black text-orange-950 flex items-center gap-1.5">
-                  <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+                <div className="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
                   {streakDays} kunlik seriyangiz xavf ostida!
                 </div>
-                <div className="text-[11px] sm:text-xs font-semibold text-orange-800">
+                <div className="text-[11px] sm:text-xs font-medium text-amber-800">
                   Seriyani saqlab qolish uchun bugun kamida 1 ta dars yoki savol bajaring.
                 </div>
               </div>
             </div>
             <button
               onClick={() => onContinueLesson(targetLessonId || undefined)}
-              className="shrink-0 px-4 py-2 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-md shadow-orange-500/25 transition-colors cursor-pointer"
+              className="shrink-0 px-4 py-2 rounded-xl bg-[#10151f] hover:bg-[#2a3342] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
             >
               Boshlash
             </button>
           </div>
         )}
 
-        {/* ROW 2: Loaded course selector */}
+        {/* ROW 2: Subject Dossier Selector */}
         <section className="space-y-3" aria-labelledby="dashboard-course-selector-heading">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Tezkor almashtirish</p>
-              <h2 id="dashboard-course-selector-heading" className="mt-1 text-base font-black text-slate-950">
+              <p className="editorial-kicker">Tezkor almashtirish</p>
+              <h2 id="dashboard-course-selector-heading" className="mt-0.5 font-display text-lg font-bold text-slate-950 tracking-tight">
                 O‘rganish yo‘nalishi
               </h2>
             </div>
             <button
               type="button"
               onClick={onOpenRoadmap}
-              className="inline-flex items-center gap-1 self-start rounded-lg px-2 py-1 text-xs font-black text-blue-600 outline-none transition-colors hover:text-blue-800 focus-visible:ring-4 focus-visible:ring-blue-100 sm:self-auto"
+              className="inline-flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-xs font-bold text-brand outline-none transition-colors hover:text-brand-dark sm:self-auto"
             >
               Yo‘l xaritasini ko‘rish
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -553,41 +560,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           />
         </section>
 
-        {/* ROW 3: HERO CARD "DAVOM ETISH" — deep-space journey surface */}
-        <div className="relative rounded-3xl overflow-hidden hero-gradient-card text-white p-6 sm:p-8 lg:p-10 border border-indigo-400/20">
-          {/* Subtle cosmic glow orbs in background */}
-          <div className="absolute top-0 right-1/3 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 right-0 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
-
+        {/* ROW 3: HERO MISSION CARD "DAVOM ETISH" — Neo-Editorial High-Contrast Docket */}
+        <div className="relative rounded-2xl overflow-hidden editorial-ink-hero text-white p-6 sm:p-8 lg:p-9 border border-white/10">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             {/* Left text column */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <span className="px-3 py-1 rounded-full bg-blue-500/30 border border-blue-400/30 text-blue-200 text-[10px] font-black uppercase tracking-wider">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded bg-white/10 border border-white/20 text-path font-mono text-[10px] font-bold uppercase tracking-wider">
                   {hasLessons ? 'DAVOM ETISH' : 'YANGI FAN'}
                 </span>
-                <span className="text-xs font-bold text-indigo-200">
+                <span className="font-mono text-xs font-medium text-slate-300">
                   {activeCourse?.title || 'Fan'} • {lessonCountLabel}
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
                 {heroTitle}
               </h2>
 
-              <p className="text-xs sm:text-sm text-indigo-100/90 font-medium leading-relaxed max-w-lg">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-lg">
                 {heroDescription}
               </p>
 
               {/* Dynamic Progress bar */}
               <div className="space-y-1.5 max-w-md pt-2">
-                <div className="flex items-center justify-between text-xs font-bold text-indigo-200">
-                  <span>Modul progressi</span>
-                  <span className="text-white font-black">{moduleProgress}%</span>
+                <div className="flex items-center justify-between text-xs font-mono font-medium text-slate-300">
+                  <span>Modul o‘zlashtirishi</span>
+                  <span className="text-white font-bold">{moduleProgress}%</span>
                 </div>
-                <div className="h-2.5 w-full bg-white/20 rounded-full overflow-hidden backdrop-blur-xs">
+                <div className="h-2 w-full bg-white/15 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-cyan-300 via-teal-300 to-emerald-300 rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-path via-path to-mint rounded-full transition-all duration-500"
                     style={{ width: `${Math.max(moduleProgress, hasLessons ? 5 : 0)}%` }}
                   />
                 </div>
@@ -598,16 +601,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {hasLessons ? (
                   <button
                     onClick={() => onContinueLesson(targetLessonId || undefined)}
-                    className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-black text-xs sm:text-sm shadow-lg shadow-black/20 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                    className="px-6 py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs sm:text-sm shadow-md flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <span>Davom etish</span>
-                    <ArrowRight className="w-4 h-4 text-blue-600" />
+                    <ArrowRight className="w-4 h-4 text-brand" />
                   </button>
                 ) : (
                   <button
                     onClick={handleCreateAILesson}
                     disabled={isGeneratingAILesson}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:brightness-105 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-cyan-500/20 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-75"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-path via-path to-mint hover:brightness-105 text-slate-950 font-bold text-xs sm:text-sm shadow-md flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-75"
                   >
                     {isGeneratingAILesson ? (
                       <>
@@ -623,16 +626,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </button>
                 )}
 
-                {/* Clear, recoverable Uzbek error when AI lesson generation fails */}
+                {/* Clear, recoverable error when AI lesson generation fails */}
                 {aiLessonError && !isGeneratingAILesson && (
-                  <div className="mt-3 max-w-md p-3.5 bg-rose-500/15 border border-rose-300/40 rounded-xl flex items-start justify-between gap-3">
-                    <span className="text-xs text-rose-100 font-semibold leading-relaxed">
+                  <div className="mt-3 max-w-md p-3.5 bg-rose-500/20 border border-rose-300/40 rounded-xl flex items-start justify-between gap-3">
+                    <span className="text-xs text-coral font-medium leading-relaxed">
                       {aiLessonError}
                     </span>
                     <button
                       type="button"
                       onClick={() => setAiLessonError(null)}
-                      className="text-rose-200 hover:text-white text-xs font-black shrink-0 cursor-pointer"
+                      className="text-coral hover:text-white text-xs font-bold shrink-0 cursor-pointer"
                       aria-label="Xabarni yopish"
                     >
                       ✕
@@ -644,37 +647,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             {/* Right Artwork column with dynamic badges */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-slate-950/40 group">
+              <div className="relative w-full max-w-sm rounded-xl overflow-hidden border border-white/20 shadow-xl bg-slate-950/40 group">
                 <img
                   src="/images/dashboard_hero_student.jpg"
                   alt={`${activeCourse?.title || 'Dars'} qahramoni`}
-                  className="w-full h-48 sm:h-56 lg:h-64 object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+                  className="w-full h-48 sm:h-56 lg:h-60 object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
                 
                 {/* Dynamic Subject Glass Badges */}
-                <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white font-black text-xs flex items-center gap-1.5 shadow-sm">
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/20 text-white font-mono font-bold text-[10px] flex items-center gap-1.5 shadow-sm">
                   <span>{heroBadge1.icon}</span>
-                  <span className="text-[10px] text-cyan-200 font-semibold">{heroBadge1.label}</span>
+                  <span className="text-path">{heroBadge1.label}</span>
                 </div>
-                <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-blue-600/80 backdrop-blur-md border border-blue-400/40 text-white font-black text-xs flex items-center gap-1.5 shadow-sm">
+                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-indigo-600/90 backdrop-blur-md border border-indigo-400/40 text-white font-mono font-bold text-[10px] flex items-center gap-1.5 shadow-sm">
                   <span>{heroBadge2.icon}</span>
-                  <span className="text-[10px] text-white font-semibold">{heroBadge2.label}</span>
+                  <span className="text-white">{heroBadge2.label}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ROW 4: "Siz uchun tavsiya" Recommendations matching Reference */}
+        {/* ROW 4: "Siz uchun tavsiya" Recommendations */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-black text-slate-900">
+            <h3 className="font-display text-base font-bold text-slate-900 tracking-tight">
               Siz uchun tavsiya
             </h3>
             <button
               onClick={onOpenRoadmap}
-              className="text-xs font-black text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 cursor-pointer transition-colors"
             >
               Barchasini ko‘rish →
             </button>
@@ -682,8 +685,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {filteredRecommendations.length === 0 ? (
-              <div className="sm:col-span-3 p-6 rounded-3xl bg-white border border-slate-200/90 text-center">
-                <p className="text-xs font-semibold text-slate-500">
+              <div className="sm:col-span-3 p-6 rounded-2xl bg-white border border-[#e4ddce] text-center">
+                <p className="text-xs font-medium text-slate-500">
                   {activeCourse
                     ? `“${searchQuery}” bo‘yicha hech narsa topilmadi.`
                     : 'Kurs tanlang — tavsiyalar shu yerda ko‘rinadi.'}
@@ -695,18 +698,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   key={rec.id}
                   type="button"
                   onClick={onOpenRoadmap}
-                  className="flex w-full items-center justify-between gap-3 rounded-3xl border border-slate-200/90 bg-white p-4 text-left shadow-2xs outline-none transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-4 focus-visible:ring-blue-100 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#e4ddce] bg-white p-4 text-left shadow-2xs outline-none transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-sm"
                   aria-label={`${rec.title} yo‘l xaritasini ochish`}
                 >
                   <span className="flex items-center gap-3">
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${rec.colorClass}`}>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${rec.colorClass}`}>
                       {rec.icon}
                     </span>
                     <span>
-                      <span className="block text-xs font-black leading-snug text-slate-900 sm:text-sm">
+                      <span className="block font-display text-sm font-bold leading-snug text-slate-900">
                         {rec.title}
                       </span>
-                      <span className="block text-[11px] font-semibold text-slate-400">{rec.desc}</span>
+                      <span className="block font-mono text-[11px] font-medium text-slate-500">{rec.desc}</span>
                     </span>
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -716,17 +719,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* ROW 5: 4-WIDGET BOTTOM GRID matching Reference */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* ROW 5: 4-WIDGET LABORATORY GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          {/* Widget 1: Yo'lchi AI Mentor */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col justify-between space-y-4">
+          {/* Widget 1: Yo'lchi AI Mentor — signature ink panel */}
+          <div className="ink-panel p-5 rounded-2xl flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-black text-slate-900">Yo‘lchi AI Mentor</h4>
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
-                    AI pedagog
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-path">Yo‘lchi AI</span>
+                  <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-white/75 border border-white/15">
+                    AI Pedagog
                   </span>
                 </div>
               </div>
@@ -734,15 +737,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Robot Mascot & Chat Bubble */}
               <div className="flex items-start gap-3 pt-1">
                 <YolchiAIMascot size="sm" mood="explaining" />
-                <div className="p-3 rounded-2xl rounded-tl-xs bg-slate-50 border border-slate-200/80 text-[11px] text-slate-700 font-semibold leading-relaxed">
-                  Bugun qaysi mavzuni birga o‘rganamiz? Savollaringizga javob beraman va sizga mos tavsiyalar beraman.
+                <div className="p-3 rounded-xl rounded-tl-none bg-white/5 border border-white/10 text-xs text-white/75 font-medium leading-relaxed">
+                  Bugun qaysi mavzuni birga o‘rganamiz? Savollaringizga bosqichma-bosqich javob beraman.
                 </div>
               </div>
             </div>
 
             <button
               onClick={onOpenAITutor}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs shadow-md shadow-blue-600/20 hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-ink font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Chatni ochish</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -750,27 +753,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Widget 2: Bilim xaritasi */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col justify-between space-y-4">
+          <div className="bg-white p-5 rounded-2xl border border-[#e4ddce] border-t-2 border-t-path shadow-sm flex flex-col justify-between space-y-4">
             <div className="space-y-2.5">
               <div className="flex items-center gap-2">
-                <Compass className="w-4 h-4 text-blue-600" />
-                <h4 className="text-xs font-black text-slate-900">Bilim xaritasi</h4>
+                <Compass className="w-4 h-4 text-brand" />
+                <h4 className="font-display text-sm font-bold text-slate-900">Bilim xaritasi</h4>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
                 O‘z bilim darajangizni ko‘ring va keyingi mavzularni oching.
               </p>
 
-              {/* Connected node graph illustration matching Reference */}
-              <div className="h-20 w-full rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center p-2 relative overflow-hidden">
+              {/* Connected node graph illustration */}
+              <div className="h-16 w-full rounded-xl bg-[#fbf9f4] border border-[#e4ddce] flex items-center justify-center p-2 relative overflow-hidden">
                 <div className="flex items-center justify-between w-4/5 relative">
-                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 -translate-y-1/2 z-0" />
-                  <div className="w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white text-[9px] font-black">
+                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-path to-mint -translate-y-1/2 z-0" />
+                  <div className="w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white font-mono text-[9px] font-bold">
                     1
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-cyan-500 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white text-[9px] font-black">
+                  <div className="w-6 h-6 rounded-full bg-path border-2 border-white shadow-xs z-10 flex items-center justify-center text-white font-mono text-[9px] font-bold">
                     2
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white text-[9px] font-black">
+                  <div className="w-6 h-6 rounded-full bg-mint border-2 border-white shadow-xs z-10 flex items-center justify-center text-white font-mono text-[9px] font-bold">
                     3
                   </div>
                   <div className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white shadow-xs z-10 flex items-center justify-center text-white text-[9px]">
@@ -782,7 +785,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onOpenKnowledgeMap}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:border-blue-300 bg-white hover:bg-slate-50 text-slate-800 hover:text-blue-600 font-black text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl border border-[#e4ddce] hover:border-slate-400 bg-white hover:bg-[#fbf9f4] text-slate-900 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Xaritani ochish</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -790,65 +793,65 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Widget 3: O'qish vaqti (Haftalik) */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col justify-between space-y-3">
+          <div className="bg-white p-5 rounded-2xl border border-[#e4ddce] border-t-2 border-t-mint shadow-sm flex flex-col justify-between space-y-3">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-slate-500" />
-                  <h4 className="text-xs font-black text-slate-900">O‘qish vaqti (Haftalik)</h4>
+                  <h4 className="font-display text-sm font-bold text-slate-900">O‘qish vaqti</h4>
                 </div>
                 <button
                   onClick={onOpenProgress}
-                  className="text-[10px] font-black text-blue-600 hover:underline cursor-pointer"
+                  className="font-mono text-[10px] font-bold text-brand hover:underline cursor-pointer"
                 >
                   Batafsil
                 </button>
               </div>
 
               {/* Bar chart derived from real daily activity */}
-              <div className="h-24 pt-3 flex items-end justify-between gap-1 border-b border-slate-100">
+              <div className="h-20 pt-2 flex items-end justify-between gap-1 border-b border-[#f0ece3]">
                 {weeklyStudyHours.length === 0 ? (
-                  <div className="w-full text-center text-[10px] font-semibold text-slate-400 self-center">
+                  <div className="w-full text-center font-mono text-[10px] text-slate-400 self-center">
                     Ma’lumot yo‘q
                   </div>
                 ) : (
                   weeklyStudyHours.map((d, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-                      <span className="text-[8px] font-bold text-slate-400">{d.hours}s</span>
+                      <span className="font-mono text-[8px] text-slate-400">{d.hours}s</span>
                       <div
-                        className={`w-full max-w-[14px] rounded-t-md transition-all ${
+                        className={`w-full max-w-[12px] rounded-t-sm transition-all ${
                           d.peak
-                            ? 'bg-blue-600 shadow-xs'
-                            : 'bg-cyan-400/80 hover:bg-cyan-500'
+                            ? 'bg-[#10151f]'
+                            : 'bg-path hover:bg-path'
                         }`}
                         style={{ height: `${Math.max((d.hours / maxWeeklyHours) * 100, d.hours > 0 ? 8 : 2)}%` }}
                       />
-                      <span className="text-[9px] font-extrabold text-slate-500">{d.day}</span>
+                      <span className="font-mono text-[9px] font-bold text-slate-600">{d.day}</span>
                     </div>
                   ))
                 )}
               </div>
               {activityError && (
-                <p role="alert" className="text-[10px] font-semibold text-rose-600">
+                <p role="alert" className="text-[10px] font-semibold text-coral">
                   Faollik ma’lumotlari yuklanmadi: {activityError}
                 </p>
               )}
             </div>
 
-            <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1">
-              <span>Umumiy: <strong>{(totalMinutes / 60).toFixed(1)} soat</strong></span>
-              <span className="text-emerald-600 font-black">{overallScore}%</span>
+            <div className="text-xs text-slate-600 flex items-center justify-between pt-1">
+              <span>Umumiy: <strong className="font-mono text-slate-900">{(totalMinutes / 60).toFixed(1)} soat</strong></span>
+              <span className="font-mono font-bold text-mint">{overallScore}%</span>
             </div>
           </div>
 
           {/* Widget 4: So'nggi natijalar */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col justify-between space-y-3">
+          <div className="bg-white p-5 rounded-2xl border border-[#e4ddce] border-t-2 border-t-amber shadow-sm flex flex-col justify-between space-y-3">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-900">So‘nggi natijalar</h4>
+                <h4 className="font-display text-sm font-bold text-slate-900">So‘nggi natijalar</h4>
                 <button
                   onClick={onOpenProgress}
-                  className="text-[10px] font-black text-blue-600 hover:underline cursor-pointer"
+                  className="font-mono text-[10px] font-bold text-brand hover:underline cursor-pointer"
                 >
                   Barchasini ko‘rish →
                 </button>
@@ -857,30 +860,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Result items derived from real attempts */}
               <div className="space-y-2">
                 {subjectRecentResults.length === 0 ? (
-                  <p className="text-[11px] font-semibold text-slate-400 py-2">
+                  <p className="text-xs font-medium text-slate-400 py-2">
                     Hali natijalar yo‘q. Birinchi darsni boshlang!
                   </p>
                 ) : (
                   subjectRecentResults.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 truncate max-w-[150px]">
+                      <div className="flex items-center gap-1.5 truncate max-w-[140px]">
                         {item.isCorrect ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-mint shrink-0" />
                         ) : (
-                          <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                          <XCircle className="w-3.5 h-3.5 text-coral shrink-0" />
                         )}
-                        <span className="font-bold text-slate-800 text-[11px] truncate">{item.title}</span>
+                        <span className="font-mono text-[11px] text-slate-800 truncate">{item.title}</span>
                       </div>
-                      <span className={`text-[11px] font-black shrink-0 ${item.isCorrect ? 'text-emerald-600' : 'text-slate-400'}`}>{item.xp}</span>
+                      <span className={`font-mono text-[11px] font-bold shrink-0 ${item.isCorrect ? 'text-mint' : 'text-slate-400'}`}>{item.xp}</span>
                     </div>
                   ))
                 )}
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <div className="pt-2 border-t border-[#f0ece3] flex items-center justify-between text-xs text-slate-600">
               <span>Umumiy bilim:</span>
-              <strong className="text-indigo-600 font-black">{overallScore}%</strong>
+              <strong className="font-mono font-bold text-brand-dark">{overallScore}%</strong>
             </div>
           </div>
 

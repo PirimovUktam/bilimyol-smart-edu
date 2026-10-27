@@ -46,9 +46,9 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
     <div className={`flex items-center gap-3 select-none ${className}`}>
       {/* Reference 2 Stylized Gradient Emblem */}
       <div
-        className={`${iconSizes[size]} rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/25 flex items-center justify-center shrink-0`}
+        className={`${iconSizes[size]} rounded-2xl bg-gradient-to-tr from-brand to-path p-0.5 shadow-lg shadow-brand/25 flex items-center justify-center shrink-0`}
       >
-        <div className="w-full h-full bg-slate-950/20 rounded-[14px] flex items-center justify-center backdrop-blur-xs">
+        <div className="w-full h-full bg-ink/20 rounded-[14px] flex items-center justify-center backdrop-blur-xs">
           <svg
             viewBox="0 0 32 32"
             fill="none"
@@ -62,14 +62,14 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
               fillOpacity="0.95"
             />
             {/* Central spine divider */}
-            <path d="M16 9V25" stroke="#4F46E5" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M16 9V25" stroke="#3550D6" strokeWidth="1.8" strokeLinecap="round" />
             {/* Glowing sprout / knowledge wings rising up */}
             <path
               d="M16 11C14 7 10 5 8 6C7 8 9 12 16 14C23 12 25 8 24 6C22 5 18 7 16 11Z"
-              fill="#38BDF8"
+              fill="#0D9AD6"
             />
             {/* Golden spark / star at center */}
-            <circle cx="16" cy="6" r="2" fill="#FBBF24" />
+            <circle cx="16" cy="6" r="2" fill="#F59F00" />
           </svg>
         </div>
       </div>
@@ -77,20 +77,20 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5 leading-tight">
           <span className={`font-black tracking-tight ${resolvedTextColor} ${titleSizes[size]}`}>
-            Bilim<span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Yo‘l</span>
+            Bilim<span className="bg-gradient-to-r from-path to-brand bg-clip-text text-transparent">Yo‘l</span>
           </span>
           <span
             className={`px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-md shadow-2xs ${
               isDark
-                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40'
-                : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border border-indigo-200/80'
+                ? 'bg-white/10 text-path border border-path/40'
+                : 'bg-brand/8 text-brand-dark border border-brand/20'
             }`}
           >
             Smart Edu
           </span>
         </div>
         {showSubtitle && (
-          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-indigo-200/80' : 'text-slate-500'}`}>
+          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-white/60' : 'text-slatefine'}`}>
             AI yordamida shaxsiylashtirilgan ta’lim
           </span>
         )}

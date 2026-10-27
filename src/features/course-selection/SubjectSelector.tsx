@@ -64,7 +64,7 @@ const StatusMessage: React.FC<{
 }> = ({ tone, children }) => {
   const styles = {
     loading: 'border-blue-200 bg-blue-50/70 text-blue-800',
-    error: 'border-rose-200 bg-rose-50/80 text-rose-800',
+    error: 'border-coral/25 bg-rose-50/80 text-coral',
     empty: 'border-slate-200 bg-white text-slate-600',
   }[tone];
 
@@ -125,15 +125,22 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
       )}
 
       <div className={layoutClass} role="group" aria-label={ariaLabel}>
-        {courses.map((course) => {
+        {courses.map((course, idx) => {
           const primaryColor = getCourseColor(course, 'primary');
-          const secondaryColor = getCourseColor(course, 'secondary');
           const Icon = getCourseIcon(course);
           const isSelected = course.id === selectedCourseId;
           const isInactive = course.isActive === false;
           const isDisabled = disabled || isLoading || isInactive;
           const progress = getProgress(progressByCourseId, course.id);
           const lessonCount = course.lessons?.length || 0;
+
+          const subjectCode = {
+            mathematics: 'MAT-01',
+            english: 'ENG-02',
+            it: 'DEV-03',
+            logic: 'LOG-04',
+            other: 'GEN-05',
+          }[course.subject] || `SUB-0${idx + 1}`;
 
           return (
             <button
@@ -142,84 +149,91 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
               disabled={isDisabled}
               aria-pressed={isSelected}
               aria-label={`${course.title} fanini tanlash${isSelected ? ' — tanlangan' : ''}`}
-              className={`group relative flex min-w-[min(84vw,20rem)] snap-start flex-col justify-between overflow-hidden rounded-3xl border-2 bg-white p-5 text-left shadow-sm outline-none motion-safe:transition-[transform,box-shadow,border-color,background-color] motion-safe:duration-200 motion-safe:ease-out motion-reduce:transition-none md:min-w-0 ${
+              className={`group relative flex min-w-[min(84vw,20rem)] snap-start flex-col justify-between overflow-hidden rounded-2xl border bg-white p-5 text-left transition-all duration-200 outline-none md:min-w-0 ${
                 isSelected
-                  ? 'ring-4 ring-blue-100'
-                  : 'border-slate-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg'
-              } focus-visible:ring-4 focus-visible:ring-blue-200 focus-visible:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:border-slate-200 disabled:hover:shadow-sm motion-reduce:active:scale-100`}
-              style={{
-                borderColor: isSelected ? primaryColor : undefined,
-                backgroundImage: isSelected
-                  ? `linear-gradient(135deg, ${primaryColor}12, ${secondaryColor}08)`
-                  : undefined,
-              }}
+                  ? 'border-[#10151f] ring-2 ring-[#10151f] shadow-md bg-gradient-to-b from-slate-50/50 to-white'
+                  : 'border-[#e4ddce] hover:border-slate-400 hover:shadow-sm hover:-translate-y-0.5'
+              } focus-visible:ring-2 focus-visible:ring-brand active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:active:scale-100`}
               onClick={() => {
                 void onSelect(course.id);
               }}
             >
-              <span
-                aria-hidden="true"
-                className="absolute inset-x-0 top-0 h-1"
-                style={{ backgroundColor: primaryColor }}
-              />
-
-              <span className="flex items-start justify-between gap-3">
-                <span
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
-                  style={{
-                    color: primaryColor,
-                    backgroundColor: `${primaryColor}14`,
-                    borderColor: `${primaryColor}40`,
-                  }}
-                >
-                  <Icon className="h-6 w-6" aria-hidden="true" />
-                </span>
-                <span className="flex items-center gap-1.5 text-right text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
-                  {isSelected && <Check className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />}
-                  {isInactive ? 'Faol emas' : isSelected ? 'Tanlangan' : getSubjectLabel(course.subject)}
-                </span>
-              </span>
-
-              <span className="mt-5 block">
-                <span className="block text-lg font-black tracking-tight text-slate-950 transition-colors motion-reduce:transition-none group-hover:text-blue-700">
-                  {course.title}
-                </span>
-                <span className="mt-2 block min-h-10 text-sm font-medium leading-5 text-slate-600">
-                  {course.description || 'Bu kurs uchun tavsif mavjud emas.'}
-                </span>
-              </span>
-
-              <span className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 pt-4 text-xs font-bold text-slate-500">
-                <span className="inline-flex items-center gap-1.5">
-                  <BookOpen className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-                  {lessonCount > 0 ? `${lessonCount} ta dars` : 'Darslar haqida ma’lumot yo‘q'}
-                </span>
-                {progress !== null && (
-                  <span className="inline-flex items-center gap-1.5 text-indigo-700">
-                    <span
-                      className="h-1.5 w-1.5 rounded-full bg-indigo-500"
-                      aria-hidden="true"
-                    />
-                    {progress}% progress
+              {/* Top editorial kicker bar */}
+              <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#f0ece3]">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    {subjectCode}
                   </span>
-                )}
-              </span>
+                  <span className="text-[10px] text-slate-300">•</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                    {getSubjectLabel(course.subject)}
+                  </span>
+                </div>
+                {isSelected ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#10151f] text-white font-mono text-[9px] font-bold uppercase tracking-wider shadow-2xs">
+                    <Check className="h-3 w-3 text-path" aria-hidden="true" />
+                    Tanlangan
+                  </span>
+                ) : isInactive ? (
+                  <span className="font-mono text-[9px] text-slate-400 uppercase tracking-wider">
+                    Faol emas
+                  </span>
+                ) : null}
+              </div>
 
-              {progress !== null && (
-                <span
-                  className="mt-3 block h-1.5 overflow-hidden rounded-full bg-slate-100"
+              {/* Main Subject Content */}
+              <div className="pt-3.5 pb-2">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#e4ddce] bg-[#fbf9f4] transition-colors group-hover:border-path"
+                    style={{ color: primaryColor }}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base sm:text-lg font-bold tracking-tight text-slate-900 group-hover:text-brand transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600 leading-relaxed font-medium line-clamp-2">
+                      {course.description || 'Shaxsiy moslashuvchan darslar va bilim marshruti.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Dossier Metadata */}
+              <div className="pt-3 border-t border-[#f0ece3] mt-2 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-slate-600">
+                    <BookOpen className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                    {lessonCount > 0 ? `${lessonCount} dars` : 'Darslar mavjud'}
+                  </span>
+                  {progress !== null ? (
+                    <span className="font-mono font-bold text-xs text-brand-dark">
+                      {progress}%
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] text-slate-400">
+                      0% boshlanmagan
+                    </span>
+                  )}
+                </div>
+
+                {/* Micro progress line */}
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full bg-[#f0ece3]"
                   role="progressbar"
                   aria-label={`${course.title} progressi`}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-valuenow={progress}
+                  aria-valuenow={progress ?? 0}
                 >
-                  <span
-                    className="block h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 motion-safe:transition-[width] motion-safe:duration-300 motion-reduce:transition-none"
-                    style={{ width: `${progress}%` }}
+                  <div
+                    className="h-full rounded-full bg-[#10151f] transition-all duration-300"
+                    style={{ width: `${progress ?? 0}%` }}
                   />
-                </span>
-              )}
+                </div>
+              </div>
             </button>
           );
         })}

@@ -46,11 +46,11 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
     <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-path border border-teal-500/30 flex items-center justify-center">
             <Volume2 className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-path uppercase tracking-wider block">
               Audio Simulyator
             </span>
             <h4 className="text-sm font-bold text-white">{speakerName}</h4>
@@ -75,7 +75,7 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
               key={i}
               className={`w-1.5 rounded-full transition-all duration-100 ${
                 isActive
-                  ? 'bg-teal-400 shadow-sm shadow-teal-400/50'
+                  ? 'bg-path shadow-sm shadow-teal-400/50'
                   : 'bg-slate-700/60'
               }`}
               style={{ height: `${randomHeight}%` }}
@@ -89,7 +89,7 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
         <div className="flex items-center gap-3">
           <button
             onClick={togglePlay}
-            className="w-11 h-11 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold flex items-center justify-center shadow-lg shadow-teal-500/20 transition-all cursor-pointer"
+            className="w-11 h-11 rounded-xl bg-path hover:bg-path text-slate-950 font-bold flex items-center justify-center shadow-lg shadow-teal-500/20 transition-all cursor-pointer"
           >
             {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
           </button>

@@ -6,9 +6,12 @@ import {
   ArrowRight,
   RefreshCw,
   AlertTriangle,
+  Terminal,
+  HelpCircle,
+  Lightbulb,
+  Compass,
 } from 'lucide-react';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
-import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
@@ -70,10 +73,10 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
   }, [messages, isTyping, scrollToBottom]);
 
   const quickPrompts = [
-    'Qoidani sodda tushuntir',
-    'Yana bitta misol ber',
-    'Mavzuni test qilib ko‘r',
-    'Formulani ko‘rsat',
+    { label: 'Qoidani sodda tushuntir', icon: Lightbulb },
+    { label: 'Yana bitta misol ber', icon: Compass },
+    { label: 'Formulani ko‘rsat', icon: Terminal },
+    { label: 'Mavzuni test qilib ko‘r', icon: HelpCircle },
   ];
 
   const currentCourseScore = activeCourse && profile?.scoresByCourse
@@ -143,171 +146,242 @@ export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesso
   );
 
   const statusLabel = aiStatus === 'unknown'
-    ? 'Holat tekshirilmoqda'
+    ? 'TEKSHIRILMOQDA'
     : aiStatus === 'ready'
-    ? 'AI faol'
+    ? 'ONLINE // GEMINI'
     : aiStatus === 'fallback'
-    ? 'Namunaviy rejim'
-    : 'AI vaqtincha mavjud emas';
-  const statusClass = aiStatus === 'unknown'
-    ? 'bg-slate-100 text-slate-700 border-slate-200'
-    : aiStatus === 'ready'
-    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    ? 'NAMUNAVIY MODEL'
+    : 'OFFLINE';
+
+  const statusDot = aiStatus === 'ready'
+    ? 'bg-mint'
     : aiStatus === 'fallback'
-    ? 'bg-amber-100 text-amber-800 border-amber-200'
-    : 'bg-rose-100 text-rose-800 border-rose-200';
+    ? 'bg-amber-500'
+    : aiStatus === 'unknown'
+    ? 'bg-slate-400'
+    : 'bg-coral';
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div className="flex items-center gap-4">
-          <YolchiAIMascot size="sm" mood="explaining" />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Yo‘lchi AI
-              </h1>
-               <span className={`px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full border flex items-center gap-1 ${statusClass}`}>
-                 <span className={`w-1.5 h-1.5 rounded-full ${aiStatus === 'ready' ? 'bg-emerald-500' : aiStatus === 'fallback' ? 'bg-amber-500' : aiStatus === 'unknown' ? 'bg-slate-500' : 'bg-rose-500'}`} />
-                 {statusLabel}
-               </span>
-             </div>
-             <p className="text-xs text-slate-500">
-               {activeCourse?.title || 'Kurs tanlanmagan'} bo‘yicha individual yordamchi
-             </p>
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      {/* Top Dossier Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#e4ddce]">
+        <div className="space-y-1">
+          <div className="editorial-kicker">
+            <span>PEDAGOGIK YORDAMCHI</span>
+            <span>//</span>
+            <span>LABORATORIYA</span>
           </div>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10151f] tracking-tight">
+              Yo‘lchi AI Mentor
+            </h1>
+            <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded bg-white border border-[#e4ddce] text-slate-700 flex items-center gap-1.5 shadow-2xs">
+              <span className={`w-2 h-2 rounded-full ${statusDot} animate-pulse`} />
+              {statusLabel}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">
+            {activeCourse ? (
+              <span>
+                Faol yo‘nalish: <strong className="text-slate-800">{activeCourse.title}</strong>{' '}
+                {currentCourseScore !== null && `(O‘zlashtirish: ${currentCourseScore}%)`}
+              </span>
+            ) : (
+              'Barcha umumiy fanlar bo‘yicha savol-javob konsoli'
+            )}
+          </p>
         </div>
 
         {onStartLesson && (
           <Button
-            variant="gradient"
-            size="sm"
+            variant="primary"
+            size="md"
             onClick={onStartLesson}
             rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="font-bold shrink-0"
           >
             Interaktiv darsga o‘tish
           </Button>
         )}
       </div>
 
-      <Card className="p-4 border-indigo-100 bg-indigo-50/60 text-xs text-indigo-950">
-        <strong>Joriy o‘quv konteksti:</strong>{' '}
-        {activeCourse?.title || 'Kurs tanlanmagan'}
-        {currentCourseScore !== null ? ` • o‘zlashtirish ${currentCourseScore}%` : ' • hali baho mavjud emas'}
-      </Card>
-
-      {/* Main Chat Box Container */}
-      <Card className="p-4 sm:p-6 border-slate-200 shadow-md min-h-[500px] flex flex-col justify-between bg-gradient-to-b from-slate-50/50 via-white to-indigo-50/30">
-        {/* Messages Stream */}
-        <div ref={messagesContainerRef} className="space-y-4 overflow-y-auto max-h-[520px] pr-2">
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              <div
-                className={`max-w-xl p-4 rounded-3xl text-sm leading-relaxed ${
-                  msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-xs shadow-md shadow-indigo-600/20'
-                    : msg.isError
-                    ? 'bg-rose-50 border border-rose-200 text-rose-800 rounded-tl-xs shadow-sm'
-                    : 'bg-white border border-indigo-100/80 text-slate-800 rounded-tl-xs shadow-sm'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 mb-1 text-[11px] font-bold opacity-80">
-                  <span>{msg.sender === 'ai' ? 'Yo‘lchi AI' : 'Siz'}</span>
-                  <span className="text-[10px]">{msg.time}</span>
-                </div>
-                <p className="font-medium whitespace-pre-line">{msg.text}</p>
+      {/* Laboratory Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Telemetry Rail */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Active Context Card */}
+          <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <YolchiAIMascot size="sm" mood="explaining" />
+              <div>
+                <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                  AGENT STATUSI
+                </span>
+                <span className="font-display text-sm font-bold text-[#10151f]">
+                  Yo‘lchi v2.4
+                </span>
               </div>
-            </motion.div>
-          ))}
-
-          {/* Typing indicator */}
-          {isTyping && (
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 p-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
-              <span>Yo‘lchi AI yozmoqda...</span>
             </div>
-          )}
 
-          {/* Retry affordance after an AI error */}
-          {!isTyping && lastFailedPrompt && (
-            <div className="flex items-center gap-2 p-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <button
-                type="button"
-                onClick={() => sendMessage(lastFailedPrompt)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-xs font-bold text-amber-800 transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Qayta urinish
-              </button>
+            <div className="pt-2 border-t border-[#e4ddce] space-y-2">
+              <div className="flex justify-between font-mono text-[11px]">
+                <span className="text-slate-500">Kurs:</span>
+                <span className="font-bold text-slate-800 text-right truncate max-w-[130px]">
+                  {activeCourse?.title || 'Umumiy'}
+                </span>
+              </div>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span className="text-slate-500">O‘zlashtirish:</span>
+                <span className="font-bold text-brand-dark">
+                  {currentCourseScore !== null ? `${currentCourseScore}%` : 'N/A'}
+                </span>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Bottom Actions & Input */}
-        <div className="pt-4 mt-4 border-t border-slate-100 space-y-3">
-          {/* Quick Prompts Chips */}
-          <div className="flex flex-wrap items-center gap-2">
-            {quickPrompts.map((chip, idx) => (
-              <button
-                key={idx}
-                type="button"
-                disabled={isTyping}
-                onClick={() => sendMessage(chip)}
-                className="px-3 py-1.5 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-xs font-bold text-indigo-700 transition-all shadow-2xs hover:scale-102 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {chip}
-              </button>
-            ))}
           </div>
 
-          {/* Text Input Pill */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendMessage();
-            }}
-            className="flex items-center gap-2 bg-white p-1.5 pl-4 rounded-2xl border border-slate-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200"
-          >
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Yo‘lchi AI ga savol bering yoki formulani so‘rang..."
-              aria-label="Yo‘lchi AI ga savol yozing"
-              className="flex-1 text-sm bg-transparent border-0 outline-none text-slate-900 placeholder:text-slate-400 font-medium"
-            />
-            <Button
-              type="submit"
-              variant="gradient"
-              size="sm"
-              disabled={!inputText.trim() || isTyping}
-              className="rounded-xl px-4 py-2"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </form>
+          {/* Quick Prompts Rail */}
+          <div className="p-5 rounded-2xl bg-[#fbf9f4] border border-[#e4ddce] space-y-3">
+            <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+              Tezkor So‘rovlar
+            </span>
+            <div className="space-y-1.5">
+              {quickPrompts.map((chip, idx) => {
+                const Icon = chip.icon;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={isTyping}
+                    onClick={() => sendMessage(chip.label)}
+                    className="w-full text-left p-2.5 rounded-xl border border-[#e4ddce] bg-white hover:bg-[#f5efe4] transition-all text-xs font-semibold text-slate-800 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-brand shrink-0" />
+                    <span className="truncate">{chip.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-           <p className="text-[10px] text-slate-400 flex items-center gap-1.5">
-             <Sparkles className="w-3 h-3 text-indigo-400" />
-             {aiStatus === 'unknown'
-               ? 'AI holati birinchi so‘rovdan keyin tasdiqlanadi.'
-               : aiStatus === 'fallback'
-               ? 'Hozir namunaviy javoblar ko‘rsatilmoqda; haqiqiy AI javobi emas.'
-               : aiStatus === 'unavailable'
-               ? 'AI javobi olinmadi. Qayta urinish orqali yana tekshiring.'
-               : 'Javoblar joriy kurs va o‘zlashtirish konteksti bilan AI modeliga yuboriladi.'}
-           </p>
+          {/* Technical Info Docket */}
+          <div className="p-4 rounded-xl border border-[#e4ddce] bg-white text-[11px] font-mono text-slate-500 space-y-1">
+            <span className="font-bold text-slate-700 block uppercase">Pedagogik protokol:</span>
+            <p className="font-sans text-[11px] text-slate-600 leading-relaxed">
+              Javoblar Sokratik metod orqali to‘g‘ridan-to‘g‘ri yechim bermasdan, o‘quvchini fikrlashga yetaklaydi.
+            </p>
+          </div>
         </div>
-      </Card>
+
+        {/* Main Conversation Workbench */}
+        <div className="lg:col-span-3 flex flex-col justify-between rounded-2xl border border-[#e4ddce] bg-white shadow-xs min-h-[580px] overflow-hidden">
+          {/* Top Workbench Bar */}
+          <div className="px-6 py-3 border-b border-[#e4ddce] bg-[#fbf9f4] flex items-center justify-between">
+            <div className="flex items-center gap-2 font-mono text-xs text-slate-600 font-bold uppercase tracking-wider">
+              <Terminal className="w-4 h-4 text-slate-500" />
+              <span>DIALOK SEANSI // LIVE</span>
+            </div>
+            <span className="font-mono text-[10px] text-slate-400">
+              {messages.length} ta xabar
+            </span>
+          </div>
+
+          {/* Messages Stream */}
+          <div ref={messagesContainerRef} className="p-6 space-y-4 overflow-y-auto max-h-[500px]">
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-2xl p-4 sm:p-5 rounded-xl text-sm leading-relaxed ${
+                    msg.sender === 'user'
+                      ? 'bg-[#10151f] text-white rounded-tr-xs shadow-xs'
+                      : msg.isError
+                      ? 'bg-coral/5 border border-coral/25 text-coral rounded-tl-xs shadow-2xs'
+                      : 'bg-[#fbf9f4] border border-[#e4ddce] text-slate-900 rounded-tl-xs shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4 mb-2 font-mono text-[10px] font-bold tracking-wider uppercase opacity-75">
+                    <span>{msg.sender === 'ai' ? 'YO‘LCHI AI' : 'TALABA'}</span>
+                    <span className="font-mono-num">{msg.time}</span>
+                  </div>
+                  <p className="font-sans font-medium whitespace-pre-line text-xs sm:text-sm">
+                    {msg.text}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Typing indicator */}
+            {isTyping && (
+              <div className="flex items-center gap-2 font-mono text-xs font-bold text-brand-dark p-3 bg-[#fbf9f4] rounded-xl border border-[#e4ddce] w-fit">
+                <span className="w-2 h-2 rounded-full bg-brand animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-brand animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 rounded-full bg-brand animate-bounce [animation-delay:0.4s]" />
+                <span>Yo‘lchi AI tahlil qilmoqda...</span>
+              </div>
+            )}
+
+            {/* Retry affordance after an AI error */}
+            {!isTyping && lastFailedPrompt && (
+              <div className="flex items-center gap-2 p-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <button
+                  type="button"
+                  onClick={() => sendMessage(lastFailedPrompt)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 font-mono text-xs font-bold text-amber-900 transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Qayta urinish
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Console Input */}
+          <div className="p-4 sm:p-5 border-t border-[#e4ddce] bg-[#fbf9f4] space-y-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendMessage();
+              }}
+              className="flex items-center gap-2 bg-white p-1.5 pl-4 rounded-xl border border-[#e4ddce] focus-within:border-[#10151f] focus-within:ring-2 focus-within:ring-[#10151f]/10 shadow-xs"
+            >
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Savol bering, masalani yozing yoki tushuntirish so‘rang..."
+                aria-label="Yo‘lchi AI ga savol yozing"
+                className="flex-1 text-sm bg-transparent border-0 outline-none text-slate-900 placeholder:text-slate-400 font-medium"
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={!inputText.trim() || isTyping}
+                className="rounded-lg px-4 py-2 font-bold"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+
+            <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-brand" />
+                {aiStatus === 'ready'
+                  ? 'Gemini 1.5 Pro orqali pedagogik tahlil faol'
+                  : aiStatus === 'fallback'
+                  ? 'Namunaviy deterministik o‘quv javoblari faol'
+                  : 'Tarmoq holati tekshirilmoqda'}
+              </span>
+              <span>ENTER — YUBORISH</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -17,7 +17,6 @@ import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { resolveContinuationLessonId, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { Badge } from '@/presentation/components/Badge';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
 interface RoadmapViewProps {
@@ -39,8 +38,8 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
   if (error) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-7 text-center border-rose-200 bg-rose-50/50 space-y-4">
-          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+        <Card className="max-w-md w-full p-7 text-center border-coral/25 bg-rose-50/50 space-y-4">
+          <AlertTriangle className="w-10 h-10 text-coral mx-auto" />
           <div>
             <h2 className="text-lg font-black text-slate-900">Ta’lim yo‘li yuklanmadi</h2>
             <p role="alert" className="text-sm text-slate-600 mt-1">{error}</p>
@@ -58,7 +57,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
   if (!roadmap || !activeCourse || roadmap.courseId !== activeCourse.id) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -75,72 +74,71 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-7">
-      {/* 1. Header with View Toggle Pill (Reference 2 style: [Bilim xaritasi | Roadmap]) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      {/* 1. Header with View Toggle Pill */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="blue" size="sm">
-              <Map className="w-3.5 h-3.5 mr-1" />
-              Ta’lim Yo‘li
-            </Badge>
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="editorial-kicker">
+              Ta’lim Yo‘li // Shaxsiy marshrut
+            </span>
+            <span className="font-mono text-xs font-bold text-slate-700 bg-white border border-[#e4ddce] px-2.5 py-0.5 rounded">
               {activeCourse.title}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Mening Ta’lim Yo‘lim
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
             Bilim darajangizga moslashtirilgan individual bosqichlar xaritasi
           </p>
         </div>
 
-        {/* Reference 2 View Switcher Toggle Pill */}
-        <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200 self-start sm:self-auto">
+        {/* View Switcher Toggle Pill */}
+        <div className="flex items-center bg-white p-1 rounded-xl border border-[#e4ddce] self-start sm:self-auto shadow-2xs">
           <button
             onClick={onOpenKnowledgeMap}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-[#f5efe4] transition-all cursor-pointer"
           >
             <Compass className="w-3.5 h-3.5" />
             <span>Bilim xaritasi</span>
           </button>
           <button
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white text-indigo-700 shadow-xs transition-all cursor-default"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#10151f] text-white shadow-2xs transition-all cursor-default"
           >
-            <Map className="w-3.5 h-3.5 text-indigo-600" />
+            <Map className="w-3.5 h-3.5 text-path" />
             <span>Roadmap</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Filter Pills (Reference 1: Barchasi, Faol, Tugallangan) */}
+      {/* 2. Filter Pills */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => setFilterTab('all')}
-          className={`px-4 py-1.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             filterTab === 'all'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-[#10151f] text-white shadow-xs'
+              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
           }`}
         >
           Barchasi ({roadmap.nodes.length})
         </button>
         <button
           onClick={() => setFilterTab('active')}
-          className={`px-4 py-1.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             filterTab === 'active'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-[#10151f] text-white shadow-xs'
+              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
           }`}
         >
           Faol bosqichlar
         </button>
         <button
           onClick={() => setFilterTab('completed')}
-          className={`px-4 py-1.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             filterTab === 'completed'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              ? 'bg-[#10151f] text-white shadow-xs'
+              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
           }`}
         >
           Tugallangan
@@ -148,7 +146,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
       </div>
 
       {/* 3. Node-based Gamified Learning Map — journey track */}
-      <div className="relative pl-6 sm:pl-10 space-y-7 before:absolute before:left-[22px] sm:before:left-[38px] before:top-6 before:bottom-6 before:w-1.5 before:journey-track before:rounded-full before:content-['']">
+      <div className="relative pl-6 sm:pl-10 space-y-6 before:absolute before:left-[22px] sm:before:left-[38px] before:top-6 before:bottom-6 before:w-1 before:bg-[#e4ddce] before:rounded-full before:content-['']">
         {filteredNodes.map((node, index) => {
           const isCompleted = node.status === 'completed';
           const isReinforcement = node.isReinforcement || node.status === 'reinforcement';
@@ -158,88 +156,87 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
           return (
             <motion.div
               key={node.id}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.08 }}
+              transition={{ duration: 0.25, delay: index * 0.05 }}
               className="relative"
             >
               {/* Node Icon on Connecting Track */}
               <div
-                className={`absolute -left-[22px] sm:-left-[38px] top-6 -translate-x-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center z-10 transition-transform ${
+                className={`absolute -left-[22px] sm:-left-[38px] top-6 -translate-x-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center z-10 transition-transform ${
                   isCompleted
-                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 ring-4 ring-white'
+                    ? 'bg-mint text-white shadow-sm ring-4 ring-mint/10'
                     : isReinforcement
-                    ? 'bg-gradient-to-tr from-rose-500 to-amber-500 text-white shadow-md shadow-rose-500/30 ring-4 ring-rose-100 animate-pulse'
+                    ? 'bg-coral text-white shadow-sm ring-4 ring-coral/10 lab-pulse'
                     : isAvailable
-                    ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white shadow-md shadow-indigo-500/30 ring-4 ring-indigo-100 pulse-glow'
-                    : 'bg-slate-200 text-slate-400 ring-4 ring-white'
+                    ? 'bg-[#10151f] text-path shadow-md ring-4 ring-slate-200'
+                    : 'bg-[#f5efe4] text-slate-400 border border-[#e4ddce] ring-4 ring-[#fbf9f4]'
                 }`}
               >
                 {isCompleted ? (
-                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : isReinforcement ? (
-                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : isAvailable ? (
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white translate-x-0.5" />
+                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-path translate-x-0.5" />
                 ) : (
-                  <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
               </div>
 
               {/* Node Content Card */}
-              <Card
-                variant={isAvailable ? 'interactive' : 'default'}
-                className={`p-5 sm:p-6 transition-all ${
+              <div
+                className={`rounded-2xl p-5 sm:p-6 transition-all ${
                   isReinforcement
-                    ? 'border-2 border-rose-300 bg-gradient-to-br from-rose-50/70 via-white to-amber-50/50'
+                    ? 'border-2 border-coral/30 bg-[#fff8f8] shadow-sm'
                     : isAvailable
-                    ? 'border-2 border-indigo-400 bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/30 shadow-md'
+                    ? 'border-2 border-[#10151f] bg-white shadow-md'
                     : isCompleted
-                    ? 'border-emerald-200 bg-white'
-                    : 'opacity-75 bg-slate-50/80 border-slate-200'
+                    ? 'border border-mint/25 bg-white shadow-2xs'
+                    : 'border border-[#e4ddce] bg-[#fbf9f4] opacity-75'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1.5 max-w-xl">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         {index + 1}-Bosqich
                       </span>
                       {isReinforcement && (
-                        <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-coral/10 text-coral border border-coral/25">
                           Mustahkamlash
                         </span>
                       )}
                       {isCompleted && (
-                        <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          Tugallangan (100%)
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-mint/10 text-mint border border-mint/25">
+                          Tugallangan
                         </span>
                       )}
                       {isAvailable && !isReinforcement && (
-                        <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-brand/8 text-brand-dark border border-brand/25">
                           Hozirgi Bosqich
                         </span>
                       )}
                     </div>
 
-                    <h3 className="text-lg font-black text-slate-900">
+                    <h3 className="font-display text-lg font-bold text-slate-900">
                       {node.title}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
                       {node.description}
                     </p>
 
-                    <div className="flex items-center gap-4 pt-2 text-xs text-slate-500 font-semibold">
+                    <div className="flex items-center gap-4 pt-2 font-mono text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
                         {node.estimatedMinutes || 15} daqiqa
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 text-amber-700 font-bold">
                         <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                         XP mukofoti
                       </span>
                       {node.score !== undefined && (
-                        <span className="text-indigo-600 font-bold">
+                        <span className="text-brand font-bold">
                           O‘zlashtirish: {node.score}%
                         </span>
                       )}
@@ -263,62 +260,64 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenK
                         {targetLesson ? 'Qayta ko‘rish' : 'Ko‘rib chiqish mavjud emas'}
                       </Button>
                     ) : isAvailable ? (
-                      <Button
-                        variant={isReinforcement ? 'coral' : 'gradient'}
-                        size="md"
+                      <button
                         onClick={() => {
                           if (!targetLesson) return;
                           selectNode(node);
                           onStartLesson(targetLesson);
                         }}
-                        rightIcon={<ArrowRight className="w-4 h-4" />}
-                        className="font-extrabold shadow-md"
+                        className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm flex items-center gap-2 transition-all cursor-pointer ${
+                          isReinforcement
+                            ? 'bg-coral hover:bg-coral text-white shadow-rose-600/20'
+                            : 'bg-[#10151f] hover:bg-[#2a3342] text-white'
+                        }`}
                       >
-                        {isReinforcement ? 'Mustahkamlashni boshlash' : 'Darsni boshlash'}
-                      </Button>
+                        <span>{isReinforcement ? 'Mustahkamlashni boshlash' : 'Darsni boshlash'}</span>
+                        <ArrowRight className="w-4 h-4 text-path" />
+                      </button>
                     ) : (
-                      <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold">
+                      <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f5efe4] border border-[#e4ddce] text-slate-400 font-mono text-xs font-bold">
                         <Lock className="w-3.5 h-3.5" />
-                        <span>Bloklangan</span>
+                        <span>Qulflangan</span>
                       </div>
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Floating Bottom Card: Continue Learning (Reference 1 & 2) */}
-      <Card variant="hero" className="p-6 sm:p-7">
+      {/* Floating Bottom Card: Continue Learning */}
+      <div className="editorial-ink-hero p-6 sm:p-7 rounded-2xl border border-white/10 text-white shadow-xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <YolchiAIMascot size="sm" mood="happy" />
             <div>
-              <h4 className="text-base font-black text-white">
+              <h4 className="font-display text-base font-bold text-white">
                 Siz hozir yaxshi sur’atdasiz!
               </h4>
-              <p className="text-xs text-indigo-100 font-medium">
+              <p className="text-xs text-slate-300 font-medium">
                 Ketma-ketlikni saqlab qoling va darsni yakunlang.
               </p>
             </div>
           </div>
 
           <Button
-            variant="cyan"
+            variant="primary"
             size="md"
             disabled={!courseScopedLessonId}
             onClick={() => {
               if (courseScopedLessonId) onStartLesson(courseScopedLessonId);
             }}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="w-full sm:w-auto font-black"
+            rightIcon={<ArrowRight className="w-4 h-4 text-path" />}
+            className="w-full sm:w-auto font-bold bg-white text-slate-950 hover:bg-slate-100 shadow-md"
           >
             {courseScopedLessonId ? 'Davom etish' : 'Dars mavjud emas'}
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

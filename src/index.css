@@ -1,145 +1,244 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   BilimYo'l Design System — "Yo'l / Journey" theme
-   Direction: deep-space indigo hero surfaces + crisp white learning cards,
-   teal→emerald progress accents, amber gamification (XP/streak),
-   rounded-3xl soft cards, motion only for comprehension/feedback.
+   BilimYo'l Smart Edu — Design System "Yo'lchi Lab"
+   Warm architectural paper · obsidian ink · cobalt signal · editorial grid.
+   Fonts: Space Grotesk (display) · Plus Jakarta Sans (interface) · JetBrains Mono (data).
    ========================================================================== */
+
+@theme {
+  /* --- Typography ------------------------------------------------------- */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Surfaces (warm paper) ------------------------------------------- */
+  --color-canvas: #fbf9f4;
+  --color-paper: #ffffff;
+  --color-sand: #f5efe4;
+  --color-muted: #ece5d8;
+  --color-hairline: #e4ddce;
+
+  /* --- Ink -------------------------------------------------------------- */
+  --color-ink: #10151f;
+  --color-graphite: #2a3342;
+  --color-slatefine: #5b6b7f;
+  --color-faint: #96a2b2;
+
+  /* --- Signal ----------------------------------------------------------- */
+  --color-brand: #3550d6;
+  --color-brand-dark: #2840b8;
+  --color-path: #0d9ad6;
+  --color-mint: #069669;
+  --color-amber: #f59f00;
+  --color-coral: #dc2828;
+  --color-lime: #8ac926;
+
+  /* --- Radii ------------------------------------------------------------ */
+  --radius-chip: 0.5rem;
+  --radius-control: 0.8rem;
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+
+  /* --- Elevation -------------------------------------------------------- */
+  --shadow-editorial: 0 1px 2px rgba(16, 21, 31, 0.04), 0 6px 16px -6px rgba(16, 21, 31, 0.08);
+  --shadow-paper: 0 1px 3px rgba(16, 21, 31, 0.06), 0 14px 30px -12px rgba(16, 21, 31, 0.12);
+  --shadow-raised: 0 10px 30px -8px rgba(53, 80, 214, 0.22), 0 3px 10px -2px rgba(16, 21, 31, 0.06);
+  --shadow-pop: 0 30px 70px -20px rgba(16, 21, 31, 0.4);
+}
 
 @layer base {
   :root {
-    /* Typography */
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    /* Legacy aliases kept for existing var(--*) usages across the app. */
+    --primary: #3550d6;
+    --primary-hover: #2840b8;
+    --primary-deep: #10151f;
+    --secondary: #0d9ad6;
+    --secondary-hover: #0b86bd;
+    --accent-coral: #dc2828;
+    --accent-mint: #069669;
+    --accent-amber: #f59f00;
+    --accent-lime: #8ac926;
 
-    /* Brand palette */
-    --primary: #4f46e5;        /* indigo-600 — main brand, primary actions */
-    --primary-hover: #4338ca;  /* indigo-700 */
-    --primary-deep: #312e81;   /* indigo-900 — hero depth */
-    --secondary: #06b6d4;      /* cyan-500 — journey/progress accent */
-    --secondary-hover: #0891b2;
-    --accent-coral: #f43f5e;   /* rose-500 — errors, reinforcement */
-    --accent-mint: #10b981;    /* emerald-500 — success, mastery */
-    --accent-amber: #f59e0b;   /* amber-500 — XP, streak, gamification */
+    --surface-canvas: #fbf9f4;
+    --surface-card: #ffffff;
+    --surface-subtle: #f5efe4;
+    --surface-muted: #ece5d8;
+    --border-hairline: #e4ddce;
+    --border-dark: #1e293b;
 
-    /* Surface + ink */
-    --surface: #ffffff;
-    --surface-soft: #f8fafc;   /* slate-50 */
-    --surface-muted: #f1f5f9;  /* slate-100 */
-    --ink: #0f172a;            /* slate-900 */
-    --ink-soft: #475569;       /* slate-600 */
-    --ink-faint: #94a3b8;      /* slate-400 */
-
-    /* Elevation (soft, indigo-tinted shadows) */
-    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(79, 70, 229, 0.10);
-    --shadow-raised: 0 10px 30px -10px rgba(79, 70, 229, 0.16), 0 4px 10px -4px rgba(15, 23, 42, 0.08);
-    --shadow-pop: 0 24px 60px -20px rgba(49, 46, 129, 0.35);
-
-    /* Radius scale */
-    --radius-card: 1.5rem;   /* rounded-3xl */
-    --radius-control: 1rem;  /* rounded-2xl */
-    --radius-chip: 0.75rem;  /* rounded-xl */
+    --ink-obsidian: #10151f;
+    --ink-body: #2a3342;
+    --ink-muted: #5b6b7f;
+    --ink-faint: #96a2b2;
   }
 
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--surface-soft);
-    color: var(--ink);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     text-rendering: optimizeLegibility;
   }
 
   /* Visible, consistent focus ring for keyboard nav (WCAG) */
   :focus-visible {
-    outline: 3px solid rgba(79, 70, 229, 0.5);
+    outline: 2px solid var(--color-brand);
     outline-offset: 2px;
     border-radius: var(--radius-chip);
+  }
+
+  ::selection {
+    background: var(--color-brand);
+    color: #ffffff;
   }
 }
 
 /* ============================================================================
-   Utilities
+   Editorial typography & composition utilities
    ========================================================================== */
 
-/* Glass panels */
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+/* Micro-labelling for the scientific "learning lab" feel */
+.editorial-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-brand);
+}
+
+.editorial-kicker .sep {
+  color: var(--color-faint);
+}
+
+/* Editorial underline for emphasis in display headlines */
+.mark-underline {
+  background-image: linear-gradient(transparent 62%, rgba(53, 80, 214, 0.22) 62%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+/* Crisp hairline rule with an editorial index slot */
+.rule-indexed {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.rule-indexed::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-hairline);
+}
+
+/* ============================================================================
+   Surfaces
+   ========================================================================== */
+
+.paper-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-editorial);
+  border-radius: var(--radius-card);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.editorial-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-editorial);
+  border-radius: var(--radius-card);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Deep-ink dossier panel: obsidian with a fine architectural grid + cobalt glow */
+.ink-panel {
+  position: relative;
+  color: #f4f6fb;
+  background-color: #10151f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-pop);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(120% 120% at 88% 0%, rgba(53, 80, 214, 0.35) 0%, rgba(53, 80, 214, 0) 58%),
+    radial-gradient(90% 110% at 6% 110%, rgba(13, 154, 214, 0.22) 0%, rgba(13, 154, 214, 0) 52%);
+  background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%;
+}
+
+.editorial-ink-hero {
+  background-color: #10151f;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(120% 120% at 88% 0%, rgba(53, 80, 214, 0.35) 0%, rgba(53, 80, 214, 0) 58%),
+    radial-gradient(90% 110% at 6% 110%, rgba(13, 154, 214, 0.22) 0%, rgba(13, 154, 214, 0) 52%);
+  background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-pop);
+}
+
+/* Subtle architectural dot canvas */
+.lab-grid-bg {
+  background-image: radial-gradient(rgba(16, 21, 31, 0.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: var(--shadow-raised);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-editorial);
 }
 
-.glass-panel-dark {
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
-  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.35);
-}
-
-/* Deep-space indigo hero (journey surface) */
-.hero-gradient-card {
-  background:
-    radial-gradient(90% 120% at 8% 0%, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0) 55%),
-    radial-gradient(70% 100% at 95% 100%, rgba(139, 92, 246, 0.28) 0%, rgba(139, 92, 246, 0) 60%),
-    linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 80%, #4f46e5 100%);
-  box-shadow: var(--shadow-pop);
-}
-
-.coral-gradient-card {
-  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fed7aa 100%);
-  border: 1.5px solid rgba(244, 63, 94, 0.3);
-}
-
-.sci-fi-glow-card {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
-  border: 1.5px solid rgba(56, 189, 248, 0.4);
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.15), inset 0 0 20px rgba(56, 189, 248, 0.05);
-}
-
-/* Journey track: a subtle vertical "path" used by roadmap + knowledge map */
+/* Journey track: architectural vertical timeline */
 .journey-track {
-  background-image: linear-gradient(
+  background: linear-gradient(
     to bottom,
-    var(--accent-mint) 0%,
-    var(--secondary) 40%,
-    var(--primary) 70%,
-    #cbd5e1 100%
+    var(--color-mint) 0%,
+    var(--color-path) 35%,
+    var(--color-brand) 70%,
+    #d8d2c6 100%
   );
 }
 
-/* ============================================================================
-   Motion — only where it aids comprehension/feedback. Honors reduced-motion.
-   ========================================================================== */
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+/* Live-lab indicator */
+.lab-pulse {
+  animation: labPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-.animate-float { animation: floatSlow 4s ease-in-out infinite; }
 
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5); }
-  50% { box-shadow: 0 0 0 12px rgba(79, 70, 229, 0); }
+@keyframes labPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.9); }
 }
-.pulse-glow { animation: pulseGlow 2.5s infinite; }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Shared entrance for stacked lists / cards */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite;
+.rise-in {
+  animation: riseIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .pulse-glow,
-  .shimmer {
+  .lab-pulse,
+  .rise-in {
     animation: none !important;
+  }
+  .editorial-card,
+  .paper-card {
+    transition: none !important;
   }
 }

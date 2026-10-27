@@ -21,18 +21,18 @@ export const Card: React.FC<CardProps> = ({
   };
 
   const variantStyles = {
-    default: 'bg-white border border-slate-200/90 rounded-3xl shadow-[var(--shadow-card)]',
-    glass: 'glass-panel rounded-3xl',
+    default: 'bg-paper border border-hairline rounded-2xl shadow-[var(--shadow-editorial)] text-ink',
+    glass: 'glass-panel rounded-2xl',
     interactive:
-      'bg-white border border-slate-200/90 hover:border-indigo-400 hover:shadow-[var(--shadow-raised)] hover:-translate-y-0.5 transition-all duration-200 rounded-3xl cursor-pointer motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+      'bg-paper border border-hairline hover:border-brand hover:shadow-[var(--shadow-paper)] hover:-translate-y-0.5 transition-all duration-200 rounded-2xl cursor-pointer motion-reduce:transition-none motion-reduce:hover:translate-y-0',
     active:
-      'bg-indigo-50/50 border-2 border-indigo-600 shadow-[var(--shadow-raised)] rounded-3xl',
+      'bg-brand/5 border-2 border-brand shadow-[var(--shadow-raised)] rounded-2xl',
     hero:
-      'hero-gradient-card text-white rounded-3xl relative overflow-hidden',
+      'editorial-ink-hero text-white rounded-3xl relative overflow-hidden',
     coral:
-      'coral-gradient-card rounded-3xl shadow-sm relative overflow-hidden',
+      'bg-coral/5 border border-coral/25 rounded-2xl shadow-2xs relative overflow-hidden',
     sciFi:
-      'sci-fi-glow-card text-white rounded-3xl shadow-xl relative overflow-hidden',
+      'ink-panel rounded-2xl relative overflow-hidden',
   };
 
   return (

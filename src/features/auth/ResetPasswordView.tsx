@@ -76,7 +76,7 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({
     >
           {sessionReady === null && (
             <div className="py-8 text-center">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-xs text-slate-500 mt-3">Tiklash havolasi tekshirilmoqda...</p>
             </div>
           )}
@@ -106,7 +106,7 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({
 
           {isDone && (
             <div className="text-center py-4 space-y-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+              <div className="w-12 h-12 bg-mint/10 rounded-full flex items-center justify-center mx-auto text-mint">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
@@ -133,7 +133,7 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({
           {sessionReady === true && !isDone && (
             <form onSubmit={handleSubmit} className="space-y-4">
               {errorMsg && (
-                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
+                <div className="p-3.5 bg-coral/5 border border-coral/25 rounded-xl flex items-start gap-2.5 text-coral text-xs font-semibold">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>

@@ -106,14 +106,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             {errorMsg && (
-              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
+              <div className="p-3.5 bg-coral/5 border border-coral/25 rounded-xl flex items-start gap-2.5 text-coral text-xs font-semibold">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-emerald-700 text-xs font-semibold">
+              <div className="p-3.5 bg-mint/10 border border-mint/25 rounded-xl flex items-start gap-2.5 text-mint text-xs font-semibold">
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{successMsg}</span>
               </div>

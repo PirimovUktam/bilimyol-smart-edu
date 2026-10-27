@@ -9,7 +9,6 @@ import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRe
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { Badge } from '@/presentation/components/Badge';
 import { Progress } from '@/presentation/components/Progress';
 
 interface KnowledgeMapViewProps {
@@ -52,8 +51,8 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
   if (mapError && activeCourse) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-7 text-center border-rose-200 bg-rose-50/50 space-y-4">
-          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+        <Card className="max-w-md w-full p-7 text-center border-coral/25 bg-rose-50/50 space-y-4">
+          <AlertTriangle className="w-10 h-10 text-coral mx-auto" />
           <div>
             <h2 className="text-lg font-black text-slate-900">Bilim xaritasi yuklanmadi</h2>
             <p role="alert" className="text-sm text-slate-600 mt-1">{mapError}</p>
@@ -69,7 +68,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
   if (!mapData || !activeCourse || mapData.courseId !== activeCourse.id) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -92,37 +91,36 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-7">
-      {/* Header bar with View Switcher (Reference 2 style) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      {/* Header bar with View Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="blue" size="sm">
-              <Compass className="w-3.5 h-3.5 mr-1" />
-              Bilim Xaritasi
-            </Badge>
-            <span className="text-xs font-semibold text-slate-500">
-              {activeCourse.title} • Umumiy holat: {overallScore}%
+          <div className="flex items-center gap-2 mb-1">
+            <span className="editorial-kicker">
+              Bilim Xaritasi // Diagnostika tahlili
+            </span>
+            <span className="font-mono text-xs font-bold text-slate-700 bg-white border border-[#e4ddce] px-2.5 py-0.5 rounded">
+              {activeCourse.title} • {overallScore}%
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Bilim Holati va Ko‘nikmalar Xaritasi
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
             Diagnostika va darslar asosida aniqlangan bilim xaritangiz
           </p>
         </div>
 
         {/* View Switcher Toggle Pill */}
-        <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200 self-start sm:self-auto">
+        <div className="flex items-center bg-white p-1 rounded-xl border border-[#e4ddce] self-start sm:self-auto shadow-2xs">
           <button
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white text-indigo-700 shadow-xs transition-all cursor-default"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#10151f] text-white shadow-2xs transition-all cursor-default"
           >
-            <Compass className="w-3.5 h-3.5 text-indigo-600" />
+            <Compass className="w-3.5 h-3.5 text-path" />
             <span>Bilim xaritasi</span>
           </button>
           <button
             onClick={onProceedToRoadmap}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-[#f5efe4] transition-all cursor-pointer"
           >
             <Map className="w-3.5 h-3.5" />
             <span>Roadmap</span>
@@ -130,11 +128,11 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
         </div>
       </div>
 
-      {/* Radial Gauge Summary Card (Reference 1 Step 4: "Sizning bilim holatingiz: 64%") */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Radial Gauge Summary Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Gauge card */}
-        <Card className="p-6 border-slate-200/90 shadow-md flex flex-col items-center justify-center text-center space-y-3">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <div className="p-6 bg-white border border-[#e4ddce] rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-3">
+          <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Sizning Bilim Holatingiz
           </span>
 
@@ -145,7 +143,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                 cy="60"
                 r="46"
                 fill="none"
-                stroke="#E2E8F0"
+                stroke="#F0ECE3"
                 strokeWidth="10"
               />
               <circle
@@ -163,31 +161,31 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
               <defs>
                 <linearGradient id="mapRingGrad" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="#38BDF8" />
-                  <stop offset="50%" stopColor="#4F46E5" />
-                  <stop offset="100%" stopColor="#06B6D4" />
+                  <stop offset="50%" stopColor="#3B5BDB" />
+                  <stop offset="100%" stopColor="#0E131F" />
                 </linearGradient>
               </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-slate-900">{overallScore}%</span>
-              <span className="text-[10px] font-bold text-emerald-600 uppercase">
+              <span className="font-display text-3xl font-bold text-slate-900">{overallScore}%</span>
+              <span className="font-mono text-[10px] font-bold text-mint uppercase">
                 {SkillScoringEngine.getMasteryLabelUz(overallScore)}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 pt-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-            <span>Yaxshi o‘zlashtirish</span>
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-600 pt-1">
+            <span className="w-2 h-2 rounded-full bg-mint inline-block" />
+            <span>Faol tahlil natijasi</span>
           </div>
-        </Card>
+        </div>
 
         {/* Detailed Breakdown Card */}
-        <Card className="p-6 border-slate-200/90 shadow-md md:col-span-2 space-y-4 flex flex-col justify-between">
+        <div className="p-6 bg-white border border-[#e4ddce] rounded-2xl shadow-sm md:col-span-2 space-y-4 flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-base font-extrabold text-slate-900">
+              <ShieldCheck className="w-5 h-5 text-brand" />
+              <h3 className="font-display text-base font-bold text-slate-900">
                 Diagnostika xulosasi
               </h3>
             </div>
@@ -197,21 +195,21 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center">
-            <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
-              <div className="text-[10px] font-bold text-emerald-800 uppercase">Yaxshi</div>
-              <div className="text-lg font-black text-emerald-900">{skillBandCounts.strong} ta mavzu</div>
+          <div className="grid grid-cols-3 gap-3 pt-2 border-t border-[#f0ece3] text-center">
+            <div className="p-3 rounded-xl bg-mint/10 border border-mint/25">
+              <div className="font-mono text-[10px] font-bold text-mint uppercase tracking-wider">Yaxshi</div>
+              <div className="font-mono text-base sm:text-lg font-bold text-mint mt-0.5">{skillBandCounts.strong} ta mavzu</div>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-              <div className="text-[10px] font-bold text-amber-800 uppercase">O‘rta</div>
-              <div className="text-lg font-black text-amber-900">{skillBandCounts.medium} ta mavzu</div>
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+              <div className="font-mono text-[10px] font-bold text-amber-800 uppercase tracking-wider">O‘rta</div>
+              <div className="font-mono text-base sm:text-lg font-bold text-amber-950 mt-0.5">{skillBandCounts.medium} ta mavzu</div>
             </div>
-            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200">
-              <div className="text-[10px] font-bold text-rose-800 uppercase">Past</div>
-              <div className="text-lg font-black text-rose-900">{skillBandCounts.weak} ta mavzu</div>
+            <div className="p-3 rounded-xl bg-coral/5 border border-coral/25">
+              <div className="font-mono text-[10px] font-bold text-coral uppercase tracking-wider">Bo‘shliq</div>
+              <div className="font-mono text-base sm:text-lg font-bold text-coral mt-0.5">{skillBandCounts.weak} ta mavzu</div>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Weakest Skill Alert Banner */}
@@ -219,33 +217,33 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-5 sm:p-6 bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border-2 border-rose-300 rounded-3xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="p-5 sm:p-6 bg-[#fff5f5] border border-coral/25 rounded-2xl shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
-              <AlertTriangle className="w-6 h-6 animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-coral text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-600/20">
+              <AlertTriangle className="w-5 h-5 lab-pulse" />
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded bg-rose-200 text-rose-900">
+                <span className="font-mono text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-coral/10 text-coral border border-coral/25">
                   Mustahkamlash talab etiladi
                 </span>
-                <span className="text-sm font-black text-rose-950">
+                <span className="font-display text-sm font-bold text-coral">
                   {weakestSkillName} ({weakest.score}%)
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-rose-900/90 font-medium">
+              <p className="text-xs sm:text-sm text-coral font-medium">
                 Ushbu mavzu bo‘yicha tushunchalar mustahkamlangandan so‘ng keyingi qiyinroq bosqichlar ochiladi.
               </p>
             </div>
           </div>
 
           <Button
-            variant="coral"
+            variant="danger"
             size="md"
             onClick={onProceedToRoadmap}
             rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="shrink-0 font-extrabold"
+            className="shrink-0 font-bold"
           >
             Yo‘l xaritasiga o‘tish
           </Button>
@@ -254,7 +252,7 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
 
       {/* Skills Grid */}
       <div className="space-y-3">
-        <h3 className="text-base font-extrabold text-slate-900">
+        <h3 className="font-display text-base font-bold text-slate-900 tracking-tight">
           Fan ko‘nikmalari reytingi
         </h3>
 
@@ -265,32 +263,32 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
             const isStrong = skillScore >= 80;
 
             return (
-              <Card
+              <div
                 key={skill.id}
-                className={`p-5 transition-all ${
+                className={`p-5 rounded-2xl border transition-all ${
                   isWeak
-                    ? 'border-rose-200 bg-rose-50/30'
+                    ? 'border-coral/25 bg-[#fffbfb]'
                     : isStrong
-                    ? 'border-emerald-200 bg-emerald-50/20'
-                    : 'border-slate-200 bg-white'
+                    ? 'border-mint/25 bg-[#fbfdfb]'
+                    : 'border-[#e4ddce] bg-white'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <h4 className="text-sm font-extrabold text-slate-900">
+                    <h4 className="font-display text-sm font-bold text-slate-900">
                       {skill.name}
                     </h4>
-                    <p className="text-xs text-slate-500 font-medium">
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
                       {skill.description || 'Asosiy tushunchalar'}
                     </p>
                   </div>
                   <span
-                    className={`text-base font-black px-2.5 py-0.5 rounded-xl border ${
+                    className={`font-mono text-xs font-bold px-2 py-0.5 rounded-lg border ${
                       isWeak
-                        ? 'bg-rose-100 text-rose-800 border-rose-200'
+                        ? 'bg-coral/10 text-coral border-coral/25'
                         : isStrong
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                        ? 'bg-mint/10 text-mint border-mint/25'
+                        : 'bg-[#f5efe4] text-slate-800 border-[#e4ddce]'
                     }`}
                   >
                     {skillScore}%
@@ -305,20 +303,20 @@ export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToR
                     ariaLabel={`${skill.name} o‘zlashtirish`}
                   />
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       </div>
 
       {/* Bottom CTA */}
-      <div className="pt-4 flex justify-end">
+      <div className="pt-2 flex justify-end">
         <Button
-          variant="gradient"
+          variant="secondary"
           size="lg"
           onClick={onProceedToRoadmap}
-          rightIcon={<ArrowRight className="w-5 h-5" />}
-          className="shadow-lg shadow-indigo-600/30"
+          rightIcon={<ArrowRight className="w-4 h-4 text-path" />}
+          className="shadow-md"
         >
           Shaxsiy Yo‘l Xaritasiga O‘tish
         </Button>

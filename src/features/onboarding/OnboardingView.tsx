@@ -169,7 +169,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-path/15 text-path flex items-center justify-center">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
@@ -190,7 +190,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                         onClick={() => setDailyMinutes(opt.value)}
                         className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'border-teal-600 bg-teal-50/60 shadow-xs'
+                            ? 'border-path bg-teal-50/60 shadow-xs'
                             : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
                         }`}
                       >
@@ -200,7 +200,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                         </div>
                         <div
                           className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-teal-600 border-teal-600 text-white' : 'border-slate-300'
+                            isSelected ? 'bg-path border-path text-white' : 'border-slate-300'
                           }`}
                         >
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -222,7 +222,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand-dark flex items-center justify-center">
                     <BarChart3 className="w-5 h-5" />
                   </div>
                   <div>
@@ -243,7 +243,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                         onClick={() => setInitialLevel(opt.value)}
                         className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'border-indigo-600 bg-indigo-50/60 shadow-xs'
+                            ? 'border-brand bg-indigo-50/60 shadow-xs'
                             : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
                         }`}
                       >
@@ -253,7 +253,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBa
                         </div>
                         <div
                           className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'
+                            isSelected ? 'bg-brand border-brand text-white' : 'border-slate-300'
                           }`}
                         >
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}

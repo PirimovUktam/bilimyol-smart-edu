@@ -25,9 +25,7 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { DailyActivitySummary } from '@/domain/repositories/ILearnerRepository';
-import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
-import { Badge } from '@/presentation/components/Badge';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
 interface ProgressViewProps {
@@ -97,12 +95,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
   const avgPerDay = activity.length > 0 ? (totalHours / activity.length).toFixed(1) : '0.0';
   const peakEntry = chartData.find((d) => d.isPeak);
 
-  // Achievements are computed from real learner metrics — never hardcoded.
-  const badgeDefs: { id: number; title: string; desc: string; icon: LucideIcon; earned: boolean; bg: string }[] = [
-    { id: 1, title: 'Muntazam O‘quvchi', desc: '7 kun uzluksiz o‘qish', icon: Trophy, earned: (profile?.streakDays ?? 0) >= 7, bg: 'from-amber-400 to-amber-600' },
-    { id: 2, title: 'Tushunish Chempioni', desc: '90%+ o‘zlashtirish', icon: Target, earned: overallScore >= 90, bg: 'from-cyan-400 to-blue-600' },
-    { id: 3, title: 'Mavzu Master', desc: '5+ dars tugatilgan', icon: Star, earned: completedLessons >= 5, bg: 'from-indigo-500 to-purple-600' },
-    { id: 4, title: 'Ilk Qadam', desc: 'Birinchi dars yakunlandi', icon: Bot, earned: completedLessons >= 1, bg: 'from-emerald-400 to-teal-600' },
+  // Real learner achievements
+  const badgeDefs: { id: number; title: string; desc: string; icon: LucideIcon; earned: boolean }[] = [
+    { id: 1, title: 'Muntazam O‘quvchi', desc: '7 kun uzluksiz o‘qish', icon: Trophy, earned: (profile?.streakDays ?? 0) >= 7 },
+    { id: 2, title: 'Tushunish Chempioni', desc: '90%+ o‘zlashtirish', icon: Target, earned: overallScore >= 90 },
+    { id: 3, title: 'Mavzu Master', desc: '5+ dars tugatilgan', icon: Star, earned: completedLessons >= 5 },
+    { id: 4, title: 'Ilk Qadam', desc: 'Birinchi dars yakunlandi', icon: Bot, earned: completedLessons >= 1 },
   ];
   const earnedCount = badgeDefs.filter((b) => b.earned).length;
 
@@ -120,131 +118,132 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
       id: course.id,
       name: course.title,
       icon: courseIcons[course.iconName] || BookOpen,
-      color: course.primaryColorHex || course.primaryColor || '#4F46E5',
+      color: course.primaryColorHex || course.primaryColor || '#10151f',
       score,
     };
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="blue" size="sm">
-              <TrendingUp className="w-3.5 h-3.5 mr-1" />
-              Real Natijalar
-            </Badge>
-            <span className="text-xs font-semibold text-slate-500">
-              {activeCourse?.title || 'Fan tanlanmagan'} • Shaxsiy statistika
-            </span>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#e4ddce]">
+        <div className="space-y-1">
+          <div className="editorial-kicker">
+            <span>ANALITIK DOSYE</span>
+            <span>//</span>
+            <span>PROGRESS MONITORING</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Mening Natijalarim
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10151f] tracking-tight">
+            Ta’lim Ko‘rsatkichlari & Analitika
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Har bir dars, test va AI tahlillari bo‘yicha o‘zlashtirish monitoringi
+          <p className="text-xs text-slate-500">
+            {activeCourse?.title || 'Fan tanlanmagan'} bo‘yicha individual faollik va ko‘nikmalar dinamikasi
           </p>
         </div>
 
-        {/* Timeframe pill selector (switches the real data window) */}
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200 self-start sm:self-auto">
+        {/* Timeframe pill selector */}
+        <div className="flex items-center gap-1 bg-[#f5efe4] p-1 rounded-xl border border-[#e4ddce] self-start sm:self-auto">
           <button
             onClick={() => setTimeframe('week')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              timeframe === 'week' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+              timeframe === 'week' ? 'bg-[#10151f] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Bu hafta
+            HAFTALIK
           </button>
           <button
             onClick={() => setTimeframe('month')}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              timeframe === 'month' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
+              timeframe === 'month' ? 'bg-[#10151f] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Bu oy
+            OYLIK
           </button>
         </div>
       </div>
 
-      {/* 4 Quick Stat Cards */}
+      {/* 4 Telemetry Tablets */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 border-slate-200/90 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-mint flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">{completedLessons}</div>
-            <div className="text-xs font-bold text-slate-500">Bajarilgan dars</div>
+            <div className="font-mono-num text-2xl font-black text-[#10151f]">{completedLessons}</div>
+            <div className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tugatilgan dars</div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-5 border-slate-200/90 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-200 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
+        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-brand-dark flex items-center justify-center shrink-0">
+            <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">{overallScore}%</div>
-            <div className="text-xs font-bold text-slate-500">O‘zlashtirish</div>
+            <div className="font-mono-num text-2xl font-black text-[#10151f]">{overallScore}%</div>
+            <div className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider">O‘zlashtirish</div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-5 border-slate-200/90 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0">
-            <Flame className="w-6 h-6 fill-amber-500" />
+        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-amber-600 flex items-center justify-center shrink-0">
+            <Flame className="w-5 h-5 fill-amber-500" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">
-              {profile?.streakDays ?? 0} kun
+            <div className="font-mono-num text-2xl font-black text-[#10151f]">
+              {profile?.streakDays ?? 0} <span className="text-sm font-bold font-sans">kun</span>
             </div>
-            <div className="text-xs font-bold text-slate-500">Ketma-ketlik</div>
+            <div className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider">Uzluksiz streak</div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-5 border-slate-200/90 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center shrink-0">
-            <Award className="w-6 h-6" />
+        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-slate-800 flex items-center justify-center shrink-0">
+            <Award className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900">
+            <div className="font-mono-num text-2xl font-black text-[#10151f]">
               {profile?.xp ?? 0}
             </div>
-            <div className="text-xs font-bold text-slate-500">Umumiy XP</div>
+            <div className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jamg‘arilgan XP</div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Center 2-Column: Activity Chart & Overall Gauge */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="p-6 border-slate-200/90 shadow-md lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="p-6 sm:p-7 rounded-2xl border border-[#e4ddce] bg-white shadow-xs lg:col-span-2 space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-[#e4ddce]">
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-base font-extrabold text-slate-900">O‘qish vaqti</h3>
+              <Clock className="w-4 h-4 text-slate-700" />
+              <h3 className="font-display text-base font-bold text-[#10151f]">O‘quv Vaqti Xronologiyasi</h3>
             </div>
-            <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl border border-indigo-200">
-              Soat / Kun
+            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#fbf9f4] border border-[#e4ddce] text-slate-600">
+              SOAT / KUN
             </span>
           </div>
 
-          <p className="text-xs text-slate-500">
-            {timeframe === 'week' ? 'Haftalik' : 'Oylik'} umumiy faol vaqt: <strong>{totalHours} soat</strong> (o‘rtacha {avgPerDay} soat/kun)
-          </p>
+          <div className="flex items-center justify-between text-xs text-slate-600">
+            <span>
+              {timeframe === 'week' ? 'Haftalik' : 'Oylik'} umumiy vaqt:{' '}
+              <strong className="text-slate-900 font-mono-num">{totalHours} soat</strong> (o‘rtacha {avgPerDay} soat/kun)
+            </span>
+            <span className="font-mono text-xs font-bold text-brand-dark">Jami savollar: {totalQuestions}</span>
+          </div>
+
           {activityError && (
-            <p role="alert" className="text-xs font-semibold text-rose-600">
+            <p role="alert" className="text-xs font-mono font-bold text-coral">
               Faollik ma’lumotlari yuklanmadi: {activityError}
             </p>
           )}
 
-          {/* Bar Chart Visualization from real activity */}
-          <div className="h-48 pt-4 flex items-end justify-between gap-1.5 px-2 border-b border-slate-100">
+          {/* Bar Chart Visualization */}
+          <div className="h-48 pt-4 flex items-end justify-between gap-1.5 px-2 border-b border-[#e4ddce]">
             {isLoadingActivity ? (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-[#10151f] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : chartData.length === 0 || totalMinutes === 0 ? (
-              <div className="w-full h-full flex items-center justify-center text-xs font-semibold text-slate-400">
+              <div className="w-full h-full flex items-center justify-center font-mono text-xs text-slate-400">
                 Hali o‘quv faoliyati qayd etilmagan.
               </div>
             ) : (
@@ -252,76 +251,74 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                 const heightPct = Math.round((d.hours / maxHours) * 100);
                 const showLabel = timeframe === 'week' || i % 5 === 0;
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                    <span className="text-[10px] font-bold text-slate-600 opacity-90 group-hover:text-indigo-600 transition-colors">
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                    <span className="font-mono text-[10px] font-bold text-slate-500 group-hover:text-[#10151f] transition-colors">
                       {d.hours > 0 ? d.hours : ''}
                     </span>
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.max(heightPct, d.hours > 0 ? 8 : 2)}%` }}
-                      transition={{ duration: 0.6, delay: Math.min(i, 10) * 0.05 }}
-                      className={`w-full max-w-[36px] rounded-t-xl transition-all duration-200 ${
+                      transition={{ duration: 0.5, delay: Math.min(i, 10) * 0.04 }}
+                      className={`w-full max-w-[32px] rounded-t-md transition-all duration-200 ${
                         d.isPeak
-                          ? 'bg-gradient-to-t from-blue-600 via-indigo-600 to-cyan-400 shadow-md shadow-indigo-500/30'
-                          : 'bg-gradient-to-t from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-600'
+                          ? 'bg-[#10151f] shadow-xs'
+                          : 'bg-[#cbd5e1] hover:bg-slate-700'
                       }`}
                     />
-                    <span className="text-[10px] font-extrabold text-slate-500 pt-1">{showLabel ? d.label : ''}</span>
+                    <span className="font-mono text-[10px] font-bold text-slate-500 pt-1">{showLabel ? d.label : ''}</span>
                   </div>
                 );
               })
             )}
           </div>
 
-          <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block" />
-              Eng faol kun: {peakEntry ? `${peakEntry.label} (${peakEntry.hours} soat)` : '—'}
+          <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#10151f] inline-block" />
+              Eng faol nuqta: {peakEntry ? `${peakEntry.label} (${peakEntry.hours} soat)` : '—'}
             </span>
-            <span className="text-emerald-600 font-bold">Jami savollar: {totalQuestions}</span>
+            <span>REAL-TIME TELEMETRY</span>
           </div>
-        </Card>
+        </div>
 
         {/* Circular Gauge Card */}
-        <Card className="p-6 border-slate-200/90 shadow-md flex flex-col items-center justify-center text-center space-y-4">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Umumiy Bilim Bazasi
-          </span>
+        <div className="p-6 sm:p-7 rounded-2xl border border-[#e4ddce] bg-white shadow-xs flex flex-col items-center justify-between text-center space-y-4">
+          <div className="w-full pb-3 border-b border-[#e4ddce] text-left">
+            <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              INDIVIDUAL MATRIX
+            </span>
+            <h3 className="font-display text-base font-bold text-[#10151f]">
+              Umumiy O‘zlashtirish
+            </h3>
+          </div>
 
-          <div className="relative w-40 h-40 flex items-center justify-center">
+          <div className="relative w-40 h-40 flex items-center justify-center my-2">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="48" fill="none" stroke="#E2E8F0" strokeWidth="10" />
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#f5efe4" strokeWidth="9" />
               <circle
                 cx="60"
                 cy="60"
                 r="48"
                 fill="none"
-                stroke="url(#progressRingGrad)"
-                strokeWidth="10"
+                stroke="#10151f"
+                strokeWidth="9"
                 strokeDasharray="301.6"
                 strokeDashoffset={301.6 * (1 - overallScore / 100)}
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-out"
               />
-              <defs>
-                <linearGradient id="progressRingGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#38BDF8" />
-                  <stop offset="50%" stopColor="#4F46E5" />
-                  <stop offset="100%" stopColor="#A855F7" />
-                </linearGradient>
-              </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-slate-900 tracking-tight">
+              <span className="font-mono-num text-4xl font-extrabold text-[#10151f] tracking-tight">
                 {overallScore}%
               </span>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                O‘zlashtirish
+              <span className="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                BAHOLANGAN
               </span>
             </div>
           </div>
 
-          <p className="text-xs font-semibold text-slate-600 px-2 leading-relaxed">
+          <p className="text-xs text-slate-600 px-2 leading-relaxed font-medium">
             {overallScore >= 80
               ? 'Ajoyib natija! Bilim darajangiz yuqori darajaga yaqinlashmoqda.'
               : overallScore >= 50
@@ -333,67 +330,66 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             variant="outline"
             size="sm"
             onClick={onOpenKnowledgeMap}
-            leftIcon={<Compass className="w-4 h-4 text-indigo-600" />}
-            className="w-full"
+            leftIcon={<Compass className="w-4 h-4 text-[#10151f]" />}
+            className="w-full font-bold"
           >
             Bilim xaritasini ochish
           </Button>
-        </Card>
+        </div>
       </div>
 
-      {/* Subject Mastery Progress Bars & Gamified Rewards */}
+      {/* Subject Mastery Progress Bars & Credential Stamps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 border-slate-200/90 shadow-md space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-extrabold text-slate-900">
-              Mavzular bo‘yicha natija
+        <div className="p-6 sm:p-7 rounded-2xl border border-[#e4ddce] bg-white shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#e4ddce]">
+            <h3 className="font-display text-base font-bold text-[#10151f]">
+              Fanlar Bo‘yicha Natijalar
             </h3>
-            <span className="text-xs text-slate-400 font-semibold">Real baholash</span>
+            <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">MATRITSA</span>
           </div>
 
-          <div className="space-y-4 pt-1">
+          <div className="space-y-3.5 pt-1">
             {subjectProgress.length === 0 ? (
-              <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500">
+              <p className="p-4 rounded-xl border border-[#e4ddce] bg-[#fbf9f4] font-mono text-xs text-slate-500">
                 Hozircha fanlar bo‘yicha ma’lumot mavjud emas.
               </p>
             ) : subjectProgress.map((subj, idx) => {
               const Icon = subj.icon;
               return (
-                <div key={subj.id} className="space-y-1.5">
+                <div key={subj.id} className="p-3 rounded-xl border border-[#e4ddce] bg-[#fbf9f4] space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                     <span className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-indigo-600" aria-hidden="true" />
-                      <span>{subj.name}</span>
+                      <Icon className="h-4 w-4 text-slate-700" aria-hidden="true" />
+                      <span className="font-display text-sm">{subj.name}</span>
                     </span>
-                    <span className="font-extrabold text-slate-900">
+                    <span className="font-mono-num font-extrabold text-[#10151f]">
                       {subj.score !== null ? `${subj.score}%` : '—'}
                     </span>
                   </div>
-                  <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-white border border-[#e4ddce] rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${subj.score ?? 0}%` }}
-                      transition={{ duration: 0.8, delay: idx * 0.1 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: subj.color }}
+                      transition={{ duration: 0.6, delay: idx * 0.08 }}
+                      className="h-full rounded-full bg-[#10151f]"
                     />
                   </div>
                 </div>
               );
             })}
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6 border-slate-200/90 shadow-md space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="p-6 sm:p-7 rounded-2xl border border-[#e4ddce] bg-white shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#e4ddce]">
             <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-500" />
-              <h3 className="text-base font-extrabold text-slate-900">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <h3 className="font-display text-base font-bold text-[#10151f]">
                 Yutuqlar va Nishonlar
               </h3>
             </div>
-            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-              {earnedCount}/{badgeDefs.length} Olingan
+            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800">
+              {earnedCount} / {badgeDefs.length} TASDIQLANGAN
             </span>
           </div>
 
@@ -401,47 +397,47 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             {badgeDefs.map((b) => (
               <div
                 key={b.id}
-                className={`p-3.5 rounded-2xl border shadow-2xs flex items-center gap-3 transition-colors ${
+                className={`p-3.5 rounded-xl border transition-colors flex items-center gap-3 ${
                   b.earned
-                    ? 'bg-gradient-to-br from-slate-50 to-white border-slate-200/90 hover:border-indigo-300'
-                    : 'bg-slate-50/60 border-slate-200 opacity-60'
+                    ? 'bg-white border-[#10151f] shadow-xs'
+                    : 'bg-[#fbf9f4] border-[#e4ddce] opacity-50'
                 }`}
               >
-                <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center text-lg shrink-0 shadow-sm ${b.earned ? `bg-gradient-to-tr ${b.bg}` : 'bg-slate-300'}`}>
-                  {b.earned ? <b.icon className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${b.earned ? 'bg-[#10151f] text-white shadow-xs' : 'bg-[#e4ddce] text-slate-500'}`}>
+                  {b.earned ? <b.icon className="w-4 h-4 text-amber-400" /> : <Lock className="w-4 h-4" />}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-extrabold text-slate-900 truncate">
+                  <h4 className="font-display text-xs font-bold text-slate-900 truncate">
                     {b.title}
                   </h4>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">
+                  <p className="font-mono text-[9px] text-slate-500 truncate">
                     {b.desc}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Floating Yo'lchi AI Encouragement Banner */}
-      <Card variant="hero" className="p-6 sm:p-8">
+      <div className="editorial-ink-hero p-6 sm:p-8 rounded-2xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <YolchiAIMascot size="lg" mood="celebrating" />
             <div className="space-y-1.5 text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-cyan-400 text-slate-900">
-                  Yo‘lchi AI Maslahati
+                <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded bg-white text-[#10151f]">
+                  YO‘LCHI AI TAVSIYASI
                 </span>
-                <span className="text-xs text-blue-200 font-semibold">Bugun</span>
+                <span className="font-mono text-[10px] text-slate-400">BUGUNGI SUR’AT</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
-                {completedLessons > 0 ? 'Ajoyib sur’at!' : 'Boshlashga tayyormisiz?'}
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
+                {completedLessons > 0 ? 'Ajoyib sur’at bilan harakatlanyapsiz!' : 'Boshlashga tayyormisiz?'}
               </h3>
-              <p className="text-xs sm:text-sm text-indigo-100 max-w-lg leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 max-w-lg leading-relaxed font-sans">
                 {completedLessons > 0
-                  ? `Siz allaqachon ${completedLessons} ta darsni yakunladingiz va jami ${profile?.xp ?? 0} XP to‘pladingiz. Keyingi darsni tugatib, yana bir nishonga erishing!`
+                  ? `Siz allaqachon ${completedLessons} ta darsni yakunladingiz va jami ${profile?.xp ?? 0} XP to‘pladingiz. Keyingi darsni boshlab yangi marralarni zabt eting.`
                   : 'Birinchi darsni yakunlab, o‘z bilim xaritangizni shakllantirishni boshlang!'}
               </p>
             </div>
@@ -452,7 +448,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
               variant="outline"
               size="md"
               onClick={onOpenRoadmap}
-              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20"
+              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border-white/20 font-bold"
             >
               Ta’lim yo‘li
             </Button>
@@ -461,13 +457,13 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
               size="md"
               onClick={onContinueLesson}
               rightIcon={<ArrowRight className="w-5 h-5" />}
-              className="w-full sm:w-auto font-black"
+              className="w-full sm:w-auto font-bold"
             >
               Darsni boshlash
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

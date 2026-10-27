@@ -44,7 +44,7 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
     >
       {isSent ? (
         <div className="text-center py-2 space-y-4">
-          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+          <div className="w-12 h-12 bg-mint/10 rounded-full flex items-center justify-center mx-auto text-mint">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
@@ -68,7 +68,7 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
       ) : (
         <form onSubmit={handleReset} className="space-y-4">
           {errorMsg && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold">
+            <div className="p-3.5 bg-coral/5 border border-coral/25 rounded-xl flex items-start gap-2.5 text-coral text-xs font-semibold">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
