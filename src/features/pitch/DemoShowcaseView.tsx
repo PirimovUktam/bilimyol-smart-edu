@@ -228,12 +228,12 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-path selection:text-white">
       {/* Background Decorative Mesh Gradients */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-200/50 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-200/40 rounded-full blur-[160px]" />
-        <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-emerald-200/30 rounded-full blur-[150px]" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand/50 rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-path/40 rounded-full blur-[160px]" />
+        <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-mint/30 rounded-full blur-[150px]" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -242,7 +242,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           <div className="flex items-center gap-3">
             <BilimYolLogo size="md" />
             <span className="text-slate-400">/</span>
-            <span className="text-xs font-black uppercase tracking-wider text-cyan-800 bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-xl">
+            <span className="text-xs font-black uppercase tracking-wider text-path bg-path/10 border border-path/25 px-2.5 py-1 rounded-xl">
               Demo Showcase (/demo)
             </span>
           </div>
@@ -258,7 +258,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               variant="primary"
               size="sm"
               onClick={onNavigateCourses}
-              className="bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
+              className="bg-path hover:bg-path text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
             >
               Jonli Prototipni Ochish <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -267,7 +267,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
         {/* DEMO HERO HEADER */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand/8 border border-brand/25 text-brand-dark text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Pitch Day 3.0 — 6-Talab: /demo Sahifasi</span>
           </div>
@@ -286,7 +286,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={() => setPlayerMode('video')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 playerMode === 'video'
-                  ? 'bg-cyan-600 text-white shadow-md font-black'
+                  ? 'bg-path text-white shadow-md font-black'
                   : 'text-slate-700 hover:text-slate-900'
               }`}
             >
@@ -297,7 +297,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={() => setPlayerMode('simulation')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 playerMode === 'simulation'
-                  ? 'bg-indigo-600 text-white shadow-md font-black'
+                  ? 'bg-brand text-white shadow-md font-black'
                   : 'text-slate-700 hover:text-slate-900'
               }`}
             >
@@ -313,9 +313,9 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           <div className="p-4 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-coral inline-block" />
                 <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-mint inline-block" />
               </div>
               <span className="text-xs font-bold text-slate-800">
                 BilimYo‘l Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (1080p Desktop • O‘zbekcha Ovoz)
@@ -323,7 +323,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 text-[10px] font-black border border-cyan-200">
+              <span className="px-2 py-0.5 rounded bg-path/15 text-path text-[10px] font-black border border-path/25">
                 1920×1080 Full HD (16:9)
               </span>
               <a
@@ -342,7 +342,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           {playerMode === 'video' ? (
             /* 1. Real Video Player with Dual MP4/WebM Fallback */
             <div className="w-full bg-black/90 p-4 sm:p-8 flex flex-col items-center justify-center">
-              <div className="w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border-2 border-cyan-500/30 bg-black aspect-video relative group">
+              <div className="w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border-2 border-path/30 bg-black aspect-video relative group">
                 <video
                   ref={videoRef}
                   poster="/videos/bilimyol-pitch-demo-poster.jpg"
@@ -369,7 +369,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 {!isVideoPlaying && !videoError && (
                   <button
                     onClick={handleToggleVideoPlay}
-                    className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-cyan-500/95 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/50 transition-all hover:scale-110 cursor-pointer z-20 backdrop-blur-sm"
+                    className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-path/95 hover:bg-path text-slate-950 flex items-center justify-center shadow-2xl shadow-path/50 transition-all hover:scale-110 cursor-pointer z-20 backdrop-blur-sm"
                     title="Videoni qo‘yish"
                     aria-label="Videoni ijro etish"
                   >
@@ -387,7 +387,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                         size="sm"
                         variant="primary"
                         onClick={handleToggleVideoPlay}
-                        className="bg-cyan-500 text-slate-950 font-bold text-xs"
+                        className="bg-path text-slate-950 font-bold text-xs"
                       >
                         <RefreshCw className="w-3.5 h-3.5 mr-1" /> Qayta urinish
                       </Button>
@@ -409,7 +409,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleToggleVideoPlay}
-                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-path hover:bg-path text-slate-950 font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
                   >
                     {isVideoPlaying ? (
                       <>
@@ -440,7 +440,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 text-slate-400 text-[11px]">
-                  <span className="flex items-center gap-1 text-cyan-300 font-bold">
+                  <span className="flex items-center gap-1 text-path font-bold">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     H.264 & WebM HD
                   </span>
@@ -468,13 +468,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-indigo-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-path/20 text-path flex items-center justify-center shadow-lg">
                         <BookOpen className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           1-Qadam: Fan Tanlash
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -494,13 +494,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-purple-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-brand/20 text-path flex items-center justify-center shadow-lg">
                         <Compass className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           2-Qadam: Adaptiv Diagnostika
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -520,13 +520,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-blue-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-brand/20 text-path flex items-center justify-center shadow-lg">
                         <Zap className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-blue-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           3-Qadam: Shaxsiy Ta’lim Yo‘li
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -546,11 +546,11 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-cyan-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-path/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
                       <YolchiAIMascot size="lg" mood="explaining" />
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           4-Qadam: Interaktiv Dars
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -570,13 +570,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-emerald-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-mint/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-mint/20 text-mint flex items-center justify-center shadow-lg">
                         <ShieldCheck className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-mint font-bold uppercase tracking-wider">
                           5-Qadam: Server-Side Scoring & Anti-Cheat
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -596,13 +596,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-indigo-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-brand/20 text-path flex items-center justify-center shadow-lg">
                         <Bot className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-indigo-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           6-Qadam: Yo‘lchi AI Mentori
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -622,7 +622,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-indigo-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
                       <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shadow-lg">
                         <Compass className="w-8 h-8" />
@@ -648,13 +648,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-purple-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-brand/20 text-path flex items-center justify-center shadow-lg">
                         <Zap className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           4-Qadam: Ko‘nikmalar Xaritasi
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -674,13 +674,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-emerald-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-mint/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-mint/20 text-mint flex items-center justify-center shadow-lg">
                         <TrendingUp className="w-8 h-8" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-mint font-bold uppercase tracking-wider">
                           10-Qadam: O‘quvchi Dashboardi
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -700,13 +700,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 1.02 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-indigo-950/70 via-slate-950 to-slate-900 text-center space-y-6"
+                      className="w-full h-full p-8 flex flex-col justify-center items-center bg-gradient-to-br from-ink/70 via-slate-950 to-slate-900 text-center space-y-6"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shadow-lg">
+                      <div className="w-16 h-16 rounded-2xl bg-path/20 text-path flex items-center justify-center shadow-lg">
                         <Sparkles className="w-8 h-8 text-amber-300" />
                       </div>
                       <div className="space-y-2 max-w-lg">
-                        <span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-path font-bold uppercase tracking-wider">
                           11-Qadam: Xulosa
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
@@ -721,7 +721,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 </AnimatePresence>
 
                 {/* Floating Chapter Badge */}
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/60 border border-white/10 text-cyan-400 text-[11px] font-bold">
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/60 border border-white/10 text-path text-[11px] font-bold">
                   {currentChapter.highlightBadge}
                 </div>
               </div>
@@ -739,7 +739,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     }}
                   >
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-600 to-indigo-600 rounded-full relative"
+                      className="h-full bg-gradient-to-r from-path to-brand rounded-full relative"
                       style={{ width: `${(currentSeconds / TOTAL_DURATION_SECONDS) * 100}%` }}
                     >
                       <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md border border-slate-300" />
@@ -757,7 +757,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all cursor-pointer shadow-sm"
+                      className="p-2.5 rounded-xl bg-path hover:bg-path text-white font-bold transition-all cursor-pointer shadow-sm"
                     >
                       {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
                     </button>
@@ -786,7 +786,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     variant="primary"
                     size="sm"
                     onClick={onNavigateCourses}
-                    className="bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
+                    className="bg-path hover:bg-path text-white font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
                   >
                     ⚡ Bu Qadamni Jonli Sinash
                   </Button>
@@ -808,12 +808,12 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 onClick={() => handleJumpToChapter(idx)}
                 className={`p-3 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
                   activeChapterIndex === idx
-                    ? 'bg-cyan-50 border-cyan-400 shadow-sm text-cyan-950'
+                    ? 'bg-path/10 border-path shadow-sm text-path'
                     : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
                 }`}
               >
                 <div>
-                  <span className="text-[10px] text-cyan-700 font-bold block">{ch.timestamp}</span>
+                  <span className="text-[10px] text-path font-bold block">{ch.timestamp}</span>
                   <h4 className="text-xs font-bold text-slate-900 mt-1 leading-tight">{ch.title}</h4>
                 </div>
                 <span className="text-[10px] text-slate-500 mt-2 block font-medium">
@@ -827,7 +827,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         {/* 6.2. DEMO-VIDEONING BATAFSIL TAVSIFI */}
         <section className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
           <div className="border-b border-slate-200 pb-4">
-            <span className="text-cyan-700 bg-cyan-50 border border-cyan-200 px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase">
+            <span className="text-path bg-path/10 border border-path/25 px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase">
               6.2-TALAB: TAVSIF
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
@@ -842,8 +842,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <h3 className="font-bold text-cyan-800 flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-cyan-600" /> 1. Adaptiv Bo‘shliqni Aniqlash (00:00 - 00:55)
+                <h3 className="font-bold text-path flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-path" /> 1. Adaptiv Bo‘shliqni Aniqlash (00:00 - 00:55)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchi fanni tanlaydi (Matematika yoki Ingliz tili). 8 ta adaptiv savoldan iborat placement test o‘quvchining xatolarini o‘rganib, uning qaysi formulalarda oqsayotganini (masalan, Funksiyalar 38%) aniq bilim xaritasiga tushiradi.
@@ -851,8 +851,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <h3 className="font-bold text-indigo-800 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-indigo-600" /> 2. Shaxsiy Ta’lim Yo‘li & Dars (00:55 - 01:55)
+                <h3 className="font-bold text-brand-dark flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-brand" /> 2. Shaxsiy Ta’lim Yo‘li & Dars (00:55 - 01:55)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchiga standart kitobdagi barcha mavzular emas, aynan uning bo‘shlig‘iga mos qadamli yo‘l ochiladi. Dars nazariya, vizual modellar va amaliy mashqlar orqali bosqichma-bosqich o‘zlashtiriladi.
@@ -860,8 +860,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> 3. Server-Side Scoring & Anti-Cheat (01:55 - 02:25)
+                <h3 className="font-bold text-mint flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-mint" /> 3. Server-Side Scoring & Anti-Cheat (01:55 - 02:25)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   O‘quvchi brauzer konsoli orqali javoblarni ko‘ra olmaydi yoki XP ni soxtalashtira olmaydi. PostgreSQL RPC funksiyasi serverda javobni xolis tekshirib, xavfsiz ball beradi.
@@ -869,8 +869,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <h3 className="font-bold text-purple-800 flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-purple-600" /> 4. Yo‘lchi AI & Natijalar (02:25 - 03:30)
+                <h3 className="font-bold text-brand-dark flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-brand" /> 4. Yo‘lchi AI & Natijalar (02:25 - 03:30)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   Supabase Edge Function orqali Google Gemini 2.5 Flash mentori xatolikning asl sababini pedagogik uslubda tushuntiradi. O‘quvchi paneli bilim darajasi o‘sganini real vaqtda aks ettiradi.
@@ -881,7 +881,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         </section>
 
         {/* 6.3. ISHLAYOTGAN PROTOTIP HAVOLALARI */}
-        <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-blue-700 text-white shadow-xl text-center space-y-6">
+        <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-path via-brand to-brand text-white shadow-xl text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white text-xs font-black backdrop-blur-md">
             <CheckCircle2 className="w-3.5 h-3.5" />
             6.3-TALAB: ISHLAYOTGAN PROTOTIP HAVOLASI
@@ -891,7 +891,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
             Hozirning O‘zida Jonli Prototipni Sinab Ko‘ring
           </h2>
 
-          <p className="text-cyan-50 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-path text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
             Hakamlar va investorlar to‘g‘ridan-to‘g‘ri brauzerda yoki mobil ilova orqali real ta’lim jarayonini o‘z ko‘zlari bilan sinab ko‘rishlari mumkin:
           </p>
 
@@ -912,7 +912,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={onNavigateDashboard}
               className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
-              <TrendingUp className="w-4 h-4 text-emerald-300" />
+              <TrendingUp className="w-4 h-4 text-mint" />
               2. O‘quvchi Dashboardini Ko‘rish (/dashboard)
             </Button>
 
@@ -922,7 +922,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={onNavigateAiTutor}
               className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
-              <Bot className="w-4 h-4 text-indigo-300" />
+              <Bot className="w-4 h-4 text-path" />
               3. Yo‘lchi AI Chatini Sinash (/ai-tutor)
             </Button>
 

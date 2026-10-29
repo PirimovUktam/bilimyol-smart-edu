@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Navbar } from '@/presentation/components/Navbar';
-import { CourseSelectionView } from '@/features/course-selection/CourseSelectionView';
-import { OnboardingView } from '@/features/onboarding/OnboardingView';
-import { PlacementTestView } from '@/features/placement/PlacementTestView';
-import { KnowledgeMapView } from '@/features/knowledge-map/KnowledgeMapView';
-import { RoadmapView } from '@/features/roadmap/RoadmapView';
-import { InteractiveLessonView } from '@/features/lesson/InteractiveLessonView';
-import { DashboardView } from '@/features/dashboard/DashboardView';
 import { LoginView } from '@/features/auth/LoginView';
 import { RegisterView } from '@/features/auth/RegisterView';
 import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
 import { ResetPasswordView } from '@/features/auth/ResetPasswordView';
-import { ProfileView } from '@/features/profile/ProfileView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
@@ -20,8 +12,6 @@ import { useAuth } from '@/core/context/AuthContext';
 import { isSupabaseConfigured } from '@/core/config/supabase';
 import { isProtectedAuthReady } from '@/core/utils/authGuards';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
-import { YolchiAIChatView } from '@/features/ai-tutor/YolchiAIChatView';
-import { ProgressView } from '@/features/progress/ProgressView';
 import { Card } from '@/presentation/components/Card';
 import { Button } from '@/presentation/components/Button';
 import { ShieldAlert } from 'lucide-react';
@@ -37,6 +27,49 @@ const LazyDemoShowcaseView = lazy(() =>
 );
 const LazyAdminDashboardView = lazy(() =>
   import('@/features/admin/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView }))
+);
+
+// Learner surfaces are split per-route so the initial bundle stays small. The
+// auth screens stay eager (they are the first paint for most visitors).
+const LazyCourseSelectionView = lazy(() =>
+  import('@/features/course-selection/CourseSelectionView').then((m) => ({ default: m.CourseSelectionView }))
+);
+const LazyOnboardingView = lazy(() =>
+  import('@/features/onboarding/OnboardingView').then((m) => ({ default: m.OnboardingView }))
+);
+const LazyPlacementTestView = lazy(() =>
+  import('@/features/placement/PlacementTestView').then((m) => ({ default: m.PlacementTestView }))
+);
+const LazyKnowledgeMapView = lazy(() =>
+  import('@/features/knowledge-map/KnowledgeMapView').then((m) => ({ default: m.KnowledgeMapView }))
+);
+const LazyRoadmapView = lazy(() =>
+  import('@/features/roadmap/RoadmapView').then((m) => ({ default: m.RoadmapView }))
+);
+const LazyInteractiveLessonView = lazy(() =>
+  import('@/features/lesson/InteractiveLessonView').then((m) => ({ default: m.InteractiveLessonView }))
+);
+const LazyDashboardView = lazy(() =>
+  import('@/features/dashboard/DashboardView').then((m) => ({ default: m.DashboardView }))
+);
+const LazyYolchiAIChatView = lazy(() =>
+  import('@/features/ai-tutor/YolchiAIChatView').then((m) => ({ default: m.YolchiAIChatView }))
+);
+const LazyProgressView = lazy(() =>
+  import('@/features/progress/ProgressView').then((m) => ({ default: m.ProgressView }))
+);
+const LazyProfileView = lazy(() =>
+  import('@/features/profile/ProfileView').then((m) => ({ default: m.ProfileView }))
+);
+
+const RouteFallback: React.FC = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
+const withSuspense = (node: React.ReactNode) => (
+  <Suspense fallback={<RouteFallback />}>{node}</Suspense>
 );
 
 export type AppView =
@@ -420,38 +453,38 @@ export const AppRouter: React.FC = () => {
               <ResetPasswordView onNavigateLogin={() => setCurrentView('login')} />
             )}
 
-            {currentView === 'profile' && (
-              <ProfileView onSignOut={() => setCurrentView('login')} />
+            {currentView === 'profile' && withSuspense(
+              <LazyProfileView onSignOut={() => setCurrentView('login')} />
             )}
 
-            {currentView === 'course-selection' && (
-              <CourseSelectionView onSelectCourse={handleSelectCourse} />
+            {currentView === 'course-selection' && withSuspense(
+              <LazyCourseSelectionView onSelectCourse={handleSelectCourse} />
             )}
 
-            {currentView === 'onboarding' && (
-              <OnboardingView
+            {currentView === 'onboarding' && withSuspense(
+              <LazyOnboardingView
                 onComplete={handleOnboardingComplete}
                 onBack={() => setCurrentView('course-selection')}
               />
             )}
 
-            {currentView === 'placement' && (
-              <PlacementTestView onComplete={handlePlacementComplete} />
+            {currentView === 'placement' && withSuspense(
+              <LazyPlacementTestView onComplete={handlePlacementComplete} />
             )}
 
-            {currentView === 'knowledge-map' && (
-              <KnowledgeMapView onProceedToRoadmap={() => setCurrentView('roadmap')} />
+            {currentView === 'knowledge-map' && withSuspense(
+              <LazyKnowledgeMapView onProceedToRoadmap={() => setCurrentView('roadmap')} />
             )}
 
-            {currentView === 'roadmap' && (
-              <RoadmapView
+            {currentView === 'roadmap' && withSuspense(
+              <LazyRoadmapView
                 onStartLesson={handleStartLesson}
                 onOpenKnowledgeMap={() => setCurrentView('knowledge-map')}
               />
             )}
 
-            {currentView === 'lesson' && activeLessonId && (
-              <InteractiveLessonView
+            {currentView === 'lesson' && activeLessonId && withSuspense(
+              <LazyInteractiveLessonView
                 lessonId={activeLessonId}
                 onFinish={handleLessonFinish}
                 onBackToRoadmap={() => setCurrentView('roadmap')}
@@ -471,8 +504,8 @@ export const AppRouter: React.FC = () => {
               </div>
             )}
 
-            {currentView === 'dashboard' && (
-              <DashboardView
+            {currentView === 'dashboard' && withSuspense(
+              <LazyDashboardView
                 onContinueLesson={(lessonId?: string) => handleContinueLesson(lessonId)}
                 onOpenRoadmap={() => setCurrentView('roadmap')}
                 onOpenKnowledgeMap={() => setCurrentView('knowledge-map')}
@@ -485,14 +518,14 @@ export const AppRouter: React.FC = () => {
               />
             )}
 
-            {currentView === 'ai-tutor' && (
-              <YolchiAIChatView
+            {currentView === 'ai-tutor' && withSuspense(
+              <LazyYolchiAIChatView
                 onStartLesson={() => handleContinueLesson()}
               />
             )}
 
-            {currentView === 'progress' && (
-              <ProgressView
+            {currentView === 'progress' && withSuspense(
+              <LazyProgressView
                 onContinueLesson={() => handleContinueLesson()}
                 onOpenRoadmap={() => setCurrentView('roadmap')}
                 onOpenKnowledgeMap={() => setCurrentView('knowledge-map')}
