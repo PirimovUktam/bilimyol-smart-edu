@@ -54,8 +54,8 @@ export const AdminDashboardView: React.FC = () => {
     title: '',
     description: '',
     subject: 'mathematics',
-    primaryColorHex: '#4F46E5',
-    secondaryColorHex: '#818CF8',
+    primaryColorHex: '#3550d6',
+    secondaryColorHex: '#0d9ad6',
     totalStudentsEstimate: 500,
     isActive: true,
   });
@@ -306,7 +306,7 @@ export const AdminDashboardView: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 flex items-center gap-1.5">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand-dark dark:text-path border border-brand/20 flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5" />
               Platforma Boshqaruv Markazi
             </span>
@@ -336,21 +336,21 @@ export const AdminDashboardView: React.FC = () => {
 
       {/* Global Overview Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="p-4 border-indigo-100 dark:border-indigo-900/40">
+        <Card className="p-4 border-brand/10 dark:border-brand-dark/40">
           <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Fanlar
+            <BookOpen className="w-3.5 h-3.5 text-brand" /> Fanlar
           </div>
           <div className="text-2xl font-black text-foreground mt-1">{courses.length}</div>
         </Card>
-        <Card className="p-4 border-cyan-100 dark:border-cyan-900/40">
+        <Card className="p-4 border-path/15 dark:border-path/40">
           <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <Target className="w-3.5 h-3.5 text-cyan-500" /> Ko‘nikmalar
+            <Target className="w-3.5 h-3.5 text-path" /> Ko‘nikmalar
           </div>
           <div className="text-2xl font-black text-foreground mt-1">{skills.length}</div>
         </Card>
-        <Card className="p-4 border-emerald-100 dark:border-emerald-900/40">
+        <Card className="p-4 border-mint/10 dark:border-mint/40">
           <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <FileText className="w-3.5 h-3.5 text-emerald-500" /> Darslar
+            <FileText className="w-3.5 h-3.5 text-mint" /> Darslar
           </div>
           <div className="text-2xl font-black text-foreground mt-1">{lessons.length}</div>
         </Card>
@@ -367,8 +367,8 @@ export const AdminDashboardView: React.FC = () => {
         <div
           className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm ${
             statusMsg.isError
-              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              ? 'bg-coral/5 text-coral border border-coral/25'
+              : 'bg-mint/10 text-mint border border-mint/25'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export const AdminDashboardView: React.FC = () => {
           onClick={() => startTransition(() => setActiveTab('courses'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'courses'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              ? 'bg-brand text-white shadow-md shadow-brand/20'
               : 'bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground'
           }`}
         >
@@ -399,7 +399,7 @@ export const AdminDashboardView: React.FC = () => {
           onClick={() => startTransition(() => setActiveTab('skills'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'skills'
-              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
+              ? 'bg-path text-white shadow-md shadow-path/20'
               : 'bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground'
           }`}
         >
@@ -411,7 +411,7 @@ export const AdminDashboardView: React.FC = () => {
           onClick={() => startTransition(() => setActiveTab('lessons'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'lessons'
-              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+              ? 'bg-mint text-white shadow-md shadow-mint/20'
               : 'bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground'
           }`}
         >
@@ -451,8 +451,8 @@ export const AdminDashboardView: React.FC = () => {
                   title: '',
                   description: '',
                   subject: 'mathematics',
-                  primaryColorHex: '#4F46E5',
-                  secondaryColorHex: '#818CF8',
+                  primaryColorHex: '#3550d6',
+                  secondaryColorHex: '#0d9ad6',
                   totalStudentsEstimate: 1000,
                   isActive: true,
                 });
@@ -502,7 +502,7 @@ export const AdminDashboardView: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteCourse(c.id)}
-                    className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1 text-xs"
+                    className="text-coral hover:bg-coral/5 dark:hover:bg-coral/30 gap-1 text-xs"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -585,13 +585,13 @@ export const AdminDashboardView: React.FC = () => {
                               setSkillForm({ ...s });
                               setShowSkillModal(true);
                             }}
-                            className="p-1.5 rounded-lg hover:bg-secondary text-indigo-600 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-secondary text-brand transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteSkill(s.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg hover:bg-coral/5 text-coral transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -668,7 +668,7 @@ export const AdminDashboardView: React.FC = () => {
                   </div>
                   <h3 className="text-base font-bold text-foreground">{l.title}</h3>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{l.summary || 'Qisqa izoh yo‘q'}</p>
-                  <div className="mt-3 text-xs text-indigo-600 font-semibold">
+                  <div className="mt-3 text-xs text-brand font-semibold">
                     Bosqichlar soni: {l.steps?.length || 0} ta qadam
                   </div>
                 </div>
@@ -680,7 +680,7 @@ export const AdminDashboardView: React.FC = () => {
                       className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 cursor-pointer ${
                         l.isPublished
                           ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-mint/10 text-mint border-mint/25 hover:bg-mint/10'
                       }`}
                     >
                       {l.isPublished ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -701,13 +701,13 @@ export const AdminDashboardView: React.FC = () => {
                         setLessonForm({ ...l });
                         setShowLessonModal(true);
                       }}
-                      className="p-1.5 rounded-lg hover:bg-secondary text-indigo-600 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-secondary text-brand transition-colors cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteLesson(l.id)}
-                      className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-coral/5 text-coral transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -795,7 +795,7 @@ export const AdminDashboardView: React.FC = () => {
 
           <div className="space-y-3">
             {filteredQuestions.map((q, qIdx) => (
-              <Card key={q.id} className="p-4 border-border space-y-3 hover:border-indigo-200 transition-colors">
+              <Card key={q.id} className="p-4 border-border space-y-3 hover:border-brand/25 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -810,7 +810,7 @@ export const AdminDashboardView: React.FC = () => {
                     </div>
                     <p className="text-sm font-semibold text-foreground">{q.text}</p>
                     {q.formulaLatex && (
-                      <div className="text-xs font-mono text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded mt-1 inline-block">
+                      <div className="text-xs font-mono text-brand bg-brand/50 px-2 py-0.5 rounded mt-1 inline-block">
                         {q.formulaLatex}
                       </div>
                     )}
@@ -836,13 +836,13 @@ export const AdminDashboardView: React.FC = () => {
                         });
                         setShowQuestionModal(true);
                       }}
-                      className="p-1.5 rounded-lg hover:bg-secondary text-indigo-600 cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-secondary text-brand cursor-pointer"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteQuestion(q.id)}
-                      className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-600 cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-coral/5 text-coral cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -858,7 +858,7 @@ export const AdminDashboardView: React.FC = () => {
                         key={oIdx}
                         className={`p-2 rounded-lg border flex items-center justify-between ${
                           isCorrect
-                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 font-bold text-emerald-800 dark:text-emerald-300'
+                            ? 'bg-mint/10 dark:bg-mint/30 border-mint/30 font-bold text-mint dark:text-mint'
                             : 'bg-secondary/30 border-border text-foreground'
                         }`}
                       >
@@ -866,7 +866,7 @@ export const AdminDashboardView: React.FC = () => {
                           {String.fromCharCode(65 + oIdx)}) {opt}
                         </span>
                         {isCorrect && (
-                          <span className="flex items-center gap-0.5 text-emerald-600 text-[10px] font-black uppercase">
+                          <span className="flex items-center gap-0.5 text-mint text-[10px] font-black uppercase">
                             <Check className="w-3.5 h-3.5" /> To‘g‘ri
                           </span>
                         )}
@@ -1194,7 +1194,7 @@ export const AdminDashboardView: React.FC = () => {
                           name="correctOptionRadio"
                           checked={isSelected}
                           onChange={() => setQuestionForm({ ...questionForm, correctIndex: idx })}
-                          className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                          className="w-4 h-4 text-mint focus:ring-mint cursor-pointer"
                         />
                         <span className="font-bold text-foreground w-4">{String.fromCharCode(65 + idx)})</span>
                         <input
@@ -1203,7 +1203,7 @@ export const AdminDashboardView: React.FC = () => {
                           value={questionForm[key]}
                           onChange={(e) => setQuestionForm({ ...questionForm, [key]: e.target.value })}
                           className={`flex-1 px-3 py-1.5 border rounded-xl bg-secondary/50 outline-none text-xs ${
-                            isSelected ? 'border-emerald-500 bg-emerald-50/20 font-bold' : 'border-border'
+                            isSelected ? 'border-mint bg-mint/20 font-bold' : 'border-border'
                           }`}
                           placeholder={`Variant ${idx + 1}`}
                         />
@@ -1229,7 +1229,7 @@ export const AdminDashboardView: React.FC = () => {
                     id="isPlacementCheck"
                     checked={questionForm.isPlacement}
                     onChange={(e) => setQuestionForm({ ...questionForm, isPlacement: e.target.checked })}
-                    className="rounded text-indigo-600 cursor-pointer"
+                    className="rounded text-brand cursor-pointer"
                   />
                   <label htmlFor="isPlacementCheck" className="text-xs font-semibold text-foreground cursor-pointer">
                     Boshlang‘ich diagnostika testi uchun ishlatilsin

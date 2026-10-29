@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "test": "vitest run",
+    "test:e2e": "node tests/e2e/run.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

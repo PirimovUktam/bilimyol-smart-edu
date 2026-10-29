@@ -32,3 +32,4 @@ dist-ssr
 .opencode/
 public/videos/*audio_temp/
 public/videos/temp_frames/
+dist-e2e
