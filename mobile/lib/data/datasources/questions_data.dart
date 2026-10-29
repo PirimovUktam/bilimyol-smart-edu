@@ -1,6 +1,7 @@
 import '../../domain/entities/question.dart';
+import '../../core/utils/question_option_order.dart';
 
-const Map<String, List<Question>> placementQuestionsData = {
+const Map<String, List<Question>> _rawPlacementQuestionsData = {
   'course_math_01': [
     // ALGEBRA (5 questions)
     Question(
@@ -381,3 +382,11 @@ const Map<String, List<Question>> placementQuestionsData = {
     ),
   ],
 };
+
+final Map<String, List<Question>> placementQuestionsData =
+    _rawPlacementQuestionsData.map(
+  (courseId, questions) => MapEntry(
+    courseId,
+    questions.map(permuteQuestionOptions).toList(growable: false),
+  ),
+);

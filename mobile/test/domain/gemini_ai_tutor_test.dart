@@ -10,7 +10,7 @@ void main() {
       const request = AIExplanationRequest(
         courseId: 'course_math_01',
         skillId: 'skill_math_functions',
-        questionId: 'q_math_lesson_interactive',
+        questionId: 'q_math_func_01_step',
         questionText: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) ni toping:',
         selectedOption: '8',
         correctOption: '11',
@@ -20,7 +20,7 @@ void main() {
       final response = await aiService.explainMistake(request);
 
       expect(response.tutorName, equals('Yo‘lchi AI'));
-      expect(response.title, equals('Ozod son (+3) unutilgan'));
+      expect(response.title, equals('Ozod son (+3) hisobga olinmagan'));
       expect(response.explanation.isNotEmpty, isTrue);
       expect(response.remediationStep.isNotEmpty, isTrue);
       expect(response.suggestedAction.isNotEmpty, isTrue);

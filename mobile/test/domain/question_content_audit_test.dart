@@ -85,6 +85,15 @@ void main() {
       }
     });
 
+    test('placement correct answers are distributed, not all index 0', () {
+      final all = placementQuestionsData.values.expand((list) => list).toList();
+      expect(all.length, greaterThan(20));
+      final distinctPositions = all.map((q) => q.correctIndex).toSet();
+      expect(distinctPositions.length, greaterThanOrEqualTo(2));
+      final zeroCount = all.where((q) => q.correctIndex == 0).length;
+      expect(zeroCount, lessThan(all.length));
+    });
+
     test('accurately validates lesson questions mathematically', () {
       final mathLesson = seedLessons['lesson_math_functions_01']!;
       final step = mathLesson.steps.firstWhere((s) => s.interactiveQuestion != null);

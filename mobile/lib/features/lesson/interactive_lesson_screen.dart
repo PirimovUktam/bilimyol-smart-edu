@@ -417,6 +417,9 @@ class _InteractiveLessonScreenState
   Widget _buildInteractiveQuizCard(BuildContext context, question) {
     final lessonState = ref.watch(lessonSessionNotifierProvider);
     final selectedIdx = lessonState.selectedOptionIndex;
+    final result = lessonState.answerResult;
+    final reveal = result != null && !result.isCorrect;
+    final correctText = result?.correctOption ?? '';
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -445,11 +448,20 @@ class _InteractiveLessonScreenState
           ...List.generate(question.options.length, (idx) {
             final opt = question.options[idx];
             final isSelected = selectedIdx == idx;
+            final isCorrectOption =
+                reveal && correctText.isNotEmpty && opt == correctText;
+            final isWrongPick = reveal && isSelected && !isCorrectOption;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Material(
-                color: isSelected ? const Color(0xFFEEF2FF) : AppColors.surface,
+                color: isCorrectOption
+                    ? AppColors.successLight
+                    : isWrongPick
+                    ? AppColors.errorLight
+                    : isSelected
+                    ? const Color(0xFFEEF2FF)
+                    : AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: lessonState.isSubmittingAnswer
@@ -468,10 +480,16 @@ class _InteractiveLessonScreenState
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected
+                        color: isCorrectOption
+                            ? AppColors.success
+                            : isWrongPick
+                            ? AppColors.error
+                            : isSelected
                             ? const Color(0xFF2563EB)
                             : AppColors.cardBorder,
-                        width: isSelected ? 2 : 1.2,
+                        width: (isSelected || isCorrectOption || isWrongPick)
+                            ? 2
+                            : 1.2,
                       ),
                       boxShadow: isSelected
                           ? [
@@ -488,7 +506,7 @@ class _InteractiveLessonScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isSelected)
+                        if (isSelected || isCorrectOption || isWrongPick)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Container(
@@ -497,12 +515,20 @@ class _InteractiveLessonScreenState
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2563EB),
+                                color: isCorrectOption
+                                    ? AppColors.success
+                                    : isWrongPick
+                                    ? AppColors.error
+                                    : const Color(0xFF2563EB),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                'tanlangan ✓',
-                                style: TextStyle(
+                              child: Text(
+                                isCorrectOption
+                                    ? 'to‘g‘ri javob'
+                                    : isWrongPick
+                                    ? 'siz tanladingiz'
+                                    : 'tanlangan ✓',
+                                style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
@@ -516,7 +542,11 @@ class _InteractiveLessonScreenState
                               width: 26,
                               height: 26,
                               decoration: BoxDecoration(
-                                color: isSelected
+                                color: isCorrectOption
+                                    ? AppColors.success
+                                    : isWrongPick
+                                    ? AppColors.error
+                                    : isSelected
                                     ? const Color(0xFF2563EB)
                                     : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(8),
@@ -527,7 +557,7 @@ class _InteractiveLessonScreenState
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w800,
-                                    color: isSelected
+                                    color: (isSelected || isCorrectOption || isWrongPick)
                                         ? Colors.white
                                         : AppColors.textSecondary,
                                   ),
@@ -549,7 +579,19 @@ class _InteractiveLessonScreenState
                                 ),
                               ),
                             ),
-                            if (isSelected)
+                            if (isCorrectOption)
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.success,
+                                size: 20,
+                              )
+                            else if (isWrongPick)
+                              const Icon(
+                                Icons.cancel_rounded,
+                                color: AppColors.error,
+                                size: 20,
+                              )
+                            else if (isSelected)
                               const Icon(
                                 Icons.check_circle_rounded,
                                 color: Color(0xFF2563EB),
@@ -564,6 +606,62 @@ class _InteractiveLessonScreenState
               ),
             );
           }),
+          if (reveal) _buildInlineAnswerReveal(question),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInlineAnswerReveal(dynamic question) {
+    final result = ref.read(lessonSessionNotifierProvider).answerResult;
+    if (result == null || result.isCorrect) return const SizedBox.shrink();
+    final options = question.options as List;
+    final correctIndex = question.correctIndex as int;
+    final correctText = result.correctOption.isNotEmpty
+        ? result.correctOption
+        : (correctIndex >= 0 && correctIndex < options.length
+              ? options[correctIndex] as String
+              : '—');
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.errorLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Siz tanladingiz: ${result.selectedOption}',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.error,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'To‘g‘ri javob: $correctText',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.success,
+            ),
+          ),
+          if ((question.explanation as String).trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              question.explanation as String,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                height: 1.4,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -590,6 +688,12 @@ class _InteractiveLessonScreenState
         !answerResult.isCorrect &&
         answerResult.aiExplanation != null) {
       HapticFeedback.heavyImpact();
+      final activeLesson = ref.read(lessonSessionNotifierProvider).lesson;
+      final activeIndex = ref
+          .read(lessonSessionNotifierProvider)
+          .currentStepIndex;
+      final activeQuestion =
+          activeLesson?.steps[activeIndex].interactiveQuestion;
       // Trigger Yo'lchi AI bottom sheet
       showModalBottomSheet(
         context: context,
@@ -597,6 +701,9 @@ class _InteractiveLessonScreenState
         backgroundColor: Colors.transparent,
         builder: (ctx) => YolchiAiSheet(
           explanation: answerResult.aiExplanation!,
+          selectedOption: answerResult.selectedOption,
+          correctOption: answerResult.correctOption,
+          questionExplanation: activeQuestion?.explanation,
           onStartReinforcement: () {
             Navigator.pop(ctx);
             if (!context.mounted ||

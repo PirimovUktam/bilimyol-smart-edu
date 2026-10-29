@@ -16,29 +16,34 @@ class AIDemoFeedbackModel {
   });
 }
 
+/// Deterministic, offline Yo‘lchi AI mistake explanations keyed by the real
+/// assessment ids used in the bundled lesson banks. When a question id is not
+/// listed here the AI service produces a generic, still-correct explanation
+/// that includes the learner's choice and the correct option.
 const Map<String, AIDemoFeedbackModel> demoAiResponsesData = {
-  // Math Lesson Mistake: Chosen '8' instead of '11'
-  'q_math_lesson_interactive': AIDemoFeedbackModel(
+  // Math lesson: selected '8' instead of '11' for f(4) = 2x + 3
+  'q_math_func_01_step': AIDemoFeedbackModel(
     courseId: 'course_math_01',
-    questionId: 'q_math_lesson_interactive',
-    misconceptionTitle: 'Ozod son (+3) unutilgan',
+    questionId: 'q_math_func_01_step',
+    misconceptionTitle: 'Ozod son (+3) hisobga olinmagan',
     explanation:
-        'Siz bu misolda 2 × 4 ni to‘g‘ri hisoblagansiz, lekin formuladagi +3 ozod hadini hisobga olmadingiz. To‘g‘ri natija 11 bo‘ladi.',
+        'Siz 2 × 4 ni to‘g‘ri hisoblagansiz, lekin formuladagi +3 ozod hadini qo‘shishni unutdingiz. To‘g‘ri natija 11 bo‘ladi.',
     remediationStep:
-        'Chiziqli funksiyada f(x) = ax + b tartibida har doim avval ko‘paytirish, so‘ng qo‘shish bajariladi.',
+        'f(x) = ax + b ko‘rinishida avval ko‘paytirish, so‘ng qo‘shish bajariladi: f(4) = 2·4 + 3 = 11.',
     suggestedAction:
-        'Keling, shu qadamni bitta qisqa mustahkamlash mashqi bilan mustahkamlaymiz.',
+        'Keling, shu qadamni qisqa mustahkamlash mashqi bilan mustahkamlaymiz.',
   ),
 
-  // English Lesson Mistake: Chosen '04:00' instead of '03:45'
-  'q_eng_lesson_interactive': AIDemoFeedbackModel(
+  // English listening lesson: "quarter past three" = 15:15
+  'q_eng_listening_01_step': AIDemoFeedbackModel(
     courseId: 'course_eng_01',
-    questionId: 'q_eng_lesson_interactive',
-    misconceptionTitle: 'Vaqt inkor iborasi e’tibordan chetda qolgan',
+    questionId: 'q_eng_listening_01_step',
+    misconceptionTitle: 'Vaqt iborasi noto‘g‘ri talqin qilindi',
     explanation:
-        'Siz asosiy "four" so‘zini to‘g‘ri eshitdingiz, ammo "quarter to four" (to‘rtga 15 daqiqa qoldi) va "not at four o\'clock" degan inkor iborasini noto‘g‘ri talqin qildingiz.',
+        '"Quarter past three" — soat uchdan 15 daqiqa o‘tganini bildiradi, ya’ni 15:15. Siz vaqt iborasini boshqa tomonga o‘girdingiz.',
     remediationStep:
-        '"quarter to [hour]" har doim aytilgan soatdan 15 daqiqa oldingi vaqtni bildiradi.',
-    suggestedAction: 'Keling, yana bitta qisqa mustahkamlash mashqini bajaramiz.',
+        '"quarter past [hour]" = soatdan +15 daqiqa; "quarter to [hour]" = keyingi soatga 15 daqiqa qolgan.',
+    suggestedAction:
+        'Keling, vaqt iboralarini bitta qisqa mashqda mustahkamlaymiz.',
   ),
 };

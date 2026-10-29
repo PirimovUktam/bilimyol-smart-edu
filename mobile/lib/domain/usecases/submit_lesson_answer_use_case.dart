@@ -41,7 +41,19 @@ class SubmitLessonAnswerUseCase {
       isCorrect: selectedIndex == question.correctIndex,
     );
     final isCorrect = attempt.isCorrect;
-    final correctOption = attempt.correctOption ?? (isCorrect ? selectedOption : '');
+    // Server-authoritative repositories may return the correct option directly;
+    // otherwise fall back to the question's own answer key. This guarantees a
+    // wrong answer can always reveal "To‘g‘ri javob: …" to the learner.
+    final serverCorrectOption = attempt.correctOption;
+    final correctIndex = question.correctIndex;
+    final localCorrectOption =
+        (correctIndex >= 0 && correctIndex < question.options.length)
+        ? question.options[correctIndex]
+        : '';
+    final correctOption = (serverCorrectOption != null &&
+            serverCorrectOption.isNotEmpty)
+        ? serverCorrectOption
+        : localCorrectOption;
 
     if (isCorrect) {
       return LessonAnswerResult(
