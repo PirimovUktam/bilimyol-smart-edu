@@ -34,7 +34,7 @@ const List<Course> seedCourses = [
     primaryColorHex: '#06B6D4',
     secondaryColorHex: '#0891B2',
     skills: ['skill_it_python', 'skill_it_web'],
-    lessons: [],
+    lessons: ['lesson_it_python_01', 'lesson_it_web_01'],
     totalStudentsEstimate: 980,
   ),
   Course(
@@ -46,7 +46,7 @@ const List<Course> seedCourses = [
     primaryColorHex: '#10B981',
     secondaryColorHex: '#059669',
     skills: ['skill_logic_puzzles', 'skill_logic_patterns'],
-    lessons: [],
+    lessons: ['lesson_logic_puzzles_01', 'lesson_logic_patterns_01'],
     totalStudentsEstimate: 850,
   ),
 ];

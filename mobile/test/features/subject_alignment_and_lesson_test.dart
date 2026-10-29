@@ -46,20 +46,56 @@ void main() {
       expect(lesson.title.contains('Listening'), isFalse);
     });
 
-    test('3. Subjects without pre-seeded lessons (IT & Logic) have empty lesson lists without math fallback', () async {
+    test('3. IT & Logic courses ship seeded lessons with correct subject attribution (no math fallback)', () async {
       final itCourse = await courseRepo.getCourseById('course_it');
       expect(itCourse, isNotNull);
       expect(itCourse!.subject, equals(SubjectType.it));
-      expect(itCourse.lessons.isEmpty, isTrue);
+      expect(itCourse.lessons, isNotEmpty);
+      expect(itCourse.lessons.first, equals('lesson_it_python_01'));
+
+      final itLesson = await lessonRepo.getLessonById(itCourse.lessons.first);
+      expect(itLesson, isNotNull);
+      expect(itLesson!.courseId, equals('course_it'));
+      expect(itLesson.title.contains('Matematika'), isFalse);
 
       final logicCourse = await courseRepo.getCourseById('course_logic');
       expect(logicCourse, isNotNull);
       expect(logicCourse!.subject, equals(SubjectType.logic));
-      expect(logicCourse.lessons.isEmpty, isTrue);
+      expect(logicCourse.lessons, isNotEmpty);
+      expect(logicCourse.lessons.first, equals('lesson_logic_puzzles_01'));
 
-      // In-memory lookup for missing lesson returns null
+      final logicLesson = await lessonRepo.getLessonById(
+        logicCourse.lessons.first,
+      );
+      expect(logicLesson, isNotNull);
+      expect(logicLesson!.courseId, equals('course_logic'));
+      expect(logicLesson.title.contains('Matematika'), isFalse);
+
+      // Unknown ids still never fall back to another course's content.
       final missingLesson = await lessonRepo.getLessonById('lesson_it_missing');
       expect(missingLesson, isNull);
+    });
+
+    test('5. IT & Logic have skills, placement questions and roadmap nodes', () async {
+      for (final courseId in ['course_it', 'course_logic']) {
+        final skills = await courseRepo.getSkillsByCourseId(courseId);
+        expect(skills, isNotEmpty, reason: '$courseId needs skills');
+
+        final questions = await courseRepo.getPlacementQuestions(courseId);
+        expect(
+          questions.length,
+          greaterThanOrEqualTo(4),
+          reason: '$courseId needs a placement bank',
+        );
+
+        final nodes = await lessonRepo.getBaseRoadmapNodes(courseId);
+        expect(nodes, isNotEmpty, reason: '$courseId needs roadmap nodes');
+        expect(
+          nodes.any((node) => node.targetLessonId != null),
+          isTrue,
+          reason: '$courseId roadmap must point at a lesson',
+        );
+      }
     });
 
     test('4. AI lesson generation creates appropriate English and Math lessons', () async {

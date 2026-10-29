@@ -41,6 +41,11 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     }
   }
 
+  Future<void> _runQuickDemo() async {
+    await ref.read(learnerStateNotifierProvider.notifier).seedQuickDemo();
+    if (mounted) context.go('/knowledge-map');
+  }
+
   @override
   Widget build(BuildContext context) {
     final courseState = ref.watch(courseStateNotifierProvider);
@@ -154,8 +159,22 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Diagnostika • ${activeCourse?.title ?? ""}'),
+appBar: AppBar(
+        title: Text('Diagnostika · ${activeCourse?.title ?? ""}'),
+        actions: [
+          TextButton.icon(
+            onPressed: _runQuickDemo,
+            icon: const Icon(Icons.bolt_rounded, size: 16),
+            label: Text(
+              'Tezkor demo',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: SafeArea(
         child: Padding(

@@ -14,6 +14,8 @@ import '../domain/usecases/submit_reinforcement_use_case.dart';
 import '../domain/usecases/reset_demo_use_case.dart';
 import '../domain/entities/course.dart';
 import '../domain/entities/skill.dart';
+import '../domain/entities/skill_score.dart';
+import '../domain/personalization/skill_scoring_engine.dart';
 import '../domain/entities/learner_profile.dart';
 import '../domain/entities/question.dart';
 import '../domain/entities/learning_path_node.dart';
@@ -147,6 +149,42 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     final resetProfile = await resetUseCase.execute();
     state = AsyncValue.data(resetProfile);
     ref.invalidate(courseStateNotifierProvider);
+    ref.invalidate(roadmapStateNotifierProvider);
+  }
+
+  /// Seeds a ready-made adaptive state so judges can reach the personalised
+  /// journey without answering the full placement test. The third skill is set
+  /// below the reinforcement threshold so the roadmap demonstrates remediation.
+  Future<void> seedQuickDemo() async {
+    final repo = ref.read(learnerRepositoryProvider);
+    final courseState = ref.read(courseStateNotifierProvider);
+    final course = courseState.activeCourse;
+    final skills = courseState.activeSkills;
+    if (course == null || skills.isEmpty) return;
+
+    const preset = [82, 74, 41, 68];
+    final scores = <String, SkillScore>{};
+    for (var i = 0; i < skills.length; i++) {
+      final score = preset[i % preset.length];
+      scores[skills[i].id] = SkillScore(
+        skillId: skills[i].id,
+        courseId: course.id,
+        score: score,
+        lastUpdated: DateTime.now().millisecondsSinceEpoch,
+        masteryLevel: SkillScoringEngine.getMasteryLevel(score),
+      );
+    }
+
+    await repo.saveSkillScores(course.id, scores);
+    final current = await repo.getProfile();
+    await repo.updateProfile(
+      current.copyWith(
+        selectedCourseId: course.id,
+        xp: current.xp < 120 ? 120 : current.xp,
+        streakDays: current.streakDays < 3 ? 3 : current.streakDays,
+      ),
+    );
+    await loadProfile();
     ref.invalidate(roadmapStateNotifierProvider);
   }
 }

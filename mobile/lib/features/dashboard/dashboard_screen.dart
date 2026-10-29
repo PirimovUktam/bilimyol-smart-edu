@@ -7,6 +7,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/demo_control_bar.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
@@ -106,6 +107,7 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const DemoControlBar(),
                   // 1. Reference 2 Top Bar: Avatar, Greeting, Daily Goal, Streak & XP
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

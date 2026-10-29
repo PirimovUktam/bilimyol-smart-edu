@@ -76,4 +76,44 @@ const List<Skill> seedSkills = [
     order: 4,
     iconName: 'chrome_reader_mode',
   ),
+
+  // IT & Coding Skills
+  Skill(
+    id: 'skill_it_python',
+    courseId: 'course_it',
+    name: 'Python asoslari',
+    code: 'IT-PY',
+    description: 'O‘zgaruvchilar, ma’lumot turlari, shart operatorlari va sikllar.',
+    order: 1,
+    iconName: 'code',
+  ),
+  Skill(
+    id: 'skill_it_web',
+    courseId: 'course_it',
+    name: 'Veb dasturlash',
+    code: 'IT-WEB',
+    description: 'HTML struktura, CSS uslublar va sahifa elementlari bilan ishlash.',
+    order: 2,
+    iconName: 'public',
+  ),
+
+  // Logic Skills
+  Skill(
+    id: 'skill_logic_puzzles',
+    courseId: 'course_logic',
+    name: 'Mantiqiy boshqotirmalar',
+    code: 'LOG-PUZ',
+    description: 'Deduktiv xulosalar, shartli mulohazalar va mantiqiy jadvallar.',
+    order: 1,
+    iconName: 'psychology',
+  ),
+  Skill(
+    id: 'skill_logic_patterns',
+    courseId: 'course_logic',
+    name: 'Qonuniyatlar va ketma-ketliklar',
+    code: 'LOG-PAT',
+    description: 'Sonli va shakl qonuniyatlarini topish, keyingi elementni aniqlash.',
+    order: 2,
+    iconName: 'trending_up',
+  ),
 ];
