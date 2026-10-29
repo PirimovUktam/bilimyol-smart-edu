@@ -13,7 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22+ is required: @supabase/realtime-js needs a native WebSocket.
+          node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -31,7 +32,7 @@ jobs:
         run: npm run test:e2e
 
   mobile:
-    name: Mobile — analyze, tests
+    name: Mobile — analyze, tests, release APK
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,6 +41,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          # Pin the toolchain the project is developed against. A newer beta
+          # introduces material.dart deprecation infos that fail `analyze`.
+          flutter-version: '3.45.0-0.1.pre'
           channel: beta
           cache: true
       - name: Install dependencies
@@ -48,3 +52,12 @@ jobs:
         run: flutter analyze
       - name: Tests
         run: flutter test
+      - name: Build release APK
+        run: flutter build apk --release
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilimyol-mobile-release-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
