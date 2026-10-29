@@ -545,19 +545,6 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       return false;
     }
   }
-
-  /// Demo Fast-Calibrate shortcut
-  Future<void> fastCalibrateDemo() async {
-    while (state.currentQuestion != null) {
-      final q = state.currentQuestion!;
-      final isWeak = q.skillId == 'skill_math_functions';
-      final pickIndex = isWeak
-          ? (q.correctIndex + 1) % q.options.length
-          : q.correctIndex;
-      final isDone = await submitAnswer(pickIndex);
-      if (isDone) break;
-    }
-  }
 }
 
 final placementStateNotifierProvider =
