@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowRight, BookOpen, HelpCircle, Lightbulb, Plus, RefreshCw, Send, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { ArrowRight, BookOpen, HelpCircle, Lightbulb, Plus, RefreshCw, Send, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
@@ -7,10 +8,10 @@ import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { readTutorHistory, writeTutorHistory, type TutorMessage } from '@/core/runtime/tutorHistory';
 import { GeminiAITutorService, GeminiAIServiceError } from '@/data/services/GeminiAITutorService';
+import { YolchiMessageBubble, YolchiTypingIndicator } from '@/features/ai-tutor/YolchiMessageBubble';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { IconButton } from '@/presentation/components/IconButton';
-import { LearningText } from '@/presentation/components/LearningText';
 import { PageHeader } from '@/presentation/components/PageHeader';
 import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
@@ -82,25 +83,76 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
   const [draft, setDraft] = useState('');
   const [waiting, setWaiting] = useState(false);
   const [failure, setFailure] = useState<{ prompt: string; error: string } | null>(null);
+  const [streamingState, setStreamingState] = useState<{ id: string; visibleLength: number } | null>(null);
   const stream = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const mounted = useRef(true);
   const busy = useRef(false);
+  const streamRaf = useRef<number | null>(null);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
+  const isReducedMotion = () =>
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scrollToBottomSmart = useCallback((force = false) => {
+    const el = stream.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (force || distanceFromBottom <= 120) {
+      if (typeof messagesEndRef.current?.scrollIntoView === 'function' && !isReducedMotion()) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+    }
   }, []);
 
   useEffect(() => {
-    if (stream.current) stream.current.scrollTop = stream.current.scrollHeight;
-  }, [messages, waiting, failure]);
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (streamRaf.current != null) cancelAnimationFrame(streamRaf.current);
+    };
+  }, []);
 
-  const keep = (next: TutorMessage[]) => {
+  useEffect(() => {
+    scrollToBottomSmart(false);
+  }, [messages, waiting, failure, streamingState, scrollToBottomSmart]);
+
+  const keep = useCallback((next: TutorMessage[]) => {
     const recent = next.slice(-60);
     writeTutorHistory(conversation, recent);
     setMessages(recent);
-  };
+  }, [conversation]);
+
+  const startStreamingReveal = useCallback((id: string, fullText: string) => {
+    if (isReducedMotion() || fullText.length <= 16) {
+      setStreamingState(null);
+      return;
+    }
+    if (streamRaf.current != null) cancelAnimationFrame(streamRaf.current);
+    const totalLen = fullText.length;
+    const startTime = performance.now();
+    const durationMs = Math.min(480, Math.max(180, totalLen * 3.5));
+
+    setStreamingState({ id, visibleLength: Math.min(12, totalLen) });
+
+    const tick = (now: number) => {
+      if (!mounted.current) return;
+      const progress = Math.min(1, (now - startTime) / durationMs);
+      const nextLen = Math.max(12, Math.floor(totalLen * progress));
+      if (progress < 1) {
+        setStreamingState({ id, visibleLength: nextLen });
+        streamRaf.current = requestAnimationFrame(tick);
+      } else {
+        setStreamingState(null);
+        streamRaf.current = null;
+      }
+    };
+    streamRaf.current = requestAnimationFrame(tick);
+  }, []);
 
   const send = async (prompt: string, retry = false) => {
     const text = prompt.trim();
@@ -113,6 +165,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     if (!retry) {
       keep(next);
       setDraft('');
+      scrollToBottomSmart(true);
     }
 
     try {
@@ -123,7 +176,11 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
         ...(isDemoMode ? { topic: topic ?? courseTitle, learnerScore: score } : {}),
         history: prior.slice(-6).map(({ sender, text: value }) => ({ sender, text: value.slice(0, 800) })),
       });
-      if (mounted.current) keep([...next, { id: crypto.randomUUID(), sender: 'ai', text: response.answer, time: Date.now() }]);
+      if (mounted.current) {
+        const aiId = crypto.randomUUID();
+        keep([...next, { id: aiId, sender: 'ai', text: response.answer, time: Date.now() }]);
+        startStreamingReveal(aiId, response.answer);
+      }
     } catch (error) {
       if (mounted.current) setFailure({
         prompt: text,
@@ -135,11 +192,15 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     }
   };
 
-  const feedback = (id: string, value: NonNullable<TutorMessage['feedback']>) => {
-    keep(messages.map((message) => message.id === id
-      ? { ...message, feedback: message.feedback === value ? undefined : value }
-      : message));
-  };
+  const feedback = useCallback((id: string, value: NonNullable<TutorMessage['feedback']>) => {
+    setMessages((prev) => {
+      const updated = prev.map((message) => message.id === id
+        ? { ...message, feedback: message.feedback === value ? undefined : value }
+        : message);
+      writeTutorHistory(conversation, updated);
+      return updated;
+    });
+  }, [conversation]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -244,52 +305,27 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
               </div>
             </div>
           )}
-          {messages.map((message) => (
-            <article
-              key={message.id}
-              className={
-                'w-fit max-w-full rounded-2xl px-4 py-3 sm:max-w-[86%] ' +
-                (message.sender === 'user'
-                  ? 'ml-auto rounded-br-xs bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white shadow-md shadow-indigo-500/20'
-                  : 'rounded-bl-xs border border-hairline bg-canvas text-ink shadow-2xs')
-              }
-            >
-              <header className="mb-1.5 flex justify-between gap-3 text-xs font-bold">
-                <span>{message.sender === 'user' ? 'Siz' : 'Yo‘lchi AI'}</span>
-                <time className={message.sender === 'user' ? 'text-indigo-100' : 'text-slatefine'}>
-                  {time.format(message.time)}
-                </time>
-              </header>
-              <div className="text-sm leading-relaxed">
-                {message.sender === 'user' ? (
-                  <p className="break-words whitespace-pre-wrap">{message.text}</p>
-                ) : (
-                  <LearningText text={message.text} />
-                )}
-              </div>
-              {message.sender === 'ai' && (
-                <div aria-label="Javobni baholash" className="mt-2.5 flex gap-1">
-                  <IconButton
-                    label="Foydali javob"
-                    aria-pressed={message.feedback === 'helpful'}
-                    className={message.feedback === 'helpful' ? 'bg-sand text-brand' : ''}
-                    onClick={() => feedback(message.id, 'helpful')}
-                  >
-                    <ThumbsUp aria-hidden="true" className="size-4" />
-                  </IconButton>
-                  <IconButton
-                    label="Javob foyda bermadi"
-                    aria-pressed={message.feedback === 'unhelpful'}
-                    className={message.feedback === 'unhelpful' ? 'bg-sand text-brand' : ''}
-                    onClick={() => feedback(message.id, 'unhelpful')}
-                  >
-                    <ThumbsDown aria-hidden="true" className="size-4" />
-                  </IconButton>
-                </div>
-              )}
-            </article>
-          ))}
-          {waiting && <p role="status" className="text-sm font-semibold text-brand">Yo‘lchi javob tayyorlamoqda…</p>}
+          {messages.map((message) => {
+            const isStreamingThis = streamingState?.id === message.id;
+            const visibleText = isStreamingThis
+              ? message.text.slice(0, streamingState.visibleLength)
+              : message.text;
+            return (
+              <YolchiMessageBubble
+                key={message.id}
+                id={message.id}
+                sender={message.sender === 'user' ? 'user' : 'yolchi'}
+                text={visibleText}
+                timestamp={time.format(message.time)}
+                isStreaming={isStreamingThis}
+                feedback={message.feedback}
+                onFeedback={message.sender === 'ai' ? feedback : undefined}
+              />
+            );
+          })}
+          <AnimatePresence>
+            {waiting && <YolchiTypingIndicator />}
+          </AnimatePresence>
           {failure && (
             <div role="alert" className="rounded-2xl border border-coral/20 bg-rose-50 p-3.5 text-sm text-coral">
               <p>{failure.error}</p>
@@ -304,6 +340,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
               </Button>
             </div>
           )}
+          <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
         </div>
         <form onSubmit={submit} className="space-y-2 border-t border-hairline bg-canvas/40 p-3.5 sm:p-5">
           <div className="flex items-end gap-2.5">

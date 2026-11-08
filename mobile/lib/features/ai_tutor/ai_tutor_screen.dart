@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,7 @@ import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../data/services/i_ai_tutor_service.dart';
 import '../../data/services/supabase_ai_tutor_service.dart';
 import '../../domain/entities/lesson.dart';
+import 'yolchi_bubble.dart';
 
 class AITutorScreen extends ConsumerStatefulWidget {
   const AITutorScreen({super.key, this.lesson});
@@ -25,6 +27,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
   final _history = <({String sender, String text})>[];
   final List<_ChatMessage> _messages = [
     _ChatMessage(
+      id: 'welcome_0',
       isAI: true,
       text:
           'Salom, men Yo‘lchi AI! Tushunmagan joyingizni yozing yoki yana bir misol so‘rang.',
@@ -34,9 +37,14 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
   bool _isSending = false;
   bool? _serviceOnline;
   int _requestGeneration = 0;
+  int _msgSequence = 1;
+  String? _streamingMessageId;
+  int _streamingVisibleLength = 0;
+  Timer? _streamingTimer;
 
   @override
   void dispose() {
+    _streamingTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -49,15 +57,48 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
     return '$h:$m';
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool force = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
+      if (mounted) {
+        scrollToBottomSmart(_scrollController, force: force);
       }
+    });
+  }
+
+  void _startStreamingReveal(String msgId, String fullText) {
+    _streamingTimer?.cancel();
+    final disableAnimations =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (disableAnimations || fullText.length <= 16) {
+      setState(() {
+        _streamingMessageId = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _streamingMessageId = msgId;
+      _streamingVisibleLength = 12.clamp(0, fullText.length);
+    });
+
+    final step = ((fullText.length / 18).ceil()).clamp(4, 28);
+    _streamingTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final nextLen = _streamingVisibleLength + step;
+      if (nextLen >= fullText.length) {
+        timer.cancel();
+        setState(() {
+          _streamingMessageId = null;
+        });
+      } else {
+        setState(() {
+          _streamingVisibleLength = nextLen;
+        });
+      }
+      _scrollToBottom(force: false);
     });
   }
 
@@ -67,13 +108,22 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
     final requestGeneration = ++_requestGeneration;
 
     setState(() {
-      if (retry) _messages.removeRange(_messages.length - 2, _messages.length);
-      _messages.add(_ChatMessage(isAI: false, text: query, time: _now()));
+      if (retry && _messages.length >= 2) {
+        _messages.removeRange(_messages.length - 2, _messages.length);
+      }
+      _messages.add(
+        _ChatMessage(
+          id: 'msg_${_msgSequence++}',
+          isAI: false,
+          text: query,
+          time: _now(),
+        ),
+      );
       _lastFailedPrompt = null;
       _isSending = true;
     });
     _controller.clear();
-    _scrollToBottom();
+    _scrollToBottom(force: true);
 
     final course = ref.read(courseStateNotifierProvider).activeCourse;
 
@@ -89,6 +139,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
         ),
       );
       if (!mounted || requestGeneration != _requestGeneration) return;
+      final aiMsgId = 'msg_${_msgSequence++}';
       setState(() {
         _isSending = false;
         _serviceOnline = response.isAiGenerated;
@@ -98,9 +149,15 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
         ]);
         if (_history.length > 6) _history.removeRange(0, _history.length - 6);
         _messages.add(
-          _ChatMessage(isAI: true, text: response.answer, time: _now()),
+          _ChatMessage(
+            id: aiMsgId,
+            isAI: true,
+            text: response.answer,
+            time: _now(),
+          ),
         );
       });
+      _startStreamingReveal(aiMsgId, response.answer);
     } on AITutorUnavailableException catch (e) {
       if (!mounted || requestGeneration != _requestGeneration) return;
       setState(() {
@@ -109,6 +166,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
         _lastFailedPrompt = query;
         _messages.add(
           _ChatMessage(
+            id: 'msg_${_msgSequence++}',
             isAI: true,
             text: e.message,
             time: _now(),
@@ -124,6 +182,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
         _lastFailedPrompt = query;
         _messages.add(
           _ChatMessage(
+            id: 'msg_${_msgSequence++}',
             isAI: true,
             text:
                 'Kechirasiz, javob berishda xatolik yuz berdi. Qayta urinib ko‘ring.',
@@ -133,7 +192,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
         );
       });
     }
-    _scrollToBottom();
+    _scrollToBottom(force: false);
   }
 
   String? _lastFailedPrompt;
@@ -196,46 +255,31 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
-                  return _MessageBubble(message: msg);
+                  final isStreaming = _streamingMessageId == msg.id;
+                  final visibleText = isStreaming
+                      ? msg.text.substring(
+                          0,
+                          _streamingVisibleLength.clamp(0, msg.text.length),
+                        )
+                      : msg.text;
+                  return YolchiBubble(
+                    key: ValueKey(msg.id),
+                    id: msg.id,
+                    message: visibleText,
+                    isYolchi: msg.isAI,
+                    isStreaming: isStreaming,
+                    isError: msg.isError,
+                    time: msg.time,
+                  );
                 },
               ),
             ),
 
-            if (_isSending)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Yo‘lchi AI yozmoqda...',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            if (_isSending) const YolchiTypingIndicator(),
 
             if (!_isSending && _lastFailedPrompt != null)
               Padding(
@@ -363,80 +407,17 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
 }
 
 class _ChatMessage {
+  final String id;
   final bool isAI;
   final String text;
   final String time;
   final bool isError;
 
   _ChatMessage({
+    required this.id,
     required this.isAI,
     required this.text,
     required this.time,
     this.isError = false,
   });
-}
-
-class _MessageBubble extends StatelessWidget {
-  final _ChatMessage message;
-
-  const _MessageBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final isAI = message.isAI;
-
-    return Align(
-      alignment: isAI ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.82,
-        ),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isAI
-              ? (message.isError ? AppColors.errorLight : Colors.white)
-              : AppColors.primary,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isAI ? 4 : 20),
-            bottomRight: Radius.circular(isAI ? 20 : 4),
-          ),
-          border: isAI
-              ? Border.all(
-                  color: message.isError
-                      ? AppColors.error.withValues(alpha: 0.3)
-                      : AppColors.cardBorder,
-                )
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.text,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12.5,
-                fontWeight: isAI ? FontWeight.w600 : FontWeight.w700,
-                color: isAI
-                    ? (message.isError
-                          ? AppColors.error
-                          : AppColors.textPrimary)
-                    : Colors.white,
-                height: 1.35,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
