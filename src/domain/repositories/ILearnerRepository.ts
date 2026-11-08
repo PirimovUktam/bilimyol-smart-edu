@@ -76,6 +76,8 @@ export interface DailyActivitySummary {
   activeMinutes: number;
   xpEarned: number;
   lessonsCompleted: number;
+  questionsAnswered?: number;
+  correctAnswers?: number;
 }
 
 export interface ILearnerRepository {

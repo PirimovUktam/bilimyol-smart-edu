@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/auth/auth_error_message.dart';
+import '../../core/auth/demo_session.dart';
+import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/app_card.dart';
@@ -20,6 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _passwordVisible = false;
   String? _errorMsg;
 
   @override
@@ -30,8 +33,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _handleLogin() async {
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      setState(() => _errorMsg = 'Hisob xizmatiga ulanib bo‘lmadi.');
+      return;
+    }
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       setState(() => _errorMsg = 'Iltimos, email va parolni to‘liq kiriting.');
@@ -44,7 +52,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      final client = Supabase.instance.client;
       await client.auth.signInWithPassword(email: email, password: password);
       final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
       await learnerNotifier.loadProfile();
@@ -53,21 +60,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _isLoading = false);
         context.go('/dashboard');
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMsg = e.toString().replaceFirst('Exception: ', '').replaceFirst('AuthApiException: ', '');
+          _errorMsg = authErrorMessage(error);
         });
       }
     }
   }
 
-  void _handleQuickDemo() async {
-    await ref.read(learnerStateNotifierProvider.notifier).resetAll();
-    if (mounted) {
-      context.go('/dashboard');
-    }
+  void _handleQuickDemo() {
+    if (SupabaseConfig.hasRemoteConfiguration) return;
+    demoSessionActive.value = true;
+    context.go('/courses');
   }
 
   @override
@@ -162,12 +168,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 7,
+                      runSpacing: 6,
                       children: [
                         _FeatureMiniPill(icon: Icons.school_rounded, label: 'Shaxsiy yo‘l'),
                         _FeatureMiniPill(icon: Icons.psychology_rounded, label: 'Yo‘lchi AI'),
-                        _FeatureMiniPill(icon: Icons.star_rounded, label: 'Real progress'),
+                        _FeatureMiniPill(icon: Icons.star_rounded, label: 'O‘sish'),
                       ],
                     ),
                   ],
@@ -244,6 +252,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
                       style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
                       decoration: InputDecoration(
                         hintText: 'nomingiz@misol.uz',
@@ -296,12 +306,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 6),
                     TextField(
                       controller: _passwordController,
-                      obscureText: true,
+                      obscureText: !_passwordVisible,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) { if (!_isLoading) _handleLogin(); },
                       style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
                       decoration: InputDecoration(
                         hintText: '••••••••',
                         hintStyle: GoogleFonts.plusJakartaSans(color: Colors.grey.shade400, fontSize: 13),
                         prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF6366F1)),
+                        suffixIcon: IconButton(
+                          tooltip: _passwordVisible ? 'Parolni yashirish' : 'Parolni ko‘rsatish',
+                          onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                          icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        ),
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
@@ -358,6 +376,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 14),
 
+                    if (!SupabaseConfig.hasRemoteConfiguration) ...[
                     // Divider yoki
                     Row(
                       children: [
@@ -379,8 +398,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 14),
 
                     // Quick Demo Button
-                    SizedBox(
-                      height: 44,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.grey.shade300),
@@ -392,12 +411,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFFF59E0B)),
                             const SizedBox(width: 6),
-                            Text(
-                              'Namuna hisobi bilan kirish',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF334155),
+                            Flexible(
+                              child: Text(
+                                'Namuna hisobi bilan kirish',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF334155),
+                                ),
                               ),
                             ),
                           ],
@@ -405,9 +427,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    ],
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: 5,
                       children: [
                         Text(
                           'Hisobingiz yo‘qmi? ',

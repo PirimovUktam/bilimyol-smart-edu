@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/auth/demo_session.dart';
 import '../core/config/supabase_config.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/welcome_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
+import '../features/auth/reset_password_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/course_selection/course_selection_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -21,17 +24,21 @@ import '../features/ai_tutor/ai_tutor_screen.dart';
 /// re-evaluate its redirect guard whenever the session appears or disappears.
 class _AuthRefreshNotifier extends ChangeNotifier {
   StreamSubscription<AuthState>? _sub;
+  String? _recoveryUserId;
+
+  bool get recoveryActive =>
+      _recoveryUserId != null &&
+      _recoveryUserId == SupabaseConfig.client?.auth.currentUser?.id;
 
   _AuthRefreshNotifier() {
-    if (SupabaseConfig.isConfigured) {
-      try {
-        _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
-          notifyListeners();
-        });
-      } catch (_) {
-        // Supabase not available: guard falls back to demo (always signed-in) mode.
+    _sub = SupabaseConfig.client?.auth.onAuthStateChange.listen((state) {
+      if (state.event == AuthChangeEvent.passwordRecovery) {
+        _recoveryUserId = state.session?.user.id;
+      } else if (state.event == AuthChangeEvent.signedOut) {
+        _recoveryUserId = null;
       }
-    }
+      notifyListeners();
+    }, onError: (Object _) => notifyListeners());
   }
 
   @override
@@ -42,21 +49,29 @@ class _AuthRefreshNotifier extends ChangeNotifier {
 }
 
 const Set<String> _publicRoutes = {
+  '/welcome',
   '/login',
   '/register',
   '/forgot-password',
 };
 
+final _authRefresh = _AuthRefreshNotifier();
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/courses',
-  refreshListenable: _AuthRefreshNotifier(),
+  initialLocation: '/welcome',
+  refreshListenable: Listenable.merge([_authRefresh, demoSessionActive]),
   redirect: (context, state) {
-    // When Supabase is not configured the app runs in local demo mode:
-    // demo users are treated as authenticated so they can explore the platform.
-    if (!SupabaseConfig.isConfigured) return null;
-
-    final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
     final path = state.matchedLocation;
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      final isPublic = _publicRoutes.contains(path);
+      if (demoSessionActive.value) return isPublic ? '/courses' : null;
+      return isPublic ? null : '/login';
+    }
+
+    if (_authRefresh.recoveryActive) {
+      return path == '/reset-password' ? null : '/reset-password';
+    }
+    final isLoggedIn = SupabaseConfig.client?.auth.currentUser != null;
+    if (path == '/reset-password') return isLoggedIn ? '/dashboard' : '/login';
     final isPublic = _publicRoutes.contains(path);
 
     if (!isLoggedIn && !isPublic) {
@@ -68,14 +83,12 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
+    GoRoute(path: '/', redirect: (context, state) => '/welcome'),
     GoRoute(
-      path: '/',
-      redirect: (context, state) => '/courses',
+      path: '/welcome',
+      builder: (context, state) => const WelcomeScreen(),
     ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
@@ -83,6 +96,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
     ),
     GoRoute(
       path: '/profile',

@@ -1,119 +1,50 @@
-import React, { useState } from 'react';
-import { Mail, ArrowLeft, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../core/context/AuthContext';
-import { Button } from '../../presentation/components/Button';
+import { useState, type FormEvent } from 'react';
+import { ArrowLeft, MailCheck, Send } from 'lucide-react';
+import { useAuth } from '@/core/context/AuthContext';
+import { Button } from '@/presentation/components/Button';
 import { AuthLayout } from './AuthLayout';
 
-interface ForgotPasswordViewProps {
-  onNavigateLogin: () => void;
-}
-
-export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({
-  onNavigateLogin,
-}) => {
+export function ForgotPasswordView({ onNavigateLogin }: { onNavigateLogin: () => void }) {
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isSent, setIsSent] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg(null);
-
-    if (!email.trim()) {
-      setErrorMsg('Iltimos, email manzilingizni kiriting.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    const { error } = await resetPassword(email.trim());
-    setIsSubmitting(false);
-
-    if (error) {
-      setErrorMsg(error.message || 'Xatolik yuz berdi. Iltimos qaytadan urinib ko‘ring.');
-    } else {
-      setIsSent(true);
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = await resetPassword(email.trim());
+      if (result.error) setError(result.error.message);
+      else setSent(true);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <AuthLayout
-      title="Parolni tiklash"
-      subtitle="Email manzilingizga parolni tiklash havolasini yuboramiz"
-    >
-      {isSent ? (
-        <div className="text-center py-2 space-y-4">
-          <div className="w-12 h-12 bg-mint/10 rounded-full flex items-center justify-center mx-auto text-mint">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Havola yuborildi!
-            </h3>
-            <p className="text-xs text-slate-600 mt-1">
-              <strong>{email}</strong> manziliga parolni tiklash bo‘yicha ko‘rsatmalar yuborildi.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="md"
-            className="w-full"
-            onClick={onNavigateLogin}
-            leftIcon={<ArrowLeft className="w-4 h-4" />}
-          >
-            Kirish sahifasiga qaytish
-          </Button>
+    <AuthLayout title="Parolni tiklash" subtitle="Hisobingizga bog‘langan email manzilini kiriting.">
+      {sent ? (
+        <div role="status" className="flex items-start gap-3 rounded-card bg-mint/8 p-4 text-sm">
+          <MailCheck aria-hidden="true" className="size-5 shrink-0 text-mint" />
+          <div><p className="font-bold text-mint">So‘rov qabul qilindi</p>
+            <p className="mt-1 leading-relaxed text-slatefine">Agar <strong className="break-all">{email}</strong> manzilida hisob mavjud bo‘lsa, tiklash havolasi pochtangizga keladi.</p></div>
         </div>
       ) : (
-        <form onSubmit={handleReset} className="space-y-4">
-          {errorMsg && (
-            <div className="p-3.5 bg-coral/5 border border-coral/25 rounded-xl flex items-start gap-2.5 text-coral text-xs font-semibold">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Email manzilingiz
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nomingiz@misol.uz"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                required
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full mt-2"
-            isLoading={isSubmitting}
-            rightIcon={<Send className="w-4 h-4" />}
-          >
-            Tiklash havolasini yuborish
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="w-full text-slate-600 hover:text-slate-900"
-            onClick={onNavigateLogin}
-            leftIcon={<ArrowLeft className="w-4 h-4" />}
-          >
-            Ortga qaytish
-          </Button>
+        <form onSubmit={submit} className="space-y-4">
+          {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-coral">{error}</p>}
+          <label className="block text-sm font-bold">Email manzilingiz
+            <input type="email" className="form-input mt-1.5 px-3.5 font-normal" autoComplete="email" required
+              placeholder="nomingiz@misol.uz" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <Button type="submit" className="w-full" isLoading={submitting}
+            rightIcon={<Send aria-hidden="true" className="size-4" />}>Tiklash havolasini yuborish</Button>
         </form>
       )}
+      <Button type="button" variant="ghost" className="mt-4 w-full" onClick={onNavigateLogin}
+        leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}>Kirish sahifasiga qaytish</Button>
     </AuthLayout>
   );
-};
+}

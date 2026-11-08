@@ -16,4 +16,22 @@ export interface AssessmentResult {
   computedScores: Record<string, SkillScore>;
   weakestSkillId: string;
   timestamp: number;
+  review?: PlacementReviewAnswer[];
+}
+
+export interface PlacementReviewAnswer extends QuestionAnswerSubmission {
+  questionText: string;
+  selectedOption: string;
+  correctOption: string;
+  explanation: string;
+}
+
+export interface PlacementSession {
+  id: string;
+  question: Question | null;
+  number: number;
+  total: number;
+  wasReset: boolean;
+  canRetake: boolean;
+  result: Omit<AssessmentResult, 'computedScores'> | null;
 }

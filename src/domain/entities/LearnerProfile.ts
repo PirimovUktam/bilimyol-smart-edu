@@ -12,6 +12,7 @@ export interface LearnerProfile {
   goal: OnboardingGoal;
   dailyMinutes: DailyTimeCommitment;
   initialLevel: InitialLevel;
+  courseLevels?: Record<string, InitialLevel>;
   xp: number;
   streakDays: number;
   lastActiveDate: string; // YYYY-MM-DD

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { useCourseStore } from '@/app/store/useCourseStore';
+import { foundationLessons } from '@/domain/personalization/learningStart';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useAuth } from '@/core/context/AuthContext';
 import { isLessonCourseMismatch } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -28,6 +30,13 @@ import { LessonCompletionModal } from './LessonCompletionModal';
 import { YolchiAIPanel } from '../ai-tutor/YolchiAIPanel';
 import { ReinforcementModal } from '../reinforcement/ReinforcementModal';
 import { sounds } from '@/core/utils/soundEffects';
+import { Formula, LearningText } from '@/presentation/components/LearningText';
+import { PageHeader } from '@/presentation/components/PageHeader';
+import { Progress } from '@/presentation/components/Progress';
+import { Modal } from '@/presentation/components/Modal';
+import { TutorConversation } from '@/features/ai-tutor/YolchiAIChatView';
+import { clearLessonPosition, readLessonPosition, saveLessonPosition } from './readingPosition';
+import { DictionaryLookup } from '@/features/dictionary/DictionaryLookup';
 
 interface InteractiveLessonViewProps {
   lessonId: string;
@@ -42,6 +51,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 }) => {
   const { activeCourse, activeCourseSkills } = useCourseStore();
   const { profile } = useLearnerStore();
+  const { profile: account, isDemoMode } = useAuth();
   const {
     currentLesson,
     currentStepIndex,
@@ -69,6 +79,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const [pickedOption, setPickedOption] = useState<number | null>(null);
   const [hasSubmittedCurrent, setHasSubmittedCurrent] = useState<boolean>(false);
+  const [help, setHelp] = useState<'tutor' | 'dictionary' | null>(null);
+  const restored = useRef<typeof currentLesson>(null);
 
   useEffect(() => {
     loadLesson(lessonId);
@@ -85,6 +97,20 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     setPickedOption(null);
     setHasSubmittedCurrent(false);
   }, [currentStepIndex]);
+
+  useEffect(() => {
+    if (!account || !currentLesson || currentLesson.id !== lessonId || currentLesson.courseId !== activeCourse?.id) return;
+    if (restored.current !== currentLesson) {
+      restored.current = currentLesson;
+      const position = readLessonPosition(account.id, currentLesson);
+      if (position !== currentStepIndex) {
+        goToStep(position);
+        return;
+      }
+    }
+    if (isCompleted) clearLessonPosition(account.id, currentLesson);
+    else saveLessonPosition(account.id, currentLesson, currentStepIndex);
+  }, [account, currentLesson, lessonId, activeCourse?.id, currentStepIndex, isCompleted, goToStep]);
 
   if (isLoading) {
     return (
@@ -110,7 +136,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   }
 
   // Cross-course isolation: refuse to render a lesson from a different course.
-  if (isLessonCourseMismatch(currentLesson, activeCourse)) {
+  if (!activeCourse || isLessonCourseMismatch(currentLesson, activeCourse)) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <Card className="p-8 border-amber-200 bg-amber-50/50 shadow-lg">
@@ -130,6 +156,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   }
 
   const currentStep = currentLesson.steps[currentStepIndex];
+  const isFoundation = foundationLessons(activeCourse).includes(currentLesson.id);
   const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
 
   // Answer reveal: after submission we always show which option was correct and
@@ -137,13 +164,13 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   const revealedCorrectOption = lastAnswerResult?.correctOption || '';
   const revealAnswers = hasSubmittedCurrent && Boolean(lastAnswerResult);
 
-  // Infographic 2 Step 8 category tabs mapping
-  const stepCategoryLabels = [
-    { label: 'Nazariya', icon: BookOpen },
-    { label: 'Misol', icon: Lightbulb },
-    { label: 'Mashq', icon: FileText },
-    { label: 'Test', icon: HelpCircle },
-  ];
+  const stepCategoryLabels = {
+    concept: { label: 'Nazariya', icon: BookOpen },
+    formula: { label: 'Formula', icon: FileText },
+    visual_example: { label: 'Misol', icon: Lightbulb },
+    audio_simulation: { label: 'Tinglash', icon: FileText },
+    interactive_question: { label: 'Test', icon: HelpCircle },
+  };
 
   const handleSelectQuizOption = (idx: number) => {
     if (isEvaluatingAnswer || hasSubmittedCurrent) return;
@@ -163,15 +190,26 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         particleCount: 70,
         spread: 70,
         origin: { y: 0.7 },
-        colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B'],
+        colors: ['#5546E8', '#2563EB', '#10B981', '#F59E0B'], disableForReducedMotion: true,
       });
     } else {
       sounds.playMistake();
     }
   };
 
+  const savedScore = profile?.scoresByCourse[currentLesson.courseId]?.[currentLesson.skillId]?.score;
+  const completedSkill = savedScore == null ? undefined : {
+    name: activeCourseSkills.find((skill) => skill.id === currentLesson.skillId)?.name ?? currentLesson.title,
+    score: savedScore,
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <div className="learning-page max-w-240 space-y-5">
+      {currentLesson.isAiGenerated && (
+        <p className="rounded-xl border border-brand/20 bg-sand p-3 text-sm leading-relaxed text-brand-dark">
+          Yo‘lchi AI tayyorlagan dars. Muhim qoidalar va yechimlarni fan manbalari bilan tekshiring.
+        </p>
+      )}
       {/* Honest disclosure when the AI edge function failed and a deterministic demo lesson is shown */}
       {currentLesson.isDeterministicFallback && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
@@ -189,97 +227,70 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         </div>
       )}
 
-      {/* Top Breadcrumb & Progress */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBackToRoadmap}
-            leftIcon={<ArrowLeft className="w-4 h-4" />}
-            className="text-slate-600 hover:text-slate-950 font-bold"
-          >
-            Yo‘l xaritasiga qaytish
-          </Button>
-          <div className="h-4 w-px bg-[#e4ddce]" />
-          <span className="font-mono text-xs font-bold text-slate-800 bg-white border border-[#e4ddce] px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
-            <BookOpen className="w-3.5 h-3.5 text-brand" />
-            {currentLesson.title}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 font-mono text-xs text-slate-500 font-medium">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>{currentLesson.estimatedMinutes} daqiqa</span>
-          <span>•</span>
-          <span>
-            Qadam {currentStepIndex + 1} / {currentLesson.steps.length}
-          </span>
-        </div>
+      <PageHeader title={currentLesson.title} eyebrow={activeCourse.title}
+        description={currentLesson.summary === currentStep.content ? undefined : currentLesson.summary}
+        action={<Button variant="outline" size="sm" onClick={onBackToRoadmap}
+          leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}>Ta’lim yo‘liga qaytish</Button>} />
+      <div className="fade-up stagger-1 flex flex-wrap items-center gap-2 rounded-[20px] border border-hairline bg-paper px-4 py-3 shadow-[var(--shadow-editorial)]">
+        <span className="mr-auto flex items-center gap-2 text-sm font-bold text-ink">
+          <Sparkles aria-hidden="true" className="size-4 text-brand" />
+          Shu darsda yordam
+        </span>
+        <Button size="sm" variant="outline" leftIcon={<Sparkles aria-hidden="true" className="size-4 text-brand" />} onClick={() => setHelp('tutor')}>Yo‘lchidan so‘rash</Button>
+        {activeCourse.subject === 'english' && <Button size="sm" variant="ghost" leftIcon={<BookOpen aria-hidden="true" className="size-4" />} onClick={() => setHelp('dictionary')}>So‘z lug‘ati</Button>}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slatefine">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-paper border border-hairline px-3 py-1 text-xs font-bold text-ink shadow-2xs">
+          <Clock aria-hidden="true" className="size-3.5 text-brand" />{currentLesson.estimatedMinutes} daqiqa
+        </span>
+        <span className="highlight">Qadam {currentStepIndex + 1} / {currentLesson.steps.length}</span>
       </div>
 
       {/* Step Category Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {!isFoundation && <nav aria-label="Dars qadamlari" className="flex flex-wrap items-center gap-2">
         {currentLesson.steps.map((st, idx) => {
           const isActive = currentStepIndex === idx;
           const isPassed = currentStepIndex > idx;
-          const catInfo = stepCategoryLabels[idx % stepCategoryLabels.length];
+          const catInfo = st.interactiveQuestion ? stepCategoryLabels.interactive_question : (stepCategoryLabels[st.type] ?? stepCategoryLabels.concept);
           const IconComp = catInfo.icon;
 
           return (
             <button
               key={st.id}
+              aria-current={isActive ? 'step' : undefined}
               onClick={() => goToStep(idx)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                 isActive
-                  ? 'bg-[#10151f] text-white border-[#10151f] shadow-xs'
+                  ? 'commonBtn border-transparent'
                   : isPassed
-                  ? 'bg-mint/10 text-mint border-mint/25 hover:bg-mint/10'
-                  : 'bg-white text-slate-600 border-[#e4ddce] hover:bg-[#fbf9f4] hover:border-slate-400'
+                  ? 'bg-mint/10 text-[#059669] border-mint/25 hover:bg-mint/15'
+                  : 'bg-white text-slate-600 border-hairline hover:bg-sand/50 hover:border-brand/30'
               }`}
             >
-              <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-path' : isPassed ? 'text-mint' : 'text-slate-400'}`} />
+              <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-white' : isPassed ? 'text-mint' : 'text-brand'}`} />
               <span>{catInfo.label}</span>
-              {isPassed && <CheckCircle2 className="w-3 h-3 text-mint ml-0.5" />}
+              {isPassed && <CheckCircle2 className="w-3.5 h-3.5 text-mint ml-0.5" />}
             </button>
           );
         })}
-      </div>
+      </nav>}
 
-      {/* Step Progress Line */}
-      <div className="flex items-center gap-2">
-        {currentLesson.steps.map((st, idx) => {
-          const isActive = currentStepIndex === idx;
-          const isPassed = currentStepIndex > idx;
-          return (
-            <div
-              key={st.id}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                isActive
-                  ? 'bg-[#10151f]'
-                  : isPassed
-                  ? 'bg-mint'
-                  : 'bg-[#ece5d8]'
-              }`}
-            />
-          );
-        })}
-      </div>
+      <Progress value={100 * (currentStepIndex + 1) / currentLesson.steps.length} ariaLabel="Dars qadamlari" size="sm" />
 
       {/* Step Content Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep.id}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25 }}
         >
-          <div className="p-7 sm:p-9 bg-white border border-[#e4ddce] rounded-2xl shadow-sm space-y-6">
+          <div className="edtech-card p-5 sm:p-8 space-y-6">
             {/* Step Header */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="editorial-kicker">
+                <span className="highlight">
                   Qadam {currentStep.stepNumber}
                 </span>
                 {currentStep.subtitle && (
@@ -288,17 +299,15 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   </span>
                 )}
               </div>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{currentStep.title}</h2>
+              <h2 className="heading text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">{currentStep.title}</h2>
             </div>
 
             {/* Step Content Description */}
-            <p className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line font-medium">
-              {currentStep.content}
-            </p>
+            <div className="text-sm text-slatefine sm:text-base"><LearningText text={currentStep.content} /></div>
 
             {/* Highlights */}
             {currentStep.highlightNotes && currentStep.highlightNotes.length > 0 && (
-              <div className="p-4 bg-[#fbf9f4] border-l-4 border-brand border-y border-r border-[#e4ddce] rounded-xl space-y-2">
+              <div className="p-4 bg-canvas border-l-4 border-brand border-y border-r border-hairline rounded-xl space-y-2">
                 <span className="font-mono text-[10px] font-bold text-brand-dark uppercase tracking-widest block">
                   Asosiy Qoidalar:
                 </span>
@@ -315,11 +324,11 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
             {/* Step Formula Data (if any) */}
             {currentStep.formulaData && (
-              <div className="p-6 bg-[#10151f] text-white rounded-xl border border-slate-700/80 space-y-4 shadow-md">
+              <div className="p-6 bg-navy text-white rounded-xl border border-slate-700/80 space-y-4 shadow-md">
                 <div className="text-center space-y-1">
-                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest font-bold">Chiziqli Funksiya Ko‘rinishi:</span>
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest font-bold">Formula</span>
                   <div className="text-2xl sm:text-3xl font-mono font-bold text-path py-1">
-                    {currentStep.formulaData.latex}
+                    <Formula source={currentStep.formulaData.latex} display />
                   </div>
                   <p className="text-xs text-slate-300">{currentStep.formulaData.description}</p>
                 </div>
@@ -348,8 +357,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
             {/* Step Interactive Question (Quiz) */}
             {currentStep.interactiveQuestion && (
-              <div className="pt-4 border-t border-[#e4ddce] space-y-5">
-                <div className="p-4 bg-[#fbf9f4] border border-[#e4ddce] rounded-xl space-y-2">
+              <div className="pt-4 border-t border-hairline space-y-5">
+                <div className="p-4 bg-canvas border border-hairline rounded-xl space-y-2">
                   <div className="flex items-center gap-2 text-xs font-mono font-bold text-brand-dark uppercase tracking-wider">
                     <Sparkles className="w-4 h-4 text-brand" />
                     <span>Darsni Yakunlovchi Sinov Savoli</span>
@@ -358,8 +367,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                     {currentStep.interactiveQuestion.text}
                   </h3>
                   {currentStep.interactiveQuestion.formulaLatex && (
-                    <div className="p-2 bg-white rounded-lg border border-[#e4ddce] font-mono font-bold text-brand-dark text-sm inline-block">
-                      {currentStep.interactiveQuestion.formulaLatex}
+                    <div className="p-2 bg-white rounded-lg border border-hairline font-mono font-bold text-brand-dark text-sm inline-block">
+                      <Formula source={currentStep.interactiveQuestion.formulaLatex} />
                     </div>
                   )}
                 </div>
@@ -377,8 +386,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       : isWrongPick
                       ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25'
                       : isSelected
-                      ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-sm'
-                      : 'border-[#e4ddce] bg-white hover:border-slate-400 hover:bg-[#fbf9f4]';
+                      ? 'border-navy ring-2 ring-navy bg-white shadow-sm'
+                      : 'border-hairline bg-white hover:border-slate-400 hover:bg-canvas';
 
                     return (
                       <button
@@ -386,6 +395,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         type="button"
                         onClick={() => handleSelectQuizOption(idx)}
                         disabled={isEvaluatingAnswer || hasSubmittedCurrent}
+                        aria-pressed={isSelected}
                         className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${optionTone}`}
                       >
                         <div className="flex items-center gap-3">
@@ -396,8 +406,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                                 : isWrongPick
                                 ? 'bg-coral text-white'
                                 : isSelected
-                                ? 'bg-[#10151f] text-white shadow-xs'
-                                : 'bg-[#f5efe4] text-slate-700 border border-[#e4ddce]'
+                                ? 'bg-navy text-white shadow-xs'
+                                : 'bg-sand text-slate-700 border border-hairline'
                             }`}
                           >
                             {letter}
@@ -437,7 +447,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       <div className="flex items-center gap-2">
                         <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-mint' : 'text-coral'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
-                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Xato tahlili: Yo‘lchi AI'}
+                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Javobni ko‘rib chiqamiz'}
                         </span>
                       </div>
 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
@@ -481,19 +491,6 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                               : 'Javob xato. Yechimni qadam-baqadam tekshirib ko‘ring.')}
                         </p>
 
-                        {lastAnswerResult.aiExplanation && (
-                          <div className="p-3 bg-white/90 rounded-2xl border border-coral/25 text-slate-800 space-y-1">
-                            <span className="text-[11px] font-black uppercase text-brand-dark block">
-                              Yo‘lchi AI maslahati:
-                            </span>
-                            {lastAnswerResult.aiExplanation.explanation && (
-                              <p className="font-medium">{lastAnswerResult.aiExplanation.explanation}</p>
-                            )}
-                            {lastAnswerResult.aiExplanation.remediationStep && (
-                              <p className="text-slate-600">{lastAnswerResult.aiExplanation.remediationStep}</p>
-                            )}
-                          </div>
-                        )}
                         <div className="flex flex-col sm:flex-row gap-2 mt-1">
                           <Button
                             variant="outline"
@@ -567,7 +564,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
             {/* Navigation Buttons for Standard Content Steps */}
             {!currentStep.interactiveQuestion && (
-              <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-6 border-t border-hairline flex flex-wrap items-center justify-between gap-2">
                 <Button
                   variant="ghost"
                   size="md"
@@ -595,13 +592,20 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         </motion.div>
       </AnimatePresence>
 
+      {help && <Modal isOpen onClose={() => setHelp(null)} title={help === 'tutor' ? 'Yo‘lchi bilan shu dars haqida' : 'Inglizcha so‘z lug‘ati'}>
+        {help === 'tutor' ? <TutorConversation compact
+          conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
+          courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
+          topic={currentLesson.title} score={savedScore} isDemoMode={isDemoMode} /> : <DictionaryLookup />}
+      </Modal>}
+
       {/* Yo'lchi AI Feedback Panel */}
-      <YolchiAIPanel
-        isOpen={showAIPanel}
-        explanation={lastAnswerResult?.aiExplanation || null}
+        {showAIPanel && lastAnswerResult && currentStep.interactiveQuestion && <YolchiAIPanel
+          question={currentStep.interactiveQuestion}
+          answer={lastAnswerResult}
         onProceedToReinforcement={openReinforcement}
         onClose={closeAIPanel}
-      />
+        />}
 
       {/* Reinforcement Exercise Modal */}
       <ReinforcementModal
@@ -616,61 +620,17 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         onClose={closeReinforcement}
       />
 
-      {/* Lesson Completion Modal matching Infographic 2 Step 10 & 11 */}
-      {(() => {
-        const courseScores = (profile?.scoresByCourse && currentLesson?.courseId)
-          ? (profile.scoresByCourse[currentLesson.courseId] || {})
-          : {};
-        const currentSkillId = currentLesson?.skillId || '';
-        const prevScore = courseScores[currentSkillId]?.score ?? 50;
-        const newSkillScore = lastAnswerResult?.newSkillScore ?? (lastAnswerResult?.isCorrect ? Math.min(100, prevScore + 15) : prevScore);
-        const realDelta = Math.max(0, newSkillScore - prevScore);
-
-        const dynamicSkillProgressList = activeCourseSkills.length > 0
-          ? activeCourseSkills.slice(0, 5).map((sk) => {
-              if (sk.id === currentSkillId) {
-                return {
-                  skillName: sk.name,
-                  score: newSkillScore,
-                  delta: realDelta > 0 ? realDelta : (lastAnswerResult?.isCorrect ? 15 : undefined),
-                };
-              }
-              return {
-                skillName: sk.name,
-                score: courseScores[sk.id]?.score ?? 50,
-                delta: undefined,
-              };
-            })
-          : [
-              {
-                skillName: currentLesson.title,
-                score: newSkillScore,
-                delta: realDelta > 0 ? realDelta : (lastAnswerResult?.isCorrect ? 15 : undefined),
-              },
-            ];
-
-        const currentSkillName = activeCourseSkills.find((s) => s.id === currentSkillId)?.name || currentLesson.title;
-        const dynamicRecommendation = realDelta > 0
-          ? `Siz ${currentSkillName} mavzusini muvaffaqiyatli o‘zlashtirdingiz (+${realDelta}% o‘sish). Ushbu bilimni keyingi modul bilan mustahkamlashni tavsiya qilamiz.`
-          : `Siz ${currentSkillName} mavzusi bo‘yicha tushunchalarni mustahkamlab oldingiz. Yangi mashqlarga o‘tishga tayyorsiz.`;
-
-        return (
-          <LessonCompletionModal
-            isOpen={isCompleted}
-            scorePercentage={Math.round((correctAnswerCount / Math.max(currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length, 1)) * 100)}
-            correctCount={correctAnswerCount}
-            totalCount={Math.max(currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length, 1)}
-            courseTitle={activeCourse?.title || 'Fan'}
-            lessonTitle={currentLesson.title}
-            skillProgressList={dynamicSkillProgressList}
-            aiRecommendation={dynamicRecommendation}
-            onProceedToNext={() => {
-              useLessonStore.getState().resetLessonState();
-              onFinish();
-            }}
-          />
-        );
-      })()}
+      <LessonCompletionModal
+        isOpen={isCompleted}
+        correctCount={correctAnswerCount}
+        totalCount={currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length}
+        lessonTitle={currentLesson.title}
+        skill={completedSkill}
+        onProceedToNext={() => {
+          useLessonStore.getState().resetLessonState();
+          onFinish();
+        }}
+      />
     </div>
   );
 };

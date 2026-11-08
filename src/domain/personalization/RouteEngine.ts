@@ -17,7 +17,8 @@ export class RouteEngine {
 
     for (const baseNode of baseNodes) {
       const skillScoreObj = skillScores[baseNode.skillId];
-      const score = skillScoreObj ? skillScoreObj.score : 0;
+      const score = skillScoreObj?.score;
+      const needsPractice = score != null && score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN;
       const isCompleted = completedNodeIds.includes(baseNode.id);
 
       // Check prerequisites
@@ -33,7 +34,7 @@ export class RouteEngine {
         status = 'locked';
       } else {
         // Prerequisites are met
-        if (score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN) {
+        if (needsPractice) {
           // Score < 50 => requires reinforcement
           status = 'reinforcement';
         } else {
@@ -50,9 +51,9 @@ export class RouteEngine {
       adaptedNodes.push(updatedNode);
 
       // If the node is in reinforcement or has low score, we attach reinforcement flow
-      if (score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN && !isCompleted) {
-        const reinforcementId = `reinf_${baseNode.id}`;
-        const isReinforcementCompleted = completedReinforcementIds.includes(reinforcementId);
+      const reinforcementId = `reinf_${baseNode.id}`;
+      const isReinforcementCompleted = completedReinforcementIds.includes(reinforcementId);
+      if ((needsPractice && !isCompleted) || isReinforcementCompleted) {
 
         const reinforcementNode: LearningPathNode = {
           id: reinforcementId,
@@ -62,7 +63,7 @@ export class RouteEngine {
           description: `Yo‘lchi AI tavsiyasi: ${baseNode.title} bo‘yicha tushunchalarni mustahkamlash mashqi`,
           prerequisites: [baseNode.id], // Follows after interactive lesson attempt
           requiredScore: ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN,
-          status: isReinforcementCompleted ? 'completed' : 'available',
+          status: isReinforcementCompleted ? 'completed' : prerequisitesMet ? 'available' : 'locked',
           isReinforcement: true,
           estimatedMinutes: 5,
           order: baseNode.order + 0.5,

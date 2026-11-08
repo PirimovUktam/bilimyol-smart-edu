@@ -1,65 +1,69 @@
-import React from 'react';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { hasStartedCourse } from '@/domain/personalization/learningStart';
+import { PageHeader } from '@/presentation/components/PageHeader';
 import { SubjectSelector } from './SubjectSelector';
 
-interface CourseSelectionViewProps {
-  onSelectCourse: (courseId: string) => void;
-}
+export function CourseSelectionView({ onSelectCourse }: { onSelectCourse: (courseId: string) => void }) {
+  const courses = useCourseStore((state) => state.courses);
+  const activeCourseId = useCourseStore((state) => state.activeCourse?.id);
+  const isLoading = useCourseStore((state) => state.isLoading);
+  const error = useCourseStore((state) => state.error);
+  const profile = useLearnerStore((state) => state.profile);
+  const [query, setQuery] = useState('');
+  const search = query.trim().toLocaleLowerCase('uz');
+  const visible = courses.filter((course) => (course.title + ' ' + course.description).toLocaleLowerCase('uz').includes(search));
+  const selected = courses.find((course) => course.id === activeCourseId);
+  const completed = new Set(profile?.completedLessonIds);
+  const completedByCourseId = Object.fromEntries(courses.map((course) => [
+    course.id, course.lessons.filter((id) => completed.has(id)).length,
+  ]));
+  const progressByCourseId = Object.fromEntries(courses.filter((course) => course.lessons.length).map((course) => [
+    course.id, 100 * completedByCourseId[course.id] / course.lessons.length,
+  ]));
 
-export const CourseSelectionView: React.FC<CourseSelectionViewProps> = ({ onSelectCourse }) => {
-  const {
-    courses,
-    activeCourse,
-    selectCourseById,
-    isLoading,
-    error,
-  } = useCourseStore();
-
-  const handleChoose = async (courseId: string) => {
+  const choose = async (courseId: string) => {
     try {
-      await selectCourseById(courseId);
-      onSelectCourse(courseId);
+      await useCourseStore.getState().selectCourseById(courseId);
+      if (useCourseStore.getState().activeCourse?.id === courseId) onSelectCourse(courseId);
     } catch {
-      // The store exposes the canonical error to the selector; keep the view mounted
-      // so the learner can choose another loaded course or retry.
+      // The selector displays the store error and remains available for retry.
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-120px)] bg-gradient-to-b from-blue-50/60 via-white to-indigo-50/40 px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
-        <header className="mb-10 max-w-3xl space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white px-3 py-1 text-xs font-bold text-blue-700 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{courses.length > 0 ? `${courses.length} ta mavjud kurs` : 'Kurslar katalogi'}</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl md:text-5xl">
-            O‘rganishni istagan fanni tanlang
-          </h1>
-          <p className="mx-auto max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
-            Sizga mavjud kurslardan birini tanlang. BilimYo‘l tanlovingiz asosida individual o‘quv yo‘lini tayyorlaydi.
-          </p>
-        </header>
-
-        <section className="w-full" aria-labelledby="course-selection-heading">
-          <h2 id="course-selection-heading" className="sr-only">Mavjud kurslar</h2>
-          <SubjectSelector
-            courses={courses}
-            selectedCourseId={activeCourse?.id}
-            isLoading={isLoading}
-            error={error}
-            onSelect={handleChoose}
-            ariaLabel="Mavjud kurslar"
-            className="w-full"
+    <div className="learning-page space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow="Fanlar katalogi"
+        title="O‘zingizga mos fanni tanlang"
+        highlightWord="fanni tanlang"
+        description="Har bir fanning natijalari alohida saqlanadi. Istalgan vaqtda boshqa fanga o‘tib, keyin o‘qishni davom ettirishingiz mumkin."
+      />
+      {courses.length > 6 && (
+        <label className="relative block max-w-sm">
+          <span className="sr-only">Fanlarni qidirish</span>
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slatefine" />
+          <input
+            type="search"
+            className="form-input pl-10 pr-4"
+            placeholder="Fanlarni qidirish"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
           />
-        </section>
-
-        <div className="mt-12 flex max-w-xl items-center gap-2 text-center text-xs font-semibold text-slate-500">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-mint" aria-hidden="true" />
-          <span>Natijalar va o‘quv yo‘li faqat tanlangan kursning mavjud ma’lumotlari asosida hisoblanadi.</span>
-        </div>
-      </div>
+        </label>
+      )}
+      <SubjectSelector
+        courses={visible}
+        selectedCourseId={selected && hasStartedCourse(selected, profile) ? selected.id : null}
+        isLoading={isLoading}
+        error={error}
+        completedByCourseId={completedByCourseId}
+        progressByCourseId={progressByCourseId}
+        onSelect={choose}
+        ariaLabel="Mavjud fanlar"
+      />
     </div>
   );
-};
+}

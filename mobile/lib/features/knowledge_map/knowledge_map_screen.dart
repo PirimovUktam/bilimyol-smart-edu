@@ -7,6 +7,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/edtech_reveal.dart';
+import '../../core/widgets/edtech_section_header.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
@@ -265,17 +267,19 @@ class KnowledgeMapScreen extends ConsumerWidget {
                         const SizedBox(height: 20),
 
                         // Skills Breakdown List
-                        Text(
-                          'Ko‘nikmalar Tahlili',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                        const EdTechReveal(
+                          index: 1,
+                          child: EdTechSectionHeader(
+                            pillText: 'Tahlil va o‘zlashtirish',
+                            title: 'Ko‘nikmalar Tahlili',
+                            highlightWord: 'Tahlili',
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        ...skills.map((skill) {
+                        ...skills.indexed.map((entry) {
+                          final index = entry.$1;
+                          final skill = entry.$2;
                           final scoreObj = scores[skill.id];
                           final score = scoreObj?.score ?? 0;
                           final isWeak = weakestSkill?.skillId == skill.id && score < 50;
@@ -289,72 +293,77 @@ class KnowledgeMapScreen extends ConsumerWidget {
                             progressColor = AppColors.success;
                           }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: AppCard(
-                              padding: const EdgeInsets.all(16),
-                              borderColor: isWeak ? AppColors.error.withValues(alpha: 0.4) : AppColors.cardBorder,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  skill.name,
-                                                  style: GoogleFonts.plusJakartaSans(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: AppColors.textPrimary,
+                          return EdTechReveal(
+                            index: index + 2,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: AppCard(
+                                padding: const EdgeInsets.all(16),
+                                borderColor: isWeak ? AppColors.error.withValues(alpha: 0.4) : AppColors.cardBorder,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      skill.name,
+                                                      style: GoogleFonts.plusJakartaSans(
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: AppColors.textPrimary,
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                AppBadge(
-                                                  text: SkillScoringEngine.getMasteryLabelUz(score),
-                                                  variant: isWeak ? AppBadgeVariant.rose : AppBadgeVariant.blue,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              skill.description,
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 11.5,
-                                                color: AppColors.textMuted,
+                                                  const SizedBox(width: 6),
+                                                  AppBadge(
+                                                    text: SkillScoringEngine.getMasteryLabelUz(score),
+                                                    variant: isWeak ? AppBadgeVariant.rose : AppBadgeVariant.blue,
+                                                  ),
+                                                ],
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                skill.description,
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontSize: 11.5,
+                                                  color: AppColors.textMuted,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '$score%',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                          color: progressColor,
+                                        Text(
+                                          '$score%',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                            color: progressColor,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: score / 100,
-                                      minHeight: 6,
-                                      backgroundColor: const Color(0xFFF1F5F9),
-                                      valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 10),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: LinearProgressIndicator(
+                                        value: score / 100,
+                                        minHeight: 7,
+                                        backgroundColor: const Color(0xFFF1F5F9),
+                                        valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );

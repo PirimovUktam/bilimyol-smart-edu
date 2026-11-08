@@ -155,13 +155,12 @@ describe('Production Gemini Edge Function & Lesson Generation Audit', () => {
       explanation: '2 × 4 + 3 = 11',
     };
 
-    const useCase = new SubmitLessonAnswerUseCase(tutorService, mockLearnerRepo as ILearnerRepository);
+    const useCase = new SubmitLessonAnswerUseCase(mockLearnerRepo as ILearnerRepository);
     
     // Correct Answer Submission
     const correctResult = await useCase.execute(
       interactiveQuestion,
       0, // selectedIndex 0 -> '11' (Correct)
-      'Alisher',
       'lesson_ai_12345'
     );
 
@@ -187,19 +186,25 @@ describe('Production Gemini Edge Function & Lesson Generation Audit', () => {
       explanation: '2 × 4 + 3 = 11',
     };
 
-    const useCase = new SubmitLessonAnswerUseCase(tutorService, mockLearnerRepo as ILearnerRepository);
+    const useCase = new SubmitLessonAnswerUseCase(mockLearnerRepo as ILearnerRepository);
     
     // Incorrect Answer Submission (index 1 -> '8')
     const mistakeResult = await useCase.execute(
       interactiveQuestion,
       1,
-      'Alisher',
       'lesson_ai_12345'
     );
 
     expect(mistakeResult.isCorrect).toBe(false);
-    expect(mistakeResult.aiExplanation).toBeDefined();
-    expect(mistakeResult.aiExplanation?.title).toBeDefined();
+    const diagnosis = await tutorService.explainMistake({
+      courseId: interactiveQuestion.courseId,
+      skillId: interactiveQuestion.skillId,
+      questionId: interactiveQuestion.id,
+      questionText: interactiveQuestion.text,
+      selectedOption: mistakeResult.selectedOption,
+      correctOption: mistakeResult.correctOption,
+    });
+    expect(diagnosis.title).toBeDefined();
 
     // Verify Skill Score after 2 correct out of 5 -> 40%
     const scoreAfterMistake = SkillScoringEngine.computeSkillScore(2, 5);

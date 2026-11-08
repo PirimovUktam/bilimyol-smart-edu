@@ -1,323 +1,379 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Map,
-  CheckCircle2,
-  Lock,
-  Play,
-  RotateCcw,
-  ArrowRight,
-  Clock,
-  Zap,
-  AlertTriangle,
-  Compass,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, BookOpen, Check, Clock, Compass, Lock, Play, Sparkles, Zap } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { resolveContinuationLessonId, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
+import { resolveNextLearningLesson, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
+import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepository';
+import type { LearningPathNode } from '@/domain/entities/LearningPathNode';
+import type { Question } from '@/domain/entities/Question';
+import { foundationLessons, hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
+import { ReinforcementModal } from '@/features/reinforcement/ReinforcementModal';
+import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
+import { PageHeader } from '@/presentation/components/PageHeader';
+import { Progress } from '@/presentation/components/Progress';
+import { SectionState } from '@/presentation/components/SectionState';
+
+const filters = { all: 'Barchasi', active: 'Ochiq bosqichlar', completed: 'Yakunlangan' } as const;
 
 interface RoadmapViewProps {
   onStartLesson: (lessonId: string) => void;
   onOpenKnowledgeMap: () => void;
+  onChooseCourse: () => void;
+  onConfigure: () => void;
 }
 
-export const RoadmapView: React.FC<RoadmapViewProps> = ({ onStartLesson, onOpenKnowledgeMap }) => {
-  const { activeCourse } = useCourseStore();
-  const { roadmap, loadRoadmap, selectNode, error } = useRoadmapStore();
-  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'completed'>('all');
+export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure }: RoadmapViewProps) {
+  const course = useCourseStore((state) => state.activeCourse);
+  const profile = useLearnerStore((state) => state.profile);
+  const roadmap = useRoadmapStore((state) => state.roadmap);
+  const error = useRoadmapStore((state) => state.error);
+  const [filter, setFilter] = useState<keyof typeof filters>('all');
+  const [practice, setPractice] = useState<Question | null>(null);
+  const [practiceLoading, setPracticeLoading] = useState<string | null>(null);
+  const [practiceError, setPracticeError] = useState('');
+  const courseId = course?.id;
 
   useEffect(() => {
-    if (activeCourse) {
-      loadRoadmap(activeCourse.id);
+    if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
+  }, [courseId]);
+
+  const path = roadmap?.courseId === courseId ? roadmap : null;
+  const nodes = path?.nodes ?? [];
+  const topics = nodes.filter((node) => !node.isReinforcement);
+  const completed = topics.filter((node) => node.status === 'completed').length;
+  const lesson = resolveNextLearningLesson(course, profile, path);
+  const foundation = pendingFoundationLesson(course, profile);
+  const foundationPath = course ? foundationLessons(course) : [];
+  const ready = Boolean(course && hasStartedCourse(course, profile));
+  const foundationCompleted = foundationPath.filter((id) => profile?.completedLessonIds.includes(id)).length;
+  const shown = nodes.filter((node) => filter === 'all' || (filter === 'active'
+    ? node.status !== 'locked' && node.status !== 'completed' : node.status === 'completed'));
+
+  const loadPractice = async (node: LearningPathNode) => {
+    setPracticeLoading(node.id);
+    setPracticeError('');
+    try {
+      const baseNode = topics.find((topic) => topic.skillId === node.skillId);
+      const linked = baseNode?.targetLessonId
+        ? await supabaseLessonRepository.getLessonById(baseNode.targetLessonId)
+        : await supabaseLessonRepository.getLessonByCourseAndSkill(node.courseId, node.skillId);
+      if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId) {
+        throw new Error('Bu mavzuga mos mashq topilmadi.');
+      }
+      setPractice(linked.reinforcementExercise);
+    } catch {
+      setPracticeError('Mustahkamlash mashqi yuklanmadi. Qayta urinib ko‘ring.');
+    } finally {
+      setPracticeLoading(null);
     }
-  }, [activeCourse, loadRoadmap]);
-
-  if (error) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-7 text-center border-coral/25 bg-rose-50/50 space-y-4">
-          <AlertTriangle className="w-10 h-10 text-coral mx-auto" />
-          <div>
-            <h2 className="text-lg font-black text-slate-900">Ta’lim yo‘li yuklanmadi</h2>
-            <p role="alert" className="text-sm text-slate-600 mt-1">{error}</p>
-          </div>
-          {activeCourse && (
-            <Button variant="primary" onClick={() => void loadRoadmap(activeCourse.id)}>
-              Qayta urinish
-            </Button>
-          )}
-        </Card>
-      </div>
-    );
-  }
-
-  if (!roadmap || !activeCourse || roadmap.courseId !== activeCourse.id) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Course-scoped fallback only: never falls back to another course's lesson.
-  const courseScopedLessonId = resolveContinuationLessonId(activeCourse, roadmap);
-
-  // Filter nodes based on selected filter tab
-  const filteredNodes = roadmap.nodes.filter((node) => {
-    if (filterTab === 'active') return node.status === 'available' || node.status === 'reinforcement';
-    if (filterTab === 'completed') return node.status === 'completed';
-    return true;
-  });
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-7">
-      {/* 1. Header with View Toggle Pill */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="editorial-kicker">
-              Ta’lim Yo‘li // Shaxsiy marshrut
-            </span>
-            <span className="font-mono text-xs font-bold text-slate-700 bg-white border border-[#e4ddce] px-2.5 py-0.5 rounded">
-              {activeCourse.title}
-            </span>
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Mening Ta’lim Yo‘lim
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-            Bilim darajangizga moslashtirilgan individual bosqichlar xaritasi
-          </p>
-        </div>
-
-        {/* View Switcher Toggle Pill */}
-        <div className="flex items-center bg-white p-1 rounded-xl border border-[#e4ddce] self-start sm:self-auto shadow-2xs">
-          <button
-            onClick={onOpenKnowledgeMap}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-[#f5efe4] transition-all cursor-pointer"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span>Bilim xaritasi</span>
-          </button>
-          <button
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#10151f] text-white shadow-2xs transition-all cursor-default"
-          >
-            <Map className="w-3.5 h-3.5 text-path" />
-            <span>Roadmap</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Filter Pills */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setFilterTab('all')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            filterTab === 'all'
-              ? 'bg-[#10151f] text-white shadow-xs'
-              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
-          }`}
-        >
-          Barchasi ({roadmap.nodes.length})
-        </button>
-        <button
-          onClick={() => setFilterTab('active')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            filterTab === 'active'
-              ? 'bg-[#10151f] text-white shadow-xs'
-              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
-          }`}
-        >
-          Faol bosqichlar
-        </button>
-        <button
-          onClick={() => setFilterTab('completed')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            filterTab === 'completed'
-              ? 'bg-[#10151f] text-white shadow-xs'
-              : 'bg-white text-slate-700 border border-[#e4ddce] hover:bg-[#f5efe4]'
-          }`}
-        >
-          Tugallangan
-        </button>
-      </div>
-
-      {/* 3. Node-based Gamified Learning Map — journey track */}
-      <div className="relative pl-6 sm:pl-10 space-y-6 before:absolute before:left-[22px] sm:before:left-[38px] before:top-6 before:bottom-6 before:w-1 before:bg-[#e4ddce] before:rounded-full before:content-['']">
-        {filteredNodes.map((node, index) => {
-          const isCompleted = node.status === 'completed';
-          const isReinforcement = node.isReinforcement || node.status === 'reinforcement';
-          const isAvailable = node.status === 'available' || node.status === 'reinforcement';
-          const targetLesson = resolveRoadmapNodeLessonId(node, courseScopedLessonId);
-
-          return (
-            <motion.div
-              key={node.id}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.25, delay: index * 0.05 }}
-              className="relative"
+    <div className="learning-page space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow={course?.title ?? 'O‘quv reja'}
+        title="Mening ta’lim yo‘lim"
+        highlightWord="ta’lim yo‘lim"
+        description="Mavzular bog‘liqligini ko‘ring va navbatdagi bosqichni boshlang."
+        action={
+          ready && (
+            <Button
+              variant="outline"
+              leftIcon={<Compass aria-hidden="true" className="size-4 text-brand" />}
+              onClick={onOpenKnowledgeMap}
             >
-              {/* Node Icon on Connecting Track */}
-              <div
-                className={`absolute -left-[22px] sm:-left-[38px] top-6 -translate-x-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center z-10 transition-transform ${
-                  isCompleted
-                    ? 'bg-mint text-white shadow-sm ring-4 ring-mint/10'
-                    : isReinforcement
-                    ? 'bg-coral text-white shadow-sm ring-4 ring-coral/10 lab-pulse'
-                    : isAvailable
-                    ? 'bg-[#10151f] text-path shadow-md ring-4 ring-slate-200'
-                    : 'bg-[#f5efe4] text-slate-400 border border-[#e4ddce] ring-4 ring-[#fbf9f4]'
-                }`}
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : isReinforcement ? (
-                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : isAvailable ? (
-                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-path translate-x-0.5" />
-                ) : (
-                  <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                )}
-              </div>
+              Bilim xaritasi
+            </Button>
+          )
+        }
+      />
 
-              {/* Node Content Card */}
-              <div
-                className={`rounded-2xl p-5 sm:p-6 transition-all ${
-                  isReinforcement
-                    ? 'border-2 border-coral/30 bg-[#fff8f8] shadow-sm'
-                    : isAvailable
-                    ? 'border-2 border-[#10151f] bg-white shadow-md'
-                    : isCompleted
-                    ? 'border border-mint/25 bg-white shadow-2xs'
-                    : 'border border-[#e4ddce] bg-[#fbf9f4] opacity-75'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1.5 max-w-xl">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        {index + 1}-Bosqich
-                      </span>
-                      {isReinforcement && (
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-coral/10 text-coral border border-coral/25">
-                          Mustahkamlash
-                        </span>
-                      )}
-                      {isCompleted && (
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-mint/10 text-mint border border-mint/25">
-                          Tugallangan
-                        </span>
-                      )}
-                      {isAvailable && !isReinforcement && (
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-brand/8 text-brand-dark border border-brand/25">
-                          Hozirgi Bosqich
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-display text-lg font-bold text-slate-900">
-                      {node.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                      {node.description}
-                    </p>
-
-                    <div className="flex items-center gap-4 pt-2 font-mono text-xs text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        {node.estimatedMinutes || 15} daqiqa
-                      </span>
-                      <span className="flex items-center gap-1 text-amber-700 font-bold">
-                        <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        XP mukofoti
-                      </span>
-                      {node.score !== undefined && (
-                        <span className="text-brand font-bold">
-                          O‘zlashtirish: {node.score}%
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Action CTA */}
-                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                    {isCompleted ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!targetLesson}
-                        onClick={() => {
-                          if (!targetLesson) return;
-                          selectNode(node);
-                          onStartLesson(targetLesson);
-                        }}
-                        leftIcon={<RotateCcw className="w-3.5 h-3.5 text-slate-500" />}
-                      >
-                        {targetLesson ? 'Qayta ko‘rish' : 'Ko‘rib chiqish mavjud emas'}
-                      </Button>
-                    ) : isAvailable ? (
-                      <button
-                        onClick={() => {
-                          if (!targetLesson) return;
-                          selectNode(node);
-                          onStartLesson(targetLesson);
-                        }}
-                        className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm flex items-center gap-2 transition-all cursor-pointer ${
-                          isReinforcement
-                            ? 'bg-coral hover:bg-coral text-white shadow-rose-600/20'
-                            : 'bg-[#10151f] hover:bg-[#2a3342] text-white'
-                        }`}
-                      >
-                        <span>{isReinforcement ? 'Mustahkamlashni boshlash' : 'Darsni boshlash'}</span>
-                        <ArrowRight className="w-4 h-4 text-path" />
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f5efe4] border border-[#e4ddce] text-slate-400 font-mono text-xs font-bold">
-                        <Lock className="w-3.5 h-3.5" />
-                        <span>Qulflangan</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Floating Bottom Card: Continue Learning */}
-      <div className="editorial-ink-hero p-6 sm:p-7 rounded-2xl border border-white/10 text-white shadow-xl">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <YolchiAIMascot size="sm" mood="happy" />
+      {!course ? (
+        <Card className="space-y-4">
+          <SectionState title="Avval fanni tanlang" />
+          <Button onClick={onChooseCourse}>Fanlar katalogi</Button>
+        </Card>
+      ) : !ready ? (
+        <Card className="space-y-4">
+          <span className="highlight">Boshlang‘ich sozlama</span>
+          <h2 className="heading text-xl font-extrabold">Qayerdan boshlaysiz?</h2>
+          <p className="text-sm text-slatefine">Fan bo‘yicha darajangizni tanlaganingizdan keyin mos reja ochiladi.</p>
+          <Button onClick={onConfigure}>O‘rganishni boshlash</Button>
+        </Card>
+      ) : foundation ? (
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <section className="min-w-0 space-y-4" aria-labelledby="foundation-title">
             <div>
-              <h4 className="font-display text-base font-bold text-white">
-                Siz hozir yaxshi sur’atdasiz!
-              </h4>
-              <p className="text-xs text-slate-300 font-medium">
-                Ketma-ketlikni saqlab qoling va darsni yakunlang.
-              </p>
+              <span className="highlight mb-2">Asosiy poydevor</span>
+              <h2 id="foundation-title" className="heading text-2xl font-extrabold">
+                Boshlang‘ich <span className="heading-accent">darslar</span>
+              </h2>
             </div>
+            <ol className="learning-timeline">
+              {foundationPath.map((id, index) => {
+                const done = profile?.completedLessonIds.includes(id) ?? false;
+                const current = id === foundation;
+                return (
+                  <li key={id} aria-current={current ? 'step' : undefined} style={{ animationDelay: `${index * 80}ms` }} className="fade-up">
+                    <span className={'timeline-marker ' + (current ? 'timeline-current' : done ? 'bg-emerald-500! text-white! border-emerald-500!' : '')}>
+                      {done ? <Check aria-hidden="true" className="size-4" /> : index + 1}
+                    </span>
+                    <Card
+                      className={'edtech-card-hover flex min-w-0 flex-wrap items-center justify-between gap-4 ' + (current ? 'ring-2 ring-brand/30 border-brand!' : '')}
+                      padding="sm"
+                    >
+                      <div className="space-y-1">
+                        <Badge variant={done ? 'emerald' : current ? 'indigo' : 'slate'} size="sm">
+                          {done ? 'Tugallangan' : current ? 'Navbatdagi darsingiz' : 'Keyingi bosqich'}
+                        </Badge>
+                        <h3 className="heading text-base font-extrabold">{index + 1}-boshlang‘ich dars</h3>
+                      </div>
+                      {(current || done) && (
+                        <Button variant={current ? 'primary' : 'outline'} size="sm" onClick={() => onStartLesson(id)}>
+                          {current ? 'Boshlang‘ich darsni ochish' : 'Qayta ko‘rish'}
+                        </Button>
+                      )}
+                    </Card>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+          <Card className="fade-up stagger-2 space-y-3" padding="md">
+            <span className="highlight">Progress</span>
+            <h2 className="heading text-lg font-extrabold">Yo‘ldagi natijangiz</h2>
+            <p className="text-sm text-slatefine">
+              {foundationCompleted} / {foundationPath.length} dars tugallangan
+            </p>
+            <Progress value={(100 * foundationCompleted) / foundationPath.length} tone="emerald" ariaLabel="Boshlang‘ich darslar bajarilishi" />
+          </Card>
+        </div>
+      ) : error && !path ? (
+        <SectionState
+          kind="error"
+          title="Ta’lim yo‘li yuklanmadi"
+          description={error}
+          onRetry={() => void useRoadmapStore.getState().loadRoadmap(course.id)}
+        />
+      ) : !path ? (
+        <SectionState kind="loading" title="Ta’lim yo‘li yuklanmoqda…" />
+      ) : (
+        <>
+          <section className="learning-hero fade-up stagger-1 grid items-center gap-5 rounded-3xl p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-8">
+            <div className="min-w-0 space-y-2.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
+                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
+                O‘quv rejangiz
+              </span>
+              <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
+                {completed} / {topics.length} mavzu yakunlangan
+              </h2>
+              {topics.length > 0 && (
+                <Progress
+                  value={(100 * completed) / topics.length}
+                  tone="cyan"
+                  size="sm"
+                  className="max-w-sm"
+                  ariaLabel="Yo‘l bosqichlari bajarilishi"
+                />
+              )}
+            </div>
+            {lesson && (
+              <Button
+                variant="outline"
+                className="w-fit border-white bg-white text-brand hover:bg-indigo-50"
+                onClick={() => onStartLesson(lesson)}
+                rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
+              >
+                Davom etish
+              </Button>
+            )}
+          </section>
+
+          <div role="group" aria-label="Bosqichlarni filtrlash" className="fade-up stagger-2 flex flex-wrap gap-2">
+            {(Object.keys(filters) as (keyof typeof filters)[]).map((key) => (
+              <Button
+                key={key}
+                variant={filter === key ? 'primary' : 'outline'}
+                aria-pressed={filter === key}
+                size="sm"
+                onClick={() => setFilter(key)}
+              >
+                {filters[key]}
+              </Button>
+            ))}
           </div>
 
-          <Button
-            variant="primary"
-            size="md"
-            disabled={!courseScopedLessonId}
-            onClick={() => {
-              if (courseScopedLessonId) onStartLesson(courseScopedLessonId);
-            }}
-            rightIcon={<ArrowRight className="w-4 h-4 text-path" />}
-            className="w-full sm:w-auto font-bold bg-white text-slate-950 hover:bg-slate-100 shadow-md"
-          >
-            {courseScopedLessonId ? 'Davom etish' : 'Dars mavjud emas'}
-          </Button>
-        </div>
-      </div>
+          {practiceError && (
+            <p role="alert" className="rounded-2xl border border-coral/20 bg-rose-50 p-3.5 text-sm text-coral">
+              {practiceError}
+            </p>
+          )}
+          {shown.length === 0 && (
+            <SectionState title={nodes.length ? 'Bu bo‘limda bosqichlar yo‘q' : 'Bu fan uchun ta’lim yo‘li hali tuzilmagan'} />
+          )}
+
+          <ol className="learning-timeline">
+            {shown.map((node, index) => {
+              const locked = node.status === 'locked';
+              const done = node.status === 'completed';
+              const isActive = node.id === path.activeNodeId;
+              const target = resolveRoadmapNodeLessonId(node);
+              const Icon = locked ? Lock : done ? Check : node.isReinforcement ? Sparkles : BookOpen;
+              const prerequisites = node.prerequisites.flatMap((id) => {
+                const previous = nodes.find((item) => item.id === id);
+                return previous ? [previous.title] : [];
+              });
+
+              const iconBoxTone = done
+                ? 'bg-emerald-50 text-mint'
+                : locked
+                ? 'bg-slate-100 text-slatefine'
+                : node.isReinforcement
+                ? 'bg-amber-50 text-amber-600'
+                : 'bg-indigo-50 text-brand';
+
+              return (
+                <li
+                  key={node.id}
+                  aria-current={isActive ? 'step' : undefined}
+                  style={{ animationDelay: `${index * 80}ms` }}
+                  className="fade-up"
+                >
+                  <span
+                    className={
+                      'timeline-marker ' +
+                      (isActive
+                        ? 'timeline-current'
+                        : done
+                        ? 'bg-emerald-500! text-white! border-emerald-500!'
+                        : '')
+                    }
+                  >
+                    <Icon aria-hidden="true" className="size-4" />
+                  </span>
+                  <Card
+                    className={
+                      'edtech-card-hover flex min-w-0 flex-col justify-between gap-4 ' +
+                      (isActive ? 'ring-2 ring-brand/30 border-brand!' : '')
+                    }
+                    padding="md"
+                  >
+                    {/* (a) Top: Icon Container + Status Badge */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${iconBoxTone}`}>
+                          <Icon aria-hidden="true" className="size-5" />
+                        </span>
+                        <Badge
+                          variant={done ? 'emerald' : locked ? 'slate' : node.isReinforcement ? 'amber' : 'indigo'}
+                          size="sm"
+                        >
+                          {done
+                            ? 'Yakunlangan'
+                            : locked
+                            ? 'Qulflangan'
+                            : node.isReinforcement
+                            ? 'Mustahkamlash'
+                            : isActive
+                            ? 'Keyingi qadam'
+                            : 'Ochiq'}
+                        </Badge>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-slatefine">0{index + 1}</span>
+                    </div>
+
+                    {/* (b) Middle: Title, Description & Progress */}
+                    <div className="min-w-0 space-y-2">
+                      <h3 className="heading break-words text-lg font-extrabold">{node.title}</h3>
+                      {node.description && (
+                        <p className="line-clamp-2 text-sm leading-relaxed text-slatefine">{node.description}</p>
+                      )}
+                      {node.score != null && (
+                        <div className="max-w-md pt-1">
+                          <Progress
+                            value={node.score}
+                            size="sm"
+                            tone={node.score >= 80 ? 'emerald' : 'indigo'}
+                            ariaLabel={`${node.title} o‘zlashtirish`}
+                          />
+                        </div>
+                      )}
+                      {locked && prerequisites.length > 0 && (
+                        <p className="text-xs font-medium text-slatefine">Avval yakunlang · {prerequisites.join(', ')}</p>
+                      )}
+                    </div>
+
+                    {/* (c) Bottom: Meta Data & Action Button */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slatefine">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock aria-hidden="true" className="size-3.5 text-brand" />
+                          {node.estimatedMinutes} daqiqa
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-amber-600">
+                          <Zap aria-hidden="true" className="size-3.5" />
+                          +20 XP
+                        </span>
+                        {node.score != null && <span>O‘zlashtirish · {node.score}%</span>}
+                      </p>
+
+                      {!locked && (
+                        <div>
+                          {node.isReinforcement && !done ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              isLoading={practiceLoading === node.id}
+                              disabled={practiceLoading !== null}
+                              onClick={() => void loadPractice(node)}
+                            >
+                              Mashqni boshlash
+                            </Button>
+                          ) : target ? (
+                            <Button
+                              size="sm"
+                              variant={done ? 'outline' : 'primary'}
+                              onClick={() => {
+                                useRoadmapStore.getState().selectNode(node);
+                                onStartLesson(target);
+                              }}
+                              leftIcon={<Play aria-hidden="true" className="size-4" />}
+                            >
+                              {done ? 'Qayta ko‘rish' : 'Darsni boshlash'}
+                            </Button>
+                          ) : (
+                            !done && <p className="text-xs text-slatefine">Bu mavzu uchun dars mavjud emas.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
+      {practice && (
+        <ReinforcementModal
+          isOpen
+          question={practice}
+          courseId={practice.courseId}
+          skillId={practice.skillId}
+          onClose={() => setPractice(null)}
+          onSuccess={() => {
+            setPractice(null);
+            void useLearnerStore
+              .getState()
+              .loadProfile()
+              .catch(() => setPracticeError('Natija saqlandi. Profilni qayta yuklang.'));
+          }}
+        />
+      )}
     </div>
   );
-};
+}

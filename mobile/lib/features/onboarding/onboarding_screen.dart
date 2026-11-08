@@ -1,377 +1,304 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/providers.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
-import '../../core/widgets/app_badge.dart';
-import '../../app/providers.dart';
+import '../../core/widgets/edtech_reveal.dart';
+import '../../core/widgets/friendly_error_state.dart';
+import '../../domain/entities/course.dart';
+import '../../domain/personalization/learning_start.dart';
 import '../../domain/entities/learner_profile.dart';
 
-class OnboardingScreen extends ConsumerStatefulWidget {
+class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
   @override
-  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  int _currentStep = 0;
-  OnboardingGoal _selectedGoal = OnboardingGoal.mastery;
-  int _selectedMinutes = 15;
-  InitialLevel _selectedLevel = InitialLevel.intermediate;
-
-  final List<Map<String, dynamic>> _goals = [
-    {
-      'goal': OnboardingGoal.mastery,
-      'title': 'Mavzuni to‘liq tushunish',
-      'subtitle': 'Bo‘shliqlarni aniqlash va fundamental bilim hosil qilish',
-      'icon': Icons.psychology_rounded,
-    },
-    {
-      'goal': OnboardingGoal.examPrep,
-      'title': 'Imtihonga tayyorlanish',
-      'subtitle': 'DTM va milliy sertifikat formatidagi masalalarni yechish',
-      'icon': Icons.military_tech_rounded,
-    },
-    {
-      'goal': OnboardingGoal.skillsBoost,
-      'title': 'Bilim darajasini oshirish',
-      'subtitle': 'Qisqa kunlik darslar orqali ko‘nikmalarni rivojlantirish',
-      'icon': Icons.trending_up_rounded,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _timeOptions = [
-    {
-      'minutes': 15,
-      'title': '15 daqiqa / kun',
-      'badge': 'Tavsiya etiladi',
-      'subtitle': 'Tezkor va samarali mikro-darslar',
-    },
-    {
-      'minutes': 30,
-      'title': '30 daqiqa / kun',
-      'badge': 'Standart',
-      'subtitle': 'Chuqurlashtirilgan o‘rganish',
-    },
-    {
-      'minutes': 60,
-      'title': '60 daqiqa / kun',
-      'badge': 'Intensiv',
-      'subtitle': 'Maksimal tezlikda natijaga erishish',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _levels = [
-    {
-      'level': InitialLevel.beginner,
-      'title': 'Boshlang‘ich',
-      'subtitle': 'Asosiy tushunchalarni yangitdan o‘rganish kerak',
-    },
-    {
-      'level': InitialLevel.intermediate,
-      'title': 'O‘rta',
-      'subtitle': 'Asoslar ma’lum, murakkab masalalarda yordam kerak',
-    },
-    {
-      'level': InitialLevel.advanced,
-      'title': 'Yuqori',
-      'subtitle': 'Olimpiada va murakkab darajaga tayyorlanish',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final courseState = ref.watch(courseStateNotifierProvider);
-    final activeCourse = courseState.activeCourse;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final courses = ref.watch(courseStateNotifierProvider);
+    final learner = ref.watch(learnerStateNotifierProvider);
+    final course = courses.activeCourse;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('O‘quv Rejasini Sozlash'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () {
-            if (_currentStep > 0) {
-              setState(() => _currentStep--);
-            } else {
-              context.pop();
+      appBar: AppBar(title: const Text('O‘rganish rejasi')),
+      body: SafeArea(
+        child: learner.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => FriendlyErrorState(
+            message: 'Profilni yuklab bo‘lmadi.',
+            onRetry: () =>
+                ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
+          ),
+          data: (profile) {
+            if (courses.isLoading) {
+              return const Center(child: CircularProgressIndicator());
             }
+            if (course == null) {
+              return Center(
+                child: AppButton(
+                  text: 'Fan tanlash',
+                  onPressed: () => context.go('/courses'),
+                ),
+              );
+            }
+            return _LearningPlanForm(
+              key: ValueKey(course.id),
+              course: course,
+              profile: profile,
+            );
           },
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Step indicator
-              Row(
-                children: List.generate(3, (index) {
-                  final isActive = index <= _currentStep;
-                  return Expanded(
-                    child: Container(
-                      height: 4,
-                      margin: EdgeInsets.only(right: index < 2 ? 6 : 0),
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.primary : AppColors.cardBorder,
-                        borderRadius: BorderRadius.circular(2),
+    );
+  }
+}
+
+const _levelChoices = [
+  (
+    InitialLevel.beginner,
+    'Noldan boshlayman',
+    'O‘zbekcha izoh va ishlangan misoldan boshlang.',
+  ),
+  (
+    InitialLevel.intermediate,
+    'Asoslarini bilaman',
+    'Mavzularni o‘rganing yoki darajangizni tekshiring.',
+  ),
+  (
+    InitialLevel.advanced,
+    'Mustahkam bilimim bor',
+    'Ta’lim rejasini oching yoki ixtiyoriy diagnostikani tanlang.',
+  ),
+];
+
+const _goals = {
+  OnboardingGoal.mastery: 'Asosiy mavzularni o‘rganish',
+  OnboardingGoal.examPrep: 'Imtihonga tayyorlanish',
+  OnboardingGoal.skillsBoost: 'Amaliy ko‘nikmalarni rivojlantirish',
+};
+
+class _LearningPlanForm extends ConsumerStatefulWidget {
+  const _LearningPlanForm({
+    super.key,
+    required this.course,
+    required this.profile,
+  });
+
+  final Course course;
+  final LearnerProfile profile;
+
+  @override
+  ConsumerState<_LearningPlanForm> createState() => _LearningPlanFormState();
+}
+
+class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
+  late InitialLevel? _level = widget.profile.courseLevels[widget.course.id];
+  late OnboardingGoal _goal = widget.profile.goal;
+  late int _minutes = [15, 30, 60].contains(widget.profile.dailyMinutes)
+      ? widget.profile.dailyMinutes
+      : 15;
+  bool _saving = false;
+  String? _error;
+
+  Future<void> _start({bool diagnostic = false}) async {
+    final level = _level;
+    if (_saving || level == null) return;
+    final course = widget.course;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(learnerStateNotifierProvider.notifier)
+          .updateOnboarding(
+            courseId: course.id,
+            goal: _goal,
+            dailyMinutes: _minutes,
+            initialLevel: level,
+          );
+      if (!mounted ||
+          ref.read(courseStateNotifierProvider).activeCourse?.id != course.id) {
+        return;
+      }
+      if (diagnostic && level != InitialLevel.beginner) {
+        context.pushReplacement('/placement');
+        return;
+      }
+
+      final starter = pendingFoundationLesson(course, ref.read(learnerStateNotifierProvider).valueOrNull);
+      if (level == InitialLevel.beginner && starter != null) {
+        await ref
+            .read(lessonSessionNotifierProvider.notifier)
+            .startLesson(starter);
+        if (!mounted ||
+            ref.read(courseStateNotifierProvider).activeCourse?.id !=
+                course.id) {
+          return;
+        }
+        if (ref.read(lessonSessionNotifierProvider).lesson?.id != starter) {
+          setState(
+            () => _error =
+                'Birinchi darsni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+          );
+          return;
+        }
+        context.pushReplacement('/lesson');
+      } else {
+        context.pushReplacement('/roadmap');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+    final hasStarter = widget.course.starterLessonId != null;
+    final beginner = _level == InitialLevel.beginner;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            EdTechReveal(
+              index: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      widget.course.title,
+                      style: theme.labelLarge?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  );
-                }),
+                  ),
+                  const SizedBox(height: 10),
+                  Text('Qayerdan boshlamoqchisiz?', style: theme.headlineSmall),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Bu fan uchun darajangizni tanlang. Uni keyin ham o‘zgartirishingiz mumkin.',
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-
-              // Title and Header
-              if (_currentStep == 0) ...[
-                const AppBadge(text: '1-qadam / 3: Asosiy Maqsad', variant: AppBadgeVariant.blue),
-                const SizedBox(height: 8),
-                Text(
-                  '${activeCourse?.title ?? "Kurs"} bo‘yicha asosiy maqsadingiz nima?',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+            ),
+            const SizedBox(height: 16),
+            for (final (idx, (level, title, detail))
+                in _levelChoices.indexed) ...[
+              EdTechReveal(
+                index: idx + 1,
+                child: AppCard(
+                  padding: EdgeInsets.zero,
+                  borderColor: _level == level
+                      ? AppColors.primary
+                      : AppColors.cardBorder,
+                  borderWidth: _level == level ? 1.6 : 1.0,
+                  backgroundColor: _level == level
+                      ? AppColors.primaryLight.withValues(alpha: 0.5)
+                      : AppColors.surface,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: ListTile(
+                      title: Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: Text(detail),
+                      leading: Icon(
+                        _level == level
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: _level == level
+                            ? AppColors.primary
+                            : AppColors.textMuted,
+                      ),
+                      selected: _level == level,
+                      onTap: _saving
+                          ? null
+                          : () => setState(() => _level = level),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _goals.length,
-                    itemBuilder: (context, idx) {
-                      final item = _goals[idx];
-                      final isSelected = _selectedGoal == item['goal'];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: AppCard(
-                          borderColor: isSelected ? AppColors.primary : AppColors.cardBorder,
-                          borderWidth: isSelected ? 2 : 1.2,
-                          backgroundColor: isSelected ? AppColors.primaryLight.withValues(alpha: 0.5) : AppColors.surface,
-                          onTap: () {
-                            setState(() => _selectedGoal = item['goal']);
-                          },
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primaryLight : const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  item['icon'] as IconData,
-                                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item['title'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      item['subtitle'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ] else if (_currentStep == 1) ...[
-                const AppBadge(text: '2-qadam / 3: Kunlik Vaqt', variant: AppBadgeVariant.teal),
-                const SizedBox(height: 8),
-                Text(
-                  'Kuniga qancha vaqt ajrata olasiz?',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _timeOptions.length,
-                    itemBuilder: (context, idx) {
-                      final item = _timeOptions[idx];
-                      final isSelected = _selectedMinutes == item['minutes'];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: AppCard(
-                          borderColor: isSelected ? AppColors.secondary : AppColors.cardBorder,
-                          borderWidth: isSelected ? 2 : 1.2,
-                          backgroundColor: isSelected ? AppColors.secondaryLight.withValues(alpha: 0.5) : AppColors.surface,
-                          onTap: () {
-                            setState(() => _selectedMinutes = item['minutes']);
-                          },
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          item['title'],
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        AppBadge(
-                                          text: item['badge'],
-                                          variant: isSelected ? AppBadgeVariant.teal : AppBadgeVariant.slate,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item['subtitle'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                color: isSelected ? AppColors.secondary : AppColors.cardBorder,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ] else ...[
-                const AppBadge(text: '3-qadam / 3: O‘z-o‘zini baholash', variant: AppBadgeVariant.amber),
-                const SizedBox(height: 8),
-                Text(
-                  'O‘z darajangizni qanday baholaysiz?',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Eslatma: Aniq ko‘nikma ballari keyingi Placement Test orqali hisoblanadi.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _levels.length,
-                    itemBuilder: (context, idx) {
-                      final item = _levels[idx];
-                      final isSelected = _selectedLevel == item['level'];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: AppCard(
-                          borderColor: isSelected ? AppColors.primary : AppColors.cardBorder,
-                          borderWidth: isSelected ? 2 : 1.2,
-                          backgroundColor: isSelected ? AppColors.primaryLight.withValues(alpha: 0.5) : AppColors.surface,
-                          onTap: () {
-                            setState(() => _selectedLevel = item['level']);
-                          },
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item['title'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item['subtitle'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                color: isSelected ? AppColors.primary : AppColors.cardBorder,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-
-              // Next / Continue button
-              AppButton(
-                text: _currentStep < 2 ? 'Keyingi qadam' : 'Placement Testga O‘tish',
-                isFullWidth: true,
-                size: AppButtonSize.large,
-                rightIcon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
-                onPressed: () async {
-                  if (_currentStep < 2) {
-                    setState(() => _currentStep++);
-                  } else {
-                    await ref.read(learnerStateNotifierProvider.notifier).updateOnboarding(
-                          goal: _selectedGoal,
-                          dailyMinutes: _selectedMinutes,
-                          initialLevel: _selectedLevel,
-                        );
-                    if (context.mounted) {
-                      context.push('/placement');
-                    }
-                  }
-                },
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
             ],
-          ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<OnboardingGoal>(
+              initialValue: _goal,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Maqsad'),
+              items: [
+                for (final entry in _goals.entries)
+                  DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                  ),
+              ],
+              onChanged: _saving
+                  ? null
+                  : (value) => setState(() => _goal = value ?? _goal),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              initialValue: _minutes,
+              decoration: const InputDecoration(labelText: 'Kunlik vaqt'),
+              items: [
+                for (final time in [15, 30, 60])
+                  DropdownMenuItem(value: time, child: Text('$time daqiqa')),
+              ],
+              onChanged: _saving
+                  ? null
+                  : (value) => setState(() => _minutes = value ?? _minutes),
+            ),
+            const SizedBox(height: 16),
+            if (_error case final message?)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    message,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+            AppButton(
+              text: beginner && hasStarter
+                  ? 'Birinchi darsni boshlash'
+                  : 'Ta’lim yo‘lini ochish',
+              isLoading: _saving,
+              onPressed: _level == null ? null : _start,
+            ),
+            if (_level != null && !beginner) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                text: 'Ixtiyoriy diagnostika',
+                variant: AppButtonVariant.outline,
+                onPressed: _saving ? null : () => _start(diagnostic: true),
+              ),
+            ],
+          ],
         ),
       ),
     );

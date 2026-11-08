@@ -1,5 +1,15 @@
 import '../entities/learner_profile.dart';
+import '../entities/placement_session.dart';
 import '../entities/skill_score.dart';
+
+enum LearnerProfileField {
+  name,
+  selectedCourse,
+  goal,
+  dailyMinutes,
+  initialLevel,
+  courseLevels,
+}
 
 class AnswerAttemptRecord {
   final String id;
@@ -100,11 +110,49 @@ abstract class ILearnerRepository {
   /// server RPCs. Demo repositories may still maintain roadmap state locally.
   bool get supportsNodeCompletion => true;
   bool get supportsServerPlacementPersistence => false;
+  bool get supportsPlacementSessions => false;
   bool get supportsServerReinforcementPersistence => false;
+
+  Future<PlacementSession> advancePlacement(
+    String courseId, {
+    String? sessionId,
+    String? questionId,
+    int? selectedIndex,
+    bool restart = false,
+  }) async => throw UnsupportedError('Placement sessions require a server.');
 
   Future<LearnerProfile> getProfile();
   Future<LearnerProfile> getCurrentProfile();
-  Future<LearnerProfile> updateProfile(LearnerProfile updated);
+  Future<LearnerProfile> updateProfile(
+    LearnerProfile updated, {
+    Set<LearnerProfileField>? fields,
+  });
+  Future<LearnerProfile> saveCourseLearningPlan({
+    required String courseId,
+    required OnboardingGoal goal,
+    required int dailyMinutes,
+    required InitialLevel initialLevel,
+  }) async {
+    final current = await getProfile();
+    if (current.selectedCourseId != courseId) {
+      throw StateError('Joriy fan o‘zgargan. Fanni qayta tanlang.');
+    }
+    return updateProfile(
+      current.copyWith(
+        goal: goal,
+        dailyMinutes: dailyMinutes,
+        initialLevel: initialLevel,
+        courseLevels: {...current.courseLevels, courseId: initialLevel},
+      ),
+      fields: {
+        LearnerProfileField.goal,
+        LearnerProfileField.dailyMinutes,
+        LearnerProfileField.initialLevel,
+        LearnerProfileField.courseLevels,
+      },
+    );
+  }
+
   Future<void> saveSkillScores(String courseId, Map<String, SkillScore> scores);
   Future<String> savePlacementAttempt(PlacementAttemptData data);
   Future<PlacementAnswerEvaluation> evaluatePlacementAnswer({
@@ -114,6 +162,7 @@ abstract class ILearnerRepository {
   });
   Future<void> markLessonCompleted(String lessonId, {String? courseId});
   Future<void> markNodeCompleted(String nodeId, {String? courseId});
+
   /// Returns authoritative persisted values online, or null for demo scoring.
   Future<ReinforcementCompletionResult?> markReinforcementCompleted({
     required String reinforcementId,

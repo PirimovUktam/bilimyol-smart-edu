@@ -6,11 +6,7 @@ class BilimYolLogo extends StatelessWidget {
   final double size;
   final bool showSubtitle;
 
-  const BilimYolLogo({
-    super.key,
-    this.size = 36,
-    this.showSubtitle = true,
-  });
+  const BilimYolLogo({super.key, this.size = 36, this.showSubtitle = true});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +20,11 @@ class BilimYolLogo extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(size * 0.35),
             gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.accent, AppColors.secondary],
+              colors: [
+                AppColors.primary,
+                AppColors.accent,
+                AppColors.secondary,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -45,57 +45,66 @@ class BilimYolLogo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: size * 0.48,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                    children: const [
-                      TextSpan(text: 'Bilim'),
-                      TextSpan(
-                        text: 'Yo‘l',
-                        style: TextStyle(color: AppColors.primary),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Wrap(
+                spacing: 6,
+                runSpacing: 3,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: size * 0.48,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    'SMART EDU',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: size * 0.22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                      children: const [
+                        TextSpan(text: 'Bilim'),
+                        TextSpan(
+                          text: 'Yo‘l',
+                          style: TextStyle(color: AppColors.primary),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            if (showSubtitle)
-              Text(
-                'Moslashuvchan Ta\'lim Platformasi',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: size * 0.26,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      'SMART EDU',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: size * 0.22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-          ],
+              if (showSubtitle)
+                Text(
+                  'Moslashuvchan ta’lim platformasi',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: size * 0.26,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

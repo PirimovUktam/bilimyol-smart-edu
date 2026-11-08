@@ -30,7 +30,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
   beforeEach(() => {
     learnerRepo = new InMemoryLearnerRepository();
     aiService = new DemoAITutorService();
-    useCase = new SubmitLessonAnswerUseCase(aiService, learnerRepo);
+    useCase = new SubmitLessonAnswerUseCase(learnerRepo);
   });
 
   it('1. Anti-Cheat: Savol obyektida correctIndex bo‘lmaganda ham server to‘g‘ri baholaydi', async () => {
@@ -49,7 +49,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     expect(sanitizedQuestion.correctIndex).toBeUndefined();
 
     // Selecting the server-side correct option (the answer key lives only in the bank)
-    const result = await useCase.execute(sanitizedQuestion, serverCorrectIndex('q_math_alg_01'), 'Ali', 'lesson_01');
+    const result = await useCase.execute(sanitizedQuestion, serverCorrectIndex('q_math_alg_01'), 'lesson_01');
     expect(result.isCorrect).toBe(true);
     expect(result.correctOption).toBe(serverCorrectOption('q_math_alg_01'));
     expect(result.xpAwarded).toBe(2);
@@ -72,13 +72,20 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     };
 
     // Student selects a wrong option
-    const result = await useCase.execute(sanitizedQuestion, serverWrongIndex('q_math_alg_01'), 'Ali', 'lesson_01');
+    const result = await useCase.execute(sanitizedQuestion, serverWrongIndex('q_math_alg_01'), 'lesson_01');
     expect(result.isCorrect).toBe(false);
     expect(result.correctOption).toBe(serverCorrectOption('q_math_alg_01'));
     expect(result.xpAwarded).toBe(0);
-    expect(result.aiExplanation).toBeDefined();
-    expect(result.aiExplanation?.explanation).toBeDefined();
-    expect(result.aiExplanation?.tutorName).toBe('Yo‘lchi AI');
+    const diagnosis = await aiService.explainMistake({
+      courseId: sanitizedQuestion.courseId,
+      skillId: sanitizedQuestion.skillId,
+      questionId: sanitizedQuestion.id,
+      questionText: sanitizedQuestion.text,
+      selectedOption: result.selectedOption,
+      correctOption: result.correctOption,
+    });
+    expect(diagnosis.explanation).toBeDefined();
+    expect(diagnosis.tutorName).toBe('Yo‘lchi AI');
   });
 
   it('3. Anti-Cheat: Notanish savol ID bo‘lsa, index 0 avtomatik to‘g‘ri deb qabul qilinmaydi', async () => {
@@ -93,7 +100,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     };
 
     // Student attempts to pick option 0 hoping for the old default-0 cheat
-    const result = await useCase.execute(fakeQuestion, 0, 'Hacker', 'lesson_cheat');
+    const result = await useCase.execute(fakeQuestion, 0, 'lesson_cheat');
     // Must be false because question is unknown in trusted DB
     expect(result.isCorrect).toBe(false);
   });
@@ -110,7 +117,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     };
 
     // First attempt
-    const res1 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'Ali', 'lesson_02');
+    const res1 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'lesson_02');
     expect(res1.isCorrect).toBe(true);
     expect(res1.xpAwarded).toBe(2);
 
@@ -118,7 +125,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     expect(profile1.xp).toBe(2);
 
     // Replay attempt with same parameters
-    const res2 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'Ali', 'lesson_02');
+    const res2 = await useCase.execute(question, serverCorrectIndex('q_math_alg_02'), 'lesson_02');
     expect(res2.isCorrect).toBe(true);
     expect(res2.xpAwarded).toBe(0); // No double XP awarded!
 
@@ -137,7 +144,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
       explanation: '',
     };
 
-    await useCase.execute(q1, serverCorrectIndex('q_math_alg_01'), 'Ali', 'lesson_stat');
+    await useCase.execute(q1, serverCorrectIndex('q_math_alg_01'), 'lesson_stat');
     const profile = await learnerRepo.getProfile();
     const algScore = profile.scoresByCourse['course_math_01']?.['skill_math_algebra'];
 

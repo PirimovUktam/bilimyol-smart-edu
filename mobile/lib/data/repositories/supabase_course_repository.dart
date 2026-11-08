@@ -72,7 +72,8 @@ class SupabaseCourseRepository implements ICourseRepository {
     }
   }
 
-  static Course _course(Map<String, dynamic> row) {
+  static Course _course(Map<String, dynamic> row, List<String> lessons) {
+    final starter = row['starter_lesson_id'] as String?;
     return Course(
       id: row['id'] as String,
       title: row['title'] as String? ?? '',
@@ -82,7 +83,13 @@ class SupabaseCourseRepository implements ICourseRepository {
       primaryColorHex: row['primary_color_hex'] as String? ?? '#2563EB',
       secondaryColorHex: row['secondary_color_hex'] as String? ?? '#3B82F6',
       skills: _strings(row['skills']),
-      lessons: _strings(row['lessons']),
+      lessons: lessons,
+      starterLessonId: starter != null && lessons.contains(starter)
+          ? starter
+          : null,
+      foundationLessonIds: _strings(row['foundation_lesson_ids'])
+          .where(lessons.contains)
+          .toList(growable: false),
       totalStudentsEstimate:
           (row['total_students_estimate'] as num?)?.toInt() ?? 1000,
     );
@@ -100,7 +107,7 @@ class SupabaseCourseRepository implements ICourseRepository {
     );
   }
 
-  static Question _question(Map<String, dynamic> row) {
+  static Question questionFromRow(Map<String, dynamic> row) {
     return Question(
       id: row['id'] as String,
       courseId: row['course_id'] as String,
@@ -124,19 +131,29 @@ class SupabaseCourseRepository implements ICourseRepository {
     if (!SupabaseConfig.hasRemoteConfiguration) {
       return _fallback.getAllCourses();
     }
+    return _readCourses();
+  }
+
+  Future<List<Course>> _readCourses([String? courseId]) async {
     final client = _requireClient();
     await _requireAuthenticated(client);
-    final rows = await client
-        .from('courses')
-        .select(
-          'id, title, subject, description, icon_name, primary_color_hex, '
-          'secondary_color_hex, total_students_estimate',
-        )
-        .eq('is_active', true)
-        .order('created_at');
-    return (rows as List)
-        .whereType<Map>()
-        .map((row) => _course(Map<String, dynamic>.from(row)))
+    var courses = client.from('courses').select().eq('is_active', true);
+    var lessons = client.from('learner_lessons').select('id, course_id');
+    if (courseId != null) {
+      courses = courses.eq('id', courseId);
+      lessons = lessons.eq('course_id', courseId);
+    }
+    final rows = await Future.wait([
+      courses.order('created_at'),
+      lessons.order('id'),
+    ]);
+    final byCourse = <String, List<String>>{};
+    for (final lesson in rows[1]) {
+      final id = lesson['course_id'] as String;
+      (byCourse[id] ??= []).add(lesson['id'] as String);
+    }
+    return rows[0]
+        .map((row) => _course(row, byCourse[row['id']] ?? const []))
         .toList(growable: false);
   }
 
@@ -145,18 +162,7 @@ class SupabaseCourseRepository implements ICourseRepository {
     if (!SupabaseConfig.hasRemoteConfiguration) {
       return _fallback.getCourseById(courseId);
     }
-    final client = _requireClient();
-    await _requireAuthenticated(client);
-    final row = await client
-        .from('courses')
-        .select(
-          'id, title, subject, description, icon_name, primary_color_hex, '
-          'secondary_color_hex, total_students_estimate',
-        )
-        .eq('id', courseId)
-        .eq('is_active', true)
-        .maybeSingle();
-    return row == null ? null : _course(Map<String, dynamic>.from(row));
+    return (await _readCourses(courseId)).firstOrNull;
   }
 
   @override
@@ -168,7 +174,9 @@ class SupabaseCourseRepository implements ICourseRepository {
     await _requireAuthenticated(client);
     final rows = await client
         .from('skills')
-        .select('id, course_id, name, code, description, order_index, icon_name')
+        .select(
+          'id, course_id, name, code, description, order_index, icon_name',
+        )
         .eq('course_id', courseId)
         .order('order_index');
     return (rows as List)
@@ -195,7 +203,7 @@ class SupabaseCourseRepository implements ICourseRepository {
         .order('created_at');
     return (rows as List)
         .whereType<Map>()
-        .map((row) => _question(Map<String, dynamic>.from(row)))
+        .map((row) => questionFromRow(Map<String, dynamic>.from(row)))
         .toList(growable: false);
   }
 }

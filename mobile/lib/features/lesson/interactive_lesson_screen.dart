@@ -9,8 +9,14 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
+import '../../data/services/i_ai_tutor_service.dart';
+import '../../domain/entities/course.dart';
+import '../../domain/entities/question.dart';
+import '../../domain/usecases/submit_lesson_answer_use_case.dart';
 import 'math_function_graph_widget.dart';
 import 'audio_sim_wave_widget.dart';
+import 'dictionary_sheet.dart';
+import '../ai_tutor/ai_tutor_screen.dart';
 import '../ai_tutor/yolchi_ai_sheet.dart';
 import '../reinforcement/reinforcement_sheet.dart';
 
@@ -105,8 +111,29 @@ class _InteractiveLessonScreenState
         title: Text(lesson.title),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.pop(),
+          tooltip: 'Ta’lim yo‘liga qaytish',
+          onPressed: () => context.go('/roadmap'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_rounded),
+            tooltip: 'Yo‘lchidan so‘rash',
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => AITutorScreen(lesson: lesson)),
+            ),
+          ),
+          if (activeCourse?.subject == SubjectType.english)
+            IconButton(
+              icon: const Icon(Icons.menu_book_rounded),
+              tooltip: 'So‘z lug‘ati',
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => const DictionarySheet(),
+              ),
+            ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -557,7 +584,10 @@ class _InteractiveLessonScreenState
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w800,
-                                    color: (isSelected || isCorrectOption || isWrongPick)
+                                    color:
+                                        (isSelected ||
+                                            isCorrectOption ||
+                                            isWrongPick)
                                         ? Colors.white
                                         : AppColors.textSecondary,
                                   ),
@@ -612,16 +642,12 @@ class _InteractiveLessonScreenState
     );
   }
 
-  Widget _buildInlineAnswerReveal(dynamic question) {
+  Widget _buildInlineAnswerReveal(Question question) {
     final result = ref.read(lessonSessionNotifierProvider).answerResult;
     if (result == null || result.isCorrect) return const SizedBox.shrink();
-    final options = question.options as List;
-    final correctIndex = question.correctIndex as int;
     final correctText = result.correctOption.isNotEmpty
         ? result.correctOption
-        : (correctIndex >= 0 && correctIndex < options.length
-              ? options[correctIndex] as String
-              : '—');
+        : '—';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 4),
@@ -651,10 +677,10 @@ class _InteractiveLessonScreenState
               color: AppColors.success,
             ),
           ),
-          if ((question.explanation as String).trim().isNotEmpty) ...[
+          if (result.explanation.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              question.explanation as String,
+              result.explanation,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 height: 1.4,
@@ -662,7 +688,57 @@ class _InteractiveLessonScreenState
               ),
             ),
           ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton(
+                onPressed: () => _openMistakeAnalysis(question, result),
+                child: const Text('Yo‘lchi AI tahlili'),
+              ),
+              TextButton(
+                onPressed: () => _openReinforcementModal(context),
+                child: const Text('Mavzuni mustahkamlash'),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  void _openMistakeAnalysis(Question question, LessonAnswerResult answer) {
+    final tutor = ref.read(aiTutorServiceProvider);
+    final notifier = ref.read(lessonSessionNotifierProvider.notifier);
+    final session = notifier.sessionGeneration;
+    final step = notifier.stepGeneration;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheet) => YolchiAiSheet(
+        loadExplanation: () => tutor.explainMistake(
+          AIExplanationRequest(
+            courseId: question.courseId,
+            skillId: question.skillId,
+            questionId: question.id,
+            questionText: question.text,
+            selectedOption: answer.selectedOption,
+            correctOption: answer.correctOption,
+          ),
+        ),
+        onStartReinforcement: () {
+          Navigator.pop(sheet);
+          if (!mounted ||
+              !identical(
+                ref.read(lessonSessionNotifierProvider.notifier),
+                notifier,
+              ) ||
+              notifier.sessionGeneration != session ||
+              notifier.stepGeneration != step) {
+            return;
+          }
+          _openReinforcementModal(context);
+        },
       ),
     );
   }
@@ -684,41 +760,8 @@ class _InteractiveLessonScreenState
     final lessonState = ref.read(lessonSessionNotifierProvider);
     final answerResult = lessonState.answerResult;
 
-    if (answerResult != null &&
-        !answerResult.isCorrect &&
-        answerResult.aiExplanation != null) {
+    if (answerResult != null && !answerResult.isCorrect) {
       HapticFeedback.heavyImpact();
-      final activeLesson = ref.read(lessonSessionNotifierProvider).lesson;
-      final activeIndex = ref
-          .read(lessonSessionNotifierProvider)
-          .currentStepIndex;
-      final activeQuestion =
-          activeLesson?.steps[activeIndex].interactiveQuestion;
-      // Trigger Yo'lchi AI bottom sheet
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) => YolchiAiSheet(
-          explanation: answerResult.aiExplanation!,
-          selectedOption: answerResult.selectedOption,
-          correctOption: answerResult.correctOption,
-          questionExplanation: activeQuestion?.explanation,
-          onStartReinforcement: () {
-            Navigator.pop(ctx);
-            if (!context.mounted ||
-                !identical(
-                  ref.read(lessonSessionNotifierProvider.notifier),
-                  notifier,
-                ) ||
-                notifier.sessionGeneration != session ||
-                notifier.stepGeneration != step) {
-              return;
-            }
-            _openReinforcementModal(context);
-          },
-        ),
-      );
     } else if (answerResult != null && answerResult.isCorrect) {
       HapticFeedback.lightImpact();
       if (lessonState.isCompleted) {
@@ -826,7 +869,7 @@ class _InteractiveLessonScreenState
               notifier.stepGeneration != step) {
             return;
           }
-          context.go('/dashboard');
+          context.go('/roadmap');
         },
       ),
     );

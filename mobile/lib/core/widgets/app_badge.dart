@@ -33,29 +33,29 @@ class AppBadge extends StatelessWidget {
 
     switch (variant) {
       case AppBadgeVariant.blue:
-        bg = AppColors.primaryLight;
+        bg = AppColors.primary.withValues(alpha: 0.1);
         fg = AppColors.primary;
-        border = AppColors.primary.withValues(alpha: 0.3);
+        border = AppColors.primary.withValues(alpha: 0.22);
         break;
       case AppBadgeVariant.teal:
         bg = AppColors.secondaryLight;
-        fg = AppColors.secondary;
-        border = AppColors.secondary.withValues(alpha: 0.3);
+        fg = AppColors.secondaryHover;
+        border = AppColors.secondary.withValues(alpha: 0.25);
         break;
       case AppBadgeVariant.amber:
         bg = AppColors.warningLight;
         fg = const Color(0xFFB45309);
-        border = AppColors.warning.withValues(alpha: 0.3);
+        border = AppColors.warning.withValues(alpha: 0.28);
         break;
       case AppBadgeVariant.rose:
         bg = AppColors.errorLight;
         fg = AppColors.error;
-        border = AppColors.error.withValues(alpha: 0.3);
+        border = AppColors.error.withValues(alpha: 0.25);
         break;
       case AppBadgeVariant.emerald:
         bg = AppColors.successLight;
-        fg = AppColors.success;
-        border = AppColors.success.withValues(alpha: 0.3);
+        fg = const Color(0xFF059669);
+        border = AppColors.success.withValues(alpha: 0.28);
         break;
       case AppBadgeVariant.slate:
         bg = const Color(0xFFF1F5F9);
@@ -65,10 +65,10 @@ class AppBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: border, width: 1),
       ),
       child: Row(

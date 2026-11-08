@@ -11,7 +11,8 @@ export function isValidSupabaseUrl(url: string): boolean {
 }
 
 export const isSupabaseConfigured = Boolean(
-  rawSupabaseUrl && rawSupabaseKey && isValidSupabaseUrl(rawSupabaseUrl),
+  rawSupabaseKey && (isValidSupabaseUrl(rawSupabaseUrl) ||
+    (import.meta.env.DEV && /^http:\/\/(?:127\.0\.0\.1|localhost):\d+\/?$/.test(rawSupabaseUrl))),
 );
 
 // Fail closed: when env is missing or malformed, do NOT silently fall back to a

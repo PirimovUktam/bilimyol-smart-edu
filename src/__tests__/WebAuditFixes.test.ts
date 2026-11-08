@@ -56,8 +56,9 @@ describe('approved web audit regressions', () => {
   });
 
   it('never assigns a generic lesson to completed nodes without a target', () => {
-    expect(resolveRoadmapNodeLessonId({ status: 'completed' }, 'lesson_generic')).toBeNull();
-    expect(resolveRoadmapNodeLessonId({ status: 'available' }, 'lesson_generic')).toBe('lesson_generic');
-    expect(resolveRoadmapNodeLessonId({ status: 'completed', targetLessonId: 'lesson_exact' }, 'lesson_generic')).toBe('lesson_exact');
+    expect(resolveRoadmapNodeLessonId({ status: 'completed' })).toBeNull();
+    expect(resolveRoadmapNodeLessonId({ status: 'available' })).toBeNull();
+    expect(resolveRoadmapNodeLessonId({ status: 'locked', targetLessonId: 'lesson_exact' })).toBeNull();
+    expect(resolveRoadmapNodeLessonId({ status: 'completed', targetLessonId: 'lesson_exact' })).toBe('lesson_exact');
   });
 });

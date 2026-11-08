@@ -113,6 +113,9 @@ DO $$ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END; $$;
 
+-- Direct finalization is an internal contract; use the owner for its original
+-- atomic persistence assertions, with the same learner claim.
+RESET ROLE;
 DO $$
 DECLARE
   payload JSONB := '[{"question_id":"q_p1_placement_a","selected_index":1,"is_correct":false},{"question_id":"q_p1_placement_b","selected_index":0,"is_correct":true}]';
@@ -148,6 +151,7 @@ BEGIN
     RAISE EXCEPTION 'ASSERT: key reused with changed payload accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
 END; $$;
+SET LOCAL ROLE authenticated;
 
 DO $$
 DECLARE
@@ -161,10 +165,6 @@ BEGIN
   PERFORM pg_temp.assert_true((answer_result->>'is_correct')::BOOLEAN, 'curated camelCase key resolves on server');
   PERFORM pg_temp.assert_true(NOT answer_result ? 'correct_index' AND NOT answer_result ? 'correct_option',
     'scoring result does not disclose an answer key');
-  first_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
-  retry_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
-  PERFORM pg_temp.assert_true(first_result->>'xp_awarded' = '20' AND retry_result->>'xp_awarded' = '0',
-    'atomic lesson completion awards XP once');
   PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_functions',
     'reinf_node_p1_fixture', 'q_p1_reinforcement', 1, 'yes', 'p1-reinforcement-answer');
   first_result := public.complete_reinforcement('reinf_node_p1_fixture', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement', 999999);
@@ -173,8 +173,9 @@ BEGIN
     'reinforcement XP fixed by server and not repeated');
   PERFORM pg_temp.assert_true(first_result->>'new_score' = retry_result->>'new_score'
     AND (retry_result->>'already_processed')::BOOLEAN, 'reinforcement retry returns persisted result');
-  PERFORM pg_temp.assert_true((SELECT status = 'completed' FROM public.lesson_progress
-    WHERE user_id = auth.uid() AND lesson_id = 'lesson_p1_fixture'), 'reinforcement persists linked lesson completion');
+  PERFORM pg_temp.assert_true(NOT EXISTS (SELECT 1 FROM public.lesson_progress
+    WHERE user_id = auth.uid() AND lesson_id = 'lesson_p1_fixture' AND status = 'completed'),
+    'reinforcement cannot complete an unpassed lesson');
 
   SELECT xp INTO old_xp FROM public.gamification_profiles WHERE user_id = auth.uid();
   answer_result := public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_functions',
@@ -188,6 +189,10 @@ BEGIN
     PERFORM public.complete_reinforcement('reinf_invented_node', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement');
     RAISE EXCEPTION 'ASSERT: invented reinforcement node accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+  first_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
+  retry_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
+  PERFORM pg_temp.assert_true(first_result->>'xp_awarded' = '20' AND retry_result->>'xp_awarded' = '0',
+    'atomic lesson completion awards XP once');
   BEGIN
     PERFORM public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab',
       'lesson_p1_fixture', 'q_p1_curated', 1, 'yes', 'wrong-course');
@@ -195,7 +200,14 @@ BEGIN
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
 END; $$;
 
-SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.answer_attempts), 'answer evidence remains user-isolated');
+-- The author must retain access; isolation is tested as a different user.
+SELECT pg_temp.assert_true((SELECT count(*) > 0 FROM public.answer_attempts),
+  'author can read persisted answer evidence');
+SELECT pg_temp.assert_true(NOT EXISTS (SELECT 1 FROM public.answer_attempts WHERE user_id <> auth.uid()),
+  'author cannot read another learner evidence');
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000103', true);
+SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.answer_attempts),
+  'other learner cannot read author answer evidence');
 RESET ROLE;
 
 -- CMS privileges must survive learner column/JSON restrictions.

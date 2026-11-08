@@ -21,7 +21,7 @@ vi.mock('../core/config/supabase', () => ({
 }));
 
 import { setDemoRuntimeActive } from '../core/runtime/demoRuntime';
-import { SupabaseCourseRepository, supabaseCourseRepository } from '../data/repositories/SupabaseCourseRepository';
+import { SupabaseCourseRepository } from '../data/repositories/SupabaseCourseRepository';
 import { SupabaseLessonRepository } from '../data/repositories/SupabaseLessonRepository';
 import { SupabaseLearnerRepository } from '../data/repositories/SupabaseLearnerRepository';
 import { GeminiAITutorService } from '../data/services/GeminiAITutorService';
@@ -152,12 +152,9 @@ describe('hosted demo data plane', () => {
   });
 
   it('makes placement choose the bundled question bank even when Supabase is configured', async () => {
-    const supabasePlacementSpy = vi.spyOn(supabaseCourseRepository, 'getPlacementQuestions');
-
     await usePlacementStore.getState().initPlacement('course_math_01');
 
     expect(usePlacementStore.getState().currentQuestion).toBeTruthy();
-    expect(supabasePlacementSpy).not.toHaveBeenCalled();
     expect(backend.getUser).not.toHaveBeenCalled();
     expect(backend.from).not.toHaveBeenCalled();
     expect(backend.rpc).not.toHaveBeenCalled();
@@ -178,16 +175,19 @@ describe('hosted demo data plane', () => {
       error: null,
     });
     const activityQuery = makeQuery({ data: [], error: null });
-    backend.from.mockReturnValueOnce(courseQuery).mockReturnValueOnce(activityQuery);
+    const lessonQuery = makeQuery({ data: [{ id: 'lesson_one', course_id: 'course_math_01' }], error: null });
+    backend.from.mockReturnValueOnce(courseQuery).mockReturnValueOnce(lessonQuery).mockReturnValueOnce(activityQuery);
 
     const courses = await new SupabaseCourseRepository().getAllCourses();
     const activity = await new SupabaseLearnerRepository().getDailyActivity(1);
 
     expect(courses).toHaveLength(1);
+    expect(courses[0].lessons).toEqual(['lesson_one']);
     expect(activity).toHaveLength(1);
     expect(backend.getUser).toHaveBeenCalledTimes(2);
     expect(backend.from).toHaveBeenNthCalledWith(1, 'courses');
-    expect(backend.from).toHaveBeenNthCalledWith(2, 'daily_learning_stats');
+    expect(backend.from).toHaveBeenNthCalledWith(2, 'learner_lessons');
+    expect(backend.from).toHaveBeenNthCalledWith(3, 'daily_learning_stats');
   });
 
   it('keeps the configured edge-function AI path when demo runtime is inactive', async () => {

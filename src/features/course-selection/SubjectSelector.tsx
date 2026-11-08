@@ -1,17 +1,9 @@
-import React from 'react';
-import {
-  BookOpen,
-  Brain,
-  Calculator,
-  Check,
-  Code,
-  Code2,
-  Headphones,
-  type LucideIcon,
-} from 'lucide-react';
-import { Course } from '@/domain/entities/Course';
+import { ArrowRight, BookOpen, Brain, Calculator, Check, Code2, Headphones, Zap, type LucideIcon } from 'lucide-react';
+import type { Course } from '@/domain/entities/Course';
+import { Progress } from '@/presentation/components/Progress';
+import { SectionState } from '@/presentation/components/SectionState';
 
-export type SubjectSelectorLayout = 'grid' | 'horizontal';
+export type SubjectSelectorLayout = 'grid' | 'compact';
 
 interface SubjectSelectorProps {
   courses: Course[];
@@ -21,223 +13,131 @@ interface SubjectSelectorProps {
   disabled?: boolean;
   layout?: SubjectSelectorLayout;
   progressByCourseId?: Record<string, number | null | undefined>;
+  completedByCourseId?: Record<string, number>;
   onSelect: (courseId: string) => void | Promise<void>;
   ariaLabel?: string;
   className?: string;
 }
 
-const courseIcons: Record<string, LucideIcon> = {
-  BookOpen,
-  Brain,
-  Calculator,
-  Code,
-  Code2,
-  Headphones,
+const subjects: Record<Course['subject'], { icon: LucideIcon; tone: string; category: string }> = {
+  mathematics: { icon: Calculator, tone: 'bg-indigo-50 text-[#4F46E5] ring-1 ring-indigo-200/60', category: 'Aniq fanlar' },
+  english: { icon: Headphones, tone: 'bg-sky-50 text-[#0EA5E9] ring-1 ring-sky-200/60', category: 'Xorijiy til' },
+  it: { icon: Code2, tone: 'bg-emerald-50 text-[#10B981] ring-1 ring-emerald-200/60', category: 'Dasturlash' },
+  logic: { icon: Brain, tone: 'bg-amber-50 text-[#D97706] ring-1 ring-amber-200/60', category: 'Tafakkur' },
+  other: { icon: BookOpen, tone: 'bg-sand text-brand ring-1 ring-brand/20', category: 'Umumiy kurs' },
 };
 
-const subjectLabels: Record<Course['subject'], string> = {
-  mathematics: 'Matematika',
-  english: 'Ingliz tili',
-  it: 'IT va kodlash',
-  logic: 'Mantiq',
-  other: 'Boshqa fan',
-};
-
-const getCourseColor = (course: Course, key: 'primary' | 'secondary'): string => {
-  if (key === 'primary') return course.primaryColorHex || course.primaryColor || '#2563EB';
-  return course.secondaryColorHex || course.secondaryColor || '#4F46E5';
-};
-
-const getCourseIcon = (course: Course): LucideIcon => courseIcons[course.iconName] || BookOpen;
-
-const getProgress = (progressByCourseId: SubjectSelectorProps['progressByCourseId'], courseId: string): number | null => {
-  const value = progressByCourseId?.[courseId];
-  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  return Math.max(0, Math.min(100, Math.round(value)));
-};
-
-const getSubjectLabel = (subject: Course['subject']): string => subjectLabels[subject];
-
-const StatusMessage: React.FC<{
-  tone: 'loading' | 'error' | 'empty';
-  children: React.ReactNode;
-}> = ({ tone, children }) => {
-  const styles = {
-    loading: 'border-blue-200 bg-blue-50/70 text-blue-800',
-    error: 'border-coral/25 bg-rose-50/80 text-coral',
-    empty: 'border-slate-200 bg-white text-slate-600',
-  }[tone];
+export function SubjectSelector({
+  courses, selectedCourseId, isLoading, error, disabled, layout = 'grid',
+  progressByCourseId, completedByCourseId, onSelect, ariaLabel = 'Fan tanlash', className = '',
+}: SubjectSelectorProps) {
+  if (isLoading && courses.length === 0) return <SectionState kind="loading" title="Fanlar yuklanmoqda…" />;
+  if (error && courses.length === 0) return <SectionState kind="error" title="Fanlar yuklanmadi" description={error} />;
+  if (courses.length === 0) return <SectionState title="Fanlar topilmadi" />;
 
   return (
-    <div
-      className={`rounded-2xl border px-4 py-4 text-sm font-semibold ${styles}`}
-      role={tone === 'error' ? 'alert' : 'status'}
-      aria-live="polite"
-    >
-      {tone === 'loading' && (
-        <span
-          aria-hidden="true"
-          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent align-[-0.15em] motion-reduce:animate-none"
-        />
-      )}
-      {children}
-    </div>
-  );
-};
-
-export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
-  courses,
-  selectedCourseId = null,
-  isLoading = false,
-  error = null,
-  disabled = false,
-  layout = 'grid',
-  progressByCourseId,
-  onSelect,
-  ariaLabel = 'Fan tanlash',
-  className = '',
-}) => {
-  if (isLoading && courses.length === 0) {
-    return <StatusMessage tone="loading">Fanlar yuklanmoqda...</StatusMessage>;
-  }
-
-  if (error && courses.length === 0) {
-    return <StatusMessage tone="error">Fanlarni yuklashda xatolik: {error}</StatusMessage>;
-  }
-
-  if (courses.length === 0) {
-    return <StatusMessage tone="empty">Hozircha tanlash uchun fanlar mavjud emas.</StatusMessage>;
-  }
-
-  const layoutClass = layout === 'horizontal'
-    ? 'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 motion-reduce:snap-none md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-4'
-    : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4';
-
-  return (
-    <div className={`space-y-3 ${className}`} aria-busy={isLoading}>
+    <div className={'space-y-4 ' + className} aria-busy={Boolean(isLoading)}>
       {error && (
-        <StatusMessage tone="error">Fanlarni yangilashda xatolik: {error}</StatusMessage>
+        <p role="alert" className="rounded-2xl border border-coral/25 bg-rose-50 p-3.5 text-sm font-semibold text-coral">
+          {error}
+        </p>
       )}
-      {isLoading && (
-        <div className="text-xs font-semibold text-blue-700" role="status" aria-live="polite">
-          Fan tanlovi yangilanmoqda...
-        </div>
-      )}
-
-      <div className={layoutClass} role="group" aria-label={ariaLabel}>
-        {courses.map((course, idx) => {
-          const primaryColor = getCourseColor(course, 'primary');
-          const Icon = getCourseIcon(course);
-          const isSelected = course.id === selectedCourseId;
-          const isInactive = course.isActive === false;
-          const isDisabled = disabled || isLoading || isInactive;
-          const progress = getProgress(progressByCourseId, course.id);
-          const lessonCount = course.lessons?.length || 0;
-
-          const subjectCode = {
-            mathematics: 'MAT-01',
-            english: 'ENG-02',
-            it: 'DEV-03',
-            logic: 'LOG-04',
-            other: 'GEN-05',
-          }[course.subject] || `SUB-0${idx + 1}`;
+      {isLoading && <p role="status" className="text-xs font-semibold text-brand">Fan tanlovi yangilanmoqda…</p>}
+      <div
+        role="group"
+        aria-label={ariaLabel}
+        className={
+          layout === 'compact'
+            ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4'
+            : 'grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4'
+        }
+      >
+        {courses.map((course, index) => {
+          const { icon: Icon, tone, category } = subjects[course.subject] ?? subjects.other;
+          const selected = course.id === selectedCourseId;
+          const progress = progressByCourseId?.[course.id];
+          const completed = completedByCourseId?.[course.id];
+          const lessons = course.lessons.length;
+          const pct = progress != null ? Math.round(progress) : 0;
 
           return (
             <button
               key={course.id}
               type="button"
-              disabled={isDisabled}
-              aria-pressed={isSelected}
-              aria-label={`${course.title} fanini tanlash${isSelected ? ' — tanlangan' : ''}`}
-              className={`group relative flex min-w-[min(84vw,20rem)] snap-start flex-col justify-between overflow-hidden rounded-2xl border bg-white p-5 text-left transition-all duration-200 outline-none md:min-w-0 ${
-                isSelected
-                  ? 'border-[#10151f] ring-2 ring-[#10151f] shadow-md bg-gradient-to-b from-slate-50/50 to-white'
-                  : 'border-[#e4ddce] hover:border-slate-400 hover:shadow-sm hover:-translate-y-0.5'
-              } focus-visible:ring-2 focus-visible:ring-brand active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:active:scale-100`}
-              onClick={() => {
-                void onSelect(course.id);
-              }}
+              disabled={Boolean(disabled || isLoading || course.isActive === false)}
+              aria-pressed={selected}
+              aria-label={course.title + ' fanini tanlash' + (selected ? ' — tanlangan' : '')}
+              onClick={() => void onSelect(course.id)}
+              style={{ animationDelay: `${index * 90}ms` }}
+              className={
+                'fade-up edtech-card-hover group flex min-w-0 cursor-pointer flex-col justify-between p-5 text-left disabled:cursor-not-allowed disabled:opacity-65 ' +
+                (selected ? 'border-brand! bg-indigo-50/35! ring-2 ring-brand/30' : '')
+              }
             >
-              {/* Top editorial kicker bar */}
-              <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#f0ece3]">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    {subjectCode}
+              {/* (a) Top: Colored Icon Container + Category/Selection Badge */}
+              <span className="flex w-full items-center justify-between gap-2">
+                <span className={'grid size-12 shrink-0 place-items-center rounded-2xl shadow-2xs transition-transform duration-200 group-hover:scale-105 ' + tone}>
+                  <Icon aria-hidden="true" className="size-6" />
+                </span>
+                {selected ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-[#059669]">
+                    <Check aria-hidden="true" className="size-3.5" />
+                    <span>Tanlangan</span>
                   </span>
-                  <span className="text-[10px] text-slate-300">•</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                    {getSubjectLabel(course.subject)}
+                ) : (
+                  <span className="highlight !py-1 !px-2.5 !text-[11px]">
+                    {category}
                   </span>
-                </div>
-                {isSelected ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#10151f] text-white font-mono text-[9px] font-bold uppercase tracking-wider shadow-2xs">
-                    <Check className="h-3 w-3 text-path" aria-hidden="true" />
-                    Tanlangan
-                  </span>
-                ) : isInactive ? (
-                  <span className="font-mono text-[9px] text-slate-400 uppercase tracking-wider">
-                    Faol emas
-                  </span>
-                ) : null}
-              </div>
+                )}
+              </span>
 
-              {/* Main Subject Content */}
-              <div className="pt-3.5 pb-2">
-                <div className="flex items-start gap-3">
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#e4ddce] bg-[#fbf9f4] transition-colors group-hover:border-path"
-                    style={{ color: primaryColor }}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-base sm:text-lg font-bold tracking-tight text-slate-900 group-hover:text-brand transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-600 leading-relaxed font-medium line-clamp-2">
-                      {course.description || 'Shaxsiy moslashuvchan darslar va bilim marshruti.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* (b) Middle: Title, 2-line Description & Visual Progress */}
+              <span className="my-4 block w-full">
+                <span className="heading block break-words text-lg font-extrabold leading-snug text-ink group-hover:text-brand transition-colors">
+                  {course.title}
+                </span>
+                <span className="mt-1.5 block line-clamp-2 text-xs leading-relaxed text-slatefine">
+                  {course.description}
+                </span>
 
-              {/* Footer Dossier Metadata */}
-              <div className="pt-3 border-t border-[#f0ece3] mt-2 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-slate-600">
-                    <BookOpen className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                    {lessonCount > 0 ? `${lessonCount} dars` : 'Darslar mavjud'}
+                <span className="mt-4 block w-full">
+                  <span className="mb-1.5 flex items-center justify-between text-[11px] font-bold text-slatefine">
+                    <span>O‘zlashtirish</span>
+                    <span className="font-mono-num text-brand">{pct}%</span>
                   </span>
-                  {progress !== null ? (
-                    <span className="font-mono font-bold text-xs text-brand-dark">
-                      {progress}%
-                    </span>
-                  ) : (
-                    <span className="font-mono text-[10px] text-slate-400">
-                      0% boshlanmagan
-                    </span>
-                  )}
-                </div>
-
-                {/* Micro progress line */}
-                <div
-                  className="h-1.5 w-full overflow-hidden rounded-full bg-[#f0ece3]"
-                  role="progressbar"
-                  aria-label={`${course.title} progressi`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={progress ?? 0}
-                >
-                  <div
-                    className="h-full rounded-full bg-[#10151f] transition-all duration-300"
-                    style={{ width: `${progress ?? 0}%` }}
+                  <Progress
+                    value={pct}
+                    size="sm"
+                    tone={pct >= 80 ? 'emerald' : 'indigo'}
+                    ariaLabel={course.title + ' darslari bajarilishi'}
                   />
-                </div>
-              </div>
+                </span>
+              </span>
+
+              {/* (c) Bottom: Meta-data (Lessons, XP) & .commonBtn Action */}
+              <span className="mt-auto flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3.5">
+                <span className="flex flex-col text-[11px] font-bold text-slatefine">
+                  <span>
+                    {lessons > 0
+                      ? completed == null
+                        ? lessons + ' dars'
+                        : completed + ' / ' + lessons + ' dars tugallangan'
+                      : 'Darslar soni ko‘rsatilmagan'}
+                  </span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-amber-600">
+                    <Zap aria-hidden="true" className="size-3" />
+                    +{Math.max(1, lessons) * 20} XP
+                  </span>
+                </span>
+                <span className="commonBtn !px-3.5 !py-2 text-xs">
+                  <span>{selected ? 'Davom etish' : 'Tanlash'}</span>
+                  <ArrowRight aria-hidden="true" className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </span>
             </button>
           );
         })}
       </div>
     </div>
   );
-};
+}

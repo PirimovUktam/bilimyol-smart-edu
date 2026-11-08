@@ -49,17 +49,9 @@ export class AdminContentService {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return [...inMemoryCourses];
     }
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error || !data || data.length === 0) {
-        return [...inMemoryCourses];
-      }
-
-      return data.map((c) => ({
+    const { data, error } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error('Fanlarni serverdan yuklab bo‘lmadi.');
+    return (data ?? []).map((c) => ({
         id: c.id,
         title: c.title,
         subject: mapCourseSubject({ id: c.id, subject: c.subject }),
@@ -73,10 +65,7 @@ export class AdminContentService {
         lessons: [],
         totalStudentsEstimate: c.total_students_estimate || 1000,
         isActive: c.is_active ?? true,
-      }));
-    } catch {
-      return [...inMemoryCourses];
-    }
+    }));
   }
 
   async saveCourse(course: Partial<Course>): Promise<Course> {
@@ -101,6 +90,7 @@ export class AdminContentService {
       const { error } = await supabase.from('courses').upsert({
         id: newCourse.id,
         title: newCourse.title,
+        subject: newCourse.subject,
         description: newCourse.description,
         icon_name: newCourse.iconName,
         primary_color_hex: newCourse.primaryColorHex || newCourse.primaryColor,
@@ -109,6 +99,7 @@ export class AdminContentService {
         is_active: newCourse.isActive,
       });
       if (error) throw new Error(`Fan saqlashda xatolik: ${error.message}`);
+      return newCourse;
     }
 
     // Update in-memory
@@ -123,6 +114,7 @@ export class AdminContentService {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw new Error(`Fanni o‘chirishda xatolik: ${error.message}`);
+      return;
     }
     inMemoryCourses = inMemoryCourses.filter((c) => c.id !== courseId);
   }
@@ -134,16 +126,11 @@ export class AdminContentService {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
       return courseId ? inMemorySkills.filter((s) => s.courseId === courseId) : [...inMemorySkills];
     }
-    try {
-      let query = supabase.from('skills').select('*').order('order_index', { ascending: true });
-      if (courseId) {
-        query = query.eq('course_id', courseId);
-      }
-      const { data, error } = await query;
-      if (error || !data || data.length === 0) {
-        return courseId ? inMemorySkills.filter((s) => s.courseId === courseId) : [...inMemorySkills];
-      }
-      return data.map((s) => ({
+    let query = supabase.from('skills').select('*').order('order_index', { ascending: true });
+    if (courseId) query = query.eq('course_id', courseId);
+    const { data, error } = await query;
+    if (error) throw new Error('Ko‘nikmalarni serverdan yuklab bo‘lmadi.');
+    return (data ?? []).map((s) => ({
         id: s.id,
         courseId: s.course_id,
         name: s.name,
@@ -152,10 +139,7 @@ export class AdminContentService {
         order: s.order_index ?? 0,
         orderIndex: s.order_index,
         iconName: s.icon_name || 'Target',
-      }));
-    } catch {
-      return courseId ? inMemorySkills.filter((s) => s.courseId === courseId) : [...inMemorySkills];
-    }
+    }));
   }
 
   async saveSkill(skill: Partial<Skill>): Promise<Skill> {
@@ -182,6 +166,7 @@ export class AdminContentService {
         icon_name: newSkill.iconName,
       });
       if (error) throw new Error(`Ko‘nikma saqlashda xatolik: ${error.message}`);
+      return newSkill;
     }
 
     const idx = inMemorySkills.findIndex((s) => s.id === id);
@@ -195,6 +180,7 @@ export class AdminContentService {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('skills').delete().eq('id', skillId);
       if (error) throw new Error(`Ko‘nikmani o‘chirishda xatolik: ${error.message}`);
+      return;
     }
     inMemorySkills = inMemorySkills.filter((s) => s.id !== skillId);
   }
@@ -286,6 +272,7 @@ export class AdminContentService {
         updated_at: newLesson.updatedAt,
       } });
       if (error || data?.saved !== true) throw new Error(`Darsni saqlashda xatolik: ${error?.message || 'Server saqlashni tasdiqlamadi.'}`);
+      return newLesson;
     }
 
     const idx = inMemoryLessons.findIndex((l) => l.id === id);
@@ -302,6 +289,7 @@ export class AdminContentService {
         .update({ is_published: isPublished, updated_at: new Date().toISOString() })
         .eq('id', lessonId);
       if (error) throw new Error(`Nashr holatini o‘zgartirishda xatolik: ${error.message}`);
+      return;
     }
     const l = inMemoryLessons.find((item) => item.id === lessonId);
     if (l) l.isPublished = isPublished;
@@ -314,6 +302,7 @@ export class AdminContentService {
         .update({ is_archived: isArchived, updated_at: new Date().toISOString() })
         .eq('id', lessonId);
       if (error) throw new Error(`Arxiv holatini o‘zgartirishda xatolik: ${error.message}`);
+      return;
     }
     const l = inMemoryLessons.find((item) => item.id === lessonId);
     if (l) l.isArchived = isArchived;
@@ -323,6 +312,7 @@ export class AdminContentService {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
       if (error) throw new Error(`Darsni o‘chirishda xatolik: ${error.message}`);
+      return;
     }
     inMemoryLessons = inMemoryLessons.filter((l) => l.id !== lessonId);
   }
@@ -392,6 +382,7 @@ export class AdminContentService {
         is_placement: newQuestion.isPlacement,
       } });
       if (error || data?.saved !== true) throw new Error(`Savolni saqlashda xatolik: ${error?.message || 'Server saqlashni tasdiqlamadi.'}`);
+      return newQuestion;
     }
 
     const idx = inMemoryQuestions.findIndex((q) => q.id === id);
@@ -405,6 +396,7 @@ export class AdminContentService {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
       const { error } = await supabase.from('questions').delete().eq('id', questionId);
       if (error) throw new Error(`Savolni o‘chirishda xatolik: ${error.message}`);
+      return;
     }
     inMemoryQuestions = inMemoryQuestions.filter((q) => q.id !== questionId);
   }

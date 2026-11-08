@@ -8,6 +8,7 @@ import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../app/providers.dart';
+import '../../core/auth/auth_error_message.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -39,8 +40,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirm = _confirmPasswordController.text.trim();
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
 
     if (firstName.isEmpty || email.isEmpty || password.isEmpty) {
       setState(() => _errorMsg = 'Iltimos, barcha majburiy maydonlarni to‘ldiring.');
@@ -96,7 +97,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMsg = e.toString().replaceFirst('Exception: ', '').replaceFirst('AuthApiException: ', '');
+          _errorMsg = authErrorMessage(e);
         });
       }
     }

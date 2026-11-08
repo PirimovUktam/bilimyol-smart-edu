@@ -10,8 +10,10 @@ import {
   DailyActivitySummary,
 } from '../../domain/repositories/ILearnerRepository';
 import { LearnerProfile } from '../../domain/entities/LearnerProfile';
+import type { PlacementSession } from '@/domain/entities/Assessment';
+import { learningDate } from '@/core/utils/learningDate';
 import { SkillScore } from '../../domain/entities/SkillScore';
-import { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
+import type { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
 import { supabaseLessonRepository } from './SupabaseLessonRepository';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
@@ -37,7 +39,35 @@ export async function resolveLessonCourseId(
 }
 
 export class SupabaseLearnerRepository implements ILearnerRepository {
-  private fallbackRepo = new InMemoryLearnerRepository();
+  private demoReminders = true;
+
+  async getLearningReminders(): Promise<boolean> {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.demoReminders;
+    const user = await this.requireAuthenticatedUser();
+    const { data, error } = await supabase.from('user_preferences').select('notifications_enabled')
+      .eq('user_id', user.id).maybeSingle();
+    if (error) throw error;
+    return data?.notifications_enabled ?? true;
+  }
+
+  async setLearningReminders(enabled: boolean): Promise<boolean> {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
+      this.demoReminders = enabled;
+      return enabled;
+    }
+    const { data, error } = await supabase.rpc('set_learning_reminders', { p_enabled: enabled });
+    if (error || typeof data !== 'boolean') throw error ?? new Error('Eslatma sozlamasi saqlanmadi.');
+    return data;
+  }
+
+  private fallbackRepo?: Promise<InMemoryLearnerRepository>;
+
+  private demoRepository() {
+    this.fallbackRepo ??= import('./InMemoryLearnerRepository').then((module) =>
+      new module.InMemoryLearnerRepository(typeof window === 'undefined' ? undefined : () => window.sessionStorage),
+    );
+    return this.fallbackRepo;
+  }
   get supportsNodeCompletion(): boolean {
     return isDemoRuntimeActive() || !isSupabaseConfigured;
   }
@@ -63,7 +93,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async getProfile(): Promise<LearnerProfile> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.getProfile();
+      return (await this.demoRepository()).getProfile();
     }
 
     try {
@@ -108,36 +138,22 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         userProfileData = provisioned;
       }
 
-      // Fetch learner profile
-      const { data: learnerData, error: learnerError } = await supabase
-        .from('learner_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (learnerError) throw learnerError;
-
-      // Fetch gamification profile
-      const { data: gamifyData, error: gamifyError } = await supabase
-        .from('gamification_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (gamifyError) throw gamifyError;
-
-      // Fetch skill scores
-      const { data: scoreRows, error: scoresError } = await supabase
-        .from('learner_skill_scores')
-        .select('*')
-        .eq('user_id', user.id);
-      if (scoresError) throw scoresError;
-
-      // Fetch completed lessons
-      const { data: progressRows, error: progressError } = await supabase
-        .from('lesson_progress')
-        .select('lesson_id, status')
-        .eq('user_id', user.id)
-        .eq('status', 'completed');
-      if (progressError) throw progressError;
+      const [learner, gamification, scores, progress, reinforcement] = await Promise.all([
+        supabase.from('learner_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('gamification_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('learner_skill_scores').select('*').eq('user_id', user.id),
+        supabase.from('lesson_progress').select('lesson_id, status').eq('user_id', user.id).eq('status', 'completed'),
+        supabase.from('reinforcement_attempts').select('reinforcement_node_id, is_correct')
+          .eq('user_id', user.id).eq('is_correct', true),
+      ]);
+      for (const response of [learner, gamification, scores, progress, reinforcement]) {
+        if (response.error) throw response.error;
+      }
+      const learnerData = learner.data;
+      const gamifyData = gamification.data;
+      const scoreRows = scores.data;
+      const progressRows = progress.data;
+      const reinfRows = reinforcement.data;
 
       const completedLessonIds = (progressRows || []).map((row) => row.lesson_id);
       let completedNodeIds = [...completedLessonIds];
@@ -155,14 +171,6 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
           ]),
         ];
       }
-
-      // Fetch completed reinforcements
-      const { data: reinfRows, error: reinfError } = await supabase
-        .from('reinforcement_attempts')
-        .select('reinforcement_node_id, is_correct')
-        .eq('user_id', user.id)
-        .eq('is_correct', true);
-      if (reinfError) throw reinfError;
 
       const scoresByCourse: Record<string, Record<string, SkillScore>> = {};
       if (scoreRows) {
@@ -195,9 +203,10 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,
         initialLevel: learnerData?.initial_level || 'intermediate',
+        courseLevels: learnerData?.course_levels ?? {},
         xp: gamifyData?.xp || 0,
-        streakDays: gamifyData?.streak_days || 1,
-        lastActiveDate: gamifyData?.last_activity_date || new Date().toISOString().split('T')[0],
+        streakDays: gamifyData?.streak_days ?? 0,
+        lastActiveDate: gamifyData?.last_activity_date ?? '',
         scoresByCourse,
         completedLessonIds,
         completedNodeIds,
@@ -212,18 +221,13 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.updateProfile(updates);
+      return (await this.demoRepository()).updateProfile(updates);
     }
 
     try {
       const user = await this.requireAuthenticatedUser();
 
       const currentProfile = await this.getProfile();
-      const merged: LearnerProfile = {
-        ...currentProfile,
-        ...updates,
-        scoresByCourse: updates.scoresByCourse || currentProfile.scoresByCourse,
-      };
 
       // Sync public.profiles if name/names/avatar are updated
       if (updates.name !== undefined || updates.firstName !== undefined || updates.lastName !== undefined || updates.avatarUrl !== undefined) {
@@ -241,26 +245,49 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         if (profileUpdateError) throw profileUpdateError;
       }
 
-      const { error: learnerUpdateError } = await supabase.from('learner_profiles').upsert({
-        user_id: user.id,
-        selected_course_id: merged.selectedCourseId,
-        goal: merged.goal,
-        daily_minutes: merged.dailyMinutes,
-        initial_level: merged.initialLevel,
-        updated_at: new Date().toISOString(),
-      });
-      if (learnerUpdateError) throw learnerUpdateError;
+      // Only write the caller's changes. Replaying a previously read profile
+      // can revert a course or preference changed by another tab/request.
+      const preferences: Record<string, unknown> = {};
+      if (updates.selectedCourseId !== undefined) preferences.selected_course_id = updates.selectedCourseId;
+      if (updates.goal !== undefined) preferences.goal = updates.goal;
+      if (updates.dailyMinutes !== undefined) preferences.daily_minutes = updates.dailyMinutes;
+      if (updates.initialLevel !== undefined) preferences.initial_level = updates.initialLevel;
+      if (Object.keys(preferences).length > 0) {
+        const { error: learnerUpdateError } = await supabase.from('learner_profiles').upsert({
+          user_id: user.id,
+          ...preferences,
+          updated_at: new Date().toISOString(),
+        });
+        if (learnerUpdateError) throw learnerUpdateError;
+      }
 
-      return merged;
+      // Report persisted values, never a locally merged success payload.
+      return await this.getProfile();
     } catch (err) {
       console.warn('Error updating Supabase learner profile:', err);
       throw err;
     }
   }
 
+  async saveCourseLearningPlan(courseId: string, goal: LearnerProfile['goal'],
+    dailyMinutes: LearnerProfile['dailyMinutes'], initialLevel: LearnerProfile['initialLevel']): Promise<LearnerProfile> {
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
+      const repo = await this.demoRepository();
+      const profile = await repo.getProfile();
+      return repo.updateProfile({
+        goal, dailyMinutes, initialLevel, courseLevels: { ...profile.courseLevels, [courseId]: initialLevel },
+      });
+    }
+    const { error } = await supabase.rpc('save_course_learning_plan', {
+      p_course_id: courseId, p_goal: goal, p_daily_minutes: dailyMinutes, p_level: initialLevel,
+    });
+    if (error) throw new Error(error.message);
+    return this.getProfile();
+  }
+
   async saveSkillScores(courseId: string, scores: Record<string, SkillScore>): Promise<void> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.saveSkillScores(courseId, scores);
+      return (await this.demoRepository()).saveSkillScores(courseId, scores);
     }
 
     try {
@@ -278,7 +305,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async savePlacementAttempt(data: PlacementAttemptData): Promise<string> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.savePlacementAttempt(data);
+      return (await this.demoRepository()).savePlacementAttempt(data);
     }
 
     try {
@@ -304,13 +331,49 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
   }
 
+  async advancePlacement(courseId: string, answer?: { sessionId: string; questionId: string; selectedIndex: number },
+    restart = false): Promise<PlacementSession> {
+    const { data, error } = await supabase.rpc('advance_placement', {
+      p_course_id: courseId,
+      ...(answer && { p_session_id: answer.sessionId, p_question_id: answer.questionId, p_selected_index: answer.selectedIndex }),
+      ...(restart && { p_restart: true }),
+    });
+    if (error || !data?.session_id || (!data.question && !data.result)) {
+      throw new Error(error?.code === '22023' || error?.code === '42501'
+        ? error.message : 'Diagnostika bilan bog‘lanib bo‘lmadi. Qayta urinib ko‘ring.');
+    }
+    const q = data.question;
+    const review = data.result?.answers.map((a: {
+      question_id: string; selected_index: number; is_correct: boolean; time_spent_seconds: number;
+      question_text: string; selected_option: string; correct_option: string; explanation: string;
+    }) => ({
+      questionId: a.question_id, selectedIndex: a.selected_index, isCorrect: a.is_correct,
+      timeSpentSeconds: a.time_spent_seconds, questionText: a.question_text,
+      selectedOption: a.selected_option, correctOption: a.correct_option, explanation: a.explanation,
+    }));
+    return {
+      id: data.session_id, number: data.question_number, total: data.total_questions,
+      wasReset: data.reset, canRetake: data.can_retake,
+      question: q ? {
+        id: q.id, courseId: q.course_id, skillId: q.skill_id, text: q.text,
+        options: q.options, contextSnippet: q.context_snippet, formulaLatex: q.formula_latex,
+        audioSimText: q.audio_sim_text, audioSimSpeaker: q.audio_sim_speaker,
+        difficulty: 'medium', explanation: '',
+      } : null,
+      result: data.result ? {
+        assessmentId: data.result.attempt_id, courseId, weakestSkillId: data.result.weakest_skill_id ?? '',
+        submissions: review, review, timestamp: Date.parse(data.result.completed_at),
+      } : null,
+    };
+  }
+
   async evaluatePlacementAnswer(
     courseId: string,
     questionId: string,
     selectedIndex: number
   ): Promise<PlacementAnswerEvaluation> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.evaluatePlacementAnswer(courseId, questionId, selectedIndex);
+      return (await this.demoRepository()).evaluatePlacementAnswer(courseId, questionId, selectedIndex);
     }
 
     const { data, error } = await supabase.rpc('evaluate_placement_answer', {
@@ -328,7 +391,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async markLessonCompleted(lessonId: string, courseId?: string | null): Promise<void> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      await this.fallbackRepo.markLessonCompleted(lessonId, courseId);
+      await (await this.demoRepository()).markLessonCompleted(lessonId, courseId);
       return;
     }
 
@@ -352,13 +415,13 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async markNodeCompleted(nodeId: string): Promise<void> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.markNodeCompleted(nodeId);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).markNodeCompleted(nodeId);
     throw new Error(`Roadmap node completion is not available through the production contract: ${nodeId}`);
   }
 
   async markReinforcementCompleted(reinforcementId: string, context?: ReinforcementCompletionContext): Promise<ReinforcementCompletionResult | void> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      await this.fallbackRepo.markReinforcementCompleted(reinforcementId, context);
+      await (await this.demoRepository()).markReinforcementCompleted(reinforcementId, context);
       return;
     }
 
@@ -399,7 +462,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.submitAnswerAttempt(request);
+      return (await this.demoRepository()).submitAnswerAttempt(request);
     }
 
     try {
@@ -420,9 +483,25 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         throw new Error(error?.message || 'Javob serverda saqlanmadi.');
       }
 
+      let correctOption: string | undefined = data.is_correct ? request.selectedAnswer : undefined;
+      let explanation = data.explanation || 'Javob baholandi.';
+      if (!data.is_correct) {
+        try {
+          const { data: feedback } = await supabase.rpc('get_mistake_feedback', {
+            p_course_id: request.courseId,
+            p_skill_id: request.skillId,
+            p_question_id: request.questionId,
+          });
+          if (typeof feedback?.correctOption === 'string') correctOption = feedback.correctOption;
+          if (typeof feedback?.explanation === 'string' && feedback.explanation) explanation = feedback.explanation;
+        } catch {
+          // Scoring has already committed. Keep that result usable.
+        }
+      }
       const result: SubmitAnswerAttemptResult = {
         isCorrect: Boolean(data.is_correct),
-        explanation: data.explanation || 'To‘g‘ri yechim.',
+        explanation,
+        correctOption,
         newSkillScore: typeof data.new_skill_score === 'number' ? data.new_skill_score : 50,
         overallScore: typeof data.overall_score === 'number' ? data.overall_score : 50,
         xpAwarded: typeof data.xp_awarded === 'number' ? data.xp_awarded : 0,
@@ -440,7 +519,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.recordAnswerAttempt(attempt);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).recordAnswerAttempt(attempt);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -473,7 +552,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async getAnswerAttempts(limit: number = 10): Promise<AnswerAttemptRecord[]> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.getAnswerAttempts(limit);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).getAnswerAttempts(limit);
     const user = await this.requireAuthenticatedUser();
     const { data, error } = await supabase
       .from('answer_attempts')
@@ -498,19 +577,18 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
   async getDailyActivity(days: number = 7): Promise<DailyActivitySummary[]> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackRepo.getDailyActivity(days);
+      return (await this.demoRepository()).getDailyActivity(days);
     }
 
     try {
       const user = await this.requireAuthenticatedUser();
 
-      const since = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0];
+      const now = Date.now();
+      const since = learningDate(days - 1, now);
 
        const { data, error } = await supabase
         .from('daily_learning_stats')
-        .select('activity_date, active_seconds, xp_earned, lessons_completed')
+        .select('activity_date, active_seconds, xp_earned, lessons_completed, questions_answered, correct_answers')
         .eq('user_id', user.id)
         .gte('activity_date', since)
         .order('activity_date', { ascending: true });
@@ -520,17 +598,18 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       for (const row of data || []) {
         byDate.set(row.activity_date, {
           date: row.activity_date,
-          activeMinutes: Math.round((row.active_seconds || 0) / 60),
+          activeMinutes: Math.floor((row.active_seconds || 0) / 60),
           xpEarned: row.xp_earned || 0,
           lessonsCompleted: row.lessons_completed || 0,
+          questionsAnswered: row.questions_answered ?? 0,
+          correctAnswers: row.correct_answers ?? 0,
         });
       }
 
       // Pad missing days with zeroes so the chart always has `days` columns.
       const result: DailyActivitySummary[] = [];
-      const dayMs = 24 * 60 * 60 * 1000;
       for (let i = days - 1; i >= 0; i--) {
-        const dateStr = new Date(Date.now() - i * dayMs).toISOString().split('T')[0];
+        const dateStr = learningDate(i, now);
         result.push(
           byDate.get(dateStr) || { date: dateStr, activeMinutes: 0, xpEarned: 0, lessonsCompleted: 0 }
         );
@@ -543,7 +622,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async addXp(amount: number, actionIdempotencyKey?: string): Promise<number> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.addXp(amount, actionIdempotencyKey);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).addXp(amount, actionIdempotencyKey);
     const { data, error } = await supabase.rpc('award_xp', {
       p_amount: amount,
       p_action_key: actionIdempotencyKey || `xp_${Date.now()}`,
@@ -553,7 +632,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async recordDailyActivity(dateStr?: string): Promise<number> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.recordDailyActivity(dateStr);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).recordDailyActivity(dateStr);
     const { data, error } = await supabase.rpc('record_learning_activity', {
       p_activity_date: dateStr || null,
     });
@@ -562,7 +641,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   async resetAll(): Promise<LearnerProfile> {
-    if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.fallbackRepo.resetAll();
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).resetAll();
     throw new Error('Production learner reset is not supported by the server contract.');
   }
 }

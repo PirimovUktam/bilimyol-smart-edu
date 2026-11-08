@@ -1,7 +1,90 @@
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/question.dart';
+import 'starter_lessons_data.dart';
 
 final Map<String, Lesson> seedLessons = {
+  'lesson_math_algebra_01': Lesson(
+    id: 'lesson_math_algebra_01',
+    courseId: 'course_math_01',
+    skillId: 'skill_math_algebra',
+    title: 'Kvadratni ochish',
+    estimatedMinutes: 8,
+    summary: '(a+b)² ni ochishda a² va b² orasidagi 2ab hadini yozing. Bu (a+b)(a+b) ni ko‘paytirishda hosil bo‘ladigan ikki bir xil ab hadining yig‘indisi.',
+    steps: [
+      const LessonStep(id: 'lesson_math_algebra_01_concept', stepNumber: 1, type: LessonStepType.concept,
+        title: 'Qoida', content: '(a+b)² ni ochishda a² va b² orasidagi 2ab hadini yozing. Bu (a+b)(a+b) ni ko‘paytirishda hosil bo‘ladigan ikki bir xil ab hadining yig‘indisi.'),
+      const LessonStep(id: 'lesson_math_algebra_01_example', stepNumber: 2, type: LessonStepType.visualExample,
+        title: 'Ishlangan misol', content: 'Masalan, (x+3)² = x² + 6x + 9. Manfiy ishorali holatda (x−3)² = x² − 6x + 9.'),
+      const LessonStep(
+        id: 'lesson_math_algebra_01_test',
+        stepNumber: 3,
+        type: LessonStepType.interactiveQuestion,
+        title: 'Bilimingizni tekshiring',
+        content: 'Variantlardan birini tanlang.',
+        interactiveQuestion: Question(
+          id: 'q_demo_math_algebra_01_quiz',
+          courseId: 'course_math_01',
+          skillId: 'skill_math_algebra',
+          text: '(x + 2)² yoyilmasida x oldidagi koeffitsiyent nechaga teng?',
+          options: ['2', '4', '8', '1'],
+          correctIndex: 1,
+          difficulty: QuestionDifficulty.medium,
+          explanation: 'Aralash had 2 · x · 2 = 4x.',
+        ),
+      ),
+    ],
+    reinforcementExercise: const Question(
+          id: 'q_demo_math_algebra_01_practice',
+          courseId: 'course_math_01',
+          skillId: 'skill_math_algebra',
+          text: '(x − 5)² ni oching.',
+          options: ['x² − 5x + 25', 'x² + 10x + 25', 'x² − 25', 'x² − 10x + 25'],
+          correctIndex: 3,
+          difficulty: QuestionDifficulty.medium,
+          explanation: 'O‘rtadagi had −2 · 5 · x = −10x, oxirgi had esa (−5)² = 25.',
+        ),
+  ),
+  'lesson_math_equations_01': Lesson(
+    id: 'lesson_math_equations_01',
+    courseId: 'course_math_01',
+    skillId: 'skill_math_equations',
+    title: 'Chiziqli tenglamani yechish',
+    estimatedMinutes: 9,
+    summary: 'Tenglikni saqlash uchun ikkala tomonga bir xil amal qo‘llanadi. Avval noma’lumli hadni ajrating, keyin uning koeffitsiyentiga bo‘ling.',
+    steps: [
+      const LessonStep(id: 'lesson_math_equations_01_concept', stepNumber: 1, type: LessonStepType.concept,
+        title: 'Qoida', content: 'Tenglikni saqlash uchun ikkala tomonga bir xil amal qo‘llanadi. Avval noma’lumli hadni ajrating, keyin uning koeffitsiyentiga bo‘ling.'),
+      const LessonStep(id: 'lesson_math_equations_01_example', stepNumber: 2, type: LessonStepType.visualExample,
+        title: 'Ishlangan misol', content: '2x + 3 = 11 bo‘lsa, ikkala tomondan 3 ayirib 2x = 8 ni olamiz. Ikkala tomonni 2 ga bo‘lsak, x = 4.'),
+      const LessonStep(
+        id: 'lesson_math_equations_01_test',
+        stepNumber: 3,
+        type: LessonStepType.interactiveQuestion,
+        title: 'Bilimingizni tekshiring',
+        content: 'Variantlardan birini tanlang.',
+        interactiveQuestion: Question(
+          id: 'q_demo_math_equations_01_quiz',
+          courseId: 'course_math_01',
+          skillId: 'skill_math_equations',
+          text: '5x − 4 = 16 tenglamasini yeching.',
+          options: ['3', '5', '4', '−4'],
+          correctIndex: 2,
+          difficulty: QuestionDifficulty.medium,
+          explanation: 'Ikkala tomonga 4 qo‘shsak, 5x = 20. Javob 4.',
+        ),
+      ),
+    ],
+    reinforcementExercise: const Question(
+          id: 'q_demo_math_equations_01_practice',
+          courseId: 'course_math_01',
+          skillId: 'skill_math_equations',
+          text: '3x + 8 = −4 tenglamasida x ni toping.',
+          options: ['4', '−12', '−4', '−2'],
+          correctIndex: 2,
+          difficulty: QuestionDifficulty.medium,
+          explanation: '8 ni ayirsak, 3x = −12. Demak, x = −4.',
+        ),
+  ),
   'lesson_math_functions_01': Lesson(
     id: 'lesson_math_functions_01',
     courseId: 'course_math_01',
@@ -631,4 +714,5 @@ final Map<String, Lesson> seedLessons = {
       explanation: 'n² qonuniyati: 6² = 36.',
     ),
   ),
+  ...starterLessons,
 };

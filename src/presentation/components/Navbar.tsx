@@ -1,211 +1,99 @@
-import React from 'react';
-import { BilimYolLogo } from './BilimYolLogo';
-import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { BookOpen, ChartNoAxesCombined, ChevronDown, House, Route, Settings, Shield, Sparkles } from 'lucide-react';
+import { useCourseStore } from '@/app/store/useCourseStore';
 import { useAuth } from '@/core/context/AuthContext';
-import {
-  Flame,
-  Award,
-  Map,
-  Compass,
-  LayoutDashboard,
-  ShieldAlert,
-  Bot,
-  TrendingUp,
-  User,
-  Sparkles,
-  Play,
-  ArrowRight,
-  GraduationCap,
-} from 'lucide-react';
+import type { AppView } from '@/app/router/AppRouter';
+import { Avatar } from './Avatar';
+import { BilimYolLogo } from './BilimYolLogo';
 
 interface NavbarProps {
-  currentView: string;
-  onNavigate: (view: string) => void;
+  currentView: AppView;
+  onNavigate: (view: AppView) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
-  const { profile } = useLearnerStore();
-  const { profile: authProfile } = useAuth();
+const studyLinks = [
+  { id: 'dashboard', label: 'Bosh sahifa', icon: House },
+  { id: 'roadmap', label: 'Ta’lim yo‘li', icon: Route },
+  { id: 'ai-tutor', label: 'Yo‘lchi AI', icon: Sparkles },
+  { id: 'progress', label: 'Natijalar', icon: ChartNoAxesCombined },
+] as const;
 
-  const userRole = authProfile?.role || 'student';
+const profileLink = { id: 'profile', label: 'Profil', icon: Settings } as const;
+const adminLink = { id: 'admin', label: 'Boshqaruv', icon: Shield } as const;
 
-  // Desktop navigation items
-  const studentDesktopLinks = [
-    { id: 'dashboard', label: 'Bosh sahifa', icon: LayoutDashboard },
-    { id: 'roadmap', label: 'Ta’lim yo‘li', icon: Map },
-    { id: 'knowledge-map', label: 'Bilim xaritasi', icon: Compass },
-    { id: 'ai-tutor', label: 'Yo‘lchi AI', icon: Bot },
-    { id: 'progress', label: 'Natijalar', icon: TrendingUp },
-  ];
+export function Navbar({ currentView, onNavigate }: NavbarProps) {
+  const { profile } = useAuth();
+  const course = useCourseStore((state) => state.activeCourse);
+  const isAdmin = profile?.role === 'admin';
+  const name = profile ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') : 'Profil';
+  const home = isAdmin ? 'admin' : 'dashboard';
+  const section = currentView === 'lesson' || currentView === 'placement' || currentView === 'knowledge-map' ? 'roadmap'
+    : currentView === 'onboarding' ? 'course-selection' : currentView;
 
-  // Mobile bottom navigation items
-  const studentMobileBottomLinks = [
-    { id: 'dashboard', label: 'Bosh sahifa', icon: LayoutDashboard },
-    { id: 'roadmap', label: 'Darslar', icon: Map },
-    { id: 'ai-tutor', label: 'Yo‘lchi AI', icon: Bot },
-    { id: 'progress', label: 'Natijalar', icon: TrendingUp },
-    { id: 'profile', label: 'Profil', icon: User },
-  ];
+  const select = onNavigate;
+  const subjectButton = (compact: boolean) => (
+    <button type="button" onClick={() => select('course-selection')}
+      aria-current={section === 'course-selection' ? 'page' : undefined}
+      aria-label="Fanni almashtirish" className={compact
+        ? 'flex min-h-11 min-w-0 items-center gap-1.5 rounded-full bg-sand px-3.5 text-xs font-bold text-brand border border-brand/20 shadow-2xs transition-transform active:scale-95'
+        : 'mt-5 flex min-h-12 w-full items-center gap-2.5 rounded-2xl border border-brand/20 bg-sand/70 px-3.5 text-left text-sm font-bold text-ink hover:bg-sand hover:border-brand/40 transition-all cursor-pointer'}>
+      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-brand text-white shadow-xs">
+        <BookOpen aria-hidden="true" className="size-3.5" />
+      </span>
+      <span className="max-w-32 truncate">{course?.title ?? 'Fan tanlash'}</span>
+      <ChevronDown aria-hidden="true" className="ml-auto size-4 shrink-0 text-brand" />
+    </button>
+  );
 
   return (
     <>
-      <nav className={`${currentView === 'dashboard' && userRole === 'student' ? 'lg:hidden' : ''} bg-paper/90 backdrop-blur-md border-b border-hairline sticky top-0 z-40`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() =>
-                  onNavigate(userRole === 'admin' ? 'admin' : 'dashboard')
-                }
-                className="cursor-pointer focus:outline-none"
-              >
-                <BilimYolLogo size="md" />
-              </button>
+      <aside className="workspace-sidebar">
+        <button
+          type="button"
+          aria-label="BilimYo‘l bosh sahifasi"
+          onClick={() => select(home)}
+          className="w-full cursor-pointer rounded-2xl bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#4F46E5] p-3 text-left shadow-md shadow-indigo-500/15 transition-transform hover:scale-[1.01]"
+        >
+          <BilimYolLogo variant="dark" showSubtitle={false} />
+        </button>
+        {!isAdmin && subjectButton(false)}
+        <nav aria-label="Asosiy navigatsiya" className="mt-6 space-y-1.5">
+          <p className="px-3 pb-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slatefine">
+            {isAdmin ? 'Boshqaruv' : 'Ta’lim maydoni'}
+          </p>
+          {(isAdmin ? [adminLink] : studyLinks).map(({ id, label, icon: Icon }) => (
+            <button type="button" key={id} onClick={() => select(id)}
+              aria-current={section === id ? 'page' : undefined}
+              className="workspace-nav-link">
+              <Icon aria-hidden="true" className="size-5 shrink-0" />
+              {label}
+            </button>
+          ))}
+        </nav>
+        <button type="button" aria-label="Profil" aria-current={section === 'profile' ? 'page' : undefined}
+          onClick={() => select('profile')} className="workspace-nav-link mt-auto gap-3! border border-hairline bg-canvas/80 p-2.5!">
+          <Avatar name={name} className="bg-brand/15! text-brand!" />
+          <span className="min-w-0 flex-1 truncate text-ink">{name}</span>
+          <Settings aria-hidden="true" className="size-4 shrink-0" />
+        </button>
+      </aside>
 
-              {/* Desktop Navigation */}
-              <div className="hidden lg:flex items-center gap-1.5 pl-5 border-l border-hairline">
-                {userRole === 'student' &&
-                  studentDesktopLinks.map((link) => {
-                    const Icon = link.icon;
-                    const isActive = currentView === link.id;
-                    return (
-                      <button
-                        key={link.id}
-                        onClick={() => onNavigate(link.id)}
-                        aria-current={isActive ? 'page' : undefined}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-ink text-white shadow-xs'
-                            : 'text-slatefine hover:text-ink hover:bg-sand'
-                        }`}
-                      >
-                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-path' : 'text-faint'}`} />
-                        <span>{link.label}</span>
-                      </button>
-                    );
-                  })}
+      <header className="workspace-mobile-header">
+        <button type="button" aria-label="BilimYo‘l bosh sahifasi" onClick={() => select(home)} className="min-w-0 cursor-pointer text-left">
+          <BilimYolLogo size="sm" showSubtitle={false} />
+        </button>
+        {isAdmin ? <button type="button" onClick={() => select('profile')} className="min-h-11 px-3 text-sm font-bold">Profil</button> : subjectButton(true)}
+      </header>
 
-                {userRole === 'admin' && (
-                  <button
-                    onClick={() => onNavigate('admin')}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#6d28d9]/10 text-[#5b21b6] border border-[#6d28d9]/25"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Boshqaruv (Admin)</span>
-                  </button>
-                )}
-
-                {/* Pitch Day 3.0 & /demo links */}
-                <div className="flex items-center gap-1.5 ml-2 pl-3 border-l border-hairline">
-                  <button
-                    onClick={() => onNavigate('pitch')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-brand/8 text-brand-dark border border-brand/20 hover:bg-brand/15 transition-all cursor-pointer group"
-                    title="Pitch Day 3.0 Taqdimot Ekrani"
-                  >
-                    <Sparkles className="w-3 h-3 text-brand group-hover:rotate-12 transition-transform" />
-                    <span>Pitch Day 3.0</span>
-                  </button>
-
-                  <button
-                    onClick={() => onNavigate('demo')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-mint/10 hover:bg-mint/20 text-[#046b4a] border border-mint/30 transition-all cursor-pointer"
-                    title="/demo Sahifasi (Video & Prototip)"
-                  >
-                    <Play className="w-2.5 h-2.5 fill-current" />
-                    <span>/demo</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Status (Role Badge + Stats + Profile) */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              {!authProfile ? (
-                <button
-                  onClick={() => onNavigate('login')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-ink hover:bg-graphite text-white text-xs font-bold shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <span>Kirish</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <>
-                  {/* Role Indicator Badge */}
-                  <div className="hidden sm:flex items-center">
-                    {userRole === 'student' && (
-                      <span className="text-graphite bg-sand border border-hairline px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <GraduationCap className="w-3.5 h-3.5 text-brand" />
-                        O‘quvchi
-                      </span>
-                    )}
-                    {userRole === 'admin' && (
-                      <span className="text-[#5b21b6] bg-[#6d28d9]/10 border border-[#6d28d9]/25 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                        Administrator
-                      </span>
-                    )}
-                  </div>
-
-                  {userRole === 'student' && (
-                    <>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber/12 border border-amber/30 text-xs font-mono font-bold text-[#8a5a00]">
-                        <Flame className="w-3.5 h-3.5 fill-amber text-amber" />
-                        <span>{profile?.streakDays ?? 0} kun</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand/8 border border-brand/25 text-xs font-mono font-bold text-brand-dark">
-                        <Award className="w-3.5 h-3.5 text-brand" />
-                        <span>{profile?.xp ?? 0} XP</span>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Profile Avatar / Link */}
-                  <button
-                    onClick={() => onNavigate('profile')}
-                    className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg transition-all cursor-pointer border ${
-                      currentView === 'profile'
-                        ? 'bg-ink text-white border-ink'
-                        : 'bg-paper hover:bg-sand text-graphite border-hairline'
-                    }`}
-                    title="Mening Profilim"
-                  >
-                    <div className="w-6 h-6 rounded-md bg-brand text-white font-mono font-bold text-xs flex items-center justify-center">
-                      {authProfile?.firstName?.charAt(0) || 'O'}
-                    </div>
-                    <span className="hidden md:inline text-xs font-bold tracking-tight">
-                      {authProfile?.firstName || 'Profil'}
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Sub-Navigation Bar for Quick Switching */}
-        <div className="lg:hidden flex items-center justify-around py-1.5 px-2 border-t border-hairline bg-paper/95">
-          {userRole === 'student' &&
-            studentMobileBottomLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = currentView === link.id;
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => onNavigate(link.id)}
-                  aria-label={link.label}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
-                    isActive ? 'text-brand font-black' : 'text-slatefine hover:text-ink'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-brand' : 'text-faint'}`} />
-                  <span>{link.label}</span>
-                </button>
-              );
-            })}
-        </div>
-      </nav>
+      {!isAdmin && <nav className="workspace-mobile-nav" aria-label="Mobil navigatsiya">
+        {[...studyLinks, profileLink]
+          .map(({ id, label, icon: Icon }) => (
+            <button type="button" key={id} onClick={() => select(id)}
+              aria-current={section === id ? 'page' : undefined}
+              className="workspace-tab">
+              <Icon aria-hidden="true" className="size-5" />{label}
+            </button>
+          ))}
+      </nav>}
     </>
   );
-};
+}

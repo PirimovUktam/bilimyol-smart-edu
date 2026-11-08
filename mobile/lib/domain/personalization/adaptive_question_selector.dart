@@ -35,10 +35,14 @@ class AdaptiveQuestionSelector {
     if (last.difficulty == QuestionDifficulty.medium) {
       return last.isCorrect ? QuestionDifficulty.hard : QuestionDifficulty.easy;
     } else if (last.difficulty == QuestionDifficulty.easy) {
-      return last.isCorrect ? QuestionDifficulty.medium : QuestionDifficulty.easy;
+      return last.isCorrect
+          ? QuestionDifficulty.medium
+          : QuestionDifficulty.easy;
     } else {
       // hard
-      return last.isCorrect ? QuestionDifficulty.hard : QuestionDifficulty.medium;
+      return last.isCorrect
+          ? QuestionDifficulty.hard
+          : QuestionDifficulty.medium;
     }
   }
 
@@ -50,6 +54,9 @@ class AdaptiveQuestionSelector {
     int targetQuestionsPerSkill = 2,
   ]) {
     final askedQuestionIds = history.map((h) => h.questionId).toSet();
+    final unasked = questionBank
+        .where((q) => !askedQuestionIds.contains(q.id))
+        .toList();
 
     // 1. Balance question distribution across target skills
     final skillCounts = <String, int>{};
@@ -59,7 +66,11 @@ class AdaptiveQuestionSelector {
 
     // Find skills that haven't reached their quota
     final pendingSkills = targetSkillIds
-        .where((sid) => (skillCounts[sid] ?? 0) < targetQuestionsPerSkill)
+        .where(
+          (sid) =>
+              (skillCounts[sid] ?? 0) < targetQuestionsPerSkill &&
+              unasked.any((q) => q.skillId == sid),
+        )
         .toList();
 
     if (pendingSkills.isEmpty) {
@@ -67,32 +78,17 @@ class AdaptiveQuestionSelector {
     }
 
     // Prioritize the skill with fewest answered questions
-    pendingSkills.sort((a, b) => (skillCounts[a] ?? 0).compareTo(skillCounts[b] ?? 0));
+    pendingSkills.sort(
+      (a, b) => (skillCounts[a] ?? 0).compareTo(skillCounts[b] ?? 0),
+    );
     final nextSkillId = pendingSkills.first;
 
     // 2. Determine target difficulty
     final targetDiff = determineNextDifficulty(nextSkillId, history);
 
     // 3. Find candidate questions in bank matching skill & difficulty
-    var candidates = questionBank.where((q) {
-      return q.skillId == nextSkillId &&
-          q.difficulty == targetDiff &&
-          !askedQuestionIds.contains(q.id);
-    }).toList();
-
-    // Fallback: any unanswered question in the same skill
-    if (candidates.isEmpty) {
-      candidates = questionBank.where((q) {
-        return q.skillId == nextSkillId && !askedQuestionIds.contains(q.id);
-      }).toList();
-    }
-
-    // Ultimate fallback: any unanswered question in bank
-    if (candidates.isEmpty) {
-      candidates = questionBank.where((q) => !askedQuestionIds.contains(q.id)).toList();
-    }
-
-    if (candidates.isEmpty) return null;
-    return candidates.first;
+    final candidates = unasked.where((q) => q.skillId == nextSkillId);
+    return candidates.where((q) => q.difficulty == targetDiff).firstOrNull ??
+        candidates.first;
   }
 }

@@ -49,8 +49,8 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(mathCourse?.subject).toBe('mathematics');
     expect(mathCourse?.lessons.length).toBeGreaterThan(0);
 
-    const firstLessonId = mathCourse!.lessons[0];
-    const lesson = await lessonRepo.getLessonById(firstLessonId);
+    expect(mathCourse?.lessons).toContain('lesson_math_functions_01');
+    const lesson = await lessonRepo.getLessonById('lesson_math_functions_01');
     expect(lesson).toBeDefined();
     expect(lesson?.courseId).toBe('course_math_01');
     expect(lesson?.title).toContain('Funksiya');
@@ -60,20 +60,14 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(formulaStep).toBeDefined();
   });
 
-  // 3. Fan bo'yicha dars mavjud emas -> noto'g'ri boshqa dars ochilmaydi, empty state saqlanadi
-  it('3. Courses without existing lessons (IT / Logic) do not fall back to math lessons', async () => {
-    const itCourse = await courseRepo.getCourseById('course_it');
-    expect(itCourse).toBeDefined();
-    expect(itCourse?.subject).toBe('it');
-    // IT course has no pre-seeded lessons; hasLessons must be false
-    expect(itCourse?.lessons.length).toBe(0);
-
-    const logicCourse = await courseRepo.getCourseById('course_logic');
-    expect(logicCourse).toBeDefined();
-    expect(logicCourse?.subject).toBe('logic');
-    expect(logicCourse?.lessons.length).toBe(0);
-
-    // Verify querying non-existent lesson in repo returns null and doesn't default to math
+  it('3. IT and logic open their own published lessons and missing IDs stay missing', async () => {
+    for (const courseId of ['course_it', 'course_logic']) {
+      const course = await courseRepo.getCourseById(courseId);
+      expect(course?.lessons.length).toBeGreaterThan(0);
+      for (const lessonId of course?.lessons ?? []) {
+        expect((await lessonRepo.getLessonById(lessonId))?.courseId).toBe(courseId);
+      }
+    }
     const nonExistentLesson = await lessonRepo.getLessonById('lesson_it_missing');
     expect(nonExistentLesson).toBeNull();
   });

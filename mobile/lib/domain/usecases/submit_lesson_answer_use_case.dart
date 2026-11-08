@@ -1,4 +1,3 @@
-import '../../data/services/i_ai_tutor_service.dart';
 import '../entities/question.dart';
 import '../repositories/i_learner_repository.dart';
 
@@ -6,27 +5,25 @@ class LessonAnswerResult {
   final bool isCorrect;
   final String selectedOption;
   final String correctOption;
-  final AIExplanationResponse? aiExplanation;
+  final String explanation;
 
   const LessonAnswerResult({
     required this.isCorrect,
     required this.selectedOption,
     required this.correctOption,
-    this.aiExplanation,
+    required this.explanation,
   });
 }
 
 class SubmitLessonAnswerUseCase {
-  final IAITutorService aiTutorService;
   final ILearnerRepository learnerRepository;
 
-  const SubmitLessonAnswerUseCase(this.aiTutorService, this.learnerRepository);
+  const SubmitLessonAnswerUseCase(this.learnerRepository);
 
   Future<LessonAnswerResult> execute({
     required Question question,
     required String lessonId,
     required int selectedIndex,
-    String? learnerName,
   }) async {
     final selectedOption = question.options[selectedIndex];
     final attempt = await learnerRepository.recordAnswerAttempt(
@@ -50,37 +47,16 @@ class SubmitLessonAnswerUseCase {
         (correctIndex >= 0 && correctIndex < question.options.length)
         ? question.options[correctIndex]
         : '';
-    final correctOption = (serverCorrectOption != null &&
-            serverCorrectOption.isNotEmpty)
+    final correctOption =
+        (serverCorrectOption != null && serverCorrectOption.isNotEmpty)
         ? serverCorrectOption
         : localCorrectOption;
 
-    if (isCorrect) {
-      return LessonAnswerResult(
-        isCorrect: true,
-        selectedOption: selectedOption,
-        correctOption: correctOption,
-      );
-    }
-
-    // Call AI Tutor service for diagnostic explanation
-    final aiExplanation = await aiTutorService.explainMistake(
-      AIExplanationRequest(
-        courseId: question.courseId,
-        skillId: question.skillId,
-        questionId: question.id,
-        questionText: question.text,
-        selectedOption: selectedOption,
-        correctOption: correctOption.isEmpty ? 'to‘g‘ri javob' : correctOption,
-        learnerName: learnerName,
-      ),
-    );
-
     return LessonAnswerResult(
-      isCorrect: false,
+      isCorrect: isCorrect,
       selectedOption: selectedOption,
       correctOption: correctOption,
-      aiExplanation: aiExplanation,
+      explanation: attempt.explanation ?? question.explanation,
     );
   }
 }

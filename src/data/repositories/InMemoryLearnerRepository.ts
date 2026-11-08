@@ -26,8 +26,8 @@ const DEFAULT_PROFILE: LearnerProfile = {
   dailyMinutes: 15,
   initialLevel: 'intermediate',
   xp: 0,
-  streakDays: 1,
-  lastActiveDate: new Date().toISOString().split('T')[0],
+  streakDays: 0,
+  lastActiveDate: '',
   scoresByCourse: {},
   completedLessonIds: [],
   completedNodeIds: [],
@@ -40,6 +40,7 @@ const DEFAULT_PROFILE: LearnerProfile = {
 // score state across instances — a cross-profile data leak).
 const createDefaultProfile = (): LearnerProfile =>
   JSON.parse(JSON.stringify(DEFAULT_PROFILE)) as LearnerProfile;
+const DEMO_PROGRESS_KEY = 'bilimyol_demo_progress';
 
 export class InMemoryLearnerRepository implements ILearnerRepository {
   readonly supportsNodeCompletion = true;
@@ -47,6 +48,29 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   private answerAttempts: AnswerAttemptRecord[] = [];
   private processedActionKeys: Set<string> = new Set();
   private recordedActivityDates: Set<string> = new Set();
+
+  constructor(private readonly tabStorage?: () => Storage) {
+    try {
+      const stored = JSON.parse(this.tabStorage?.().getItem(DEMO_PROGRESS_KEY) ?? 'null');
+      if (stored?.profile?.id !== DEFAULT_PROFILE.id || !Array.isArray(stored.answerAttempts) ||
+        !Array.isArray(stored.processedActionKeys) || !Array.isArray(stored.recordedActivityDates)) return;
+      this.profile = { ...createDefaultProfile(), ...stored.profile };
+      this.answerAttempts = stored.answerAttempts;
+      this.processedActionKeys = new Set(stored.processedActionKeys);
+      this.recordedActivityDates = new Set(stored.recordedActivityDates);
+    } catch { /* A malformed snapshot starts a fresh demo. */ }
+  }
+
+  private saveTabProgress() {
+    try {
+      this.tabStorage?.().setItem(DEMO_PROGRESS_KEY, JSON.stringify({
+        profile: this.profile,
+        answerAttempts: this.answerAttempts,
+        processedActionKeys: [...this.processedActionKeys],
+        recordedActivityDates: [...this.recordedActivityDates],
+      }));
+    } catch { /* The demo still works when browser storage is unavailable. */ }
+  }
 
   async getCurrentProfile(): Promise<LearnerProfile> {
     return this.getProfile();
@@ -83,6 +107,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       ...updates,
       scoresByCourse: updates.scoresByCourse || this.profile.scoresByCourse,
     };
+    this.saveTabProgress();
     return this.getProfile();
   }
 
@@ -94,6 +119,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       ...(this.profile.scoresByCourse[courseId] || {}),
       ...scores,
     };
+    this.saveTabProgress();
   }
 
   async savePlacementAttempt(_data: PlacementAttemptData): Promise<string> {
@@ -130,12 +156,14 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   async markNodeCompleted(nodeId: string): Promise<void> {
     if (!this.profile.completedNodeIds.includes(nodeId)) {
       this.profile.completedNodeIds.push(nodeId);
+      this.saveTabProgress();
     }
   }
 
   async markReinforcementCompleted(reinforcementId: string, _context?: ReinforcementCompletionContext): Promise<void> {
     if (!this.profile.completedReinforcementIds.includes(reinforcementId)) {
       this.profile.completedReinforcementIds.push(reinforcementId);
+      this.saveTabProgress();
       await this.addXp(15, `reinforcement_completed_${reinforcementId}`);
       await this.recordDailyActivity();
     }
@@ -259,6 +287,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     };
 
     const overallScore = SkillScoringEngine.computeOverallScore(this.profile.scoresByCourse[request.courseId] || {});
+    this.saveTabProgress();
 
     return {
       isCorrect,
@@ -304,6 +333,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
     };
 
+    this.saveTabProgress();
     return record;
   }
 
@@ -324,9 +354,11 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       const correct = dayAttempts.filter((a) => a.isCorrect).length;
       result.push({
         date: dateStr,
-        activeMinutes: Math.round(dayAttempts.length * 1.5),
+        activeMinutes: 0,
         xpEarned: correct * 2,
         lessonsCompleted: 0,
+        questionsAnswered: dayAttempts.length,
+        correctAnswers: correct,
       });
     }
 
@@ -341,6 +373,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       this.processedActionKeys.add(actionIdempotencyKey);
     }
     this.profile.xp = (this.profile.xp || 0) + amount;
+    this.saveTabProgress();
     return this.profile.xp;
   }
 
@@ -371,6 +404,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     }
 
     this.profile.lastActiveDate = today;
+    this.saveTabProgress();
     return this.profile.streakDays;
   }
 
@@ -379,6 +413,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     this.answerAttempts = [];
     this.processedActionKeys.clear();
     this.recordedActivityDates.clear();
+    this.saveTabProgress();
     return this.getProfile();
   }
 }

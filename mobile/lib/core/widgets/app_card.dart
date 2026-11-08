@@ -18,14 +18,16 @@ class AppCard extends StatelessWidget {
     this.onTap,
     this.backgroundColor,
     this.borderColor,
-    this.borderWidth = 1.2,
+    this.borderWidth = 1.0,
     this.borderRadius = 20,
     this.boxShadow,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget cardBody = Container(
+    final Widget cardBody = AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       padding: padding,
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.surface,
@@ -34,14 +36,7 @@ class AppCard extends StatelessWidget {
           color: borderColor ?? AppColors.cardBorder,
           width: borderWidth,
         ),
-        boxShadow: boxShadow ??
-            [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        boxShadow: boxShadow ?? AppColors.cardShadow,
       ),
       child: child,
     );

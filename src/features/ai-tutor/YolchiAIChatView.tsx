@@ -1,387 +1,340 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Send,
-  Sparkles,
-  ArrowRight,
-  RefreshCw,
-  AlertTriangle,
-  Terminal,
-  HelpCircle,
-  Lightbulb,
-  Compass,
-} from 'lucide-react';
-import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
-import { Button } from '@/presentation/components/Button';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { ArrowRight, BookOpen, HelpCircle, Lightbulb, Plus, RefreshCw, Send, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useLessonStore } from '@/app/store/useLessonStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { useAuth } from '@/core/context/AuthContext';
+import { readTutorHistory, writeTutorHistory, type TutorMessage } from '@/core/runtime/tutorHistory';
 import { GeminiAITutorService, GeminiAIServiceError } from '@/data/services/GeminiAITutorService';
-import { isSupabaseConfigured } from '@/core/config/supabase';
-import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
-import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
+import { Button } from '@/presentation/components/Button';
+import { Card } from '@/presentation/components/Card';
+import { IconButton } from '@/presentation/components/IconButton';
+import { LearningText } from '@/presentation/components/LearningText';
+import { PageHeader } from '@/presentation/components/PageHeader';
+import { YolchiAIMascot } from '@/presentation/components/YolchiAIMascot';
 
-interface Message {
-  id: string;
-  sender: 'ai' | 'user';
-  text: string;
-  time: string;
-  isError?: boolean;
-}
+const tutor = new GeminiAITutorService();
+const time = new Intl.DateTimeFormat('uz-Latn', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' });
+const prompts = [
+  { title: 'Qoidani sodda tushuntir', icon: Lightbulb },
+  { title: 'Yana bitta misol ber', icon: BookOpen },
+  { title: 'Mavzuni test qilib ko‘r', icon: HelpCircle },
+];
 
-interface YolchiAIChatViewProps {
-  onStartLesson?: () => void;
-}
-
-const aiService = new GeminiAITutorService();
-
-export const YolchiAIChatView: React.FC<YolchiAIChatViewProps> = ({ onStartLesson }) => {
-  const { activeCourse } = useCourseStore();
-  const { profile } = useLearnerStore();
-  const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      sender: 'ai',
-      text: 'Salom! Men sizning shaxsiy ta’lim yo‘ldoshingiz — Yo‘lchi AI man. Savollaringizga tushunarli javob beraman, xatolaringizni pedagogik tahlil qilaman va sizga mos misollar yechib beraman.',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [lastFailedPrompt, setLastFailedPrompt] = useState<string | null>(null);
-  const [aiStatus, setAiStatus] = useState<'unknown' | 'ready' | 'fallback' | 'unavailable'>(
-    isSupabaseConfigured && !isDemoRuntimeActive() ? 'unknown' : 'fallback'
-  );
-  const mountedRef = useRef(true);
-  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
-
+export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void }) {
+  const { profile, isDemoMode } = useAuth();
+  const course = useCourseStore((state) => state.activeCourse);
+  const path = useRoadmapStore((state) => state.roadmap);
+  const lesson = useLessonStore((state) => state.currentLesson);
+  const learner = useLearnerStore((state) => state.profile);
+  const courseId = course?.id;
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const scrollToBottom = useCallback(() => {
-    const el = messagesContainerRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
+    if (courseId && useRoadmapStore.getState().roadmap?.courseId !== courseId) {
+      void useRoadmapStore.getState().loadRoadmap(courseId);
     }
-  }, []);
+  }, [courseId]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
-
-  const quickPrompts = [
-    { label: 'Qoidani sodda tushuntir', icon: Lightbulb },
-    { label: 'Yana bitta misol ber', icon: Compass },
-    { label: 'Formulani ko‘rsat', icon: Terminal },
-    { label: 'Mavzuni test qilib ko‘r', icon: HelpCircle },
-  ];
-
-  const currentCourseScore = activeCourse && profile?.scoresByCourse
-    ? SkillScoringEngine.computeOverallScore(profile.scoresByCourse[activeCourse.id] || {})
-    : null;
-
-  const sendMessage = useCallback(
-    async (textToSend?: string) => {
-      const text = (textToSend ?? inputText).trim();
-      if (!text || isTyping) return;
-
-      const userMsg: Message = {
-        id: `u_${Date.now()}`,
-        sender: 'user',
-        text,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setMessages((prev) => [...prev, userMsg]);
-      setInputText('');
-      setIsTyping(true);
-      setLastFailedPrompt(null);
-
-      try {
-        const response = await aiService.askTutor({
-          message: text,
-          courseId: activeCourse?.id,
-          topic: activeCourse?.title,
-          learnerName: profile?.name,
-          learnerScore: currentCourseScore ?? undefined,
-        });
-
-        if (!mountedRef.current) return;
-        setAiStatus(response.isDeterministicFallback || !response.isAiGenerated ? 'fallback' : 'ready');
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `a_${Date.now()}`,
-            sender: 'ai' as const,
-            text: response.answer,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-      } catch (err) {
-        if (!mountedRef.current) return;
-        setAiStatus('unavailable');
-        const message =
-          err instanceof GeminiAIServiceError
-            ? err.message
-            : 'Kechirasiz, javob berishda xatolik yuz berdi. Qayta urinib ko‘ring.';
-        setLastFailedPrompt(text);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `e_${Date.now()}`,
-            sender: 'ai' as const,
-            text: message,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isError: true,
-          },
-        ]);
-      } finally {
-        if (mountedRef.current) setIsTyping(false);
-      }
-    },
-    [inputText, isTyping, activeCourse?.id, activeCourse?.title, currentCourseScore, profile?.name]
-  );
-
-  const statusLabel = aiStatus === 'unknown'
-    ? 'TEKSHIRILMOQDA'
-    : aiStatus === 'ready'
-    ? 'ONLINE // GEMINI'
-    : aiStatus === 'fallback'
-    ? 'NAMUNAVIY MODEL'
-    : 'OFFLINE';
-
-  const statusDot = aiStatus === 'ready'
-    ? 'bg-mint'
-    : aiStatus === 'fallback'
-    ? 'bg-amber-500'
-    : aiStatus === 'unknown'
-    ? 'bg-slate-400'
-    : 'bg-coral';
-
+  const activeLesson = lesson?.courseId === courseId ? lesson : null;
+  const node = path?.courseId === courseId ? path?.nodes.find((item) => item.id === path.activeNodeId) : null;
+  const skillId = activeLesson?.skillId ?? node?.skillId;
+  const topic = activeLesson?.title ?? node?.title;
+  const score = courseId && skillId ? learner?.scoresByCourse[courseId]?.[skillId]?.score : undefined;
+  const conversation = (profile?.id ?? 'guest') + '/' + (courseId ?? 'general');
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* Top Dossier Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#e4ddce]">
-        <div className="space-y-1">
-          <div className="editorial-kicker">
-            <span>PEDAGOGIK YORDAMCHI</span>
-            <span>//</span>
-            <span>LABORATORIYA</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10151f] tracking-tight">
-              Yo‘lchi AI Mentor
-            </h1>
-            <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded bg-white border border-[#e4ddce] text-slate-700 flex items-center gap-1.5 shadow-2xs">
-              <span className={`w-2 h-2 rounded-full ${statusDot} animate-pulse`} />
-              {statusLabel}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500">
-            {activeCourse ? (
-              <span>
-                Faol yo‘nalish: <strong className="text-slate-800">{activeCourse.title}</strong>{' '}
-                {currentCourseScore !== null && `(O‘zlashtirish: ${currentCourseScore}%)`}
-              </span>
-            ) : (
-              'Barcha umumiy fanlar bo‘yicha savol-javob konsoli'
-            )}
-          </p>
-        </div>
-
-        {onStartLesson && (
-          <Button
-            variant="primary"
-            size="md"
-            onClick={onStartLesson}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="font-bold shrink-0"
-          >
-            Interaktiv darsga o‘tish
-          </Button>
-        )}
-      </div>
-
-      {/* Laboratory Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Telemetry Rail */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Active Context Card */}
-          <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs space-y-3">
-            <div className="flex items-center gap-3">
-              <YolchiAIMascot size="sm" mood="explaining" />
-              <div>
-                <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-                  AGENT STATUSI
-                </span>
-                <span className="font-display text-sm font-bold text-[#10151f]">
-                  Yo‘lchi v2.4
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-[#e4ddce] space-y-2">
-              <div className="flex justify-between font-mono text-[11px]">
-                <span className="text-slate-500">Kurs:</span>
-                <span className="font-bold text-slate-800 text-right truncate max-w-[130px]">
-                  {activeCourse?.title || 'Umumiy'}
-                </span>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span className="text-slate-500">O‘zlashtirish:</span>
-                <span className="font-bold text-brand-dark">
-                  {currentCourseScore !== null ? `${currentCourseScore}%` : 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Prompts Rail */}
-          <div className="p-5 rounded-2xl bg-[#fbf9f4] border border-[#e4ddce] space-y-3">
-            <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-              Tezkor So‘rovlar
-            </span>
-            <div className="space-y-1.5">
-              {quickPrompts.map((chip, idx) => {
-                const Icon = chip.icon;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    disabled={isTyping}
-                    onClick={() => sendMessage(chip.label)}
-                    className="w-full text-left p-2.5 rounded-xl border border-[#e4ddce] bg-white hover:bg-[#f5efe4] transition-all text-xs font-semibold text-slate-800 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Icon className="w-3.5 h-3.5 text-brand shrink-0" />
-                    <span className="truncate">{chip.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Technical Info Docket */}
-          <div className="p-4 rounded-xl border border-[#e4ddce] bg-white text-[11px] font-mono text-slate-500 space-y-1">
-            <span className="font-bold text-slate-700 block uppercase">Pedagogik protokol:</span>
-            <p className="font-sans text-[11px] text-slate-600 leading-relaxed">
-              Javoblar Sokratik metod orqali to‘g‘ridan-to‘g‘ri yechim bermasdan, o‘quvchini fikrlashga yetaklaydi.
-            </p>
-          </div>
-        </div>
-
-        {/* Main Conversation Workbench */}
-        <div className="lg:col-span-3 flex flex-col justify-between rounded-2xl border border-[#e4ddce] bg-white shadow-xs min-h-[580px] overflow-hidden">
-          {/* Top Workbench Bar */}
-          <div className="px-6 py-3 border-b border-[#e4ddce] bg-[#fbf9f4] flex items-center justify-between">
-            <div className="flex items-center gap-2 font-mono text-xs text-slate-600 font-bold uppercase tracking-wider">
-              <Terminal className="w-4 h-4 text-slate-500" />
-              <span>DIALOK SEANSI // LIVE</span>
-            </div>
-            <span className="font-mono text-[10px] text-slate-400">
-              {messages.length} ta xabar
-            </span>
-          </div>
-
-          {/* Messages Stream */}
-          <div ref={messagesContainerRef} className="p-6 space-y-4 overflow-y-auto max-h-[500px]">
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-              >
-                <div
-                  className={`max-w-2xl p-4 sm:p-5 rounded-xl text-sm leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-[#10151f] text-white rounded-tr-xs shadow-xs'
-                      : msg.isError
-                      ? 'bg-coral/5 border border-coral/25 text-coral rounded-tl-xs shadow-2xs'
-                      : 'bg-[#fbf9f4] border border-[#e4ddce] text-slate-900 rounded-tl-xs shadow-2xs'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4 mb-2 font-mono text-[10px] font-bold tracking-wider uppercase opacity-75">
-                    <span>{msg.sender === 'ai' ? 'YO‘LCHI AI' : 'TALABA'}</span>
-                    <span className="font-mono-num">{msg.time}</span>
-                  </div>
-                  <p className="font-sans font-medium whitespace-pre-line text-xs sm:text-sm">
-                    {msg.text}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-
-            {/* Typing indicator */}
-            {isTyping && (
-              <div className="flex items-center gap-2 font-mono text-xs font-bold text-brand-dark p-3 bg-[#fbf9f4] rounded-xl border border-[#e4ddce] w-fit">
-                <span className="w-2 h-2 rounded-full bg-brand animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-brand animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-brand animate-bounce [animation-delay:0.4s]" />
-                <span>Yo‘lchi AI tahlil qilmoqda...</span>
-              </div>
-            )}
-
-            {/* Retry affordance after an AI error */}
-            {!isTyping && lastFailedPrompt && (
-              <div className="flex items-center gap-2 p-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <button
-                  type="button"
-                  onClick={() => sendMessage(lastFailedPrompt)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 font-mono text-xs font-bold text-amber-900 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Qayta urinish
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Console Input */}
-          <div className="p-4 sm:p-5 border-t border-[#e4ddce] bg-[#fbf9f4] space-y-3">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                sendMessage();
-              }}
-              className="flex items-center gap-2 bg-white p-1.5 pl-4 rounded-xl border border-[#e4ddce] focus-within:border-[#10151f] focus-within:ring-2 focus-within:ring-[#10151f]/10 shadow-xs"
+    <div className="learning-page space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow="Shaxsiy ustoz"
+        title="Yo‘lchi AI"
+        highlightWord="AI"
+        description="Qoidani tushunib oling, xatoni tahlil qiling yoki mavzuga mos misol so‘rang."
+        action={
+          courseId && (
+            <Button
+              variant="outline"
+              onClick={onStartLesson}
+              rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
             >
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Savol bering, masalani yozing yoki tushuntirish so‘rang..."
-                aria-label="Yo‘lchi AI ga savol yozing"
-                className="flex-1 text-sm bg-transparent border-0 outline-none text-slate-900 placeholder:text-slate-400 font-medium"
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                disabled={!inputText.trim() || isTyping}
-                className="rounded-lg px-4 py-2 font-bold"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
-
-            <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-brand" />
-                {aiStatus === 'ready'
-                  ? 'Gemini 1.5 Pro orqali pedagogik tahlil faol'
-                  : aiStatus === 'fallback'
-                  ? 'Namunaviy deterministik o‘quv javoblari faol'
-                  : 'Tarmoq holati tekshirilmoqda'}
-              </span>
-              <span>ENTER — YUBORISH</span>
-            </div>
-          </div>
-        </div>
-      </div>
+              Darsga o‘tish
+            </Button>
+          )
+        }
+      />
+      <TutorConversation
+        key={conversation}
+        conversation={conversation}
+        courseId={courseId}
+        courseTitle={course?.title}
+        skillId={skillId}
+        topic={topic}
+        score={score}
+        isDemoMode={isDemoMode}
+      />
     </div>
   );
-};
+}
+
+export function TutorConversation({ conversation, courseId, courseTitle, skillId, topic, score, isDemoMode, compact = false }: {
+  conversation: string; courseId?: string; courseTitle?: string; skillId?: string; topic?: string;
+  score?: number; isDemoMode: boolean; compact?: boolean;
+}) {
+  const [messages, setMessages] = useState(() => readTutorHistory(conversation));
+  const [draft, setDraft] = useState('');
+  const [waiting, setWaiting] = useState(false);
+  const [failure, setFailure] = useState<{ prompt: string; error: string } | null>(null);
+  const stream = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const mounted = useRef(true);
+  const busy = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (stream.current) stream.current.scrollTop = stream.current.scrollHeight;
+  }, [messages, waiting, failure]);
+
+  const keep = (next: TutorMessage[]) => {
+    const recent = next.slice(-60);
+    writeTutorHistory(conversation, recent);
+    setMessages(recent);
+  };
+
+  const send = async (prompt: string, retry = false) => {
+    const text = prompt.trim();
+    if (!text || busy.current) return;
+    busy.current = true;
+    setWaiting(true);
+    setFailure(null);
+    const prior = retry ? messages.slice(0, -1) : messages;
+    const next = retry ? messages : [...messages, { id: crypto.randomUUID(), sender: 'user' as const, text, time: Date.now() }];
+    if (!retry) {
+      keep(next);
+      setDraft('');
+    }
+
+    try {
+      const response = await tutor.askTutor({
+        message: text,
+        courseId,
+        skillId,
+        ...(isDemoMode ? { topic: topic ?? courseTitle, learnerScore: score } : {}),
+        history: prior.slice(-6).map(({ sender, text: value }) => ({ sender, text: value.slice(0, 800) })),
+      });
+      if (mounted.current) keep([...next, { id: crypto.randomUUID(), sender: 'ai', text: response.answer, time: Date.now() }]);
+    } catch (error) {
+      if (mounted.current) setFailure({
+        prompt: text,
+        error: error instanceof GeminiAIServiceError ? error.message : 'Javob olinmadi. Qayta urinib ko‘ring.',
+      });
+    } finally {
+      busy.current = false;
+      if (mounted.current) setWaiting(false);
+    }
+  };
+
+  const feedback = (id: string, value: NonNullable<TutorMessage['feedback']>) => {
+    keep(messages.map((message) => message.id === id
+      ? { ...message, feedback: message.feedback === value ? undefined : value }
+      : message));
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    void send(draft);
+  };
+
+  return (
+    <div className={compact ? 'grid min-w-0' : 'grid items-start gap-5 xl:grid-cols-[17rem_minmax(0,1fr)]'}>
+      {!compact && (
+        <aside className="fade-up stagger-1 order-2 space-y-4 xl:order-1" aria-label="O‘quv konteksti">
+          <section className="learning-hero space-y-3 rounded-3xl p-6">
+            <div aria-hidden="true" className="tutor-orbit">
+              <YolchiAIMascot size="md" mood="explaining" />
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
+              <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
+              Faol mavzu
+            </span>
+            <h2 className="font-display text-xl font-extrabold">Sizning mavzuingiz</h2>
+            <p className="break-words text-sm font-semibold text-indigo-100">{courseTitle ?? 'Umumiy suhbat'}</p>
+            {topic && <p className="break-words text-sm text-indigo-100/90">{topic}</p>}
+            {score != null && (
+              <p className="inline-flex rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200">
+                O‘zlashtirish · {score}%
+              </p>
+            )}
+          </section>
+          <Card padding="sm" className="space-y-2">
+            <span className="highlight">Tezkor savollar</span>
+            <h2 className="heading text-sm font-extrabold">Suhbatni boshlang</h2>
+            <div className="space-y-1 pt-1">
+              {prompts.map(({ title, icon: Icon }) => (
+                <button
+                  type="button"
+                  key={title}
+                  disabled={waiting}
+                  onClick={() => void send(title)}
+                  className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-medium text-slatefine transition-colors hover:bg-sand hover:text-brand disabled:opacity-50"
+                >
+                  <Icon aria-hidden="true" className="size-4 shrink-0 text-brand" />
+                  {title}
+                </button>
+              ))}
+            </div>
+          </Card>
+        </aside>
+      )}
+      <section
+        className="edtech-card fade-up stagger-2 order-1 min-w-0 overflow-hidden xl:order-2"
+        aria-label="Yo‘lchi bilan suhbat"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 p-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-sand text-brand shadow-2xs">
+              <Sparkles aria-hidden="true" className="size-5" />
+            </span>
+            <div>
+              <h2 className="heading font-extrabold">Suhbat</h2>
+              <p className="break-words text-xs font-medium text-slatefine">
+                {isDemoMode ? 'Namunaviy javoblar' : topic ?? courseTitle ?? 'Umumiy ta’lim savollari'}
+              </p>
+            </div>
+          </div>
+          {messages.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={waiting}
+              onClick={() => {
+                keep([]);
+                setFailure(null);
+                input.current?.focus();
+              }}
+              leftIcon={<Plus aria-hidden="true" className="size-4" />}
+            >
+              Yangi suhbat
+            </Button>
+          )}
+        </div>
+        <div
+          ref={stream}
+          role="log"
+          aria-label="Suhbat tarixi"
+          aria-live="polite"
+          className="min-h-64 max-h-[min(55dvh,34rem)] space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-6"
+        >
+          {messages.length === 0 && (
+            <div className="mx-auto max-w-lg py-8 text-center">
+              <span className="mx-auto mb-3 grid size-14 place-items-center rounded-2xl bg-sand text-brand">
+                <Sparkles aria-hidden="true" className="size-7" />
+              </span>
+              <p className="heading text-lg font-extrabold">Qaysi mavzuni ko‘rib chiqamiz?</p>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-slatefine">
+                Tushunmagan joyingizni yozing. Yo‘lchi sizga keyingi qadamni topishda yordam beradi.
+              </p>
+              <div className={'mt-5 flex flex-wrap justify-center gap-2 ' + (compact ? '' : 'xl:hidden')}>
+                {prompts.map(({ title }) => (
+                  <Button key={title} size="sm" variant="outline" disabled={waiting} onClick={() => void send(title)}>
+                    {title}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((message) => (
+            <article
+              key={message.id}
+              className={
+                'w-fit max-w-full rounded-2xl px-4 py-3 sm:max-w-[86%] ' +
+                (message.sender === 'user'
+                  ? 'ml-auto rounded-br-xs bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white shadow-md shadow-indigo-500/20'
+                  : 'rounded-bl-xs border border-hairline bg-canvas text-ink shadow-2xs')
+              }
+            >
+              <header className="mb-1.5 flex justify-between gap-3 text-xs font-bold">
+                <span>{message.sender === 'user' ? 'Siz' : 'Yo‘lchi AI'}</span>
+                <time className={message.sender === 'user' ? 'text-indigo-100' : 'text-slatefine'}>
+                  {time.format(message.time)}
+                </time>
+              </header>
+              <div className="text-sm leading-relaxed">
+                {message.sender === 'user' ? (
+                  <p className="break-words whitespace-pre-wrap">{message.text}</p>
+                ) : (
+                  <LearningText text={message.text} />
+                )}
+              </div>
+              {message.sender === 'ai' && (
+                <div aria-label="Javobni baholash" className="mt-2.5 flex gap-1">
+                  <IconButton
+                    label="Foydali javob"
+                    aria-pressed={message.feedback === 'helpful'}
+                    className={message.feedback === 'helpful' ? 'bg-sand text-brand' : ''}
+                    onClick={() => feedback(message.id, 'helpful')}
+                  >
+                    <ThumbsUp aria-hidden="true" className="size-4" />
+                  </IconButton>
+                  <IconButton
+                    label="Javob foyda bermadi"
+                    aria-pressed={message.feedback === 'unhelpful'}
+                    className={message.feedback === 'unhelpful' ? 'bg-sand text-brand' : ''}
+                    onClick={() => feedback(message.id, 'unhelpful')}
+                  >
+                    <ThumbsDown aria-hidden="true" className="size-4" />
+                  </IconButton>
+                </div>
+              )}
+            </article>
+          ))}
+          {waiting && <p role="status" className="text-sm font-semibold text-brand">Yo‘lchi javob tayyorlamoqda…</p>}
+          {failure && (
+            <div role="alert" className="rounded-2xl border border-coral/20 bg-rose-50 p-3.5 text-sm text-coral">
+              <p>{failure.error}</p>
+              <Button
+                className="mt-2"
+                variant="outline"
+                size="sm"
+                onClick={() => void send(failure.prompt, true)}
+                leftIcon={<RefreshCw aria-hidden="true" className="size-4" />}
+              >
+                Qayta urinish
+              </Button>
+            </div>
+          )}
+        </div>
+        <form onSubmit={submit} className="space-y-2 border-t border-hairline bg-canvas/40 p-3.5 sm:p-5">
+          <div className="flex items-end gap-2.5">
+            <textarea
+              ref={input}
+              aria-label="Yo‘lchi AI ga savol yozing"
+              rows={2}
+              maxLength={4000}
+              className="form-input min-w-0 flex-1 resize-y bg-white px-3.5 py-2.5"
+              placeholder="Savolingizni yozing…"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  void send(draft);
+                }
+              }}
+            />
+            <IconButton
+              type="submit"
+              label="Savolni yuborish"
+              disabled={!draft.trim() || waiting}
+              className="commonBtn !size-11 !p-0 text-white!"
+            >
+              <Send aria-hidden="true" className="size-5" />
+            </IconButton>
+          </div>
+          <p className="text-xs text-slatefine">AI izohini darsdagi qoida va misollar bilan tekshiring.</p>
+        </form>
+      </section>
+    </div>
+  );
+}

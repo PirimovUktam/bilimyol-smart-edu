@@ -131,15 +131,6 @@ export class SubmitReinforcementUseCase {
       xpAwarded,
     });
 
-    // Also mark the target node as completed so downstream unlocks
-    const targetNodeId = reinforcementNodeId.replace('reinf_', '');
-    // The server completion RPC is authoritative in production. Do not mark a
-    // roadmap node as completed in an in-memory cache after a remote success;
-    // that would make the UI report a state the server cannot reproduce.
-    if (this.learnerRepo.supportsNodeCompletion !== false) {
-      await this.learnerRepo.markNodeCompleted(targetNodeId);
-    }
-
     // 4. Save new score
     const updatedSkillScore = {
       skillId,

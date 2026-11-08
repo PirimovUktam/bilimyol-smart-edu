@@ -28,6 +28,7 @@
         "npm:canvas-confetti@^1.9.4",
         "npm:clsx@^2.1.1",
         "npm:framer-motion@^13.1.0",
+        "npm:katex@0.19.1",
         "npm:lucide-react@^1.31.0",
         "npm:oxlint@^1.75.0",
         "npm:playwright@^1.64.0",
@@ -37,7 +38,7 @@
         "npm:tailwind-merge@^3.6.0",
         "npm:tailwindcss@^4.3.3",
         "npm:typescript@~6.0.2",
-        "npm:vite@^8.2.0",
+        "npm:vite@^8.3.5",
         "npm:vitest@^4.1.10",
         "npm:zustand@^5.0.15"
       ]

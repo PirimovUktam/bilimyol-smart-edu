@@ -12,6 +12,8 @@ export interface Course {
   secondaryColorHex?: string;
   skills: string[]; // skill IDs
   lessons: string[]; // lesson IDs
+  starterLessonId?: string;
+  foundationLessonIds?: string[];
   totalStudentsEstimate?: number;
   isActive?: boolean;
 }

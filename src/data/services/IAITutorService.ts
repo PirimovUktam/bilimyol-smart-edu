@@ -66,6 +66,8 @@ export interface GenerateLessonRequest {
 export interface AskTutorRequest {
   message: string;
   courseId?: string;
+  skillId?: string;
+  history?: { sender: 'user' | 'ai'; text: string }[];
   topic?: string;
   learnerName?: string;
   learnerScore?: number;

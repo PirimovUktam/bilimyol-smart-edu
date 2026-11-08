@@ -10,7 +10,9 @@ export const SEED_COURSES: Course[] = [
     primaryColor: '#2563EB',
     secondaryColor: '#3B82F6',
     skills: ['skill_math_algebra', 'skill_math_equations', 'skill_math_functions', 'skill_math_graphs'],
-    lessons: ['lesson_math_functions_01', 'lesson_math_functions_02', 'lesson_math_functions_03'],
+    lessons: ['lesson_math_algebra_01', 'lesson_math_equations_01', 'lesson_math_functions_01', 'lesson_math_functions_02', 'lesson_math_functions_03', 'lesson_math_starter', 'lesson_math_foundation_02'],
+    starterLessonId: 'lesson_math_starter',
+    foundationLessonIds: ['lesson_math_starter', 'lesson_math_foundation_02'],
     totalStudentsEstimate: 1420,
   },
   {
@@ -22,7 +24,9 @@ export const SEED_COURSES: Course[] = [
     primaryColor: '#14B8A6',
     secondaryColor: '#0D9488',
     skills: ['skill_eng_vocab', 'skill_eng_grammar', 'skill_eng_listening', 'skill_eng_reading'],
-    lessons: ['lesson_eng_listening_01', 'lesson_eng_vocab_01', 'lesson_eng_grammar_01'],
+    lessons: ['lesson_eng_listening_01', 'lesson_eng_vocab_01', 'lesson_eng_grammar_01', 'lesson_eng_starter', 'lesson_eng_foundation_02'],
+    starterLessonId: 'lesson_eng_starter',
+    foundationLessonIds: ['lesson_eng_starter', 'lesson_eng_foundation_02'],
     totalStudentsEstimate: 1890,
   },
   {
@@ -34,7 +38,9 @@ export const SEED_COURSES: Course[] = [
     primaryColor: '#06B6D4',
     secondaryColor: '#0891B2',
     skills: ['skill_it_python', 'skill_it_web'],
-    lessons: [],
+    lessons: ['lesson_it_python_01', 'lesson_it_web_01', 'lesson_it_starter', 'lesson_it_foundation_02'],
+    starterLessonId: 'lesson_it_starter',
+    foundationLessonIds: ['lesson_it_starter', 'lesson_it_foundation_02'],
     totalStudentsEstimate: 980,
   },
   {
@@ -46,7 +52,9 @@ export const SEED_COURSES: Course[] = [
     primaryColor: '#10B981',
     secondaryColor: '#059669',
     skills: ['skill_logic_puzzles', 'skill_logic_patterns'],
-    lessons: [],
+    lessons: ['lesson_logic_puzzles_01', 'lesson_logic_patterns_01', 'lesson_logic_starter', 'lesson_logic_foundation_02'],
+    starterLessonId: 'lesson_logic_starter',
+    foundationLessonIds: ['lesson_logic_starter', 'lesson_logic_foundation_02'],
     totalStudentsEstimate: 850,
   },
 ];

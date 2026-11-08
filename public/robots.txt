@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /reset-password
+Disallow: /?view=
+
+Sitemap: https://bilimyol.uz/sitemap.xml

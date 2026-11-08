@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useTransition } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert,
   PlusCircle,
@@ -18,6 +17,8 @@ import {
   Check,
 } from 'lucide-react';
 import { Button } from '../../presentation/components/Button';
+import { Modal } from '../../presentation/components/Modal';
+import type { SubjectType } from '@/core/types/common';
 import { Card } from '../../presentation/components/Card';
 import { Badge } from '../../presentation/components/Badge';
 import {
@@ -134,8 +135,8 @@ export const AdminDashboardView: React.FC = () => {
       setSkills(sList);
       setLessons(lList);
       setQuestions(qList);
-    } catch (err) {
-      console.warn('Error loading CMS data:', err);
+    } catch {
+      setStatusMsg({ text: 'Kontentni yuklab bo‘lmadi. Qayta urinib ko‘ring.', isError: true });
     } finally {
       setIsCmsLoading(false);
     }
@@ -300,6 +301,8 @@ export const AdminDashboardView: React.FC = () => {
     return true;
   });
 
+  const formError = statusMsg?.isError && <p role="alert" className="text-sm text-coral">{statusMsg.text}</p>;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Header */}
@@ -384,6 +387,7 @@ export const AdminDashboardView: React.FC = () => {
       {/* Tab Navigation Navigation Bar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
         <button
+          aria-pressed={activeTab === 'courses'}
           onClick={() => startTransition(() => setActiveTab('courses'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'courses'
@@ -396,6 +400,7 @@ export const AdminDashboardView: React.FC = () => {
         </button>
 
         <button
+          aria-pressed={activeTab === 'skills'}
           onClick={() => startTransition(() => setActiveTab('skills'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'skills'
@@ -408,6 +413,7 @@ export const AdminDashboardView: React.FC = () => {
         </button>
 
         <button
+          aria-pressed={activeTab === 'lessons'}
           onClick={() => startTransition(() => setActiveTab('lessons'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'lessons'
@@ -420,6 +426,7 @@ export const AdminDashboardView: React.FC = () => {
         </button>
 
         <button
+          aria-pressed={activeTab === 'questions'}
           onClick={() => startTransition(() => setActiveTab('questions'))}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'questions'
@@ -450,12 +457,13 @@ export const AdminDashboardView: React.FC = () => {
                   id: `course_${Date.now()}`,
                   title: '',
                   description: '',
-                  subject: 'mathematics',
+                  subject: 'other',
                   primaryColorHex: '#3550d6',
                   secondaryColorHex: '#0d9ad6',
                   totalStudentsEstimate: 1000,
                   isActive: true,
                 });
+                setStatusMsg(null);
                 setShowCourseModal(true);
               }}
               className="gap-1.5"
@@ -491,6 +499,7 @@ export const AdminDashboardView: React.FC = () => {
                     size="sm"
                     onClick={() => {
                       setCourseForm({ ...c });
+                      setStatusMsg(null);
                       setShowCourseModal(true);
                     }}
                     className="gap-1 text-xs"
@@ -895,16 +904,15 @@ export const AdminDashboardView: React.FC = () => {
       {/* ========================================================================= */}
       {/* MODALS */}
       {/* ========================================================================= */}
-      <AnimatePresence>
         {/* Course Modal */}
         {showCourseModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-border">
-              <h3 className="text-base font-bold text-foreground mb-4">Fan Ma’lumotlarini Kiritish</h3>
+          <Modal isOpen onClose={() => setShowCourseModal(false)} title="Fan ma’lumotlari" maxWidth="md" dismissable={!isSubmitting}>
               <form onSubmit={handleSaveCourse} className="space-y-3 text-xs">
+                {formError}
                 <div>
-                  <label className="font-bold text-foreground block mb-1">Fan Nomi *</label>
+                  <label htmlFor="admin-course-title" className="font-bold text-foreground block mb-1">Fan nomi</label>
                   <input
+                    id="admin-course-title"
                     type="text"
                     required
                     value={courseForm.title}
@@ -914,8 +922,20 @@ export const AdminDashboardView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-foreground block mb-1">Tavsifi</label>
+                  <label htmlFor="admin-course-subject" className="font-bold text-foreground block mb-1">Fan turi</label>
+                  <select id="admin-course-subject" className="form-input px-3" value={courseForm.subject ?? 'other'}
+                    onChange={(event) => setCourseForm({ ...courseForm, subject: event.target.value as SubjectType })}>
+                    <option value="mathematics">Matematika</option>
+                    <option value="english">Ingliz tili</option>
+                    <option value="it">IT va dasturlash</option>
+                    <option value="logic">Mantiq</option>
+                    <option value="other">Boshqa</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="admin-course-description" className="font-bold text-foreground block mb-1">Tavsifi</label>
                   <textarea
+                    id="admin-course-description"
                     rows={2}
                     value={courseForm.description}
                     onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
@@ -925,8 +945,9 @@ export const AdminDashboardView: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="font-bold text-foreground block mb-1">Asosiy Rang (HEX)</label>
+                    <label htmlFor="admin-course-color" className="font-bold text-foreground block mb-1">Asosiy rang (HEX)</label>
                     <input
+                      id="admin-course-color"
                       type="text"
                       value={courseForm.primaryColorHex}
                       onChange={(e) => setCourseForm({ ...courseForm, primaryColorHex: e.target.value })}
@@ -934,8 +955,9 @@ export const AdminDashboardView: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-foreground block mb-1">Status</label>
+                    <label htmlFor="admin-course-status" className="font-bold text-foreground block mb-1">Holat</label>
                     <select
+                      id="admin-course-status"
                       value={courseForm.isActive ? 'true' : 'false'}
                       onChange={(e) => setCourseForm({ ...courseForm, isActive: e.target.value === 'true' })}
                       className="w-full px-3 py-2 border border-border rounded-xl bg-secondary/50 outline-none"
@@ -946,20 +968,18 @@ export const AdminDashboardView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-3">
-                  <Button variant="ghost" type="button" onClick={() => setShowCourseModal(false)}>Bekor qilish</Button>
+                  <Button variant="ghost" type="button" disabled={isSubmitting} onClick={() => setShowCourseModal(false)}>Bekor qilish</Button>
                   <Button variant="primary" type="submit" isLoading={isSubmitting}>Saqlash</Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+          </Modal>
         )}
 
         {/* Skill Modal */}
         {showSkillModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-border">
-              <h3 className="text-base font-bold text-foreground mb-4">Ko‘nikma / Mavzu Qo‘shish</h3>
+          <Modal isOpen onClose={() => setShowSkillModal(false)} title="Ko‘nikma ma’lumotlari" maxWidth="md">
               <form onSubmit={handleSaveSkill} className="space-y-3 text-xs">
+                {formError}
                 <div>
                   <label className="font-bold text-foreground block mb-1">Fan</label>
                   <select
@@ -1020,16 +1040,14 @@ export const AdminDashboardView: React.FC = () => {
                   <Button variant="primary" type="submit" isLoading={isSubmitting}>Saqlash</Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+          </Modal>
         )}
 
         {/* Lesson Modal */}
         {showLessonModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-border max-h-[90vh] overflow-y-auto">
-              <h3 className="text-base font-bold text-foreground mb-4">Darslik Qo‘shish / Tahrirlash</h3>
+          <Modal isOpen onClose={() => setShowLessonModal(false)} title="Dars ma’lumotlari" maxWidth="lg">
               <form onSubmit={handleSaveLesson} className="space-y-3 text-xs">
+                {formError}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="font-bold text-foreground block mb-1">Fan</label>
@@ -1104,16 +1122,14 @@ export const AdminDashboardView: React.FC = () => {
                   <Button variant="primary" type="submit" isLoading={isSubmitting}>Darsni Saqlash</Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+          </Modal>
         )}
 
         {/* Question Modal */}
         {showQuestionModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-border max-h-[90vh] overflow-y-auto">
-              <h3 className="text-base font-bold text-foreground mb-4">Savol Qo‘shish / Tahrirlash</h3>
+          <Modal isOpen onClose={() => setShowQuestionModal(false)} title="Savol ma’lumotlari" maxWidth="lg">
               <form onSubmit={handleSaveQuestion} className="space-y-3 text-xs">
+                {formError}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="font-bold text-foreground block mb-1">Fan</label>
@@ -1241,10 +1257,8 @@ export const AdminDashboardView: React.FC = () => {
                   <Button variant="primary" type="submit" isLoading={isSubmitting}>Savolni Saqlash</Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+          </Modal>
         )}
-      </AnimatePresence>
     </div>
   );
 };

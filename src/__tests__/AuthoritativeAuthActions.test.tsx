@@ -6,13 +6,13 @@ import { isDemoRuntimeActive, setDemoRuntimeActive } from '../core/runtime/demoR
 
 const backend = vi.hoisted(() => ({
   configured: true, query: vi.fn(), from: vi.fn(), signIn: vi.fn(), signUp: vi.fn(),
-  insert: vi.fn(), signOut: vi.fn(), getUser: vi.fn(),
+  insert: vi.fn(), signOut: vi.fn(), getUser: vi.fn(), resend: vi.fn(),
 }));
 vi.mock('../core/config/supabase', () => ({
   get isSupabaseConfigured() { return backend.configured; },
   supabase: {
     from: backend.from,
-    auth: { signInWithPassword: backend.signIn, signUp: backend.signUp, signOut: backend.signOut, getUser: backend.getUser },
+    auth: { signInWithPassword: backend.signIn, signUp: backend.signUp, signOut: backend.signOut, getUser: backend.getUser, resend: backend.resend },
   },
 }));
 // Exercise the provider's real public auth actions without introducing a DOM
@@ -37,6 +37,12 @@ beforeEach(() => {
     setItem: (key: string, value: string) => storage.set(key, value),
     removeItem: (key: string) => storage.delete(key),
   });
+  const tabStorage = new Map<string, string>();
+  vi.stubGlobal('sessionStorage', {
+    getItem: (key: string) => tabStorage.get(key) ?? null,
+    setItem: (key: string, value: string) => tabStorage.set(key, value),
+    removeItem: (key: string) => tabStorage.delete(key),
+  });
   backend.from.mockReturnValue({
     select: () => ({ eq: () => ({ maybeSingle: backend.query }) }),
     insert: backend.insert,
@@ -56,11 +62,28 @@ afterEach(() => {
 });
 
 describe('authoritative configured authentication actions', () => {
+  it('reports email delivery failure without claiming signup or loading a profile', async () => {
+    backend.signUp.mockResolvedValueOnce({ data: { user: null, session: null }, error: { code: 'over_email_send_rate_limit', message: 'provider detail' } });
+    const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
+    expect(result.error?.message).toContain('Hozir xat yuborilmadi');
+    expect(result.requiresEmailConfirmation).toBeUndefined();
+    expect(backend.query).not.toHaveBeenCalled();
+  });
+
+  it('resends signup confirmation to the current site and propagates rate limits', async () => {
+    vi.stubGlobal('window', { location: { origin: 'https://bilimyol.test' } });
+    backend.resend.mockResolvedValueOnce({ error: { code: 'over_email_send_rate_limit' } });
+    const result = await actions().resendConfirmation(' auth@example.invalid ');
+    expect(backend.resend).toHaveBeenCalledWith({ type: 'signup', email: user.email, options: { emailRedirectTo: 'https://bilimyol.test' } });
+    expect(result.error?.message).toContain('Hozir xat yuborilmadi');
+    expect(backend.query).not.toHaveBeenCalled();
+  });
+
   it('uses the database role, never signup metadata, after sign-in', async () => {
     const result = await actions().signIn(user.email, 'not-a-real-password');
     expect(result.error).toBeNull();
     expect(result.profile).toMatchObject({ id: user.id, firstName: 'Ali', role: 'student' });
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile.role).toBe('student');
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
   it.each([
@@ -92,10 +115,7 @@ describe('authoritative configured authentication actions', () => {
     expect(result.error).toBeNull();
     expect(result.requiresEmailConfirmation).toBeUndefined();
     expect(backend.query).toHaveBeenCalledOnce();
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile).toMatchObject({
-      id: user.id,
-      role: 'student',
-    });
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
   it('self-provisions a missing profile with safe columns, then reads its server role', async () => {
@@ -114,7 +134,8 @@ describe('authoritative configured authentication actions', () => {
       email: user.email,
     });
     expect(backend.insert.mock.calls[0][0]).not.toHaveProperty('role');
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile.role).toBe('student');
+    expect(backend.query).toHaveBeenCalledTimes(2);
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
   it('reports provisioning failure instead of successful signed-in signup', async () => {
@@ -148,7 +169,8 @@ describe('authoritative configured authentication actions', () => {
     expect(result.error).toBeNull();
     expect(signupPayload.options.data).toEqual({ first_name: 'Ali', last_name: 'Vali' });
     expect(signupPayload.options.data).not.toHaveProperty('role');
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!).profile.role).toBe('student');
+    expect(backend.query).toHaveBeenCalledOnce();
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
   it('discards an authoritative profile response after explicit sign-out', async () => {
@@ -183,7 +205,8 @@ describe('authoritative configured authentication actions', () => {
     auth.setDemoUser();
 
     expect(isDemoRuntimeActive()).toBe(true);
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!)).toMatchObject({
+    expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
+    expect(JSON.parse(sessionStorage.getItem('bilimyol_demo_session')!)).toMatchObject({
       isDemoMode: true,
       profile: { id: 'guest_user_01' },
     });
@@ -197,9 +220,23 @@ describe('authoritative configured authentication actions', () => {
     const auth = actions();
     auth.setDemoUser();
 
-    expect(JSON.parse(localStorage.getItem('bilimyol_auth_session')!)).toMatchObject({
+    expect(JSON.parse(sessionStorage.getItem('bilimyol_demo_session')!)).toMatchObject({
       isDemoMode: true,
       profile: { id: 'guest_user_01' },
     });
+  });
+
+  it('never turns credentials into a demo account when the auth server is unconfigured', async () => {
+    backend.configured = false;
+    vi.stubEnv('PROD', false);
+    const auth = actions();
+    const signIn = await auth.signIn('admin@example.invalid', 'not-a-real-password');
+    const signUp = await auth.signUp('new@example.invalid', 'not-a-real-password', 'Ali', 'Vali');
+    expect(signIn.error).toBeInstanceOf(Error);
+    expect(signUp.error).toBeInstanceOf(Error);
+    expect(isDemoRuntimeActive()).toBe(false);
+    expect(sessionStorage.getItem('bilimyol_demo_session')).toBeNull();
+    expect(backend.signIn).not.toHaveBeenCalled();
+    expect(backend.signUp).not.toHaveBeenCalled();
   });
 });

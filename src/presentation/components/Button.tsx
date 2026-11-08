@@ -26,39 +26,41 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center font-bold tracking-tight rounded-[var(--radius-control)] transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
+    'inline-flex items-center justify-center font-bold tracking-tight rounded-[var(--radius-control)] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-xs gap-1.5',
-    md: 'px-4.5 py-2.5 text-sm gap-2',
-    lg: 'px-6 py-3 text-base gap-2.5',
+    sm: 'min-h-9 px-3.5 py-1.5 text-xs gap-1.5 pointer-coarse:min-h-11',
+    md: 'min-h-11 px-5 py-2.5 text-sm gap-2',
+    lg: 'min-h-12 px-6 py-3 text-base gap-2.5',
   };
 
   const variantStyles = {
     primary:
-      'bg-brand hover:bg-brand-dark text-white shadow-sm shadow-brand/25 border border-brand',
+      'commonBtn bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white border border-transparent shadow-[0_8px_20px_-4px_rgba(79,70,229,0.4)] hover:shadow-[0_12px_26px_-4px_rgba(79,70,229,0.52)] hover:-translate-y-0.5',
     secondary:
-      'bg-ink hover:bg-graphite text-white shadow-sm border border-ink',
+      'bg-ink hover:bg-graphite text-white shadow-sm border border-ink hover:-translate-y-0.5',
     gradient:
-      'bg-gradient-to-r from-brand to-path hover:brightness-105 text-white shadow-md shadow-brand/30 border-0',
+      'commonBtn bg-gradient-to-r from-[#4F46E5] via-[#3B82F6] to-[#0EA5E9] hover:brightness-105 text-white shadow-[0_8px_20px_-4px_rgba(79,70,229,0.45)] border-0 hover:-translate-y-0.5',
     cyan:
-      'bg-path hover:bg-secondary-hover text-white shadow-sm border-0',
+      'bg-path hover:bg-secondary-hover text-white shadow-[0_8px_18px_-4px_rgba(14,165,233,0.38)] border-0 hover:-translate-y-0.5',
     coral:
-      'bg-coral hover:brightness-95 text-white shadow-sm border-0',
+      'bg-coral hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(225,29,72,0.35)] border-0 hover:-translate-y-0.5',
     outline:
-      'bg-paper hover:bg-canvas text-ink border border-hairline hover:border-slatefine shadow-2xs',
+      'bg-paper hover:bg-sand/60 text-ink border border-hairline hover:border-brand/40 shadow-2xs hover:-translate-y-0.5',
     ghost:
-      'bg-transparent hover:bg-sand text-graphite',
+      'bg-transparent hover:bg-sand/80 text-graphite hover:text-brand-dark',
     danger:
-      'bg-coral hover:brightness-95 text-white shadow-sm shadow-coral/20',
+      'bg-coral hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(225,29,72,0.35)]',
     success:
-      'bg-mint hover:brightness-95 text-white shadow-sm shadow-mint/20',
+      'bg-mint hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(16,185,129,0.38)] hover:-translate-y-0.5',
   };
 
   return (
     <button
+      type="button"
       className={cn(baseStyles, sizeStyles[size], variantStyles[variant], className)}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       {...props}
     >
       {isLoading ? (

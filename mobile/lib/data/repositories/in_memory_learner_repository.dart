@@ -8,7 +8,7 @@ import '../datasources/questions_data.dart';
 import '../datasources/lessons_data.dart';
 import '../datasources/roadmaps_data.dart';
 
-class InMemoryLearnerRepository implements ILearnerRepository {
+class InMemoryLearnerRepository extends ILearnerRepository {
   @override
   bool get supportsNodeCompletion => true;
 
@@ -50,8 +50,30 @@ class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   @override
-  Future<LearnerProfile> updateProfile(LearnerProfile updated) async {
-    _profile = updated;
+  Future<LearnerProfile> updateProfile(
+    LearnerProfile updated, {
+    Set<LearnerProfileField>? fields,
+  }) async {
+    if (fields == null) {
+      _profile = updated;
+    } else {
+      _profile = _profile.copyWith(
+        name: fields.contains(LearnerProfileField.name) ? updated.name : null,
+        selectedCourseId: fields.contains(LearnerProfileField.selectedCourse)
+            ? updated.selectedCourseId
+            : null,
+        goal: fields.contains(LearnerProfileField.goal) ? updated.goal : null,
+        dailyMinutes: fields.contains(LearnerProfileField.dailyMinutes)
+            ? updated.dailyMinutes
+            : null,
+        initialLevel: fields.contains(LearnerProfileField.initialLevel)
+            ? updated.initialLevel
+            : null,
+        courseLevels: fields.contains(LearnerProfileField.courseLevels)
+            ? updated.courseLevels
+            : null,
+      );
+    }
     return _profile;
   }
 
@@ -208,7 +230,9 @@ class InMemoryLearnerRepository implements ILearnerRepository {
     required String selectedAnswer,
   }) async {
     Question? question;
-    for (final candidate in placementQuestionsData.values.expand((items) => items)) {
+    for (final candidate in placementQuestionsData.values.expand(
+      (items) => items,
+    )) {
       if (candidate.id == questionId) {
         question = candidate;
         break;

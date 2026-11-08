@@ -58,17 +58,17 @@ describe('Curriculum answer-key integrity & scorable AI content', () => {
     const clientQuestion = toClientQuestion(authored);
 
     const repo = new InMemoryLearnerRepository();
-    const useCase = new SubmitLessonAnswerUseCase(new DemoAITutorService(), repo);
+    const useCase = new SubmitLessonAnswerUseCase(repo);
 
-    const correct = await useCase.execute(clientQuestion, correctIndex, 'Ali', lesson.id);
+    const correct = await useCase.execute(clientQuestion, correctIndex, lesson.id);
     expect(correct.isCorrect).toBe(true);
     expect(correct.correctOption).toBe(authored.options[correctIndex]);
 
     const wrongIndex = (correctIndex + 1) % authored.options.length;
-    const wrong = await useCase.execute(clientQuestion, wrongIndex, 'Ali', lesson.id);
+    const wrong = await useCase.execute(clientQuestion, wrongIndex, lesson.id);
     expect(wrong.isCorrect).toBe(false);
     expect(wrong.correctOption).toBe(authored.options[correctIndex]);
-    expect(wrong.aiExplanation).toBeDefined();
+    expect(wrong.explanation).toBe(authored.explanation);
   });
 
   it('AI-generated lesson questions are scorable and never leak the answer key', async () => {
@@ -92,10 +92,10 @@ describe('Curriculum answer-key integrity & scorable AI content', () => {
       explanation: '',
     };
 
-    const useCase = new SubmitLessonAnswerUseCase(service, new InMemoryLearnerRepository());
+    const useCase = new SubmitLessonAnswerUseCase(new InMemoryLearnerRepository());
     const results = [];
     for (let index = 0; index < generated.options.length; index++) {
-      results.push(await useCase.execute(clientQuestion, index, 'Ali', lesson.lessonId));
+      results.push(await useCase.execute(clientQuestion, index, lesson.lessonId));
     }
 
     const correctResults = results.filter((result) => result.isCorrect);
@@ -127,10 +127,10 @@ describe('Curriculum answer-key integrity & scorable AI content', () => {
       explanation: '',
     };
 
-    const useCase = new SubmitLessonAnswerUseCase(service, new InMemoryLearnerRepository());
+    const useCase = new SubmitLessonAnswerUseCase(new InMemoryLearnerRepository());
     const results = [];
     for (let index = 0; index < fallback.options.length; index++) {
-      results.push(await useCase.execute(clientQuestion, index, 'Ali', 'lesson_fallback'));
+      results.push(await useCase.execute(clientQuestion, index, 'lesson_fallback'));
     }
     expect(results.filter((result) => result.isCorrect)).toHaveLength(1);
     results

@@ -1,11 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/i_learner_repository.dart';
 import '../../domain/entities/learner_profile.dart';
+import '../../domain/entities/placement_session.dart';
+import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../core/config/supabase_config.dart';
 import 'in_memory_learner_repository.dart';
+import 'supabase_course_repository.dart';
 
-class SupabaseLearnerRepository implements ILearnerRepository {
+class SupabaseLearnerRepository extends ILearnerRepository {
   final InMemoryLearnerRepository _fallbackRepo = InMemoryLearnerRepository();
 
   @override
@@ -14,6 +17,67 @@ class SupabaseLearnerRepository implements ILearnerRepository {
   @override
   bool get supportsServerPlacementPersistence =>
       SupabaseConfig.hasRemoteConfiguration;
+
+  @override
+  bool get supportsPlacementSessions => SupabaseConfig.hasRemoteConfiguration;
+
+  @override
+  Future<PlacementSession> advancePlacement(
+    String courseId, {
+    String? sessionId,
+    String? questionId,
+    int? selectedIndex,
+    bool restart = false,
+  }) async {
+    final data = await Supabase.instance.client.rpc(
+      'advance_placement',
+      params: {
+        'p_course_id': courseId,
+        if (sessionId != null) ...{
+          'p_session_id': sessionId,
+          'p_question_id': questionId,
+          'p_selected_index': selectedIndex,
+        },
+        if (restart) 'p_restart': true,
+      },
+    ) as Map<String, dynamic>;
+    final question = data['question'] as Map<String, dynamic>?;
+    final result = data['result'] as Map<String, dynamic>?;
+    return PlacementSession(
+      id: data['session_id'] as String,
+      questionNumber: data['question_number'] as int,
+      totalQuestions: data['total_questions'] as int,
+      question: question == null
+          ? null
+          : SupabaseCourseRepository.questionFromRow(question),
+      result: result == null
+          ? null
+          : CompletedPlacement(
+              attemptId: result['attempt_id'] as String,
+              weakestSkillId: result['weakest_skill_id'] as String? ?? '',
+              completedAt: DateTime.parse(result['completed_at'] as String),
+              review: (result['answers'] as List)
+                  .map((answer) {
+                    final row = answer as Map<String, dynamic>;
+                    return PlacementReview(
+                      submission: QuestionAnswerSubmission(
+                        questionId: row['question_id'] as String,
+                        selectedIndex: row['selected_index'] as int,
+                        isCorrect: row['is_correct'] as bool,
+                        timeSpentSeconds: row['time_spent_seconds'] as int,
+                      ),
+                      question: row['question_text'] as String,
+                      selected: row['selected_option'] as String,
+                      correct: row['correct_option'] as String,
+                      explanation: row['explanation'] as String,
+                    );
+                  })
+                  .toList(growable: false),
+            ),
+      wasReset: data['reset'] == true,
+      canRetake: data['can_retake'] == true,
+    );
+  }
 
   @override
   bool get supportsServerReinforcementPersistence =>
@@ -26,7 +90,9 @@ class SupabaseLearnerRepository implements ILearnerRepository {
 
   @override
   Future<LearnerProfile> getProfile() async {
-    if (!SupabaseConfig.hasRemoteConfiguration) return _fallbackRepo.getProfile();
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      return _fallbackRepo.getProfile();
+    }
     try {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
@@ -66,17 +132,28 @@ class SupabaseLearnerRepository implements ILearnerRepository {
           'updated_at': DateTime.now().toIso8601String(),
         };
         if (userProfile != null) {
-          await client.from('profiles').update(editableProfile).eq('id', user.id);
+          await client
+              .from('profiles')
+              .update(editableProfile)
+              .eq('id', user.id);
         } else {
-          await client.from('profiles').upsert({
-            'id': user.id, 'email': user.email ?? '', ...editableProfile,
-          }, onConflict: 'id', ignoreDuplicates: true);
+          await client
+              .from('profiles')
+              .upsert(
+                {'id': user.id, 'email': user.email ?? '', ...editableProfile},
+                onConflict: 'id',
+                ignoreDuplicates: true,
+              );
         }
         // A signup trigger or concurrent reader may have provisioned the row.
         // Read back the winner instead of manufacturing a local profile.
-        userProfile = await client.from('profiles')
-            .select('id, first_name, last_name, display_name, email, avatar_url')
-            .eq('id', user.id).single();
+        userProfile = await client
+            .from('profiles')
+            .select(
+              'id, first_name, last_name, display_name, email, avatar_url',
+            )
+            .eq('id', user.id)
+            .single();
       }
 
       // Fetch learner profile
@@ -146,8 +223,7 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         completedNodeIds = [
           ...<String>{
             ...completedNodeIds,
-            ...(nodeRows as List)
-                .map((row) => row['id'] as String),
+            ...(nodeRows as List).map((row) => row['id'] as String),
           },
         ];
       }
@@ -171,6 +247,13 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         goal: _parseGoal(learnerData?['goal']),
         dailyMinutes: (learnerData?['daily_minutes'] as num?)?.toInt() ?? 15,
         initialLevel: _parseInitialLevel(learnerData?['initial_level']),
+        courseLevels: {
+          for (final entry
+              in (learnerData?['course_levels'] as Map<String, dynamic>? ?? {})
+                  .entries)
+            if (InitialLevel.values.any((level) => level.name == entry.value))
+              entry.key: _parseInitialLevel(entry.value),
+        },
         xp: gamifyData?['xp'] ?? 0,
         streakDays: gamifyData?['streak_days'] ?? 1,
         lastActiveDate:
@@ -178,7 +261,7 @@ class SupabaseLearnerRepository implements ILearnerRepository {
             DateTime.now().toIso8601String().split('T').first,
         scoresByCourse: scoresByCourse,
         completedLessonIds: completedLessonIds,
-         completedNodeIds: completedNodeIds,
+        completedNodeIds: completedNodeIds,
         completedReinforcementIds: completedReinfIds,
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
@@ -190,36 +273,88 @@ class SupabaseLearnerRepository implements ILearnerRepository {
   }
 
   @override
-  Future<LearnerProfile> updateProfile(LearnerProfile updated) async {
+  Future<LearnerProfile> saveCourseLearningPlan({
+    required String courseId,
+    required OnboardingGoal goal,
+    required int dailyMinutes,
+    required InitialLevel initialLevel,
+  }) async {
     if (!SupabaseConfig.hasRemoteConfiguration) {
-      return _fallbackRepo.updateProfile(updated);
+      return _fallbackRepo.saveCourseLearningPlan(
+        courseId: courseId,
+        goal: goal,
+        dailyMinutes: dailyMinutes,
+        initialLevel: initialLevel,
+      );
     }
-    try {
-      final client = Supabase.instance.client;
-      final user = client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
-      }
+    await Supabase.instance.client.rpc(
+      'save_course_learning_plan',
+      params: {
+        'p_course_id': courseId,
+        'p_goal': switch (goal) {
+          OnboardingGoal.mastery => 'mastery',
+          OnboardingGoal.examPrep => 'exam_prep',
+          OnboardingGoal.skillsBoost => 'skills_boost',
+        },
+        'p_daily_minutes': dailyMinutes,
+        'p_level': initialLevel.name,
+      },
+    );
+    return getProfile();
+  }
 
-      await client.from('profiles').update({
-        'first_name': updated.name,
-        'display_name': updated.name,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      await client.from('learner_profiles').upsert({
-        'user_id': user.id,
+  @override
+  Future<LearnerProfile> updateProfile(
+    LearnerProfile updated, {
+    Set<LearnerProfileField>? fields,
+  }) async {
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      return _fallbackRepo.updateProfile(updated, fields: fields);
+    }
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null || updated.id != user.id) {
+      throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+    }
+    final selected = fields ?? LearnerProfileField.values.toSet();
+    final now = DateTime.now().toIso8601String();
+    if (selected.contains(LearnerProfileField.name)) {
+      await client
+          .from('profiles')
+          .update({
+            'first_name': updated.name,
+            'display_name': updated.name,
+            'updated_at': now,
+          })
+          .eq('id', user.id)
+          .select('id')
+          .single();
+    }
+    final preferences = <String, dynamic>{
+      if (selected.contains(LearnerProfileField.selectedCourse))
         'selected_course_id': updated.selectedCourseId,
+      if (selected.contains(LearnerProfileField.dailyMinutes))
         'daily_minutes': updated.dailyMinutes,
-        'goal': updated.goal.name,
+      if (selected.contains(LearnerProfileField.goal))
+        'goal': switch (updated.goal) {
+          OnboardingGoal.mastery => 'mastery',
+          OnboardingGoal.examPrep => 'exam_prep',
+          OnboardingGoal.skillsBoost => 'skills_boost',
+        },
+      if (selected.contains(LearnerProfileField.initialLevel))
         'initial_level': updated.initialLevel.name,
-        'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (preferences.isNotEmpty) {
+      await client.from('learner_profiles').upsert({
+        ...preferences,
+        'user_id': user.id,
+        'updated_at': now,
       });
-
-      return updated;
-    } catch (_) {
-      rethrow;
     }
+    if (client.auth.currentUser?.id != user.id) {
+      throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+    }
+    return getProfile();
   }
 
   @override
@@ -237,7 +372,10 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
       }
 
-      await client.rpc('recalculate_skill_scores', params: {'p_course_id': courseId});
+      await client.rpc(
+        'recalculate_skill_scores',
+        params: {'p_course_id': courseId},
+      );
     } catch (_) {
       rethrow;
     }
@@ -255,17 +393,24 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
       }
 
-      final result = await client.rpc('save_placement_attempt', params: {
-        'p_course_id': data.courseId,
-        'p_submissions': data.submissions
-            .map((sub) => {
-                  'question_id': sub.questionId,
-                  'selected_index': sub.selectedIndex,
-                })
-            .toList(),
-        'p_idempotency_key':
-            'placement_${data.courseId}_${DateTime.now().toIso8601String().split('T').first}',
-      }).eq('id', user.id);
+      final result = await client
+          .rpc(
+            'save_placement_attempt',
+            params: {
+              'p_course_id': data.courseId,
+              'p_submissions': data.submissions
+                  .map(
+                    (sub) => {
+                      'question_id': sub.questionId,
+                      'selected_index': sub.selectedIndex,
+                    },
+                  )
+                  .toList(),
+              'p_idempotency_key':
+                  'placement_${data.courseId}_${DateTime.now().toIso8601String().split('T').first}',
+            },
+          )
+          .eq('id', user.id);
 
       if (result is! Map || result['attempt_id'] == null) {
         throw Exception('Placement natijasini serverga saqlab bo‘lmadi.');
@@ -290,11 +435,14 @@ class SupabaseLearnerRepository implements ILearnerRepository {
       );
     }
 
-    final result = await Supabase.instance.client.rpc('evaluate_placement_answer', params: {
-      'p_course_id': courseId,
-      'p_question_id': questionId,
-      'p_selected_index': selectedIndex,
-    });
+    final result = await Supabase.instance.client.rpc(
+      'evaluate_placement_answer',
+      params: {
+        'p_course_id': courseId,
+        'p_question_id': questionId,
+        'p_selected_index': selectedIndex,
+      },
+    );
 
     if (result is! Map || result['is_correct'] is! bool) {
       throw Exception('Javobni serverda tekshirib bo‘lmadi.');
@@ -317,10 +465,10 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         throw ArgumentError('Darsni saqlash uchun courseId talab qilinadi.');
       }
 
-      final result = await client.rpc('complete_lesson', params: {
-        'p_lesson_id': lessonId,
-        'p_course_id': courseId,
-      });
+      final result = await client.rpc(
+        'complete_lesson',
+        params: {'p_lesson_id': lessonId, 'p_course_id': courseId},
+      );
       if (result is! Map || result['completed'] != true) {
         throw StateError('Dars yakuni serverda tasdiqlanmadi.');
       }
@@ -368,13 +516,16 @@ class SupabaseLearnerRepository implements ILearnerRepository {
 
     // A signed-in completion must not fall back to demo state: that would make
     // the UI report success while the required remote row was not persisted.
-    final result = await client.rpc('complete_reinforcement', params: {
-      'p_reinforcement_node_id': reinforcementId,
-      'p_course_id': courseId,
-      'p_skill_id': skillId,
-      'p_question_id': questionId,
-      'p_xp_awarded': xpAwarded,
-    });
+    final result = await client.rpc(
+      'complete_reinforcement',
+      params: {
+        'p_reinforcement_node_id': reinforcementId,
+        'p_course_id': courseId,
+        'p_skill_id': skillId,
+        'p_question_id': questionId,
+        'p_xp_awarded': xpAwarded,
+      },
+    );
     if (result is! Map || result['already_processed'] is! bool) {
       throw const FormatException('Malformed complete_reinforcement result.');
     }
@@ -554,23 +705,22 @@ class SupabaseLearnerRepository implements ILearnerRepository {
         .limit(limit);
     return (rows as List)
         .whereType<Map>()
-        .map<AnswerAttemptRecord>(
-          (raw) {
-            final row = Map<String, dynamic>.from(raw);
-            return AnswerAttemptRecord(
-              id: row['id'].toString(),
-              courseId: row['course_id'] as String,
-              skillId: row['skill_id'] as String,
-              lessonId: row['lesson_id']?.toString() ?? 'general',
-              questionId: row['question_id'] as String,
-              selectedIndex: (row['selected_index'] as num).toInt(),
-              selectedAnswer: row['selected_answer'] as String? ?? '',
-              isCorrect: row['is_correct'] == true,
-              timestamp: DateTime.parse(row['created_at'] as String)
-                  .millisecondsSinceEpoch,
-            );
-          },
-        )
+        .map<AnswerAttemptRecord>((raw) {
+          final row = Map<String, dynamic>.from(raw);
+          return AnswerAttemptRecord(
+            id: row['id'].toString(),
+            courseId: row['course_id'] as String,
+            skillId: row['skill_id'] as String,
+            lessonId: row['lesson_id']?.toString() ?? 'general',
+            questionId: row['question_id'] as String,
+            selectedIndex: (row['selected_index'] as num).toInt(),
+            selectedAnswer: row['selected_answer'] as String? ?? '',
+            isCorrect: row['is_correct'] == true,
+            timestamp: DateTime.parse(
+              row['created_at'] as String,
+            ).millisecondsSinceEpoch,
+          );
+        })
         .toList(growable: false);
   }
 
@@ -645,10 +795,15 @@ class SupabaseLearnerRepository implements ILearnerRepository {
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
       }
-      final result = await client.rpc('award_xp', params: {
-        'p_amount': amount,
-        'p_action_key': actionIdempotencyKey ?? 'xp_${DateTime.now().microsecondsSinceEpoch}',
-      });
+      final result = await client.rpc(
+        'award_xp',
+        params: {
+          'p_amount': amount,
+          'p_action_key':
+              actionIdempotencyKey ??
+              'xp_${DateTime.now().microsecondsSinceEpoch}',
+        },
+      );
       if (result is! Map) throw Exception('XP serverda saqlanmadi.');
       return (result['xp'] as num?)?.toInt() ?? 0;
     } catch (_) {
@@ -671,10 +826,13 @@ class SupabaseLearnerRepository implements ILearnerRepository {
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
       }
-      final result = await client.rpc('record_learning_activity', params: {
-        'p_activity_date': today,
-      });
-      if (result is! Map) throw Exception('Kunlik faollik serverda saqlanmadi.');
+      final result = await client.rpc(
+        'record_learning_activity',
+        params: {'p_activity_date': today},
+      );
+      if (result is! Map) {
+        throw Exception('Kunlik faollik serverda saqlanmadi.');
+      }
       return (result['streak_days'] as num?)?.toInt() ?? 0;
     } catch (_) {
       rethrow;

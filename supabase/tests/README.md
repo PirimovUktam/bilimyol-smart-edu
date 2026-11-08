@@ -21,6 +21,8 @@ supabase db lint --local --level error --fail-on error
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/profile_bootstrap_regression.sql
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/p1_persistence_regression.sql
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/retired_relationship_absence.sql
+psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/tutor_and_learning_activity_regression.sql
+psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/placement_sessions_regression.sql
 ```
 
 If the database has already applied a different version of one of these
@@ -72,3 +74,19 @@ The auth action tests use the real provider's public actions via server-side
 rendering; startup effects and mounted browser auth-event races still need a
 browser smoke check. Lesson-session tests use controlled asynchronous repository
 boundaries to verify stale responses, completion prerequisites and retries.
+
+## Haqiqiy mahalliy Auth va PostgREST sinovi
+
+Ajratilgan Supabase muhitida barcha migratsiyalar va `supabase/seed/seed.sql` qo‘llangan bo‘lishi kerak. Sozlangan Vite ilovasi, Yo‘lchi Edge Function va Mailpit ishga tushiriladi. Mahalliy Auth sinov hisoblarini darhol tasdiqlashi va veb ilovaning `/reset-password` manziliga yo‘naltirishga ruxsat berishi kerak.
+
+`E2E_APP_URL`, `E2E_SUPABASE_URL`, `E2E_SUPABASE_ANON_KEY` va `E2E_MAIL_URL` qiymatlarini belgilab, `npm run test:e2e:supabase` ni ishga tushiring. Skript ilova, API va pochta uchun faqat loopback HTTP manzillarini qabul qiladi. `E2E_ADMIN_EMAIL` va `E2E_ADMIN_PASSWORD` berilsa, mahalliy administrator orqali nofaol fan yaratish ham tekshiriladi.
+
+Flutter uchun mahalliy `SUPABASE_URL` va `SUPABASE_ANON_KEY` bilan birga `BILIMYOL_RUN_LOCAL_INTEGRATION=true` hamda `BILIMYOL_LOCAL_MAILBOX` qiymatlarini vaqtinchalik JSON fayliga yozing. `mobile/` ichida quyidagi buyruqni ishlating.
+
+```bash
+flutter test --dart-define-from-file=/path/to/local-defines.json test/integration/local_supabase_test.dart
+```
+
+Har ikki sinov yangi `example.test` hisobidan foydalanadi. Kalit va mahalliy sinov sozlamalarini Git’ga qo‘shmang.
+
+Flutter orqali haqiqiy Yo‘lchi javobini sinash uchun shu integratsiya faylini `BILIMYOL_RUN_LOCAL_AI_INTEGRATION=true` bilan ishlating. Mahalliy API manzili haqiqiy AI provayderiga ulangan Edge funksiyasini xizmat qilishi kerak. Provayder kaliti Edge funksiyasi muhitida saqlanadi. Flutter sozlamalariga faqat mahalliy Supabase ochiq kaliti beriladi.

@@ -10,23 +10,23 @@ describe('yolchi-tutor edge function hardening', () => {
     const s = src();
     expect(s).toContain('MAX_ID_LENGTH');
     // identifier fields are validated, not interpolated unbounded
-    expect(s).toMatch(/idFields[\s\S]{0,200}courseId[\s\S]{0,200}skillId/);
-    expect(s).toMatch(/length > MAX_ID_LENGTH/);
+    expect(s).toContain('["courseId", "skillId", "questionId"]');
+    expect(s).toMatch(/length <= MAX_ID_LENGTH/);
   });
 
-  it('caps topic/skillName/misconceptionTitle text fields', () => {
+  it('limits streamed request bytes and resolves catalogue topics on the server', () => {
     const s = src();
-    for (const field of ['topic', 'skillName', 'misconceptionTitle']) {
-      expect(s).toContain(`(payload as any).${field}`);
-    }
-    expect(s).toMatch(/length > MAX_TEXT_LENGTH/);
+    expect(s).toContain('req.body?.getReader()');
+    expect(s).toContain('bytes > MAX_REQUEST_BYTES');
+    expect(s).toContain('topic: skill.name');
+    expect(s).toContain('skillName: skill.name');
+    expect(s).toMatch(/length <= MAX_TEXT_LENGTH/);
   });
 
-  it('diagnose_mistake resolves correctOption server-side via questions table', () => {
+  it('diagnose_mistake requires a verified persisted attempt for the authenticated identity', () => {
     const s = src();
-    expect(s).toContain('authoritativeCorrect');
-    expect(s).toMatch(/from\("questions"\)[\s\S]{0,200}correct_index, options/);
-    expect(s).not.toMatch(/payload\.correctOption \|\| 'Noma‘lum'/);
+    expect(s).toMatch(/rpc\("tutor_mistake_context",[\s\S]{0,150}p_user_id: user.id/);
+    expect(s).toContain('if (!context) throw new TutorHttpError(403');
   });
 
   it('unmapped fallback question/course ids throw instead of silently keying option 0', () => {

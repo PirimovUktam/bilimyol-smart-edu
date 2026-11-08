@@ -34,11 +34,7 @@ const persistCourseId = (courseId: string): void => {
 };
 
 export const resolveInitialCourse = (courses: Course[], preferredId: string | null): Course | null => {
-  if (preferredId !== null) {
-    const preferred = courses.find((c) => c.id === preferredId);
-    return preferred || null;
-  }
-  return courses[0] || null;
+  return preferredId === null ? null : courses.find((course) => course.id === preferredId) ?? null;
 };
 
 interface CourseState {
@@ -86,7 +82,8 @@ export const useCourseStore = create<CourseState>((set, get) => {
         if (currentOperation !== operation) return;
         // The server profile is authoritative once it is available. Local
         // storage is only the reload/offline fallback while the profile loads.
-        const preferredId = useLearnerStore.getState().profile?.selectedCourseId || readPersistedCourseId();
+        const profile = useLearnerStore.getState().profile;
+        const preferredId = profile ? profile.selectedCourseId || null : readPersistedCourseId();
         const activeCourse = resolveInitialCourse(courses, preferredId);
         const skills = activeCourse ? await supabaseCourseRepository.getSkillsByCourseId(activeCourse.id) : [];
         if (currentOperation !== operation) return;

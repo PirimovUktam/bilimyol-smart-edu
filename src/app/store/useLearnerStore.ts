@@ -8,7 +8,9 @@ interface LearnerState {
   isLoading: boolean;
   loadProfile: () => Promise<void>;
   setSelectedCourse: (courseId: string, isCurrent?: () => boolean) => Promise<void>;
-  setOnboardingData: (goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment, initialLevel: InitialLevel) => Promise<void>;
+  saveStudyPreferences: (goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment) => Promise<void>;
+  saveCourseLearningPlan: (courseId: string, goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment,
+    initialLevel: InitialLevel, isCurrent: () => boolean) => Promise<void>;
   clearSession: () => void;
   resetAll: () => Promise<void>;
 }
@@ -55,12 +57,15 @@ export const useLearnerStore = create<LearnerState>((set) => {
       await applyProfile(() => supabaseLearnerRepository.updateProfile({ selectedCourseId: courseId }), false, isCurrent);
     },
 
-    setOnboardingData: async (goal, dailyMinutes, initialLevel) => {
+    saveStudyPreferences: async (goal, dailyMinutes) => {
       await applyProfile(() => supabaseLearnerRepository.updateProfile({
         goal,
         dailyMinutes,
-        initialLevel,
       }));
+    },
+
+    saveCourseLearningPlan: async (courseId, goal, dailyMinutes, initialLevel, isCurrent) => {
+      await applyProfile(() => supabaseLearnerRepository.saveCourseLearningPlan(courseId, goal, dailyMinutes, initialLevel), false, isCurrent);
     },
 
     clearSession: () => {

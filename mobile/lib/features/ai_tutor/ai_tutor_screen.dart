@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app/providers.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/config/supabase_config.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../data/services/i_ai_tutor_service.dart';
 import '../../data/services/supabase_ai_tutor_service.dart';
+import '../../domain/entities/lesson.dart';
 
 class AITutorScreen extends ConsumerStatefulWidget {
-  const AITutorScreen({super.key});
+  const AITutorScreen({super.key, this.lesson});
+
+  final Lesson? lesson;
 
   @override
   ConsumerState<AITutorScreen> createState() => _AITutorScreenState();
@@ -18,11 +22,12 @@ class AITutorScreen extends ConsumerStatefulWidget {
 class _AITutorScreenState extends ConsumerState<AITutorScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final _history = <({String sender, String text})>[];
   final List<_ChatMessage> _messages = [
     _ChatMessage(
       isAI: true,
       text:
-          'Salom, men Yo‘lchi AI! Savollaringizga javob beraman, xatolaringizni tushuntiraman va sizga mos tavsiyalar beraman. 🤖✨',
+          'Salom, men Yo‘lchi AI! Tushunmagan joyingizni yozing yoki yana bir misol so‘rang.',
       time: '',
     ),
   ];
@@ -56,13 +61,15 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
     });
   }
 
-  Future<void> _sendMessage([String? prompt]) async {
+  Future<void> _sendMessage({String? prompt, bool retry = false}) async {
     final query = (prompt ?? _controller.text).trim();
     if (query.isEmpty || _isSending) return;
     final requestGeneration = ++_requestGeneration;
 
     setState(() {
+      if (retry) _messages.removeRange(_messages.length - 2, _messages.length);
       _messages.add(_ChatMessage(isAI: false, text: query, time: _now()));
+      _lastFailedPrompt = null;
       _isSending = true;
     });
     _controller.clear();
@@ -75,15 +82,21 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
       final response = await service.askTutor(
         AskTutorRequest(
           message: query,
-          courseId: course?.id,
-          topic: course?.title,
+          courseId: widget.lesson?.courseId ?? course?.id,
+          skillId: widget.lesson?.skillId,
+          topic: widget.lesson?.title ?? course?.title,
+          history: List.unmodifiable(_history),
         ),
       );
       if (!mounted || requestGeneration != _requestGeneration) return;
       setState(() {
         _isSending = false;
-        _lastFailedPrompt = null;
         _serviceOnline = response.isAiGenerated;
+        _history.addAll([
+          (sender: 'user', text: _historyText(query)),
+          (sender: 'ai', text: _historyText(response.answer)),
+        ]);
+        if (_history.length > 6) _history.removeRange(0, _history.length - 6);
         _messages.add(
           _ChatMessage(isAI: true, text: response.answer, time: _now()),
         );
@@ -125,12 +138,15 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
 
   String? _lastFailedPrompt;
 
+  String _historyText(String value) =>
+      value.length > 800 ? value.substring(0, 800) : value;
+
   @override
   Widget build(BuildContext context) {
     final quickChips = [
-      'Qoidani sodda tushuntir 💡',
-      'Yana bitta misol ber ✍️',
-      'Test savoli ber 🎯',
+      'Qoidani sodda tushuntir',
+      'Yana bitta misol ber',
+      'Mashq savoli ber',
     ];
 
     return Scaffold(
@@ -151,11 +167,13 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
                   ),
                 ),
                 Text(
-                  _serviceOnline == true
-                      ? 'Online • Pedagogik yordamchi'
+                  !SupabaseConfig.hasRemoteConfiguration
+                      ? 'Namuna rejimi'
+                      : _serviceOnline == true
+                      ? 'Pedagogik yordamchi'
                       : _serviceOnline == false
                       ? 'Offline • Qayta urinib ko‘ring'
-                      : 'Ulanish tekshirilmoqda...',
+                      : widget.lesson?.title ?? 'Savolingizni yozing',
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w600,
                     fontSize: 10.5,
@@ -169,7 +187,9 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const BilimYolBottomNav(currentIndex: 2),
+      bottomNavigationBar: widget.lesson == null
+          ? const BilimYolBottomNav(currentIndex: 2)
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -228,8 +248,9 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
                     TextButton.icon(
                       onPressed: () {
                         final failed = _lastFailedPrompt;
-                        setState(() => _lastFailedPrompt = null);
-                        if (failed != null) _sendMessage(failed);
+                        if (failed != null) {
+                          _sendMessage(prompt: failed, retry: true);
+                        }
                       },
                       icon: const Icon(
                         Icons.refresh_rounded,
@@ -276,7 +297,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
                       ),
                       onPressed: _isSending
                           ? null
-                          : () => _sendMessage(quickChips[i]),
+                          : () => _sendMessage(prompt: quickChips[i]),
                     );
                   },
                 ),
@@ -298,8 +319,10 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
                       ),
                       child: TextField(
                         controller: _controller,
+                        maxLength: 4000,
                         style: GoogleFonts.plusJakartaSans(fontSize: 13),
                         decoration: InputDecoration(
+                          counterText: '',
                           hintText: 'Savol yozing...',
                           hintStyle: GoogleFonts.plusJakartaSans(
                             fontSize: 13,

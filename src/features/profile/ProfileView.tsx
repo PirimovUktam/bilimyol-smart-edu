@@ -1,256 +1,385 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { User, Mail, Award, Flame, BookOpen, LogOut, CheckCircle2, AlertCircle, Save, ShieldCheck } from 'lucide-react';
-import { useAuth } from '../../core/context/AuthContext';
-import { useLearnerStore } from '../../app/store/useLearnerStore';
-import { useCourseStore } from '../../app/store/useCourseStore';
-import { Button } from '../../presentation/components/Button';
-import { Badge } from '../../presentation/components/Badge';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Bell, BookOpen, KeyRound, LogOut, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '@/core/context/AuthContext';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useCourseStore } from '@/app/store/useCourseStore';
+import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
+import type { DailyTimeCommitment, InitialLevel, OnboardingGoal } from '@/core/types/common';
+import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
+import type { Course } from '@/domain/entities/Course';
+import { Avatar } from '@/presentation/components/Avatar';
+import { Badge } from '@/presentation/components/Badge';
+import { Button } from '@/presentation/components/Button';
+import { Card } from '@/presentation/components/Card';
+import { Modal } from '@/presentation/components/Modal';
+import { PageHeader } from '@/presentation/components/PageHeader';
 
 interface ProfileViewProps {
   onSignOut: () => void;
+  onChooseSubject: () => void;
+  onOpenLearningPlan: () => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ onSignOut }) => {
-  const { profile, updateProfile, signOut } = useAuth();
-  const { profile: learnerProfile } = useLearnerStore();
-  const { activeCourse } = useCourseStore();
+export function ProfileView({ onSignOut, onChooseSubject, onOpenLearningPlan }: ProfileViewProps) {
+  const { profile, updateProfile, signOut, resetPassword, isDemoMode } = useAuth();
+  const learner = useLearnerStore((state) => state.profile);
+  const course = useCourseStore((state) => state.activeCourse);
+  const [firstName, setFirstName] = useState(profile?.firstName ?? '');
+  const [lastName, setLastName] = useState(profile?.lastName ?? '');
+  const [profileStatus, setProfileStatus] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [securityStatus, setSecurityStatus] = useState('');
+  const [securityError, setSecurityError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [securityAction, setSecurityAction] = useState<'email' | 'exit' | null>(null);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const isAdmin = profile?.role === 'admin';
+  const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
 
-  const [firstName, setFirstName] = useState(profile?.firstName || '');
-  const [lastName, setLastName] = useState(profile?.lastName || '');
-  const [isSaving, setIsSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  // Sync when profile loads
-  useEffect(() => {
-    setFirstName(profile?.firstName || '');
-    setLastName(profile?.lastName || '');
-  }, [profile?.firstName, profile?.lastName]);
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedSuccess(false);
-    setSaveError(null);
-    setIsSaving(true);
+  const saveProfile = async (event: FormEvent) => {
+    event.preventDefault();
+    setProfileStatus('');
+    setProfileError('');
+    if (!firstName.trim()) return setProfileError('Ism bo‘sh qolmasligi kerak.');
+    setSaving(true);
     try {
-      const result = await updateProfile({ firstName, lastName });
-      if (result?.error) {
-        setSaveError(result.error.message || 'Saqlashda xatolik yuz berdi.');
-      } else {
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 2500);
-      }
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Saqlashda xatolik yuz berdi.');
+      const { error } = await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim() });
+      if (error) setProfileError(error.message);
+      else setProfileStatus('Profil saqlandi.');
+    } catch {
+      setProfileError('Profilni saqlab bo‘lmadi.');
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    onSignOut();
+  const requestRecovery = async () => {
+    if (!profile?.email) return;
+    setSecurityStatus('');
+    setSecurityError('');
+    setSecurityAction('email');
+    try {
+      const { error } = await resetPassword(profile.email);
+      if (error) setSecurityError(error.message);
+      else setSecurityStatus('Parolni yangilash uchun pochtangizdagi havolani oching.');
+    } finally {
+      setSecurityAction(null);
+    }
+  };
+
+  const exit = async (scope: 'local' | 'global') => {
+    setSecurityError('');
+    setSecurityAction('exit');
+    try {
+      await signOut(scope);
+      onSignOut();
+    } catch {
+      setSecurityError('Sessiyani tugatib bo‘lmadi. Qayta urinib ko‘ring.');
+      setConfirmExit(false);
+    } finally {
+      setSecurityAction(null);
+    }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      {/* Profile Header Card */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#e4ddce] shadow-xs relative overflow-hidden">
-          {/* Top architectural accent strip */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#10151f]" />
+    <div className="learning-page space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow={isDemoMode ? 'Namuna hisobi' : 'Hisob sozlamalari'}
+        title="Profil"
+        description="Hisobingiz va o‘rganish sozlamalarini boshqaring."
+      />
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pt-1">
-            <div className="w-20 h-20 rounded-2xl bg-[#10151f] text-white font-mono font-bold text-2xl flex items-center justify-center shadow-md shrink-0">
-              {profile?.firstName?.charAt(0)?.toUpperCase() || 'U'}
-              {profile?.lastName?.charAt(0)?.toUpperCase() || ''}
-            </div>
-
-            <div className="space-y-2 text-center sm:text-left flex-1">
-              <div className="editorial-kicker justify-center sm:justify-start">
-                <span>TALABA DOSYESI</span>
-                <span>//</span>
-                <span>STATUS: FAOLLASHTIRILGAN</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10151f]">
-                  {profile?.firstName} {profile?.lastName}
-                </h1>
-                <Badge
-                  variant={profile?.role === 'admin' ? 'purple' : 'slate'}
-                  size="sm"
-                >
-                  {profile?.role === 'admin' ? 'ADMINISTRATOR' : 'FAOL TALABA'}
-                </Badge>
-              </div>
-              <p className="font-mono text-xs text-slate-500 flex items-center justify-center sm:justify-start gap-1.5">
-                <Mail className="w-3.5 h-3.5" />
-                {profile?.email}
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              leftIcon={<LogOut className="w-4 h-4 text-coral" />}
-              className="text-coral hover:bg-coral/5 border-coral/25 font-mono text-xs font-bold"
-            >
-              Chiqish
-            </Button>
+      <Card className="fade-up stagger-1 flex flex-wrap items-center gap-4 bg-gradient-to-r from-white via-white to-indigo-50/50" padding="md">
+        <Avatar name={name} className="size-15! text-lg! shadow-sm" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="heading break-words text-xl font-extrabold">{name || 'O‘quvchi'}</h2>
+            <Badge variant="emerald" size="sm">
+              {isDemoMode ? 'Namuna' : isAdmin ? 'Admin' : 'O‘quvchi'}
+            </Badge>
           </div>
+          <p className="break-all text-sm font-medium text-slatefine">{profile?.email}</p>
         </div>
-      </motion.div>
+        <Button
+          variant="outline"
+          isLoading={securityAction === 'exit'}
+          disabled={securityAction !== null}
+          onClick={() => void exit('local')}
+          leftIcon={<LogOut aria-hidden="true" className="size-4" />}
+        >
+          Chiqish
+        </Button>
+      </Card>
 
-      {/* Learning Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-slate-800 flex items-center justify-center shrink-0">
-            <Award className="w-5 h-5 text-amber-500" />
-          </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card className="fade-up stagger-2 space-y-4" padding="md">
           <div>
-            <div className="font-mono-num text-xl font-black text-[#10151f]">
-              {learnerProfile?.xp ?? 0} <span className="text-xs font-sans font-bold">XP</span>
-            </div>
-            <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider font-bold">Jamg‘arilgan XP</div>
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-amber-600 flex items-center justify-center shrink-0">
-            <Flame className="w-5 h-5 fill-amber-500" />
-          </div>
-          <div>
-            <div className="font-mono-num text-xl font-black text-[#10151f]">
-              {learnerProfile?.streakDays ?? 0} <span className="text-xs font-sans font-bold">kun</span>
-            </div>
-            <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider font-bold">Uzluksiz Streak</div>
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white border border-[#e4ddce] shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] text-brand-dark flex items-center justify-center shrink-0">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="font-display text-lg font-bold text-[#10151f] truncate max-w-[170px]">
-              {activeCourse?.title || 'Tanlanmagan'}
-            </div>
-            <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider font-bold">Faol Kurs</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Details & Preferences */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Personal Details Form */}
-        <div className="p-6 rounded-2xl bg-white border border-[#e4ddce] shadow-xs space-y-5">
-          <div className="flex items-center gap-2 pb-3 border-b border-[#e4ddce]">
-            <User className="w-4 h-4 text-slate-700" />
-            <h2 className="font-display text-base font-bold text-[#10151f]">
-              Shaxsiy Ma’lumotlar
+            <span className="highlight mb-1.5">Shaxsiy karta</span>
+            <h2 className="heading text-lg font-extrabold">
+              Shaxsiy <span className="heading-accent">ma’lumotlar</span>
             </h2>
           </div>
-
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            {savedSuccess && (
-              <div className="p-3 bg-mint/10 border border-mint/25 rounded-xl flex items-center gap-2 text-mint text-xs font-mono font-bold">
-                <CheckCircle2 className="w-4 h-4 text-mint" />
-                O‘ZGARISHLAR SAQLANDI!
-              </div>
-            )}
-
-            {saveError && (
-              <div className="p-3 bg-coral/5 border border-coral/25 rounded-xl flex items-center gap-2 text-coral text-xs font-mono font-bold">
-                <AlertCircle className="w-4 h-4 shrink-0 text-coral" />
-                {saveError}
-              </div>
-            )}
-
-            <div>
-              <label className="block font-mono text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                Ism
-              </label>
+          <form onSubmit={saveProfile} className="space-y-3.5">
+            <label className="block text-sm font-bold">
+              Ism
               <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-[#fbf9f4] border border-[#e4ddce] rounded-xl text-sm text-slate-900 focus:bg-white focus:border-[#10151f] focus:ring-2 focus:ring-[#10151f]/10 outline-none"
+                className="form-input mt-1.5 px-3.5 font-normal"
                 required
+                maxLength={80}
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
               />
-            </div>
-
-            <div>
-              <label className="block font-mono text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                Familiya
-              </label>
+            </label>
+            <label className="block text-sm font-bold">
+              Familiya
               <input
-                type="text"
+                className="form-input mt-1.5 px-3.5 font-normal"
+                maxLength={80}
+                autoComplete="family-name"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-[#fbf9f4] border border-[#e4ddce] rounded-xl text-sm text-slate-900 focus:bg-white focus:border-[#10151f] focus:ring-2 focus:ring-[#10151f]/10 outline-none"
+                onChange={(event) => setLastName(event.target.value)}
               />
-            </div>
-
-            <div>
-              <label className="block font-mono text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={profile?.email || ''}
-                disabled
-                className="w-full px-3.5 py-2.5 bg-[#f5efe4] border border-[#e4ddce] rounded-xl text-sm font-mono text-slate-500 cursor-not-allowed"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isSaving}
-              leftIcon={<Save className="w-4 h-4" />}
-              className="font-bold uppercase tracking-wider text-xs"
-            >
-              O‘zgarishlarni Saqlash
+            </label>
+            <Feedback error={profileError} status={profileStatus} />
+            <Button type="submit" isLoading={saving} leftIcon={<Save aria-hidden="true" className="size-4" />}>
+              Profilni saqlash
             </Button>
           </form>
-        </div>
+        </Card>
 
-        {/* System Info */}
-        <div className="p-6 rounded-2xl bg-white border border-[#e4ddce] shadow-xs space-y-5">
-          <div className="flex items-center gap-2 pb-3 border-b border-[#e4ddce]">
-            <ShieldCheck className="w-4 h-4 text-slate-700" />
-            <h2 className="font-display text-base font-bold text-[#10151f]">
-              Tizim va Xavfsizlik
+        {!isAdmin && learner && (
+          <LearningPreferences
+            learner={learner}
+            course={course}
+            onChooseSubject={onChooseSubject}
+            onOpenLearningPlan={onOpenLearningPlan}
+          />
+        )}
+
+        {!isAdmin && <ReminderPreferences />}
+
+        <Card className="fade-up stagger-4 space-y-4" padding="md">
+          <div>
+            <span className="highlight mb-1.5">Himoya</span>
+            <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
+              <ShieldCheck aria-hidden="true" className="size-5 text-brand" /> Hisob <span className="heading-accent">xavfsizligi</span>
             </h2>
           </div>
-
-          <div className="space-y-3">
-            {[
-              { label: 'Hisob turi', value: profile?.role === 'admin' ? 'ADMINISTRATOR' : 'TALABA' },
-              { label: 'Email', value: profile?.email || '—' },
-              { label: 'Joriy kurs', value: activeCourse?.title || 'Tanlanmagan' },
-              { label: 'Umumiy XP', value: `${learnerProfile?.xp ?? 0} XP` },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between p-3 rounded-xl bg-[#fbf9f4] border border-[#e4ddce]">
-                <span className="font-mono text-xs text-slate-500 font-bold uppercase">{row.label}</span>
-                <span className="font-mono text-xs font-bold text-slate-900 text-right">{row.value}</span>
-              </div>
-            ))}
-
-            <div className="p-4 bg-[#fbf9f4] rounded-xl border border-[#e4ddce] text-xs text-slate-700 space-y-1">
-              <div className="font-mono text-[10px] font-bold text-slate-800 uppercase tracking-wider">
-                Cross-Platform Sinxronizatsiya
-              </div>
-              <p className="text-slate-600 leading-relaxed font-sans text-xs">
-                Ushbu hisob orqali web va Flutter mobil ilovasi o‘rtasida barcha progress va bilim ballaringiz sinxronlashadi.
-              </p>
+          {isDemoMode ? (
+            <p className="text-sm text-slatefine">Parol va qurilmalar sozlamalari shaxsiy hisobda mavjud.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2.5">
+              <Button
+                variant="outline"
+                isLoading={securityAction === 'email'}
+                disabled={securityAction !== null}
+                onClick={() => void requestRecovery()}
+                leftIcon={<KeyRound aria-hidden="true" className="size-4" />}
+              >
+                Parolni yangilash
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmExit(true)} disabled={securityAction !== null}>
+                Barcha qurilmalardan chiqish
+              </Button>
             </div>
-          </div>
-        </div>
+          )}
+          <Feedback error={securityError} status={securityStatus} />
+        </Card>
       </div>
+
+      <Modal
+        isOpen={confirmExit}
+        title="Barcha qurilmalardan chiqasizmi?"
+        maxWidth="sm"
+        dismissable={securityAction !== 'exit'}
+        onClose={() => setConfirmExit(false)}
+      >
+        <p className="mb-4 text-sm leading-relaxed text-slatefine">Bu qurilmada ham qayta kirishingiz kerak bo‘ladi.</p>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" disabled={securityAction === 'exit'} onClick={() => setConfirmExit(false)}>
+            Bekor qilish
+          </Button>
+          <Button variant="danger" isLoading={securityAction === 'exit'} onClick={() => void exit('global')}>
+            Chiqish
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
+}
+
+const goals: Record<OnboardingGoal, string> = {
+  mastery: 'Bilimni mustahkamlash',
+  exam_prep: 'Imtihonga tayyorlanish',
+  skills_boost: 'Ko‘nikmalarni rivojlantirish',
 };
+const levels: Record<InitialLevel, string> = { beginner: 'Boshlang‘ich', intermediate: 'O‘rta', advanced: 'Yuqori' };
+
+function LearningPreferences({ learner, course, onChooseSubject, onOpenLearningPlan }: {
+  learner: LearnerProfile; course: Course | null; onChooseSubject: () => void; onOpenLearningPlan: () => void;
+}) {
+  const [goal, setGoal] = useState(learner.goal);
+  const [minutes, setMinutes] = useState(learner.dailyMinutes);
+  const level = course ? learner.courseLevels?.[course.id] : undefined;
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    setStatus('');
+    setError('');
+    setSaving(true);
+    try {
+      await useLearnerStore.getState().saveStudyPreferences(goal, minutes);
+      setStatus('O‘rganish sozlamalari saqlandi.');
+    } catch {
+      setError('O‘rganish sozlamalarini saqlab bo‘lmadi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="fade-up stagger-3 space-y-4" padding="md">
+      <div>
+        <span className="highlight mb-1.5">
+          <Sparkles aria-hidden="true" className="size-3.5" />
+          Moslashtirish
+        </span>
+        <h2 className="heading text-lg font-extrabold">
+          O‘rganish <span className="heading-accent">sozlamalari</span>
+        </h2>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-hairline bg-canvas/80 p-3">
+        <span className="inline-flex items-center gap-2 text-sm font-bold text-ink">
+          <BookOpen aria-hidden="true" className="size-4 shrink-0 text-brand" />
+          {course?.title ?? 'Fan tanlanmagan'}
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          <Button variant="ghost" size="sm" onClick={onChooseSubject}>
+            Fanni almashtirish
+          </Button>
+          {course && (
+            <Button variant="outline" size="sm" onClick={onOpenLearningPlan}>
+              {level ? levels[level] + ' · Darajani sozlash' : 'Darajani tanlash'}
+            </Button>
+          )}
+        </div>
+      </div>
+      <form onSubmit={save} className="grid gap-3.5 sm:grid-cols-2">
+        <div className="text-sm sm:col-span-2">
+          <label className="font-bold" htmlFor="profile-goal">
+            Maqsad
+          </label>
+          <select
+            id="profile-goal"
+            className="form-input mt-1.5 px-3"
+            value={goal}
+            onChange={(event) => setGoal(event.target.value as OnboardingGoal)}
+          >
+            {Object.entries(goals).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-sm">
+          <label className="font-bold" htmlFor="profile-daily-minutes">
+            Kunlik vaqt
+          </label>
+          <select
+            id="profile-daily-minutes"
+            className="form-input mt-1.5 px-3"
+            value={minutes}
+            onChange={(event) => setMinutes(Number(event.target.value) as DailyTimeCommitment)}
+          >
+            {[15, 30, 60].map((value) => (
+              <option key={value} value={value}>
+                {value} daqiqa
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-3 sm:col-span-2">
+          <Feedback error={error} status={status} />
+          <Button type="submit" isLoading={saving}>
+            Sozlamalarni saqlash
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+function ReminderPreferences() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setError('');
+    void supabaseLearnerRepository.getLearningReminders().then(
+      (value) => { if (active) setEnabled(value); },
+      () => { if (active) setError('Eslatma sozlamasi yuklanmadi.'); },
+    );
+    return () => { active = false; };
+  }, [retry]);
+
+  const toggle = async (next: boolean) => {
+    setSaving(true);
+    setError('');
+    try {
+      setEnabled(await supabaseLearnerRepository.setLearningReminders(next));
+    } catch {
+      setError('Eslatma sozlamasi saqlanmadi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="fade-up stagger-3 space-y-3.5" padding="md">
+      <div>
+        <span className="highlight mb-1.5">Bildirishnoma</span>
+        <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
+          <Bell aria-hidden="true" className="size-5 text-brand" /> Eslatmalar
+        </h2>
+      </div>
+      <p className="text-sm text-slatefine">Kunlik maqsad bo‘yicha eslatma bosh sahifada ko‘rinadi.</p>
+      {enabled == null ? (
+        error ? (
+          <Button variant="outline" onClick={() => setRetry((value) => value + 1)}>
+            Qayta urinish
+          </Button>
+        ) : (
+          <p role="status" className="text-sm text-slatefine">
+            Sozlama yuklanmoqda…
+          </p>
+        )
+      ) : (
+        <label className="flex min-h-11 w-fit cursor-pointer items-center gap-3 text-sm font-bold">
+          <input
+            type="checkbox"
+            checked={enabled}
+            disabled={saving}
+            className="size-5 accent-brand"
+            onChange={(event) => void toggle(event.target.checked)}
+          />{' '}
+          Kunlik eslatmani ko‘rsatish
+        </label>
+      )}
+      <Feedback error={error} status="" />
+    </Card>
+  );
+}
+
+function Feedback({ error, status }: { error: string; status: string }) {
+  if (error) return <p role="alert" className="rounded-2xl bg-rose-50 p-3.5 text-sm text-coral">{error}</p>;
+  if (status) return <p role="status" className="rounded-2xl bg-mint/10 p-3.5 text-sm font-semibold text-[#059669]">{status}</p>;
+  return null;
+}

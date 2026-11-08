@@ -4,7 +4,6 @@ import { Skill } from '@/domain/entities/Skill';
 import { Question } from '@/domain/entities/Question';
 import { SubjectType } from '@/core/types/common';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
-import { inMemoryCourseRepository } from './InMemoryCourseRepository';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
 const normalizeSubjectValue = (value: string): SubjectType | null => {
@@ -35,9 +34,8 @@ export function mapCourseSubject(row: { id: string; subject?: string | null }): 
 }
 
 /**
- * Course rows are catalog metadata. Lesson ids are deliberately not inferred
- * here: the roadmap/lesson repositories are the source of truth for content,
- * so a Supabase course with no lesson relation stays an honest empty course.
+ * Course rows describe subjects. Published lesson metadata is read separately
+ * from the learner-safe view.
  */
 export const mapCourseRow = (c: Record<string, unknown>): Course => ({
   id: c.id as string,
@@ -51,12 +49,18 @@ export const mapCourseRow = (c: Record<string, unknown>): Course => ({
   secondaryColorHex: (c.secondary_color_hex as string) || '#818CF8',
   skills: [],
   lessons: [],
+  starterLessonId: typeof c.starter_lesson_id === 'string' ? c.starter_lesson_id : undefined,
+  foundationLessonIds: Array.isArray(c.foundation_lesson_ids)
+    ? c.foundation_lesson_ids.filter((id): id is string => typeof id === 'string')
+    : undefined,
   totalStudentsEstimate: (c.total_students_estimate as number) || 1000,
   isActive: (c.is_active as boolean | undefined) ?? true,
 });
 
 export class SupabaseCourseRepository implements ICourseRepository {
-  private fallback = inMemoryCourseRepository;
+  private async demoRepository() {
+    return (await import('./InMemoryCourseRepository')).inMemoryCourseRepository;
+  }
 
   private async requireAuthenticatedUser(): Promise<void> {
     const { data, error } = await supabase.auth.getUser();
@@ -66,23 +70,32 @@ export class SupabaseCourseRepository implements ICourseRepository {
 
   async getAllCourses(): Promise<Course[]> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getAllCourses();
+      return (await this.demoRepository()).getAllCourses();
     }
 
     try {
       await this.requireAuthenticatedUser();
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .order('title', { ascending: true });
-
-      if (error) throw error;
-      if (!data) return [];
-
-      const activeRows = data.filter((c) => c.is_active !== false);
-      const mapped = activeRows.map(mapCourseRow);
-
-      return mapped;
+      const [courses, lessons] = await Promise.all([
+        supabase.from('courses').select('*').eq('is_active', true).order('title'),
+        supabase.from('learner_lessons').select('id, course_id').order('id'),
+      ]);
+      if (courses.error || lessons.error) throw courses.error ?? lessons.error;
+      const byCourse = new Map<string, string[]>();
+      for (const lesson of lessons.data ?? []) {
+        const ids = byCourse.get(lesson.course_id) ?? [];
+        ids.push(lesson.id);
+        byCourse.set(lesson.course_id, ids);
+      }
+      return (courses.data ?? []).map((row) => {
+        const course = mapCourseRow(row);
+        const published = byCourse.get(course.id) ?? [];
+        return {
+          ...course,
+          lessons: published,
+          starterLessonId: course.starterLessonId && published.includes(course.starterLessonId) ? course.starterLessonId : undefined,
+          foundationLessonIds: course.foundationLessonIds?.filter((id) => published.includes(id)),
+        };
+      });
     } catch (error) {
       console.warn('Error fetching Supabase courses:', error);
       throw error;
@@ -91,7 +104,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
 
   async getCourseById(courseId: string): Promise<Course | null> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getCourseById(courseId);
+      return (await this.demoRepository()).getCourseById(courseId);
     }
 
     try {
@@ -114,7 +127,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
 
   async getSkillsByCourseId(courseId: string): Promise<Skill[]> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getSkillsByCourseId(courseId);
+      return (await this.demoRepository()).getSkillsByCourseId(courseId);
     }
 
     try {
@@ -146,7 +159,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
 
   async getPlacementQuestions(courseId: string): Promise<Question[]> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getPlacementQuestions(courseId);
+      return (await this.demoRepository()).getPlacementQuestions(courseId);
     }
 
     try {

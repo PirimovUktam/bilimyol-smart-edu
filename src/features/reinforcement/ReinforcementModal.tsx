@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, XCircle, Award, ArrowRight, Unlock, Zap, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Award, ArrowRight, Zap, X } from 'lucide-react';
 import { Question } from '@/domain/entities/Question';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { deriveReinforcementNodeId } from './reinforcementNodeId';
 import { Button } from '@/presentation/components/Button';
+import { Formula } from '@/presentation/components/LearningText';
+import { Modal } from '@/presentation/components/Modal';
 import { sounds } from '@/core/utils/soundEffects';
 
 interface ReinforcementModalProps {
@@ -71,6 +73,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
+        disableForReducedMotion: true,
       });
 
       setScoreTransition({
@@ -91,24 +94,15 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#10151f]/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 16 }}
-        transition={{ duration: 0.25 }}
-        className="max-w-2xl w-full"
-      >
-        <div className="p-7 sm:p-9 shadow-2xl rounded-2xl border border-[#e4ddce] bg-white relative overflow-hidden">
-          {/* Top architectural accent strip */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#10151f]" />
-
+    <Modal isOpen={isOpen} title="Mustahkamlash mashqi" maxWidth="lg" onClose={onClose}
+      showClose={false} dismissable={!isUpdating}>
+      <div>
           {feedbackState !== 'success' ? (
             <div className="space-y-6 pt-1">
               {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#10151f] text-white flex items-center justify-center shrink-0 shadow-md">
+                  <div className="w-11 h-11 rounded-xl bg-navy text-white flex items-center justify-center shrink-0 shadow-md">
                     <Zap className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
@@ -117,7 +111,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                       <span>//</span>
                       <span>MUSTAHKAMLASH MASHQI</span>
                     </div>
-                    <h3 className="font-display text-xl font-bold text-[#10151f]">
+                    <h3 className="font-display text-xl font-bold text-navy">
                       Tushunchani Amalda Qo‘llash
                     </h3>
                   </div>
@@ -125,20 +119,22 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-[#f5efe4] transition-colors cursor-pointer"
+                  aria-label="Yopish"
+                  disabled={isUpdating}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-sand transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Question */}
-              <div className="p-5 rounded-xl bg-[#fbf9f4] border border-[#e4ddce] space-y-3">
+              <div className="p-5 rounded-xl bg-canvas border border-hairline space-y-3">
                 <h4 className="font-display text-base sm:text-lg font-bold text-slate-900">
                   {question.text}
                 </h4>
                 {question.formulaLatex && (
-                  <div className="p-3 bg-white rounded-lg border border-[#e4ddce] text-center font-mono font-bold text-brand-dark text-sm">
-                    {question.formulaLatex}
+                  <div className="p-3 bg-white rounded-lg border border-hairline text-center font-mono font-bold text-brand-dark text-sm">
+                    <Formula source={question.formulaLatex} display />
                   </div>
                 )}
               </div>
@@ -169,8 +165,8 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                           : isWrongPick
                           ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25 text-[#a51c1c]'
                           : isSelected
-                          ? 'border-[#10151f] ring-2 ring-[#10151f] bg-white shadow-xs'
-                          : 'border-[#e4ddce] bg-[#fbf9f4] hover:border-slate-400 hover:bg-white text-slate-800'
+                          ? 'border-navy ring-2 ring-navy bg-white shadow-xs'
+                          : 'border-hairline bg-canvas hover:border-slate-400 hover:bg-white text-slate-800'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -180,8 +176,8 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                             : isWrongPick
                             ? 'bg-coral text-white'
                             : isSelected
-                            ? 'bg-[#10151f] text-white'
-                            : 'bg-[#e4ddce] text-slate-700'
+                            ? 'bg-navy text-white'
+                            : 'bg-hairline text-slate-700'
                         }`}>
                           {letter}
                         </span>
@@ -192,7 +188,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                       ) : isWrongPick ? (
                         <XCircle className="w-4 h-4 text-coral" />
                       ) : isSelected ? (
-                        <CheckCircle2 className="w-4 h-4 text-[#10151f]" />
+                        <CheckCircle2 className="w-4 h-4 text-navy" />
                       ) : null}
                     </button>
                   );
@@ -227,7 +223,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
               )}
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-[#e4ddce] flex items-center justify-between">
+              <div className="pt-4 border-t border-hairline flex items-center justify-between">
                 <Button variant="ghost" size="md" onClick={onClose} className="font-mono text-xs font-bold text-slate-500">
                   Bekor qilish
                 </Button>
@@ -252,7 +248,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               className="text-center space-y-6 py-4 pt-2"
             >
-              <div className="w-16 h-16 rounded-2xl bg-[#10151f] text-white flex items-center justify-center mx-auto shadow-lg">
+              <div className="w-16 h-16 rounded-2xl bg-navy text-white flex items-center justify-center mx-auto shadow-lg">
                 <CheckCircle2 className="w-8 h-8 text-mint stroke-[2.5]" />
               </div>
 
@@ -260,7 +256,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                 <div className="editorial-kicker justify-center text-mint">
                   <span>REMEDIATSIYA TASDIQLANDI</span>
                 </div>
-                <h3 className="font-display text-2xl font-extrabold text-[#10151f] mt-1">
+                <h3 className="font-display text-2xl font-extrabold text-navy mt-1">
                   Mavzu Muvaffaqiyatli Mustahkamlandi!
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-sans">
@@ -269,7 +265,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
               </div>
 
               {/* Score Transition Banner */}
-              <div className="p-6 bg-[#10151f] rounded-xl text-white space-y-4 max-w-md mx-auto shadow-xl border border-slate-800">
+              <div className="p-6 bg-navy rounded-xl text-white space-y-4 max-w-md mx-auto shadow-xl border border-slate-800">
                 <div className="flex items-center justify-between font-mono text-xs">
                   <span className="text-slate-400">Ko‘nikma o‘zlashtirish:</span>
                   <span className="font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-mint border border-emerald-500/30">
@@ -300,7 +296,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                     <Award className="w-4 h-4" /> +{scoreTransition?.xpAwarded ?? 0} XP mukofoti
                   </span>
                   <span className="flex items-center gap-1.5 text-mint font-bold">
-                    <Unlock className="w-4 h-4" /> Keyingi bosqich ochildi
+                    Mashq natijasi saqlandi
                   </span>
                 </div>
               </div>
@@ -313,13 +309,12 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                   className="w-full sm:w-auto px-8 font-bold"
                 >
-                  Dashboardga O‘tish
+                  Davom etish
                 </Button>
               </div>
             </motion.div>
           )}
-        </div>
-      </motion.div>
-    </div>
+      </div>
+    </Modal>
   );
 };

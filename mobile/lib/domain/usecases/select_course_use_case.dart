@@ -16,7 +16,10 @@ class SelectCourseUseCase {
     }
 
     final profile = await learnerRepository.getProfile();
-    await learnerRepository.updateProfile(profile.copyWith(selectedCourseId: courseId));
+    await learnerRepository.updateProfile(
+      profile.copyWith(selectedCourseId: courseId),
+      fields: {LearnerProfileField.selectedCourse},
+    );
     return course;
   }
 }

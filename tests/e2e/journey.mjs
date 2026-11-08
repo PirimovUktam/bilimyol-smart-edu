@@ -1,171 +1,211 @@
-/**
- * BilimYo'l — Core learning-journey E2E (Playwright, no @playwright/test dep).
- *
- * Covers the product loop end-to-end in demo mode (no Supabase needed):
- *   landing → demo auth → roadmap → lesson → answer quiz (correct + wrong)
- *   → reinforcement → completion → progress stats update.
- *
- * Uses in-app navigation (the real learner flow) instead of full page reloads,
- * so it does not depend on demo-session persistence, and waits for rendered
- * text instead of fixed delays — deterministic on cold servers and in CI.
- *
- * Run:
- *   npm run test:e2e                         (boots a demo server automatically)
- *   BASE_URL=http://localhost:5173 node tests/e2e/journey.mjs
- *
- * Exits non-zero on any failed assertion (CI-friendly).
- */
-
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { chromium } from 'playwright';
 
-const BASE = process.env.BASE_URL || 'http://localhost:5173';
-const VIEWPORT = { width: 1280, height: 800 };
-const TIMEOUT = 45000;
+const base = process.env.BASE_URL;
+assert(base, 'Use npm run test:e2e for an isolated demo build.');
+const screenshots = process.env.QA_SCREENSHOT_DIR;
+if (screenshots) await mkdir(screenshots, { recursive: true });
 
-let failures = 0;
-const results = [];
-function check(name, cond, extra = '') {
-  const ok = Boolean(cond);
-  results.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${extra ? ' — ' + extra : ''}`);
-  if (!ok) failures++;
+const browser = await chromium.launch();
+const context = await browser.newContext({ viewport: { width: 1440, height: 960 }, reducedMotion: 'reduce' });
+const page = await context.newPage();
+const errors = [];
+const remoteRequests = [];
+page.on('pageerror', (error) => errors.push(error.message));
+page.on('request', (request) => {
+  if (new URL(request.url()).hostname.endsWith('.supabase.co')) remoteRequests.push(new URL(request.url()).pathname);
+});
+page.setDefaultTimeout(12000);
+const main = page.getByRole('main');
+const nav = page.getByRole('navigation', { name: 'Asosiy navigatsiya' });
+const click = (name, root = main) => root.getByRole('button', { name, exact: typeof name === 'string' }).click();
+const heading = (name) => main.getByRole('heading', { name }).first().waitFor({ state: 'visible' });
+const screenshot = async (filename) => {
+  if (screenshots) await page.screenshot({ path: join(screenshots, filename), animations: 'disabled' });
+};
+let assertions = 0;
+
+async function chooseLearningPlan(level) {
+  await heading('O‘rganish rejangizni sozlang');
+  await main.getByRole('radio', { name: new RegExp(level) }).check();
 }
 
-/** Polls the rendered body until it matches `regex` (or times out). */
-async function waitForText(page, regex, label = '', timeout = TIMEOUT) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeout) {
-    const text = (await page.textContent('body').catch(() => '')) || '';
-    if (regex.test(text)) return true;
-    await page.waitForTimeout(400);
-  }
-  if (label) console.log(`  (timeout waiting for ${label})`);
-  return false;
+async function switchSubject(subject) {
+  await click('Fanni almashtirish', page);
+  await heading('O‘zingizga mos fanni tanlang');
+  await click(subject);
 }
 
-/** Clicks an element whose text contains `text` (first match). */
-async function clickText(page, text, timeout = TIMEOUT) {
-  const loc = page.getByText(text, { exact: false });
-  if ((await loc.count()) === 0) return false;
-  await loc.first().click({ timeout }).catch(() => {});
-  return true;
+async function checkWidth(view, width) {
+  const sizes = await page.evaluate(() => ({
+    width: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+  }));
+  assert(sizes.scroll <= sizes.width + 1, view + ' overflow at ' + width + 'px: ' + JSON.stringify(sizes));
+  assertions++;
 }
 
-/** Switches the app view via its own navigation API (no reload, no ambiguity). */
-async function goToView(page, view) {
-  await page.evaluate((target) => {
-    if (typeof window.__navigateToView === 'function') window.__navigateToView(target);
-  }, view);
-  await page.waitForTimeout(600);
-}
-
-async function main() {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: VIEWPORT });
-  // Block remote fonts so DOMContentLoaded never depends on network access.
-  await context.route('**://fonts.googleapis.com/**', (r) => r.abort());
-  await context.route('**://fonts.gstatic.com/**', (r) => r.abort());
-  const page = await context.newPage();
-
-  try {
-    // ── 1. Landing renders ──────────────────────────────────────────────
-    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: TIMEOUT });
-    await waitForText(page, /Namuna hisobi bilan kirish/, 'demo login button');
-    check('landing renders', (await page.title()).length > 0);
-
-    // ── 2. Demo auth (no Supabase needed) ───────────────────────────────
-    check('demo login button present', (await page.getByText('Namuna hisobi bilan kirish').count()) > 0);
-    await clickText(page, 'Namuna hisobi bilan kirish');
-    const dashReady = await waitForText(
-      page,
-      /Assalomu alaykum|O‘rganish yo‘nalishi|DAVOM ETISH/,
-      'dashboard',
-    );
-    const dash = (await page.textContent('main').catch(() => '')) || '';
-    check('dashboard loaded after demo auth', dashReady && /Assalomu alaykum|O‘rganish yo‘nalishi|DAVOM ETISH/.test(dash));
-    check('4 courses visible in selector', /Matematika/.test(dash) && /Ingliz tili/.test(dash));
-
-    // ── 3. Roadmap (in-app navigation) ──────────────────────────────────
-    await goToView(page, 'roadmap');
-    await waitForText(page, /Mening Ta’lim Yo‘lim|Darsni boshlash|Davom etish/, 'roadmap');
-    const roadmap = (await page.textContent('main').catch(() => '')) || '';
-    check('roadmap renders', /Mening Ta’lim Yo‘lim|Bosqich|MUSTAHKAMLASH|Darsni boshlash|Davom etish/.test(roadmap));
-    check('adaptive reinforcement nodes present', /Mustahkamlash/.test(roadmap));
-
-    // ── 4. Open a lesson via roadmap continue ───────────────────────────
-    const continued = await clickText(page, 'Davom etish');
-    check('continue button opens lesson', continued);
-    await waitForText(page, /Qadam\s*\d|Nazariya|Misol|Mashq|Test/, 'lesson steps');
-    const lesson = (await page.textContent('main').catch(() => '')) || '';
-    check('lesson renders steps', /Qadam|Nazariya|Misol|Mashq|Test/.test(lesson));
-
-    // ── 5. Navigate to quiz (last step) ────────────────────────────────
-    await clickText(page, 'Test');
-    await waitForText(page, /TEKSHIRISH|Interaktiv|Sinov|savol/i, 'quiz');
-    const quizPage = (await page.textContent('main').catch(() => '')) || '';
-    check('quiz question visible', /DARSNI YAKUNLOVCHI|f\(4\)|savol|Sinov/i.test(quizPage));
-
-    // ── 6. Answer the quiz — click an option then submit ───────────────
-    const optionButton = page.locator('main button').filter({ hasText: '11' });
-    if ((await optionButton.count()) > 0) {
-      await optionButton.first().click().catch(() => {});
-      await page.waitForTimeout(600);
-    }
-    const submitBtn = page.locator('button', { hasText: 'TEKSHIRISH' }).first();
-    if ((await submitBtn.count()) > 0 && (await submitBtn.isEnabled().catch(() => false))) {
-      await submitBtn.click();
-    }
-    const evaluated = await waitForText(
-      page,
-      /TO‘G‘RI|To‘g‘ri javob|Xato tahlili|Yo‘lchi AI|Mustahkamlash|Dars yakunlandi/,
-      'quiz feedback',
-    );
-    const afterAnswer = (await page.textContent('main').catch(() => '')) || '';
-    check('answer evaluated (correct or Yo‘lchi feedback)', evaluated);
-
-    // ── 7. Completion / XP surface ──────────────────────────────────────
-    check(
-      'XP or completion feedback shown',
-      /XP|Dars yakunlandi|BILIM DARAJANGIZ|Keyingi savol/.test(afterAnswer),
-    );
-
-    // ── 8. Progress view ───────────────────────────────────────────────
-    await goToView(page, 'progress');
-    await waitForText(page, /Ko‘rsatkich|O‘zlashtirish|Umumiy|Ketma-ketlik/, 'progress');
-    const progress = (await page.textContent('main').catch(() => '')) || '';
-    check('progress view renders', /Ko‘rsatkich|O‘zlashtirish|Umumiy|Ketma-ketlik/.test(progress));
-
-    // ── 9. Knowledge map ───────────────────────────────────────────────
-    await goToView(page, 'knowledge-map');
-    await waitForText(page, /Bilim Holati|Ko‘nikmalar|Diagnostika|O‘zlashtirish/, 'knowledge map');
-    const kmap = (await page.textContent('main').catch(() => '')) || '';
-    check('knowledge map renders', /Bilim Holati|Ko‘nikmalar|Diagnostika|O‘zlashtirish/.test(kmap));
-
-    // ── 10. AI tutor view ──────────────────────────────────────────────
-    await goToView(page, 'ai-tutor');
-    await waitForText(page, /savol bering|Mentor|Namunaviy|Yo‘lchi AI pedagog/, 'ai tutor');
-    const tutor = (await page.textContent('main').catch(() => '')) || '';
-    check('Yo‘lchi AI tutor renders', /savol bering|Mentor|Namunaviy|Yo‘lchi AI/.test(tutor));
-  } catch (err) {
-    check('no fatal navigation/runtime error', false, String(err && err.message ? err.message : err));
-  } finally {
-    await browser.close();
-  }
-}
-
-const started = Date.now();
-main()
-  .then(() => {
-    console.log('\n────────────────────────────────────────');
-    results.forEach((r) => console.log('  ' + r));
-    console.log('────────────────────────────────────────');
-    console.log(
-      failures === 0
-        ? `E2E PASSED — all ${results.length} assertions in ${Math.round((Date.now() - started) / 1000)}s`
-        : `E2E FAILED — ${failures} of ${results.length} assertions failed`
-    );
-    process.exit(failures === 0 ? 0 : 1);
-  })
-  .catch((err) => {
-    console.error('E2E runner crashed:', err);
-    process.exit(1);
+try {
+  await context.addInitScript(() => {
+    localStorage.setItem('bilimyol_auth_session', JSON.stringify({
+      isDemoMode: true, profile: { id: 'guest_user_01', role: 'student', firstName: 'Oldingi namuna' },
+    }));
   });
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await heading('O‘zingizga mos yo‘ldan o‘rganing.');
+  await screenshot('after-welcome-1440.png');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await checkWidth('welcome', 390);
+  await screenshot('after-welcome-390.png');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await click('Kirish');
+  await heading('Xush kelibsiz!');
+  await click('Parolni ko‘rsatish');
+  assert.equal(await page.getByLabel('Parol', { exact: true }).getAttribute('type'), 'text');
+  await click('Parolni yashirish');
+  assert.equal(await page.getByLabel('Parol', { exact: true }).getAttribute('type'), 'password');
+  await page.getByLabel('Email manzilingiz').fill('offline@example.test');
+  await page.getByLabel('Parol', { exact: true }).fill('test-password');
+  await click('Kirish');
+  await main.getByRole('alert').getByText(/Hisob xizmatiga ulanib bo‘lmadi/).waitFor();
+  await heading('Xush kelibsiz!');
+  await screenshot('kirish-1440.png');
+  await click('Namuna hisobi bilan kirish');
+  await heading('O‘zingizga mos fanni tanlang');
+  for (const course of [/Matematika/, /Ingliz tili/, /IT & Kodlash/, /Mantiq/]) {
+    assert.equal(await main.getByRole('button', { name: new RegExp(course.source + ' fanini tanlash') }).count(), 1);
+  }
+  const fresh = await browser.newPage({ storageState: await context.storageState() });
+  await fresh.goto(base, { waitUntil: 'domcontentloaded' });
+  await fresh.getByRole('heading', { name: 'O‘zingizga mos yo‘ldan o‘rganing.' }).waitFor();
+  await fresh.close();
+
+  await click(/Ingliz tili fanini tanlash/);
+  await chooseLearningPlan('Noldan boshlayman');
+  assert.equal(await main.getByRole('button', { name: 'Ixtiyoriy diagnostika' }).count(), 0);
+  await click('Birinchi darsni boshlash');
+  await heading('Birinchi inglizcha so‘zlar');
+  await heading('Asosiy tushuncha');
+  await main.getByText(/«Hello» — salom/).first().waitFor();
+  assert.equal(await main.getByRole('button', { name: 'Test', exact: true }).count(), 0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await screenshot('ilk-ingliz-darsi-390.png');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await click('Keyingi qadam');
+  await heading('Birga misol ko‘ramiz');
+  await click('Yo‘lchidan so‘rash');
+  const help = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+  await help.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Hello qachon ishlatiladi?');
+  await click('Savolni yuborish', help);
+  await help.getByRole('button', { name: 'Foydali javob' }).waitFor();
+  await click('Yopish', help);
+  await heading('Birga misol ko‘ramiz');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await heading('Birga misol ko‘ramiz');
+  await click('Keyingi qadam');
+  await heading('O‘rganganingizni sinab ko‘ring');
+  await click('Ta’lim yo‘liga qaytish');
+  await heading('Boshlang‘ich darslar');
+  console.log('PASS welcome, one-tap subject choice, beginner instruction, contextual help and reading checkpoint');
+
+  await switchSubject(/IT & Kodlash fanini tanlash/);
+  await chooseLearningPlan('Asoslarini bilaman');
+  await click('Ta’lim yo‘lini ochish');
+  await heading('Mening ta’lim yo‘lim');
+  await click('Bosh sahifa', nav);
+  await click('Davom etish');
+  await heading(/Python/);
+  assert.equal(await main.getByRole('heading', { name: 'Kvadratni ochish' }).count(), 0);
+  await click('Ta’lim yo‘liga qaytish');
+  await switchSubject(/Matematika fanini tanlash/);
+  await chooseLearningPlan('Asoslarini bilaman');
+  await click('Ta’lim yo‘lini ochish');
+  await heading('Mening ta’lim yo‘lim');
+  await click('Bosh sahifa', nav);
+  await click('Davom etish');
+  await heading('Kvadratni ochish');
+  await click('Test');
+  await heading(/yoyilmasida x oldidagi/);
+  assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
+  await main.getByText('4', { exact: true }).click();
+  await click(/Tekshirish/i);
+  await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor();
+  const dialog = page.getByRole('dialog', { name: 'Dars yakunlandi' });
+  await dialog.waitFor();
+  await page.keyboard.press('Tab');
+  assert(await dialog.evaluate((node) => node.contains(document.activeElement)));
+  await click('Ta’lim yo‘liga o‘tish', dialog);
+  await click('Natijalar', nav);
+  await main.getByText('22', { exact: true }).first().waitFor();
+  await switchSubject(/Ingliz tili fanini tanlash/);
+  await click('Davom etish');
+  await heading('Birinchi inglizcha so‘zlar');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await heading('Birinchi inglizcha so‘zlar');
+  await click('Ta’lim yo‘liga qaytish');
+  await switchSubject(/Matematika fanini tanlash/);
+  await heading(/Assalomu alaykum/);
+  await screenshot('after-learn-1440.png');
+  await click('Natijalar', nav);
+  await main.getByText('22', { exact: true }).first().waitFor();
+  console.log('PASS demo login, course isolation, authoritative demo scorer and completion');
+
+  await click('Yo‘lchi AI', nav);
+  await heading('Yo‘lchi AI');
+  await page.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Kvadratni qanday ochaman?');
+  await click('Savolni yuborish');
+  await main.getByRole('button', { name: 'Foydali javob' }).waitFor();
+  await click('Foydali javob');
+  assert.equal(await main.getByRole('button', { name: 'Foydali javob' }).getAttribute('aria-pressed'), 'true');
+  await click('Natijalar', nav);
+  await heading('Ta’lim ko‘rsatkichlari');
+  await click('Yo‘lchi AI', nav);
+  await main.getByText('Kvadratni qanday ochaman?', { exact: true }).waitFor();
+  await screenshot('yolchi-1440.png');
+  console.log('PASS demo tutor, feedback and in-session conversation history');
+
+  const views = [
+    ['dashboard', /Assalomu alaykum/],
+    ['course-selection', /O‘zingizga mos fanni tanlang/],
+    ['onboarding', /Maqsad|Boshlaymiz|O‘rganish/i],
+    ['placement', 'Boshlang‘ich diagnostika'],
+    ['knowledge-map', 'Bilim xaritasi'],
+    ['roadmap', 'Mening ta’lim yo‘lim'],
+    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni ochish'],
+    ['lesson&lessonId=lesson_math_starter', 'Qo‘shish va ayirishdan boshlaymiz'],
+    ['ai-tutor', 'Yo‘lchi AI'],
+    ['progress', 'Ta’lim ko‘rsatkichlari'],
+    ['profile', 'Profil'],
+  ];
+  for (const width of [360, 390, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: width <= 390 ? 844 : 960 });
+    for (const [view, title] of views) {
+      await page.goto(base + '/?view=' + view, { waitUntil: 'domcontentloaded' });
+      await heading(title);
+      await checkWidth(view, width);
+      if (width === 390 && ['dashboard', 'lesson&lessonId=lesson_math_algebra_01', 'profile'].includes(view)) {
+        await screenshot((view === 'dashboard' ? 'after-learn' : view.split('&')[0]) + '-390.png');
+      }
+    }
+    const targetNav = width < 1024
+      ? page.getByRole('navigation', { name: 'Mobil navigatsiya' })
+      : nav;
+    await click('Natijalar', targetNav);
+    await heading('Ta’lim ko‘rsatkichlari');
+    await page.goBack();
+    await heading('Profil');
+    console.log('PASS ' + width + 'px, ' + views.length + ' screens, navigation and browser Back');
+  }
+  assert.deepEqual(remoteRequests, []);
+  assert.deepEqual(errors, []);
+  console.log('E2E PASSED — ' + assertions + ' layout assertions and demo journeys');
+} catch (error) {
+  console.error('Demo journey failed:', error.message);
+  console.error('Current path:', new URL(page.url()).pathname + new URL(page.url()).search);
+  console.error('Visible headings:', await main.getByRole('heading').allTextContents());
+  process.exitCode = 1;
+} finally {
+  await browser.close();
+}

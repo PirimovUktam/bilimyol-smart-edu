@@ -1,6 +1,7 @@
 import '../repositories/i_course_repository.dart';
 import '../repositories/i_learner_repository.dart';
 import '../entities/question.dart';
+import '../entities/placement_session.dart';
 import '../entities/skill_score.dart';
 import '../personalization/skill_scoring_engine.dart';
 
@@ -11,6 +12,7 @@ class AssessmentResult {
   final Map<String, SkillScore> computedScores;
   final String weakestSkillId;
   final int timestamp;
+  final List<PlacementReview> review;
 
   const AssessmentResult({
     required this.assessmentId,
@@ -19,6 +21,7 @@ class AssessmentResult {
     required this.computedScores,
     required this.weakestSkillId,
     required this.timestamp,
+    this.review = const [],
   });
 }
 
@@ -26,7 +29,10 @@ class SubmitPlacementTestUseCase {
   final ICourseRepository courseRepository;
   final ILearnerRepository learnerRepository;
 
-  const SubmitPlacementTestUseCase(this.courseRepository, this.learnerRepository);
+  const SubmitPlacementTestUseCase(
+    this.courseRepository,
+    this.learnerRepository,
+  );
 
   Future<AssessmentResult> execute(
     String courseId,
@@ -122,11 +128,13 @@ class SubmitPlacementTestUseCase {
         score: overallScore,
         weakestSkillId: weakestSkillId,
         submissions: verifiedSubmissions
-            .map((s) => PlacementAttemptSubmission(
-                  questionId: s.questionId,
-                  selectedIndex: s.selectedIndex,
-                  isCorrect: s.isCorrect,
-                ))
+            .map(
+              (s) => PlacementAttemptSubmission(
+                questionId: s.questionId,
+                selectedIndex: s.selectedIndex,
+                isCorrect: s.isCorrect,
+              ),
+            )
             .toList(),
       ),
     );
@@ -160,6 +168,19 @@ class SubmitPlacementTestUseCase {
       computedScores: computedScores,
       weakestSkillId: weakestSkillId,
       timestamp: DateTime.now().millisecondsSinceEpoch,
+      review: [
+        for (final submission in verifiedSubmissions)
+          if (questionsById[submission.questionId] case final question?
+              when question.correctIndex >= 0 &&
+                  question.correctIndex < question.options.length)
+            PlacementReview(
+              submission: submission,
+              question: question.text,
+              selected: question.options[submission.selectedIndex],
+              correct: question.options[question.correctIndex],
+              explanation: question.explanation,
+            ),
+      ],
     );
   }
 }

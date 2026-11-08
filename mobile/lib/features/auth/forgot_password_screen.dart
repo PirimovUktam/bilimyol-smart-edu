@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/auth/auth_error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/bilim_yol_logo.dart';
@@ -29,8 +29,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _handleReset() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      setState(() => _errorMsg = 'Iltimos, email manzilingizni kiriting.');
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      setState(() => _errorMsg = 'Email manzilini to‘g‘ri kiriting.');
+      return;
+    }
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      setState(
+        () => _errorMsg = SupabaseConfig.hasRemoteConfiguration
+            ? 'Hisob xizmatiga ulanib bo‘lmadi. Qayta urinib ko‘ring.'
+            : 'Namuna rejimida tiklash xati yuborilmaydi.',
+      );
       return;
     }
 
@@ -40,23 +49,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      if (SupabaseConfig.isConfigured) {
-        await Supabase.instance.client.auth.resetPasswordForEmail(email);
-      } else {
-        // Local demo mode has no real mail backend; keep behavior graceful.
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
+      await client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: SupabaseConfig.passwordRecoveryUrl,
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
           _isSent = true;
         });
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMsg = e.toString().replaceFirst('AuthApiException: ', '');
+          _errorMsg = authErrorMessage(error);
         });
       }
     }
@@ -103,7 +110,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 color: AppColors.successLight,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 28),
+                              child: const Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.success,
+                                size: 28,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -148,14 +159,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
                                 hintText: 'nomingiz@misol.uz',
-                                prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18),
+                                prefixIcon: const Icon(
+                                  Icons.mail_outline_rounded,
+                                  size: 18,
+                                ),
                                 filled: true,
                                 fillColor: const Color(0xFFF8FAFC),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppColors.cardBorder),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.cardBorder,
+                                  ),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -165,11 +184,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 decoration: BoxDecoration(
                                   color: AppColors.errorLight,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                                  border: Border.all(
+                                    color: AppColors.error.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+                                    const Icon(
+                                      Icons.error_outline_rounded,
+                                      color: AppColors.error,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(

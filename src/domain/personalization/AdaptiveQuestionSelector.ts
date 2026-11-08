@@ -29,15 +29,14 @@ export class AdaptiveQuestionSelector {
     });
 
     // Sort skills by least answered
-    const sortedSkills = [...targetSkillIds].sort(
+    const sortedSkills = targetSkillIds.filter((id) =>
+      skillCounts[id] < targetQuestionsPerSkill && unasked.some((question) => question.skillId === id)
+    ).sort(
       (a, b) => (skillCounts[a] || 0) - (skillCounts[b] || 0)
     );
 
     const candidateSkillId = sortedSkills[0];
-    if (skillCounts[candidateSkillId] >= targetQuestionsPerSkill) {
-      // All skills reached target count
-      return null;
-    }
+    if (!candidateSkillId) return null;
 
     // 2. Determine target difficulty for candidateSkillId based on recent performance
     const skillHistory = history.filter((h) => h.skillId === candidateSkillId);
@@ -72,11 +71,6 @@ export class AdaptiveQuestionSelector {
     // Fallback if exact difficulty is exhausted
     if (!match) {
       match = unasked.find((q) => q.skillId === candidateSkillId);
-    }
-
-    // Fallback to any remaining unasked question
-    if (!match && unasked.length > 0) {
-      match = unasked[0];
     }
 
     return match || null;

@@ -44,7 +44,7 @@ describe('ReinforcementFlow', () => {
 
     const profile = await learnerRepo.getProfile();
     expect(profile.completedReinforcementIds).toContain('reinf_node_math_func');
-    expect(profile.completedNodeIds).toContain('node_math_func');
+    expect(profile.completedNodeIds).not.toContain('node_math_func');
     expect(profile.scoresByCourse['course_math_01']['skill_math_functions'].score).toBe(63);
   });
 

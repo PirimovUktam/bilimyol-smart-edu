@@ -1,10 +1,8 @@
 import { create } from 'zustand';
 import { Question, QuestionAnswerSubmission } from '@/domain/entities/Question';
-import { AssessmentResult } from '@/domain/entities/Assessment';
-import { inMemoryCourseRepository } from '@/data/repositories/InMemoryCourseRepository';
+import type { AssessmentResult, PlacementSession } from '@/domain/entities/Assessment';
 import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
-import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
-import { isSupabaseConfigured } from '@/core/config/supabase';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
 import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
@@ -24,12 +22,14 @@ interface PlacementState {
   isLoading: boolean;
   error: string | null;
   hasFinished: boolean;
+  sessionId: string | null;
+  canRetake: boolean;
   /** Timestamp when the current question was first displayed (ms). */
   _questionStartedAt: number;
   /** Timestamp of the last successful submission (ms) — for rate limiting. */
   _lastSubmittedAt: number;
 
-  initPlacement: (courseId: string) => Promise<void>;
+  initPlacement: (courseId: string, restart?: boolean) => Promise<void>;
   submitAnswer: (selectedIndex: number) => Promise<boolean>;
   resetPlacement: () => void;
 }
@@ -45,6 +45,20 @@ export const getTargetSkillsForCourse = (allQuestions: Question[]): string[] =>
 
 const QUESTIONS_PER_SKILL = 2;
 let placementRequestToken: object = {};
+
+async function sessionState(session: PlacementSession, isCurrent: () => boolean): Promise<Partial<PlacementState>> {
+  const result = session.result;
+  if (result && isCurrent()) await useLearnerStore.getState().loadProfile().catch(() => undefined);
+  const learner = useLearnerStore.getState().profile;
+  return {
+    allQuestions: [], currentQuestion: session.question, questionNumber: session.number,
+    totalQuestionsToAsk: session.total, sessionId: session.id, canRetake: session.canRetake,
+    submissions: result?.submissions ?? [], history: [], hasFinished: result !== null,
+    assessmentResult: result ? { ...result, computedScores: learner?.scoresByCourse[result.courseId] ?? {} } : null,
+    isLoading: false, isSubmitting: false,
+    error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
+  };
+}
 
 /** The displayed total is derived from the configured target coverage and bank. */
 export const getPlacementQuestionCount = (
@@ -75,18 +89,26 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   isLoading: false,
   error: null,
   hasFinished: false,
+  sessionId: null,
+  canRetake: false,
   _questionStartedAt: 0,
   _lastSubmittedAt: 0,
 
-  initPlacement: async (courseId: string) => {
+  initPlacement: async (courseId: string, restart = false) => {
     const requestToken = placementRequestToken = {};
     const isCurrent = () => placementRequestToken === requestToken;
-    set({ isLoading: true, error: null, currentQuestion: null, hasFinished: false });
+    set({ isLoading: true, error: null, currentQuestion: null, assessmentResult: null,
+      sessionId: null, canRetake: false, hasFinished: false, isSubmitting: false });
 
     try {
-      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
-      const courseRepository = useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository;
-      const allQuestions = await courseRepository.getPlacementQuestions(courseId);
+      if (supabaseLearnerRepository.supportsServerPlacementPersistence) {
+        const session = await supabaseLearnerRepository.advancePlacement(courseId, undefined, restart);
+        if (!isCurrent()) return;
+        const next = await sessionState(session, isCurrent);
+        if (isCurrent()) set(next);
+        return;
+      }
+      const allQuestions = await supabaseCourseRepository.getPlacementQuestions(courseId);
       if (!isCurrent()) return;
       const targetSkills = getTargetSkillsForCourse(allQuestions);
       const totalQuestionsToAsk = getPlacementQuestionCount(allQuestions, targetSkills);
@@ -129,6 +151,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
   },
 
   submitAnswer: async (selectedIndex: number) => {
+    const token = placementRequestToken;
+    const isCurrent = () => token === placementRequestToken;
     const {
       allQuestions,
       currentQuestion,
@@ -137,6 +161,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       history,
       submissions,
       isSubmitting,
+      sessionId,
       _questionStartedAt,
       _lastSubmittedAt,
     } = get();
@@ -145,7 +170,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
     // Rate limiting: prevent rapid-fire submission abuse
     const now = Date.now();
-    if (_lastSubmittedAt && now - _lastSubmittedAt < MIN_SUBMIT_INTERVAL_MS) {
+    if (!sessionId && _lastSubmittedAt && now - _lastSubmittedAt < MIN_SUBMIT_INTERVAL_MS) {
       return false;
     }
 
@@ -160,6 +185,22 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     }
 
     set({ isSubmitting: true, error: null });
+    if (sessionId) {
+      try {
+        const session = await supabaseLearnerRepository.advancePlacement(currentQuestion.courseId, {
+          sessionId, questionId: currentQuestion.id, selectedIndex,
+        });
+        if (!isCurrent()) return false;
+        const next = await sessionState(session, isCurrent);
+        if (!isCurrent()) return false;
+        set(next);
+        return session.result !== null;
+      } catch (error) {
+        if (isCurrent()) set({ isSubmitting: false,
+          error: error instanceof Error ? error.message : 'Javobni yuborib bo‘lmadi. Qayta urinib ko‘ring.' });
+        return false;
+      }
+    }
 
     let isCorrect: boolean;
     try {
@@ -168,8 +209,10 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         currentQuestion.id,
         selectedIndex
       );
+      if (!isCurrent()) return false;
       isCorrect = Boolean(evaluation?.isCorrect);
     } catch (err) {
+      if (!isCurrent()) return false;
       set({
         isSubmitting: false,
         error: err instanceof Error
@@ -214,14 +257,13 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
 
     if (isDone) {
       // Evaluate full placement test using UseCase
-      const useDemoDataPlane = isDemoRuntimeActive() || !isSupabaseConfigured;
-      const useCase = new SubmitPlacementTestUseCase(
-        useDemoDataPlane ? inMemoryCourseRepository : supabaseCourseRepository,
-        supabaseLearnerRepository
-      );
+      const useCase = new SubmitPlacementTestUseCase(supabaseCourseRepository, supabaseLearnerRepository);
 
       try {
-        const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions);
+        const result = await useCase.execute(currentQuestion.courseId, updatedSubmissions, isCurrent);
+        if (!isCurrent()) return false;
+        await useLearnerStore.getState().loadProfile().catch(() => undefined);
+        if (!isCurrent()) return false;
 
         set({
           history: updatedHistory,
@@ -229,6 +271,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
           currentQuestion: null,
           assessmentResult: result,
           hasFinished: true,
+          canRetake: true,
           isSubmitting: false,
           error: null,
           _questionStartedAt: 0,
@@ -236,6 +279,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         });
         return true;
       } catch (err) {
+        if (!isCurrent()) return false;
         set({
           isSubmitting: false,
           error: err instanceof Error
@@ -272,6 +316,8 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
       isLoading: false,
       error: null,
       hasFinished: false,
+      sessionId: null,
+      canRetake: false,
       _questionStartedAt: 0,
       _lastSubmittedAt: 0,
     });

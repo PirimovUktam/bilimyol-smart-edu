@@ -1,326 +1,192 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Compass, AlertTriangle, ArrowRight, Map, ShieldCheck } from 'lucide-react';
+import { useEffect } from 'react';
+import { ArrowRight, Check, Compass, Lock, Sparkles, Target, Zap } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
-import { GetKnowledgeMapUseCase, KnowledgeMapData } from '@/domain/usecases/GetKnowledgeMapUseCase';
-import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
-import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
+import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
+import { CircularProgress } from '@/presentation/components/CircularProgress';
+import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
+import { SectionState } from '@/presentation/components/SectionState';
 
-interface KnowledgeMapViewProps {
-  onProceedToRoadmap: () => void;
-}
-
-export const KnowledgeMapView: React.FC<KnowledgeMapViewProps> = ({ onProceedToRoadmap }) => {
-  const { activeCourse, activeCourseSkills } = useCourseStore();
-  const { profile } = useLearnerStore();
-  const [mapData, setMapData] = useState<KnowledgeMapData | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChooseCourse }: {
+  onProceedToRoadmap: () => void; onStartPlacement: () => void; onChooseCourse: () => void;
+}) {
+  const course = useCourseStore((state) => state.activeCourse);
+  const skills = useCourseStore((state) => state.activeCourseSkills);
+  const profile = useLearnerStore((state) => state.profile);
+  const roadmap = useRoadmapStore((state) => state.roadmap);
+  const courseId = course?.id;
 
   useEffect(() => {
-    const courseId = activeCourse?.id;
-    if (!courseId) {
-      setMapData(null);
-      setMapError(null);
-      return;
+    if (courseId && useRoadmapStore.getState().roadmap?.courseId !== courseId) {
+      void useRoadmapStore.getState().loadRoadmap(courseId);
     }
+  }, [courseId]);
 
-    let cancelled = false;
-    setMapData(null);
-    setMapError(null);
-    const useCase = new GetKnowledgeMapUseCase(supabaseCourseRepository, supabaseLearnerRepository);
-    void useCase.execute(courseId).then((nextMap) => {
-      if (!cancelled) setMapData(nextMap);
-    }).catch((err) => {
-      if (!cancelled) {
-        setMapData(null);
-        setMapError(err instanceof Error ? err.message : 'Bilim xaritasi yuklanmadi.');
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeCourse?.id, profile, reloadKey]);
-
-  if (mapError && activeCourse) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-7 text-center border-coral/25 bg-rose-50/50 space-y-4">
-          <AlertTriangle className="w-10 h-10 text-coral mx-auto" />
-          <div>
-            <h2 className="text-lg font-black text-slate-900">Bilim xaritasi yuklanmadi</h2>
-            <p role="alert" className="text-sm text-slate-600 mt-1">{mapError}</p>
-          </div>
-          <Button variant="primary" onClick={() => setReloadKey((key) => key + 1)}>
-            Qayta urinish
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!mapData || !activeCourse || mapData.courseId !== activeCourse.id) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const weakest = mapData.weakestSkill;
-  const weakestSkillName = weakest
-    ? activeCourseSkills.find((s) => s.id === weakest.skillId)?.name || 'Ko‘nikma'
-    : 'Ko‘nikma';
-  const overallScore = mapData.overallScore;
-  const skillBandCounts = mapData.skills.reduce(
-    (counts, skill) => {
-      const score = mapData.scores[skill.id]?.score ?? 0;
-      if (score >= 80) counts.strong += 1;
-      else if (score >= 50) counts.medium += 1;
-      else counts.weak += 1;
-      return counts;
-    },
-    { strong: 0, medium: 0, weak: 0 }
-  );
+  const scores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
+  const hasScores = Object.keys(scores).length > 0;
+  const overall = SkillScoringEngine.computeOverallScore(scores);
+  const path = roadmap?.courseId === courseId ? roadmap : null;
+  const weak = skills.filter((skill) => scores[skill.id] && scores[skill.id].score < 50);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-7">
-      {/* Header bar with View Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e4ddce]">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="editorial-kicker">
-              Bilim Xaritasi // Diagnostika tahlili
-            </span>
-            <span className="font-mono text-xs font-bold text-slate-700 bg-white border border-[#e4ddce] px-2.5 py-0.5 rounded">
-              {activeCourse.title} • {overallScore}%
-            </span>
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            Bilim Holati va Ko‘nikmalar Xaritasi
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-            Diagnostika va darslar asosida aniqlangan bilim xaritangiz
-          </p>
-        </div>
-
-        {/* View Switcher Toggle Pill */}
-        <div className="flex items-center bg-white p-1 rounded-xl border border-[#e4ddce] self-start sm:self-auto shadow-2xs">
-          <button
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#10151f] text-white shadow-2xs transition-all cursor-default"
-          >
-            <Compass className="w-3.5 h-3.5 text-path" />
-            <span>Bilim xaritasi</span>
-          </button>
-          <button
-            onClick={onProceedToRoadmap}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-[#f5efe4] transition-all cursor-pointer"
-          >
-            <Map className="w-3.5 h-3.5" />
-            <span>Roadmap</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Radial Gauge Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Gauge card */}
-        <div className="p-6 bg-white border border-[#e4ddce] rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-3">
-          <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Sizning Bilim Holatingiz
-          </span>
-
-          <div className="relative w-36 h-36 flex items-center justify-center">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-              <circle
-                cx="60"
-                cy="60"
-                r="46"
-                fill="none"
-                stroke="#F0ECE3"
-                strokeWidth="10"
-              />
-              <circle
-                cx="60"
-                cy="60"
-                r="46"
-                fill="none"
-                stroke="url(#mapRingGrad)"
-                strokeWidth="10"
-                strokeDasharray="289"
-                strokeDashoffset={289 * (1 - overallScore / 100)}
-                strokeLinecap="round"
-                className="transition-all duration-1000 ease-out"
-              />
-              <defs>
-                <linearGradient id="mapRingGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#38BDF8" />
-                  <stop offset="50%" stopColor="#3B5BDB" />
-                  <stop offset="100%" stopColor="#0E131F" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-3xl font-bold text-slate-900">{overallScore}%</span>
-              <span className="font-mono text-[10px] font-bold text-mint uppercase">
-                {SkillScoringEngine.getMasteryLabelUz(overallScore)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-600 pt-1">
-            <span className="w-2 h-2 rounded-full bg-mint inline-block" />
-            <span>Faol tahlil natijasi</span>
-          </div>
-        </div>
-
-        {/* Detailed Breakdown Card */}
-        <div className="p-6 bg-white border border-[#e4ddce] rounded-2xl shadow-sm md:col-span-2 space-y-4 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-brand" />
-              <h3 className="font-display text-base font-bold text-slate-900">
-                Diagnostika xulosasi
-              </h3>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-              Siz tanlagan <strong>{activeCourse.title}</strong> fani bo‘yicha ko‘nikmalaringiz tahlil qilindi.
-              Har bir mavzu uchun bilim darajasi va qaysi mavzularda bo‘shliq borligi aniqlandi.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 pt-2 border-t border-[#f0ece3] text-center">
-            <div className="p-3 rounded-xl bg-mint/10 border border-mint/25">
-              <div className="font-mono text-[10px] font-bold text-mint uppercase tracking-wider">Yaxshi</div>
-              <div className="font-mono text-base sm:text-lg font-bold text-mint mt-0.5">{skillBandCounts.strong} ta mavzu</div>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-              <div className="font-mono text-[10px] font-bold text-amber-800 uppercase tracking-wider">O‘rta</div>
-              <div className="font-mono text-base sm:text-lg font-bold text-amber-950 mt-0.5">{skillBandCounts.medium} ta mavzu</div>
-            </div>
-            <div className="p-3 rounded-xl bg-coral/5 border border-coral/25">
-              <div className="font-mono text-[10px] font-bold text-coral uppercase tracking-wider">Bo‘shliq</div>
-              <div className="font-mono text-base sm:text-lg font-bold text-coral mt-0.5">{skillBandCounts.weak} ta mavzu</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Weakest Skill Alert Banner */}
-      {weakest && weakest.score < 50 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-5 sm:p-6 bg-[#fff5f5] border border-coral/25 rounded-2xl shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-coral text-white flex items-center justify-center shrink-0 shadow-sm shadow-rose-600/20">
-              <AlertTriangle className="w-5 h-5 lab-pulse" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-coral/10 text-coral border border-coral/25">
-                  Mustahkamlash talab etiladi
-                </span>
-                <span className="font-display text-sm font-bold text-coral">
-                  {weakestSkillName} ({weakest.score}%)
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-coral font-medium">
-                Ushbu mavzu bo‘yicha tushunchalar mustahkamlangandan so‘ng keyingi qiyinroq bosqichlar ochiladi.
-              </p>
-            </div>
-          </div>
-
-          <Button
-            variant="danger"
-            size="md"
-            onClick={onProceedToRoadmap}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="shrink-0 font-bold"
-          >
-            Yo‘l xaritasiga o‘tish
+    <div className="learning-page space-y-6 sm:space-y-8">
+      <PageHeader
+        title="Bilim xaritasi"
+        highlightWord="xaritasi"
+        eyebrow={course?.title ?? 'Ko‘nikmalar'}
+        description="Qaysi mavzularni egallaganingizni va qaysilarini takrorlash kerakligini ko‘ring."
+        action={
+          <Button onClick={onProceedToRoadmap} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>
+            Ta’lim yo‘li
           </Button>
-        </motion.div>
-      )}
-
-      {/* Skills Grid */}
-      <div className="space-y-3">
-        <h3 className="font-display text-base font-bold text-slate-900 tracking-tight">
-          Fan ko‘nikmalari reytingi
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {mapData.skills.map((skill) => {
-            const skillScore = mapData.scores[skill.id]?.score ?? 0;
-            const isWeak = skillScore < 50;
-            const isStrong = skillScore >= 80;
-
-            return (
-              <div
-                key={skill.id}
-                className={`p-5 rounded-2xl border transition-all ${
-                  isWeak
-                    ? 'border-coral/25 bg-[#fffbfb]'
-                    : isStrong
-                    ? 'border-mint/25 bg-[#fbfdfb]'
-                    : 'border-[#e4ddce] bg-white'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div>
-                    <h4 className="font-display text-sm font-bold text-slate-900">
-                      {skill.name}
-                    </h4>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                      {skill.description || 'Asosiy tushunchalar'}
-                    </p>
-                  </div>
-                  <span
-                    className={`font-mono text-xs font-bold px-2 py-0.5 rounded-lg border ${
-                      isWeak
-                        ? 'bg-coral/10 text-coral border-coral/25'
-                        : isStrong
-                        ? 'bg-mint/10 text-mint border-mint/25'
-                        : 'bg-[#f5efe4] text-slate-800 border-[#e4ddce]'
-                    }`}
-                  >
-                    {skillScore}%
-                  </span>
-                </div>
-
-                <div className="mt-3">
-                  <Progress
-                    value={skillScore}
-                    tone={isWeak ? 'rose' : isStrong ? 'emerald' : 'indigo'}
-                    size="md"
-                    ariaLabel={`${skill.name} o‘zlashtirish`}
-                  />
-                </div>
+        }
+      />
+      {!course ? (
+        <Card className="space-y-4">
+          <SectionState title="Avval fanni tanlang" />
+          <Button onClick={onChooseCourse}>Fanlar katalogi</Button>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="fade-up stagger-1 flex items-center gap-4" padding="md">
+              {hasScores ? (
+                <CircularProgress value={overall} label="Umumiy o‘zlashtirish" />
+              ) : (
+                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-sand text-brand">
+                  <Target aria-hidden="true" className="size-7" />
+                </span>
+              )}
+              <div className="space-y-2">
+                <span className="highlight">Diagnostika holati</span>
+                <h2 className="heading text-lg font-extrabold">Baholangan mavzular</h2>
+                <p className="text-sm text-slatefine">
+                  {hasScores
+                    ? Object.keys(scores).length + ' mavzu bo‘yicha natija mavjud.'
+                    : 'Diagnostika o‘quv rejangizni moslashtirishga yordam beradi.'}
+                </p>
+                {!hasScores && (
+                  <Button size="sm" variant="outline" onClick={onStartPlacement}>
+                    Diagnostikani boshlash
+                  </Button>
+                )}
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </Card>
 
-      {/* Bottom CTA */}
-      <div className="pt-2 flex justify-end">
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={onProceedToRoadmap}
-          rightIcon={<ArrowRight className="w-4 h-4 text-path" />}
-          className="shadow-md"
-        >
-          Shaxsiy Yo‘l Xaritasiga O‘tish
-        </Button>
-      </div>
+            <Card className="fade-up stagger-2 space-y-2.5" padding="md">
+              <span className="highlight">Diqqat markazi</span>
+              <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
+                <Sparkles aria-hidden="true" className="size-5 text-brand" /> Mustahkamlash <span className="heading-accent">kerak</span>
+              </h2>
+              {weak.length ? (
+                <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
+                  {weak.map((skill) => (
+                    <li key={skill.id}>
+                      {skill.name} · <span className="font-bold text-coral">{scores[skill.id].score}%</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slatefine">
+                  {hasScores
+                    ? 'Baholangan mavzular orasida 50 foizdan past natija yo‘q.'
+                    : 'Zaif mavzular baholashdan keyin aniqlanadi.'}
+                </p>
+              )}
+            </Card>
+          </div>
+
+          {skills.length ? (
+            <ol className="grid gap-5 lg:grid-cols-2">
+              {skills.map((skill, index) => {
+                const node = path?.nodes.find((item) => !item.isReinforcement && item.skillId === skill.id);
+                const score = scores[skill.id]?.score;
+                const isCompleted = node?.status === 'completed';
+                const isLocked = node?.status === 'locked';
+                const Icon = isLocked ? Lock : isCompleted ? Check : Compass;
+                const prerequisites =
+                  node?.prerequisites.flatMap((id) => {
+                    const item = path?.nodes.find((candidate) => candidate.id === id);
+                    return item ? [item.title] : [];
+                  }) ?? [];
+
+                return (
+                  <li key={skill.id} style={{ animationDelay: `${index * 80}ms` }} className="fade-up">
+                    <Card padding="md" className="edtech-card-hover flex h-full flex-col justify-between gap-4">
+                      {/* (a) Top: Icon & Status Badge */}
+                      <div className="flex items-center justify-between gap-3">
+                        <span
+                          className={
+                            'grid size-11 shrink-0 place-items-center rounded-2xl ' +
+                            (isCompleted
+                              ? 'bg-emerald-50 text-mint'
+                              : isLocked
+                              ? 'bg-slate-100 text-slatefine'
+                              : 'bg-indigo-50 text-brand')
+                          }
+                        >
+                          <Icon aria-hidden="true" className="size-5" />
+                        </span>
+                        <Badge
+                          variant={isCompleted ? 'emerald' : isLocked ? 'slate' : 'indigo'}
+                          size="sm"
+                        >
+                          {index + 1}-mavzu
+                          {isCompleted
+                            ? ' · Yakunlangan'
+                            : isLocked
+                            ? ' · Qulflangan'
+                            : node && node.id === path?.activeNodeId
+                            ? ' · Joriy mavzu'
+                            : ''}
+                        </Badge>
+                      </div>
+
+                      {/* (b) Middle: Title, Description & Progress */}
+                      <div className="min-w-0 space-y-2">
+                        <h3 className="heading break-words text-lg font-extrabold">{skill.name}</h3>
+                        <p className="line-clamp-2 text-sm text-slatefine">{skill.description}</p>
+                        <div className="pt-2">
+                          {score == null ? (
+                            <p className="text-xs font-bold text-slatefine">Hali baholanmagan</p>
+                          ) : (
+                            <Progress
+                              value={score}
+                              ariaLabel="O‘zlashtirish"
+                              showLabel
+                              tone={score < 50 ? 'amber' : 'emerald'}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* (c) Bottom: Meta Footer */}
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs font-bold text-slatefine">
+                        <span>
+                          {prerequisites.length > 0
+                            ? 'Bog‘liq mavzular · ' + prerequisites.join(', ')
+                            : 'Mustaqil boshlang‘ich modul'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-brand">
+                          <Zap aria-hidden="true" className="size-3.5" />
+                          Ko‘nikma #{index + 1}
+                        </span>
+                      </div>
+                    </Card>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <SectionState title="Bu fan uchun ko‘nikmalar hali kiritilmagan" />
+          )}
+        </>
+      )}
     </div>
   );
-};
+}

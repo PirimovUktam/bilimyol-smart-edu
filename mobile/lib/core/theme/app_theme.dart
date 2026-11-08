@@ -9,7 +9,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
@@ -23,32 +23,47 @@ class AppTheme {
         displayLarge: baseTextTheme.displayLarge?.copyWith(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w800,
+          letterSpacing: -0.6,
         ),
         displayMedium: baseTextTheme.displayMedium?.copyWith(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
         ),
         headlineLarge: baseTextTheme.headlineLarge?.copyWith(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.4,
         ),
         headlineMedium: baseTextTheme.headlineMedium?.copyWith(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
+        ),
+        headlineSmall: baseTextTheme.headlineSmall?.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
         ),
         titleLarge: baseTextTheme.titleLarge?.copyWith(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
         ),
         titleMedium: baseTextTheme.titleMedium?.copyWith(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
         bodyLarge: baseTextTheme.bodyLarge?.copyWith(
           color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
         ),
         bodyMedium: baseTextTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondary,
+          fontWeight: FontWeight.w400,
+        ),
+        bodySmall: baseTextTheme.bodySmall?.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
         ),
       ),
       cardTheme: CardThemeData(
@@ -56,11 +71,11 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.cardBorder, width: 1.2),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        backgroundColor: Colors.white.withValues(alpha: 0.94),
         elevation: 0,
         scrolledUnderElevation: 0.5,
         centerTitle: false,
@@ -75,7 +90,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 1,
+          elevation: 2,
+          shadowColor: AppColors.primary.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),

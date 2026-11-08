@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import '../config/supabase_config.dart';
 import '../../app/providers.dart';
 
 /// Compact demo control strip for judges: resets the whole demo state so the
@@ -18,7 +19,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
   bool _resetting = false;
 
   Future<void> _resetDemo() async {
-    if (_resetting) return;
+    if (_resetting || SupabaseConfig.hasRemoteConfiguration) return;
     setState(() => _resetting = true);
     try {
       await ref.read(learnerStateNotifierProvider.notifier).resetAll();
@@ -30,6 +31,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
 
   @override
   Widget build(BuildContext context) {
+    if (SupabaseConfig.hasRemoteConfiguration) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -48,7 +50,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              'Demo rejimi — hakamlar istalgan vaqtda qayta boshlashi mumkin',
+              'Namuna rejimi. Mashg‘ulotni qayta boshlashingiz mumkin.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,

@@ -5,6 +5,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/edtech_reveal.dart';
+import '../../core/widgets/edtech_section_header.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
@@ -146,6 +148,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const EdTechReveal(
+                    index: 0,
+                    child: EdTechSectionHeader(
+                      pillText: 'Natijalar tahlili',
+                      title: 'Ta’lim ko‘rsatkichlari',
+                      highlightWord: 'ko‘rsatkichlari',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // 4 Stat Cards Grid (Reference 2 style)
                   Row(
                     children: [

@@ -387,19 +387,9 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     });
 
     try {
-      const useCase = new SubmitLessonAnswerUseCase({
-        explainMistake: async (request) => {
-          // The use case may request feedback after awaiting answer scoring.
-          // Do not start that follow-up work for a discarded question/session.
-          if (!isCurrent()) throw new Error('Dars sessiyasi o‘zgardi.');
-          const explanation = await aiService.explainMistake(request);
-          if (!isCurrent()) throw new Error('Dars sessiyasi o‘zgardi.');
-          return explanation;
-        },
-      }, supabaseLearnerRepository);
-      const learnerName = useLearnerStore.getState().profile?.name || 'O‘quvchi';
+      const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
-      const result = await useCase.execute(question, selectedIndex, learnerName, currentLesson.id);
+      const result = await useCase.execute(question, selectedIndex, currentLesson.id);
       if (!isCurrent()) return null;
 
       if (result.isCorrect) {

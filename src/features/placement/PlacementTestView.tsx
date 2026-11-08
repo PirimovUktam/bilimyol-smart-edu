@@ -1,275 +1,206 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ArrowRight, ShieldAlert, Cpu } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Check, ClipboardCheck, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
-import { sounds } from '@/core/utils/soundEffects';
+import { Formula } from '@/presentation/components/LearningText';
+import { Modal } from '@/presentation/components/Modal';
+import { PageHeader } from '@/presentation/components/PageHeader';
+import { Progress } from '@/presentation/components/Progress';
+import { SectionState } from '@/presentation/components/SectionState';
+import { AudioSimWave } from '@/features/lesson/AudioSimWave';
 
-interface PlacementTestViewProps {
-  onComplete: () => void;
-}
-
-export const PlacementTestView: React.FC<PlacementTestViewProps> = ({ onComplete }) => {
-  const { activeCourse } = useCourseStore();
-  const {
-    currentQuestion,
-    questionNumber,
-    totalQuestionsToAsk,
-    isSubmitting,
-    isLoading,
-    error,
-    initPlacement,
-    submitAnswer,
-    hasFinished,
-  } = usePlacementStore();
-
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning }: {
+  onComplete: () => void; onChooseCourse: () => void; onStartLearning: () => void;
+}) {
+  const course = useCourseStore((state) => state.activeCourse);
+  const skills = useCourseStore((state) => state.activeCourseSkills);
+  const question = usePlacementStore((state) => state.currentQuestion);
+  const number = usePlacementStore((state) => state.questionNumber);
+  const total = usePlacementStore((state) => state.totalQuestionsToAsk);
+  const submitting = usePlacementStore((state) => state.isSubmitting);
+  const loading = usePlacementStore((state) => state.isLoading);
+  const error = usePlacementStore((state) => state.error);
+  const result = usePlacementStore((state) => state.assessmentResult);
+  const canRetake = usePlacementStore((state) => state.canRetake);
+  const [selection, setSelection] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const courseId = course?.id;
+  const finalQuestion = number >= total;
+  const init = (id: string, restart = false) => {
+    setSelection(null);
+    setConfirm(false);
+    void usePlacementStore.getState().initPlacement(id, restart);
+  };
 
   useEffect(() => {
-    if (activeCourse) {
-      initPlacement(activeCourse.id);
-    }
-  }, [activeCourse, initPlacement]);
+    if (courseId) init(courseId);
+    return () => usePlacementStore.getState().resetPlacement();
+  }, [courseId]);
 
-  const progressPercent = totalQuestionsToAsk > 0
-    ? (questionNumber / totalQuestionsToAsk) * 100
-    : 0;
-
-  const handleSelectOption = (index: number) => {
-    if (isSubmitting) return;
-    setSelectedOption(index);
+  const submit = async () => {
+    if (selection == null || submitting) return;
+    setConfirm(false);
+    const before = usePlacementStore.getState();
+    await before.submitAnswer(selection);
+    const after = usePlacementStore.getState();
+    if (after.currentQuestion?.id !== before.currentQuestion?.id || after.sessionId !== before.sessionId) setSelection(null);
   };
-
-  const handleConfirmAnswer = async () => {
-    if (selectedOption === null || isSubmitting) return;
-
-    const isDone = await submitAnswer(selectedOption);
-    setSelectedOption(null);
-    if (isDone) {
-      sounds.playSuccess();
-      onComplete();
-    }
-  };
-
-  const getDifficultyLabel = (diff: string) => {
-    switch (diff) {
-      case 'easy':
-        return 'OSON';
-      case 'medium':
-        return 'O‘RTA';
-      case 'hard':
-        return 'MURAKKAB';
-      default:
-        return 'ADAPTIV';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="p-8 rounded-2xl bg-white border border-[#e4ddce] text-center space-y-4 max-w-sm shadow-xs">
-          <div className="w-10 h-10 border-2 border-[#10151f] border-t-transparent rounded-full animate-spin mx-auto" />
-          <div className="editorial-kicker justify-center">Yuklanmoqda</div>
-          <p className="font-display text-sm font-bold text-slate-800">
-            Diagnostika savollari tayyorlanmoqda...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-8 text-center border-[#e4ddce] bg-white space-y-4 shadow-sm">
-          <ShieldAlert className="w-10 h-10 text-coral mx-auto" />
-          <div className="space-y-1">
-            <div className="editorial-kicker justify-center text-coral">Xatolik</div>
-            <h2 className="font-display text-lg font-bold text-[#10151f]">Diagnostika yuklanmadi</h2>
-            <p className="text-xs text-slate-600 mt-1">{error}</p>
-          </div>
-          {activeCourse && (
-            <Button
-              variant="primary"
-              onClick={() => {
-                setSelectedOption(null);
-                void initPlacement(activeCourse.id);
-              }}
-              className="w-full font-bold"
-            >
-              Qayta urinish
-            </Button>
-          )}
-        </Card>
-      </div>
-    );
-  }
-
-  if (hasFinished) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-8 text-center border-[#e4ddce] bg-white space-y-5 shadow-sm">
-          <div className="w-12 h-12 rounded-2xl bg-[#10151f] text-white flex items-center justify-center mx-auto shadow-md">
-            <CheckCircle2 className="w-6 h-6 text-mint" />
-          </div>
-          <div className="space-y-1">
-            <div className="editorial-kicker justify-center text-mint">Tugallandi</div>
-            <h2 className="font-display text-xl font-bold text-[#10151f]">Diagnostika Yakunlandi</h2>
-            <p className="text-xs text-slate-600 mt-1">
-              Barcha savollar bo‘yicha individual ko‘nikma matritsangiz hisoblab chiqildi.
-            </p>
-          </div>
-          <Button variant="primary" onClick={onComplete} className="w-full font-bold">
-            Shaxsiy Yo‘lni Ko‘rish
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!currentQuestion || totalQuestionsToAsk === 0) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <Card className="max-w-md w-full p-8 text-center border-[#e4ddce] bg-white space-y-4">
-          <p className="text-sm font-semibold text-slate-600">Diagnostika uchun savollar mavjud emas.</p>
-          {activeCourse && (
-            <Button variant="outline" onClick={() => void initPlacement(activeCourse.id)}>
-              Qayta yuklash
-            </Button>
-          )}
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center px-4 py-8">
-      <div className="max-w-2xl w-full space-y-6">
-        {/* Header with progress */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#e4ddce]">
-          <div className="space-y-1">
-            <div className="editorial-kicker">
-              <span>ADAPTIV DIAGNOSTIKA</span>
-              <span>//</span>
-              <span>{activeCourse?.title || 'FAN'}</span>
+    <div className="learning-page max-w-200 space-y-6">
+      <PageHeader
+        title="Boshlang‘ich diagnostika"
+        highlightWord="diagnostika"
+        eyebrow={course?.title ?? 'Bilim darajasi'}
+        description="Diagnostika ixtiyoriy. Fan bilan endi tanishayotgan bo‘lsangiz, avval darsdan boshlashingiz mumkin."
+        action={course && !result ? <Button variant="outline" onClick={onStartLearning}>Darsdan boshlash</Button> : undefined}
+      />
+      {!courseId ? (
+        <Card className="space-y-4">
+          <SectionState title="Avval fanni tanlang" />
+          <Button onClick={onChooseCourse}>Fanlar katalogi</Button>
+        </Card>
+      ) : loading ? (
+        <SectionState kind="loading" title="Diagnostika savollari yuklanmoqda…" />
+      ) : result ? (
+        <Card className="fade-up space-y-5" padding="md">
+          <div className="flex items-center gap-3">
+            <span className="grid size-12 place-items-center rounded-2xl bg-emerald-50 text-mint">
+              <ClipboardCheck aria-hidden="true" className="size-7" />
+            </span>
+            <div>
+              <span className="highlight">Natija tayyor</span>
+              <h2 className="heading mt-1 text-2xl font-extrabold">Diagnostika yakunlandi</h2>
             </div>
-            <h1 className="font-display text-2xl font-extrabold text-[#10151f] tracking-tight">
-              Bilim Darajangizni Aniqlash
-            </h1>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#f5efe4] text-slate-800 border border-[#e4ddce]">
-              {getDifficultyLabel(currentQuestion.difficulty)}
-            </span>
-            <span className="font-mono text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-[#e4ddce]">
-              SAVOL {questionNumber} / {totalQuestionsToAsk}
+          <p className="text-sm font-semibold text-slatefine">
+            {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length} javob to‘g‘ri.
+          </p>
+          <ul className="space-y-3" aria-label="Ko‘nikmalar bo‘yicha natijalar">
+            {Object.values(result.computedScores).map((score) => (
+              <li key={score.skillId}>
+                <Progress
+                  showLabel
+                  value={score.score}
+                  ariaLabel={skills.find((skill) => skill.id === score.skillId)?.name ?? 'Ko‘nikma'}
+                  tone={score.score < 50 ? 'amber' : 'emerald'}
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2.5 pt-1">
+            <Button onClick={onComplete} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>
+              Shaxsiy yo‘lni ko‘rish
+            </Button>
+            {canRetake && (
+              <Button variant="outline" onClick={() => init(courseId, true)}>
+                Qayta topshirish
+              </Button>
+            )}
+          </div>
+          {!!result.review?.length && (
+            <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
+              <summary className="cursor-pointer font-bold text-brand">Javoblar tahlili</summary>
+              <ol className="mt-3 space-y-3">
+                {result.review.map((answer, index) => (
+                  <li key={answer.questionId} className="space-y-1 rounded-2xl border border-hairline bg-paper p-3.5 text-sm leading-relaxed">
+                    <p className={'font-bold ' + (answer.isCorrect ? 'text-mint' : 'text-coral')}>
+                      {answer.isCorrect ? 'To‘g‘ri' : 'Xato'}
+                    </p>
+                    <p className="break-words font-bold">{index + 1}. {answer.questionText}</p>
+                    <p className="break-words">Siz belgilagan javob — {answer.selectedOption}</p>
+                    {!answer.isCorrect && <p className="break-words font-semibold text-mint">To‘g‘ri javob — {answer.correctOption}</p>}
+                    {answer.explanation && <p className="break-words text-slatefine">{answer.explanation}</p>}
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+        </Card>
+      ) : !question ? (
+        <SectionState
+          kind={error ? 'error' : 'empty'}
+          title={error ? 'Diagnostikani yuklab bo‘lmadi' : 'Savollar tayyorlanmoqda'}
+          description={error ?? undefined}
+          onRetry={() => init(courseId)}
+        />
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <span className="highlight">
+              <Sparkles aria-hidden="true" className="size-3.5" />
+              {number} / {total} savol
             </span>
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="h-1.5 w-full bg-[#f5efe4] rounded-full overflow-hidden border border-[#e4ddce]">
-          <motion.div
-            className="h-full bg-[#10151f]"
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-
-        {/* Question Card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestion.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="p-7 sm:p-9 rounded-2xl border border-[#e4ddce] bg-white shadow-xs space-y-6">
-              {/* Question Text */}
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="w-7 h-7 rounded-lg bg-[#10151f] text-white font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                    {String(questionNumber).padStart(2, '0')}
-                  </span>
-                  <div className="space-y-2 flex-1">
-                    <h2 className="font-display text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                      {currentQuestion.text}
-                    </h2>
-                    {currentQuestion.formulaLatex && (
-                      <div className="p-2.5 bg-[#fbf9f4] rounded-lg border border-[#e4ddce] font-mono font-bold text-sm text-brand-dark inline-block">
-                        {currentQuestion.formulaLatex}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="space-y-2.5 pt-2">
-                {currentQuestion.options.map((option, idx) => {
-                  const isSelected = selectedOption === idx;
-                  const optionLetters = ['A', 'B', 'C', 'D'];
-
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSelectOption(idx)}
-                      disabled={isSubmitting}
-                      className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-3.5 cursor-pointer disabled:pointer-events-none ${
-                        isSelected
-                          ? 'border-[#10151f] ring-2 ring-[#10151f] bg-[#fbf9f4] shadow-xs'
-                          : 'border-[#e4ddce] bg-white hover:border-slate-400 hover:bg-[#fbf9f4]'
-                      }`}
-                    >
-                      <span
-                        className={`w-7 h-7 rounded-lg font-mono font-bold text-xs flex items-center justify-center transition-colors shrink-0 ${
-                          isSelected
-                            ? 'bg-[#10151f] text-white'
-                            : 'bg-[#f5efe4] text-slate-700 border border-[#e4ddce]'
-                        }`}
-                      >
-                        {optionLetters[idx]}
-                      </span>
-                      <span className="font-mono text-sm font-bold text-slate-900 flex-1">
-                        {option}
-                      </span>
-                      {isSelected && (
-                        <CheckCircle2 className="w-5 h-5 text-[#10151f] shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Action Button */}
-              <div className="pt-6 border-t border-[#e4ddce] flex items-center justify-between">
-                <span className="font-mono text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5" />
-                  Ko‘nikma matritsasi yangilanadi
-                </span>
-
-                <Button
-                  variant="primary"
-                  size="md"
-                  disabled={selectedOption === null || isSubmitting}
-                  isLoading={isSubmitting}
-                  onClick={handleConfirmAnswer}
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                  className="font-bold uppercase tracking-wider text-xs px-6 py-2.5"
+          <Progress value={(100 * number) / total} ariaLabel="Diagnostika jarayoni" size="sm" />
+          <Card className="fade-up space-y-5 p-5 sm:p-7">
+            <h2 className="heading break-words text-xl font-extrabold sm:text-2xl">{question.text}</h2>
+            {question.contextSnippet && (
+              <p className="rounded-2xl bg-canvas p-4 text-sm leading-relaxed text-slatefine">{question.contextSnippet}</p>
+            )}
+            {question.formulaLatex && <Formula source={question.formulaLatex} display />}
+            {question.audioSimText && (
+              <AudioSimWave transcript={question.audioSimText} speakerName={question.audioSimSpeaker ?? 'Audio xabar'} />
+            )}
+            <fieldset className="space-y-2.5" disabled={submitting}>
+              <legend className="sr-only">Javob variantlari</legend>
+              {question.options.map((option, index) => (
+                <label
+                  key={index}
+                  className={
+                    'flex min-h-13 cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3 text-sm transition-all ' +
+                    (selection === index
+                      ? 'border-brand bg-sand font-bold ring-2 ring-brand/20'
+                      : 'border-hairline bg-paper hover:border-brand/50')
+                  }
                 >
-                  {questionNumber >= totalQuestionsToAsk ? 'Natijani Ko‘rish' : 'Keyingi Savol'}
+                  <input
+                    type="radio"
+                    name="placement-option"
+                    checked={selection === index}
+                    className="size-4 shrink-0 accent-brand"
+                    onChange={() => setSelection(index)}
+                  />
+                  <span className="min-w-0 flex-1 break-words">{option}</span>
+                  {selection === index && <Check aria-hidden="true" className="size-4 shrink-0 text-brand" />}
+                </label>
+              ))}
+            </fieldset>
+            {error && (
+              <div role="alert" className="space-y-2 rounded-2xl bg-rose-50 p-3.5 text-sm text-coral">
+                <p>{error}</p>
+                <Button variant="ghost" size="sm" onClick={() => init(courseId)}>
+                  Sessiyani qayta yuklash
                 </Button>
               </div>
+            )}
+            <div className="flex justify-end pt-1">
+              <Button
+                isLoading={submitting}
+                disabled={selection == null}
+                onClick={() => {
+                  if (finalQuestion) setConfirm(true);
+                  else void submit();
+                }}
+                rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
+              >
+                {finalQuestion ? 'Natijani ko‘rish' : 'Keyingi savol'}
+              </Button>
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          </Card>
+          <Modal isOpen={confirm} onClose={() => setConfirm(false)} title="Javoblarni topshirasizmi?" maxWidth="sm">
+            <p className="mb-4 text-sm text-slatefine">Oxirgi javobni yuborgach, natijangiz saqlanadi.</p>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="ghost" onClick={() => setConfirm(false)}>
+                Qaytish
+              </Button>
+              <Button onClick={() => void submit()}>Topshirish</Button>
+            </div>
+          </Modal>
+        </>
+      )}
     </div>
   );
-};
+}

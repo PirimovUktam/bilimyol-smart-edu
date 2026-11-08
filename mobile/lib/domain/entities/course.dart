@@ -1,9 +1,4 @@
-enum SubjectType {
-  mathematics,
-  english,
-  it,
-  logic,
-}
+enum SubjectType { mathematics, english, it, logic }
 
 class Course {
   final String id;
@@ -15,6 +10,8 @@ class Course {
   final String secondaryColorHex;
   final List<String> skills;
   final List<String> lessons;
+  final String? starterLessonId;
+  final List<String> foundationLessonIds;
   final int totalStudentsEstimate;
 
   const Course({
@@ -27,6 +24,8 @@ class Course {
     required this.secondaryColorHex,
     required this.skills,
     required this.lessons,
+    this.starterLessonId,
+    this.foundationLessonIds = const [],
     this.totalStudentsEstimate = 1000,
   });
 }

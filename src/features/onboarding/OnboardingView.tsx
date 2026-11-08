@@ -1,301 +1,230 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Clock, BarChart3, ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, BookOpen, ClipboardCheck, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
-import { OnboardingGoal, DailyTimeCommitment, InitialLevel } from '@/core/types/common';
+import type { DailyTimeCommitment, InitialLevel, OnboardingGoal } from '@/core/types/common';
+import { foundationLessons } from '@/domain/personalization/learningStart';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
+import { PageHeader } from '@/presentation/components/PageHeader';
+import { SectionState } from '@/presentation/components/SectionState';
 
-interface OnboardingViewProps {
-  onComplete: () => void;
+const levels: { value: InitialLevel; label: string; description: string; badge: string }[] = [
+  {
+    value: 'beginner',
+    label: 'Noldan boshlayman',
+    description: 'Avval o‘zbekcha tushuntirish va ishlangan misol. Mashq dars oxirida keladi.',
+    badge: 'Boshlang‘ich',
+  },
+  {
+    value: 'intermediate',
+    label: 'Asoslarini bilaman',
+    description: 'Darslarni davom ettiring yoki bilimingizni qisqa diagnostikada tekshiring.',
+    badge: 'O‘rta daraja',
+  },
+  {
+    value: 'advanced',
+    label: 'Mustahkam bilimim bor',
+    description: 'Mavzular rejasiga o‘ting yoki qaysi mavzuda yordam kerakligini aniqlang.',
+    badge: 'Yuqori daraja',
+  },
+];
+
+const goals: { value: OnboardingGoal; label: string }[] = [
+  { value: 'mastery', label: 'Asosiy mavzularni o‘rganish' },
+  { value: 'exam_prep', label: 'Imtihonga tayyorlanish' },
+  { value: 'skills_boost', label: 'Amaliy ko‘nikmalarni rivojlantirish' },
+];
+const times: DailyTimeCommitment[] = [15, 30, 60];
+
+export function OnboardingView({ onComplete, onBack }: {
+  onComplete: (courseId: string, level: InitialLevel, diagnostic: boolean) => void;
   onBack: () => void;
-}
+}) {
+  const course = useCourseStore((state) => state.activeCourse);
+  const profile = useLearnerStore((state) => state.profile);
+  const [level, setLevel] = useState<InitialLevel | null>(course ? profile?.courseLevels?.[course.id] ?? null : null);
+  const [goal, setGoal] = useState<OnboardingGoal>(profile?.goal ?? 'mastery');
+  const [minutes, setMinutes] = useState<DailyTimeCommitment>(profile?.dailyMinutes ?? 15);
+  const [pending, setPending] = useState<'learn' | 'diagnostic' | null>(null);
+  const [error, setError] = useState('');
+  const mounted = useRef(false);
+  const saving = useRef(false);
+  const foundation = course ? foundationLessons(course) : [];
+  const nextFoundation = foundation.find((id) => !profile?.completedLessonIds.includes(id));
 
-export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onBack }) => {
-  const { activeCourse } = useCourseStore();
-  const { setOnboardingData } = useLearnerStore();
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [goal, setGoal] = useState<OnboardingGoal>('mastery');
-  const [dailyMinutes, setDailyMinutes] = useState<DailyTimeCommitment>(15);
-  const [initialLevel, setInitialLevel] = useState<InitialLevel>('intermediate');
-
-  const goalOptions = (() => {
-    switch (activeCourse?.subject) {
-      case 'mathematics':
-        return [
-          { id: 'mastery' as OnboardingGoal, title: 'Mavzuni mustahkamlash', desc: 'Asosiy formulalar va tushunchalarni chuqurroq o‘zlashtirish' },
-          { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'DTM va milliy sertifikat testlariga qat’iy tayyorgarlik' },
-          { id: 'skills_boost' as OnboardingGoal, title: 'Bilim darajasini oshirish', desc: 'Mantiqiy fikrlash va masalalar yechish tezligini oshirish' },
-        ];
-      case 'english':
-        return [
-          { id: 'mastery' as OnboardingGoal, title: 'Umumiy ingliz tilini yaxshilash', desc: 'Kundalik suhbat va erkin fikr bayon qilish' },
-          { id: 'exam_prep' as OnboardingGoal, title: 'Imtihonga tayyorlanish', desc: 'IELTS / CEFR imtihonlariga yo‘naltirilgan intensiv reja' },
-          { id: 'skills_boost' as OnboardingGoal, title: 'Til ko‘nikmalarini rivojlantirish', desc: 'Listening va Reading ko‘nikmalarini mustahkamlash' },
-        ];
-      case 'it':
-        return [
-          { id: 'mastery' as OnboardingGoal, title: 'Dasturlash asoslarini egallash', desc: 'Kod yozish, sintaksis va amaliy loyihalar bilan mustahkamlash' },
-          { id: 'exam_prep' as OnboardingGoal, title: 'Texnik suhbatga tayyorlanish', desc: 'Algoritmlar va muammolarni yechish ko‘nikmalarini sinash' },
-          { id: 'skills_boost' as OnboardingGoal, title: 'Amaliy loyiha yaratish', desc: 'Veb, avtomatlashtirish yoki dasturiy loyiha uchun poydevor qurish' },
-        ];
-      case 'logic':
-        return [
-          { id: 'mastery' as OnboardingGoal, title: 'Mantiqiy fikrlashni mustahkamlash', desc: 'Deduksiya va xulosalash usullarini chuqurroq o‘rganish' },
-          { id: 'exam_prep' as OnboardingGoal, title: 'Test va olimpiadaga tayyorlanish', desc: 'Vaqt chegarasida murakkab boshqotirmalarni yechish' },
-          { id: 'skills_boost' as OnboardingGoal, title: 'Tezkor tahlilni rivojlantirish', desc: 'Qonuniyatlar, zanjirlar va strategik fikrlashni mashq qilish' },
-        ];
-      default:
-        return [
-          { id: 'mastery' as OnboardingGoal, title: 'Asosiy mavzularni o‘zlashtirish', desc: 'Tanlangan kursning muhim tushunchalarini izchil o‘rganish' },
-          { id: 'exam_prep' as OnboardingGoal, title: 'Baholashga tayyorlanish', desc: 'Kurs bo‘yicha diagnostika va amaliy topshiriqlarni bajarish' },
-          { id: 'skills_boost' as OnboardingGoal, title: 'Amaliy ko‘nikmalarni rivojlantirish', desc: 'Bilimni mashqlar va real vazifalarda qo‘llash' },
-        ];
-    }
-  })();
-
-  const timeOptions: { value: DailyTimeCommitment; label: string; desc: string }[] = [
-    { value: 15, label: '15 daqiqa', desc: 'Engil va barqaror kunlik odat' },
-    { value: 30, label: '30 daqiqa', desc: 'Optimal intensivlikdagi o‘rganish' },
-    { value: 60, label: '60 daqiqa', desc: 'Tezkor va chuqur natijaga erishish' },
-  ];
-
-  const levelOptions: { value: InitialLevel; label: string; desc: string }[] = [
-    { value: 'beginner', label: 'Boshlang‘ich', desc: 'Asosiy tushunchalardan boshlamoqchiman' },
-    { value: 'intermediate', label: 'O‘rta', desc: 'Bazasini bilaman, bo‘shliqlarni to‘ldirmoqchiman' },
-    { value: 'advanced', label: 'Yuqori', desc: 'Murakkab masalalar va yuqori daraja kerak' },
-  ];
-
-  const handleNext = async () => {
-    if (step < 3) {
-      setStep((s) => (s + 1) as 1 | 2 | 3);
-    } else {
-      await setOnboardingData(goal, dailyMinutes, initialLevel);
-      onComplete();
-    }
-  };
-
-  const handlePrev = () => {
-    if (step > 1) {
-      setStep((s) => (s - 1) as 1 | 2 | 3);
-    } else {
-      onBack();
+  const submit = async (action: 'learn' | 'diagnostic') => {
+    if (!course || !level || saving.current) return;
+    saving.current = true;
+    setPending(action);
+    setError('');
+    const isCurrent = () => mounted.current && useCourseStore.getState().activeCourse?.id === course.id;
+    try {
+      await useLearnerStore.getState().saveCourseLearningPlan(course.id, goal, minutes, level, isCurrent);
+      if (isCurrent()) onComplete(course.id, level, action === 'diagnostic');
+    } catch {
+      if (isCurrent()) setError('Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.');
+    } finally {
+      saving.current = false;
+      if (isCurrent()) setPending(null);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center px-4 py-8">
-      <div className="max-w-2xl w-full">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
-            <span>Bosqich {step} / 3</span>
-            <span>{step === 1 ? 'Maqsad' : step === 2 ? 'Kunlik Vaqt' : 'Dastlabki Baholash'}</span>
-          </div>
-          <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-600 rounded-full"
-              initial={{ width: '33%' }}
-              animate={{ width: `${(step / 3) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        </div>
-
-        <Card className="border-slate-200/90 shadow-xl p-8">
-          <AnimatePresence mode="wait">
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                    <Target className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">
-                      {activeCourse?.title} bo‘yicha asosiy maqsadingiz nima?
-                    </h2>
-                    <p className="text-xs text-slate-500">Shaxsiy rejani maqsadingizga qarab moslaymiz</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {goalOptions.map((opt) => {
-                    const isSelected = goal === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => setGoal(opt.id)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-blue-600 bg-blue-50/60 shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm">{opt.title}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
-                        </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-path/15 text-path flex items-center justify-center">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">
-                      Kuniga qancha vaqt ajrata olasiz?
-                    </h2>
-                    <p className="text-xs text-slate-500">Muntazamlik — muvaffaqiyat garovidir</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {timeOptions.map((opt) => {
-                    const isSelected = dailyMinutes === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setDailyMinutes(opt.value)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-path bg-teal-50/60 shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm">{opt.label}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
-                        </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-path border-path text-white' : 'border-slate-300'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand-dark flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">
-                      O‘z darajangizni qanday baholaysiz?
-                    </h2>
-                    <p className="text-xs text-slate-500">Keyingi qadamda 5 ta qisqa savolli Placement Test o‘tkazamiz</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {levelOptions.map((opt) => {
-                    const isSelected = initialLevel === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setInitialLevel(opt.value)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-brand bg-indigo-50/60 shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm">{opt.label}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
-                        </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-brand border-brand text-white' : 'border-slate-300'
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 text-[11px] text-amber-800 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Eslatma:</strong> Bu faqat dastlabki so‘rovnoma. Asosiy ko‘nikma ballari (Skill Scores) Placement Test orqali aniqlanadi.
-                  </span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="flex items-center justify-between pt-8 mt-6 border-t border-slate-100">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={handlePrev}
-              leftIcon={<ArrowLeft className="w-4 h-4" />}
-            >
-              Orqaga
-            </Button>
-
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={handleNext}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              {step === 3 ? 'Placement Testga o‘tish' : 'Keyingisi'}
-            </Button>
-          </div>
+    <div className="learning-page max-w-200 space-y-6">
+      <PageHeader
+        eyebrow={course?.title ?? 'Boshlash'}
+        title="O‘rganish rejangizni sozlang"
+        highlightWord="rejangizni sozlang"
+        description="Shu fan bo‘yicha hozirgi darajangizni tanlang. Rejani keyin ham o‘zgartira olasiz."
+      />
+      {!course ? (
+        <Card className="space-y-4">
+          <SectionState title="Avval fanni tanlang" />
+          <Button onClick={onBack}>Fanlar katalogi</Button>
         </Card>
-      </div>
+      ) : (
+        <Card className="fade-up stagger-1 space-y-6" padding="md">
+          <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); void submit('learn'); }}>
+            <fieldset disabled={pending !== null} className="space-y-3">
+              <legend className="heading mb-3 text-lg font-extrabold">Qayerdan boshlamoqchisiz?</legend>
+              {levels.map((option, index) => {
+                const selected = level === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    style={{ animationDelay: `${index * 70}ms` }}
+                    className={
+                      'fade-up flex min-h-16 cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition-all ' +
+                      (selected
+                        ? 'border-brand bg-sand/70 ring-2 ring-brand/20 shadow-xs'
+                        : 'border-hairline bg-paper hover:border-brand/50 hover:-translate-y-0.5')
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="learning-level"
+                      className="mt-1 size-4 shrink-0 accent-brand"
+                      value={option.value}
+                      checked={selected}
+                      onChange={() => setLevel(option.value)}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="heading text-sm font-extrabold">{option.label}</span>
+                        <span className="highlight !py-0.5 !px-2.5 !text-[10px]">{option.badge}</span>
+                      </span>
+                      <span className="mt-1 block break-words text-sm leading-relaxed text-slatefine">
+                        {option.description}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+
+            <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
+              <summary className="cursor-pointer text-sm font-bold text-brand">
+                Maqsad va kunlik vaqtni moslash
+              </summary>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="start-goal" className="mb-1.5 block text-sm font-bold">
+                    Maqsad
+                  </label>
+                  <select
+                    id="start-goal"
+                    className="form-input px-3"
+                    value={goal}
+                    disabled={pending !== null}
+                    onChange={(event) => setGoal(event.target.value as OnboardingGoal)}
+                  >
+                    {goals.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="start-minutes" className="mb-1.5 block text-sm font-bold">
+                    Kunlik vaqt
+                  </label>
+                  <select
+                    id="start-minutes"
+                    className="form-input px-3"
+                    value={minutes}
+                    disabled={pending !== null}
+                    onChange={(event) => setMinutes(Number(event.target.value) as DailyTimeCommitment)}
+                  >
+                    {times.map((time) => (
+                      <option key={time} value={time}>
+                        {time} daqiqa
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            {level === 'beginner' && (
+              <p className="flex items-center gap-2 rounded-2xl bg-sand p-3.5 text-sm font-medium text-brand-dark">
+                <Sparkles aria-hidden="true" className="size-4 shrink-0 text-brand" />
+                {nextFoundation
+                  ? `${foundation.length} ta boshlang‘ich dars sizni asosiy mavzularga tayyorlaydi.`
+                  : 'Mavjud mavzularni ta’lim rejasidan ko‘rishingiz mumkin.'}
+              </p>
+            )}
+            {error && (
+              <p role="alert" className="rounded-2xl bg-rose-50 p-3.5 text-sm text-coral">
+                {error}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              <Button
+                type="submit"
+                disabled={level === null || pending === 'diagnostic'}
+                isLoading={pending === 'learn'}
+                leftIcon={<BookOpen aria-hidden="true" className="size-4" />}
+                rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
+              >
+                {level === 'beginner' && nextFoundation
+                  ? nextFoundation === foundation[0]
+                    ? 'Birinchi darsni boshlash'
+                    : 'Boshlang‘ich darsni davom ettirish'
+                  : 'Ta’lim yo‘lini ochish'}
+              </Button>
+              {level !== null && level !== 'beginner' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  isLoading={pending === 'diagnostic'}
+                  disabled={pending === 'learn'}
+                  leftIcon={<ClipboardCheck aria-hidden="true" className="size-4" />}
+                  onClick={() => void submit('diagnostic')}
+                >
+                  Ixtiyoriy diagnostika
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={pending !== null}
+                onClick={onBack}
+                leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}
+              >
+                Fanlarga qaytish
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
     </div>
   );
-};
+}

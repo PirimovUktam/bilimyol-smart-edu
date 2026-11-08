@@ -1,16 +1,8 @@
 import 'skill_score.dart';
 
-enum OnboardingGoal {
-  mastery,
-  examPrep,
-  skillsBoost,
-}
+enum OnboardingGoal { mastery, examPrep, skillsBoost }
 
-enum InitialLevel {
-  beginner,
-  intermediate,
-  advanced,
-}
+enum InitialLevel { beginner, intermediate, advanced }
 
 class LearnerProfile {
   final String id;
@@ -19,10 +11,12 @@ class LearnerProfile {
   final OnboardingGoal goal;
   final int dailyMinutes;
   final InitialLevel initialLevel;
+  final Map<String, InitialLevel> courseLevels;
   final int xp;
   final int streakDays;
   final String lastActiveDate;
-  final Map<String, Map<String, SkillScore>> scoresByCourse; // courseId -> skillId -> SkillScore
+  final Map<String, Map<String, SkillScore>>
+  scoresByCourse; // courseId -> skillId -> SkillScore
   final List<String> completedLessonIds;
   final List<String> completedNodeIds;
   final List<String> completedReinforcementIds;
@@ -35,6 +29,7 @@ class LearnerProfile {
     required this.goal,
     required this.dailyMinutes,
     required this.initialLevel,
+    this.courseLevels = const {},
     required this.xp,
     required this.streakDays,
     required this.lastActiveDate,
@@ -52,6 +47,7 @@ class LearnerProfile {
     OnboardingGoal? goal,
     int? dailyMinutes,
     InitialLevel? initialLevel,
+    Map<String, InitialLevel>? courseLevels,
     int? xp,
     int? streakDays,
     String? lastActiveDate,
@@ -68,13 +64,15 @@ class LearnerProfile {
       goal: goal ?? this.goal,
       dailyMinutes: dailyMinutes ?? this.dailyMinutes,
       initialLevel: initialLevel ?? this.initialLevel,
+      courseLevels: courseLevels ?? this.courseLevels,
       xp: xp ?? this.xp,
       streakDays: streakDays ?? this.streakDays,
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
       scoresByCourse: scoresByCourse ?? this.scoresByCourse,
       completedLessonIds: completedLessonIds ?? this.completedLessonIds,
       completedNodeIds: completedNodeIds ?? this.completedNodeIds,
-      completedReinforcementIds: completedReinforcementIds ?? this.completedReinforcementIds,
+      completedReinforcementIds:
+          completedReinforcementIds ?? this.completedReinforcementIds,
       createdAt: createdAt ?? this.createdAt,
     );
   }

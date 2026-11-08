@@ -3,7 +3,6 @@ import { Lesson } from '@/domain/entities/Lesson';
 import { Question } from '@/domain/entities/Question';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
-import { inMemoryLessonRepository } from './InMemoryLessonRepository';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
 const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question => ({
@@ -67,7 +66,9 @@ export function mapLearnerLesson(row: any): Lesson {
 }
 
 export class SupabaseLessonRepository implements ILessonRepository {
-  private fallback = inMemoryLessonRepository;
+  private async demoRepository() {
+    return (await import('./InMemoryLessonRepository')).inMemoryLessonRepository;
+  }
 
   private async requireAuthenticatedUser(): Promise<void> {
     const { data, error } = await supabase.auth.getUser();
@@ -77,7 +78,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
   async getLessonById(lessonId: string): Promise<Lesson | null> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getLessonById(lessonId);
+      return (await this.demoRepository()).getLessonById(lessonId);
     }
 
     try {
@@ -116,7 +117,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
   async getLessonByCourseAndSkill(courseId: string, skillId: string): Promise<Lesson | null> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getLessonByCourseAndSkill(courseId, skillId);
+      return (await this.demoRepository()).getLessonByCourseAndSkill(courseId, skillId);
     }
 
     try {
@@ -142,7 +143,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
   async getBaseRoadmapNodes(courseId: string): Promise<LearningPathNode[]> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallback.getBaseRoadmapNodes(courseId);
+      return (await this.demoRepository()).getBaseRoadmapNodes(courseId);
     }
 
     try {
@@ -183,7 +184,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
     // `generated_lessons` table is exclusively the Edge Function's
     // responsibility (service_role) — clients must never write the shared
     // cache, otherwise one learner could poison content for everyone.
-    await this.fallback.saveLesson(lesson);
+    await (await this.demoRepository()).saveLesson(lesson);
   }
 }
 

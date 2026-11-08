@@ -32,7 +32,8 @@ const extractStatus = (err: unknown): number | null => {
 };
 
 const describeEdgeError = (status: number): string => {
-  if (status === 401 || status === 403) return 'AI xizmatiga ruxsat etilmadi (autifikatsiya xatosi)';
+  if (status === 401) return 'Sessiya tugagan. Yo‘lchi AI uchun qayta kiring.';
+  if (status === 403) return 'Bu amal uchun ruxsat yo‘q. Xato tahlili uchun avval javob topshiring.';
   if (status === 429) return 'AI xizmatiga so‘rovlar limiti tugadi';
   if (status >= 500) return 'AI xizmati vaqtincha ishlamayapti';
   return `AI xizmati so‘rovni qabul qilmadi (xatolik kodi: ${status})`;
@@ -226,9 +227,9 @@ export class GeminiAITutorService implements IAITutorService {
         },
       });
 
-      if (error || !data || typeof data.answer !== 'string') {
+      if (error || !data || typeof data.answer !== 'string' || !data.answer.trim()) {
         throw new GeminiAIServiceError(
-          'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.'
+          error ? describeEdgeError(extractStatus(error) ?? 503) : 'Yo‘lchi AI javobi o‘qilmadi. Qayta urinib ko‘ring.'
         );
       }
 

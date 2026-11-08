@@ -56,9 +56,12 @@ class _ServerRepository extends InMemoryLearnerRepository {
   }
 
   @override
-  Future<LearnerProfile> updateProfile(LearnerProfile updated) async {
+  Future<LearnerProfile> updateProfile(
+    LearnerProfile updated, {
+    Set<LearnerProfileField>? fields,
+  }) async {
     profileWrites++;
-    return super.updateProfile(updated);
+    return super.updateProfile(updated, fields: fields);
   }
 
   @override

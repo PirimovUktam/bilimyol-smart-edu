@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/auth/demo_session.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/edtech_reveal.dart';
+import '../../core/widgets/edtech_section_header.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 
@@ -20,43 +23,37 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  bool _darkMode = false;
-  bool _notifications = true;
   bool _isLoggingOut = false;
 
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
+    if (demoSessionActive.value) {
+      demoSessionActive.value = false;
+      context.go('/login');
+      return;
+    }
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _isLoggingOut = true);
-    Object? signOutError;
     try {
-      if (SupabaseConfig.isConfigured) {
-        await Supabase.instance.client.auth.signOut();
+      final auth = SupabaseConfig.client?.auth;
+      if (auth == null) throw StateError('Hisob xizmatiga ulanish yo‘q.');
+      await auth.signOut(scope: SignOutScope.local);
+      container.invalidate(learnerStateNotifierProvider);
+      container.invalidate(courseStateNotifierProvider);
+      container.invalidate(roadmapStateNotifierProvider);
+      container.invalidate(placementStateNotifierProvider);
+      container.invalidate(lessonSessionNotifierProvider);
+      if (mounted) context.go('/login');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hisobdan chiqib bo‘lmadi. Qayta urinib ko‘ring.'),
+          ),
+        );
       }
-    } catch (error) {
-      signOutError = error;
     } finally {
-      // Clear the shared repository cache even when the auth request fails.
-      // Otherwise a subsequent user can briefly see the previous profile.
-      try {
-        await ref.read(learnerRepositoryProvider).clearLocalState();
-      } finally {
-        ref.invalidate(learnerStateNotifierProvider);
-        ref.invalidate(courseStateNotifierProvider);
-        ref.invalidate(roadmapStateNotifierProvider);
-        ref.invalidate(placementStateNotifierProvider);
-        ref.invalidate(lessonSessionNotifierProvider);
-        if (mounted) {
-          setState(() => _isLoggingOut = false);
-          context.go('/login');
-          if (signOutError != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Hisobdan chiqildi, server bilan aloqa uzildi.'),
-              ),
-            );
-          }
-        }
-      }
+      if (mounted) setState(() => _isLoggingOut = false);
     }
   }
 
@@ -65,6 +62,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final learnerAsync = ref.watch(learnerStateNotifierProvider);
     final courseState = ref.watch(courseStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
+    final demo = demoSessionActive.value;
+    final email = SupabaseConfig.client?.auth.currentUser?.email;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -124,24 +123,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Text(
-                                    profile.name,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
+                                  Flexible(
+                                    child: Text(
+                                      profile.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const AppBadge(
-                                    text: 'Faol',
+                                  AppBadge(
+                                    text: demo ? 'Namuna' : 'O‘quvchi',
                                     variant: AppBadgeVariant.emerald,
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'demo@bilimyol.uz',
+                                demo
+                                    ? 'Namuna hisobi'
+                                    : (email ??
+                                          'Elektron pochta ko‘rsatilmagan'),
+                                overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   color: AppColors.textMuted,
@@ -211,7 +217,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ),
                               ),
                               Text(
-                                'Streak',
+                                'Ketma-ket',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.5,
                                   color: AppColors.textMuted,
@@ -259,112 +265,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 20),
 
                   // Settings Card
-                  Text(
-                    'Sozlamalar',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                  const EdTechReveal(
+                    index: 2,
+                    child: EdTechSectionHeader(
+                      pillText: 'Moslashtirish',
+                      title: 'O‘quv sozlamalari',
+                      highlightWord: 'sozlamalari',
                     ),
                   ),
                   const SizedBox(height: 10),
 
                   AppCard(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.dark_mode_outlined,
-                                  size: 20,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Qorong‘i rejim',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
+                    padding: EdgeInsets.zero,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.menu_book_outlined),
+                            title: const Text('Fanni o‘zgartirish'),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () => context.push('/courses'),
+                          ),
+                          if (activeCourse != null)
+                            ListTile(
+                              leading: const Icon(Icons.tune_rounded),
+                              title: const Text('Boshlash darajasini sozlash'),
+                              subtitle: Text(activeCourse.title),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () => context.push('/onboarding'),
                             ),
-                            Switch(
-                              value: _darkMode,
-                              onChanged: (val) =>
-                                  setState(() => _darkMode = val),
-                              activeThumbColor: AppColors.primary,
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.notifications_none_rounded,
-                                  size: 20,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Eslatmalar',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Switch(
-                              value: _notifications,
-                              onChanged: (val) =>
-                                  setState(() => _notifications = val),
-                              activeThumbColor: AppColors.secondary,
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Actions
-                  AppButton(
-                    text: 'Demo Holatiga Qaytarish',
-                    isFullWidth: true,
-                    variant: AppButtonVariant.outline,
-                    leftIcon: const Icon(
-                      Icons.refresh_rounded,
-                      size: 16,
-                      color: Color(0xFFF59E0B),
+                  if (demo)
+                    AppButton(
+                      text: 'Namuna natijalarini tiklash',
+                      isFullWidth: true,
+                      variant: AppButtonVariant.outline,
+                      leftIcon: const Icon(
+                        Icons.refresh_rounded,
+                        size: 16,
+                        color: Color(0xFFF59E0B),
+                      ),
+                      onPressed: () async {
+                        await ref
+                            .read(learnerStateNotifierProvider.notifier)
+                            .resetAll();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Demo muvaffaqiyatli tiklandi.'),
+                            ),
+                          );
+                          context.go('/courses');
+                        }
+                      },
                     ),
-                    onPressed: () async {
-                      await ref
-                          .read(learnerStateNotifierProvider.notifier)
-                          .resetAll();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Demo muvaffaqiyatli tiklandi.'),
-                          ),
-                        );
-                        context.go('/courses');
-                      }
-                    },
-                  ),
                   const SizedBox(height: 10),
 
                   AppButton(
-                    text: 'Hisobdan Chiqish',
+                    text: 'Hisobdan chiqish',
                     isFullWidth: true,
                     variant: AppButtonVariant.danger,
                     leftIcon: const Icon(

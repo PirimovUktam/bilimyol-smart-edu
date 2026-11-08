@@ -18,7 +18,9 @@ class SupabaseAITutorService implements IAITutorService {
   final DemoAITutorService _fallbackService = DemoAITutorService();
 
   @override
-  Future<AIExplanationResponse> explainMistake(AIExplanationRequest request) async {
+  Future<AIExplanationResponse> explainMistake(
+    AIExplanationRequest request,
+  ) async {
     try {
       final client = Supabase.instance.client;
       final session = client.auth.currentSession;
@@ -44,9 +46,15 @@ class SupabaseAITutorService implements IAITutorService {
         return AIExplanationResponse(
           tutorName: data['tutorName'] ?? 'Yo‘lchi AI',
           title: data['title'] ?? 'Xatoni tahlil qilish',
-          explanation: data['explanation'] ?? 'Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas.',
-          remediationStep: data['remediationStep'] ?? 'Mavzuni qadamma-qadam takrorlash tavsiya etiladi.',
-          suggestedAction: data['suggestedAction'] ?? 'Keling, ushbu mavzuni qisqa mashq bilan mustahkamlaymiz.',
+          explanation:
+              data['explanation'] ??
+              'Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas.',
+          remediationStep:
+              data['remediationStep'] ??
+              'Mavzuni qadamma-qadam takrorlash tavsiya etiladi.',
+          suggestedAction:
+              data['suggestedAction'] ??
+              'Keling, ushbu mavzuni qisqa mashq bilan mustahkamlaymiz.',
           isDeterministicFallback: data['isDeterministicFallback'] == true,
         );
       }
@@ -56,7 +64,9 @@ class SupabaseAITutorService implements IAITutorService {
           'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
         );
       }
-      debugPrint('[AITutor] explainMistake returned no usable payload — using deterministic fallback.');
+      debugPrint(
+        '[AITutor] explainMistake returned no usable payload — using deterministic fallback.',
+      );
       return _fallbackService.explainMistake(request);
     } catch (err) {
       if (SupabaseConfig.hasRemoteConfiguration) {
@@ -65,13 +75,17 @@ class SupabaseAITutorService implements IAITutorService {
           'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
         );
       }
-      debugPrint('[AITutor] explainMistake failed ($err) — using deterministic fallback.');
+      debugPrint(
+        '[AITutor] explainMistake failed ($err) — using deterministic fallback.',
+      );
       return _fallbackService.explainMistake(request);
     }
   }
 
   @override
-  Future<GeneratedLessonResponse> generateLesson(GenerateLessonRequest request) async {
+  Future<GeneratedLessonResponse> generateLesson(
+    GenerateLessonRequest request,
+  ) async {
     try {
       final client = Supabase.instance.client;
       final session = client.auth.currentSession;
@@ -93,7 +107,9 @@ class SupabaseAITutorService implements IAITutorService {
       );
 
       final data = res.data;
-      if (data != null && data is Map<String, dynamic> && data['title'] != null) {
+      if (data != null &&
+          data is Map<String, dynamic> &&
+          data['title'] != null) {
         return GeneratedLessonResponse(
           lessonId: data['lessonId'] ?? 'lesson_gen_${request.skillId}',
           courseId: data['courseId'] ?? request.courseId,
@@ -117,7 +133,9 @@ class SupabaseAITutorService implements IAITutorService {
           'Dars kontenti hozircha yuklanmadi. Internetni tekshirib qayta urinib ko‘ring.',
         );
       }
-      debugPrint('[AITutor] generateLesson returned no usable payload — using deterministic fallback.');
+      debugPrint(
+        '[AITutor] generateLesson returned no usable payload — using deterministic fallback.',
+      );
       return _fallbackService.generateLesson(request);
     } catch (err) {
       if (SupabaseConfig.hasRemoteConfiguration) {
@@ -126,7 +144,9 @@ class SupabaseAITutorService implements IAITutorService {
           'Dars kontenti xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
         );
       }
-      debugPrint('[AITutor] generateLesson failed ($err) — using deterministic fallback.');
+      debugPrint(
+        '[AITutor] generateLesson failed ($err) — using deterministic fallback.',
+      );
       return _fallbackService.generateLesson(request);
     }
   }
@@ -150,14 +170,21 @@ class SupabaseAITutorService implements IAITutorService {
           'action': 'askTutor',
           'message': message,
           'courseId': request.courseId,
+          'skillId': request.skillId,
           'topic': request.topic,
-          'learnerName': request.learnerName,
-          'learnerScore': request.learnerScore,
+          'history': [
+            for (final turn in request.history)
+              {'sender': turn.sender, 'text': turn.text},
+          ],
         },
       );
 
       final data = res.data;
-      if (data != null && data is Map<String, dynamic> && data['answer'] is String) {
+      if (data is Map<String, dynamic> &&
+          data['isAiGenerated'] == true &&
+          data['isDeterministicFallback'] != true &&
+          data['answer'] is String &&
+          (data['answer'] as String).trim().isNotEmpty) {
         return AskTutorResponse(
           tutorName: data['tutorName'] ?? 'Yo‘lchi AI',
           answer: data['answer'] as String,

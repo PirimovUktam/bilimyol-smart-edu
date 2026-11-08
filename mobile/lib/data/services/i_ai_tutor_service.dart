@@ -93,16 +93,16 @@ class GeneratedLessonResponse {
 class AskTutorRequest {
   final String message;
   final String? courseId;
+  final String? skillId;
   final String? topic;
-  final String? learnerName;
-  final int? learnerScore;
+  final List<({String sender, String text})> history;
 
   const AskTutorRequest({
     required this.message,
     this.courseId,
+    this.skillId,
     this.topic,
-    this.learnerName,
-    this.learnerScore,
+    this.history = const [],
   });
 }
 

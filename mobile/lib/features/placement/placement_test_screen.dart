@@ -13,7 +13,8 @@ class PlacementTestScreen extends ConsumerStatefulWidget {
   const PlacementTestScreen({super.key});
 
   @override
-  ConsumerState<PlacementTestScreen> createState() => _PlacementTestScreenState();
+  ConsumerState<PlacementTestScreen> createState() =>
+      _PlacementTestScreenState();
 }
 
 class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
@@ -22,12 +23,20 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final activeCourse = ref.read(courseStateNotifierProvider).activeCourse;
-      if (activeCourse != null) {
-        ref.read(placementStateNotifierProvider.notifier).loadQuestions(activeCourse.id);
-      }
-    });
+    ref.listenManual(
+      courseStateNotifierProvider.select((state) => state.activeCourse?.id),
+      (_, courseId) {
+        if (courseId == null) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted &&
+              ref.read(courseStateNotifierProvider).activeCourse?.id ==
+                  courseId) {
+            _load(courseId);
+          }
+        });
+      },
+      fireImmediately: true,
+    );
   }
 
   String _getDifficultyLabel(QuestionDifficulty diff) {
@@ -46,6 +55,61 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     if (mounted) context.go('/knowledge-map');
   }
 
+  void _load(String courseId, {bool restart = false}) {
+    setState(() => _selectedOption = null);
+    ref
+        .read(placementStateNotifierProvider.notifier)
+        .loadQuestions(courseId, restart: restart);
+  }
+
+  Future<void> _submit(PlacementState placement) async {
+    final selected = _selectedOption;
+    if (selected == null) return;
+    if (placement.questionNumber >= placement.totalQuestionsToAsk) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Javoblarni topshirasizmi?'),
+          content: const Text(
+            'Oxirgi javob yuborilgach, natijangiz saqlanadi.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Qaytish'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Topshirish'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+    }
+    final notifier = ref.read(placementStateNotifierProvider.notifier);
+    try {
+      await notifier.submitAnswer(selected);
+      if (!mounted) return;
+      final next = ref.read(placementStateNotifierProvider);
+      if (next.currentQuestion?.id != placement.currentQuestion?.id ||
+          next.sessionId != placement.sessionId) {
+        setState(() => _selectedOption = null);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Javob yuborilmadi. Qayta urinib ko‘ring.'),
+          action: SnackBarAction(
+            label: 'Sessiyani yuklash',
+            onPressed: () => _load(placement.courseId),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final courseState = ref.watch(courseStateNotifierProvider);
@@ -55,6 +119,73 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     final currentQ = placementState.currentQuestion;
     final qNumber = placementState.questionNumber;
     final totalQ = placementState.totalQuestionsToAsk;
+    final result = placementState.result;
+
+    if (result != null) {
+      final correct = result.submissions
+          .where((answer) => answer.isCorrect)
+          .length;
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('Diagnostika natijasi')),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Icon(
+              Icons.fact_check_outlined,
+              size: 36,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Diagnostika yakunlandi',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '$correct / ${result.submissions.length} javob to‘g‘ri.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              text: 'Shaxsiy yo‘lni ko‘rish',
+              onPressed: () => context.go('/roadmap'),
+            ),
+            if (placementState.canRetake) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                text: 'Qayta topshirish',
+                variant: AppButtonVariant.outline,
+                onPressed: () => _load(placementState.courseId, restart: true),
+              ),
+            ],
+            if (result.review.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Javoblar tahlili',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              for (final answer in result.review)
+                ExpansionTile(
+                  title: Text(answer.question),
+                  subtitle: Text(
+                    answer.submission.isCorrect ? 'To‘g‘ri' : 'Xato',
+                  ),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Siz belgilagan javob — ${answer.selected}'),
+                    if (!answer.submission.isCorrect)
+                      Text('To‘g‘ri javob — ${answer.correct}'),
+                    if (answer.explanation.isNotEmpty) Text(answer.explanation),
+                  ],
+                ),
+            ],
+          ],
+        ),
+      );
+    }
 
     if (placementState.isSubmitting) {
       return Scaffold(
@@ -98,7 +229,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isLoadingQuestions ? Icons.hourglass_top_rounded : Icons.error_outline_rounded,
+                  isLoadingQuestions
+                      ? Icons.hourglass_top_rounded
+                      : Icons.error_outline_rounded,
                   size: 44,
                   color: AppColors.textMuted,
                 ),
@@ -132,11 +265,15 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                   AppButton(
                     text: 'Qayta urinish',
                     isFullWidth: true,
-                    leftIcon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+                    leftIcon: const Icon(
+                      Icons.refresh_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                     onPressed: () {
                       final active = activeCourse ?? courseState.activeCourse;
                       if (active != null) {
-                        ref.read(placementStateNotifierProvider.notifier).loadQuestions(active.id);
+                        _load(active.id);
                       }
                     },
                   ),
@@ -159,20 +296,23 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-appBar: AppBar(
+      appBar: AppBar(
         title: Text('Diagnostika · ${activeCourse?.title ?? ""}'),
         actions: [
-          TextButton.icon(
-            onPressed: _runQuickDemo,
-            icon: const Icon(Icons.bolt_rounded, size: 16),
-            label: Text(
-              'Tezkor demo',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+          if (!ref
+              .watch(learnerRepositoryProvider)
+              .supportsServerPlacementPersistence)
+            TextButton.icon(
+              onPressed: _runQuickDemo,
+              icon: const Icon(Icons.bolt_rounded, size: 16),
+              label: Text(
+                'Tezkor demo',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -211,10 +351,17 @@ appBar: AppBar(
                   value: progress,
                   minHeight: 6,
                   backgroundColor: AppColors.cardBorder,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
+              if (placementState.notice case final notice?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(notice),
+                ),
 
               // Question Card
               Expanded(
@@ -242,15 +389,11 @@ appBar: AppBar(
                               ),
                             ),
                             const SizedBox(width: 8),
-                            AppBadge(
-                              text: currentQ.skillId.replaceAll('skill_math_', '').replaceAll('skill_eng_', '').toUpperCase(),
-                              variant: AppBadgeVariant.blue,
-                            ),
-                            const SizedBox(width: 6),
-                            AppBadge(
-                              text: _getDifficultyLabel(currentQ.difficulty),
-                              variant: AppBadgeVariant.slate,
-                            ),
+                            if (placementState.sessionId == null)
+                              AppBadge(
+                                text: _getDifficultyLabel(currentQ.difficulty),
+                                variant: AppBadgeVariant.slate,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -266,11 +409,18 @@ appBar: AppBar(
                         if (currentQ.formulaLatex != null) ...[
                           const SizedBox(height: 10),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withValues(alpha: 0.5),
+                              color: AppColors.primaryLight.withValues(
+                                alpha: 0.5,
+                              ),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                              ),
                             ),
                             child: Text(
                               currentQ.formulaLatex!,
@@ -312,7 +462,11 @@ appBar: AppBar(
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Material(
-                              color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.7) : AppColors.surface,
+                              color: isSelected
+                                  ? AppColors.primaryLight.withValues(
+                                      alpha: 0.7,
+                                    )
+                                  : AppColors.surface,
                               borderRadius: BorderRadius.circular(14),
                               child: InkWell(
                                 onTap: () {
@@ -320,11 +474,16 @@ appBar: AppBar(
                                 },
                                 borderRadius: BorderRadius.circular(14),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
-                                      color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.cardBorder,
                                       width: isSelected ? 2 : 1.2,
                                     ),
                                   ),
@@ -334,8 +493,12 @@ appBar: AppBar(
                                         width: 28,
                                         height: 28,
                                         decoration: BoxDecoration(
-                                          color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
-                                          borderRadius: BorderRadius.circular(8),
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Center(
                                           child: Text(
@@ -343,7 +506,9 @@ appBar: AppBar(
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w800,
-                                              color: isSelected ? Colors.white : AppColors.textSecondary,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : AppColors.textSecondary,
                                             ),
                                           ),
                                         ),
@@ -381,20 +546,19 @@ appBar: AppBar(
               const SizedBox(height: 12),
               // Submit button
               AppButton(
-                text: qNumber >= totalQ ? 'Natijalarni Ko‘rish' : 'Keyingi Savol',
+                text: qNumber >= totalQ
+                    ? 'Natijalarni Ko‘rish'
+                    : 'Keyingi Savol',
                 isFullWidth: true,
                 size: AppButtonSize.large,
-                rightIcon: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                rightIcon: const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 onPressed: _selectedOption == null
                     ? null
-                    : () async {
-                        final picked = _selectedOption!;
-                        setState(() => _selectedOption = null);
-                        final isFinished = await ref.read(placementStateNotifierProvider.notifier).submitAnswer(picked);
-                        if (isFinished && context.mounted) {
-                          context.go('/knowledge-map');
-                        }
-                      },
+                    : () => _submit(placementState),
               ),
               const SizedBox(height: 8),
             ],

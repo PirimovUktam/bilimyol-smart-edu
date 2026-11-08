@@ -14,25 +14,25 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const paddingStyles = {
     none: 'p-0',
-    sm: 'p-4',
+    sm: 'p-4 sm:p-5',
     md: 'p-6',
     lg: 'p-8',
     xl: 'p-10',
   };
 
   const variantStyles = {
-    default: 'bg-paper border border-hairline rounded-2xl shadow-[var(--shadow-editorial)] text-ink',
-    glass: 'glass-panel rounded-2xl',
+    default: 'edtech-card text-ink',
+    glass: 'glass-panel rounded-[20px]',
     interactive:
-      'bg-paper border border-hairline hover:border-brand hover:shadow-[var(--shadow-paper)] hover:-translate-y-0.5 transition-all duration-200 rounded-2xl cursor-pointer motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+      'edtech-card-hover cursor-pointer text-ink motion-reduce:transition-none motion-reduce:hover:translate-y-0',
     active:
-      'bg-brand/5 border-2 border-brand shadow-[var(--shadow-raised)] rounded-2xl',
+      'bg-brand/5 border-2 border-brand shadow-[var(--shadow-raised)] rounded-[20px] text-ink',
     hero:
       'editorial-ink-hero text-white rounded-3xl relative overflow-hidden',
     coral:
-      'bg-coral/5 border border-coral/25 rounded-2xl shadow-2xs relative overflow-hidden',
+      'bg-coral/5 border border-coral/25 rounded-[20px] shadow-2xs relative overflow-hidden',
     sciFi:
-      'ink-panel rounded-2xl relative overflow-hidden',
+      'ink-panel rounded-[20px] relative overflow-hidden',
   };
 
   return (

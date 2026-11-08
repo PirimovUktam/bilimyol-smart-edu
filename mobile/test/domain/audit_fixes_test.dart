@@ -5,7 +5,6 @@ import 'package:bilimyol_mobile/app/providers.dart';
 import 'package:bilimyol_mobile/data/datasources/lessons_data.dart';
 import 'package:bilimyol_mobile/data/repositories/in_memory_learner_repository.dart';
 import 'package:bilimyol_mobile/data/repositories/in_memory_lesson_repository.dart';
-import 'package:bilimyol_mobile/data/services/demo_ai_tutor_service.dart';
 import 'package:bilimyol_mobile/domain/entities/question.dart';
 import 'package:bilimyol_mobile/domain/entities/lesson.dart';
 import 'package:bilimyol_mobile/domain/repositories/i_learner_repository.dart';
@@ -70,7 +69,6 @@ class _ServerRejectedReinforcementRepository extends InMemoryLearnerRepository {
       timestamp: DateTime.now().millisecondsSinceEpoch,
     );
   }
-
 }
 
 class _FailingReinforcementRepository extends InMemoryLearnerRepository {
@@ -99,10 +97,7 @@ void main() {
           .cast<Question>()
           .first;
       final repository = _ServerScoringRepository();
-      final useCase = SubmitLessonAnswerUseCase(
-        DemoAITutorService(),
-        repository,
-      );
+      final useCase = SubmitLessonAnswerUseCase(repository);
 
       final result = await useCase.execute(
         question: question,
@@ -157,29 +152,34 @@ void main() {
     },
   );
 
-  test('stale lesson requests cannot replace the newest lesson session', () async {
-    final lessonRepository = _DelayedLessonRepository();
-    final container = ProviderContainer(
-      overrides: [
-        lessonRepositoryProvider.overrideWithValue(lessonRepository),
-      ],
-    );
-    addTearDown(container.dispose);
+  test(
+    'stale lesson requests cannot replace the newest lesson session',
+    () async {
+      final lessonRepository = _DelayedLessonRepository();
+      final container = ProviderContainer(
+        overrides: [
+          lessonRepositoryProvider.overrideWithValue(lessonRepository),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    final notifier = container.read(lessonSessionNotifierProvider.notifier);
-    final staleRequest = notifier.startLesson('lesson_math_functions_01');
-    final currentRequest = notifier.startLesson('lesson_eng_listening_01');
+      final notifier = container.read(lessonSessionNotifierProvider.notifier);
+      final staleRequest = notifier.startLesson('lesson_math_functions_01');
+      final currentRequest = notifier.startLesson('lesson_eng_listening_01');
 
-    lessonRepository.pending['lesson_eng_listening_01']!
-        .complete(seedLessons['lesson_eng_listening_01']);
-    await currentRequest;
-    lessonRepository.pending['lesson_math_functions_01']!
-        .complete(seedLessons['lesson_math_functions_01']);
-    await staleRequest;
+      lessonRepository.pending['lesson_eng_listening_01']!.complete(
+        seedLessons['lesson_eng_listening_01'],
+      );
+      await currentRequest;
+      lessonRepository.pending['lesson_math_functions_01']!.complete(
+        seedLessons['lesson_math_functions_01'],
+      );
+      await staleRequest;
 
-    expect(
-      container.read(lessonSessionNotifierProvider).lesson?.id,
-      equals('lesson_eng_listening_01'),
-    );
-  });
+      expect(
+        container.read(lessonSessionNotifierProvider).lesson?.id,
+        equals('lesson_eng_listening_01'),
+      );
+    },
+  );
 }

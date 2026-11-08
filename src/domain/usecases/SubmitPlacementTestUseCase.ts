@@ -10,9 +10,13 @@ export class SubmitPlacementTestUseCase {
     private learnerRepo: ILearnerRepository
   ) {}
 
-  async execute(courseId: string, submissions: QuestionAnswerSubmission[]): Promise<AssessmentResult> {
+  async execute(courseId: string, submissions: QuestionAnswerSubmission[], isCurrent = () => true): Promise<AssessmentResult> {
+    const assertCurrent = () => {
+      if (!isCurrent()) throw new Error('Diagnostika sessiyasi yopilgan.');
+    };
     if (submissions.length === 0) throw new Error('Placement javoblari bo‘sh bo‘lishi mumkin emas.');
     const questions = await this.courseRepo.getPlacementQuestions(courseId);
+    assertCurrent();
     const questionsById = new Map(questions.map((question) => [question.id, question]));
     const submittedIds = new Set<string>();
     // Validate the entire adaptive submission before evaluating or writing any
@@ -37,6 +41,7 @@ export class SubmitPlacementTestUseCase {
     // demo repositories retain the local audit-write path.
     const verifiedSubmissions = submissions.map((submission) => ({ ...submission, isCorrect: false }));
     for (const sub of verifiedSubmissions) {
+      assertCurrent();
       const q = questionsById.get(sub.questionId)!;
       if (this.learnerRepo.supportsServerPlacementPersistence) {
         const evaluation = await this.learnerRepo.evaluatePlacementAnswer(courseId, q.id, sub.selectedIndex);
@@ -45,6 +50,7 @@ export class SubmitPlacementTestUseCase {
         const isCorrect = q.correctIndex !== undefined
           ? sub.selectedIndex === q.correctIndex
           : (await this.learnerRepo.evaluatePlacementAnswer(courseId, q.id, sub.selectedIndex)).isCorrect;
+        assertCurrent();
         const attempt = await this.learnerRepo.recordAnswerAttempt({
           courseId,
           skillId: q.skillId,
@@ -71,6 +77,7 @@ export class SubmitPlacementTestUseCase {
     let weakestSkillId = findWeakestSkillId(computedScores);
 
     // Save placement attempt & individual answers to Supabase / repository
+    assertCurrent();
     const attemptId = await this.learnerRepo.savePlacementAttempt({
       courseId,
       score: overallScore,
@@ -84,6 +91,7 @@ export class SubmitPlacementTestUseCase {
 
     // The production placement RPC already awards completion/answer XP and
     // records activity atomically. Keep the local path for demo mode only.
+    assertCurrent();
     if (this.learnerRepo.supportsServerPlacementPersistence) {
       const profile = await this.learnerRepo.getProfile();
       computedScores = profile.scoresByCourse[courseId] || {};
@@ -101,6 +109,12 @@ export class SubmitPlacementTestUseCase {
       computedScores,
       weakestSkillId,
       timestamp: Date.now(),
+      review: verifiedSubmissions.flatMap((answer) => {
+        const question = questionsById.get(answer.questionId)!;
+        if (question.correctIndex === undefined) return [];
+        return [{ ...answer, questionText: question.text, selectedOption: question.options[answer.selectedIndex],
+          correctOption: question.options[question.correctIndex], explanation: question.explanation }];
+      }),
     };
   }
 }

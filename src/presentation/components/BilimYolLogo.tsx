@@ -77,12 +77,12 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5 leading-tight">
           <span className={`font-black tracking-tight ${resolvedTextColor} ${titleSizes[size]}`}>
-            Bilim<span className="bg-gradient-to-r from-path to-brand bg-clip-text text-transparent">Yo‘l</span>
+            Bilim<span className={isDark ? 'text-indigo-200' : 'text-brand-dark'}>Yo‘l</span>
           </span>
           <span
             className={`px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider uppercase rounded-md shadow-2xs ${
               isDark
-                ? 'bg-white/10 text-path border border-path/40'
+                ? 'bg-white/10 text-indigo-100 border border-white/20'
                 : 'bg-brand/8 text-brand-dark border border-brand/20'
             }`}
           >

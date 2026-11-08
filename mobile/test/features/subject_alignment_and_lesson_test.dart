@@ -37,13 +37,14 @@ void main() {
       expect(course, isNotNull);
       expect(course!.subject, equals(SubjectType.mathematics));
       expect(course.lessons, isNotEmpty);
-      expect(course.lessons.first, equals('lesson_math_functions_01'));
+      expect(course.lessons, contains('lesson_math_functions_01'));
 
-      final lesson = await lessonRepo.getLessonById(course.lessons.first);
+      final lesson = await lessonRepo.getLessonById('lesson_math_functions_01');
       expect(lesson, isNotNull);
       expect(lesson!.courseId, equals('course_math_01'));
       expect(lesson.title, contains('Funksiya'));
       expect(lesson.title.contains('Listening'), isFalse);
+      expect(lesson.steps.any((step) => step.formulaData != null), isTrue);
     });
 
     test('3. IT & Logic courses ship seeded lessons with correct subject attribution (no math fallback)', () async {

@@ -6,7 +6,9 @@ import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourse
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
-import { setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { isDemoRuntimeActive, setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { clearTutorHistory } from '@/core/runtime/tutorHistory';
+import { authErrorMessage } from '@/core/utils/authErrors';
 
 export interface UserProfile {
   id: string;
@@ -23,10 +25,12 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isDemoMode: boolean;
+  isPasswordRecovery: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }>;
-  signOut: () => Promise<void>;
+  signOut: (scope?: 'local' | 'global') => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  resendConfirmation: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<UserProfile | null>;
@@ -42,8 +46,30 @@ const defaultDemoProfile: UserProfile = {
   role: 'student',
 };
 
-const isSupportedRole = (role: unknown): role is NonNullable<UserProfile['role']> =>
-  role === 'student' || role === 'admin';
+const DEMO_SESSION_KEY = 'bilimyol_demo_session';
+const AUTH_UNAVAILABLE = 'Hisob xizmatiga ulanib bo‘lmadi. Ilovani namuna rejimida ko‘rishingiz mumkin.';
+
+function readDemoProfile(): UserProfile | null {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(DEMO_SESSION_KEY) ?? 'null');
+    const profile = stored?.profile;
+    if (stored?.isDemoMode === true && profile?.id === defaultDemoProfile.id && profile.role === 'student') {
+      return {
+        ...defaultDemoProfile,
+        firstName: typeof profile.firstName === 'string' ? profile.firstName : defaultDemoProfile.firstName,
+        lastName: typeof profile.lastName === 'string' ? profile.lastName : '',
+      };
+    }
+  } catch { /* The demo is still available if browser storage cannot be read. */ }
+  return null;
+}
+
+function storeDemoProfile(profile: UserProfile | null) {
+  try {
+    if (profile) sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify({ profile, isDemoMode: true }));
+    else sessionStorage.removeItem(DEMO_SESSION_KEY);
+  } catch { /* A demo can still run in the current page. */ }
+}
 
 interface ProfileFetchOptions {
   provisionIfMissing?: {
@@ -61,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const profileRequest = useRef(0);
   const authRevision = useRef(0);
   const authAction = useRef(0);
@@ -69,6 +96,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Entries live only until their action settles, including canceled SDK calls.
   const authOperations = useRef(new Map<number, string>());
   const signingOut = useRef<number | null>(null);
+  const recoveryUserId = useRef<string | null>(null);
+
+  const setRecoveryUser = useCallback((userId: string | null) => {
+    recoveryUserId.current = userId;
+    setIsPasswordRecovery(userId !== null);
+  }, []);
 
   const clearSessionStores = useCallback(() => {
     useLearnerStore.getState().clearSession();
@@ -76,8 +109,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useRoadmapStore.getState().clearSession();
     useLessonStore.getState().clearSession();
     usePlacementStore.getState().resetPlacement();
-    localStorage.removeItem('bilimyol_auth_session');
-    localStorage.removeItem(ACTIVE_COURSE_STORAGE_KEY);
+    clearTutorHistory();
+    try {
+      localStorage.removeItem(ACTIVE_COURSE_STORAGE_KEY);
+    } catch { /* The authenticated profile is still the source of truth. */ }
   }, []);
 
   const invalidatePendingAuth = useCallback(() => {
@@ -91,19 +126,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     invalidatePendingAuth();
     activeUserId.current = null;
     setDemoRuntimeActive(false);
+    storeDemoProfile(null);
     clearSessionStores();
     setUser(null);
     setSession(null);
     setProfile(null);
     setIsDemoMode(false);
+    setRecoveryUser(null);
     setIsLoading(false);
-  }, [clearSessionStores, invalidatePendingAuth]);
+  }, [clearSessionStores, invalidatePendingAuth, setRecoveryUser]);
 
   const beginAuthAction = (email: string) => {
     const request = ++authAction.current;
     authRevision.current++;
     profileRequest.current++;
     setDemoRuntimeActive(false);
+    storeDemoProfile(null);
     pendingAuth.current = { request, email: email.toLowerCase().trim() };
     authOperations.current.set(request, pendingAuth.current.email);
     // A previous account's data must not render while another login is pending.
@@ -113,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setProfile(null);
     setIsDemoMode(false);
-    localStorage.removeItem('bilimyol_auth_session');
+    setRecoveryUser(null);
     setIsLoading(true);
     return request;
   };
@@ -127,20 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ) => {
     const request = ++profileRequest.current;
     const isCurrent = () => request === profileRequest.current;
-    if (!isSupabaseConfigured) {
-      const cached = localStorage.getItem('bilimyol_auth_session');
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.profile && isSupportedRole(parsed.profile.role)) {
-            setProfile(parsed.profile);
-            return parsed.profile;
-          }
-        } catch {}
-      }
-      setProfile(null);
-      return null;
-    }
+    if (!isSupabaseConfigured) return null;
 
     try {
       // Query authoritative public.profiles. Signup may recover from a missing
@@ -205,7 +230,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setProfile(userProfile);
-        localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: userProfile }));
         return userProfile;
       }
 
@@ -217,7 +241,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isCurrent()) return null;
       console.warn('Error resolving authenticated profile from Supabase:', err);
       setProfile(null);
-      localStorage.removeItem('bilimyol_auth_session');
       if (options.throwOnError) {
         throw err instanceof Error
           ? err
@@ -230,19 +253,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
-    if (!isSupabaseConfigured) {
-      const cached = localStorage.getItem('bilimyol_auth_session');
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.profile && isSupportedRole(parsed.profile.role)) {
-            setProfile(parsed.profile);
-            return parsed.profile;
-          }
-        } catch {}
-      }
-      return profile;
-    }
+    if (isDemoMode) return profile;
+    if (!isSupabaseConfigured) return null;
 
     const revision = authRevision.current;
     const userId = activeUserId.current;
@@ -253,60 +265,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return await fetchProfile(userData.user.id, userData.user.email ?? '');
     }
     return null;
-  }, [fetchProfile, profile]);
+  }, [fetchProfile, isDemoMode, profile]);
 
   useEffect(() => {
     let mounted = true;
     const startupRevision = authRevision.current;
     const isCurrentStartup = () => mounted && startupRevision === authRevision.current;
+    try {
+      localStorage.removeItem('bilimyol_auth_session');
+    } catch { /* Older copies of the profile are never used to sign in. */ }
+
+    function restoreDemo() {
+      const demo = readDemoProfile();
+      setDemoRuntimeActive(Boolean(demo));
+      setProfile(demo);
+      setIsDemoMode(Boolean(demo));
+      setIsLoading(false);
+    }
 
     async function initAuth() {
       try {
         if (!isSupabaseConfigured) {
-          if (import.meta.env.PROD) {
-            console.error('[CONFIG] Production missing Supabase configuration: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
-            if (mounted) {
-              setDemoRuntimeActive(false);
-              setProfile(null);
-              setIsDemoMode(false);
-              setIsLoading(false);
-            }
-            return;
-          }
-
-          console.warn('[AUTH] Running in local development fallback mode.');
-          setDemoRuntimeActive(false);
-          const cached = localStorage.getItem('bilimyol_auth_session');
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              const isExplicitDemo = Boolean(parsed?.isDemoMode);
-              const isDefaultDemo = parsed?.profile?.id === defaultDemoProfile.id;
-              if (mounted && parsed?.profile && isSupportedRole(parsed.profile.role) && (!isDefaultDemo || isExplicitDemo)) {
-                setDemoRuntimeActive(isExplicitDemo);
-                setProfile(parsed.profile);
-                setIsDemoMode(isExplicitDemo);
-              } else if (mounted) {
-                setDemoRuntimeActive(false);
-                setProfile(null);
-                setIsDemoMode(false);
-                localStorage.removeItem('bilimyol_auth_session');
-              }
-            } catch {
-              if (mounted) {
-                setDemoRuntimeActive(false);
-                setProfile(null);
-                setIsDemoMode(false);
-              }
-            }
-          } else {
-            if (mounted) {
-              setDemoRuntimeActive(false);
-              setProfile(null);
-              setIsDemoMode(false);
-            }
-          }
-          if (mounted) setIsLoading(false);
+          if (isCurrentStartup()) restoreDemo();
           return;
         }
 
@@ -316,48 +296,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(data.session);
           setUser(data.session?.user ?? null);
           if (data.session?.user) {
+            storeDemoProfile(null);
+            setDemoRuntimeActive(false);
             await fetchProfile(data.session.user.id, data.session.user.email ?? '');
           } else {
-            // A configured backend is authoritative for real accounts. An
-            // explicit bundled demo session is the only session allowed to
-            // run without Supabase auth, and its data plane is local-only.
-            const cached = localStorage.getItem('bilimyol_auth_session');
-            let cachedDemoProfile: UserProfile | null = null;
-            if (cached) {
-              try {
-                const parsed = JSON.parse(cached);
-                if (
-                  parsed?.isDemoMode === true &&
-                  parsed?.profile?.id === defaultDemoProfile.id &&
-                  parsed?.profile?.role === defaultDemoProfile.role
-                ) {
-                  cachedDemoProfile = parsed.profile;
-                }
-              } catch {}
-            }
-
             clearSessionStores();
-            if (cachedDemoProfile) {
-              localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: cachedDemoProfile, isDemoMode: true }));
-              setDemoRuntimeActive(true);
-              setProfile(cachedDemoProfile);
-              setIsDemoMode(true);
-            } else {
-              setDemoRuntimeActive(false);
-              setProfile(null);
-              setIsDemoMode(false);
-            }
-            setIsLoading(false);
+            restoreDemo();
           }
         }
       } catch (err) {
         console.warn('Auth initialization error:', err);
-        if (isCurrentStartup()) {
-          setDemoRuntimeActive(false);
-          setProfile(null);
-          setIsDemoMode(false);
-          setIsLoading(false);
-        }
+        if (isCurrentStartup()) restoreDemo();
       }
     }
 
@@ -368,24 +317,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
         if (event === 'INITIAL_SESSION' && startupRevision !== authRevision.current) return;
         if (event === 'INITIAL_SESSION' && !newSession?.user) {
-          const cached = localStorage.getItem('bilimyol_auth_session');
-          try {
-            const parsed = cached ? JSON.parse(cached) : null;
-            if (
-              parsed?.isDemoMode === true &&
-              parsed?.profile?.id === defaultDemoProfile.id &&
-              parsed?.profile?.role === defaultDemoProfile.role
-            ) {
-              setDemoRuntimeActive(true);
-              setSession(null);
-              setUser(null);
-              setProfile(parsed.profile);
-              setIsDemoMode(true);
-              setIsLoading(false);
-              return;
-            }
-          } catch {}
+          return; // initAuth restores an explicitly started demo in this tab.
         }
+        if (!newSession?.user && isDemoRuntimeActive()) return;
         if (signingOut.current !== null && newSession?.user) return;
         const eventEmail = newSession?.user.email?.toLowerCase();
         const pending = pendingAuth.current;
@@ -404,12 +338,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           pendingAuth.current = null;
         }
         const changedAccount = activeUserId.current !== newSession.user.id;
+        if (event === 'PASSWORD_RECOVERY') {
+          setRecoveryUser(newSession.user.id);
+        } else if (changedAccount) {
+          setRecoveryUser(null);
+        }
         if (changedAccount) {
           profileRequest.current++;
-          if (activeUserId.current) clearSessionStores();
+          if (activeUserId.current || isDemoRuntimeActive()) clearSessionStores();
           setProfile(null);
         }
         activeUserId.current = newSession.user.id;
+        storeDemoProfile(null);
         setDemoRuntimeActive(false);
         setSession(newSession);
         setUser(newSession.user);
@@ -422,7 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         profileRequest.current++;
         const revision = authRevision.current;
-        setIsLoading(true);
+        if (changedAccount || event === 'INITIAL_SESSION') setIsLoading(true);
         // Keep this callback synchronous; DB reads can need the auth session lock.
         queueMicrotask(() => {
           if (mounted && revision === authRevision.current && activeUserId.current === newSession.user.id) {
@@ -442,38 +382,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       invalidatePendingAuth();
     };
-  }, [clearAuthState, clearSessionStores, fetchProfile, invalidatePendingAuth]);
+  }, [clearAuthState, clearSessionStores, fetchProfile, invalidatePendingAuth, setRecoveryUser]);
 
   const signIn = async (email: string, password: string) => {
     if (signingOut.current !== null) return { error: staleActionError() };
-    if (!isSupabaseConfigured) {
-      if (import.meta.env.PROD) {
-        return {
-          error: new Error('Server konfiguratsiyasi topilmadi. Vercel sozlamalarida VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY parametrlarini kiriting.'),
-        };
-      }
-
-      console.warn('[AUTH] Signing in via local development demo mode.');
-      const demoProf: UserProfile = {
-        id: 'user_' + Date.now(),
-        firstName: email.split('@')[0],
-        lastName: '',
-        email,
-        role: email.includes('admin') ? 'admin' : 'student',
-      };
-      setDemoRuntimeActive(true);
-      setProfile(demoProf);
-      setIsDemoMode(true);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: demoProf, isDemoMode: true }));
-      return { error: null, profile: demoProf };
-    }
+    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
 
     const request = beginAuthAction(email);
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (request !== authAction.current) return { error: staleActionError() };
       if (error || !authData.user || !authData.session) {
-        return { error: error ? new Error(error.message) : new Error('Kirishda xatolik yuz berdi.') };
+        return { error: new Error(authErrorMessage(error, 'Hisobga kirib bo‘lmadi. Qayta urinib ko‘ring.')) };
       }
       if (pendingAuth.current?.userId && pendingAuth.current.userId !== authData.user.id) {
         return { error: staleActionError() };
@@ -504,23 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lastName: string
   ): Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }> => {
     if (signingOut.current !== null) return { error: staleActionError() };
-    if (!isSupabaseConfigured) {
-      if (import.meta.env.PROD) {
-        return { error: new Error('Server konfiguratsiyasi topilmadi. VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY sozlanishi kerak.') };
-      }
-      const newProf: UserProfile = {
-        id: 'user_' + Date.now(),
-        firstName,
-        lastName,
-        email,
-        role: 'student',
-      };
-      setDemoRuntimeActive(true);
-      setProfile(newProf);
-      setIsDemoMode(true);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: newProf, isDemoMode: true }));
-      return { error: null };
-    }
+    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
 
     const request = beginAuthAction(email);
     try {
@@ -544,7 +448,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (request !== authAction.current) return { error: staleActionError() };
-      if (error) return { error: new Error(error.message) };
+      if (error) return { error: new Error(authErrorMessage(error, 'Hisob yaratishda xatolik yuz berdi.')) };
       if (!signUpData.user) return { error: new Error('Hisob yaratishda xatolik yuz berdi.') };
       if (!signUpData.session) {
         authRevision.current++;
@@ -553,7 +457,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setSession(null);
         setProfile(null);
-        localStorage.removeItem('bilimyol_auth_session');
         return { error: null, requiresEmailConfirmation: true };
       }
       if (pendingAuth.current?.userId && pendingAuth.current.userId !== signUpData.user.id) {
@@ -585,14 +488,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
-    clearAuthState();
+  const signOut = async (scope: 'local' | 'global' = 'local') => {
+    if (!isSupabaseConfigured || isDemoMode) {
+      clearAuthState();
+      return;
+    }
     const request = authAction.current;
     signingOut.current = request;
     try {
-      if (isSupabaseConfigured) {
-        await supabase.auth.signOut();
-      }
+      const result = await supabase.auth.signOut({ scope });
+      if (result?.error) throw new Error('Sessiyani tugatib bo‘lmadi. Qayta urinib ko‘ring.');
+      if (authAction.current === request) clearAuthState();
     } finally {
       if (signingOut.current === request) signingOut.current = null;
     }
@@ -600,33 +506,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     if (!isSupabaseConfigured) {
-      return { error: null };
+      return { error: new Error('Namuna rejimida parolni tiklash xizmati mavjud emas.') };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      return { error: error ? new Error(authErrorMessage(error, 'Havola so‘rovini yuborib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring.')) : null };
+    } catch {
+      return { error: new Error('Tiklash xizmatiga ulanib bo‘lmadi. Qayta urinib ko‘ring.') };
+    }
+  };
 
-    return { error: error ? new Error(error.message) : null };
+  const resendConfirmation = async (email: string) => {
+    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup', email: email.trim(),
+        options: { emailRedirectTo: window.location.origin },
+      });
+      return { error: error ? new Error(authErrorMessage(error)) : null };
+    } catch {
+      return { error: new Error('Xat so‘rovini yuborib bo‘lmadi. Ulanishni tekshiring.') };
+    }
   };
 
   // Sets the new password on the recovery session Supabase establishes after
   // the emailed link is opened. Without this, the reset email is a dead end.
   const updatePassword = async (newPassword: string) => {
-    if (!isSupabaseConfigured) {
-      return { error: null };
+    const recoveryId = recoveryUserId.current;
+    if (!isSupabaseConfigured || !recoveryId || recoveryId !== activeUserId.current) {
+      return { error: new Error('Faol tiklash havolasi kerak. Yangi havola so‘rang.') };
     }
-    const trimmed = newPassword.trim();
-    if (trimmed.length < 6) {
+    if (newPassword.trim().length < 6) {
       return { error: new Error('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.') };
     }
-    const { error } = await supabase.auth.updateUser({ password: trimmed });
-    return { error: error ? new Error(error.message) : null };
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        return { error: new Error('Parolni yangilab bo‘lmadi. Boshqa parol bilan qayta urinib ko‘ring.') };
+      }
+      setRecoveryUser(null);
+      return { error: null };
+    } catch {
+      return { error: new Error('Parolni yangilash xizmatiga ulanib bo‘lmadi.') };
+    }
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!profile) return { error: new Error('Profil topilmadi') };
-    if (isSupabaseConfigured && profile.id !== activeUserId.current) return { error: staleActionError() };
+    if (isSupabaseConfigured && !isDemoMode && profile.id !== activeUserId.current) return { error: staleActionError() };
 
     const updated = {
       ...profile,
@@ -635,11 +565,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatarUrl: data.avatarUrl ?? profile.avatarUrl,
     };
 
-    if (!isSupabaseConfigured) {
+    if (isDemoMode) {
       setProfile(updated);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
+      storeDemoProfile(updated);
       return { error: null };
     }
+    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
 
     const request = profileRequest.current;
     const action = authAction.current;
@@ -660,7 +591,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: staleActionError() };
       }
       setProfile(updated);
-      localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: updated, isDemoMode }));
       return { error: null };
     } catch {
       return { error: new Error('Profil serverda saqlanmadi. Qayta urinib ko‘ring.') };
@@ -672,7 +602,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDemoRuntimeActive(true);
     setProfile(defaultDemoProfile);
     setIsDemoMode(true);
-    localStorage.setItem('bilimyol_auth_session', JSON.stringify({ profile: defaultDemoProfile, isDemoMode: true }));
+    storeDemoProfile(defaultDemoProfile);
   };
 
   return (
@@ -683,10 +613,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         isLoading,
         isDemoMode,
+        isPasswordRecovery,
         signIn,
         signUp,
         signOut,
         resetPassword,
+        resendConfirmation,
         updatePassword,
         updateProfile,
         refreshProfile,

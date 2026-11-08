@@ -138,14 +138,6 @@ class SubmitReinforcementUseCase {
       );
     }
 
-    // Demo repositories can persist roadmap-node completion locally. The
-    // production repository must not manufacture a local success after a
-    // remote reinforcement write; the server owns that state.
-    final targetNodeId = reinforcementNodeId.replaceAll('reinf_', '');
-    if (learnerRepository.supportsNodeCompletion) {
-      await learnerRepository.markNodeCompleted(targetNodeId, courseId: courseId);
-    }
-
     // Save the new skill score.
     final updatedSkillScore = SkillScore(
       skillId: skillId,

@@ -7,6 +7,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
+import '../../core/widgets/edtech_reveal.dart';
+import '../../core/widgets/edtech_section_header.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/learning_path_node.dart';
@@ -146,16 +148,30 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const EdTechReveal(
+                          index: 0,
+                          child: EdTechSectionHeader(
+                            pillText: 'O‘quv marshruti',
+                            title: 'Shaxsiy ta’lim bosqichlari',
+                            highlightWord: 'bosqichlari',
+                            subtitle:
+                                'Mavzularni bosqichma-bosqich o‘zlashtirib, keyingi darajani oching.',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         // Vertical Connected Nodes (Reference 2 style)
                         ...List.generate(nodes.length, (index) {
                           final node = nodes[index];
                           final isLast = index == nodes.length - 1;
 
-                          return _buildTimelineItem(
-                            context,
-                            node,
-                            isLast,
-                            index + 1,
+                          return EdTechReveal(
+                            index: index + 1,
+                            child: _buildTimelineItem(
+                              context,
+                              node,
+                              isLast,
+                              index + 1,
+                            ),
                           );
                         }),
 

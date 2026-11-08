@@ -17,18 +17,23 @@ import '../domain/entities/skill.dart';
 import '../domain/entities/skill_score.dart';
 import '../domain/personalization/skill_scoring_engine.dart';
 import '../domain/entities/learner_profile.dart';
+import '../domain/entities/placement_session.dart';
 import '../domain/entities/question.dart';
 import '../domain/entities/learning_path_node.dart';
 import '../domain/entities/lesson.dart';
 import '../domain/personalization/adaptive_question_selector.dart';
 
 import '../data/services/i_ai_tutor_service.dart';
+import '../data/services/demo_ai_tutor_service.dart';
 import '../data/services/supabase_ai_tutor_service.dart';
+import '../core/config/supabase_config.dart';
 import '../data/repositories/supabase_learner_repository.dart';
 
 // --- Singleton Service & Repository Providers ---
 final aiTutorServiceProvider = Provider<IAITutorService>(
-  (ref) => SupabaseAITutorService(),
+  (ref) => SupabaseConfig.hasRemoteConfiguration
+      ? SupabaseAITutorService()
+      : DemoAITutorService(),
 );
 final courseRepositoryProvider = Provider<ICourseRepository>(
   (ref) => SupabaseCourseRepository(),
@@ -74,10 +79,7 @@ final startLessonUseCaseProvider = Provider(
 );
 
 final submitLessonAnswerUseCaseProvider = Provider(
-  (ref) => SubmitLessonAnswerUseCase(
-    ref.watch(aiTutorServiceProvider),
-    ref.watch(learnerRepositoryProvider),
-  ),
+  (ref) => SubmitLessonAnswerUseCase(ref.watch(learnerRepositoryProvider)),
 );
 
 final submitReinforcementUseCaseProvider = Provider(
@@ -125,22 +127,22 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
   }
 
   Future<void> updateOnboarding({
+    required String courseId,
     required OnboardingGoal goal,
     required int dailyMinutes,
     required InitialLevel initialLevel,
   }) async {
-    final current = state.value;
-    if (current == null) return;
-
-    final updated = current.copyWith(
+    final repo = ref.read(learnerRepositoryProvider);
+    final saved = await repo.saveCourseLearningPlan(
+      courseId: courseId,
       goal: goal,
       dailyMinutes: dailyMinutes,
       initialLevel: initialLevel,
     );
-
-    final repo = ref.read(learnerRepositoryProvider);
-    await repo.updateProfile(updated);
-    state = AsyncValue.data(updated);
+    if (mounted &&
+        ref.read(courseStateNotifierProvider).activeCourse?.id == courseId) {
+      state = AsyncValue.data(saved);
+    }
   }
 
   Future<void> resetAll() async {
@@ -157,6 +159,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
   /// below the reinforcement threshold so the roadmap demonstrates remediation.
   Future<void> seedQuickDemo() async {
     final repo = ref.read(learnerRepositoryProvider);
+    if (repo.supportsServerPlacementPersistence) return;
     final courseState = ref.read(courseStateNotifierProvider);
     final course = courseState.activeCourse;
     final skills = courseState.activeSkills;
@@ -202,12 +205,14 @@ class CourseState {
   final Course? activeCourse;
   final List<Skill> activeSkills;
   final bool isLoading;
+  final String? error;
 
   const CourseState({
     required this.courses,
     this.activeCourse,
     required this.activeSkills,
     this.isLoading = false,
+    this.error,
   });
 
   CourseState copyWith({
@@ -215,12 +220,14 @@ class CourseState {
     Course? activeCourse,
     List<Skill>? activeSkills,
     bool? isLoading,
+    String? error,
   }) {
     return CourseState(
       courses: courses ?? this.courses,
       activeCourse: activeCourse ?? this.activeCourse,
       activeSkills: activeSkills ?? this.activeSkills,
       isLoading: isLoading ?? this.isLoading,
+      error: error,
     );
   }
 }
@@ -236,63 +243,74 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
 
   Future<void> init() async {
     final generation = ++_initGeneration;
-    final courseRepo = ref.read(courseRepositoryProvider);
-    final allCourses = await courseRepo.getAllCourses();
-    if (!mounted || generation != _initGeneration) return;
-
-    // Restore the persisted course selection (server/local profile truth)
-    // instead of always resetting to courses[0].
-    Course? restored;
+    state = state.copyWith(isLoading: true);
     try {
+      final courseRepo = ref.read(courseRepositoryProvider);
+      final allCourses = await courseRepo.getAllCourses();
+      if (!mounted || generation != _initGeneration) return;
+
+      // Restore the persisted course selection (server/local profile truth)
+      // instead of always resetting to courses[0].
       final learnerRepo = ref.read(learnerRepositoryProvider);
       final profile = await learnerRepo.getProfile();
       if (!mounted || generation != _initGeneration) return;
       final selectedId = profile.selectedCourseId;
-      if (selectedId.isNotEmpty) {
-        restored = allCourses.where((c) => c.id == selectedId).firstOrNull;
+      final active = selectedId.isEmpty
+          ? null
+          : allCourses.where((c) => c.id == selectedId).firstOrNull;
+
+      List<Skill> skills = [];
+      if (active != null) {
+        skills = await courseRepo.getSkillsByCourseId(active.id);
+        if (!mounted || generation != _initGeneration) return;
+      }
+
+      state = CourseState(
+        courses: allCourses,
+        activeCourse: active,
+        activeSkills: skills,
+        isLoading: false,
+      );
+
+      if (active != null) {
+        ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(active.id);
       }
     } catch (_) {
-      // Restore is best-effort — fall back to the first course below.
-    }
-
-    final active = restored ?? allCourses.firstOrNull;
-
-    List<Skill> skills = [];
-    if (active != null) {
-      skills = await courseRepo.getSkillsByCourseId(active.id);
       if (!mounted || generation != _initGeneration) return;
-    }
-
-    state = CourseState(
-      courses: allCourses,
-      activeCourse: active,
-      activeSkills: skills,
-      isLoading: false,
-    );
-
-    if (active != null) {
-      ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(active.id);
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+      );
     }
   }
 
   Future<void> selectCourse(String courseId) async {
     if (!mounted || state.isLoading) return;
     state = state.copyWith(isLoading: true);
-    final selectUseCase = ref.read(selectCourseUseCaseProvider);
-    final course = await selectUseCase.execute(courseId);
-    if (!mounted) return;
-    final courseRepo = ref.read(courseRepositoryProvider);
-    final skills = await courseRepo.getSkillsByCourseId(course.id);
+    try {
+      final courseRepo = ref.read(courseRepositoryProvider);
+      final skills = await courseRepo.getSkillsByCourseId(courseId);
+      if (!mounted) return;
+      final selectUseCase = ref.read(selectCourseUseCaseProvider);
+      final course = await selectUseCase.execute(courseId);
+      if (!mounted) return;
+      await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
+      if (!mounted) return;
 
-    state = state.copyWith(
-      activeCourse: course,
-      activeSkills: skills,
-      isLoading: false,
-    );
+      state = state.copyWith(
+        activeCourse: course,
+        activeSkills: skills,
+        isLoading: false,
+      );
 
-    // Refresh learner & roadmap
-    ref.read(learnerStateNotifierProvider.notifier).loadProfile();
-    ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(course.id);
+      ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(course.id);
+    } catch (_) {
+      if (!mounted) return;
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Kursni tanlab bo‘lmadi. Qayta urinib ko‘ring.',
+      );
+    }
   }
 }
 
@@ -302,21 +320,6 @@ final courseStateNotifierProvider =
     });
 
 // 3. Placement Test State Notifier
-const courseTargetSkills = <String, List<String>>{
-  'course_math_01': [
-    'skill_math_algebra',
-    'skill_math_equations',
-    'skill_math_functions',
-    'skill_math_graphs',
-  ],
-  'course_eng_01': [
-    'skill_eng_vocab',
-    'skill_eng_grammar',
-    'skill_eng_listening',
-    'skill_eng_reading',
-  ],
-};
-
 class PlacementState {
   final String courseId;
   final List<Question> allQuestions;
@@ -330,6 +333,9 @@ class PlacementState {
   final bool hasLoaded;
   final DateTime? questionStartedAt;
   final DateTime? lastSubmittedAt;
+  final String? sessionId;
+  final bool canRetake;
+  final String? notice;
 
   const PlacementState({
     required this.courseId,
@@ -344,6 +350,9 @@ class PlacementState {
     this.hasLoaded = false,
     this.questionStartedAt,
     this.lastSubmittedAt,
+    this.sessionId,
+    this.canRetake = false,
+    this.notice,
   });
 
   // Backward-compatible getters
@@ -363,6 +372,7 @@ class PlacementState {
     bool? hasLoaded,
     DateTime? questionStartedAt,
     DateTime? lastSubmittedAt,
+    bool? canRetake,
   }) {
     return PlacementState(
       courseId: courseId ?? this.courseId,
@@ -377,12 +387,16 @@ class PlacementState {
       hasLoaded: hasLoaded ?? this.hasLoaded,
       questionStartedAt: questionStartedAt ?? this.questionStartedAt,
       lastSubmittedAt: lastSubmittedAt ?? this.lastSubmittedAt,
+      sessionId: sessionId,
+      canRetake: canRetake ?? this.canRetake,
+      notice: notice,
     );
   }
 }
 
 class PlacementStateNotifier extends StateNotifier<PlacementState> {
   final Ref ref;
+  Object _request = Object();
 
   PlacementStateNotifier(this.ref)
     : super(
@@ -394,12 +408,45 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         ),
       );
 
-  Future<void> loadQuestions(String courseId) async {
-    final courseRepo = ref.read(courseRepositoryProvider);
-    final allQuestions = await courseRepo.getPlacementQuestions(courseId);
-    final targetSkills =
-        courseTargetSkills[courseId] ??
-        allQuestions.map((q) => q.skillId).toSet().toList();
+  Future<void> loadQuestions(String courseId, {bool restart = false}) async {
+    final request = _request = Object();
+    bool isCurrent() => mounted && identical(_request, request);
+    state = PlacementState(
+      courseId: courseId,
+      allQuestions: const [],
+      history: const [],
+      submissions: const [],
+    );
+    final learner = ref.read(learnerRepositoryProvider);
+    if (learner.supportsPlacementSessions) {
+      try {
+        final session = await learner.advancePlacement(
+          courseId,
+          restart: restart,
+        );
+        if (isCurrent()) await _applySession(courseId, session, isCurrent);
+      } catch (_) {
+        if (isCurrent()) state = state.copyWith(hasLoaded: true);
+      }
+      return;
+    }
+
+    late final List<Question> allQuestions;
+    try {
+      allQuestions = await ref
+          .read(courseRepositoryProvider)
+          .getPlacementQuestions(courseId);
+    } catch (_) {
+      if (isCurrent()) state = state.copyWith(hasLoaded: true);
+      return;
+    }
+    if (!isCurrent()) return;
+    final targetSkills = allQuestions.map((q) => q.skillId).toSet().toList();
+    final total = targetSkills.fold<int>(
+      0,
+      (sum, skill) =>
+          sum + allQuestions.where((q) => q.skillId == skill).take(2).length,
+    );
 
     final firstQ =
         AdaptiveQuestionSelector.getNextQuestion(
@@ -415,7 +462,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       allQuestions: allQuestions,
       currentQuestion: firstQ,
       questionNumber: 1,
-      totalQuestionsToAsk: 8,
+      totalQuestionsToAsk: total,
       history: [],
       submissions: [],
       isSubmitting: false,
@@ -425,25 +472,91 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
     );
   }
 
+  Future<void> _applySession(
+    String courseId,
+    PlacementSession session,
+    bool Function() isCurrent,
+  ) async {
+    final completed = session.result;
+    AssessmentResult? result;
+    if (completed != null) {
+      await ref
+          .read(learnerStateNotifierProvider.notifier)
+          .loadProfile(isCurrent: isCurrent);
+      if (!isCurrent()) return;
+      final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
+      result = AssessmentResult(
+        assessmentId: completed.attemptId,
+        courseId: courseId,
+        submissions: completed.review
+            .map((answer) => answer.submission)
+            .toList(growable: false),
+        computedScores: profile?.scoresByCourse[courseId] ?? {},
+        weakestSkillId: completed.weakestSkillId,
+        timestamp: completed.completedAt.millisecondsSinceEpoch,
+        review: completed.review,
+      );
+      ref.invalidate(roadmapStateNotifierProvider);
+    }
+    state = PlacementState(
+      courseId: courseId,
+      allQuestions: const [],
+      history: const [],
+      submissions: result?.submissions ?? const [],
+      sessionId: session.id,
+      currentQuestion: session.question,
+      questionNumber: session.questionNumber,
+      totalQuestionsToAsk: session.totalQuestions,
+      result: result,
+      hasLoaded: true,
+      canRetake: session.canRetake,
+      notice: session.wasReset
+          ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.'
+          : null,
+    );
+  }
+
   Future<bool> submitAnswer(int selectedIndex) async {
     final currentQ = state.currentQuestion;
-    if (currentQ == null || state.isSubmitting) return true;
+    if (currentQ == null || state.isSubmitting) return false;
 
     // Rate limiting: prevent rapid-fire submission abuse
     final now = DateTime.now();
-    if (state.lastSubmittedAt != null &&
+    if (state.sessionId == null &&
+        state.lastSubmittedAt != null &&
         now.difference(state.lastSubmittedAt!).inMilliseconds < 800) {
       return false;
     }
 
     // Input validation: selectedIndex must be within options range
     if (selectedIndex < 0 ||
-        (currentQ.options.isNotEmpty && selectedIndex >= currentQ.options.length)) {
+        (currentQ.options.isNotEmpty &&
+            selectedIndex >= currentQ.options.length)) {
       return false;
     }
 
+    final request = _request;
+    final courseId = state.courseId;
+    bool isCurrent() => mounted && identical(_request, request);
+    final sessionId = state.sessionId;
     state = state.copyWith(isSubmitting: true);
     final learnerRepository = ref.read(learnerRepositoryProvider);
+    if (sessionId != null) {
+      try {
+        final session = await learnerRepository.advancePlacement(
+          courseId,
+          sessionId: sessionId,
+          questionId: currentQ.id,
+          selectedIndex: selectedIndex,
+        );
+        if (!isCurrent()) return false;
+        await _applySession(courseId, session, isCurrent);
+        return isCurrent() && session.result != null;
+      } catch (_) {
+        if (isCurrent()) state = state.copyWith(isSubmitting: false);
+        rethrow;
+      }
+    }
     late final PlacementAnswerEvaluation evaluation;
     try {
       evaluation = await learnerRepository.evaluatePlacementAnswer(
@@ -452,9 +565,10 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         selectedIndex: selectedIndex,
       );
     } catch (_) {
-      state = state.copyWith(isSubmitting: false);
+      if (isCurrent()) state = state.copyWith(isSubmitting: false);
       rethrow;
     }
+    if (!isCurrent()) return false;
     final isCorrect = evaluation.isCorrect;
 
     final elapsed = state.questionStartedAt != null
@@ -482,9 +596,10 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       state.submissions,
     )..add(submission);
 
-    final targetSkills =
-        courseTargetSkills[state.courseId] ??
-        state.allQuestions.map((q) => q.skillId).toSet().toList();
+    final targetSkills = state.allQuestions
+        .map((q) => q.skillId)
+        .toSet()
+        .toList();
 
     final nextQ = AdaptiveQuestionSelector.getNextQuestion(
       state.allQuestions,
@@ -513,16 +628,20 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
           updatedSubmissions,
         );
       } catch (_) {
-        state = state.copyWith(
-          currentQuestion: currentQ,
-          isSubmitting: false,
-        );
+        if (isCurrent()) {
+          state = state.copyWith(
+            currentQuestion: currentQ,
+            isSubmitting: false,
+          );
+        }
         rethrow;
       }
+      if (!isCurrent()) return false;
 
       state = state.copyWith(
         isSubmitting: false,
         result: result,
+        canRetake: true,
         lastSubmittedAt: DateTime.now(),
       );
 
@@ -595,7 +714,6 @@ class LessonSessionState {
   final int? selectedOptionIndex;
   final LessonAnswerResult? answerResult;
   final bool isSubmittingAnswer;
-  final bool showAiSheet;
   final bool showReinforcementSheet;
   final ReinforcementResult? reinforcementResult;
   final String? answerError;
@@ -609,7 +727,6 @@ class LessonSessionState {
     this.selectedOptionIndex,
     this.answerResult,
     this.isSubmittingAnswer = false,
-    this.showAiSheet = false,
     this.showReinforcementSheet = false,
     this.reinforcementResult,
     this.answerError,
@@ -624,7 +741,6 @@ class LessonSessionState {
     int? selectedOptionIndex,
     LessonAnswerResult? answerResult,
     bool? isSubmittingAnswer,
-    bool? showAiSheet,
     bool? showReinforcementSheet,
     ReinforcementResult? reinforcementResult,
     String? answerError,
@@ -646,7 +762,6 @@ class LessonSessionState {
           ? null
           : (answerResult ?? this.answerResult),
       isSubmittingAnswer: isSubmittingAnswer ?? this.isSubmittingAnswer,
-      showAiSheet: showAiSheet ?? this.showAiSheet,
       showReinforcementSheet:
           showReinforcementSheet ?? this.showReinforcementSheet,
       reinforcementResult: clearReinforcementResult
@@ -721,7 +836,6 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         clearAnswerResult: true,
         clearAnswerError: true,
         clearReinforcementResult: true,
-        showAiSheet: false,
         showReinforcementSheet: false,
       );
       return;
@@ -755,7 +869,6 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         clearAnswerResult: true,
         clearAnswerError: true,
         clearReinforcementResult: true,
-        showAiSheet: false,
         showReinforcementSheet: false,
       );
     }
@@ -827,7 +940,6 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       state = state.copyWith(
         isSubmittingAnswer: false,
         answerResult: result,
-        showAiSheet: !result.isCorrect,
         clearAnswerError: true,
       );
     } catch (_) {
@@ -836,7 +948,6 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         isSubmittingAnswer: false,
         answerError:
             'Javobni tekshirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
-        showAiSheet: false,
       );
     }
   }
@@ -845,7 +956,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     if (state.lesson == null || state.isSubmittingAnswer || state.isCompleted) {
       return;
     }
-    state = state.copyWith(showAiSheet: false, showReinforcementSheet: true);
+    state = state.copyWith(showReinforcementSheet: true);
   }
 
   bool _isCurrent(int session, int step, int answer) =>
