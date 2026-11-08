@@ -283,7 +283,8 @@ export function AppRouter() {
   const showNavigation = isWorkspace && hasUsableAuth && view !== 'lesson';
   return (
     <div className={showNavigation ? 'workspace-shell bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}
-      data-learner={showNavigation && !isAdmin ? '' : undefined}>
+      data-learner={showNavigation && !isAdmin ? '' : undefined}
+      data-view={view}>
       {showNavigation && <Navbar currentView={view} onNavigate={navigate} />}
       <div className={isWorkspace ? 'workspace-content' : undefined}>
         {isWorkspace && <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-xl focus:bg-paper focus:p-3">

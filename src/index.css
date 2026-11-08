@@ -376,11 +376,12 @@
   gap: 0.5rem;
   min-height: 4.25rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04);
+  background: rgba(11, 14, 41, 0.94);
+  color: #F8FAFC;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.24);
+  box-shadow: 0 8px 24px -4px rgba(5, 7, 24, 0.5);
 }
 .workspace-mobile-header summary::-webkit-details-marker { display: none; }
 
@@ -392,15 +393,30 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   padding: 0.4rem 0.5rem max(0.4rem, env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.06);
+  background: rgba(11, 14, 41, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(139, 92, 246, 0.26);
+  box-shadow: 0 -10px 30px rgba(5, 7, 24, 0.65);
 }
 
 .workspace-shell[data-learner] {
   padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+.workspace-shell[data-view="dashboard"] {
+  background-color: #090C22;
+  background-image:
+    radial-gradient(45rem 32rem at 18% 8%, rgba(124, 58, 237, 0.22) 0%, transparent 65%),
+    radial-gradient(42rem 30rem at 88% 14%, rgba(6, 182, 212, 0.14) 0%, transparent 62%),
+    radial-gradient(48rem 34rem at 78% 72%, rgba(236, 72, 153, 0.15) 0%, transparent 65%),
+    linear-gradient(180deg, #090C22 0%, #0D1130 50%, #090C22 100%);
+  color: #F8FAFC;
+}
+
+.workspace-shell[data-view="dashboard"] footer {
+  border-top-color: rgba(139, 92, 246, 0.18);
+  color: rgba(199, 210, 254, 0.6);
 }
 
 .workspace-tab {
@@ -409,7 +425,7 @@
   place-content: center;
   justify-items: center;
   gap: 0.25rem;
-  color: #64748B;
+  color: #94A3B8;
   font-size: 0.65rem;
   font-weight: 700;
   border-radius: 0.875rem;
@@ -418,15 +434,16 @@
   transition: all 0.2s ease;
 }
 .workspace-tab[aria-current] {
-  color: #4F46E5;
-  background: rgba(79, 70, 229, 0.1);
+  color: #FFFFFF;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.38) 0%, rgba(79, 70, 229, 0.22) 100%);
+  box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.45);
   font-weight: 800;
 }
 
 @media (min-width: 64rem) {
   .workspace-shell {
     display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-columns: 16.5rem minmax(0, 1fr);
   }
   .workspace-shell[data-learner] { padding-bottom: 0; }
   .workspace-mobile-header, .workspace-mobile-nav { display: none; }
@@ -440,22 +457,26 @@
     flex-direction: column;
     align-items: stretch;
     padding: 1.25rem 1rem;
-    background: #FFFFFF;
-    color: #0F172A;
-    border-right: 1px solid rgba(226, 232, 240, 0.85);
-    box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.04);
+    background:
+      radial-gradient(18rem 16rem at 50% 82%, rgba(168, 85, 247, 0.22) 0%, transparent 70%),
+      radial-gradient(14rem 14rem at 15% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 65%),
+      linear-gradient(180deg, #0B0E29 0%, #10143A 55%, #0C0F2D 100%);
+    color: #F8FAFC;
+    border-right: 1px solid rgba(139, 92, 246, 0.22);
+    box-shadow: 12px 0 36px -8px rgba(4, 6, 20, 0.55);
   }
 }
 
 .workspace-nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
   min-height: 2.875rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 0.875rem;
-  color: #64748B;
+  padding: 0.625rem 0.95rem;
+  border-radius: 0.95rem;
+  color: #A5B4FC;
   cursor: pointer;
   text-align: left;
   font-size: 0.875rem;
@@ -463,14 +484,75 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .workspace-nav-link:hover {
-  background: #F8FAFC;
-  color: #0F172A;
+  background: rgba(139, 92, 246, 0.14);
+  color: #FFFFFF;
   transform: translateX(2px);
 }
 .workspace-nav-link[aria-current] {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.42) 0%, rgba(79, 70, 229, 0.18) 100%);
   color: #FFFFFF;
-  box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.38);
+  border: 1px solid rgba(168, 85, 247, 0.42);
+  box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.42);
+}
+.workspace-nav-link[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: -0.35rem;
+  top: 22%;
+  bottom: 22%;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #22D3EE 0%, #A855F7 50%, #EC4899 100%);
+  box-shadow: 0 0 12px #A855F7;
+}
+
+.cosmos-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(25, 30, 78, 0.86) 0%, rgba(16, 20, 56, 0.92) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.26);
+  border-radius: 22px;
+  box-shadow:
+    0 18px 40px -10px rgba(4, 6, 22, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cosmos-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(168, 85, 247, 0.55);
+  box-shadow:
+    0 22px 48px -10px rgba(124, 58, 237, 0.32),
+    0 0 24px -6px rgba(34, 211, 238, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.cosmos-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  background: linear-gradient(95deg, #FF9447 0%, #EC4899 52%, #8B5CF6 100%);
+  color: #FFFFFF;
+  border-radius: 999px;
+  font-weight: 800;
+  box-shadow:
+    0 12px 28px -4px rgba(236, 72, 153, 0.5),
+    0 0 18px -2px rgba(139, 92, 246, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+.cosmos-cta-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 16px 34px -4px rgba(236, 72, 153, 0.65),
+    0 0 24px 0 rgba(168, 85, 247, 0.55);
+  filter: brightness(1.06);
+}
+.cosmos-cta-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .learning-hero :focus-visible, .auth-showcase :focus-visible {
