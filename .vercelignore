@@ -15,6 +15,12 @@ public/videos/temp_frames/
 # System and dependencies
 node_modules/
 .git/
+.claude/
+.opencode/
+.omnirush/
+artifacts/
+dist/
+dist-e2e/
 .vscode/
 .idea/
 *.log
