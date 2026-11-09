@@ -828,8 +828,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // =======================================================
                     // 7. PREMIUM TA'LIM CARD ("Tez orada ishga tushadi")
                     // =======================================================
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 380),
+                    EdTechReveal(
+                      index: 5,
                       duration: const Duration(milliseconds: 420),
                       child: Container(
                         padding: const EdgeInsets.all(18),
