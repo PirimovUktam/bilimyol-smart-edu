@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
   ChartNoAxesCombined,
   ChevronDown,
+  Clock,
   Crown,
   House,
   Layers,
@@ -45,7 +47,14 @@ const adminLink = { id: 'admin', label: 'Boshqaruv', icon: Shield } as const;
 export function Navbar({ currentView, onNavigate }: NavbarProps) {
   const { profile } = useAuth();
   const course = useCourseStore((state) => state.activeCourse);
+  const [premiumSoonOpen, setPremiumSoonOpen] = useState(false);
   const isAdmin = profile?.role === 'admin';
+
+  useEffect(() => {
+    if (!premiumSoonOpen) return;
+    const timer = window.setTimeout(() => setPremiumSoonOpen(false), 4200);
+    return () => window.clearTimeout(timer);
+  }, [premiumSoonOpen]);
   const name = profile
     ? [profile.firstName, profile.lastName].filter(Boolean).join(' ')
     : 'Profil';
@@ -119,9 +128,15 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
                 aria-hidden="true"
                 className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full bg-purple-500/25 blur-2xl"
               />
-              <span className="inline-flex size-9 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 shadow-inner">
-                <Crown aria-hidden="true" className="size-5" />
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex size-9 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 shadow-inner">
+                  <Crown aria-hidden="true" className="size-5" />
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-200">
+                  <Clock aria-hidden="true" className="size-3" />
+                  Tez kunda
+                </span>
+              </div>
               <h3 className="mt-2.5 font-display text-base font-extrabold text-white">
                 Premium Ta’lim
               </h3>
@@ -130,12 +145,22 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
               </p>
               <button
                 type="button"
-                onClick={() => select('roadmap')}
+                onClick={() => setPremiumSoonOpen(true)}
                 className="cosmos-cta-btn mt-3.5 w-full py-2.5 px-3.5 text-xs"
               >
                 Obuna bo‘lish
                 <ArrowRight aria-hidden="true" className="size-3.5" />
               </button>
+              {premiumSoonOpen && (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className="fade-up mt-2.5 flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/35 bg-cyan-500/15 px-3 py-2 text-center text-[11px] font-bold text-cyan-200"
+                >
+                  <Sparkles aria-hidden="true" className="size-3.5 shrink-0 text-cyan-300" />
+                  Tez orada ishga tushadi!
+                </p>
+              )}
             </div>
           )}
 
@@ -196,6 +221,35 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
             </button>
           ))}
         </nav>
+      )}
+
+      {premiumSoonOpen && (
+        <div
+          role="dialog"
+          aria-label="Premium Ta’lim haqida xabar"
+          className="fade-up fixed right-4 bottom-20 z-50 max-w-sm rounded-2xl border border-purple-400/45 bg-[#13173D]/95 p-4 text-white shadow-[0_20px_50px_rgba(4,6,22,0.85)] backdrop-blur-xl lg:top-6 lg:right-6 lg:bottom-auto"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-purple-500/25 text-amber-300 ring-1 ring-amber-400/35">
+              <Crown aria-hidden="true" className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-extrabold text-white">
+                Tez orada ishga tushadi!
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-indigo-200/90">
+                Premium Ta’lim obunasi yaqin kunlarda ishga tushiriladi. Hozircha barcha darslar va Yo‘lchi AI imkoniyatlari siz uchun ochiq!
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPremiumSoonOpen(false)}
+              className="cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-indigo-300 hover:bg-white/10 hover:text-white"
+            >
+              Yopish
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

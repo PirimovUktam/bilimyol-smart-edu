@@ -7,8 +7,10 @@ import {
   Calculator,
   ChartNoAxesColumn,
   ChevronDown,
+  Clock,
   Code2,
   Compass,
+  Crown,
   Flame,
   FlaskConical,
   Languages,
@@ -76,8 +78,15 @@ export function DashboardView({
   const [courseTab, setCourseTab] = useState<CourseFilterTab>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [premiumSoonOpen, setPremiumSoonOpen] = useState(false);
   const [activity, setActivity] = useState<DailyActivitySummary[] | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!premiumSoonOpen) return;
+    const timer = window.setTimeout(() => setPremiumSoonOpen(false), 4200);
+    return () => window.clearTimeout(timer);
+  }, [premiumSoonOpen]);
 
   const started = Boolean(course && hasStartedCourse(course, profile));
 
@@ -1274,6 +1283,50 @@ export function DashboardView({
           </div>
         </section>
       </div>
+
+      {/* MOBILE PREMIUM TA'LIM CARD (shown on <1024px where sidebar is hidden) */}
+      <section
+        aria-label="Premium Ta’lim"
+        className="fade-up relative overflow-hidden rounded-3xl border border-purple-400/30 bg-gradient-to-b from-[#231B59]/90 via-[#1A1545]/95 to-[#141138] p-5 shadow-[0_14px_34px_-8px_rgba(124,58,237,0.35)] lg:hidden"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-purple-500/25 blur-2xl"
+        />
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex size-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300 shadow-inner">
+            <Crown aria-hidden="true" className="size-5" />
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-400/15 px-3 py-1 text-xs font-extrabold text-amber-200">
+            <Clock aria-hidden="true" className="size-3.5" />
+            Tez kunda
+          </span>
+        </div>
+        <h2 className="mt-3 font-display text-lg font-extrabold text-white">
+          Premium Ta’lim
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-indigo-200/80">
+          Cheksiz darslar, AI yordam va ko‘proq imkoniyatlar
+        </p>
+        <button
+          type="button"
+          onClick={() => setPremiumSoonOpen(true)}
+          className="cosmos-cta-btn mt-4 w-full py-3 px-4 text-xs"
+        >
+          Obuna bo‘lish
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </button>
+        {premiumSoonOpen && (
+          <p
+            role="status"
+            aria-live="polite"
+            className="fade-up mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/35 bg-cyan-500/15 px-3 py-2.5 text-center text-xs font-bold text-cyan-200"
+          >
+            <Sparkles aria-hidden="true" className="size-4 shrink-0 text-cyan-300" />
+            Tez orada ishga tushadi!
+          </p>
+        )}
+      </section>
     </div>
   );
 }
