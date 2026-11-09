@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
 import { ArrowRight, BookOpenCheck, ChartNoAxesCombined, Clock, Flame, Sparkles, Target, Trophy, Zap, type LucideIcon } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -20,6 +21,7 @@ interface ProgressViewProps {
 }
 
 export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeMap }: ProgressViewProps) {
+  const { t } = useTranslation();
   const activeCourse = useCourseStore((state) => state.activeCourse);
   const courses = useCourseStore((state) => state.courses);
   const skills = useCourseStore((state) => state.activeCourseSkills);
@@ -51,42 +53,40 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
   const evaluated = skills.flatMap((skill) => scores[skill.id] ? [{ ...skill, score: scores[skill.id].score }] : [])
     .sort((a, b) => b.score - a.score);
   const achievements = [
-    { title: 'Ilk qadam', description: 'Birinchi dars yakunlandi', earned: completed.size >= 1 },
-    { title: 'Muntazam o‘quvchi', description: '7 kun ketma-ket o‘qish', earned: (profile?.streakDays ?? 0) >= 7 },
-    { title: 'Beshta marraga yetildi', description: '5 ta dars yakunlandi', earned: completed.size >= 5 },
+    { title: t('progress.firstStep'), description: t('progress.firstLesson'), earned: completed.size >= 1 },
+    { title: t('progress.regular'), description: t('progress.sevenDays'), earned: (profile?.streakDays ?? 0) >= 7 },
+    { title: t('progress.fiveMilestones'), description: t('progress.fiveLessons'), earned: completed.size >= 5 },
   ];
 
   return (
     <div className="learning-page space-y-6 sm:space-y-8">
       <PageHeader
-        title="Ta’lim ko‘rsatkichlari"
-        highlightWord="ko‘rsatkichlari"
-        eyebrow="Natijalar"
-        description="Darslar, mashqlar va o‘qish odatingiz qanday o‘zgarayotganini kuzating."
+        title={t('progress.title')}
+        highlightWord={t('progress.highlight')}
+        eyebrow={t('progress.resultsTitle')}
+        description={t('progress.description')}
         action={
-          <Button onClick={onContinueLesson} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>
-            Darsga qaytish
-          </Button>
+          <Button onClick={onContinueLesson} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('progress.backLesson')}</Button>
         }
       />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <Stat icon={Clock} tone="bg-indigo-50 text-brand" label="O‘qish vaqti" value={totals ? totals.minutes + ' daqiqa' : '—'} index={0} />
-        <Stat icon={BookOpenCheck} tone="bg-emerald-50 text-mint" label="Yakunlangan darslar" value={String(completed.size)} index={1} />
-        <Stat icon={Flame} tone="bg-amber-50 text-amber-600" label="Ketma-ketlik" value={(profile?.streakDays ?? 0) + ' kun'} index={2} />
-        <Stat icon={Zap} tone="bg-sky-50 text-path" label="Jamg‘arilgan XP" value={String(profile?.xp ?? 0)} index={3} />
+        <Stat icon={Clock} tone="bg-indigo-50 text-brand" label={t('progress.studyTime')} value={totals ? t('dynamic.minutes', { count: totals.minutes }) : '—'} index={0} />
+        <Stat icon={BookOpenCheck} tone="bg-emerald-50 text-mint" label={t('progress.completedLessons')} value={String(completed.size)} index={1} />
+        <Stat icon={Flame} tone="bg-amber-50 text-amber-600" label={t('progress.streak')} value={t('dynamic.days', { count: profile?.streakDays ?? 0 })} index={2} />
+        <Stat icon={Zap} tone="bg-sky-50 text-path" label={t('progress.xp')} value={String(profile?.xp ?? 0)} index={3} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,21rem)]">
         <Card className="fade-up stagger-2 min-w-0 space-y-4" padding="md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <span className="highlight mb-1.5">Statistika</span>
+              <span className="highlight mb-1.5">{t('progress.statistics')}</span>
               <h2 className="heading flex items-center gap-2 text-xl font-extrabold">
-                <ChartNoAxesCombined aria-hidden="true" className="size-5 text-brand" /> O‘qish <span className="heading-accent">faolligi</span>
+                <ChartNoAxesCombined aria-hidden="true" className="size-5 text-brand" />{t('progress.study')}{' '}<span className="heading-accent">{t('progress.activity')}</span>
               </h2>
             </div>
-            <div role="group" aria-label="Vaqt oralig‘i" className="flex gap-1 rounded-xl bg-sand p-1">
+            <div role="group" aria-label={t('progress.period')} className="flex gap-1 rounded-xl bg-sand p-1">
               {([7, 30] as const).map((days) => (
                 <Button
                   key={days}
@@ -95,38 +95,36 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
                   aria-pressed={period === days}
                   onClick={() => setPeriod(days)}
                 >
-                  {days} kun
-                </Button>
+                  {days}{' '}{t('courses.day')}</Button>
               ))}
             </div>
           </div>
           {failed ? (
-            <SectionState kind="error" title="Faollik yuklanmadi" onRetry={() => setRetry((n) => n + 1)} />
+            <SectionState kind="error" title={t('progress.activityFailed')} onRetry={() => setRetry((n) => n + 1)} />
           ) : activity ? (
             <WeeklyActivity days={activity} />
           ) : (
-            <SectionState kind="loading" title="Faollik yuklanmoqda…" />
+            <SectionState kind="loading" title={t('progress.activityLoading')} />
           )}
         </Card>
 
         <Card className="fade-up stagger-3 flex flex-col justify-between space-y-4" padding="md">
           <div className="space-y-2">
-            <span className="highlight">Aniqlik</span>
+            <span className="highlight">{t('progress.accuracy')}</span>
             <h2 className="heading flex items-center gap-2 text-xl font-extrabold">
-              <Target aria-hidden="true" className="size-5 text-brand" /> Mashqlar <span className="heading-accent">natijasi</span>
+              <Target aria-hidden="true" className="size-5 text-brand" />{t('progress.exercises')}{' '}<span className="heading-accent">{t('progress.result')}</span>
             </h2>
           </div>
           {accuracy == null ? (
             <p className="text-sm leading-relaxed text-slatefine">
-              {totals ? 'Bu davrda baholangan mashqlar yo‘q.' : 'Hisoblanmoqda…'}
+              {totals ? t('progress.noAttempts') : 'Hisoblanmoqda…'}
             </p>
           ) : (
             <div className="space-y-3">
               <p className="heading text-4xl font-extrabold text-ink">{accuracy}%</p>
-              <Progress value={accuracy} ariaLabel="Mashqlardagi to‘g‘ri javoblar ulushi" tone="emerald" />
+              <Progress value={accuracy} ariaLabel={t('progress.accuracyDescription')} tone="emerald" />
               <p className="text-sm font-medium text-slatefine">
-                {totals?.questions} javobdan {totals?.correct} tasi to‘g‘ri
-              </p>
+                {totals?.questions}{' '}{t('progress.outOf')}{' '}{totals?.correct}{' '}{t('progress.correct')}</p>
             </div>
           )}
         </Card>
@@ -136,14 +134,11 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
         <Card className="fade-up stagger-3 space-y-4" padding="md">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <span className="highlight mb-1">Katalog bo‘yicha</span>
-              <h2 className="heading text-xl font-extrabold">
-                Fanlar bo‘yicha <span className="heading-accent">natijalar</span>
+              <span className="highlight mb-1">{t('progress.catalog')}</span>
+              <h2 className="heading text-xl font-extrabold">{t('progress.bySubject')}{' '}<span className="heading-accent">{t('progress.results')}</span>
               </h2>
             </div>
-            <Button size="sm" variant="ghost" onClick={onOpenRoadmap}>
-              Ta’lim yo‘li
-            </Button>
+            <Button size="sm" variant="ghost" onClick={onOpenRoadmap}>{t('path.path')}</Button>
           </div>
           {courses.length ? (
             <ul className="space-y-3">
@@ -157,40 +152,36 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
                       <strong className="heading font-extrabold">{course.title}</strong>
                       {course.lessons.length > 0 && (
                         <Badge variant="indigo" size="sm">
-                          {lessonCount} / {course.lessons.length} dars
-                        </Badge>
+                          {lessonCount} / {course.lessons.length}{t('courses.lesson')}</Badge>
                       )}
                     </div>
                     {scored ? (
                       <Progress
                         value={SkillScoringEngine.computeOverallScore(subjectScores)}
                         size="sm"
-                        ariaLabel="Baholangan mavzular"
+                        ariaLabel={t('path.evaluatedTopics')}
                         showLabel
                       />
                     ) : (
-                      <p className="text-xs font-medium text-slatefine">Baholash hali o‘tkazilmagan.</p>
+                      <p className="text-xs font-medium text-slatefine">{t('progress.notAssessed')}</p>
                     )}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="text-sm text-slatefine">Kurs natijalari hali mavjud emas.</p>
+            <p className="text-sm text-slatefine">{t('progress.noResults')}</p>
           )}
         </Card>
 
         <Card className="fade-up stagger-4 space-y-4" padding="md">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <span className="highlight mb-1">Ko‘nikmalar</span>
-              <h2 className="heading text-xl font-extrabold">
-                Mavzular <span className="heading-accent">tahlili</span>
+              <span className="highlight mb-1">{t('path.skills')}</span>
+              <h2 className="heading text-xl font-extrabold">{t('progress.topics')}{' '}<span className="heading-accent">{t('progress.analysis')}</span>
               </h2>
             </div>
-            <Button size="sm" variant="ghost" onClick={onOpenKnowledgeMap}>
-              Bilim xaritasi
-            </Button>
+            <Button size="sm" variant="ghost" onClick={onOpenKnowledgeMap}>{t('path.map')}</Button>
           </div>
           {evaluated.length ? (
             <ul className="space-y-3.5">
@@ -206,9 +197,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slatefine">
-              Diagnostika yoki darsdan keyin kuchli va mustahkamlash kerak bo‘lgan mavzular ko‘rinadi.
-            </p>
+            <p className="text-sm text-slatefine">{t('progress.assessmentDescription')}</p>
           )}
         </Card>
       </div>
@@ -216,12 +205,8 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
       <section aria-labelledby="achievements-title" className="fade-up stagger-5 space-y-4">
         <div>
           <span className="highlight mb-1.5">
-            <Sparkles aria-hidden="true" className="size-3.5" />
-            Mukofotlar
-          </span>
-          <h2 id="achievements-title" className="heading text-xl font-extrabold">
-            Yutuqlar
-          </h2>
+            <Sparkles aria-hidden="true" className="size-3.5" />{t('progress.rewards')}</span>
+          <h2 id="achievements-title" className="heading text-xl font-extrabold">{t('progress.achievements')}</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           {achievements.map(({ title, description, earned }) => (
@@ -236,13 +221,13 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
                   <Trophy aria-hidden="true" className="size-5" />
                 </span>
                 <Badge variant={earned ? 'emerald' : 'slate'} size="sm">
-                  {earned ? 'Erishildi' : 'Hali ochilmagan'}
+                  {earned ? 'Erishildi' : t('progress.locked')}
                 </Badge>
               </div>
               <div>
                 <h3 className="heading font-extrabold">{title}</h3>
                 <p className="mt-1 text-xs text-slatefine">
-                  {description} · {earned ? 'Erishildi' : 'Hali ochilmagan'}
+                  {description} · {earned ? 'Erishildi' : t('progress.locked')}
                 </p>
               </div>
             </Card>

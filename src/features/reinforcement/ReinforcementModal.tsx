@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -27,6 +28,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   onSuccess,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const { completeReinforcement, isUpdating, roadmap, error: submissionError } = useRoadmapStore();
 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -94,7 +96,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} title="Mustahkamlash mashqi" maxWidth="lg" onClose={onClose}
+    <Modal isOpen={isOpen} title={t('assessment.reinforcement')} maxWidth="lg" onClose={onClose}
       showClose={false} dismissable={!isUpdating}>
       <div>
           {feedbackState !== 'success' ? (
@@ -107,21 +109,19 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                   </div>
                   <div>
                     <div className="editorial-kicker">
-                      <span>REMEDIATSIYA</span>
+                      <span>{t('assessment.remediation')}</span>
                       <span>//</span>
-                      <span>MUSTAHKAMLASH MASHQI</span>
+                      <span>{t('assessment.reinforcementTitle')}</span>
                     </div>
-                    <h3 className="font-display text-xl font-bold text-navy">
-                      Tushunchani Amalda Qo‘llash
-                    </h3>
+                    <h3 className="font-display text-xl font-bold text-navy">{t('assessment.apply')}</h3>
                   </div>
                 </div>
 
                 <button
                   onClick={onClose}
-                  aria-label="Yopish"
+                  aria-label={t('courses.close')}
                   disabled={isUpdating}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-sand transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-graphite hover:bg-sand transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -129,11 +129,11 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
               {/* Question */}
               <div className="p-5 rounded-xl bg-canvas border border-hairline space-y-3">
-                <h4 className="font-display text-base sm:text-lg font-bold text-slate-900">
+                <h4 className="font-display text-base sm:text-lg font-bold text-ink">
                   {question.text}
                 </h4>
                 {question.formulaLatex && (
-                  <div className="p-3 bg-white rounded-lg border border-hairline text-center font-mono font-bold text-brand-dark text-sm">
+                  <div className="p-3 bg-paper rounded-lg border border-hairline text-center font-mono font-bold text-brand-dark text-sm">
                     <Formula source={question.formulaLatex} display />
                   </div>
                 )}
@@ -165,8 +165,8 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                           : isWrongPick
                           ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25 text-[#a51c1c]'
                           : isSelected
-                          ? 'border-navy ring-2 ring-navy bg-white shadow-xs'
-                          : 'border-hairline bg-canvas hover:border-slate-400 hover:bg-white text-slate-800'
+                          ? 'border-navy ring-2 ring-navy bg-paper shadow-xs'
+                          : 'border-hairline bg-canvas hover:border-slate-400 hover:bg-paper text-graphite'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -200,33 +200,27 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     {selectedIdx !== null && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-coral/10 border border-coral/30 font-mono text-[11px] font-bold text-[#a51c1c]">
-                        <XCircle className="w-3.5 h-3.5" />
-                        Siz tanladingiz: {question.options[selectedIdx]}
+                        <XCircle className="w-3.5 h-3.5" />{t('lesson.selectedAnswer')}{' '}{question.options[selectedIdx]}
                       </span>
                     )}
                     {failureFeedback?.correctOption && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        To‘g‘ri javob: {failureFeedback.correctOption}
+                        <CheckCircle2 className="w-3.5 h-3.5" />{t('lesson.rightAnswer')}{' '}{failureFeedback.correctOption}
                       </span>
                     )}
                   </div>
                   <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                    {failureFeedback?.explanation || 'Javob xato. Yechimni qadam-baqadam tekshirib, qayta urinib ko‘ring.'}
+                    {failureFeedback?.explanation || t('assessment.incorrect')}
                   </p>
                 </div>
               )}
               {submissionError && (
-                <div role="alert" className="p-3 bg-coral/5 border border-coral/25 rounded-xl text-xs font-mono font-bold text-coral">
-                  Javob serverda saqlanmadi: {submissionError}. Qayta urinib ko‘ring.
-                </div>
+                <div role="alert" className="p-3 bg-coral/5 border border-coral/25 rounded-xl text-xs font-mono font-bold text-coral">{t('assessment.notSaved')}{' '}{submissionError}{' '}{t('assessment.retrySuffix')}</div>
               )}
 
               {/* Action Buttons */}
               <div className="pt-4 border-t border-hairline flex items-center justify-between">
-                <Button variant="ghost" size="md" onClick={onClose} className="font-mono text-xs font-bold text-slate-500">
-                  Bekor qilish
-                </Button>
+                <Button variant="ghost" size="md" onClick={onClose} className="font-mono text-xs font-bold text-slatefine">{t('courses.cancel')}</Button>
 
                 <Button
                   variant="primary"
@@ -236,9 +230,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                   onClick={handleSubmit}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                   className="font-bold uppercase tracking-wider text-xs px-6 py-2.5"
-                >
-                  Javobni Tekshirish
-                </Button>
+                >{t('assessment.check')}</Button>
               </div>
             </div>
           ) : (
@@ -254,37 +246,32 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
               <div className="space-y-1">
                 <div className="editorial-kicker justify-center text-mint">
-                  <span>REMEDIATSIYA TASDIQLANDI</span>
+                  <span>{t('assessment.confirmed')}</span>
                 </div>
-                <h3 className="font-display text-2xl font-extrabold text-navy mt-1">
-                  Mavzu Muvaffaqiyatli Mustahkamlandi!
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto font-sans">
-                  Siz xatoni to‘g‘riladingiz va tushunchani amalda to‘liq qo‘llay oldingiz.
-                </p>
+                <h3 className="font-display text-2xl font-extrabold text-navy mt-1">{t('assessment.reinforced')}</h3>
+                <p className="text-xs sm:text-sm text-slatefine max-w-md mx-auto font-sans">{t('assessment.reinforcedDescription')}</p>
               </div>
 
               {/* Score Transition Banner */}
               <div className="p-6 bg-navy rounded-xl text-white space-y-4 max-w-md mx-auto shadow-xl border border-slate-800">
                 <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="text-slate-400">Ko‘nikma o‘zlashtirish:</span>
+                  <span className="text-slate-400">{t('assessment.mastery')}</span>
                   <span className="font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-mint border border-emerald-500/30">
-                    +{scoreTransition ? Math.max(0, scoreTransition.newScore - scoreTransition.oldScore) : 0}% O‘SISH
-                  </span>
+                    +{scoreTransition ? Math.max(0, scoreTransition.newScore - scoreTransition.oldScore) : 0}{t('assessment.growth')}</span>
                 </div>
 
                 <div className="flex items-center justify-center gap-6">
                   <div className="text-center font-mono">
-                    <span className="text-[10px] text-slate-400 block mb-0.5 uppercase tracking-wider">Oldingi:</span>
+                    <span className="text-[10px] text-slate-400 block mb-0.5 uppercase tracking-wider">{t('assessment.previous')}</span>
                     <span className="text-2xl font-bold text-coral line-through">
                       {scoreTransition?.oldScore}%
                     </span>
                   </div>
 
-                  <ArrowRight className="w-5 h-5 text-slate-500" />
+                  <ArrowRight className="w-5 h-5 text-slatefine" />
 
                   <div className="text-center font-mono">
-                    <span className="text-[10px] text-slate-400 block mb-0.5 uppercase tracking-wider">Yangi:</span>
+                    <span className="text-[10px] text-slate-400 block mb-0.5 uppercase tracking-wider">{t('assessment.new')}</span>
                     <span className="text-3xl font-extrabold text-mint">
                       {scoreTransition?.newScore}%
                     </span>
@@ -293,11 +280,8 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between font-mono text-[11px] text-slate-300">
                   <span className="flex items-center gap-1.5 text-amber-300 font-bold">
-                    <Award className="w-4 h-4" /> +{scoreTransition?.xpAwarded ?? 0} XP mukofoti
-                  </span>
-                  <span className="flex items-center gap-1.5 text-mint font-bold">
-                    Mashq natijasi saqlandi
-                  </span>
+                    <Award className="w-4 h-4" /> +{scoreTransition?.xpAwarded ?? 0}{t('assessment.xp')}</span>
+                  <span className="flex items-center gap-1.5 text-mint font-bold">{t('assessment.saved')}</span>
                 </div>
               </div>
 
@@ -308,9 +292,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                   onClick={onSuccess}
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                   className="w-full sm:w-auto px-8 font-bold"
-                >
-                  Davom etish
-                </Button>
+                >{t('courses.continue')}</Button>
               </div>
             </motion.div>
           )}

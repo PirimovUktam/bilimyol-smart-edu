@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -38,6 +39,7 @@ import type { DailyActivitySummary } from '@/domain/repositories/ILearnerReposit
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { Avatar } from '@/presentation/components/Avatar';
 import { Button } from '@/presentation/components/Button';
+import { WeeklyActivity } from '@/presentation/components/WeeklyActivity';
 
 interface DashboardViewProps {
   onContinueLesson: (lessonId: string) => void;
@@ -51,7 +53,6 @@ interface DashboardViewProps {
 
 type CourseFilterTab = 'active' | 'recommended' | 'all';
 
-const weekShortLabels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sha', 'Ya'];
 
 export function DashboardView({
   onContinueLesson,
@@ -62,6 +63,7 @@ export function DashboardView({
   onOpenAITutor,
   onOpenProgress,
 }: DashboardViewProps) {
+  const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const courses = useCourseStore((state) => state.courses);
   const selectCourse = useCourseStore((state) => state.selectCourseById);
@@ -80,6 +82,8 @@ export function DashboardView({
   const [showNotifications, setShowNotifications] = useState(false);
   const [premiumSoonOpen, setPremiumSoonOpen] = useState(false);
   const [activity, setActivity] = useState<DailyActivitySummary[] | null>(null);
+  const [activityFailed, setActivityFailed] = useState(false);
+  const [activityRetry, setActivityRetry] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -99,18 +103,19 @@ export function DashboardView({
 
   useEffect(() => {
     let mounted = true;
+    setActivityFailed(false);
     void supabaseLearnerRepository.getDailyActivity(7).then(
       (days) => {
         if (mounted) setActivity(days);
       },
       () => {
-        if (mounted) setActivity([]);
+        if (mounted) setActivityFailed(true);
       },
     );
     return () => {
       mounted = false;
     };
-  }, [courseId, profile?.completedLessonIds.length]);
+  }, [account?.id, profile?.completedLessonIds.length, activityRetry]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -137,12 +142,12 @@ export function DashboardView({
   const foundationPosition = foundation
     ? firstSteps.indexOf(foundation) + 1
     : 0;
-  const name = account?.firstName || profile?.firstName || 'O‘quvchi';
+  const name = account?.firstName || profile?.firstName || t('courses.student');
   const nextTitle = !started
-    ? 'Birinchi faningizni tanlang'
+    ? t('dashboard.firstSubject')
     : foundation
-    ? 'Boshlang‘ich darsingiz'
-    : nextTopic?.title ?? 'Ta’lim yo‘lingiz';
+    ? t('dashboard.foundation')
+    : nextTopic?.title ?? t('dashboard.yourPath');
 
   const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
   const scoreValues = Object.values(courseScores);
@@ -178,12 +183,12 @@ export function DashboardView({
       else {
         setGenerationError(
           useLessonStore.getState().error ??
-            'Dars tayyorlanmadi. Qayta urinib ko‘ring.',
+            t('dashboard.lessonFailed'),
         );
       }
     } catch {
       if (useCourseStore.getState().activeCourse?.id === courseId) {
-        setGenerationError('Dars tayyorlanmadi. Qayta urinib ko‘ring.');
+        setGenerationError(t('dashboard.lessonFailed'));
       }
     } finally {
       setGenerating(false);
@@ -244,7 +249,7 @@ export function DashboardView({
         results.push({
           id: 'course_' + c.id,
           title: c.title,
-          subtitle: 'Kurs · ' + c.lessons.length + ' ta dars',
+          subtitle: t('dynamic.courseSummary', { count: c.lessons.length }),
           onSelect: () => {
             setSearchQuery('');
             void selectCourse(c.id);
@@ -261,7 +266,7 @@ export function DashboardView({
         results.push({
           id: 'node_' + node.id,
           title: node.title,
-          subtitle: (course?.title ?? 'Mavzu') + ' · ' + node.estimatedMinutes + ' daqiqa',
+          subtitle: (course?.title ?? t('courses.topic')) + ' · ' + t('dynamic.minutes', { count: node.estimatedMinutes }),
           onSelect: () => {
             setSearchQuery('');
             if (node.targetLessonId) onContinueLesson(node.targetLessonId);
@@ -271,35 +276,7 @@ export function DashboardView({
       }
     }
     return results.slice(0, 5);
-  }, [searchQuery, courses, path?.nodes, course?.title, selectCourse, onContinueLesson, onOpenRoadmap]);
-
-  // Weekly bars data (7 days)
-  const weeklyBars = useMemo(() => {
-    const hasTrackedMinutes =
-      activity != null && activity.some((d) => d.activeMinutes > 0);
-    if (activity && activity.length > 0 && hasTrackedMinutes) {
-      const slice = activity.slice(-7);
-      const maxMin = Math.max(...slice.map((d) => d.activeMinutes), 15);
-      return slice.map((d, idx) => ({
-        label: weekShortLabels[idx % 7],
-        minutes: d.activeMinutes,
-        heightPct: Math.max(
-          28,
-          Math.min(100, Math.round((100 * d.activeMinutes) / maxMin)),
-        ),
-      }));
-    }
-    const base = totalCompletedAllCourses > 0 ? 45 : 24;
-    const defaultHeights = [42, 58, 50, 86, 72, 62, 48];
-    return weekShortLabels.map((label, idx) => ({
-      label,
-      minutes:
-        idx === 3
-          ? base
-          : Math.round(base * (defaultHeights[idx] / 100)),
-      heightPct: defaultHeights[idx],
-    }));
-  }, [activity, totalCompletedAllCourses]);
+  }, [searchQuery, courses, path?.nodes, course?.title, selectCourse, onContinueLesson, onOpenRoadmap, t]);
 
   const handleCourseAction = async (targetCourseId: string) => {
     if (targetCourseId === course?.id) {
@@ -316,31 +293,31 @@ export function DashboardView({
   };
 
   return (
-    <div className="learning-page space-y-6 text-white">
+    <div className="learning-page space-y-6 text-ink">
       {/* =====================================================================
           TOP NAVBAR ROW: Search (Ctrl+K), Notifications, Streak, User Profile
          ===================================================================== */}
       <div className="fade-up flex flex-wrap items-center justify-between gap-3">
         {/* Search Bar */}
         <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
-          <div className="flex h-11 items-center gap-2.5 rounded-2xl border border-purple-400/25 bg-[#14183E]/90 px-3.5 shadow-inner backdrop-blur-md focus-within:border-purple-400/60">
-            <Search aria-hidden="true" className="size-4 shrink-0 text-indigo-300" />
+          <div className="flex h-11 items-center gap-2.5 rounded-2xl border border-hairline bg-paper px-3.5 shadow-inner backdrop-blur-md focus-within:border-hairline">
+            <Search aria-hidden="true" className="size-4 shrink-0 text-slatefine" />
             <input
               ref={searchInputRef}
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Dars, kurs yoki mavzu qidiring..."
-              aria-label="Dars, kurs yoki mavzu qidiring"
-              className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm text-white placeholder:text-indigo-300/60 focus:outline-none"
+              placeholder={t('dashboard.searchPlaceholder')}
+              aria-label={t('dashboard.searchLabel')}
+              className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm text-ink placeholder:text-slatefine focus:outline-none"
             />
-            <kbd className="hidden rounded-lg border border-purple-300/20 bg-[#1E2356] px-2 py-0.5 font-mono text-[10px] font-semibold text-indigo-200 sm:inline-block">
+            <kbd className="hidden rounded-lg border border-hairline bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold text-slatefine sm:inline-block">
               Ctrl K
             </kbd>
           </div>
 
           {searchQuery.trim().length > 0 && (
-            <div className="absolute top-13 right-0 left-0 z-30 rounded-2xl border border-purple-400/35 bg-[#13173D]/98 p-2 shadow-2xl backdrop-blur-xl">
+            <div className="absolute top-13 right-0 left-0 z-30 rounded-2xl border border-hairline bg-paper p-2 shadow-2xl backdrop-blur-xl">
               {searchResults.length > 0 ? (
                 <ul className="space-y-1">
                   {searchResults.map((item) => (
@@ -351,25 +328,23 @@ export function DashboardView({
                         className="flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-left transition-colors hover:bg-purple-500/20"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-bold text-white">
+                          <p className="truncate text-xs font-bold text-ink">
                             {item.title}
                           </p>
-                          <p className="truncate text-[11px] text-indigo-300">
+                          <p className="truncate text-[11px] text-slatefine">
                             {item.subtitle}
                           </p>
                         </div>
                         <ArrowRight
                           aria-hidden="true"
-                          className="size-3.5 shrink-0 text-purple-300"
+                          className="size-3.5 shrink-0 text-brand-dark"
                         />
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="px-3 py-2 text-xs text-indigo-300">
-                  Hech narsa topilmadi. Boshqa kalit so‘z yozib ko‘ring.
-                </p>
+                <p className="px-3 py-2 text-xs text-slatefine">{t('dashboard.nothingFound')}</p>
               )}
             </div>
           )}
@@ -380,9 +355,9 @@ export function DashboardView({
           <div className="relative">
             <button
               type="button"
-              aria-label="Bildirishnomalar"
+              aria-label={t('dashboard.notifications')}
               onClick={() => setShowNotifications((prev) => !prev)}
-              className="relative grid size-11 cursor-pointer place-items-center rounded-2xl border border-purple-400/25 bg-[#151A42]/90 text-indigo-200 transition-all hover:border-purple-400/50 hover:text-white"
+              className="relative grid size-11 cursor-pointer place-items-center rounded-2xl border border-hairline bg-paper text-slatefine transition-all hover:border-hairline hover:text-ink"
             >
               <Bell aria-hidden="true" className="size-4.5" />
               <span
@@ -392,15 +367,12 @@ export function DashboardView({
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-purple-400/35 bg-[#141942]/98 p-4 shadow-2xl backdrop-blur-xl">
-                <p className="text-xs font-extrabold text-white">
-                  O‘quv eslatmalari
-                </p>
-                <p className="mt-1.5 text-xs leading-relaxed text-indigo-200/85">
-                  Kunlik maqsadingiz: <strong>{profile?.dailyMinutes ?? 15} daqiqa</strong>.{' '}
+              <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-hairline bg-paper p-4 shadow-2xl backdrop-blur-xl">
+                <p className="text-xs font-extrabold text-ink">{t('dashboard.reminders')}</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-slatefine">{t('dashboard.dailyGoal')}{' '}<strong>{profile?.dailyMinutes ?? 15}{t('courses.minutes')}</strong>.{' '}
                   {started
-                    ? `Joriy fan: ${course?.title} (${progressPct}% bajarildi).`
-                    : 'Boshlash uchun fan tanlang.'}
+                    ? t('dynamic.currentSubject', { title: course?.title ?? '', progress: progressPct })
+                    : t('dashboard.chooseToStart')}
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -409,34 +381,27 @@ export function DashboardView({
                       setShowNotifications(false);
                       onOpenOnboarding();
                     }}
-                    className="cursor-pointer rounded-xl bg-purple-500/25 px-3 py-1.5 text-xs font-bold text-purple-200 hover:bg-purple-500/35"
-                  >
-                    Rejani sozlash
-                  </button>
+                    className="cursor-pointer rounded-xl bg-purple-500/25 px-3 py-1.5 text-xs font-bold text-brand-dark hover:bg-purple-500/35"
+                  >{t('dashboard.configure')}</button>
                   <button
                     type="button"
                     onClick={() => setShowNotifications(false)}
-                    className="cursor-pointer rounded-xl px-2.5 py-1.5 text-xs font-semibold text-indigo-300 hover:text-white"
-                  >
-                    Yopish
-                  </button>
+                    className="cursor-pointer rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slatefine hover:text-ink"
+                  >{t('courses.close')}</button>
                 </div>
               </div>
             )}
           </div>
 
           {/* Streak Pill */}
-          <div className="flex h-11 items-center gap-2 rounded-2xl border border-purple-400/25 bg-[#151A42]/90 px-3.5">
+          <div className="flex h-11 items-center gap-2 rounded-2xl border border-hairline bg-paper px-3.5">
             <span className="grid size-7 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-orange-500/25 text-amber-400">
               <Flame aria-hidden="true" className="size-4 fill-amber-400" />
             </span>
             <div className="leading-tight">
-              <p className="text-xs font-extrabold text-white">
-                {profile?.streakDays ?? 0} kun
-              </p>
-              <p className="text-[10px] font-medium text-indigo-300">
-                Ketma-ket
-              </p>
+              <p className="text-xs font-extrabold text-ink">
+                {profile?.streakDays ?? 0}{t('courses.day')}</p>
+              <p className="text-[10px] font-medium text-slatefine">{t('dashboard.consecutive')}</p>
             </div>
           </div>
 
@@ -444,21 +409,21 @@ export function DashboardView({
           <button
             type="button"
             onClick={onOpenCourses}
-            className="hidden cursor-pointer items-center gap-2.5 rounded-2xl border border-purple-400/25 bg-[#151A42]/90 py-1.5 pr-3 pl-2 transition-all hover:border-purple-400/50 sm:flex"
+            className="hidden cursor-pointer items-center gap-2.5 rounded-2xl border border-hairline bg-paper py-1.5 pr-3 pl-2 transition-all hover:border-hairline sm:flex"
           >
             <Avatar
               name={name}
               className="size-8! bg-gradient-to-br! from-purple-500! to-pink-500! text-white!"
             />
             <div className="text-left leading-tight">
-              <p className="max-w-28 truncate text-xs font-extrabold text-white">
+              <p className="max-w-28 truncate text-xs font-extrabold text-ink">
                 {name}
               </p>
-              <p className="max-w-28 truncate text-[10px] font-medium text-indigo-300">
-                {isDemoMode ? 'Namuna hisobi' : course?.title ?? 'O‘quvchi'}
+              <p className="max-w-28 truncate text-[10px] font-medium text-slatefine">
+                {isDemoMode ? t('profile.demo') : course?.title ?? t('courses.student')}
               </p>
             </div>
-            <ChevronDown aria-hidden="true" className="size-3.5 text-indigo-300" />
+            <ChevronDown aria-hidden="true" className="size-3.5 text-slatefine" />
           </button>
         </div>
       </div>
@@ -587,7 +552,7 @@ export function DashboardView({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1 text-xs font-bold text-cyan-200 backdrop-blur-xs">
                   <Compass aria-hidden="true" className="size-3.5" />
-                  {started ? course?.title : 'Boshlang‘ich yo‘nalish'}
+                  {started ? course?.title : t('dashboard.startingPath')}
                 </span>
                 {(profile?.xp ?? 0) > 0 && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-400/15 px-3 py-1 text-xs font-bold text-amber-200">
@@ -598,22 +563,19 @@ export function DashboardView({
               </div>
 
               <h1 id="continue-heading" className="space-y-1">
-                <span className="block text-base font-bold text-indigo-100 sm:text-lg">
-                  Assalomu alaykum, {name}! 👋
+                <span className="block text-base font-bold text-indigo-100 sm:text-lg">{t('dashboard.greeting')}{' '}{name}! 👋
                 </span>
-                <span className="block font-display text-2xl leading-tight font-extrabold tracking-tight text-white sm:text-4xl">
-                  Bilim yo‘lingizni davom ettiring!
-                </span>
+                <span className="block font-display text-2xl leading-tight font-extrabold tracking-tight text-white sm:text-4xl">{t('dashboard.continuePath')}</span>
               </h1>
 
               <p className="max-w-md text-xs leading-relaxed text-indigo-100/90 sm:text-sm">
                 {!started
-                  ? 'Fan va darajani tanlang. Keyingi darsni BilimYo‘l ko‘rsatadi.'
+                  ? t('dashboard.chooseLevel')
                   : foundation
-                  ? `${firstSteps.length} ta boshlang‘ich darsdan ${foundationPosition}-dars: ${nextTitle}.`
+                  ? t('dynamic.foundationPosition', { total: firstSteps.length, position: foundationPosition, title: nextTitle })
                   : `${nextTitle} — ${
                       nextTopic?.description ||
-                      'Bugungi maqsadni bajaring va bilimingizni yangi bosqichga olib chiqing.'
+                      t('dashboard.dailyDescription')
                     }`}
               </p>
 
@@ -633,10 +595,10 @@ export function DashboardView({
                   }
                 >
                   {!started
-                    ? 'Fan tanlash'
+                    ? t('courses.choose')
                     : nextId
-                    ? 'Davom etish'
-                    : 'Ta’lim yo‘lini ochish'}
+                    ? t('courses.continue')
+                    : t('courses.openPath')}
                 </Button>
 
                 {started && (
@@ -644,16 +606,13 @@ export function DashboardView({
                     type="button"
                     onClick={onOpenRoadmap}
                     className="cursor-pointer rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-indigo-100 backdrop-blur-xs transition-colors hover:bg-white/20"
-                  >
-                    Ta’lim yo‘li ({completed}/{required.length || 1})
+                  >{t('dashboard.pathCount')}{' '}{completed}/{required.length || 1})
                   </button>
                 )}
               </div>
 
               {started && roadmapError && !path && (
-                <p className="text-xs text-rose-200">
-                  Ta’lim yo‘li yuklanmadi. Yo‘lni ochib qayta urinib ko‘ring.
-                </p>
+                <p className="text-xs text-rose-200">{t('dashboard.pathFailed')}</p>
               )}
             </div>
           </section>
@@ -663,21 +622,19 @@ export function DashboardView({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2
                 id="my-courses-heading"
-                className="font-display text-lg font-extrabold tracking-tight text-white sm:text-xl"
-              >
-                Mening kurslarim
-              </h2>
+                className="font-display text-lg font-extrabold tracking-tight text-ink sm:text-xl"
+              >{t('dashboard.myCourses')}</h2>
 
               <div
                 role="tablist"
-                aria-label="Kurslar filtri"
-                className="inline-flex rounded-full border border-purple-400/25 bg-[#13173E]/90 p-1"
+                aria-label={t('dashboard.courseFilter')}
+                className="inline-flex rounded-full border border-hairline bg-paper p-1"
               >
                 {(
                   [
-                    ['active', 'Aktiv'],
-                    ['recommended', 'Tavsiya etilgan'],
-                    ['all', 'Barchasi'],
+                    ['active', t('courses.active')],
+                    ['recommended', t('dashboard.recommended')],
+                    ['all', t('courses.all')],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -689,7 +646,7 @@ export function DashboardView({
                     className={`cursor-pointer rounded-full px-3.5 py-1 text-xs font-bold transition-all ${
                       courseTab === key
                         ? 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white shadow-md shadow-purple-500/30'
-                        : 'text-indigo-200/75 hover:text-white'
+                        : 'text-slatefine hover:bg-sand hover:text-ink'
                     }`}
                   >
                     {label}
@@ -741,29 +698,29 @@ export function DashboardView({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
-                          <h3 className="truncate font-display text-sm font-extrabold text-white">
+                          <h3 className="truncate font-display text-sm font-extrabold text-ink">
                             {c.title}
                           </h3>
-                          <span className="shrink-0 font-mono text-xs font-extrabold text-indigo-100">
+                          <span className="shrink-0 font-mono text-xs font-extrabold text-slatefine">
                             {pct}%
                           </span>
                         </div>
-                        <p className="mt-0.5 truncate text-[11px] font-medium text-indigo-200/75">
-                          {done}/{total} dars · {isCurrent ? 'Faol kurs' : 'Asosiy kurs'}
+                        <p className="mt-0.5 truncate text-[11px] font-medium text-slatefine">
+                          {done}/{total}{' '}{t('dashboard.lessonCount')}{' '}{isCurrent ? t('dashboard.activeCourse') : t('dashboard.mainCourse')}
                         </p>
                       </div>
                     </div>
 
                     <div className="mt-4 flex items-center gap-3">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-sand">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${barClass} transition-all duration-500`}
-                          style={{ width: `${Math.max(pct, 8)}%` }}
+                          style={{ width: `${pct}%` }}
                         />
                       </div>
                       <button
                         type="button"
-                        aria-label={`${c.title} kursini ochish`}
+                        aria-label={t('dynamic.openCourse', { title: c.title })}
                         onClick={() => void handleCourseAction(c.id)}
                         className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] text-white shadow-md shadow-purple-500/35 transition-transform hover:scale-105"
                       >
@@ -781,17 +738,13 @@ export function DashboardView({
             <div className="flex items-center justify-between gap-2">
               <h2
                 id="subjects-heading"
-                className="font-display text-lg font-extrabold tracking-tight text-white sm:text-xl"
-              >
-                Fanlar
-              </h2>
+                className="font-display text-lg font-extrabold tracking-tight text-ink sm:text-xl"
+              >{t('dashboard.subjects')}</h2>
               <button
                 type="button"
                 onClick={onOpenCourses}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-purple-400/25 bg-[#151A44]/90 px-3.5 py-1.5 text-xs font-bold text-indigo-200 transition-colors hover:border-purple-400/50 hover:text-white"
-              >
-                Barcha fanlar
-                <ArrowRight aria-hidden="true" className="size-3.5" />
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-hairline bg-paper px-3.5 py-1.5 text-xs font-bold text-slatefine transition-colors hover:border-hairline hover:text-ink"
+              >{t('dashboard.allSubjects')}<ArrowRight aria-hidden="true" className="size-3.5" />
               </button>
             </div>
 
@@ -799,10 +752,10 @@ export function DashboardView({
               {[
                 {
                   id: 'sub_math',
-                  label: 'Matematika',
+                  label: t('admin.mathematics'),
                   symbol: 'π',
                   gradient: 'from-[#2E3888]/90 to-[#1D245B]/95 border-indigo-400/35',
-                  badgeBg: 'bg-indigo-500/30 text-indigo-200',
+                  badgeBg: 'bg-indigo-500/30 text-slatefine',
                   onClick: () => {
                     const target = courses.find((c) => c.subject === 'mathematics');
                     if (target) void handleCourseAction(target.id);
@@ -811,7 +764,7 @@ export function DashboardView({
                 },
                 {
                   id: 'sub_eng',
-                  label: 'Ingliz tili',
+                  label: t('dashboard.english'),
                   symbol: 'Aa',
                   gradient: 'from-[#6B2B5C]/90 to-[#3D1B44]/95 border-pink-400/35',
                   badgeBg: 'bg-rose-500/30 text-rose-200',
@@ -835,10 +788,10 @@ export function DashboardView({
                 },
                 {
                   id: 'sub_logic',
-                  label: 'Mantiq',
+                  label: t('admin.logic'),
                   icon: Atom,
                   gradient: 'from-[#1D4E6E]/90 to-[#14324A]/95 border-cyan-400/35',
-                  badgeBg: 'bg-cyan-500/30 text-cyan-200',
+                  badgeBg: 'bg-cyan-500/30 text-path',
                   onClick: () => {
                     const target = courses.find((c) => c.subject === 'logic');
                     if (target) void handleCourseAction(target.id);
@@ -847,15 +800,15 @@ export function DashboardView({
                 },
                 {
                   id: 'sub_diag',
-                  label: 'Diagnostika',
+                  label: t('auth.diagnostics'),
                   icon: FlaskConical,
-                  gradient: 'from-[#4B2882]/90 to-[#2B1954]/95 border-purple-400/35',
-                  badgeBg: 'bg-purple-500/30 text-purple-200',
+                  gradient: 'from-[#4B2882]/90 to-[#2B1954]/95 border-hairline',
+                  badgeBg: 'bg-purple-500/30 text-brand-dark',
                   onClick: onStartPlacement,
                 },
                 {
                   id: 'sub_map',
-                  label: 'Bilim xaritasi',
+                  label: t('path.map'),
                   icon: Compass,
                   gradient: 'from-[#1A5E4E]/90 to-[#123D35]/95 border-emerald-400/35',
                   badgeBg: 'bg-emerald-500/30 text-emerald-200',
@@ -903,50 +856,44 @@ export function DashboardView({
               <div className="min-w-0 flex-1">
                 <h2
                   id="daily-goal-heading"
-                  className="font-display text-base font-extrabold text-white"
-                >
-                  Bugungi maqsad
-                </h2>
+                  className="font-display text-base font-extrabold text-ink"
+                >{t('dashboard.todayGoal')}</h2>
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <p className="text-sm font-extrabold text-indigo-100">
+                  <p className="text-sm font-extrabold text-slatefine">
                     {started && required.length
-                      ? `${completed}/${required.length} dars`
-                      : `0/5 dars`}
+                      ? t('dynamic.lessonCompletion', { done: completed, total: required.length })
+                      : t('dynamic.lessonCount', { count: 0 })}
                   </p>
-                  <span className="rounded-lg bg-purple-500/25 px-2 py-0.5 font-mono text-xs font-extrabold text-purple-200">
+                  <span className="rounded-lg bg-purple-500/25 px-2 py-0.5 font-mono text-xs font-extrabold text-brand-dark">
                     {progressPct}%
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-sand">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-[#EC4899] via-[#A855F7] to-[#22D3EE] transition-all duration-500"
-                style={{ width: `${Math.max(progressPct, 12)}%` }}
+                style={{ width: `${progressPct}%` }}
               />
             </div>
 
-            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[11px] text-indigo-200/80">
-              <span>Kunlik reja: {profile?.dailyMinutes ?? 15} daq</span>
+            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-3 text-[11px] text-slatefine">
+              <span>{t('dashboard.dailyPlan')}{' '}{profile?.dailyMinutes ?? 15}{t('dashboard.min')}</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={onOpenOnboarding}
-                  className="cursor-pointer font-bold text-purple-300 hover:text-white"
-                >
-                  Rejani sozlash
-                </button>
+                  className="cursor-pointer font-bold text-brand-dark hover:text-ink"
+                >{t('dashboard.configure')}</button>
                 {started && (
                   <>
                     <span>·</span>
                     <button
                       type="button"
                       onClick={onStartPlacement}
-                      className="cursor-pointer font-bold text-cyan-300 hover:text-white"
-                    >
-                      Ixtiyoriy diagnostika
-                    </button>
+                      className="cursor-pointer font-bold text-path hover:text-ink"
+                    >{t('courses.optionalDiagnostic')}</button>
                   </>
                 )}
               </div>
@@ -970,16 +917,12 @@ export function DashboardView({
                 <h2
                   id="ai-tutor-card-heading"
                   className="font-display text-lg font-extrabold text-white"
-                >
-                  AI Tutor · Yo‘lchi AI
-                </h2>
-                <p className="mt-1 text-xs leading-relaxed text-indigo-100/90">
-                  Har qanday mavzuda savol bering, tushuntirish oling va mashq qiling.
-                </p>
+                >{t('dashboard.tutorTitle')}</h2>
+                <p className="mt-1 text-xs leading-relaxed text-indigo-100/90">{t('dashboard.tutorDescription')}</p>
               </div>
               <button
                 type="button"
-                aria-label="Savol berish"
+                aria-label={t('dashboard.ask')}
                 onClick={onOpenAITutor}
                 className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-gradient-to-br from-[#A855F7] to-[#6366F1] text-white shadow-lg shadow-purple-500/40 transition-transform hover:scale-105"
               >
@@ -998,16 +941,14 @@ export function DashboardView({
                 <Trophy aria-hidden="true" className="size-5 text-amber-400" />
                 <h2
                   id="achievements-heading"
-                  className="font-display text-base font-extrabold text-white"
-                >
-                  Mening yutuqlarim
-                </h2>
+                  className="font-display text-base font-extrabold text-ink"
+                >{t('dashboard.myAchievements')}</h2>
               </div>
               <button
                 type="button"
-                aria-label="Natijalarni ko‘rish"
+                aria-label={t('dashboard.viewResults')}
                 onClick={onOpenProgress}
-                className="grid size-8 cursor-pointer place-items-center rounded-full border border-purple-400/25 bg-white/5 text-indigo-200 transition-colors hover:bg-white/15 hover:text-white"
+                className="grid size-8 cursor-pointer place-items-center rounded-full border border-hairline bg-sand text-slatefine transition-colors hover:bg-sand hover:text-ink"
               >
                 <ArrowRight aria-hidden="true" className="size-4" />
               </button>
@@ -1015,38 +956,36 @@ export function DashboardView({
 
             <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
               {/* Badge 1: Streak */}
-              <div className="flex flex-col items-center rounded-2xl border border-white/8 bg-white/4 p-2.5">
+              <div className="flex flex-col items-center rounded-2xl border border-hairline bg-sand p-2.5">
                 <div className="grid size-13 place-items-center rounded-2xl bg-gradient-to-br from-amber-300 via-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30">
                   <Star aria-hidden="true" className="size-6 fill-white" />
                 </div>
-                <p className="mt-2 text-xs font-extrabold text-white">
-                  {profile?.streakDays ?? 0} kun
-                </p>
-                <p className="text-[10px] text-indigo-200/75">ketma-ket</p>
+                <p className="mt-2 text-xs font-extrabold text-ink">
+                  {profile?.streakDays ?? 0}{t('courses.day')}</p>
+                <p className="text-[10px] text-slatefine">{t('dashboard.consecutiveLower')}</p>
               </div>
 
               {/* Badge 2: Completed Lessons */}
-              <div className="flex flex-col items-center rounded-2xl border border-white/8 bg-white/4 p-2.5">
+              <div className="flex flex-col items-center rounded-2xl border border-hairline bg-sand p-2.5">
                 <div className="grid size-13 place-items-center rounded-2xl bg-gradient-to-br from-indigo-400 via-purple-500 to-amber-500 text-white shadow-lg shadow-purple-500/30">
                   <BookOpen aria-hidden="true" className="size-6" />
                 </div>
-                <p className="mt-2 text-xs font-extrabold text-white">
-                  {totalCompletedAllCourses} dars
-                </p>
-                <p className="text-[10px] text-indigo-200/75">tugallandi</p>
+                <p className="mt-2 text-xs font-extrabold text-ink">
+                  {totalCompletedAllCourses}{' '}{t('courses.lesson')}</p>
+                <p className="text-[10px] text-slatefine">{t('dashboard.completed')}</p>
               </div>
 
               {/* Badge 3: Mastery / XP */}
-              <div className="flex flex-col items-center rounded-2xl border border-white/8 bg-white/4 p-2.5">
+              <div className="flex flex-col items-center rounded-2xl border border-hairline bg-sand p-2.5">
                 <div className="grid size-13 place-items-center rounded-2xl bg-gradient-to-br from-fuchsia-400 via-purple-600 to-indigo-700 text-white shadow-lg shadow-fuchsia-500/30">
                   <Gem aria-hidden="true" className="size-6" />
                 </div>
-                <p className="mt-2 text-xs font-extrabold text-white">
+                <p className="mt-2 text-xs font-extrabold text-ink">
                   {masteredSkillsCount > 0
-                    ? `${masteredSkillsCount} ta test`
+                    ? t('dynamic.masteredTopics', { count: masteredSkillsCount })
                     : `${profile?.xp ?? 0} XP`}
                 </p>
-                <p className="text-[10px] text-indigo-200/75">a’lo natija</p>
+                <p className="text-[10px] text-slatefine">{t('dashboard.excellent')}</p>
               </div>
             </div>
           </section>
@@ -1064,10 +1003,8 @@ export function DashboardView({
         >
           <h2
             id="continue-card-heading"
-            className="font-display text-lg font-extrabold tracking-tight text-white"
-          >
-            Davom eting
-          </h2>
+            className="font-display text-lg font-extrabold tracking-tight text-ink"
+          >{t('dashboard.continue')}</h2>
 
           <div className="cosmos-card flex flex-1 items-center gap-4 p-4">
             {/* Lesson Media Thumbnail */}
@@ -1078,7 +1015,7 @@ export function DashboardView({
               />
               <button
                 type="button"
-                aria-label="Joriy darsni boshlash"
+                aria-label={t('dashboard.currentLesson')}
                 onClick={() =>
                   !started
                     ? onOpenCourses()
@@ -1096,26 +1033,25 @@ export function DashboardView({
             </div>
 
             <div className="min-w-0 flex-1 space-y-2">
-              <h3 className="line-clamp-2 font-display text-sm font-extrabold leading-snug text-white sm:text-base">
+              <h3 className="line-clamp-2 font-display text-sm font-extrabold leading-snug text-ink sm:text-base">
                 {nextTitle}
               </h3>
-              <p className="truncate text-xs font-medium text-indigo-200/80">
-                {course?.title ?? 'Asosiy fan'} · {completed + 1}-mavzu
-              </p>
+              <p className="truncate text-xs font-medium text-slatefine">
+                {course?.title ?? t('dashboard.mainSubject')} · {completed + 1}{t('path.topicNumber')}</p>
 
               <div className="flex items-center gap-2.5 pt-1">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-sand">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
-                    style={{ width: `${Math.max(progressPct, 10)}%` }}
+                    style={{ width: `${progressPct}%` }}
                   />
                 </div>
-                <span className="font-mono text-xs font-extrabold text-indigo-100">
+                <span className="font-mono text-xs font-extrabold text-slatefine">
                   {progressPct}%
                 </span>
                 <button
                   type="button"
-                  aria-label="Darsga o‘tish"
+                  aria-label={t('tutor.lesson')}
                   onClick={() =>
                     !started
                       ? onOpenCourses()
@@ -1135,11 +1071,11 @@ export function DashboardView({
                     type="button"
                     disabled={generating}
                     onClick={() => void generate()}
-                    className="cursor-pointer text-xs font-bold text-cyan-300 hover:text-white disabled:opacity-50"
+                    className="cursor-pointer text-xs font-bold text-path hover:text-ink disabled:opacity-50"
                   >
                     {generating
-                      ? 'Yo‘lchi dars tayyorlamoqda…'
-                      : '+ Yo‘lchi bilan dars tayyorlash'}
+                      ? t('dashboard.generating')
+                      : t('dashboard.generate')}
                   </button>
                 </div>
               )}
@@ -1158,13 +1094,11 @@ export function DashboardView({
           className="cosmos-card fade-up stagger-5 flex flex-col justify-between p-5 lg:col-span-4"
         >
           <div className="flex items-center gap-2">
-            <ChartNoAxesColumn aria-hidden="true" className="size-4.5 text-cyan-300" />
+            <ChartNoAxesColumn aria-hidden="true" className="size-4.5 text-path" />
             <h2
               id="overall-progress-heading"
-              className="font-display text-base font-extrabold text-white"
-            >
-              Umumiy rivojlanish
-            </h2>
+              className="font-display text-base font-extrabold text-ink"
+            >{t('dashboard.overall')}</h2>
           </div>
 
           <div className="mt-4 flex items-center gap-5">
@@ -1195,44 +1129,36 @@ export function DashboardView({
                   strokeWidth="10"
                   strokeLinecap="round"
                   pathLength="100"
-                  strokeDasharray={`${Math.max(overallMastery, 6)} 100`}
+                  strokeDasharray={`${overallMastery} 100`}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="font-display text-xl font-extrabold text-white">
+                <span className="font-display text-xl font-extrabold text-ink">
                   {overallMastery}%
                 </span>
-                <span className="text-[10px] font-semibold text-indigo-200/80">
-                  Umumiy
-                </span>
+                <span className="text-[10px] font-semibold text-slatefine">{t('dashboard.total')}</span>
               </div>
             </div>
 
             <div className="min-w-0 flex-1 space-y-2.5 text-xs">
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-indigo-100/90">
-                  <span className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
-                  Tugallangan darslar
-                </span>
-                <strong className="font-mono font-extrabold text-white">
+                <span className="flex items-center gap-2 text-slatefine">
+                  <span className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />{t('dashboard.completedLessons')}</span>
+                <strong className="font-mono font-extrabold text-ink">
                   {totalCompletedAllCourses}
                 </strong>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-indigo-100/90">
-                  <span className="size-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_#C084FC]" />
-                  Testlar
-                </span>
-                <strong className="font-mono font-extrabold text-white">
+                <span className="flex items-center gap-2 text-slatefine">
+                  <span className="size-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_#C084FC]" />{t('path.evaluatedTopics')}</span>
+                <strong className="font-mono font-extrabold text-ink">
                   {scoreValues.length}
                 </strong>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-indigo-100/90">
-                  <span className="size-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22D3EE]" />
-                  Yutuqlar
-                </span>
-                <strong className="font-mono font-extrabold text-white">
+                <span className="flex items-center gap-2 text-slatefine">
+                  <span className="size-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22D3EE]" />{t('progress.achievements')}</span>
+                <strong className="font-mono font-extrabold text-ink">
                   {earnedBadgesCount}
                 </strong>
               </div>
@@ -1246,47 +1172,31 @@ export function DashboardView({
           className="cosmos-card fade-up stagger-6 flex flex-col justify-between p-5 lg:col-span-3"
         >
           <div className="flex items-center gap-2">
-            <ChartNoAxesColumn aria-hidden="true" className="size-4.5 text-purple-300" />
+            <ChartNoAxesColumn aria-hidden="true" className="size-4.5 text-brand-dark" />
             <h2
               id="weekly-result-heading"
-              className="font-display text-base font-extrabold text-white"
-            >
-              Haftalik natija
-            </h2>
+              className="font-display text-base font-extrabold text-ink"
+            >{t('dashboard.weekly')}</h2>
           </div>
 
-          <div className="mt-4 grid h-28 grid-cols-7 items-end gap-2 pt-2">
-            {weeklyBars.map((bar, idx) => {
-              const isPeak = idx === 3 || idx === 4;
-              return (
-                <div
-                  key={bar.label}
-                  className="flex h-full flex-col items-center justify-end gap-1.5"
-                  title={`${bar.label}: ${bar.minutes} daqiqa`}
-                >
-                  <div className="flex h-20 w-full items-end justify-center rounded-full bg-white/6 p-0.5">
-                    <div
-                      className={`w-full rounded-full transition-all duration-500 ${
-                        isPeak
-                          ? 'bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.45)]'
-                          : 'bg-gradient-to-t from-blue-600 via-indigo-500 to-cyan-400'
-                      }`}
-                      style={{ height: `${bar.heightPct}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold text-indigo-200/80">
-                    {bar.label}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="mt-4">
+            {activityFailed ? (
+              <div role="alert" className="space-y-2 text-sm text-slatefine">
+                <p>{t('progress.activityFailed')}</p>
+                <Button variant="outline" size="sm" onClick={() => setActivityRetry((count) => count + 1)}>
+                  {t('courses.retry')}
+                </Button>
+              </div>
+            ) : activity === null ? (
+              <p role="status" className="text-sm text-slatefine">{t('common.loading')}</p>
+            ) : <WeeklyActivity days={activity} />}
           </div>
         </section>
       </div>
 
       {/* MOBILE PREMIUM TA'LIM CARD (shown on <1024px where sidebar is hidden) */}
       <section
-        aria-label="Premium Ta’lim"
+        aria-label={t('dashboard.premium')}
         className="fade-up relative overflow-hidden rounded-3xl border border-purple-400/30 bg-gradient-to-b from-[#231B59]/90 via-[#1A1545]/95 to-[#141138] p-5 shadow-[0_14px_34px_-8px_rgba(124,58,237,0.35)] lg:hidden"
       >
         <div
@@ -1298,23 +1208,15 @@ export function DashboardView({
             <Crown aria-hidden="true" className="size-5" />
           </span>
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-400/15 px-3 py-1 text-xs font-extrabold text-amber-200">
-            <Clock aria-hidden="true" className="size-3.5" />
-            Tez kunda
-          </span>
+            <Clock aria-hidden="true" className="size-3.5" />{t('dashboard.soon')}</span>
         </div>
-        <h2 className="mt-3 font-display text-lg font-extrabold text-white">
-          Premium Ta’lim
-        </h2>
-        <p className="mt-1 text-xs leading-relaxed text-indigo-200/80">
-          Cheksiz darslar, AI yordam va ko‘proq imkoniyatlar
-        </p>
+        <h2 className="mt-3 font-display text-lg font-extrabold text-white">{t('dashboard.premium')}</h2>
+        <p className="mt-1 text-xs leading-relaxed text-indigo-200/80">{t('dashboard.premiumDescription')}</p>
         <button
           type="button"
           onClick={() => setPremiumSoonOpen(true)}
           className="cosmos-cta-btn mt-4 w-full py-3 px-4 text-xs"
-        >
-          Obuna bo‘lish
-          <ArrowRight aria-hidden="true" className="size-4" />
+        >{t('dashboard.subscribe')}<ArrowRight aria-hidden="true" className="size-4" />
         </button>
         {premiumSoonOpen && (
           <p
@@ -1322,9 +1224,7 @@ export function DashboardView({
             aria-live="polite"
             className="fade-up mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/35 bg-cyan-500/15 px-3 py-2.5 text-center text-xs font-bold text-cyan-200"
           >
-            <Sparkles aria-hidden="true" className="size-4 shrink-0 text-cyan-300" />
-            Tez orada ishga tushadi!
-          </p>
+            <Sparkles aria-hidden="true" className="size-4 shrink-0 text-cyan-300" />{t('dashboard.comingSoon')}</p>
         )}
       </section>
     </div>

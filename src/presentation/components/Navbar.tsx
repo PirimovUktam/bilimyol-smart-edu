@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
 import {
   ArrowRight,
@@ -26,25 +27,26 @@ interface NavbarProps {
 }
 
 const studyLinks = [
-  { id: 'dashboard', label: 'Bosh sahifa', icon: House },
-  { id: 'course-selection', label: 'Kurslar', icon: Layers },
-  { id: 'roadmap', label: 'Ta’lim yo‘li', icon: Route },
-  { id: 'ai-tutor', label: 'Yo‘lchi AI', icon: Sparkles },
-  { id: 'progress', label: 'Natijalar', icon: ChartNoAxesCombined },
-  { id: 'knowledge-map', label: 'Yutuqlar va xarita', icon: Trophy },
+  { id: 'dashboard', label: 'common.home', icon: House },
+  { id: 'course-selection', label: 'common.courses', icon: Layers },
+  { id: 'roadmap', label: 'common.path', icon: Route },
+  { id: 'ai-tutor', label: 'common.tutor', icon: Sparkles },
+  { id: 'progress', label: 'common.progress', icon: ChartNoAxesCombined },
+  { id: 'knowledge-map', label: 'common.map', icon: Trophy },
 ] as const;
 
 const mobileLinks = [
-  { id: 'dashboard', label: 'Bosh sahifa', icon: House },
-  { id: 'roadmap', label: 'Ta’lim yo‘li', icon: Route },
-  { id: 'ai-tutor', label: 'Yo‘lchi AI', icon: Sparkles },
-  { id: 'progress', label: 'Natijalar', icon: ChartNoAxesCombined },
-  { id: 'profile', label: 'Profil', icon: Settings },
+  { id: 'dashboard', label: 'common.home', icon: House },
+  { id: 'roadmap', label: 'common.path', icon: Route },
+  { id: 'ai-tutor', label: 'common.tutor', icon: Sparkles },
+  { id: 'progress', label: 'common.progress', icon: ChartNoAxesCombined },
+  { id: 'profile', label: 'common.profile', icon: Settings },
 ] as const;
 
-const adminLink = { id: 'admin', label: 'Boshqaruv', icon: Shield } as const;
+const adminLink = { id: 'admin', label: 'common.admin', icon: Shield } as const;
 
 export function Navbar({ currentView, onNavigate }: NavbarProps) {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const course = useCourseStore((state) => state.activeCourse);
   const [premiumSoonOpen, setPremiumSoonOpen] = useState(false);
@@ -57,7 +59,7 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
   }, [premiumSoonOpen]);
   const name = profile
     ? [profile.firstName, profile.lastName].filter(Boolean).join(' ')
-    : 'Profil';
+    : t('profile.profile');
   const home = isAdmin ? 'admin' : 'dashboard';
   const section =
     currentView === 'lesson' || currentView === 'placement'
@@ -72,20 +74,20 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
       type="button"
       onClick={() => select('course-selection')}
       aria-current={section === 'course-selection' ? 'page' : undefined}
-      aria-label="Fanni almashtirish"
+      aria-label={t('common.switchCourse')}
       className={
         compact
-          ? 'flex min-h-11 min-w-0 items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C47] px-3.5 text-xs font-bold text-indigo-100 shadow-sm transition-transform active:scale-95'
-          : 'mt-4 flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-purple-400/25 bg-[#161B44]/85 px-3.5 text-left text-xs font-bold text-indigo-100 transition-all hover:border-purple-400/50 hover:bg-[#1D2358]'
+          ? 'flex min-h-11 min-w-0 items-center gap-1.5 rounded-full border border-hairline bg-paper px-3.5 text-xs font-bold text-slatefine shadow-sm transition-transform active:scale-95'
+          : 'mt-4 flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-hairline bg-paper px-3.5 text-left text-xs font-bold text-slatefine transition-all hover:border-hairline hover:bg-paper'
       }
     >
       <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#8B5CF6] to-[#06B6D4] text-white shadow-xs">
         <BookOpen aria-hidden="true" className="size-3.5" />
       </span>
-      <span className="max-w-32 truncate">{course?.title ?? 'Fan tanlash'}</span>
+      <span className="max-w-32 truncate">{course?.title ?? t('common.chooseCourse')}</span>
       <ChevronDown
         aria-hidden="true"
-        className="ml-auto size-4 shrink-0 text-purple-300"
+        className="ml-auto size-4 shrink-0 text-brand-dark"
       />
     </button>
   );
@@ -95,16 +97,16 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
       <aside className="workspace-sidebar">
         <button
           type="button"
-          aria-label="BilimYo‘l bosh sahifasi"
+          aria-label={t('shell.home')}
           onClick={() => select(home)}
           className="w-full cursor-pointer rounded-2xl px-2 py-1.5 text-left transition-transform hover:scale-[1.01]"
         >
-          <BilimYolLogo variant="dark" showSubtitle={false} />
+          <BilimYolLogo variant="auto" showSubtitle={false} />
         </button>
 
         {!isAdmin && subjectButton(false)}
 
-        <nav aria-label="Asosiy navigatsiya" className="mt-5 space-y-1.5">
+        <nav aria-label={t('common.navigation')} className="mt-5 space-y-1.5">
           {(isAdmin ? [adminLink] : studyLinks).map(
             ({ id, label, icon: Icon }) => (
               <button
@@ -115,7 +117,7 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
                 className="workspace-nav-link"
               >
                 <Icon aria-hidden="true" className="size-5 shrink-0" />
-                {label}
+                {t(label)}
               </button>
             ),
           )}
@@ -133,23 +135,15 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
                   <Crown aria-hidden="true" className="size-5" />
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-200">
-                  <Clock aria-hidden="true" className="size-3" />
-                  Tez kunda
-                </span>
+                  <Clock aria-hidden="true" className="size-3" />{t('dashboard.soon')}</span>
               </div>
-              <h3 className="mt-2.5 font-display text-base font-extrabold text-white">
-                Premium Ta’lim
-              </h3>
-              <p className="mt-1 text-xs leading-relaxed text-indigo-200/80">
-                Cheksiz darslar, AI yordam va ko‘proq imkoniyatlar
-              </p>
+              <h3 className="mt-2.5 font-display text-base font-extrabold text-white">{t('dashboard.premium')}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-indigo-200/80">{t('dashboard.premiumDescription')}</p>
               <button
                 type="button"
                 onClick={() => setPremiumSoonOpen(true)}
                 className="cosmos-cta-btn mt-3.5 w-full py-2.5 px-3.5 text-xs"
-              >
-                Obuna bo‘lish
-                <ArrowRight aria-hidden="true" className="size-3.5" />
+              >{t('dashboard.subscribe')}<ArrowRight aria-hidden="true" className="size-3.5" />
               </button>
               {premiumSoonOpen && (
                 <p
@@ -157,28 +151,26 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
                   aria-live="polite"
                   className="fade-up mt-2.5 flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/35 bg-cyan-500/15 px-3 py-2 text-center text-[11px] font-bold text-cyan-200"
                 >
-                  <Sparkles aria-hidden="true" className="size-3.5 shrink-0 text-cyan-300" />
-                  Tez orada ishga tushadi!
-                </p>
+                  <Sparkles aria-hidden="true" className="size-3.5 shrink-0 text-cyan-300" />{t('dashboard.comingSoon')}</p>
               )}
             </div>
           )}
 
           <button
             type="button"
-            aria-label="Profil"
+            aria-label={t('common.profile')}
             aria-current={section === 'profile' ? 'page' : undefined}
             onClick={() => select('profile')}
-            className="workspace-nav-link gap-3! border border-purple-400/20 bg-[#151A42]/80 p-2.5!"
+            className="workspace-nav-link gap-3! border border-hairline bg-paper p-2.5!"
           >
             <Avatar
               name={name}
-              className="bg-purple-500/25! text-purple-200!"
+              className="bg-purple-500/25! text-brand-dark!"
             />
-            <span className="min-w-0 flex-1 truncate text-white">{name}</span>
+            <span className="min-w-0 flex-1 truncate text-ink">{name}</span>
             <Settings
               aria-hidden="true"
-              className="size-4 shrink-0 text-indigo-300"
+              className="size-4 shrink-0 text-slatefine"
             />
           </button>
         </div>
@@ -187,27 +179,25 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
       <header className="workspace-mobile-header">
         <button
           type="button"
-          aria-label="BilimYo‘l bosh sahifasi"
+          aria-label={t('shell.home')}
           onClick={() => select(home)}
           className="min-w-0 cursor-pointer text-left"
         >
-          <BilimYolLogo size="sm" variant="dark" showSubtitle={false} />
+          <BilimYolLogo size="sm" variant="auto" showSubtitle={false} />
         </button>
         {isAdmin ? (
           <button
             type="button"
             onClick={() => select('profile')}
-            className="min-h-11 px-3 text-sm font-bold text-white"
-          >
-            Profil
-          </button>
+            className="min-h-11 px-3 text-sm font-bold text-ink"
+          >{t('profile.profile')}</button>
         ) : (
           subjectButton(true)
         )}
       </header>
 
       {!isAdmin && (
-        <nav className="workspace-mobile-nav" aria-label="Mobil navigatsiya">
+        <nav className="workspace-mobile-nav" aria-label={t('common.mobileNavigation')}>
           {mobileLinks.map(({ id, label, icon: Icon }) => (
             <button
               type="button"
@@ -217,7 +207,7 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
               className="workspace-tab"
             >
               <Icon aria-hidden="true" className="size-5" />
-              {label}
+              {t(label)}
             </button>
           ))}
         </nav>
@@ -226,28 +216,22 @@ export function Navbar({ currentView, onNavigate }: NavbarProps) {
       {premiumSoonOpen && (
         <div
           role="dialog"
-          aria-label="Premium Ta’lim haqida xabar"
-          className="fade-up fixed right-4 bottom-20 z-50 max-w-sm rounded-2xl border border-purple-400/45 bg-[#13173D]/95 p-4 text-white shadow-[0_20px_50px_rgba(4,6,22,0.85)] backdrop-blur-xl lg:top-6 lg:right-6 lg:bottom-auto"
+          aria-label={t('dashboard.premiumNotice')}
+          className="fade-up fixed right-4 bottom-20 z-50 max-w-sm rounded-2xl border border-hairline bg-paper p-4 text-ink shadow-[0_20px_50px_rgba(4,6,22,0.85)] backdrop-blur-xl lg:top-6 lg:right-6 lg:bottom-auto"
         >
           <div className="flex items-start gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-purple-500/25 text-amber-300 ring-1 ring-amber-400/35">
               <Crown aria-hidden="true" className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-display text-sm font-extrabold text-white">
-                Tez orada ishga tushadi!
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-indigo-200/90">
-                Premium Ta’lim obunasi yaqin kunlarda ishga tushiriladi. Hozircha barcha darslar va Yo‘lchi AI imkoniyatlari siz uchun ochiq!
-              </p>
+              <p className="font-display text-sm font-extrabold text-ink">{t('dashboard.comingSoon')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slatefine">{t('dashboard.premiumNoticeDescription')}</p>
             </div>
             <button
               type="button"
               onClick={() => setPremiumSoonOpen(false)}
-              className="cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-indigo-300 hover:bg-white/10 hover:text-white"
-            >
-              Yopish
-            </button>
+              className="cursor-pointer rounded-lg px-2 py-1 text-xs font-bold text-slatefine hover:bg-sand hover:text-ink"
+            >{t('courses.close')}</button>
           </div>
         </div>
       )}

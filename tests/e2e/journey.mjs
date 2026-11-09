@@ -198,6 +198,53 @@ try {
     await heading('Profil');
     console.log('PASS ' + width + 'px, ' + views.length + ' screens, navigation and browser Back');
   }
+
+  const language = page.locator('#interface-language');
+  const root = page.locator('html');
+  assert.equal(await language.inputValue(), 'uz');
+  assert.equal(await root.getAttribute('data-theme'), 'light');
+  const lightBackground = await page.locator('body').evaluate((node) => getComputedStyle(node).backgroundColor);
+  await click('Qorong‘i rejimni yoqish', page);
+  await language.selectOption('ru');
+  await click('Включить светлую тему', page);
+  assert.equal(await root.getAttribute('data-theme'), 'light');
+  await click('Включить тёмную тему', page);
+  assert.notEqual(await page.locator('body').evaluate((node) => getComputedStyle(node).backgroundColor), lightBackground);
+  await page.reload();
+  await heading('Профиль');
+  assert.equal(await root.getAttribute('lang'), 'ru');
+  assert.equal(await root.getAttribute('data-theme'), 'dark');
+  assert.equal(await language.inputValue(), 'ru');
+
+  const russianViews = [
+    ['dashboard', /Здравствуйте/],
+    ['course-selection', 'Выберите подходящий предмет'],
+    ['onboarding', 'Настройте свой план обучения'],
+    ['placement', 'Входная диагностика'],
+    ['knowledge-map', 'Карта знаний'],
+    ['roadmap', 'Мой путь обучения'],
+    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni ochish'],
+    ['ai-tutor', 'Yo‘lchi AI'],
+    ['progress', 'Результаты обучения'],
+    ['profile', 'Профиль'],
+  ];
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    for (const [view, title] of russianViews) {
+      await page.goto(base + '/?view=' + view, { waitUntil: 'domcontentloaded' });
+      await heading(title);
+      assert.equal(await root.getAttribute('data-theme'), 'dark');
+      await checkWidth(view + ' (ru, dark)', width);
+      if (view === 'dashboard') await screenshot('dashboard-ru-dark-' + width + '.png');
+    }
+  }
+  await page.goto(base + '/?view=ai-tutor');
+  await page.getByRole('textbox', { name: 'Напишите вопрос Yo‘lchi AI' }).fill('Как раскрыть квадрат?');
+  await click('Отправить вопрос');
+  await main.getByText(/Давайте разберём вопрос по шагам/).waitFor();
+  await language.selectOption('uz');
+  await main.getByRole('button', { name: 'Savolni yuborish' }).waitFor();
+  console.log('PASS theme and language switching, reload, Russian tutor demo and 20 Russian dark layouts');
   assert.deepEqual(remoteRequests, []);
   assert.deepEqual(errors, []);
   console.log('E2E PASSED — ' + assertions + ' layout assertions and demo journeys');

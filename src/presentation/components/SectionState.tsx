@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { AlertCircle, BookOpen, LoaderCircle } from 'lucide-react';
 import { Button } from './Button';
 
@@ -9,6 +10,7 @@ interface SectionStateProps {
 }
 
 export function SectionState({ title, description, kind = 'empty', onRetry }: SectionStateProps) {
+  const { t } = useTranslation();
   const Icon = kind === 'loading' ? LoaderCircle : kind === 'error' ? AlertCircle : BookOpen;
   return (
     <div
@@ -20,7 +22,7 @@ export function SectionState({ title, description, kind = 'empty', onRetry }: Se
         : 'mx-auto mb-3 size-6 text-brand'} />
       <p className="font-bold text-ink">{title}</p>
       {description && <p className="mt-1 text-sm text-slatefine">{description}</p>}
-      {onRetry && <Button type="button" variant="outline" className="mt-4" onClick={onRetry}>Qayta urinish</Button>}
+      {onRetry && <Button type="button" variant="outline" className="mt-4" onClick={onRetry}>{t('courses.retry')}</Button>}
     </div>
   );
 }

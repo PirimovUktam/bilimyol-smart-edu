@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss" source("./");
+@source "../index.html";
 
 /* ============================================================================
    BilimYo'l Smart Edu — Modern Interactive EdTech Design System

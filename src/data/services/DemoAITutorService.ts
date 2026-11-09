@@ -329,7 +329,9 @@ export class DemoAITutorService implements IAITutorService {
     const topic = request.topic || 'bu mavzu';
     return {
       tutorName: 'Yo‘lchi AI',
-      answer: `${topic} bo‘yicha savolingiz juda yaxshi! Keling, birgalikda qadam-baqadam ko‘rib chiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qo‘llab ko‘ramiz.`,
+      answer: request.language === 'ru'
+        ? 'Давайте разберём вопрос по шагам. Какое правило здесь подходит? Попробуйте применить его к простому примеру.'
+        : `${topic} bo‘yicha savolingiz juda yaxshi! Keling, birgalikda qadam-baqadam ko‘rib chiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qo‘llab ko‘ramiz.`,
       isAiGenerated: false,
       isDeterministicFallback: true,
     };

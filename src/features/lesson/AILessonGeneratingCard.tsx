@@ -1,3 +1,5 @@
+import { translate as t } from '@/core/locales/useTranslation';
+import { useTranslation } from '@/core/locales/useTranslation';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, AlertCircle, RefreshCw, ArrowLeft, Loader2, Target, Lightbulb, Zap } from 'lucide-react';
@@ -14,13 +16,14 @@ interface AILessonGeneratingCardProps {
 }
 
 export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
-  topic = 'Dars mavzusi',
-  courseTitle = 'Fan',
+  topic = t('lesson.topic'),
+  courseTitle = t('admin.subject'),
   error,
   onRetry,
   onCancel,
   timeoutMs = 15000,
 }) => {
+  const { t } = useTranslation();
   const [isTimedOut, setIsTimedOut] = useState(false);
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
   const hasError = Boolean(error || isTimedOut);
   const displayErrorMessage =
     error ||
-    'Darsni shakllantirish uchun serverdan javob kutish vaqti tugadi (Timeout). Iltimos, qayta urinib ko‘ring.';
+    t('lesson.timeout');
 
   const handleRetry = () => {
     setIsTimedOut(false);
@@ -53,7 +56,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
         transition={{ duration: 0.3 }}
         className="max-w-md w-full"
       >
-        <Card className="p-6 sm:p-8 shadow-2xl border-slate-200/90 bg-white relative overflow-hidden space-y-6">
+        <Card className="p-6 sm:p-8 shadow-2xl border-hairline/90 bg-paper relative overflow-hidden space-y-6">
           {/* Subtle gradient accent header */}
           <div
             className={`absolute top-0 left-0 right-0 h-1.5 ${
@@ -71,10 +74,8 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Darsni ochishda xatolik
-                </h2>
-                <p className="text-xs font-semibold text-slate-500">
+                <h2 className="text-xl sm:text-2xl font-black text-ink tracking-tight">{t('lesson.openFailed')}</h2>
+                <p className="text-xs font-semibold text-slatefine">
                   {courseTitle} • <span className="text-slate-700">{topic}</span>
                 </p>
                 <div className="p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200/90 text-coral text-xs font-medium text-left leading-relaxed">
@@ -89,9 +90,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                     onClick={handleRetry}
                     leftIcon={<RefreshCw className="w-4 h-4" />}
                     className="flex-1 font-bold justify-center"
-                  >
-                    Qayta urinish
-                  </Button>
+                  >{t('courses.retry')}</Button>
                 )}
                 {onCancel && (
                   <Button
@@ -99,9 +98,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                     onClick={onCancel}
                     leftIcon={<ArrowLeft className="w-4 h-4" />}
                     className="flex-1 font-bold justify-center"
-                  >
-                    Ortga qaytish
-                  </Button>
+                  >{t('courses.back')}</Button>
                 )}
               </div>
             </div>
@@ -114,10 +111,8 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                   <Sparkles className="w-8 h-8 animate-pulse text-amber-200" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                    AI dars yaratmoqda...
-                  </h2>
-                  <p className="text-xs font-semibold text-slate-500 mt-1">
+                  <h2 className="text-2xl font-black text-ink tracking-tight">{t('lesson.generating')}</h2>
+                  <p className="text-xs font-semibold text-slatefine mt-1">
                     {courseTitle} • <span className="text-blue-600 font-bold">{topic}</span>
                   </p>
                 </div>
@@ -125,12 +120,10 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
 
               {/* Indeterminate Animated Progress Bar */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+                <div className="flex items-center justify-between text-xs font-bold text-slatefine">
                   <span className="flex items-center gap-1.5 text-blue-600">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Yo‘lchi AI tahlili jarayonda...
-                  </span>
-                  <span className="text-slate-400 font-semibold text-[11px]">Kuting...</span>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />{t('lesson.analyzing')}</span>
+                  <span className="text-slate-400 font-semibold text-[11px]">{t('lesson.wait')}</span>
                 </div>
                 <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden relative">
                   <motion.div
@@ -145,24 +138,22 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                     }}
                   />
                 </div>
-                <p className="text-[11px] text-slate-500 text-center italic pt-1">
-                  Bilim darajangizga mos tushuntirish va misollar generatsiya qilinmoqda...
-                </p>
+                <p className="text-[11px] text-slatefine text-center italic pt-1">{t('lesson.generatingDescription')}</p>
               </div>
 
               {/* Pedagogical Feature Pills */}
               <div className="pt-4 border-t border-slate-100 grid grid-cols-1 gap-2 text-xs font-semibold text-slate-700">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-mint shrink-0" />
-                  <span>Siz tanlagan fanga mos interaktiv kontent</span>
+                  <span>{t('lesson.matched')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>Real hayotiy misollar va tushuntirishlar</span>
+                  <span>{t('lesson.examples')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Dars yakunida o‘zlashtirishni tekshiruvchi test</span>
+                  <span>{t('lesson.finalQuiz')}</span>
                 </div>
               </div>
 
@@ -173,9 +164,7 @@ export const AILessonGeneratingCard: React.FC<AILessonGeneratingCardProps> = ({
                     type="button"
                     onClick={onCancel}
                     className="text-xs text-slate-400 hover:text-slate-700 font-semibold transition-colors cursor-pointer"
-                  >
-                    Kutishni bekor qilish va ortga qaytish
-                  </button>
+                  >{t('lesson.cancelWait')}</button>
                 </div>
               )}
             </div>

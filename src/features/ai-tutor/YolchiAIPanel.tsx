@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useRef, useState } from 'react';
 import type { AIExplanationResponse } from '@/data/services/IAITutorService';
 import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
@@ -17,6 +18,7 @@ interface YolchiAIPanelProps {
 }
 
 export function YolchiAIPanel({ question, answer, onProceedToReinforcement, onClose }: YolchiAIPanelProps) {
+  const { t } = useTranslation();
   const [retry, setRetry] = useState(0);
   const [explanation, setExplanation] = useState<AIExplanationResponse | null>(null);
   const [error, setError] = useState('');
@@ -35,18 +37,18 @@ export function YolchiAIPanel({ question, answer, onProceedToReinforcement, onCl
     void request.current.then((value) => {
       if (active) setExplanation(value);
     }).catch((failure: unknown) => {
-      if (active) setError(failure instanceof Error ? failure.message : 'Izohni yuklab bo‘lmadi.');
+      if (active) setError(failure instanceof Error ? failure.message : t('tutor.explanationFailed'));
     });
     return () => { active = false; };
-  }, [question, answer, retry]);
+  }, [question, answer, retry, t]);
 
   return (
-    <Modal isOpen title="Yo‘lchi bilan xato tahlili" maxWidth="md" onClose={onClose}>
+    <Modal isOpen title={t('tutor.mistakes')} maxWidth="md" onClose={onClose}>
       <div className="space-y-4">
         {explanation ? (
           <div className="space-y-3 rounded-xl border border-hairline bg-canvas p-4">
             <p className="text-xs font-semibold text-brand-dark">
-              {explanation.isDeterministicFallback || explanation.isFallback ? 'Tayyor izoh' : 'Yo‘lchi AI izohi'}
+              {explanation.isDeterministicFallback || explanation.isFallback ? t('tutor.prepared') : t('tutor.explanation')}
             </p>
             <h3 className="font-bold">{explanation.title}</h3>
             <LearningText text={explanation.explanation} />
@@ -59,12 +61,12 @@ export function YolchiAIPanel({ question, answer, onProceedToReinforcement, onCl
               request.current = null;
               setError('');
               setRetry((value) => value + 1);
-            }}>Qayta urinish</Button>
+            }}>{t('courses.retry')}</Button>
           </div>
         ) : (
-          <p role="status">Yo‘lchi topshirilgan javobni tahlil qilmoqda…</p>
+          <p role="status">{t('tutor.analyzing')}</p>
         )}
-        <Button onClick={onProceedToReinforcement}>Mavzuni mustahkamlash mashqi</Button>
+        <Button onClick={onProceedToReinforcement}>{t('tutor.reinforce')}</Button>
       </div>
     </Modal>
   );

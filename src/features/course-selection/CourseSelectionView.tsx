@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -7,6 +8,7 @@ import { PageHeader } from '@/presentation/components/PageHeader';
 import { SubjectSelector } from './SubjectSelector';
 
 export function CourseSelectionView({ onSelectCourse }: { onSelectCourse: (courseId: string) => void }) {
+  const { t } = useTranslation();
   const courses = useCourseStore((state) => state.courses);
   const activeCourseId = useCourseStore((state) => state.activeCourse?.id);
   const isLoading = useCourseStore((state) => state.isLoading);
@@ -36,19 +38,19 @@ export function CourseSelectionView({ onSelectCourse }: { onSelectCourse: (cours
   return (
     <div className="learning-page space-y-6 sm:space-y-8">
       <PageHeader
-        eyebrow="Fanlar katalogi"
-        title="O‘zingizga mos fanni tanlang"
-        highlightWord="fanni tanlang"
-        description="Har bir fanning natijalari alohida saqlanadi. Istalgan vaqtda boshqa fanga o‘tib, keyin o‘qishni davom ettirishingiz mumkin."
+        eyebrow={t('courses.subjects')}
+        title={t('courses.chooseSubject')}
+        highlightWord={t('courses.chooseHighlight')}
+        description={t('courses.separateProgress')}
       />
       {courses.length > 6 && (
         <label className="relative block max-w-sm">
-          <span className="sr-only">Fanlarni qidirish</span>
+          <span className="sr-only">{t('courses.search')}</span>
           <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slatefine" />
           <input
             type="search"
             className="form-input pl-10 pr-4"
-            placeholder="Fanlarni qidirish"
+            placeholder={t('courses.search')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -62,7 +64,7 @@ export function CourseSelectionView({ onSelectCourse }: { onSelectCourse: (cours
         completedByCourseId={completedByCourseId}
         progressByCourseId={progressByCourseId}
         onSelect={choose}
-        ariaLabel="Mavjud fanlar"
+        ariaLabel={t('courses.available')}
       />
     </div>
   );

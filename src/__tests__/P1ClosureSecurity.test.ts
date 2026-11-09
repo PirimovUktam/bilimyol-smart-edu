@@ -113,6 +113,6 @@ describe('P1 closure: server evaluation and production persistence boundaries', 
     const progressView = source('src/features/progress/ProgressView.tsx');
 
     expect(lessonStore).toContain('Dars progressi saqlanmadi:');
-    expect(progressView).toContain('kind="error" title="Faollik yuklanmadi"');
+    expect(progressView).toContain('kind="error" title={t(\'progress.activityFailed\')}');
   });
 });

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Navbar } from '@/presentation/components/Navbar';
 import { LoginView } from '@/features/auth/LoginView';
@@ -18,14 +19,24 @@ import { Button } from '@/presentation/components/Button';
 
 import { SectionState } from '@/presentation/components/SectionState';
 import { RouteErrorBoundary } from '@/presentation/components/RouteErrorBoundary';
+import type { ComponentType } from 'react';
+
+function lazyAnimated<Props extends object>(load: () => Promise<ComponentType<Props>>) {
+  return lazy(async () => {
+    const [View, { withMotionPreferences }] = await Promise.all([
+      load(), import('@/presentation/components/withMotionPreferences'),
+    ]);
+    return { default: withMotionPreferences(View) };
+  });
+}
 
 // Route-level code-splitting for heavy, rarely-opened surfaces. The marketing
 // slides (~2.7k lines) and the admin panel only load when actually visited.
-const LazyPitchShowcaseView = lazy(() =>
-  import('@/features/pitch/PitchShowcaseView').then((m) => ({ default: m.PitchShowcaseView }))
+const LazyPitchShowcaseView = lazyAnimated(() =>
+  import('@/features/pitch/PitchShowcaseView').then((m) => m.PitchShowcaseView)
 );
-const LazyDemoShowcaseView = lazy(() =>
-  import('@/features/pitch/DemoShowcaseView').then((m) => ({ default: m.DemoShowcaseView }))
+const LazyDemoShowcaseView = lazyAnimated(() =>
+  import('@/features/pitch/DemoShowcaseView').then((m) => m.DemoShowcaseView)
 );
 const LazyAdminDashboardView = lazy(() =>
   import('@/features/admin/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView }))
@@ -45,17 +56,17 @@ const LazyPlacementTestView = lazy(() =>
 const LazyKnowledgeMapView = lazy(() =>
   import('@/features/knowledge-map/KnowledgeMapView').then((m) => ({ default: m.KnowledgeMapView }))
 );
-const LazyRoadmapView = lazy(() =>
-  import('@/features/roadmap/RoadmapView').then((m) => ({ default: m.RoadmapView }))
+const LazyRoadmapView = lazyAnimated(() =>
+  import('@/features/roadmap/RoadmapView').then((m) => m.RoadmapView)
 );
-const LazyInteractiveLessonView = lazy(() =>
-  import('@/features/lesson/InteractiveLessonView').then((m) => ({ default: m.InteractiveLessonView }))
+const LazyInteractiveLessonView = lazyAnimated(() =>
+  import('@/features/lesson/InteractiveLessonView').then((m) => m.InteractiveLessonView)
 );
 const LazyDashboardView = lazy(() =>
   import('@/features/dashboard/DashboardView').then((m) => ({ default: m.DashboardView }))
 );
-const LazyYolchiAIChatView = lazy(() =>
-  import('@/features/ai-tutor/YolchiAIChatView').then((m) => ({ default: m.YolchiAIChatView }))
+const LazyYolchiAIChatView = lazyAnimated(() =>
+  import('@/features/ai-tutor/YolchiAIChatView').then((m) => m.YolchiAIChatView)
 );
 const LazyProgressView = lazy(() =>
   import('@/features/progress/ProgressView').then((m) => ({ default: m.ProgressView }))
@@ -65,9 +76,12 @@ const LazyProfileView = lazy(() =>
 );
 
 
-const RouteFallback = () => (
-  <div className="learning-page"><SectionState kind="loading" title="Sahifa yuklanmoqda…" /></div>
+const RouteFallback = () => {
+  const { t } = useTranslation();
+  return (
+  <div className="learning-page"><SectionState kind="loading" title={t('shell.pageLoading')} /></div>
 );
+};
 
 const views = [
   'pitch', 'demo', 'course-selection', 'onboarding', 'placement', 'knowledge-map',
@@ -94,6 +108,7 @@ const learningViews = new Set<AppView>(['lesson', 'placement', 'roadmap', 'knowl
 export { type AppView };
 
 export function AppRouter() {
+  const { t } = useTranslation();
   const [{ view, lessonId }, setRoute] = useState(readRoute);
   const main = useRef<HTMLElement>(null);
   const navigate = useCallback((next: AppView, id?: string, replace = false) => {
@@ -197,8 +212,8 @@ export function AppRouter() {
     if (isWorkspace && learnerId && view !== 'admin' && view !== 'profile' && setupError) {
       return (
         <div className="learning-page">
-          <SectionState kind="error" title="Ta’lim maydonini yuklab bo‘lmadi"
-            description="Profil va fanlar ro‘yxatini qayta yuklab ko‘ring."
+          <SectionState kind="error" title={t('shell.workspaceFailed')}
+            description={t('shell.workspaceRetry')}
             onRetry={() => setSetupRetry((attempt) => attempt + 1)} />
         </div>
       );
@@ -256,9 +271,9 @@ export function AppRouter() {
       case 'lesson':
         return lessonId ? <LazyInteractiveLessonView key={lessonId} lessonId={lessonId}
           onFinish={openRoadmap} onBackToRoadmap={openRoadmap} />
-          : <div className="learning-page"><SectionState title="Dars topilmadi"
-            description="Ta’lim yo‘lingizdan dars tanlang." />
-            <Button className="mt-4" onClick={openRoadmap}>Ta’lim yo‘liga qaytish</Button></div>;
+          : <div className="learning-page"><SectionState title={t('shell.lessonMissing')}
+            description={t('shell.chooseLesson')} />
+            <Button className="mt-4" onClick={openRoadmap}>{t('lesson.backPath')}</Button></div>;
       case 'dashboard':
         return <LazyDashboardView onContinueLesson={continueLesson} onOpenRoadmap={openRoadmap}
           onOpenCourses={() => navigate('course-selection')}
@@ -273,8 +288,8 @@ export function AppRouter() {
       case 'admin':
         return isAdmin ? <LazyAdminDashboardView /> : (
           <div className="learning-page">
-            <SectionState kind="error" title="Ruxsat cheklangan" description="Bu sahifa administratorlar uchun." />
-            <Button className="mt-4" onClick={() => navigate('dashboard')}>Bosh sahifaga qaytish</Button>
+            <SectionState kind="error" title={t('shell.restricted')} description={t('shell.adminOnly')} />
+            <Button className="mt-4" onClick={() => navigate('dashboard')}>{t('shell.backHome')}</Button>
           </div>
         );
     }
@@ -287,17 +302,13 @@ export function AppRouter() {
       data-view={view}>
       {showNavigation && <Navbar currentView={view} onNavigate={navigate} />}
       <div className={isWorkspace ? 'workspace-content' : undefined}>
-        {isWorkspace && <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-xl focus:bg-paper focus:p-3">
-          Asosiy mazmunga o‘tish
-        </a>}
+        {isWorkspace && <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-xl focus:bg-paper focus:p-3">{t('shell.skip')}</a>}
         <main ref={main} id="main-content" tabIndex={-1} className="focus:outline-none">
           <RouteErrorBoundary key={view + (lessonId ?? '')}>
             <Suspense fallback={<RouteFallback />}>{renderView()}</Suspense>
           </RouteErrorBoundary>
         </main>
-        {!isShowcase && <footer className="border-t border-hairline px-4 py-5 text-center text-xs text-slatefine">
-          BilimYo‘l Smart Edu · Shaxsiy ta’lim yo‘li
-        </footer>}
+        {!isShowcase && <footer className="border-t border-hairline px-4 py-5 text-center text-xs text-slatefine">{t('shell.footer')}</footer>}
       </div>
     </div>
   );

@@ -1,14 +1,13 @@
-import { MotionConfig } from 'framer-motion';
 import { AuthProvider } from './core/context/AuthContext';
 import { AppRouter } from './app/router/AppRouter';
+import { PreferencesBar } from './presentation/components/PreferencesBar';
 
 export function App() {
   return (
-    <MotionConfig reducedMotion="user">
     <AuthProvider>
+      <PreferencesBar />
       <AppRouter />
     </AuthProvider>
-    </MotionConfig>
   );
 }
 

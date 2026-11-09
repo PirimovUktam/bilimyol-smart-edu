@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import React from 'react';
 
 interface BilimYolLogoProps {
@@ -12,9 +13,10 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
   size = 'md',
   showSubtitle = true,
   className = '',
-  variant = 'light',
+  variant = 'auto',
   textColor,
 }) => {
+  const { t } = useTranslation();
   const iconSizes = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
@@ -39,7 +41,7 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
     : variant === 'dark'
     ? 'text-white'
     : variant === 'auto'
-    ? 'text-slate-900 dark:text-white'
+    ? 'text-ink'
     : 'text-slate-900';
 
   return (
@@ -90,9 +92,7 @@ export const BilimYolLogo: React.FC<BilimYolLogoProps> = ({
           </span>
         </div>
         {showSubtitle && (
-          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-white/60' : 'text-slatefine'}`}>
-            AI yordamida shaxsiylashtirilgan ta’lim
-          </span>
+          <span className={`text-[11px] font-semibold tracking-tight ${isDark ? 'text-white/60' : 'text-slatefine'}`}>{t('shell.logoDescription')}</span>
         )}
       </div>
     </div>

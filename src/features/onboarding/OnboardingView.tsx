@@ -1,3 +1,5 @@
+import { translate as t } from '@/core/locales/useTranslation';
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, ClipboardCheck, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -12,28 +14,28 @@ import { SectionState } from '@/presentation/components/SectionState';
 const levels: { value: InitialLevel; label: string; description: string; badge: string }[] = [
   {
     value: 'beginner',
-    label: 'Noldan boshlayman',
-    description: 'Avval o‘zbekcha tushuntirish va ishlangan misol. Mashq dars oxirida keladi.',
-    badge: 'Boshlang‘ich',
+    get label() { return t('courses.zero'); },
+    get description() { return t('courses.zeroDescription'); },
+    get badge() { return t('courses.beginner'); },
   },
   {
     value: 'intermediate',
-    label: 'Asoslarini bilaman',
-    description: 'Darslarni davom ettiring yoki bilimingizni qisqa diagnostikada tekshiring.',
-    badge: 'O‘rta daraja',
+    get label() { return t('courses.basics'); },
+    get description() { return t('courses.basicsDescription'); },
+    get badge() { return t('courses.intermediate'); },
   },
   {
     value: 'advanced',
-    label: 'Mustahkam bilimim bor',
-    description: 'Mavzular rejasiga o‘ting yoki qaysi mavzuda yordam kerakligini aniqlang.',
-    badge: 'Yuqori daraja',
+    get label() { return t('courses.advanced'); },
+    get description() { return t('courses.advancedDescription'); },
+    get badge() { return t('courses.advancedBadge'); },
   },
 ];
 
 const goals: { value: OnboardingGoal; label: string }[] = [
-  { value: 'mastery', label: 'Asosiy mavzularni o‘rganish' },
-  { value: 'exam_prep', label: 'Imtihonga tayyorlanish' },
-  { value: 'skills_boost', label: 'Amaliy ko‘nikmalarni rivojlantirish' },
+  { value: 'mastery', get label() { return t('courses.masteryGoal'); } },
+  { value: 'exam_prep', get label() { return t('courses.exam'); } },
+  { value: 'skills_boost', get label() { return t('courses.skillsGoal'); } },
 ];
 const times: DailyTimeCommitment[] = [15, 30, 60];
 
@@ -41,6 +43,7 @@ export function OnboardingView({ onComplete, onBack }: {
   onComplete: (courseId: string, level: InitialLevel, diagnostic: boolean) => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const profile = useLearnerStore((state) => state.profile);
   const [level, setLevel] = useState<InitialLevel | null>(course ? profile?.courseLevels?.[course.id] ?? null : null);
@@ -68,7 +71,7 @@ export function OnboardingView({ onComplete, onBack }: {
       await useLearnerStore.getState().saveCourseLearningPlan(course.id, goal, minutes, level, isCurrent);
       if (isCurrent()) onComplete(course.id, level, action === 'diagnostic');
     } catch {
-      if (isCurrent()) setError('Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.');
+      if (isCurrent()) setError(t('courses.saveFailed'));
     } finally {
       saving.current = false;
       if (isCurrent()) setPending(null);
@@ -78,21 +81,21 @@ export function OnboardingView({ onComplete, onBack }: {
   return (
     <div className="learning-page max-w-200 space-y-6">
       <PageHeader
-        eyebrow={course?.title ?? 'Boshlash'}
-        title="O‘rganish rejangizni sozlang"
-        highlightWord="rejangizni sozlang"
-        description="Shu fan bo‘yicha hozirgi darajangizni tanlang. Rejani keyin ham o‘zgartira olasiz."
+        eyebrow={course?.title ?? t('courses.start')}
+        title={t('courses.plan')}
+        highlightWord={t('courses.planHighlight')}
+        description={t('courses.planDescription')}
       />
       {!course ? (
         <Card className="space-y-4">
-          <SectionState title="Avval fanni tanlang" />
-          <Button onClick={onBack}>Fanlar katalogi</Button>
+          <SectionState title={t('courses.chooseFirst')} />
+          <Button onClick={onBack}>{t('courses.subjects')}</Button>
         </Card>
       ) : (
         <Card className="fade-up stagger-1 space-y-6" padding="md">
           <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); void submit('learn'); }}>
             <fieldset disabled={pending !== null} className="space-y-3">
-              <legend className="heading mb-3 text-lg font-extrabold">Qayerdan boshlamoqchisiz?</legend>
+              <legend className="heading mb-3 text-lg font-extrabold">{t('courses.startWhere')}</legend>
               {levels.map((option, index) => {
                 const selected = level === option.value;
                 return (
@@ -129,14 +132,10 @@ export function OnboardingView({ onComplete, onBack }: {
             </fieldset>
 
             <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
-              <summary className="cursor-pointer text-sm font-bold text-brand">
-                Maqsad va kunlik vaqtni moslash
-              </summary>
+              <summary className="cursor-pointer text-sm font-bold text-brand">{t('courses.goalTime')}</summary>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="start-goal" className="mb-1.5 block text-sm font-bold">
-                    Maqsad
-                  </label>
+                  <label htmlFor="start-goal" className="mb-1.5 block text-sm font-bold">{t('courses.goal')}</label>
                   <select
                     id="start-goal"
                     className="form-input px-3"
@@ -152,9 +151,7 @@ export function OnboardingView({ onComplete, onBack }: {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="start-minutes" className="mb-1.5 block text-sm font-bold">
-                    Kunlik vaqt
-                  </label>
+                  <label htmlFor="start-minutes" className="mb-1.5 block text-sm font-bold">{t('courses.dailyTime')}</label>
                   <select
                     id="start-minutes"
                     className="form-input px-3"
@@ -164,8 +161,7 @@ export function OnboardingView({ onComplete, onBack }: {
                   >
                     {times.map((time) => (
                       <option key={time} value={time}>
-                        {time} daqiqa
-                      </option>
+                        {time}{' '}{t('courses.minutes')}</option>
                     ))}
                   </select>
                 </div>
@@ -177,7 +173,7 @@ export function OnboardingView({ onComplete, onBack }: {
                 <Sparkles aria-hidden="true" className="size-4 shrink-0 text-brand" />
                 {nextFoundation
                   ? `${foundation.length} ta boshlang‘ich dars sizni asosiy mavzularga tayyorlaydi.`
-                  : 'Mavjud mavzularni ta’lim rejasidan ko‘rishingiz mumkin.'}
+                  : t('courses.availableTopics')}
               </p>
             )}
             {error && (
@@ -196,9 +192,9 @@ export function OnboardingView({ onComplete, onBack }: {
               >
                 {level === 'beginner' && nextFoundation
                   ? nextFoundation === foundation[0]
-                    ? 'Birinchi darsni boshlash'
-                    : 'Boshlang‘ich darsni davom ettirish'
-                  : 'Ta’lim yo‘lini ochish'}
+                    ? t('courses.firstLesson')
+                    : t('courses.continueFoundation')
+                  : t('courses.openPath')}
               </Button>
               {level !== null && level !== 'beginner' && (
                 <Button
@@ -208,9 +204,7 @@ export function OnboardingView({ onComplete, onBack }: {
                   disabled={pending === 'learn'}
                   leftIcon={<ClipboardCheck aria-hidden="true" className="size-4" />}
                   onClick={() => void submit('diagnostic')}
-                >
-                  Ixtiyoriy diagnostika
-                </Button>
+                >{t('courses.optionalDiagnostic')}</Button>
               )}
               <Button
                 type="button"
@@ -218,9 +212,7 @@ export function OnboardingView({ onComplete, onBack }: {
                 disabled={pending !== null}
                 onClick={onBack}
                 leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}
-              >
-                Fanlarga qaytish
-              </Button>
+              >{t('courses.backSubjects')}</Button>
             </div>
           </form>
         </Card>

@@ -1,3 +1,4 @@
+import { translate as t } from '@/core/locales/useTranslation';
 import { Component, type ReactNode } from 'react';
 import { SectionState } from './SectionState';
 
@@ -12,8 +13,8 @@ export class RouteErrorBoundary extends Component<{ children: ReactNode }, { fai
     if (!this.state.failed) return this.props.children;
     return (
       <div className="learning-page">
-        <SectionState kind="error" title="Sahifani ochib bo‘lmadi"
-          description="Sahifani qayta yuklab ko‘ring."
+        <SectionState kind="error" title={t('shell.openFailed')}
+          description={t('shell.reloadDescription')}
           onRetry={() => window.location.reload()} />
       </div>
     );
