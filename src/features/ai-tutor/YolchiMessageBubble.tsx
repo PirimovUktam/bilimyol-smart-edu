@@ -50,14 +50,14 @@ export const YolchiMessageBubble = memo(({
       )}
 
       <div
-        className={`relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
+        className={`relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
           isYolchi
-            ? 'bg-white border border-slate-200/80 text-slate-800 rounded-tl-sm'
-            : 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-600/10'
+            ? 'bg-[#181E52]/95 border border-purple-400/30 text-slate-100 rounded-tl-sm'
+            : 'bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white rounded-tr-sm shadow-purple-600/20'
         }`}
       >
         <header className="mb-1 flex items-center justify-between gap-3 text-[11px] font-bold">
-          <span className={isYolchi ? 'text-indigo-600' : 'text-indigo-100'}>
+          <span className={isYolchi ? 'text-cyan-300' : 'text-purple-100'}>
             {isYolchi ? 'Yo‘lchi AI' : 'Siz'}
           </span>
         </header>

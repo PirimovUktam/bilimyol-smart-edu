@@ -43,7 +43,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
       </aside>
       <div className="fade-up flex items-center justify-center px-2 py-6 sm:px-8 sm:py-10">
         <div className="edtech-card w-full max-w-112 p-6 sm:p-9">
-          <div className="mb-6 lg:hidden"><BilimYolLogo showSubtitle={false} /></div>
+          <div className="mb-6 lg:hidden"><BilimYolLogo variant="dark" showSubtitle={false} /></div>
           <header className="mb-6">
             <span className="highlight mb-2.5">
               <Sparkles aria-hidden="true" className="size-3.5" />

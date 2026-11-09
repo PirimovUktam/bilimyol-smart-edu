@@ -12,27 +12,27 @@
   --font-display: 'Plus Jakarta Sans', 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* --- Surfaces (Slate 50 & Crisp White) -------------------------------- */
-  --color-canvas: #F8FAFC;
-  --color-paper: #FFFFFF;
-  --color-sand: #EEF2FF;
-  --color-muted: #E2E8F0;
-  --color-hairline: #E2E8F0;
+  /* --- Surfaces (Deep Navy Cosmos & Glassmorphic Panels) ----------------- */
+  --color-canvas: #090C22;
+  --color-paper: #151A44;
+  --color-sand: #1E255E;
+  --color-muted: #242C6E;
+  --color-hairline: rgba(139, 92, 246, 0.28);
 
-  /* --- Ink (Slate 900 & Slate 500) -------------------------------------- */
-  --color-navy: #0F172A;
-  --color-ink: #0F172A;
-  --color-graphite: #334155;
-  --color-slatefine: #64748B;
-  --color-faint: #94A3B8;
+  /* --- Ink (Crisp Starlight & Indigo Mist) ------------------------------- */
+  --color-navy: #090C22;
+  --color-ink: #F8FAFC;
+  --color-graphite: #E2E8F0;
+  --color-slatefine: #A5B4FC;
+  --color-faint: #818CF8;
 
-  /* --- EdTech Signal & Accents ------------------------------------------ */
-  --color-brand: #4F46E5;
-  --color-brand-dark: #4338CA;
-  --color-path: #0EA5E9;
+  /* --- EdTech Signal & Accents (Electric Purple, Cyan, Magenta) ---------- */
+  --color-brand: #8B5CF6;
+  --color-brand-dark: #A78BFA;
+  --color-path: #22D3EE;
   --color-mint: #10B981;
   --color-amber: #F59E0B;
-  --color-coral: #E11D48;
+  --color-coral: #EC4899;
   --color-lime: #10B981;
 
   /* --- Radii ------------------------------------------------------------ */
@@ -42,49 +42,55 @@
   --radius-panel: 1.5rem;
 
   /* --- Multi-layer Soft EdTech Shadows ---------------------------------- */
-  --shadow-editorial: 0 12px 32px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-  --shadow-paper: 0 20px 40px -8px rgba(79, 70, 229, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.05);
-  --shadow-raised: 0 14px 34px -6px rgba(79, 70, 229, 0.24), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
-  --shadow-pop: 0 28px 64px -16px rgba(15, 23, 42, 0.32);
-  --shadow-btn: 0 8px 20px -4px rgba(79, 70, 229, 0.4);
+  --shadow-editorial: 0 16px 38px -8px rgba(4, 6, 22, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-paper: 0 22px 48px -10px rgba(124, 58, 237, 0.28), 0 8px 18px -4px rgba(4, 6, 22, 0.5);
+  --shadow-raised: 0 16px 36px -6px rgba(139, 92, 246, 0.36), 0 4px 12px -2px rgba(4, 6, 22, 0.5);
+  --shadow-pop: 0 28px 64px -16px rgba(4, 6, 22, 0.78);
+  --shadow-btn: 0 10px 24px -4px rgba(139, 92, 246, 0.5);
 }
 
 @layer base {
   :root {
-    --primary: #4F46E5;
-    --primary-hover: #4338CA;
-    --primary-deep: #0F172A;
-    --secondary: #0EA5E9;
-    --secondary-hover: #0284C7;
-    --accent-coral: #E11D48;
+    --primary: #8B5CF6;
+    --primary-hover: #7C3AED;
+    --primary-deep: #090C22;
+    --secondary: #22D3EE;
+    --secondary-hover: #06B6D4;
+    --accent-coral: #EC4899;
     --accent-mint: #10B981;
     --accent-amber: #F59E0B;
     --accent-lime: #10B981;
 
-    --surface-canvas: #F8FAFC;
-    --surface-card: #FFFFFF;
-    --surface-subtle: #EEF2FF;
-    --surface-muted: #E2E8F0;
-    --border-hairline: rgba(226, 232, 240, 0.8);
-    --border-dark: #1E293B;
+    --surface-canvas: #090C22;
+    --surface-card: #151A44;
+    --surface-subtle: #1E255E;
+    --surface-muted: #242C6E;
+    --border-hairline: rgba(139, 92, 246, 0.28);
+    --border-dark: #2E3782;
 
-    --ink-obsidian: #0F172A;
-    --ink-body: #334155;
-    --ink-muted: #64748B;
-    --ink-faint: #94A3B8;
+    --ink-obsidian: #F8FAFC;
+    --ink-body: #E2E8F0;
+    --ink-muted: #A5B4FC;
+    --ink-faint: #818CF8;
   }
 
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--color-canvas);
+    background-color: #090C22;
+    background-image:
+      radial-gradient(45rem 32rem at 16% 8%, rgba(124, 58, 237, 0.22) 0%, transparent 65%),
+      radial-gradient(42rem 30rem at 88% 14%, rgba(34, 211, 238, 0.14) 0%, transparent 62%),
+      radial-gradient(48rem 34rem at 78% 76%, rgba(236, 72, 153, 0.14) 0%, transparent 65%),
+      linear-gradient(180deg, #090C22 0%, #0D1130 50%, #090C22 100%);
+    background-attachment: fixed;
     color: var(--color-ink);
     text-rendering: optimizeLegibility;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid var(--color-path);
     outline-offset: 2px;
     border-radius: var(--radius-chip);
   }
@@ -96,40 +102,41 @@
 }
 
 /* ============================================================================
-   M-SoftTech EdTech Typography, Badges, Buttons & Cards
+   BilimYo'l Cosmos EdTech Typography, Badges, Buttons & Cards
    ========================================================================== */
 
 .highlight {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(79, 70, 229, 0.1);
-  color: #4F46E5;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #DDD6FE;
   padding: 6px 14px;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.75rem;
   line-height: 1.25;
   letter-spacing: 0.01em;
 }
 
 .heading {
-  color: #0F172A;
+  color: #FFFFFF;
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.025em;
 }
 
 .heading-accent {
-  color: #4F46E5;
-  background: linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%);
+  color: #22D3EE;
+  background: linear-gradient(135deg, #22D3EE 0%, #A855F7 52%, #EC4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .heading-emerald {
-  color: #10B981;
-  background: linear-gradient(135deg, #10B981 0%, #0EA5E9 100%);
+  color: #34D399;
+  background: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -139,19 +146,19 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 55%, #FF8C42 100%);
   color: #FFFFFF;
   border-radius: var(--radius-control);
   font-weight: 700;
-  box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 10px 24px -4px rgba(236, 72, 153, 0.42), 0 0 16px -4px rgba(139, 92, 246, 0.45);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
   cursor: pointer;
 }
 
 .commonBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 12px 26px -4px rgba(79, 70, 229, 0.52);
-  filter: brightness(1.04);
+  box-shadow: 0 14px 30px -4px rgba(236, 72, 153, 0.55), 0 0 22px -2px rgba(168, 85, 247, 0.55);
+  filter: brightness(1.06);
 }
 
 .commonBtn:active:not(:disabled) {
@@ -159,25 +166,29 @@
 }
 
 .edtech-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 20px;
-  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(145deg, rgba(25, 30, 78, 0.88) 0%, rgba(16, 20, 56, 0.94) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px -10px rgba(4, 6, 22, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .edtech-card-hover {
-  background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 20px;
-  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(145deg, rgba(25, 30, 78, 0.88) 0%, rgba(16, 20, 56, 0.94) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px -10px rgba(4, 6, 22, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .edtech-card-hover:hover:not(:disabled) {
   transform: translateY(-6px);
-  border-color: rgba(79, 70, 229, 0.45);
-  box-shadow: 0 20px 40px -8px rgba(79, 70, 229, 0.14), 0 8px 16px -4px rgba(15, 23, 42, 0.05);
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 22px 48px -10px rgba(124, 58, 237, 0.34), 0 0 24px -6px rgba(34, 211, 238, 0.2);
 }
 
 .font-mono-num {
@@ -189,8 +200,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(79, 70, 229, 0.1);
-  color: #4F46E5;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #DDD6FE;
   padding: 4px 12px;
   border-radius: 999px;
   font-family: var(--font-sans);
@@ -204,7 +216,7 @@
 }
 
 .mark-underline {
-  background-image: linear-gradient(transparent 62%, rgba(79, 70, 229, 0.2) 62%);
+  background-image: linear-gradient(transparent 62%, rgba(139, 92, 246, 0.35) 62%);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -218,7 +230,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(226, 232, 240, 0.8);
+  background: rgba(139, 92, 246, 0.28);
 }
 
 /* ============================================================================
@@ -227,10 +239,10 @@
 
 .paper-card,
 .editorial-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: linear-gradient(145deg, rgba(25, 30, 78, 0.88) 0%, rgba(16, 20, 56, 0.94) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.28);
   box-shadow: var(--shadow-editorial);
-  border-radius: 20px;
+  border-radius: 22px;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
@@ -255,10 +267,10 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(21, 26, 68, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.28);
   box-shadow: var(--shadow-editorial);
 }
 
@@ -266,9 +278,9 @@
   background: linear-gradient(
     to bottom,
     #10B981 0%,
-    #0EA5E9 35%,
-    #4F46E5 70%,
-    #E2E8F0 100%
+    #22D3EE 35%,
+    #8B5CF6 70%,
+    #242C6E 100%
   );
 }
 
@@ -309,22 +321,29 @@
 .stagger-6 { animation-delay: 480ms; }
 
 /* ============================================================================
-   Shared Workspace Frame & Modern Light EdTech Navigation
+   Shared Workspace Frame & Deep Navy Cosmos Navigation
    ========================================================================== */
 
 .workspace-shell {
   min-height: 100dvh;
-  background-color: var(--color-canvas);
+  background-color: #090C22;
+  background-image:
+    radial-gradient(45rem 32rem at 18% 8%, rgba(124, 58, 237, 0.22) 0%, transparent 65%),
+    radial-gradient(42rem 30rem at 88% 14%, rgba(6, 182, 212, 0.14) 0%, transparent 62%),
+    radial-gradient(48rem 34rem at 78% 72%, rgba(236, 72, 153, 0.15) 0%, transparent 65%),
+    linear-gradient(180deg, #090C22 0%, #0D1130 50%, #090C22 100%);
+  color: #F8FAFC;
 }
 .workspace-content { min-width: 0; }
 .workspace-content main { min-height: 70dvh; }
 
 .welcome-path {
   background:
-    radial-gradient(circle at 92% 12%, rgba(14, 165, 233, 0.28) 0%, transparent 55%),
-    radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.18) 0%, transparent 50%),
-    linear-gradient(135deg, #0F172A 0%, #1E1B4B 52%, #4F46E5 100%);
-  box-shadow: 0 24px 60px -16px rgba(79, 70, 229, 0.32);
+    radial-gradient(circle at 92% 12%, rgba(34, 211, 238, 0.32) 0%, transparent 55%),
+    radial-gradient(circle at 12% 88%, rgba(236, 72, 153, 0.26) 0%, transparent 52%),
+    linear-gradient(135deg, #131845 0%, #241963 52%, #4C1D95 100%);
+  border: 1px solid rgba(168, 85, 247, 0.36);
+  box-shadow: 0 24px 60px -16px rgba(124, 58, 237, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .learning-timeline { display: grid; gap: 0.875rem; }
@@ -340,7 +359,7 @@
   bottom: -1rem;
   left: 1.1875rem;
   width: 2px;
-  background: linear-gradient(to bottom, #4F46E5, #E2E8F0);
+  background: linear-gradient(to bottom, #8B5CF6, rgba(139, 92, 246, 0.25));
   content: '';
 }
 .timeline-marker {
@@ -350,18 +369,18 @@
   height: 2.5rem;
   margin-top: 0.5rem;
   place-items: center;
-  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  border: 1.5px solid rgba(139, 92, 246, 0.45);
   border-radius: 50%;
-  background: #FFFFFF;
-  color: #4F46E5;
+  background: #151A44;
+  color: #C4B5FD;
   font-weight: 800;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 14px rgba(4, 6, 22, 0.5);
 }
 .timeline-current {
-  background: linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%);
+  background: linear-gradient(135deg, #8B5CF6 0%, #22D3EE 100%);
   color: white;
   border-color: transparent;
-  box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 8px 20px -4px rgba(139, 92, 246, 0.55);
 }
 
 .workspace-sidebar { display: none; }
@@ -603,26 +622,30 @@
 .auth-showcase {
   color: white;
   background:
-    radial-gradient(circle at 90% 12%, rgba(14, 165, 233, 0.35), transparent 55%),
-    radial-gradient(circle at 10% 88%, rgba(16, 185, 129, 0.2), transparent 50%),
-    linear-gradient(135deg, #0F172A 0%, #1E1B4B 48%, #4F46E5 100%);
-  box-shadow: 0 24px 56px -14px rgba(15, 23, 42, 0.3);
+    radial-gradient(circle at 90% 12%, rgba(34, 211, 238, 0.34), transparent 55%),
+    radial-gradient(circle at 12% 88%, rgba(236, 72, 153, 0.28), transparent 52%),
+    linear-gradient(135deg, #131845 0%, #241963 48%, #4C1D95 100%);
+  border: 1px solid rgba(168, 85, 247, 0.36);
+  box-shadow: 0 24px 56px -14px rgba(4, 6, 22, 0.65);
 }
 
 .form-input {
   min-height: 2.875rem;
   width: 100%;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.34);
   border-radius: var(--radius-control);
-  background: #F8FAFC;
-  color: #0F172A;
+  background: #10143A;
+  color: #F8FAFC;
   font-size: 0.875rem;
   transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
+.form-input::placeholder {
+  color: rgba(165, 180, 252, 0.55);
+}
 .form-input:focus {
-  background: #FFFFFF;
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  background: #151A48;
+  border-color: #A855F7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.22);
 }
 
 @media (prefers-reduced-motion: reduce) {

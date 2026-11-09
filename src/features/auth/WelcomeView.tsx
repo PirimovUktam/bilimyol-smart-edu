@@ -9,10 +9,10 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
   return (
     <div className="welcome-page mx-auto grid min-h-[88dvh] w-full max-w-304 content-center gap-8 px-5 py-8 sm:px-9 lg:grid-cols-2 lg:items-center lg:gap-14">
       <section className="fade-up min-w-0 space-y-6" aria-labelledby="welcome-title">
-        <BilimYolLogo />
+        <BilimYolLogo variant="dark" />
         <div>
           <p className="highlight mb-3.5">
-            <Compass aria-hidden="true" className="size-4" />
+            <Compass aria-hidden="true" className="size-4 text-cyan-300" />
             Shaxsiy ta’lim yo‘li
           </p>
           <h1 id="welcome-title" className="heading max-w-xl text-[clamp(2.4rem,5.6vw,4.4rem)] leading-[1.06] font-extrabold tracking-tight">
@@ -25,12 +25,12 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
 
         {/* Highlight Stats Row */}
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-paper px-3.5 py-1.5 text-xs font-bold text-ink shadow-2xs">
-            <Sparkles aria-hidden="true" className="size-3.5 text-brand" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
+            <Sparkles aria-hidden="true" className="size-3.5 text-cyan-300" />
             Adaptiv diagnostika
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-paper px-3.5 py-1.5 text-xs font-bold text-ink shadow-2xs">
-            <Zap aria-hidden="true" className="size-3.5 text-mint" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
+            <Zap aria-hidden="true" className="size-3.5 text-emerald-400" />
             Yo‘lchi AI 24/7 ustoz
           </span>
         </div>
@@ -45,7 +45,7 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
         </div>
         <button
           type="button"
-          className="min-h-11 cursor-pointer text-sm font-bold text-brand underline-offset-4 hover:underline"
+          className="min-h-11 cursor-pointer text-sm font-bold text-cyan-300 underline-offset-4 hover:text-cyan-200 hover:underline"
           onClick={setDemoUser}
         >
           Namuna hisobi bilan kirish

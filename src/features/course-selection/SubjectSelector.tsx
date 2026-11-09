@@ -20,11 +20,11 @@ interface SubjectSelectorProps {
 }
 
 const subjects: Record<Course['subject'], { icon: LucideIcon; tone: string; category: string }> = {
-  mathematics: { icon: Calculator, tone: 'bg-indigo-50 text-[#4F46E5] ring-1 ring-indigo-200/60', category: 'Aniq fanlar' },
-  english: { icon: Headphones, tone: 'bg-sky-50 text-[#0EA5E9] ring-1 ring-sky-200/60', category: 'Xorijiy til' },
-  it: { icon: Code2, tone: 'bg-emerald-50 text-[#10B981] ring-1 ring-emerald-200/60', category: 'Dasturlash' },
-  logic: { icon: Brain, tone: 'bg-amber-50 text-[#D97706] ring-1 ring-amber-200/60', category: 'Tafakkur' },
-  other: { icon: BookOpen, tone: 'bg-sand text-brand ring-1 ring-brand/20', category: 'Umumiy kurs' },
+  mathematics: { icon: Calculator, tone: 'bg-gradient-to-br from-indigo-500/30 to-purple-600/30 text-indigo-200 ring-1 ring-purple-400/40', category: 'Aniq fanlar' },
+  english: { icon: Headphones, tone: 'bg-gradient-to-br from-pink-500/30 to-rose-600/30 text-pink-200 ring-1 ring-pink-400/40', category: 'Xorijiy til' },
+  it: { icon: Code2, tone: 'bg-gradient-to-br from-cyan-500/30 to-blue-600/30 text-cyan-200 ring-1 ring-cyan-400/40', category: 'Dasturlash' },
+  logic: { icon: Brain, tone: 'bg-gradient-to-br from-amber-500/30 to-orange-600/30 text-amber-200 ring-1 ring-amber-400/40', category: 'Tafakkur' },
+  other: { icon: BookOpen, tone: 'bg-gradient-to-br from-emerald-500/30 to-teal-600/30 text-emerald-200 ring-1 ring-emerald-400/40', category: 'Umumiy kurs' },
 };
 
 export function SubjectSelector({
@@ -71,7 +71,7 @@ export function SubjectSelector({
               style={{ animationDelay: `${index * 90}ms` }}
               className={
                 'fade-up edtech-card-hover group flex min-w-0 cursor-pointer flex-col justify-between p-5 text-left disabled:cursor-not-allowed disabled:opacity-65 ' +
-                (selected ? 'border-brand! bg-indigo-50/35! ring-2 ring-brand/30' : '')
+                (selected ? 'border-purple-400! bg-purple-500/15! ring-2 ring-purple-400/40' : '')
               }
             >
               {/* (a) Top: Colored Icon Container + Category/Selection Badge */}
@@ -80,7 +80,7 @@ export function SubjectSelector({
                   <Icon aria-hidden="true" className="size-6" />
                 </span>
                 {selected ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-[#059669]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 px-3 py-1 text-[11px] font-bold text-emerald-300">
                     <Check aria-hidden="true" className="size-3.5" />
                     <span>Tanlangan</span>
                   </span>
@@ -93,7 +93,7 @@ export function SubjectSelector({
 
               {/* (b) Middle: Title, 2-line Description & Visual Progress */}
               <span className="my-4 block w-full">
-                <span className="heading block break-words text-lg font-extrabold leading-snug text-ink group-hover:text-brand transition-colors">
+                <span className="heading block break-words text-lg font-extrabold leading-snug text-ink group-hover:text-cyan-300 transition-colors">
                   {course.title}
                 </span>
                 <span className="mt-1.5 block line-clamp-2 text-xs leading-relaxed text-slatefine">
@@ -103,7 +103,7 @@ export function SubjectSelector({
                 <span className="mt-4 block w-full">
                   <span className="mb-1.5 flex items-center justify-between text-[11px] font-bold text-slatefine">
                     <span>O‘zlashtirish</span>
-                    <span className="font-mono-num text-brand">{pct}%</span>
+                    <span className="font-mono-num text-cyan-300">{pct}%</span>
                   </span>
                   <Progress
                     value={pct}
@@ -115,7 +115,7 @@ export function SubjectSelector({
               </span>
 
               {/* (c) Bottom: Meta-data (Lessons, XP) & .commonBtn Action */}
-              <span className="mt-auto flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3.5">
+              <span className="mt-auto flex w-full items-center justify-between gap-2 border-t border-purple-400/20 pt-3.5">
                 <span className="flex flex-col text-[11px] font-bold text-slatefine">
                   <span>
                     {lessons > 0
@@ -124,7 +124,7 @@ export function SubjectSelector({
                         : completed + ' / ' + lessons + ' dars tugallangan'
                       : 'Darslar soni ko‘rsatilmagan'}
                   </span>
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-amber-600">
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-amber-300">
                     <Zap aria-hidden="true" className="size-3" />
                     +{Math.max(1, lessons) * 20} XP
                   </span>

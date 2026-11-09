@@ -36,23 +36,23 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary:
-      'commonBtn bg-gradient-to-r from-[#4F46E5] to-[#4338CA] text-white border border-transparent shadow-[0_8px_20px_-4px_rgba(79,70,229,0.4)] hover:shadow-[0_12px_26px_-4px_rgba(79,70,229,0.52)] hover:-translate-y-0.5',
+      'commonBtn bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#FF8C42] text-white border border-transparent shadow-[0_10px_24px_-4px_rgba(236,72,153,0.45)] hover:shadow-[0_14px_30px_-4px_rgba(168,85,247,0.58)] hover:-translate-y-0.5',
     secondary:
-      'bg-ink hover:bg-graphite text-white shadow-sm border border-ink hover:-translate-y-0.5',
+      'bg-[#1D235C] hover:bg-[#252D73] text-white shadow-sm border border-purple-400/35 hover:-translate-y-0.5',
     gradient:
-      'commonBtn bg-gradient-to-r from-[#4F46E5] via-[#3B82F6] to-[#0EA5E9] hover:brightness-105 text-white shadow-[0_8px_20px_-4px_rgba(79,70,229,0.45)] border-0 hover:-translate-y-0.5',
+      'commonBtn bg-gradient-to-r from-[#7C3AED] via-[#A855F7] to-[#22D3EE] hover:brightness-105 text-white shadow-[0_10px_24px_-4px_rgba(139,92,246,0.5)] border-0 hover:-translate-y-0.5',
     cyan:
-      'bg-path hover:bg-secondary-hover text-white shadow-[0_8px_18px_-4px_rgba(14,165,233,0.38)] border-0 hover:-translate-y-0.5',
+      'bg-gradient-to-r from-[#06B6D4] to-[#22D3EE] hover:brightness-105 text-white shadow-[0_8px_18px_-4px_rgba(34,211,238,0.42)] border-0 hover:-translate-y-0.5',
     coral:
-      'bg-coral hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(225,29,72,0.35)] border-0 hover:-translate-y-0.5',
+      'bg-gradient-to-r from-[#EC4899] to-[#F43F5E] hover:brightness-105 text-white shadow-[0_8px_18px_-4px_rgba(236,72,153,0.42)] border-0 hover:-translate-y-0.5',
     outline:
-      'bg-paper hover:bg-sand/60 text-ink border border-hairline hover:border-brand/40 shadow-2xs hover:-translate-y-0.5',
+      'bg-[#171C4B]/90 hover:bg-[#222968] text-white border border-purple-400/40 hover:border-purple-300/75 shadow-2xs hover:-translate-y-0.5',
     ghost:
-      'bg-transparent hover:bg-sand/80 text-graphite hover:text-brand-dark',
+      'bg-transparent hover:bg-purple-500/15 text-indigo-100 hover:text-white',
     danger:
-      'bg-coral hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(225,29,72,0.35)]',
+      'bg-gradient-to-r from-[#EC4899] to-[#E11D48] hover:brightness-105 text-white shadow-[0_8px_18px_-4px_rgba(225,29,72,0.42)]',
     success:
-      'bg-mint hover:brightness-95 text-white shadow-[0_8px_18px_-4px_rgba(16,185,129,0.38)] hover:-translate-y-0.5',
+      'bg-gradient-to-r from-[#10B981] to-[#059669] hover:brightness-105 text-white shadow-[0_8px_18px_-4px_rgba(16,185,129,0.42)] hover:-translate-y-0.5',
   };
 
   return (
