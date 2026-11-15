@@ -276,6 +276,7 @@ export function AppRouter() {
             <Button className="mt-4" onClick={openRoadmap}>{t('lesson.backPath')}</Button></div>;
       case 'dashboard':
         return <LazyDashboardView onContinueLesson={continueLesson} onOpenRoadmap={openRoadmap}
+          onOpenKnowledgeMap={openKnowledgeMap}
           onOpenCourses={() => navigate('course-selection')}
           onOpenOnboarding={() => navigate('onboarding')}
           onStartPlacement={() => navigate('placement')} onOpenAITutor={() => navigate('ai-tutor')}

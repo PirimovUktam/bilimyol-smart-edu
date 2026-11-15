@@ -10,6 +10,9 @@ import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepo
 import type { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import type { Question } from '@/domain/entities/Question';
 import { foundationLessons, hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
+import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
+import { RecommendationEngine } from '@/domain/personalization/RecommendationEngine';
+import { AdaptiveCyclePanel } from '@/features/adaptive/AdaptiveCyclePanel';
 import { ReinforcementModal } from '@/features/reinforcement/ReinforcementModal';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
@@ -30,6 +33,7 @@ interface RoadmapViewProps {
 export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure }: RoadmapViewProps) {
   const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
+  const skills = useCourseStore((state) => state.activeCourseSkills);
   const profile = useLearnerStore((state) => state.profile);
   const roadmap = useRoadmapStore((state) => state.roadmap);
   const error = useRoadmapStore((state) => state.error);
@@ -54,6 +58,13 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const foundationCompleted = foundationPath.filter((id) => profile?.completedLessonIds.includes(id)).length;
   const shown = nodes.filter((node) => filter === 'all' || (filter === 'active'
     ? node.status !== 'locked' && node.status !== 'completed' : node.status === 'completed'));
+  const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
+  const adaptiveCycle = path
+    ? AdaptiveCycleEngine.evaluateCycle({ course, profile, skills, skillScores: courseScores, roadmap: path })
+    : null;
+  const adaptiveRec = path
+    ? RecommendationEngine.generateRecommendation(courseId ?? '', skills, courseScores, path, profile)
+    : null;
 
   const loadPractice = async (node: LearningPathNode) => {
     setPracticeLoading(node.id);
@@ -187,6 +198,20 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             )}
           </section>
 
+          {adaptiveCycle && adaptiveRec && (
+            <AdaptiveCyclePanel
+              compact
+              cycle={adaptiveCycle}
+              factors={adaptiveRec.explainableFactors ?? []}
+              dailyTasks={adaptiveRec.dailyMicroTasks ?? []}
+              onStepAction={(stepKey) => {
+                if (stepKey === 'profile') onOpenKnowledgeMap();
+                else if (stepKey === 'diagnostic') onConfigure();
+                else if (stepKey === 'practice' && lesson) onStartLesson(lesson);
+              }}
+            />
+          )}
+
           <div role="group" aria-label={t('path.filter')} className="fade-up stagger-2 flex flex-wrap gap-2">
             {(Object.keys(filters) as (keyof typeof filters)[]).map((key) => (
               <Button
@@ -285,6 +310,16 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                       <h3 className="heading break-words text-lg font-extrabold">{node.title}</h3>
                       {node.description && (
                         <p className="line-clamp-2 text-sm leading-relaxed text-slatefine">{node.description}</p>
+                      )}
+                      {(isActive || node.isReinforcement) && (
+                        <div className="rounded-xl border border-brand/25 bg-sand/70 px-3 py-2 text-xs leading-relaxed text-graphite">
+                          <span className="font-extrabold text-brand-dark">{t('adaptive.xaiEyebrow')}: </span>
+                          <span>
+                            {node.isReinforcement
+                              ? adaptiveRec?.reason || node.description
+                              : adaptiveCycle?.loopUpdateSummary || node.description}
+                          </span>
+                        </div>
                       )}
                       {node.score != null && (
                         <div className="max-w-md pt-1">

@@ -1,5 +1,5 @@
 import { useTranslation } from '@/core/locales/useTranslation';
-import { ArrowRight, BookOpen, Check, Compass, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, Check, Compass, Layers, Sparkles, Target, Zap } from 'lucide-react';
 import { useAuth } from '@/core/context/AuthContext';
 import { BilimYolLogo } from '@/presentation/components/BilimYolLogo';
 import { Button } from '@/presentation/components/Button';
@@ -26,7 +26,7 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
         </div>
 
         {/* Highlight Stats Row */}
-        <div className="flex flex-wrap items-center gap-3 pt-1">
+        <div className="flex flex-wrap items-center gap-2.5 pt-1">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
             <Sparkles aria-hidden="true" className="size-3.5 text-cyan-300" />
             {t('auth.diagnostics')}
@@ -34,6 +34,9 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
           <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
             <Zap aria-hidden="true" className="size-3.5 text-emerald-400" />
             {t('auth.alwaysTutor')}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/35 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-cyan-200 shadow-2xs">
+            6 870 545 · +9,3%
           </span>
         </div>
 
@@ -55,44 +58,46 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
       </section>
 
       <section aria-label={t('auth.learningOrder')} className="welcome-path fade-up stagger-2 rounded-3xl p-6 text-white sm:p-8">
-        <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wide text-indigo-100">
               <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
-              {t('auth.withTutor')}
+              {t('adaptive.cycleEyebrow')}
             </span>
-            <h2 className="mt-2 font-display text-2xl font-extrabold">{t('auth.threeSteps')}</h2>
+            <h2 className="mt-2 font-display text-xl font-extrabold sm:text-2xl">{t('adaptive.cycleTitle')}</h2>
           </div>
           <div aria-hidden="true" className="hidden sm:block">
             <YolchiAIMascot size="md" mood="explaining" />
           </div>
         </div>
-        <ol className="space-y-3.5">
+        <ol className="space-y-2.5">
           {[
-            { icon: Compass, title: t('auth.chooseSubject'), description: t('auth.chooseSubjectDescription') },
-            { icon: BookOpen, title: t('auth.readLesson'), description: t('auth.readLessonDescription') },
-            { icon: Sparkles, title: t('auth.findNext'), description: t('auth.findNextDescription') },
+            { icon: Target, title: t('adaptive.stepDiagnostic'), description: t('adaptive.stepDiagnosticDesc') },
+            { icon: Layers, title: t('adaptive.stepProfile'), description: t('adaptive.stepProfileDesc') },
+            { icon: Compass, title: t('adaptive.stepPath'), description: t('adaptive.stepPathDesc') },
+            { icon: BookOpen, title: t('adaptive.stepPractice'), description: t('adaptive.stepPracticeDesc') },
+            { icon: BarChart3, title: t('adaptive.stepProgress'), description: t('adaptive.stepProgressDesc') },
           ].map(({ icon: Icon, title, description }, index) => (
             <li
               key={title}
-              className="flex items-center gap-3.5 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xs transition-transform hover:-translate-y-0.5"
+              className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-xs transition-transform hover:-translate-y-0.5"
             >
-              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-indigo-400/25 text-white shadow-xs">
-                <Icon aria-hidden="true" className="size-5" />
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-indigo-400/25 text-white shadow-xs">
+                <Icon aria-hidden="true" className="size-4.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display font-bold">{title}</h3>
-                <p className="mt-0.5 text-sm text-indigo-100">{description}</p>
+                <h3 className="font-display text-sm font-bold sm:text-base">{title}</h3>
+                <p className="text-xs text-indigo-100 sm:text-sm">{description}</p>
               </div>
-              <span aria-hidden="true" className="font-mono text-sm font-bold text-sky-300">
+              <span aria-hidden="true" className="font-mono text-xs font-bold text-sky-300">
                 0{index + 1}
               </span>
             </li>
           ))}
         </ol>
-        <p className="mt-6 flex items-center gap-2 text-sm font-medium text-emerald-200">
-          <Check aria-hidden="true" className="size-4 text-emerald-300" />
-          {t('auth.separateProgress')}
+        <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-emerald-200 sm:text-sm">
+          <Check aria-hidden="true" className="size-4 shrink-0 text-emerald-300" />
+          {t('adaptive.cycleSubtitle')} · Explainable AI
         </p>
       </section>
     </div>

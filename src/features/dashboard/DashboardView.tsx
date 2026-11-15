@@ -35,6 +35,8 @@ import {
   pendingFoundationLesson,
 } from '@/domain/personalization/learningStart';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
+import { AdaptiveCycleEngine, type AdaptiveStepKey } from '@/domain/personalization/AdaptiveCycleEngine';
+import { AdaptiveCyclePanel } from '@/features/adaptive/AdaptiveCyclePanel';
 import type { DailyActivitySummary } from '@/domain/repositories/ILearnerRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { Avatar } from '@/presentation/components/Avatar';
@@ -44,6 +46,7 @@ import { WeeklyActivity } from '@/presentation/components/WeeklyActivity';
 interface DashboardViewProps {
   onContinueLesson: (lessonId: string) => void;
   onOpenRoadmap: () => void;
+  onOpenKnowledgeMap?: () => void;
   onOpenCourses: () => void;
   onOpenOnboarding: () => void;
   onStartPlacement: () => void;
@@ -58,6 +61,7 @@ type CourseFilterTab = 'active' | 'recommended' | 'all';
 export function DashboardView({
   onContinueLesson,
   onOpenRoadmap,
+  onOpenKnowledgeMap,
   onOpenCourses,
   onOpenOnboarding,
   onStartPlacement,
@@ -164,12 +168,46 @@ export function DashboardView({
     ? t('dashboard.foundation')
     : nextTopic?.title ?? t('dashboard.yourPath');
 
-  const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
+  const courseScores = useMemo(
+    () => (courseId ? profile?.scoresByCourse[courseId] ?? {} : {}),
+    [courseId, profile?.scoresByCourse],
+  );
   const scoreValues = Object.values(courseScores);
   const overallMastery =
     scoreValues.length > 0
       ? SkillScoringEngine.computeOverallScore(courseScores)
       : progressPct;
+  const adaptiveBundle = useMemo(() => {
+    const input = { course, profile, skills, skillScores: courseScores, roadmap: path };
+    return {
+      cycle: AdaptiveCycleEngine.evaluateCycle(input),
+      factors: AdaptiveCycleEngine.buildExplainableFactors(input),
+      dailyTasks: AdaptiveCycleEngine.buildDailyMicroTasks(input),
+    };
+  }, [course, profile, skills, courseScores, path]);
+
+  const handleCycleStepAction = useCallback((stepKey: AdaptiveStepKey) => {
+    switch (stepKey) {
+      case 'diagnostic':
+        onStartPlacement();
+        break;
+      case 'profile':
+        if (onOpenKnowledgeMap) onOpenKnowledgeMap();
+        else onOpenProgress();
+        break;
+      case 'path':
+        onOpenRoadmap();
+        break;
+      case 'practice':
+        if (!started) onOpenCourses();
+        else if (nextId) onContinueLesson(nextId);
+        else onOpenRoadmap();
+        break;
+      case 'progress':
+        onOpenProgress();
+        break;
+    }
+  }, [onStartPlacement, onOpenKnowledgeMap, onOpenProgress, onOpenRoadmap, started, onOpenCourses, nextId, onContinueLesson]);
   const masteredSkillsCount = scoreValues.filter((s) => s.score >= 70).length;
   const totalCompletedAllCourses = profile?.completedLessonIds.length ?? 0;
   const earnedBadgesCount =
@@ -1014,6 +1052,20 @@ export function DashboardView({
           </section>
         </div>
       </div>
+
+      {/* =====================================================================
+          5-STEP ADAPTIVE LEARNING LOOP & EXPLAINABLE AI (6 PERSONALIZATION INPUTS)
+         ===================================================================== */}
+      <AdaptiveCyclePanel
+        cycle={adaptiveBundle.cycle}
+        factors={adaptiveBundle.factors}
+        dailyTasks={adaptiveBundle.dailyTasks}
+        onStepAction={handleCycleStepAction}
+        onPrimaryAction={() =>
+          !started ? onOpenCourses() : nextId ? onContinueLesson(nextId) : onOpenRoadmap()
+        }
+        primaryActionLabel={!started ? t('adaptive.cycleActionSetup') : t('adaptive.cycleActionOpen')}
+      />
 
       {/* =====================================================================
           BOTTOM ROW: Davom eting | Umumiy rivojlanish | Haftalik natija

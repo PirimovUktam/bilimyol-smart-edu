@@ -23,6 +23,9 @@ export function LessonCompletionModal({ isOpen, correctCount, totalCount, lesson
         </span>
         <p className="break-words font-bold">{lessonTitle}</p>
         <p className="text-sm text-slatefine">{correctCount} / {totalCount}{' '}{t('lesson.resultSaved')}</p>
+        <p className="rounded-xl border border-brand/25 bg-sand px-3 py-2 text-xs font-bold text-brand-dark">
+          {t('adaptive.completionCycleNote')}
+        </p>
         {skill && <Progress value={skill.score} showLabel ariaLabel={skill.name} tone="emerald" />}
         <Button className="w-full" onClick={onProceedToNext} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('lesson.openPath')}</Button>
       </div>

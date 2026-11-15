@@ -79,6 +79,9 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
           </div>
           <p className="text-sm font-semibold text-slatefine">
             {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length}{t('assessment.correctCount')}</p>
+          <p className="rounded-xl border border-brand/25 bg-sand px-3.5 py-2 text-xs font-bold text-brand-dark">
+            {t('adaptive.placementHandoff')}
+          </p>
           <ul className="space-y-3" aria-label={t('assessment.bySkill')}>
             {Object.values(result.computedScores).map((score) => (
               <li key={score.skillId}>

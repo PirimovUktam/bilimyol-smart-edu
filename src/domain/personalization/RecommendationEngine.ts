@@ -2,16 +2,19 @@ import { Recommendation } from '../entities/Recommendation';
 import { SkillScore } from '../entities/SkillScore';
 import { LearningPath } from '../entities/LearningPathNode';
 import { Skill } from '../entities/Skill';
+import { LearnerProfile } from '../entities/LearnerProfile';
+import { AdaptiveCycleEngine } from './AdaptiveCycleEngine';
 
 export class RecommendationEngine {
   /**
-   * Generates tailored next-step recommendation for the learner
+   * Generates tailored next-step recommendation with Explainable AI factors and cycle impact
    */
   public static generateRecommendation(
     courseId: string,
     skills: Skill[],
     skillScores: Record<string, SkillScore>,
-    roadmap: LearningPath
+    roadmap: LearningPath,
+    profile?: LearnerProfile | null
   ): Recommendation {
     // 1. Find weakest skill
     let weakestSkill: SkillScore | null = null;
@@ -34,6 +37,20 @@ export class RecommendationEngine {
     const isReinforcement = activeNode ? activeNode.isReinforcement || activeNode.status === 'reinforcement' : false;
     const weakestScoreValue = weakestSkill ? (weakestSkill as SkillScore).score : 100;
 
+    const cycle = AdaptiveCycleEngine.evaluateCycle({ skills, skillScores, roadmap, profile });
+    const explainableFactors = AdaptiveCycleEngine.buildExplainableFactors({
+      skills,
+      skillScores,
+      roadmap,
+      profile,
+    });
+    const dailyMicroTasks = AdaptiveCycleEngine.buildDailyMicroTasks({
+      skills,
+      skillScores,
+      roadmap,
+      profile,
+    });
+
     return {
       id: `rec_${courseId}_${Date.now()}`,
       courseId,
@@ -49,6 +66,9 @@ export class RecommendationEngine {
         : `O‘zlashtirish sur’atini saqlab qolish uchun rejadagi darsni davom ettiring.`,
       suggestedMinutes: isReinforcement ? 5 : activeNode ? activeNode.estimatedMinutes : 15,
       priority: weakestScoreValue < 50 ? 'high' : 'medium',
+      explainableFactors,
+      cycleImpact: cycle.loopUpdateSummary,
+      dailyMicroTasks,
     };
   }
 }

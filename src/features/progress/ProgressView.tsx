@@ -1,8 +1,10 @@
 import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
-import { ArrowRight, BookOpenCheck, ChartNoAxesCombined, Clock, Flame, Sparkles, Target, Trophy, Zap, type LucideIcon } from 'lucide-react';
+import { ArrowRight, BookOpenCheck, ChartNoAxesCombined, CheckCircle2, Clock, Flame, RefreshCw, Sparkles, Target, TrendingUp, Trophy, XCircle, Zap, type LucideIcon } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import type { DailyActivitySummary } from '@/domain/repositories/ILearnerRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
@@ -26,6 +28,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
   const courses = useCourseStore((state) => state.courses);
   const skills = useCourseStore((state) => state.activeCourseSkills);
   const profile = useLearnerStore((state) => state.profile);
+  const roadmap = useRoadmapStore((state) => state.roadmap);
   const [period, setPeriod] = useState<7 | 30>(7);
   const [activity, setActivity] = useState<DailyActivitySummary[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -49,6 +52,14 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
   }), { questions: 0, correct: 0, minutes: 0 });
   const accuracy = totals && totals.questions > 0 ? Math.round(100 * totals.correct / totals.questions) : null;
   const scores = activeCourse ? profile?.scoresByCourse[activeCourse.id] ?? {} : {};
+  const path = roadmap?.courseId === activeCourse?.id ? roadmap : null;
+  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
+    course: activeCourse,
+    profile,
+    skills,
+    skillScores: scores,
+    roadmap: path,
+  });
   const completed = new Set(profile?.completedLessonIds);
   const evaluated = skills.flatMap((skill) => scores[skill.id] ? [{ ...skill, score: scores[skill.id].score }] : [])
     .sort((a, b) => b.score - a.score);
@@ -76,6 +87,130 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
         <Stat icon={Flame} tone="bg-amber-50 text-amber-600" label={t('progress.streak')} value={t('dynamic.days', { count: profile?.streakDays ?? 0 })} index={2} />
         <Stat icon={Zap} tone="bg-sky-50 text-path" label={t('progress.xp')} value={String(profile?.xp ?? 0)} index={3} />
       </div>
+
+      {/* ADAPTIVE CYCLE EFFECTIVENESS & COMPETITIVE ADVANTAGE */}
+      <section aria-labelledby="adaptive-effectiveness-heading" className="grid gap-5 lg:grid-cols-12">
+        <Card className="fade-up stagger-2 space-y-5 lg:col-span-7" padding="md">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="space-y-1">
+              <span className="highlight">
+                <RefreshCw aria-hidden="true" className="size-3.5 text-path" />
+                {t('adaptive.effectivenessEyebrow')}
+              </span>
+              <h2 id="adaptive-effectiveness-heading" className="heading text-xl font-extrabold">
+                {t('adaptive.effectivenessTitle')}
+              </h2>
+              <p className="text-xs leading-relaxed text-slatefine sm:text-sm">
+                {t('adaptive.effectivenessDesc')}
+              </p>
+            </div>
+            <Badge variant="emerald" size="md">
+              +{effectiveness.growthDelta}%
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">
+              <p className="text-[11px] font-bold text-slatefine">{t('adaptive.baselineScore')} → {t('adaptive.currentScore')}</p>
+              <p className="mt-1 font-mono text-base font-extrabold text-ink">
+                {effectiveness.baselineScore}% → {effectiveness.currentScore}%
+              </p>
+            </div>
+            <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">
+              <p className="text-[11px] font-bold text-slatefine">{t('adaptive.gapsClosed')}</p>
+              <p className="mt-1 font-mono text-base font-extrabold text-mint">
+                {effectiveness.closedGapsCount} / {effectiveness.detectedGapsCount}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">
+              <p className="text-[11px] font-bold text-slatefine">{t('adaptive.cycleUpdates')}</p>
+              <p className="mt-1 font-mono text-base font-extrabold text-brand">
+                {effectiveness.adaptiveUpdatesCount}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">
+              <p className="text-[11px] font-bold text-slatefine">{t('adaptive.paceEfficiency')}</p>
+              <p className="mt-1 font-mono text-base font-extrabold text-path">
+                {effectiveness.paceEfficiencyPct}%
+              </p>
+            </div>
+          </div>
+
+          {effectiveness.skillDeltas.length > 0 && (
+            <ul className="space-y-2.5">
+              {effectiveness.skillDeltas.slice(0, 4).map((item) => {
+                const statusLabel = item.status === 'closed_gap'
+                  ? t('adaptive.gapStatusClosed')
+                  : item.status === 'gap_detected'
+                  ? t('adaptive.gapStatusDetected')
+                  : item.status === 'mastered'
+                  ? t('adaptive.gapStatusMastered')
+                  : item.status === 'unassessed'
+                  ? t('adaptive.gapStatusUnassessed')
+                  : t('adaptive.gapStatusReinforcing');
+                const variant = item.status === 'closed_gap' || item.status === 'mastered'
+                  ? 'emerald'
+                  : item.status === 'gap_detected'
+                  ? 'rose'
+                  : item.status === 'unassessed'
+                  ? 'slate'
+                  : 'amber';
+                return (
+                  <li key={item.skillId} className="space-y-1.5 rounded-2xl border border-hairline bg-canvas/50 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="font-extrabold text-ink">{item.skillName}</span>
+                      <div className="flex items-center gap-2">
+                        {item.delta > 0 && (
+                          <span className="inline-flex items-center gap-0.5 font-mono font-bold text-mint">
+                            <TrendingUp aria-hidden="true" className="size-3" />+{item.delta}%
+                          </span>
+                        )}
+                        <Badge variant={variant} size="sm">{statusLabel}</Badge>
+                      </div>
+                    </div>
+                    <Progress
+                      value={item.current}
+                      size="sm"
+                      ariaLabel={`${item.skillName} ${item.current}%`}
+                      tone={item.current >= 70 ? 'emerald' : item.current < 50 ? 'amber' : 'indigo'}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        <Card className="fade-up stagger-3 flex flex-col justify-between space-y-4 lg:col-span-5" padding="md">
+          <div className="space-y-1">
+            <span className="highlight">
+              <Sparkles aria-hidden="true" className="size-3.5 text-brand" />
+              {t('adaptive.bilimyolLabel')}
+            </span>
+            <h2 className="heading text-lg font-extrabold">{t('adaptive.advantageTitle')}</h2>
+          </div>
+
+          <ul className="space-y-2.5">
+            {[
+              { trad: t('adaptive.advPlanTraditional'), smart: t('adaptive.advPlanBilimyol') },
+              { trad: t('adaptive.advDynamicTraditional'), smart: t('adaptive.advDynamicBilimyol') },
+              { trad: t('adaptive.advXaiTraditional'), smart: t('adaptive.advXaiBilimyol') },
+              { trad: t('adaptive.advMeasureTraditional'), smart: t('adaptive.advMeasureBilimyol') },
+            ].map((row) => (
+              <li key={row.smart} className="rounded-2xl border border-hairline bg-canvas/60 p-3 text-xs space-y-1.5">
+                <p className="flex items-start gap-2 text-slatefine">
+                  <XCircle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-coral" />
+                  <span><strong className="font-bold">{t('adaptive.traditionalLabel')}:</strong> {row.trad}</span>
+                </p>
+                <p className="flex items-start gap-2 font-semibold text-ink">
+                  <CheckCircle2 aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-mint" />
+                  <span><strong className="font-bold text-mint">{t('adaptive.bilimyolLabel')}:</strong> {row.smart}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,21rem)]">
         <Card className="fade-up stagger-2 min-w-0 space-y-4" padding="md">

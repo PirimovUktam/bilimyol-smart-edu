@@ -285,6 +285,10 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                 </div>
               </div>
 
+              <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-mint max-w-md mx-auto">
+                {t('adaptive.reinforceImpact')}
+              </p>
+
               <div className="pt-2">
                 <Button
                   variant="primary"

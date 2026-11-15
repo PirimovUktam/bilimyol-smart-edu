@@ -5,6 +5,7 @@ import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
+import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -33,6 +34,13 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   const hasScores = Object.keys(scores).length > 0;
   const overall = SkillScoringEngine.computeOverallScore(scores);
   const path = roadmap?.courseId === courseId ? roadmap : null;
+  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
+    course,
+    profile,
+    skills,
+    skillScores: scores,
+    roadmap: path,
+  });
   const weak = skills.filter((skill) => scores[skill.id] && scores[skill.id].score < 50);
 
   return (
@@ -82,13 +90,19 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                 <Sparkles aria-hidden="true" className="size-5 text-brand" />{t('path.reinforce')}{' '}<span className="heading-accent">{t('path.needed')}</span>
               </h2>
               {weak.length ? (
-                <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
-                  {weak.map((skill) => (
-                    <li key={skill.id}>
-                      {skill.name} · <span className="font-bold text-coral">{scores[skill.id].score}%</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-3">
+                  <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
+                    {weak.map((skill) => (
+                      <li key={skill.id}>
+                        {skill.name} · <span className="font-bold text-coral">{scores[skill.id].score}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-coral/25 bg-coral/5 px-3 py-2 text-xs font-semibold text-graphite">
+                    <span>{t('adaptive.lessonImpactWrong')}</span>
+                    <Button size="sm" variant="outline" onClick={onProceedToRoadmap}>{t('path.path')}</Button>
+                  </div>
+                </div>
               ) : (
                 <p className="text-sm text-slatefine">
                   {hasScores
@@ -146,7 +160,26 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
 
                       {/* (b) Middle: Title, Description & Progress */}
                       <div className="min-w-0 space-y-2">
-                        <h3 className="heading break-words text-lg font-extrabold">{skill.name}</h3>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h3 className="heading break-words text-lg font-extrabold">{skill.name}</h3>
+                          {score != null && (() => {
+                            const delta = effectiveness.skillDeltas.find((d) => d.skillId === skill.id);
+                            if (!delta) return null;
+                            const gapLabel = delta.status === 'gap_detected'
+                              ? t('adaptive.gapStatusDetected')
+                              : delta.status === 'closed_gap'
+                              ? t('adaptive.gapStatusClosed')
+                              : delta.status === 'mastered'
+                              ? t('adaptive.gapStatusMastered')
+                              : t('adaptive.gapStatusReinforcing');
+                            const variant = delta.status === 'gap_detected'
+                              ? 'rose'
+                              : delta.status === 'closed_gap' || delta.status === 'mastered'
+                              ? 'emerald'
+                              : 'amber';
+                            return <Badge variant={variant} size="sm">{gapLabel}</Badge>;
+                          })()}
+                        </div>
                         <p className="line-clamp-2 text-sm text-slatefine">{skill.description}</p>
                         <div className="pt-2">
                           {score == null ? (

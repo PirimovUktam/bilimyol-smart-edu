@@ -451,6 +451,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         <p className="text-slate-700">
                           {lastAnswerResult.explanation || t('lesson.understood')}
                         </p>
+                        <p className="rounded-xl border border-mint/30 bg-mint/10 px-3 py-2 text-xs font-bold text-[#046b4a]">
+                          {t('adaptive.lessonImpactCorrect')}
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-3 text-xs sm:text-sm">
@@ -469,6 +472,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                             (lastAnswerResult.correctOption
                               ? `Nima uchun xato? To‘g‘ri javob — "${lastAnswerResult.correctOption}". Yechimni qadam-baqadam tekshirib ko‘ring.`
                               : t('lesson.incorrect'))}
+                        </p>
+                        <p className="rounded-xl border border-coral/25 bg-coral/10 px-3 py-2 text-xs font-bold text-[#a51c1c]">
+                          {t('adaptive.lessonImpactWrong')}
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-2 mt-1">

@@ -314,10 +314,10 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <span>BOZOR AUDITORIYASI</span>
                   <Users className="w-3.5 h-3.5 text-path" />
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-path transition-colors">
-                  6.5M+
+                <div className="text-2xl sm:text-3xl font-black text-white mt-1 group-hover:text-path transition-colors">
+                  6 870 545
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">Maktab o‘quvchilari (O‘zbekiston)</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">2025-yilda umumta’lim o‘quvchilari (+9,3%)</div>
               </motion.div>
 
               <motion.div
@@ -325,13 +325,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 className="p-5 rounded-2xl bg-white/[0.04] border border-mint/30 backdrop-blur-xl shadow-[0_0_25px_rgba(6,150,105,0.1)] text-left group"
               >
                 <div className="text-xs font-mono font-bold text-mint flex items-center justify-between">
-                  <span>METODIKA</span>
+                  <span>ADAPTIV SIKL</span>
                   <CheckCircle2 className="w-3.5 h-3.5 text-mint" />
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-mint transition-colors">
-                  100%
+                <div className="text-2xl sm:text-3xl font-black text-white mt-1 group-hover:text-mint transition-colors">
+                  5 Bosqich
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">Adaptiv Diagnostika & Bilim Matritsasi</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Diagnostika → Bo‘shliq → Yo‘l → Mashq → Progress</div>
               </motion.div>
 
               <motion.div
@@ -339,13 +339,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 className="p-5 rounded-2xl bg-white/[0.04] border border-brand/30 backdrop-blur-xl shadow-[0_0_25px_rgba(53,80,214,0.1)] text-left group"
               >
                 <div className="text-xs font-mono font-bold text-path flex items-center justify-between">
-                  <span>AI TEZLIK</span>
+                  <span>EXPLAINABLE AI</span>
                   <Clock className="w-3.5 h-3.5 text-path" />
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-path transition-colors">
-                  &lt;1.5s
+                <div className="text-2xl sm:text-3xl font-black text-white mt-1 group-hover:text-path transition-colors">
+                  6 Mezon
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">Yo‘lchi AI Deno Edge Javob Vaqti</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Maqsad, Profil, Daraja, Xato, Tezlik, Vaqt</div>
               </motion.div>
 
               <motion.div
@@ -365,7 +365,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </motion.div>
         </section>
 
-        {/* 4. SECTION 1: MUAMMO → BIZNING YECHIM (CYBERNETIC COMPARISON) */}
+        {/* 4. SECTION 1: MUAMMO (SLIDE 01) → YANGILIK & YECHIM (SLIDE 02) */}
         <section id="problem-solution" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -375,19 +375,19 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-path bg-path/80 px-3.5 py-1 rounded-full border border-path/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(13,154,214,0.2)]">
-              1. ASOSIY BOSQICH • PITCH NUKLEUS
+              01 TA’LIMDA EHTIYOJ • 02 ADAPTIV TA’LIM SIKLI
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Kritik Muammo <span className="text-slate-500 font-light">vs</span> Bizning Yechim
+              AI chatbot emas — Adaptiv ta’lim sikli
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3 max-w-2xl mx-auto">
-              O‘zbekiston ta’lim tizimidagi eng og‘riqli tizimli bo‘shliqlarni sun’iy intellekt va adaptiv pedagogika orqali tubdan hal etamiz.
+              Ta’lim bor, lekin har bir o‘quvchi uchun moslashtirilgan yo‘l yetishmaydi. Bir sinfda tayyorgarlik, tezlik va bilim bo‘shliqlari turlicha.
             </p>
           </motion.div>
 
-          {/* Side-by-Side Neon Comparison Grid */}
+          {/* Side-by-Side Comparison Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch relative">
-            {/* THE PROBLEM SIDE (Crimson Velvet Dark Glass) */}
+            {/* SLIDE 01: THE PROBLEM */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -395,97 +395,91 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               transition={{ duration: 0.6 }}
               className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-coral/35 via-slate-900/90 to-slate-950 border border-coral/30 backdrop-blur-2xl shadow-[0_0_50px_rgba(220,40,40,0.12)] relative overflow-hidden flex flex-col justify-between group"
             >
-              {/* Corner ambient danger aura */}
               <div className="absolute top-0 right-0 w-44 h-44 bg-coral/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div>
-                <div className="flex items-center gap-3.5 mb-8 pb-5 border-b border-coral/20">
-                  <div className="w-12 h-12 rounded-2xl bg-coral/20 border border-coral/40 text-coral flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(220,40,40,0.3)]">
-                    ✕
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-coral animate-ping" />
-                      <h3 className="text-2xl font-black text-white">Kritik Muammo</h3>
+              <div className="space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-coral/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-coral/20 border border-coral/40 text-coral flex items-center justify-center font-black text-lg">
+                      01
                     </div>
-                    <p className="text-xs text-coral mt-0.5">An’anaviy ta’limdagi 4 ta tizimli bo‘shliq</p>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-white">Ta’limda ehtiyoj — har bir o‘quvchiga mos yo‘l</h3>
+                      <p className="text-xs text-coral mt-0.5">Bir sinfda tayyorgarlik, tezlik va bilim bo‘shliqlari turlicha</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-coral/15 text-coral border border-coral/30">
+                    DOLZARBLIK · 20 BALL
+                  </span>
+                </div>
+
+                {/* Official Stats Block from Slide 01 */}
+                <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-path">6 870 545</div>
+                    <div className="text-[11px] text-slate-300 mt-0.5">2025-yilda umumta’lim o‘quvchilari</div>
+                  </div>
+                  <div className="border-l border-white/10 pl-4">
+                    <div className="text-2xl sm:text-3xl font-black text-mint">+9,3%</div>
+                    <div className="text-[11px] text-slate-300 mt-0.5">2020–2025 o‘sish</div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Problem Card 1 */}
+                <div className="space-y-3.5">
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
+                    className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
                   >
-                    <div className="flex items-center gap-2.5 mb-1.5">
+                    <div className="flex items-center gap-2.5 mb-1">
                       <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
                         01
                       </span>
-                      <h4 className="font-bold text-sm text-white">35–40 talik ommaviy sinflar</h4>
+                      <h4 className="font-bold text-sm text-white">Bir xil temp</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      An’anaviy 45 daqiqalik darsda har bir o‘quvchiga hatto 1 daqiqa ham individual vaqt ajratilmaydi. Barcha bolalar qobiliyatidan qat’i nazar bitta o‘rtacha sur’atda o‘qiydi.
+                      Kimdir tez o‘zlashtiradi, kimdir ko‘proq mustahkamlashga muhtoj. Umumiy dars rejasi bir o‘quvchi uchun juda oson, boshqasi uchun murakkab.
                     </p>
                   </motion.div>
 
-                  {/* Problem Card 2 */}
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
+                    className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
                   >
-                    <div className="flex items-center gap-2.5 mb-1.5">
+                    <div className="flex items-center gap-2.5 mb-1">
                       <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
                         02
                       </span>
-                      <h4 className="font-bold text-sm text-white">Qimmat repetitorlar (500K – 1.5M so‘m/oy)</h4>
+                      <h4 className="font-bold text-sm text-white">Bo‘shliq kech aniqlanadi</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Oilalar byudjetiga juda og‘ir moliyaviy yuk. Qishloq va tumanlarda esa ixtisoslashgan malakali mutaxassislar umuman yetishmaydi yoki topilmaydi.
+                      Tayanch mavzu to‘liq tushunilmay, keyingi bosqichga o‘tilishi mumkin. Bilim bo‘shlig‘i o‘z vaqtida aniqlanmasa, keyingi mavzularni o‘zlashtirish qiyinlashadi.
                     </p>
                   </motion.div>
 
-                  {/* Problem Card 3 */}
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
+                    className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
                   >
-                    <div className="flex items-center gap-2.5 mb-1.5">
+                    <div className="flex items-center gap-2.5 mb-1">
                       <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
                         03
                       </span>
-                      <h4 className="font-bold text-sm text-white">Quruq, tushunarsiz testlar</h4>
+                      <h4 className="font-bold text-sm text-white">Individual reja uchun vaqt kam</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      O‘quvchi xato qilganda nega xato qilganini pedagogik tushuntiradigan hech kim yo‘q. Faqat quruq "noto‘g‘ri" degan ball qo‘yilib, bolaning qiziqishi so‘nadi.
-                    </p>
-                  </motion.div>
-
-                  {/* Problem Card 4 */}
-                  <motion.div
-                    whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.03] border border-coral/20 hover:border-coral/50 hover:bg-coral/20 transition-all"
-                  >
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
-                        04
-                      </span>
-                      <h4 className="font-bold text-sm text-white">Bilim bo‘shliqlarining yillar davomida to‘planishi</h4>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      5-sinfda kasrlarni o‘zlashtirmagan o‘quvchi 8-sinfda algebra va geometriyani mutlaqo tushuna olmay qoladi va ta’limdan ortda qoladi.
+                      O‘qituvchining har bir o‘quvchiga alohida tahlil va doimiy qayta tuziladigan reja berish vaqti cheklangan.
                     </p>
                   </motion.div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-coral/20 flex items-center justify-between text-[11px] text-coral font-mono">
-                <span>Natija: Past o‘zlashtirish & Ta’limiy tengsizlik</span>
-                <span className="font-bold">An’anaviy Model</span>
+              <div className="mt-6 pt-4 border-t border-coral/20 flex items-center justify-between text-[11px] text-coral font-mono">
+                <span>Natija: Past o‘zlashtirish & Motivatsiya yo‘qolishi</span>
+                <span className="font-bold">An’anaviy Statik Model</span>
               </div>
             </motion.div>
 
-            {/* THE SOLUTION SIDE (Cyan-Emerald Hyper-Glass) */}
+            {/* SLIDE 02: THE SOLUTION (5-STEP ADAPTIVE LOOP) */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -493,105 +487,64 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               transition={{ duration: 0.6 }}
               className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-path/40 via-slate-900/90 to-slate-950 border-2 border-path/40 backdrop-blur-2xl shadow-[0_0_60px_rgba(13,154,214,0.2)] relative overflow-hidden flex flex-col justify-between group"
             >
-              {/* Luminous Top Accent Beam */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-path to-transparent shadow-[0_0_20px_#0d9ad6]" />
               <div className="absolute top-0 right-0 w-44 h-44 bg-path/15 rounded-full blur-3xl pointer-events-none" />
 
-              <div>
-                <div className="flex items-center gap-3.5 mb-8 pb-5 border-b border-path/25">
-                  <div className="w-12 h-12 rounded-2xl bg-path/20 border border-path/50 text-path flex items-center justify-center font-black text-xl shadow-[0_0_25px_rgba(13,154,214,0.35)]">
-                    ✓
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-path animate-pulse" />
-                      <h3 className="text-2xl font-black text-white">BilimYo‘l Yechimi</h3>
+              <div className="space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-path/25">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-path/20 border border-path/50 text-path flex items-center justify-center font-black text-lg">
+                      02
                     </div>
-                    <p className="text-xs text-path mt-0.5">Sun’iy intellektga asoslangan shaxsiy ekotizim</p>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-white">Yangilik — AI chatbot emas, adaptiv ta’lim sikli</h3>
+                      <p className="text-xs text-path mt-0.5">Diagnostik baholash + mastery learning + formative feedback</p>
+                    </div>
                   </div>
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-path/15 text-path border border-path/30">
+                    INNOVATSION YANGILIK · 20 BALL
+                  </span>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Solution Card 1 */}
-                  <motion.div
-                    whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.04] border border-path/25 hover:border-path/60 hover:bg-path/20 transition-all shadow-sm"
-                  >
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-path/20 text-path font-mono font-black text-xs flex items-center justify-center border border-path/40">
-                        01
-                      </span>
-                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
-                        100% Adaptiv Diagnostika
-                        <span className="text-[10px] font-bold text-path bg-ink px-2 py-0.5 rounded border border-path">0–100% Shkala</span>
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      8 ta dinamik moslashuvchan savol orqali o‘quvchining har bir ko‘nikmasi (Algebra, Tenglamalar, Funksiyalar, Lug‘at va h.k.) aniq xaritaga tushiriladi.
-                    </p>
-                  </motion.div>
+                {/* Amaliy yangilik & Innovatsion qiymat */}
+                <div className="p-4 rounded-2xl bg-white/[0.04] border border-path/25 space-y-1.5">
+                  <div className="text-[11px] font-mono font-bold text-mint uppercase">Innovatsion qiymat</div>
+                  <p className="text-xs sm:text-sm font-bold text-white">
+                    Lokal ta’lim kontenti + o‘quvchi profili + natijaga qarab qayta tavsiya.
+                  </p>
+                  <p className="text-[11px] text-slate-300">
+                    Bu jarayon bitta savolga javob berish bilan tugamaydi; o‘quvchi natijasi keyingi tavsiyaga bevosita ta’sir qiladi va sikl samaradorligi o‘lchanadi.
+                  </p>
+                </div>
 
-                  {/* Solution Card 2 */}
-                  <motion.div
-                    whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.04] border border-path/25 hover:border-path/60 hover:bg-path/20 transition-all shadow-sm"
-                  >
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-path/20 text-path font-mono font-black text-xs flex items-center justify-center border border-path/40">
-                        02
-                      </span>
-                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
-                        "Yo‘lchi AI" Do‘stona Mentori
-                        <span className="text-[10px] font-bold text-path bg-ink px-2 py-0.5 rounded border border-brand-dark">Gemini 2.5 Flash</span>
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Google Gemini 2.5 Flash modeli bolaga tayyor javobni emas, xatoning tub ildizini tushuntiradi va o‘z fikrlashini rivojlantirishga yo‘naltiradi.
-                    </p>
-                  </motion.div>
-
-                  {/* Solution Card 3 */}
-                  <motion.div
-                    whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-white/[0.04] border border-path/25 hover:border-path/60 hover:bg-path/20 transition-all shadow-sm"
-                  >
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-path/20 text-path font-mono font-black text-xs flex items-center justify-center border border-path/40">
-                        03
-                      </span>
-                      <h4 className="font-bold text-sm text-white">Individual 3 Qadamli Darslar</h4>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Zaif nuqta aniqlanishi bilanoq AI maxsus dars generatsiya qiladi: <strong>1) Tushuncha</strong>; <strong>2) Vizual model & Audio</strong>; <strong>3) Interaktiv mustahkamlash</strong>.
-                    </p>
-                  </motion.div>
-
-                  {/* Solution Card 4 (Monetization highlighted) */}
-                  <motion.div
-                    whileHover={{ x: 6 }}
-                    className="p-5 rounded-2xl bg-mint/30 border border-mint/40 hover:border-mint hover:bg-mint/40 transition-all shadow-[0_0_20px_rgba(6,150,105,0.15)]"
-                  >
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="w-6 h-6 rounded-lg bg-mint/20 text-mint font-mono font-black text-xs flex items-center justify-center border border-mint/40">
-                        04
-                      </span>
-                      <h4 className="font-bold text-sm text-white flex items-center gap-2">
-                        Hamyonbop va Har Doim Yoningizda
-                        <span className="text-[10px] font-black text-mint bg-mint/90 px-2 py-0.5 rounded-full border border-mint">
-                          59 900 so‘m / oy
-                        </span>
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy ta’lim. Web va Flutter Mobile orqali 24/7 ishlaydi.
-                    </p>
-                  </motion.div>
+                {/* 5 Connected Steps Visualization */}
+                <div className="space-y-2.5">
+                  <div className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                    Bir-biriga ulangan 5 bosqich
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                    {[
+                      { code: '01', name: 'Diagnostika', desc: 'Boshlang‘ich bilim holati', color: 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' },
+                      { code: '02', name: 'Bilim profili', desc: 'Kuchli va zaif mavzular', color: 'border-blue-400/50 bg-blue-500/15 text-blue-300' },
+                      { code: '03', name: 'Individual yo‘l', desc: 'Keyingi qadam tanlanadi', color: 'border-violet-400/50 bg-violet-500/15 text-violet-300' },
+                      { code: '04', name: 'Adaptiv mashq', desc: 'Darajaga mos topshiriq', color: 'border-amber-400/50 bg-amber-500/15 text-amber-300' },
+                      { code: '05', name: 'Progress', desc: 'Natija qayta o‘lchanadi', color: 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' },
+                    ].map((st) => (
+                      <div key={st.code} className={`p-3 rounded-xl border ${st.color} flex flex-col justify-between gap-1`}>
+                        <span className="font-mono text-xs font-black">{st.code}</span>
+                        <div>
+                          <div className="text-xs font-extrabold text-white">{st.name}</div>
+                          <div className="text-[10px] text-slate-300 leading-tight mt-0.5">{st.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-path/25 flex items-center justify-between text-[11px] text-path font-mono">
-                <span>Natija: 100% Shaxsiylashtirilgan O‘sish</span>
-                <span className="font-bold text-mint">BilimYo‘l Smart Edu</span>
+              <div className="mt-6 pt-4 border-t border-path/25 flex items-center justify-between text-[11px] text-path font-mono">
+                <span className="font-bold">Sikl har bir yangi natijadan so‘ng yangilanadi</span>
+                <span className="font-bold text-mint">Explainable AI</span>
               </div>
             </motion.div>
           </div>
@@ -820,25 +773,53 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           </div>
         </section>
 
-        {/* 6. SECTION 3: NEGA AYNAN BIZNING JAMOA? (MVP USTUNLIGI) */}
+        {/* 6. SECTION 3: BIZNING USTUNLIGIMIZ & EXPLAINABLE AI (6 INPUTS) */}
         <section id="why-us-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/10 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-14"
           >
             <span className="text-path bg-path/80 px-3.5 py-1 rounded-full border border-path/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(13,154,214,0.2)]">
-              3. ASOSIY BOSQICH • RAXOBATBARDOSH USTUNLIK
+              3. ASOSIY BOSQICH • BIZNING USTUNLIGIMIZ
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Nima Uchun Aynan Bizning Jamoa?
+              Explainable AI & Raqobatbardosh Ustunlik
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              G‘oya va oddiy slaydlar bosqichidan o‘tib, real ishlayotgan mahsulotga ega ekanligimiz — bizning asosiy ustunligimizdir.
+              Yo‘lchi AI 6 ta shaxsiylashtirish mezoni asosida shaffof tavsiya beradi va har bir adaptiv siklning real samaradorligini o‘lchaydi.
             </p>
           </motion.div>
+
+          {/* 6 Personalization Inputs Showcase */}
+          <div className="mb-10 p-6 rounded-3xl bg-slate-900/75 border border-white/10 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <span className="text-xs font-mono font-bold text-path uppercase tracking-wider">
+                Shaxsiy Ta’lim Oqimiga Kiruvchi 6 Ta Mezon (Inputs → Personalized Path)
+              </span>
+              <span className="text-[11px] font-bold text-mint bg-mint/15 px-2.5 py-1 rounded-full border border-mint/30">
+                Real vaqtda qayta hisoblanadi
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                { label: 'Goal (Maqsad)', desc: 'Maktab, imtihon yoki amaliy ko‘nikma' },
+                { label: 'Skill profiling', desc: 'Kuchli va zaif mavzular xaritasi' },
+                { label: 'Knowledge level', desc: 'Joriy o‘zlashtirish foizi (0–100%)' },
+                { label: 'Errors (Xatolar)', desc: 'Bo‘shliq aniqlansa mustahkamlash' },
+                { label: 'Learning speed', desc: 'Mavzuni o‘zlashtirish sur’ati' },
+                { label: 'Daily time', desc: '15 / 30 / 60 daqiqalik kunlik byudjet' },
+              ].map((item, idx) => (
+                <div key={item.label} className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1">
+                  <div className="text-[10px] font-mono font-bold text-path">0{idx + 1}</div>
+                  <div className="text-xs font-extrabold text-white">{item.label}</div>
+                  <div className="text-[11px] text-slate-400 leading-snug">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div
@@ -848,9 +829,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-path/20 text-path flex items-center justify-center mb-4 border border-path/40">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">100% Ishlayotgan MVP</h3>
+              <h3 className="text-lg font-bold text-white mb-2">AI asosida shaxsiy reja</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Biz quruq taqdimot bilan kelmadik. Web va Flutter Mobile ilovamiz to‘liq tayyor, testlar bilan qoplangan va jonli rejimda ishlaydi.
+                Bir xil darslik o‘rniga o‘quvchining maqsadi, boshlang‘ich darajasi va kunlik vaqtiga mos shaxsiy yo‘l xaritasi tuziladi.
               </p>
             </motion.div>
 
@@ -861,9 +842,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-brand/20 text-path flex items-center justify-center mb-4 border border-brand/40">
                 <Brain className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Haqiqiy Pedagogik AI</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Adaptiv va dinamik ta’lim</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Oddiy ChatGPT wrapper emas. Tizim bolaga tayyor javobni aytib dangasa qilmaydi, balki ko‘nikmalar grafigi bo‘yicha tushuntiradi.
+                Jarayon bitta savol bilan tugamaydi: har bir javob va xato keyingi dars hamda mustahkamlash tavsiyasini avtomatik yangilaydi.
               </p>
             </motion.div>
 
@@ -874,9 +855,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-mint/20 text-mint flex items-center justify-center mb-4 border border-mint/40">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Server Anti-Cheat Xavfsizligi</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Tavsiyalar sababi (Explainable AI)</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Ballar, ko‘nikmalar va XP lar to‘liq server-side hisoblanadi. O‘quvchi brauzer orqali javoblarni ko‘rib ololmaydi yoki ballni soxtalashtira olmaydi.
+                O‘quvchi va o‘qituvchi nima uchun aynan shu mavzu tavsiya etilganini 6 ta mezon bo‘yicha shaffof tushuntirish bilan ko‘radi.
               </p>
             </motion.div>
 
@@ -885,11 +866,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               className="p-6 rounded-3xl bg-slate-900/70 border border-brand/30 backdrop-blur-xl shadow-[0_0_30px_rgba(53,80,214,0.1)] transition-all"
             >
               <div className="w-12 h-12 rounded-2xl bg-brand/20 text-path flex items-center justify-center mb-4 border border-brand/40">
-                <Users className="w-6 h-6" />
+                <TrendingUp className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">3 Kishi Kuchli Sinergiyasi</h3>
+              <h3 className="text-lg font-bold text-white mb-2">O‘lchash va optimizatsiya</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Tizim arxitekturasi va AI muhandisligi (O‘ktam), biznes strategiyasi va maktablar bilan B2B hamkorlik (Abdurauf) hamda milliy kurikulum metodikasi (Dildora) uyg‘unlashgan.
+                Real-time analytics boshlang‘ich va joriy o‘zlashtirish (+Δ%), yopilgan bo‘shliqlar hamda server-side anti-cheat natijalarini o‘lchaydi.
               </p>
             </motion.div>
           </div>
