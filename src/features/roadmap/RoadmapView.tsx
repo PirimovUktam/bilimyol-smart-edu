@@ -1,3 +1,5 @@
+import { translate as t } from '@/core/locales/useTranslation';
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
 import { ArrowRight, BookOpen, Check, Clock, Compass, Lock, Play, Sparkles, Zap } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -16,7 +18,7 @@ import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { SectionState } from '@/presentation/components/SectionState';
 
-const filters = { all: 'Barchasi', active: 'Ochiq bosqichlar', completed: 'Yakunlangan' } as const;
+const filters = { get all() { return t('courses.all'); }, get active() { return t('path.openStages'); }, get completed() { return t('path.completed'); } } as const;
 
 interface RoadmapViewProps {
   onStartLesson: (lessonId: string) => void;
@@ -26,6 +28,7 @@ interface RoadmapViewProps {
 }
 
 export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure }: RoadmapViewProps) {
+  const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const profile = useLearnerStore((state) => state.profile);
   const roadmap = useRoadmapStore((state) => state.roadmap);
@@ -61,11 +64,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
         ? await supabaseLessonRepository.getLessonById(baseNode.targetLessonId)
         : await supabaseLessonRepository.getLessonByCourseAndSkill(node.courseId, node.skillId);
       if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId) {
-        throw new Error('Bu mavzuga mos mashq topilmadi.');
+        throw new Error(t('path.noExercise'));
       }
       setPractice(linked.reinforcementExercise);
     } catch {
-      setPracticeError('Mustahkamlash mashqi yuklanmadi. Qayta urinib ko‘ring.');
+      setPracticeError(t('path.exerciseFailed'));
     } finally {
       setPracticeLoading(null);
     }
@@ -74,42 +77,39 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   return (
     <div className="learning-page space-y-6 sm:space-y-8">
       <PageHeader
-        eyebrow={course?.title ?? 'O‘quv reja'}
-        title="Mening ta’lim yo‘lim"
-        highlightWord="ta’lim yo‘lim"
-        description="Mavzular bog‘liqligini ko‘ring va navbatdagi bosqichni boshlang."
+        eyebrow={course?.title ?? t('path.curriculum')}
+        title={t('path.title')}
+        highlightWord={t('path.highlight')}
+        description={t('path.description')}
         action={
           ready && (
             <Button
               variant="outline"
               leftIcon={<Compass aria-hidden="true" className="size-4 text-brand" />}
               onClick={onOpenKnowledgeMap}
-            >
-              Bilim xaritasi
-            </Button>
+            >{t('path.map')}</Button>
           )
         }
       />
 
       {!course ? (
         <Card className="space-y-4">
-          <SectionState title="Avval fanni tanlang" />
-          <Button onClick={onChooseCourse}>Fanlar katalogi</Button>
+          <SectionState title={t('courses.chooseFirst')} />
+          <Button onClick={onChooseCourse}>{t('courses.subjects')}</Button>
         </Card>
       ) : !ready ? (
         <Card className="space-y-4">
-          <span className="highlight">Boshlang‘ich sozlama</span>
-          <h2 className="heading text-xl font-extrabold">Qayerdan boshlaysiz?</h2>
-          <p className="text-sm text-slatefine">Fan bo‘yicha darajangizni tanlaganingizdan keyin mos reja ochiladi.</p>
-          <Button onClick={onConfigure}>O‘rganishni boshlash</Button>
+          <span className="highlight">{t('path.setup')}</span>
+          <h2 className="heading text-xl font-extrabold">{t('path.where')}</h2>
+          <p className="text-sm text-slatefine">{t('path.levelDescription')}</p>
+          <Button onClick={onConfigure}>{t('path.start')}</Button>
         </Card>
       ) : foundation ? (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <section className="min-w-0 space-y-4" aria-labelledby="foundation-title">
             <div>
-              <span className="highlight mb-2">Asosiy poydevor</span>
-              <h2 id="foundation-title" className="heading text-2xl font-extrabold">
-                Boshlang‘ich <span className="heading-accent">darslar</span>
+              <span className="highlight mb-2">{t('path.foundation')}</span>
+              <h2 id="foundation-title" className="heading text-2xl font-extrabold">{t('courses.beginner')}{' '}<span className="heading-accent">{t('path.lessons')}</span>
               </h2>
             </div>
             <ol className="learning-timeline">
@@ -127,13 +127,13 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                     >
                       <div className="space-y-1">
                         <Badge variant={done ? 'emerald' : current ? 'indigo' : 'slate'} size="sm">
-                          {done ? 'Tugallangan' : current ? 'Navbatdagi darsingiz' : 'Keyingi bosqich'}
+                          {done ? 'Tugallangan' : current ? t('path.nextLesson') : t('path.nextStage')}
                         </Badge>
-                        <h3 className="heading text-base font-extrabold">{index + 1}-boshlang‘ich dars</h3>
+                        <h3 className="heading text-base font-extrabold">{index + 1}{t('path.foundationNumber')}</h3>
                       </div>
                       {(current || done) && (
                         <Button variant={current ? 'primary' : 'outline'} size="sm" onClick={() => onStartLesson(id)}>
-                          {current ? 'Boshlang‘ich darsni ochish' : 'Qayta ko‘rish'}
+                          {current ? t('path.openFoundation') : t('path.review')}
                         </Button>
                       )}
                     </Card>
@@ -143,41 +143,37 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             </ol>
           </section>
           <Card className="fade-up stagger-2 space-y-3" padding="md">
-            <span className="highlight">Progress</span>
-            <h2 className="heading text-lg font-extrabold">Yo‘ldagi natijangiz</h2>
+            <span className="highlight">{t('path.progress')}</span>
+            <h2 className="heading text-lg font-extrabold">{t('path.result')}</h2>
             <p className="text-sm text-slatefine">
-              {foundationCompleted} / {foundationPath.length} dars tugallangan
-            </p>
-            <Progress value={(100 * foundationCompleted) / foundationPath.length} tone="emerald" ariaLabel="Boshlang‘ich darslar bajarilishi" />
+              {foundationCompleted} / {foundationPath.length}{t('path.lessonsDone')}</p>
+            <Progress value={(100 * foundationCompleted) / foundationPath.length} tone="emerald" ariaLabel={t('path.foundationProgress')} />
           </Card>
         </div>
       ) : error && !path ? (
         <SectionState
           kind="error"
-          title="Ta’lim yo‘li yuklanmadi"
+          title={t('path.failed')}
           description={error}
           onRetry={() => void useRoadmapStore.getState().loadRoadmap(course.id)}
         />
       ) : !path ? (
-        <SectionState kind="loading" title="Ta’lim yo‘li yuklanmoqda…" />
+        <SectionState kind="loading" title={t('path.loading')} />
       ) : (
         <>
           <section className="learning-hero fade-up stagger-1 grid items-center gap-5 rounded-3xl p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-8">
             <div className="min-w-0 space-y-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
-                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
-                O‘quv rejangiz
-              </span>
+                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />{t('path.yourPlan')}</span>
               <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
-                {completed} / {topics.length} mavzu yakunlangan
-              </h2>
+                {completed} / {topics.length}{t('path.topicsDone')}</h2>
               {topics.length > 0 && (
                 <Progress
                   value={(100 * completed) / topics.length}
                   tone="cyan"
                   size="sm"
                   className="max-w-sm"
-                  ariaLabel="Yo‘l bosqichlari bajarilishi"
+                  ariaLabel={t('path.stageProgress')}
                 />
               )}
             </div>
@@ -187,13 +183,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                 className="w-fit border-white bg-white text-brand hover:bg-indigo-50"
                 onClick={() => onStartLesson(lesson)}
                 rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
-              >
-                Davom etish
-              </Button>
+              >{t('courses.continue')}</Button>
             )}
           </section>
 
-          <div role="group" aria-label="Bosqichlarni filtrlash" className="fade-up stagger-2 flex flex-wrap gap-2">
+          <div role="group" aria-label={t('path.filter')} className="fade-up stagger-2 flex flex-wrap gap-2">
             {(Object.keys(filters) as (keyof typeof filters)[]).map((key) => (
               <Button
                 key={key}
@@ -213,7 +207,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             </p>
           )}
           {shown.length === 0 && (
-            <SectionState title={nodes.length ? 'Bu bo‘limda bosqichlar yo‘q' : 'Bu fan uchun ta’lim yo‘li hali tuzilmagan'} />
+            <SectionState title={nodes.length ? t('path.emptyFilter') : t('path.empty')} />
           )}
 
           <ol className="learning-timeline">
@@ -273,13 +267,13 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                           size="sm"
                         >
                           {done
-                            ? 'Yakunlangan'
+                            ? t('path.completed')
                             : locked
                             ? 'Qulflangan'
                             : node.isReinforcement
-                            ? 'Mustahkamlash'
+                            ? t('path.reinforce')
                             : isActive
-                            ? 'Keyingi qadam'
+                            ? t('lesson.nextStep')
                             : 'Ochiq'}
                         </Badge>
                       </div>
@@ -303,7 +297,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                         </div>
                       )}
                       {locked && prerequisites.length > 0 && (
-                        <p className="text-xs font-medium text-slatefine">Avval yakunlang · {prerequisites.join(', ')}</p>
+                        <p className="text-xs font-medium text-slatefine">{t('path.prerequisite')}{' '}{prerequisites.join(', ')}</p>
                       )}
                     </div>
 
@@ -312,13 +306,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slatefine">
                         <span className="inline-flex items-center gap-1">
                           <Clock aria-hidden="true" className="size-3.5 text-brand" />
-                          {node.estimatedMinutes} daqiqa
-                        </span>
+                          {node.estimatedMinutes}{t('courses.minutes')}</span>
                         <span className="inline-flex items-center gap-1 text-amber-600">
                           <Zap aria-hidden="true" className="size-3.5" />
                           +20 XP
                         </span>
-                        {node.score != null && <span>O‘zlashtirish · {node.score}%</span>}
+                        {node.score != null && <span>{t('tutor.mastery')}{' '}{node.score}%</span>}
                       </p>
 
                       {!locked && (
@@ -330,9 +323,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                               isLoading={practiceLoading === node.id}
                               disabled={practiceLoading !== null}
                               onClick={() => void loadPractice(node)}
-                            >
-                              Mashqni boshlash
-                            </Button>
+                            >{t('path.startExercise')}</Button>
                           ) : target ? (
                             <Button
                               size="sm"
@@ -343,10 +334,10 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                               }}
                               leftIcon={<Play aria-hidden="true" className="size-4" />}
                             >
-                              {done ? 'Qayta ko‘rish' : 'Darsni boshlash'}
+                              {done ? t('path.review') : t('path.startLesson')}
                             </Button>
                           ) : (
-                            !done && <p className="text-xs text-slatefine">Bu mavzu uchun dars mavjud emas.</p>
+                            !done && <p className="text-xs text-slatefine">{t('path.noLesson')}</p>
                           )}
                         </div>
                       )}
@@ -370,7 +361,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             void useLearnerStore
               .getState()
               .loadProfile()
-              .catch(() => setPracticeError('Natija saqlandi. Profilni qayta yuklang.'));
+              .catch(() => setPracticeError(t('path.refreshProfile')));
           }}
         />
       )}

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, RotateCcw } from 'lucide-react';
 import { sounds } from '@/core/utils/soundEffects';
@@ -8,6 +9,7 @@ interface AudioSimWaveProps {
 }
 
 export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerName }) => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -50,9 +52,7 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
             <Volume2 className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-path uppercase tracking-wider block">
-              Audio Simulyator
-            </span>
+            <span className="text-xs font-bold text-path uppercase tracking-wider block">{t('lesson.audioSimulator')}</span>
             <h4 className="text-sm font-bold text-white">{speakerName}</h4>
           </div>
         </div>
@@ -96,22 +96,20 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
           <button
             onClick={handleReplay}
             className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-            title="Boshidan tinglash"
+            title={t('lesson.listenAgain')}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
 
         <div className="text-xs text-slate-400">
-          {isPlaying ? 'Tinglanmoqda...' : 'Tinglash uchun "Play"ni bosing'}
+          {isPlaying ? 'Tinglanmoqda...' : t('lesson.play')}
         </div>
       </div>
 
       {/* Transcript with highlighting */}
       <div className="p-4 bg-slate-800/80 rounded-xl border border-slate-700/80 space-y-2">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-          Matn transkripsiyasi:
-        </span>
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{t('lesson.transcript')}</span>
         <p className="text-sm font-medium text-slate-200 leading-relaxed italic">
           "{transcript}"
         </p>

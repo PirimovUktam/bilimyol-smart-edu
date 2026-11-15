@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -49,6 +50,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   onFinish,
   onBackToRoadmap,
 }) => {
+  const { t } = useTranslation();
   const { activeCourse, activeCourseSkills } = useCourseStore();
   const { profile } = useLearnerStore();
   const { profile: account, isDemoMode } = useAuth();
@@ -115,8 +117,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   if (isLoading) {
     return (
       <AILessonGeneratingCard
-        topic={currentLesson?.title || activeCourse?.title || 'Mavzu tahlili'}
-        courseTitle={activeCourse?.title || 'Fan'}
+        topic={currentLesson?.title || activeCourse?.title || t('lesson.analysis')}
+        courseTitle={activeCourse?.title || t('admin.subject')}
         onCancel={onBackToRoadmap}
         onRetry={() => loadLesson(lessonId)}
       />
@@ -126,9 +128,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   if (!currentLesson) {
     return (
       <AILessonGeneratingCard
-        error={error || 'Ushbu dars topilmadi yoki yuklashda xatolik yuz berdi.'}
+        error={error || t('lesson.missing')}
         topic={activeCourse?.title || 'Dars'}
-        courseTitle={activeCourse?.title || 'Fan'}
+        courseTitle={activeCourse?.title || t('admin.subject')}
         onCancel={onBackToRoadmap}
         onRetry={() => loadLesson(lessonId)}
       />
@@ -143,13 +145,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
           <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Dars noto‘g‘ri fanda</h2>
-          <p className="text-sm text-slate-600 mb-6">
-            Ushbu dars boshqa fanga tegishli. Iltimos, yo‘nalishingizni tanlab, qayta urinib ko‘ring.
-          </p>
-          <Button variant="primary" onClick={onBackToRoadmap}>
-            Yo‘l xaritasiga qaytish
-          </Button>
+          <h2 className="text-xl font-bold text-ink mb-2">{t('lesson.wrongCourse')}</h2>
+          <p className="text-sm text-slatefine mb-6">{t('lesson.wrongCourseDescription')}</p>
+          <Button variant="primary" onClick={onBackToRoadmap}>{t('lesson.backRoadmap')}</Button>
         </Card>
       </div>
     );
@@ -166,7 +164,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const stepCategoryLabels = {
     concept: { label: 'Nazariya', icon: BookOpen },
-    formula: { label: 'Formula', icon: FileText },
+    formula: { label: t('lesson.formula'), icon: FileText },
     visual_example: { label: 'Misol', icon: Lightbulb },
     audio_simulation: { label: 'Tinglash', icon: FileText },
     interactive_question: { label: 'Test', icon: HelpCircle },
@@ -206,18 +204,13 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   return (
     <div className="learning-page max-w-240 space-y-5">
       {currentLesson.isAiGenerated && (
-        <p className="rounded-xl border border-brand/20 bg-sand p-3 text-sm leading-relaxed text-brand-dark">
-          Yo‘lchi AI tayyorlagan dars. Muhim qoidalar va yechimlarni fan manbalari bilan tekshiring.
-        </p>
+        <p className="rounded-xl border border-brand/20 bg-sand p-3 text-sm leading-relaxed text-brand-dark">{t('lesson.aiNotice')}</p>
       )}
       {/* Honest disclosure when the AI edge function failed and a deterministic demo lesson is shown */}
       {currentLesson.isDeterministicFallback && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs sm:text-sm text-amber-900 font-medium leading-relaxed">
-            AI xizmati hozircha javob bera olmayapti — namunaviy (demo) dars ko‘rsatilmoqda.
-            Mavzular haqiqiy AI bilan yaratilganda avtomatik ravishda yangilanadi.
-          </div>
+          <div className="text-xs sm:text-sm text-amber-900 font-medium leading-relaxed">{t('lesson.demoNotice')}</div>
         </div>
       )}
 
@@ -230,24 +223,21 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       <PageHeader title={currentLesson.title} eyebrow={activeCourse.title}
         description={currentLesson.summary === currentStep.content ? undefined : currentLesson.summary}
         action={<Button variant="outline" size="sm" onClick={onBackToRoadmap}
-          leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}>Ta’lim yo‘liga qaytish</Button>} />
+          leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}>{t('lesson.backPath')}</Button>} />
       <div className="fade-up stagger-1 flex flex-wrap items-center gap-2 rounded-[20px] border border-hairline bg-paper px-4 py-3 shadow-[var(--shadow-editorial)]">
         <span className="mr-auto flex items-center gap-2 text-sm font-bold text-ink">
-          <Sparkles aria-hidden="true" className="size-4 text-brand" />
-          Shu darsda yordam
-        </span>
-        <Button size="sm" variant="outline" leftIcon={<Sparkles aria-hidden="true" className="size-4 text-brand" />} onClick={() => setHelp('tutor')}>Yo‘lchidan so‘rash</Button>
-        {activeCourse.subject === 'english' && <Button size="sm" variant="ghost" leftIcon={<BookOpen aria-hidden="true" className="size-4" />} onClick={() => setHelp('dictionary')}>So‘z lug‘ati</Button>}
+          <Sparkles aria-hidden="true" className="size-4 text-brand" />{t('lesson.help')}</span>
+        <Button size="sm" variant="outline" leftIcon={<Sparkles aria-hidden="true" className="size-4 text-brand" />} onClick={() => setHelp('tutor')}>{t('lesson.ask')}</Button>
+        {activeCourse.subject === 'english' && <Button size="sm" variant="ghost" leftIcon={<BookOpen aria-hidden="true" className="size-4" />} onClick={() => setHelp('dictionary')}>{t('lesson.dictionary')}</Button>}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slatefine">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-paper border border-hairline px-3 py-1 text-xs font-bold text-ink shadow-2xs">
-          <Clock aria-hidden="true" className="size-3.5 text-brand" />{currentLesson.estimatedMinutes} daqiqa
-        </span>
-        <span className="highlight">Qadam {currentStepIndex + 1} / {currentLesson.steps.length}</span>
+          <Clock aria-hidden="true" className="size-3.5 text-brand" />{currentLesson.estimatedMinutes}{t('courses.minutes')}</span>
+        <span className="highlight">{t('lesson.step')}{' '}{currentStepIndex + 1} / {currentLesson.steps.length}</span>
       </div>
 
       {/* Step Category Navigation Tabs */}
-      {!isFoundation && <nav aria-label="Dars qadamlari" className="flex flex-wrap items-center gap-2">
+      {!isFoundation && <nav aria-label={t('lesson.steps')} className="flex flex-wrap items-center gap-2">
         {currentLesson.steps.map((st, idx) => {
           const isActive = currentStepIndex === idx;
           const isPassed = currentStepIndex > idx;
@@ -264,7 +254,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   ? 'commonBtn border-transparent'
                   : isPassed
                   ? 'bg-mint/10 text-[#059669] border-mint/25 hover:bg-mint/15'
-                  : 'bg-white text-slate-600 border-hairline hover:bg-sand/50 hover:border-brand/30'
+                  : 'bg-paper text-slatefine border-hairline hover:bg-sand/50 hover:border-brand/30'
               }`}
             >
               <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-white' : isPassed ? 'text-mint' : 'text-brand'}`} />
@@ -275,7 +265,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         })}
       </nav>}
 
-      <Progress value={100 * (currentStepIndex + 1) / currentLesson.steps.length} ariaLabel="Dars qadamlari" size="sm" />
+      <Progress value={100 * (currentStepIndex + 1) / currentLesson.steps.length} ariaLabel={t('lesson.steps')} size="sm" />
 
       {/* Step Content Card */}
       <AnimatePresence mode="wait">
@@ -290,11 +280,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             {/* Step Header */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="highlight">
-                  Qadam {currentStep.stepNumber}
+                <span className="highlight">{t('lesson.step')}{' '}{currentStep.stepNumber}
                 </span>
                 {currentStep.subtitle && (
-                  <span className="font-mono text-xs text-slate-500 font-medium">
+                  <span className="font-mono text-xs text-slatefine font-medium">
                     // {currentStep.subtitle}
                   </span>
                 )}
@@ -308,12 +297,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             {/* Highlights */}
             {currentStep.highlightNotes && currentStep.highlightNotes.length > 0 && (
               <div className="p-4 bg-canvas border-l-4 border-brand border-y border-r border-hairline rounded-xl space-y-2">
-                <span className="font-mono text-[10px] font-bold text-brand-dark uppercase tracking-widest block">
-                  Asosiy Qoidalar:
-                </span>
+                <span className="font-mono text-[10px] font-bold text-brand-dark uppercase tracking-widest block">{t('lesson.rules')}</span>
                 <ul className="space-y-1.5">
                   {currentStep.highlightNotes.map((note, i) => (
-                    <li key={i} className="text-xs sm:text-sm text-slate-800 flex items-start gap-2 font-medium">
+                    <li key={i} className="text-xs sm:text-sm text-graphite flex items-start gap-2 font-medium">
                       <CheckCircle2 className="w-4 h-4 text-mint shrink-0 mt-0.5" />
                       <span>{note}</span>
                     </li>
@@ -326,7 +313,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             {currentStep.formulaData && (
               <div className="p-6 bg-navy text-white rounded-xl border border-slate-700/80 space-y-4 shadow-md">
                 <div className="text-center space-y-1">
-                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest font-bold">Formula</span>
+                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-widest font-bold">{t('lesson.formula')}</span>
                   <div className="text-2xl sm:text-3xl font-mono font-bold text-path py-1">
                     <Formula source={currentStep.formulaData.latex} display />
                   </div>
@@ -351,7 +338,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             {currentStep.visualModelData?.type === 'audio_wave' && (
               <AudioSimWave
                 transcript={currentStep.visualModelData.audioTranscript || ''}
-                speakerName={currentStep.visualModelData.speakerName || 'Audio Xabarchi'}
+                speakerName={currentStep.visualModelData.speakerName || t('lesson.audio')}
               />
             )}
 
@@ -361,13 +348,13 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                 <div className="p-4 bg-canvas border border-hairline rounded-xl space-y-2">
                   <div className="flex items-center gap-2 text-xs font-mono font-bold text-brand-dark uppercase tracking-wider">
                     <Sparkles className="w-4 h-4 text-brand" />
-                    <span>Darsni Yakunlovchi Sinov Savoli</span>
+                    <span>{t('lesson.finalQuestion')}</span>
                   </div>
-                  <h3 className="font-display text-base sm:text-lg font-bold text-slate-900">
+                  <h3 className="font-display text-base sm:text-lg font-bold text-ink">
                     {currentStep.interactiveQuestion.text}
                   </h3>
                   {currentStep.interactiveQuestion.formulaLatex && (
-                    <div className="p-2 bg-white rounded-lg border border-hairline font-mono font-bold text-brand-dark text-sm inline-block">
+                    <div className="p-2 bg-paper rounded-lg border border-hairline font-mono font-bold text-brand-dark text-sm inline-block">
                       <Formula source={currentStep.interactiveQuestion.formulaLatex} />
                     </div>
                   )}
@@ -386,8 +373,8 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       : isWrongPick
                       ? 'border-coral/50 bg-coral/5 ring-2 ring-coral/25'
                       : isSelected
-                      ? 'border-navy ring-2 ring-navy bg-white shadow-sm'
-                      : 'border-hairline bg-white hover:border-slate-400 hover:bg-canvas';
+                      ? 'border-navy ring-2 ring-navy bg-paper shadow-sm'
+                      : 'border-hairline bg-paper hover:border-slate-400 hover:bg-canvas';
 
                     return (
                       <button
@@ -412,20 +399,16 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           >
                             {letter}
                           </span>
-                          <span className="font-mono font-bold text-slate-900 text-sm">{opt}</span>
+                          <span className="font-mono font-bold text-ink text-sm">{opt}</span>
                         </div>
                         {isCorrectOption ? (
                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-mint/15 text-[#046b4a] border border-mint/30 shrink-0 uppercase tracking-wider flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> To‘g‘ri javob
-                          </span>
+                            <CheckCircle2 className="w-3 h-3" />{t('lesson.correctAnswer')}</span>
                         ) : isWrongPick ? (
                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-coral/10 text-[#a51c1c] border border-coral/30 shrink-0 uppercase tracking-wider flex items-center gap-1">
-                            <XCircle className="w-3 h-3" /> Siz tanladingiz
-                          </span>
+                            <XCircle className="w-3 h-3" />{t('lesson.youSelected')}</span>
                         ) : isSelected ? (
-                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 shrink-0 uppercase tracking-wider">
-                            tanlangan ✓
-                          </span>
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-graphite border border-slate-300 shrink-0 uppercase tracking-wider">{t('lesson.selected')}</span>
                         ) : null}
                       </button>
                     );
@@ -447,7 +430,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       <div className="flex items-center gap-2">
                         <Sparkles className={`w-4 h-4 ${lastAnswerResult.isCorrect ? 'text-mint' : 'text-coral'}`} />
                         <span className="text-xs font-black uppercase tracking-wider">
-                          {lastAnswerResult.isCorrect ? 'To‘g‘ri javob!' : 'Javobni ko‘rib chiqamiz'}
+                          {lastAnswerResult.isCorrect ? t('lesson.correct') : t('lesson.review')}
                         </span>
                       </div>
 <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
@@ -455,19 +438,18 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         }`}>
                           {lastAnswerResult.isCorrect
                             ? `+${lastAnswerResult.xpAwarded ?? 2} XP`
-                            : 'Mustahkamlash tavsiya etiladi'}
+                            : t('lesson.reinforceRecommended')}
                         </span>
                     </div>
 
                     {lastAnswerResult.isCorrect ? (
                       <div className="space-y-2 text-xs sm:text-sm">
-                        <p className="font-bold text-mint">To‘g‘ri javob tanlandi!</p>
+                        <p className="font-bold text-mint">{t('lesson.correctSelected')}</p>
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Javob: {lastAnswerResult.selectedOption || lastAnswerResult.correctOption}
+                          <CheckCircle2 className="w-3.5 h-3.5" />{t('lesson.answer')}{' '}{lastAnswerResult.selectedOption || lastAnswerResult.correctOption}
                         </div>
                         <p className="text-slate-700">
-                          {lastAnswerResult.explanation || 'Ajoyib! Mavzu bo‘yicha tushunchangiz mustahkamlandi.'}
+                          {lastAnswerResult.explanation || t('lesson.understood')}
                         </p>
                       </div>
                     ) : (
@@ -475,20 +457,18 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         {/* Explicit answer reveal: what was chosen vs what is correct */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-coral/10 border border-coral/30 font-mono text-[11px] font-bold text-[#a51c1c]">
-                            <XCircle className="w-3.5 h-3.5" />
-                            Siz tanladingiz: {lastAnswerResult.selectedOption || '—'}
+                            <XCircle className="w-3.5 h-3.5" />{t('lesson.selectedAnswer')}{' '}{lastAnswerResult.selectedOption || '—'}
                           </span>
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-[#046b4a]">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            To‘g‘ri javob: {lastAnswerResult.correctOption || '—'}
+                            <CheckCircle2 className="w-3.5 h-3.5" />{t('lesson.rightAnswer')}{' '}{lastAnswerResult.correctOption || '—'}
                           </span>
                         </div>
 
-                        <p className="font-medium text-slate-800">
+                        <p className="font-medium text-graphite">
                           {lastAnswerResult.explanation ||
                             (lastAnswerResult.correctOption
                               ? `Nima uchun xato? To‘g‘ri javob — "${lastAnswerResult.correctOption}". Yechimni qadam-baqadam tekshirib ko‘ring.`
-                              : 'Javob xato. Yechimni qadam-baqadam tekshirib ko‘ring.')}
+                              : t('lesson.incorrect'))}
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-2 mt-1">
@@ -498,18 +478,14 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                             onClick={openAIPanel}
                             leftIcon={<Sparkles className="w-4 h-4 text-brand" />}
                             className="font-bold"
-                          >
-                            Yo‘lchi AI tahlili
-                          </Button>
+                          >{t('lesson.aiAnalysis')}</Button>
                           <Button
                             variant="coral"
                             size="sm"
                             onClick={openReinforcement}
                             rightIcon={<ArrowRight className="w-4 h-4" />}
                             className="font-bold"
-                          >
-                            Mavzuni mustahkamlash mashqi
-                          </Button>
+                          >{t('tutor.reinforce')}</Button>
                         </div>
                       </div>
                     )}
@@ -527,9 +503,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                       onClick={handleAnswerSubmit}
                       rightIcon={<ArrowRight className="w-5 h-5" />}
                       className="w-full sm:w-auto font-black px-8 py-3.5 tracking-wider shadow-lg shadow-indigo-600/30"
-                    >
-                      TEKSHIRISH
-                    </Button>
+                    >{t('lesson.check')}</Button>
                   ) : (
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                       {!lastAnswerResult?.isCorrect && (
@@ -543,9 +517,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           }}
                           leftIcon={<RotateCcw className="w-4 h-4" />}
                           className="flex-1 sm:flex-none"
-                        >
-                          Qayta urinish
-                        </Button>
+                        >{t('courses.retry')}</Button>
                       )}
                       <Button
                         variant="gradient"
@@ -553,9 +525,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         onClick={nextStep}
                         rightIcon={<ArrowRight className="w-4 h-4" />}
                         className="flex-1 sm:flex-none font-black"
-                      >
-                        Keyingi savol
-                      </Button>
+                      >{t('lesson.nextQuestion')}</Button>
                     </div>
                   )}
                 </div>
@@ -571,9 +541,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   onClick={prevStep}
                   disabled={currentStepIndex === 0}
                   leftIcon={<ArrowLeft className="w-4 h-4" />}
-                >
-                  Oldingi
-                </Button>
+                >{t('lesson.previous')}</Button>
 
                 <Button
                   variant="primary"
@@ -584,7 +552,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                   aria-busy={isCompletingLesson}
                   rightIcon={<ArrowRight className="w-5 h-5" />}
                 >
-                  {isCompletingLesson ? 'Saqlanmoqda…' : isFinalStep ? (error ? 'Qayta urinish' : 'Darsni yakunlash') : 'Keyingi qadam'}
+                  {isCompletingLesson ? 'Saqlanmoqda…' : isFinalStep ? (error ? t('courses.retry') : t('lesson.complete')) : t('lesson.nextStep')}
                 </Button>
               </div>
             )}
@@ -592,7 +560,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         </motion.div>
       </AnimatePresence>
 
-      {help && <Modal isOpen onClose={() => setHelp(null)} title={help === 'tutor' ? 'Yo‘lchi bilan shu dars haqida' : 'Inglizcha so‘z lug‘ati'}>
+      {help && <Modal isOpen onClose={() => setHelp(null)} title={help === 'tutor' ? t('lesson.lessonChat') : t('lesson.englishDictionary')}>
         {help === 'tutor' ? <TutorConversation compact
           conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
           courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}

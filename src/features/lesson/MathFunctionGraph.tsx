@@ -1,7 +1,9 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export const MathFunctionGraph: React.FC = () => {
+  const { t } = useTranslation();
   const [sliderX, setSliderX] = useState<number>(4);
 
   // f(x) = 2x + 3
@@ -25,13 +27,11 @@ export const MathFunctionGraph: React.FC = () => {
     <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-            Interaktiv Grafik Modeli
-          </span>
+          <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">{t('lesson.interactiveGraph')}</span>
           <h4 className="text-lg font-bold text-white font-mono">f(x) = 2x + 3</h4>
         </div>
         <div className="text-right">
-          <span className="text-xs text-slate-400 block">Joriy qiymat:</span>
+          <span className="text-xs text-slate-400 block">{t('lesson.currentValue')}</span>
           <span className="text-sm font-bold text-path font-mono">
             f({sliderX}) = 2 × {sliderX} + 3 = <strong className="text-white text-base">{currentY}</strong>
           </span>
@@ -133,7 +133,7 @@ export const MathFunctionGraph: React.FC = () => {
       {/* Interactive Slider */}
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-slate-400">
-          <span>x qiymatini o‘zgartiring:</span>
+          <span>{t('lesson.changeX')}</span>
           <span className="font-mono font-bold text-white">x = {sliderX}</span>
         </div>
         <input

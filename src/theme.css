@@ -1,0 +1,101 @@
+/* Semantic surfaces shared by both modes. Decorative lesson artwork keeps its own palette. */
+:root {
+  --color-canvas: #f5f6fc;
+  --color-paper: #ffffff;
+  --color-sand: #edf0fa;
+  --color-muted: #e4e8f5;
+  --color-hairline: #d5dbea;
+  --color-ink: #171a2b;
+  --color-graphite: #344056;
+  --color-slatefine: #52617a;
+  --color-faint: #63718b;
+  --color-brand: #5546e8;
+  --color-brand-dark: #4636cb;
+  --color-path: #087e98;
+  --surface-canvas: var(--color-canvas);
+  --surface-card: var(--color-paper);
+  --surface-subtle: var(--color-sand);
+  --surface-muted: var(--color-muted);
+  --border-hairline: var(--color-hairline);
+  --ink-obsidian: var(--color-ink);
+  --ink-body: var(--color-graphite);
+  --ink-muted: var(--color-slatefine);
+  --ink-faint: var(--color-faint);
+  --surface-shadow: 0 8px 24px rgb(31 42 80 / .06);
+}
+:root[data-theme="dark"] {
+  --color-canvas: #101426;
+  --color-paper: #1a2137;
+  --color-sand: #242d46;
+  --color-muted: #303b56;
+  --color-hairline: #39445e;
+  --color-ink: #eef1fa;
+  --color-graphite: #d3dced;
+  --color-slatefine: #aebbd2;
+  --color-faint: #9baac4;
+  --color-brand: #a69aff;
+  --color-brand-dark: #b9afff;
+  --color-path: #67d9e9;
+  --surface-shadow: 0 8px 24px rgb(0 0 0 / .16);
+}
+html, body, .workspace-shell, .workspace-shell[data-view="dashboard"] {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+.preferences-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: .5rem;
+  min-height: 3.5rem;
+  padding: .375rem max(1rem, env(safe-area-inset-right));
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.preference-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: .8rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: .8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.preference-control:hover { background: var(--color-sand); }
+.heading { color: var(--color-ink); }
+.highlight, .editorial-kicker { background: var(--color-sand); color: var(--color-brand-dark); border-color: var(--color-hairline); }
+.edtech-card, .edtech-card-hover, .cosmos-card {
+  background: var(--color-paper);
+  border-color: var(--color-hairline);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: none;
+}
+.form-input { background: var(--color-paper); color: var(--color-ink); border-color: var(--color-hairline); }
+.form-input::placeholder { color: var(--color-faint); }
+.form-input:focus { background: var(--color-paper); border-color: var(--color-brand); }
+.workspace-sidebar, .workspace-mobile-nav, .workspace-mobile-header {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-hairline);
+  box-shadow: var(--surface-shadow);
+}
+.workspace-mobile-header { top: 3.5rem; }
+.workspace-sidebar { top: 3.5rem; height: calc(100dvh - 3.5rem); }
+.workspace-nav-link, .workspace-tab { color: var(--color-slatefine); }
+.workspace-nav-link:hover, .workspace-nav-link[aria-current], .workspace-tab[aria-current] {
+  background: var(--color-sand); color: var(--color-brand-dark); box-shadow: none; border-color: var(--color-hairline);
+}
+.workspace-shell[data-view="dashboard"] footer { color: var(--color-slatefine); border-color: var(--color-hairline); }
+.auth-showcase .heading, .learning-hero .heading { color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-card, .cosmos-cta-btn, .workspace-nav-link, .workspace-tab { transition: none; transform: none; }
+}

@@ -148,6 +148,21 @@ try {
   await switchSubject(/Matematika fanini tanlash/);
   await heading(/Assalomu alaykum/);
   await screenshot('after-learn-1440.png');
+  await page.setViewportSize({ width: 360, height: 844 });
+  await click('Bildirishnomalar');
+  await checkWidth('open reminders', 360);
+  await main.getByRole('button', { name: 'Yopish', exact: true }).click();
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await click('Profil');
+  await main.getByRole('checkbox', { name: /eslatma/i }).uncheck();
+  await click('Bosh sahifa', nav);
+  await heading(/Assalomu alaykum/);
+  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor({ state: 'hidden' });
+  await click('Profil');
+  await main.getByRole('checkbox', { name: /eslatma/i }).check();
+  await click('Bosh sahifa', nav);
+  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor();
+  console.log('PASS reminder preference and 360px notification menu');
   await click('Natijalar', nav);
   await main.getByText('22', { exact: true }).first().waitFor();
   console.log('PASS demo login, course isolation, authoritative demo scorer and completion');
@@ -164,6 +179,9 @@ try {
   await click('Yo‘lchi AI', nav);
   await main.getByText('Kvadratni qanday ochaman?', { exact: true }).waitFor();
   await screenshot('yolchi-1440.png');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await screenshot('yolchi-390.png');
+  await page.setViewportSize({ width: 1440, height: 960 });
   console.log('PASS demo tutor, feedback and in-session conversation history');
 
   const views = [
@@ -198,6 +216,53 @@ try {
     await heading('Profil');
     console.log('PASS ' + width + 'px, ' + views.length + ' screens, navigation and browser Back');
   }
+
+  const language = page.locator('#interface-language');
+  const root = page.locator('html');
+  assert.equal(await language.inputValue(), 'uz');
+  assert.equal(await root.getAttribute('data-theme'), 'light');
+  const lightBackground = await page.locator('body').evaluate((node) => getComputedStyle(node).backgroundColor);
+  await click('Qorong‘i rejimni yoqish', page);
+  await language.selectOption('ru');
+  await click('Включить светлую тему', page);
+  assert.equal(await root.getAttribute('data-theme'), 'light');
+  await click('Включить тёмную тему', page);
+  assert.notEqual(await page.locator('body').evaluate((node) => getComputedStyle(node).backgroundColor), lightBackground);
+  await page.reload();
+  await heading('Профиль');
+  assert.equal(await root.getAttribute('lang'), 'ru');
+  assert.equal(await root.getAttribute('data-theme'), 'dark');
+  assert.equal(await language.inputValue(), 'ru');
+
+  const russianViews = [
+    ['dashboard', /Здравствуйте/],
+    ['course-selection', 'Выберите подходящий предмет'],
+    ['onboarding', 'Настройте свой план обучения'],
+    ['placement', 'Входная диагностика'],
+    ['knowledge-map', 'Карта знаний'],
+    ['roadmap', 'Мой путь обучения'],
+    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni ochish'],
+    ['ai-tutor', 'Yo‘lchi AI'],
+    ['progress', 'Результаты обучения'],
+    ['profile', 'Профиль'],
+  ];
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    for (const [view, title] of russianViews) {
+      await page.goto(base + '/?view=' + view, { waitUntil: 'domcontentloaded' });
+      await heading(title);
+      assert.equal(await root.getAttribute('data-theme'), 'dark');
+      await checkWidth(view + ' (ru, dark)', width);
+      if (view === 'dashboard') await screenshot('dashboard-ru-dark-' + width + '.png');
+    }
+  }
+  await page.goto(base + '/?view=ai-tutor');
+  await page.getByRole('textbox', { name: 'Напишите вопрос Yo‘lchi AI' }).fill('Как раскрыть квадрат?');
+  await click('Отправить вопрос');
+  await main.getByText(/Давайте разберём вопрос по шагам/).waitFor();
+  await language.selectOption('uz');
+  await main.getByRole('button', { name: 'Savolni yuborish' }).waitFor();
+  console.log('PASS theme and language switching, reload, Russian tutor demo and 20 Russian dark layouts');
   assert.deepEqual(remoteRequests, []);
   assert.deepEqual(errors, []);
   console.log('E2E PASSED — ' + assertions + ' layout assertions and demo journeys');

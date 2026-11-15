@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { IconButton } from './IconButton';
@@ -18,6 +19,7 @@ const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-4xl
 export function Modal({
   isOpen, onClose, title, children, maxWidth = 'lg', showClose = true, labelledBy, dismissable = true,
 }: ModalProps) {
+  const { t } = useTranslation();
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
   useEffect(() => {
@@ -36,7 +38,7 @@ export function Modal({
     <dialog
       ref={dialog}
       aria-labelledby={labelledBy ?? (title ? id : undefined)}
-      aria-label={!labelledBy && !title ? 'Muloqot oynasi' : undefined}
+      aria-label={!labelledBy && !title ? t('shell.dialog') : undefined}
       className={'m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-panel border border-hairline bg-paper p-0 text-ink shadow-pop backdrop:bg-navy/65 ' + widths[maxWidth]}
       onCancel={(event) => { event.preventDefault(); if (dismissable) onClose?.(); }}
       onClick={(event) => { if (dismissable && event.target === event.currentTarget) onClose?.(); }}
@@ -61,7 +63,7 @@ export function Modal({
         {(title || (showClose && dismissable)) && (
           <div className="mb-3 flex items-start justify-between gap-3">
             {title ? <h2 id={id} className="font-display text-xl font-bold">{title}</h2> : <span />}
-            {showClose && dismissable && <IconButton label="Yopish" onClick={onClose}><X aria-hidden="true" className="size-5" /></IconButton>}
+            {showClose && dismissable && <IconButton label={t('courses.close')} onClick={onClose}><X aria-hidden="true" className="size-5" /></IconButton>}
           </div>
         )}
         {children}

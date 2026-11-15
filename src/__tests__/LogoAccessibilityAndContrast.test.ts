@@ -13,7 +13,7 @@ describe('BilimYolLogo Accessibility & Contrast Suite', () => {
     expect(code).toContain('textColor?: string');
     expect(code).toContain("variant === 'dark'");
     expect(code).toContain("'text-white'");
-    expect(code).toContain("'text-slate-900 dark:text-white'");
+    expect(code).toMatch(/variant === 'auto'\s*\? 'text-ink'/);
   });
 
   it('2. The shared auth layout uses the dark logo variant in its showcase', () => {
@@ -24,8 +24,8 @@ describe('BilimYolLogo Accessibility & Contrast Suite', () => {
     expect(code).toMatch(/<BilimYolLogo[^>]*showSubtitle=\{false\}[^>]*\/>/i);
   });
 
-  it('3. The workspace sidebar uses the dark logo variant', () => {
+  it('3. The workspace sidebar uses the theme-aware logo variant', () => {
     const code = fs.readFileSync(navbarPath, 'utf8');
-    expect(code).toMatch(/<BilimYolLogo[^>]*variant="dark"[^>]*\/>/i);
+    expect(code).toMatch(/<BilimYolLogo[^>]*variant="auto"[^>]*\/>/i);
   });
 });

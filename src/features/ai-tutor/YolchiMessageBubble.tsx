@@ -1,3 +1,5 @@
+import { translate as t } from '@/core/locales/useTranslation';
+import { useTranslation } from '@/core/locales/useTranslation';
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, ThumbsDown, ThumbsUp, User } from 'lucide-react';
@@ -23,6 +25,7 @@ export const YolchiMessageBubble = memo(({
   feedback,
   onFeedback,
 }: MessageProps) => {
+  const { t } = useTranslation();
   const isYolchi = sender === 'yolchi' || sender === 'ai';
 
   return (
@@ -52,12 +55,12 @@ export const YolchiMessageBubble = memo(({
       <div
         className={`relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
           isYolchi
-            ? 'bg-[#181E52]/95 border border-purple-400/30 text-slate-100 rounded-tl-sm'
+            ? 'bg-paper border border-hairline text-ink rounded-tl-sm'
             : 'bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white rounded-tr-sm shadow-purple-600/20'
         }`}
       >
         <header className="mb-1 flex items-center justify-between gap-3 text-[11px] font-bold">
-          <span className={isYolchi ? 'text-cyan-300' : 'text-purple-100'}>
+          <span className={isYolchi ? 'text-brand-dark dark:text-sky-300' : 'text-purple-100'}>
             {isYolchi ? 'Yo‘lchi AI' : 'Siz'}
           </span>
         </header>
@@ -81,9 +84,9 @@ export const YolchiMessageBubble = memo(({
 
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {isYolchi && onFeedback ? (
-            <div aria-label="Javobni baholash" className="flex gap-1">
+            <div aria-label={t('tutor.rate')} className="flex gap-1">
               <IconButton
-                label="Foydali javob"
+                label={t('tutor.helpful')}
                 aria-pressed={feedback === 'helpful'}
                 className={feedback === 'helpful' ? 'bg-sand text-brand' : ''}
                 onClick={() => onFeedback(id, 'helpful')}
@@ -91,7 +94,7 @@ export const YolchiMessageBubble = memo(({
                 <ThumbsUp aria-hidden="true" className="size-3.5" />
               </IconButton>
               <IconButton
-                label="Javob foyda bermadi"
+                label={t('tutor.notHelpful')}
                 aria-pressed={feedback === 'unhelpful'}
                 className={feedback === 'unhelpful' ? 'bg-sand text-brand' : ''}
                 onClick={() => onFeedback(id, 'unhelpful')}
@@ -105,7 +108,7 @@ export const YolchiMessageBubble = memo(({
 
           <time
             className={`block text-[10px] ${
-              isYolchi ? 'text-slate-400' : 'text-indigo-200'
+              isYolchi ? 'text-slatefine' : 'text-indigo-100'
             } text-right`}
           >
             {timestamp}
@@ -130,7 +133,7 @@ YolchiMessageBubble.displayName = 'YolchiMessageBubble';
 export const YolchiTypingIndicator = () => (
   <motion.div
     role="status"
-    aria-label="Yo‘lchi javob tayyorlamoqda…"
+    aria-label={t('tutor.thinking')}
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, scale: 0.9 }}
@@ -157,7 +160,7 @@ export const YolchiTypingIndicator = () => (
         />
       ))}
     </div>
-    <span className="sr-only">Yo‘lchi javob tayyorlamoqda…</span>
+    <span className="sr-only">{t('tutor.thinking')}</span>
   </motion.div>
 );
 

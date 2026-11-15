@@ -1,3 +1,5 @@
+import { LocalizedError, displayError } from '@/core/locales/LocalizedError';
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useState, type FormEvent } from 'react';
 import { AlertCircle, ArrowRight, Play } from 'lucide-react';
 import { useAuth } from '@/core/context/AuthContext';
@@ -13,11 +15,12 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onNavigateRegister, onNavigateForgotPassword }: LoginViewProps) {
+  const { t } = useTranslation();
   const { signIn, setDemoUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -25,49 +28,51 @@ export function LoginView({ onNavigateRegister, onNavigateForgotPassword }: Logi
     setIsSubmitting(true);
     try {
       const result = await signIn(email.trim(), password);
-      if (result.error) setError(result.error.message);
+      if (result.error) setError(result.error);
+    } catch {
+      setError(new LocalizedError('errors.auth'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <AuthLayout title="Xush kelibsiz!" subtitle="O‘quv yo‘lingizni davom ettirish uchun hisobingizga kiring.">
+    <AuthLayout title={t('auth.welcome')} subtitle={t('auth.loginDescription')}>
       <form onSubmit={submit} className="space-y-4">
         {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-coral/20 bg-rose-50 p-3 text-sm text-coral">
-          <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{error}
+          <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{displayError(error, t)}
         </p>}
         {!isSupabaseConfigured && (
-          <p className="rounded-xl bg-sand p-3 text-sm text-slatefine">Bu muhitda hisob xizmati ulanmagan. Ilovani namuna rejimida sinab ko‘ring.</p>
+          <p className="rounded-xl bg-sand p-3 text-sm text-slatefine">{t('auth.unavailable')}</p>
         )}
         <div>
-          <label htmlFor="login-email" className="mb-1.5 block text-sm font-bold">Email manzilingiz</label>
+          <label htmlFor="login-email" className="mb-1.5 block text-sm font-bold">{t('auth.email')}</label>
           <input id="login-email" className="form-input px-3.5" type="email" required autoComplete="email"
-            placeholder="nomingiz@misol.uz" value={email} onChange={(event) => setEmail(event.target.value)} />
+            placeholder={t('auth.emailPlaceholder')} value={email} onChange={(event) => setEmail(event.target.value)} />
         </div>
         <div>
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-            <label htmlFor="login-password" className="text-sm font-bold">Parol</label>
+            <label htmlFor="login-password" className="text-sm font-bold">{t('auth.password')}</label>
             <button type="button" className="cursor-pointer text-xs font-bold text-brand-dark hover:underline"
-              onClick={onNavigateForgotPassword}>Unutdingizmi?</button>
+              onClick={onNavigateForgotPassword}>{t('auth.forgot')}</button>
           </div>
-          <PasswordInput id="login-password" required autoComplete="current-password" placeholder="Parolingiz"
+          <PasswordInput id="login-password" required autoComplete="current-password" placeholder={t('auth.passwordPlaceholder')}
             value={password} onChange={(event) => setPassword(event.target.value)} />
         </div>
         <Button type="submit" size="lg" className="w-full" isLoading={isSubmitting}
-          rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>Kirish</Button>
+          rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('auth.login')}</Button>
       </form>
-      {error?.startsWith('Emailingiz hali tasdiqlanmagan.') && <ConfirmationResend key={email.trim()} email={email} />}
+      {error instanceof LocalizedError && error.code === 'email_not_confirmed' && <ConfirmationResend key={email.trim()} email={email} />}
       <div className="my-5 flex items-center gap-3 text-xs text-slatefine" aria-hidden="true">
-        <span className="h-px flex-1 bg-hairline" /> yoki <span className="h-px flex-1 bg-hairline" />
+        <span className="h-px flex-1 bg-hairline" /> {t('auth.or')} <span className="h-px flex-1 bg-hairline" />
       </div>
       <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}
         onClick={setDemoUser}
-        leftIcon={<Play aria-hidden="true" className="size-4 text-brand" />}>Namuna hisobi bilan kirish</Button>
-      <p className="mt-2 text-center text-xs leading-relaxed text-slatefine">Namuna natijalari brauzer xotirasida saqlanadi.</p>
+        leftIcon={<Play aria-hidden="true" className="size-4 text-brand" />}>{t('auth.demo')}</Button>
+      <p className="mt-2 text-center text-xs leading-relaxed text-slatefine">{t('auth.demoStorage')}</p>
       <p className="mt-5 text-center text-sm text-slatefine">
-        Hisobingiz yo‘qmi? <button type="button" className="cursor-pointer font-bold text-brand-dark hover:underline"
-          onClick={onNavigateRegister}>Ro‘yxatdan o‘tish</button>
+        {t('auth.noAccount')} <button type="button" className="cursor-pointer font-bold text-brand-dark hover:underline"
+          onClick={onNavigateRegister}>{t('auth.register')}</button>
       </p>
     </AuthLayout>
   );

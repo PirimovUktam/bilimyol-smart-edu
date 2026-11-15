@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/presentation/components/Button';
@@ -32,6 +33,7 @@ function getEntry(body: unknown): Entry | null {
 }
 
 export function DictionaryLookup() {
+  const { t } = useTranslation();
   const [word, setWord] = useState('');
   const [result, setResult] = useState<{ word: string; entry: Entry } | null>(null);
   const [error, setError] = useState('');
@@ -46,7 +48,7 @@ export function DictionaryLookup() {
     setResult(null);
     setError('');
     if (!/^[a-z]+(?:[-'][a-z]+)*$/.test(query) || query.length > 40) {
-      setError('Bitta inglizcha so‘z kiriting. Masalan: hello.');
+      setError(t('tutor.lookupWord'));
       return;
     }
     const controller = new AbortController();
@@ -60,10 +62,10 @@ export function DictionaryLookup() {
       const entry = response.ok ? getEntry(await response.json()) : null;
       if (pending.current !== controller) return;
       if (entry) setResult({ word: query, entry });
-      else if (response.status === 404 || response.ok) setError('Bu so‘z uchun ta’rif topilmadi. Imlo yoki boshqa so‘zni tekshiring.');
-      else setError('Lug‘at hozir javob bermayapti. Keyinroq qayta urinib ko‘ring.');
+      else if (response.status === 404 || response.ok) setError(t('tutor.wordMissing'));
+      else setError(t('tutor.dictionaryUnavailable'));
     } catch {
-      if (pending.current === controller) setError('Lug‘atga ulanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.');
+      if (pending.current === controller) setError(t('tutor.dictionaryNetwork'));
     } finally {
       window.clearTimeout(timeout);
       if (pending.current === controller) { pending.current = null; setLoading(false); }
@@ -71,13 +73,12 @@ export function DictionaryLookup() {
   };
 
   return <div className="space-y-3">
-    <p className="text-sm text-slatefine">So‘zning inglizcha ta’rifi, talaffuzi va mavjud misolini toping.</p>
+    <p className="text-sm text-slatefine">{t('tutor.dictionaryDescription')}</p>
     <form onSubmit={(event) => void lookup(event)} className="flex flex-wrap items-end gap-2">
-      <label className="min-w-0 flex-1 basis-40 text-sm font-bold">Inglizcha so‘z
-        <input type="text" value={word} maxLength={40} autoComplete="off" spellCheck={false} onChange={(event) => setWord(event.target.value)}
+      <label className="min-w-0 flex-1 basis-40 text-sm font-bold">{t('tutor.englishWord')}<input type="text" value={word} maxLength={40} autoComplete="off" spellCheck={false} onChange={(event) => setWord(event.target.value)}
           placeholder="hello" className="form-input mt-1 px-3" />
       </label>
-      <Button type="submit" isLoading={loading} disabled={!word.trim()} leftIcon={<Search aria-hidden="true" className="size-4" />}>So‘zni izlash</Button>
+      <Button type="submit" isLoading={loading} disabled={!word.trim()} leftIcon={<Search aria-hidden="true" className="size-4" />}>{t('tutor.searchWord')}</Button>
     </form>
     {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-coral">{error}</p>}
     {result && <section aria-live="polite" className="rounded-card border border-hairline bg-canvas p-4">
@@ -87,6 +88,6 @@ export function DictionaryLookup() {
         <p className="break-words text-sm">{definition}</p>{example && <p className="mt-1 break-words text-sm italic text-slatefine">{example}</p>}
       </li>)}</ol>
     </section>}
-    <p className="text-xs text-slatefine">Manba: <a className="font-bold underline" href="https://dictionaryapi.dev/" target="_blank" rel="noreferrer">Free Dictionary API</a></p>
+    <p className="text-xs text-slatefine">{t('tutor.source')}<a className="font-bold underline" href="https://dictionaryapi.dev/" target="_blank" rel="noreferrer">Free Dictionary API</a></p>
   </div>;
 }

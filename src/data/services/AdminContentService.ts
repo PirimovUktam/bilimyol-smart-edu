@@ -10,7 +10,8 @@ import { PLACEMENT_QUESTIONS } from '../datasources/questions';
 import { mapCourseSubject } from '@/data/repositories/SupabaseCourseRepository';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
-export interface AdminLessonRecord extends Lesson {
+export interface AdminLessonRecord extends Omit<Lesson, 'reinforcementExercise'> {
+  reinforcementExercise: Lesson['reinforcementExercise'] | null;
   isPublished: boolean;
   isArchived: boolean;
   createdAt?: string;
@@ -20,6 +21,14 @@ export interface AdminLessonRecord extends Lesson {
 export interface AdminQuestionRecord extends Question {
   isPlacement?: boolean;
   createdAt?: string;
+}
+
+const pageSize = 20;
+function pageOf<T>(rows: T[]) {
+  return { rows: rows.slice(0, pageSize), hasMore: rows.length > pageSize };
+}
+function demoPage<T>(rows: T[], page: number) {
+  return pageOf(rows.slice(page * pageSize, (page + 1) * pageSize + 1));
 }
 
 // In-memory fallbacks mutable stores
@@ -122,15 +131,16 @@ export class AdminContentService {
   // =========================================================================
   // 2. SKILLS MANAGEMENT (KO‘NIKMALAR VA MAVZULAR)
   // =========================================================================
-  async getSkills(courseId?: string): Promise<Skill[]> {
+  async getSkills(courseId: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return courseId ? inMemorySkills.filter((s) => s.courseId === courseId) : [...inMemorySkills];
+      return demoPage(inMemorySkills.filter((s) => s.courseId === courseId), page);
     }
-    let query = supabase.from('skills').select('*').order('order_index', { ascending: true });
-    if (courseId) query = query.eq('course_id', courseId);
-    const { data, error } = await query;
-    if (error) throw new Error('Ko‘nikmalarni serverdan yuklab bo‘lmadi.');
-    return (data ?? []).map((s) => ({
+    const { data, error } = await supabase.from('skills')
+      .select('id,course_id,name,code,description,order_index,icon_name')
+      .eq('course_id', courseId).order('order_index').order('id')
+      .range(page * pageSize, (page + 1) * pageSize);
+    if (error && error.code !== 'PGRST103') throw new Error(error.message);
+    return pageOf<Skill>((data ?? []).map((s) => ({
         id: s.id,
         courseId: s.course_id,
         name: s.name,
@@ -139,7 +149,21 @@ export class AdminContentService {
         order: s.order_index ?? 0,
         orderIndex: s.order_index,
         iconName: s.icon_name || 'Target',
-    }));
+    })));
+  }
+
+  async getSkillOptions(courseId: string): Promise<Pick<Skill, 'id' | 'name'>[]> {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
+      return inMemorySkills.filter((skill) => skill.courseId === courseId);
+    }
+    const rows: Pick<Skill, 'id' | 'name'>[] = [];
+    for (let offset = 0; ; offset += 100) {
+      const { data, error } = await supabase.from('skills').select('id,name').eq('course_id', courseId)
+        .order('order_index').order('id').range(offset, offset + 99);
+      if (error && error.code !== 'PGRST103') throw new Error(error.message);
+      rows.push(...(data ?? []));
+      if (!data || data.length < 100) return rows;
+    }
   }
 
   async saveSkill(skill: Partial<Skill>): Promise<Skill> {
@@ -188,41 +212,41 @@ export class AdminContentService {
   // =========================================================================
   // 3. LESSONS MANAGEMENT (DARSLAR VA MATERIALLAR)
   // =========================================================================
-  async getLessons(courseId?: string): Promise<AdminLessonRecord[]> {
+  async getLessons(courseId: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return courseId ? inMemoryLessons.filter((l) => l.courseId === courseId) : [...inMemoryLessons];
+      return demoPage(inMemoryLessons.filter((l) => l.courseId === courseId), page);
     }
     // Learner access uses learner_lessons; CMS reads use the role-gated view
     // so answer-key JSON never travels to ordinary authenticated clients.
-    let query = supabase.from('admin_lessons').select('*').order('created_at', { ascending: false });
-    if (courseId) {
-      query = query.eq('course_id', courseId);
-    }
-    const { data, error } = await query;
-    if (error) throw new Error(`Darslarni yuklashda xatolik: ${error.message}`);
-    if (!data) return [];
-    return data.map((l) => ({
+    const { data, error } = await supabase.from('admin_lessons')
+      .select('id,course_id,skill_id,title,estimated_minutes,summary,is_published,is_archived,created_at,updated_at')
+      .eq('course_id', courseId).order('created_at', { ascending: false }).order('id')
+      .range(page * pageSize, (page + 1) * pageSize);
+    if (error && error.code !== 'PGRST103') throw new Error(error.message);
+    return pageOf((data ?? []).map((l) => ({
         id: l.id,
         courseId: l.course_id,
         skillId: l.skill_id,
         title: l.title,
         estimatedMinutes: l.estimated_minutes || 15,
         summary: l.summary || '',
-        steps: Array.isArray(l.steps) ? l.steps : [],
-        reinforcementExercise: l.reinforcement_exercise || {
-          id: `q_reinf_${l.id}`,
-          courseId: l.course_id,
-          skillId: l.skill_id,
-          text: 'Mavzuni to‘liq o‘zlashtirdingizmi?',
-          options: ['Ha, to‘liq', 'Qisman', 'Yana takrorlash kerak', 'Boshqatdan'],
-          difficulty: 'medium',
-          explanation: 'Mustahkamlash savoli',
-        },
         isPublished: l.is_published ?? true,
         isArchived: l.is_archived ?? false,
         createdAt: l.created_at,
         updatedAt: l.updated_at,
-    }));
+    })));
+  }
+
+  async getLessonDetails(lessonId: string): Promise<Pick<AdminLessonRecord, 'steps' | 'reinforcementExercise'>> {
+    if (!isSupabaseConfigured || isDemoRuntimeActive()) {
+      const lesson = inMemoryLessons.find((row) => row.id === lessonId);
+      if (!lesson) throw new Error('Dars topilmadi.');
+      return { steps: lesson.steps, reinforcementExercise: lesson.reinforcementExercise };
+    }
+    const { data, error } = await supabase.from('admin_lessons')
+      .select('steps,reinforcement_exercise').eq('id', lessonId).single();
+    if (error || !data) throw new Error(error?.message ?? 'Dars topilmadi.');
+    return { steps: data.steps, reinforcementExercise: data.reinforcement_exercise };
   }
 
   async saveLesson(lesson: Partial<AdminLessonRecord>): Promise<AdminLessonRecord> {
@@ -234,7 +258,7 @@ export class AdminContentService {
       title: lesson.title || 'Yangi Dars',
       estimatedMinutes: lesson.estimatedMinutes || 15,
       summary: lesson.summary || '',
-      steps: lesson.steps && lesson.steps.length > 0 ? lesson.steps : [
+      steps: lesson.steps ?? [
         {
           id: `step_${Date.now()}_1`,
           stepNumber: 1,
@@ -243,7 +267,7 @@ export class AdminContentService {
           content: 'Darsning nazariy qismi...',
         },
       ],
-      reinforcementExercise: lesson.reinforcementExercise || {
+      reinforcementExercise: lesson.reinforcementExercise !== undefined ? lesson.reinforcementExercise : {
         id: `q_reinf_${id}`,
         courseId: lesson.courseId || 'course_math_01',
         skillId: lesson.skillId || 'skill_math_functions',
@@ -266,7 +290,7 @@ export class AdminContentService {
         summary: newLesson.summary,
         estimated_minutes: newLesson.estimatedMinutes,
         steps: newLesson.steps,
-        reinforcement_exercise: newLesson.reinforcementExercise || null,
+        reinforcement_exercise: newLesson.reinforcementExercise,
         is_published: newLesson.isPublished,
         is_archived: newLesson.isArchived,
         updated_at: newLesson.updatedAt,
@@ -320,25 +344,20 @@ export class AdminContentService {
   // =========================================================================
   // 4. QUESTIONS MANAGEMENT (SAVOLLAR VA TESTLAR)
   // =========================================================================
-  async getQuestions(courseId?: string, skillId?: string): Promise<AdminQuestionRecord[]> {
+  async getQuestions(courseId: string, skillId?: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return inMemoryQuestions.filter((q) => {
-        if (courseId && q.courseId !== courseId) return false;
-        if (skillId && q.skillId !== skillId) return false;
-        return true;
-      });
+      return demoPage(inMemoryQuestions.filter((q) => q.courseId === courseId && (!skillId || q.skillId === skillId)), page);
     }
     // Answer keys are exposed only through the admin-only security-definer
     // view; learner-facing question reads never receive correct_index.
-    let query = supabase.from('admin_questions').select('*').order('created_at', { ascending: false });
-    if (courseId) query = query.eq('course_id', courseId);
+    let query = supabase.from('admin_questions')
+      .select('id,course_id,skill_id,text,options,correct_index,difficulty,explanation,formula_latex,is_placement,created_at')
+      .eq('course_id', courseId).order('created_at', { ascending: false }).order('id');
     if (skillId) query = query.eq('skill_id', skillId);
 
-    const { data, error } = await query;
-    if (error) throw new Error(`Savollarni yuklashda xatolik: ${error.message}`);
-    if (!data) return [];
-
-    return data.map((q) => ({
+    const { data, error } = await query.range(page * pageSize, (page + 1) * pageSize);
+    if (error && error.code !== 'PGRST103') throw new Error(error.message);
+    return pageOf<AdminQuestionRecord>((data ?? []).map((q) => ({
         id: q.id,
         courseId: q.course_id,
         skillId: q.skill_id,
@@ -350,7 +369,7 @@ export class AdminContentService {
         formulaLatex: q.formula_latex || undefined,
         isPlacement: q.is_placement ?? false,
         createdAt: q.created_at,
-    }));
+    })));
   }
 
   async saveQuestion(question: Partial<AdminQuestionRecord>): Promise<AdminQuestionRecord> {

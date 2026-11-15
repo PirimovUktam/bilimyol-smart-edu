@@ -1,3 +1,4 @@
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
 import { ArrowRight, Check, ClipboardCheck, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -14,6 +15,7 @@ import { AudioSimWave } from '@/features/lesson/AudioSimWave';
 export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning }: {
   onComplete: () => void; onChooseCourse: () => void; onStartLearning: () => void;
 }) {
+  const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const skills = useCourseStore((state) => state.activeCourseSkills);
   const question = usePlacementStore((state) => state.currentQuestion);
@@ -51,19 +53,19 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
   return (
     <div className="learning-page max-w-200 space-y-6">
       <PageHeader
-        title="Boshlang‘ich diagnostika"
+        title={t('assessment.initial')}
         highlightWord="diagnostika"
-        eyebrow={course?.title ?? 'Bilim darajasi'}
-        description="Diagnostika ixtiyoriy. Fan bilan endi tanishayotgan bo‘lsangiz, avval darsdan boshlashingiz mumkin."
-        action={course && !result ? <Button variant="outline" onClick={onStartLearning}>Darsdan boshlash</Button> : undefined}
+        eyebrow={course?.title ?? t('assessment.level')}
+        description={t('assessment.optional')}
+        action={course && !result ? <Button variant="outline" onClick={onStartLearning}>{t('assessment.lessonFirst')}</Button> : undefined}
       />
       {!courseId ? (
         <Card className="space-y-4">
-          <SectionState title="Avval fanni tanlang" />
-          <Button onClick={onChooseCourse}>Fanlar katalogi</Button>
+          <SectionState title={t('courses.chooseFirst')} />
+          <Button onClick={onChooseCourse}>{t('courses.subjects')}</Button>
         </Card>
       ) : loading ? (
-        <SectionState kind="loading" title="Diagnostika savollari yuklanmoqda…" />
+        <SectionState kind="loading" title={t('assessment.loading')} />
       ) : result ? (
         <Card className="fade-up space-y-5" padding="md">
           <div className="flex items-center gap-3">
@@ -71,47 +73,42 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
               <ClipboardCheck aria-hidden="true" className="size-7" />
             </span>
             <div>
-              <span className="highlight">Natija tayyor</span>
-              <h2 className="heading mt-1 text-2xl font-extrabold">Diagnostika yakunlandi</h2>
+              <span className="highlight">{t('assessment.resultReady')}</span>
+              <h2 className="heading mt-1 text-2xl font-extrabold">{t('assessment.completed')}</h2>
             </div>
           </div>
           <p className="text-sm font-semibold text-slatefine">
-            {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length} javob to‘g‘ri.
-          </p>
-          <ul className="space-y-3" aria-label="Ko‘nikmalar bo‘yicha natijalar">
+            {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length}{t('assessment.correctCount')}</p>
+          <ul className="space-y-3" aria-label={t('assessment.bySkill')}>
             {Object.values(result.computedScores).map((score) => (
               <li key={score.skillId}>
                 <Progress
                   showLabel
                   value={score.score}
-                  ariaLabel={skills.find((skill) => skill.id === score.skillId)?.name ?? 'Ko‘nikma'}
+                  ariaLabel={skills.find((skill) => skill.id === score.skillId)?.name ?? t('assessment.skill')}
                   tone={score.score < 50 ? 'amber' : 'emerald'}
                 />
               </li>
             ))}
           </ul>
           <div className="flex flex-wrap gap-2.5 pt-1">
-            <Button onClick={onComplete} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>
-              Shaxsiy yo‘lni ko‘rish
-            </Button>
+            <Button onClick={onComplete} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('assessment.viewPath')}</Button>
             {canRetake && (
-              <Button variant="outline" onClick={() => init(courseId, true)}>
-                Qayta topshirish
-              </Button>
+              <Button variant="outline" onClick={() => init(courseId, true)}>{t('assessment.retry')}</Button>
             )}
           </div>
           {!!result.review?.length && (
             <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
-              <summary className="cursor-pointer font-bold text-brand">Javoblar tahlili</summary>
+              <summary className="cursor-pointer font-bold text-brand">{t('assessment.analysis')}</summary>
               <ol className="mt-3 space-y-3">
                 {result.review.map((answer, index) => (
                   <li key={answer.questionId} className="space-y-1 rounded-2xl border border-hairline bg-paper p-3.5 text-sm leading-relaxed">
                     <p className={'font-bold ' + (answer.isCorrect ? 'text-mint' : 'text-coral')}>
-                      {answer.isCorrect ? 'To‘g‘ri' : 'Xato'}
+                      {answer.isCorrect ? t('assessment.correct') : 'Xato'}
                     </p>
                     <p className="break-words font-bold">{index + 1}. {answer.questionText}</p>
-                    <p className="break-words">Siz belgilagan javob — {answer.selectedOption}</p>
-                    {!answer.isCorrect && <p className="break-words font-semibold text-mint">To‘g‘ri javob — {answer.correctOption}</p>}
+                    <p className="break-words">{t('assessment.youSelected')}{' '}{answer.selectedOption}</p>
+                    {!answer.isCorrect && <p className="break-words font-semibold text-mint">{t('assessment.rightAnswer')}{' '}{answer.correctOption}</p>}
                     {answer.explanation && <p className="break-words text-slatefine">{answer.explanation}</p>}
                   </li>
                 ))}
@@ -122,7 +119,7 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
       ) : !question ? (
         <SectionState
           kind={error ? 'error' : 'empty'}
-          title={error ? 'Diagnostikani yuklab bo‘lmadi' : 'Savollar tayyorlanmoqda'}
+          title={error ? t('assessment.failed') : t('assessment.preparing')}
           description={error ?? undefined}
           onRetry={() => init(courseId)}
         />
@@ -131,10 +128,9 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
           <div className="flex items-center justify-between gap-2">
             <span className="highlight">
               <Sparkles aria-hidden="true" className="size-3.5" />
-              {number} / {total} savol
-            </span>
+              {number} / {total}{' '}{t('assessment.question')}</span>
           </div>
-          <Progress value={(100 * number) / total} ariaLabel="Diagnostika jarayoni" size="sm" />
+          <Progress value={(100 * number) / total} ariaLabel={t('assessment.process')} size="sm" />
           <Card className="fade-up space-y-5 p-5 sm:p-7">
             <h2 className="heading break-words text-xl font-extrabold sm:text-2xl">{question.text}</h2>
             {question.contextSnippet && (
@@ -142,10 +138,10 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
             )}
             {question.formulaLatex && <Formula source={question.formulaLatex} display />}
             {question.audioSimText && (
-              <AudioSimWave transcript={question.audioSimText} speakerName={question.audioSimSpeaker ?? 'Audio xabar'} />
+              <AudioSimWave transcript={question.audioSimText} speakerName={question.audioSimSpeaker ?? t('assessment.audio')} />
             )}
             <fieldset className="space-y-2.5" disabled={submitting}>
-              <legend className="sr-only">Javob variantlari</legend>
+              <legend className="sr-only">{t('assessment.options')}</legend>
               {question.options.map((option, index) => (
                 <label
                   key={index}
@@ -171,9 +167,7 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
             {error && (
               <div role="alert" className="space-y-2 rounded-2xl bg-rose-50 p-3.5 text-sm text-coral">
                 <p>{error}</p>
-                <Button variant="ghost" size="sm" onClick={() => init(courseId)}>
-                  Sessiyani qayta yuklash
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => init(courseId)}>{t('assessment.reload')}</Button>
               </div>
             )}
             <div className="flex justify-end pt-1">
@@ -186,17 +180,15 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
                 }}
                 rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
               >
-                {finalQuestion ? 'Natijani ko‘rish' : 'Keyingi savol'}
+                {finalQuestion ? t('assessment.viewResult') : t('lesson.nextQuestion')}
               </Button>
             </div>
           </Card>
-          <Modal isOpen={confirm} onClose={() => setConfirm(false)} title="Javoblarni topshirasizmi?" maxWidth="sm">
-            <p className="mb-4 text-sm text-slatefine">Oxirgi javobni yuborgach, natijangiz saqlanadi.</p>
+          <Modal isOpen={confirm} onClose={() => setConfirm(false)} title={t('assessment.confirm')} maxWidth="sm">
+            <p className="mb-4 text-sm text-slatefine">{t('assessment.confirmDescription')}</p>
             <div className="flex flex-wrap justify-end gap-2">
-              <Button variant="ghost" onClick={() => setConfirm(false)}>
-                Qaytish
-              </Button>
-              <Button onClick={() => void submit()}>Topshirish</Button>
+              <Button variant="ghost" onClick={() => setConfirm(false)}>{t('assessment.back')}</Button>
+              <Button onClick={() => void submit()}>{t('assessment.submit')}</Button>
             </div>
           </Modal>
         </>

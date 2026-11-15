@@ -1,3 +1,4 @@
+import { LocalizedError } from '@/core/locales/LocalizedError';
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
@@ -8,7 +9,7 @@ import { useLessonStore } from '@/app/store/useLessonStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
 import { isDemoRuntimeActive, setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { clearTutorHistory } from '@/core/runtime/tutorHistory';
-import { authErrorMessage } from '@/core/utils/authErrors';
+import { authError } from '@/core/utils/authErrors';
 
 export interface UserProfile {
   id: string;
@@ -47,7 +48,6 @@ const defaultDemoProfile: UserProfile = {
 };
 
 const DEMO_SESSION_KEY = 'bilimyol_demo_session';
-const AUTH_UNAVAILABLE = 'Hisob xizmatiga ulanib bo‘lmadi. Ilovani namuna rejimida ko‘rishingiz mumkin.';
 
 function readDemoProfile(): UserProfile | null {
   try {
@@ -156,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return request;
   };
 
-  const staleActionError = () => new Error('Sessiya o‘zgardi. Qayta urinib ko‘ring.');
+  const staleActionError = () => new LocalizedError('errors.sessionChanged');
 
   const fetchProfile = useCallback(async (
     userId: string,
@@ -178,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!isCurrent()) return null;
       if (error) {
-        throw new Error('Profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+        throw new LocalizedError('errors.profileRead');
       }
 
       if (!data && options.provisionIfMissing) {
@@ -200,7 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
         if (provisionError) {
-          throw new Error('Profilni yaratib bo‘lmadi. Qayta urinib ko‘ring.');
+          throw new LocalizedError('errors.profileCreate');
         }
 
         const { data: provisioned, error: readError } = await supabase
@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
 
         if (readError) {
-          throw new Error('Yaratilgan profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+          throw new LocalizedError('errors.profileCreatedRead');
         }
         if (!isCurrent()) return null;
         data = provisioned;
@@ -244,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (options.throwOnError) {
         throw err instanceof Error
           ? err
-          : new Error('Profilni serverdan o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
+          : new LocalizedError('errors.profileRead');
       }
       return null;
     } finally {
@@ -386,14 +386,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     if (signingOut.current !== null) return { error: staleActionError() };
-    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
+    if (!isSupabaseConfigured) return { error: new LocalizedError('errors.unavailable') };
 
     const request = beginAuthAction(email);
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (request !== authAction.current) return { error: staleActionError() };
       if (error || !authData.user || !authData.session) {
-        return { error: new Error(authErrorMessage(error, 'Hisobga kirib bo‘lmadi. Qayta urinib ko‘ring.')) };
+        return { error: authError(error, 'errors.login') };
       }
       if (pendingAuth.current?.userId && pendingAuth.current.userId !== authData.user.id) {
         return { error: staleActionError() };
@@ -405,9 +405,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (request !== authAction.current) return { error: staleActionError() };
       return resolved
         ? { error: null, profile: resolved }
-        : { error: new Error('Profilni serverdan yuklab bo‘lmadi. Qayta urinib ko‘ring.') };
+        : { error: new LocalizedError('errors.profileLoad') };
     } catch (err) {
-      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new Error('Kirishda xatolik yuz berdi.') };
+      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new LocalizedError('errors.loginFailed') };
     } finally {
       authOperations.current.delete(request);
       if (request === authAction.current) {
@@ -424,7 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lastName: string
   ): Promise<{ error: Error | null; requiresEmailConfirmation?: boolean }> => {
     if (signingOut.current !== null) return { error: staleActionError() };
-    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
+    if (!isSupabaseConfigured) return { error: new LocalizedError('errors.unavailable') };
 
     const request = beginAuthAction(email);
     try {
@@ -448,8 +448,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (request !== authAction.current) return { error: staleActionError() };
-      if (error) return { error: new Error(authErrorMessage(error, 'Hisob yaratishda xatolik yuz berdi.')) };
-      if (!signUpData.user) return { error: new Error('Hisob yaratishda xatolik yuz berdi.') };
+      if (error) return { error: authError(error, 'errors.register') };
+      if (!signUpData.user) return { error: new LocalizedError('errors.register') };
       if (!signUpData.session) {
         authRevision.current++;
         profileRequest.current++;
@@ -476,9 +476,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (request !== authAction.current) return { error: staleActionError() };
       return resolved
         ? { error: null }
-        : { error: new Error('Profilni serverdan yuklab bo‘lmadi. Qayta urinib ko‘ring.') };
+        : { error: new LocalizedError('errors.profileLoad') };
     } catch (err) {
-      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new Error('Hisob yaratishda xatolik yuz berdi.') };
+      return { error: request !== authAction.current ? staleActionError() : err instanceof Error ? err : new LocalizedError('errors.register') };
     } finally {
       authOperations.current.delete(request);
       if (request === authAction.current) {
@@ -497,7 +497,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signingOut.current = request;
     try {
       const result = await supabase.auth.signOut({ scope });
-      if (result?.error) throw new Error('Sessiyani tugatib bo‘lmadi. Qayta urinib ko‘ring.');
+      if (result?.error) throw new LocalizedError('auth.logoutFailed');
       if (authAction.current === request) clearAuthState();
     } finally {
       if (signingOut.current === request) signingOut.current = null;
@@ -506,29 +506,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     if (!isSupabaseConfigured) {
-      return { error: new Error('Namuna rejimida parolni tiklash xizmati mavjud emas.') };
+      return { error: new LocalizedError('errors.demoRecovery') };
     }
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      return { error: error ? new Error(authErrorMessage(error, 'Havola so‘rovini yuborib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring.')) : null };
+      return { error: error ? authError(error, 'errors.recoveryRequest') : null };
     } catch {
-      return { error: new Error('Tiklash xizmatiga ulanib bo‘lmadi. Qayta urinib ko‘ring.') };
+      return { error: new LocalizedError('errors.recovery') };
     }
   };
 
   const resendConfirmation = async (email: string) => {
-    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
+    if (!isSupabaseConfigured) return { error: new LocalizedError('errors.unavailable') };
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup', email: email.trim(),
         options: { emailRedirectTo: window.location.origin },
       });
-      return { error: error ? new Error(authErrorMessage(error)) : null };
+      return { error: error ? authError(error, 'errors.auth') : null };
     } catch {
-      return { error: new Error('Xat so‘rovini yuborib bo‘lmadi. Ulanishni tekshiring.') };
+      return { error: new LocalizedError('auth.resendFailed') };
     }
   };
 
@@ -537,25 +537,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updatePassword = async (newPassword: string) => {
     const recoveryId = recoveryUserId.current;
     if (!isSupabaseConfigured || !recoveryId || recoveryId !== activeUserId.current) {
-      return { error: new Error('Faol tiklash havolasi kerak. Yangi havola so‘rang.') };
+      return { error: new LocalizedError('errors.recoveryRequired') };
     }
     if (newPassword.trim().length < 6) {
-      return { error: new Error('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.') };
+      return { error: new LocalizedError('auth.shortPassword') };
     }
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        return { error: new Error('Parolni yangilab bo‘lmadi. Boshqa parol bilan qayta urinib ko‘ring.') };
+        return { error: new LocalizedError('errors.passwordUpdate') };
       }
       setRecoveryUser(null);
       return { error: null };
     } catch {
-      return { error: new Error('Parolni yangilash xizmatiga ulanib bo‘lmadi.') };
+      return { error: new LocalizedError('errors.passwordConnection') };
     }
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!profile) return { error: new Error('Profil topilmadi') };
+    if (!profile) return { error: new LocalizedError('errors.profileMissing') };
     if (isSupabaseConfigured && !isDemoMode && profile.id !== activeUserId.current) return { error: staleActionError() };
 
     const updated = {
@@ -570,7 +570,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       storeDemoProfile(updated);
       return { error: null };
     }
-    if (!isSupabaseConfigured) return { error: new Error(AUTH_UNAVAILABLE) };
+    if (!isSupabaseConfigured) return { error: new LocalizedError('errors.unavailable') };
 
     const request = profileRequest.current;
     const action = authAction.current;
@@ -586,14 +586,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         })
         .eq('id', profile.id);
 
-      if (error) return { error: new Error(error.message) };
+      if (error) return { error: new LocalizedError('errors.profileSave') };
       if (request !== profileRequest.current || action !== authAction.current || profile.id !== activeUserId.current) {
         return { error: staleActionError() };
       }
       setProfile(updated);
       return { error: null };
     } catch {
-      return { error: new Error('Profil serverda saqlanmadi. Qayta urinib ko‘ring.') };
+      return { error: new LocalizedError('errors.profileSave') };
     }
   };
 
