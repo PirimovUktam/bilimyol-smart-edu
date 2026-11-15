@@ -54,12 +54,12 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(created.name).toBe('Matritsalar va Determinantlar');
 
     const courseSkills = await adminContentService.getSkills('course_math_01');
-    expect(courseSkills.some((s) => s.id === skillId)).toBe(true);
+    expect(courseSkills.rows.some((s) => s.id === skillId)).toBe(true);
 
     // Delete skill
     await adminContentService.deleteSkill(skillId);
     const afterDelete = await adminContentService.getSkills('course_math_01');
-    expect(afterDelete.some((s) => s.id === skillId)).toBe(false);
+    expect(afterDelete.rows.some((s) => s.id === skillId)).toBe(false);
   });
 
   it('3. Darslar CMS: Darslik yaratish, nashr qilish (publish) va arxivlash (archive)', async () => {
@@ -81,17 +81,17 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     // Toggle publish to false (draft)
     await adminContentService.toggleLessonPublish(lessonId, false);
     let lessons = await adminContentService.getLessons('course_math_01');
-    expect(lessons.find((l) => l.id === lessonId)?.isPublished).toBe(false);
+    expect(lessons.rows.find((l) => l.id === lessonId)?.isPublished).toBe(false);
 
     // Toggle archive
     await adminContentService.toggleLessonArchive(lessonId, true);
     lessons = await adminContentService.getLessons('course_math_01');
-    expect(lessons.find((l) => l.id === lessonId)?.isArchived).toBe(true);
+    expect(lessons.rows.find((l) => l.id === lessonId)?.isArchived).toBe(true);
 
     // Delete lesson
     await adminContentService.deleteLesson(lessonId);
     lessons = await adminContentService.getLessons('course_math_01');
-    expect(lessons.some((l) => l.id === lessonId)).toBe(false);
+    expect(lessons.rows.some((l) => l.id === lessonId)).toBe(false);
   });
 
   it('4. Test Banki CMS: Yangi savol va 4 ta variant kiritish, to‘g‘ri javobni belgilash', async () => {
@@ -113,12 +113,12 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(created.correctIndex).toBe(2);
 
     const questions = await adminContentService.getQuestions('course_math_01', 'skill_math_algebra');
-    expect(questions.some((q) => q.id === qId)).toBe(true);
+    expect(questions.rows.some((q) => q.id === qId)).toBe(true);
 
     // Delete question
     await adminContentService.deleteQuestion(qId);
     const afterDelete = await adminContentService.getQuestions('course_math_01', 'skill_math_algebra');
-    expect(afterDelete.some((q) => q.id === qId)).toBe(false);
+    expect(afterDelete.rows.some((q) => q.id === qId)).toBe(false);
   });
 
   it('5. Repozitoriy integratsiyasi: O‘quvchi repozitoriylari fallback va sozlanish holatida ishlaydi', async () => {

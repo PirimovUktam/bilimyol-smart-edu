@@ -279,7 +279,7 @@ export function AppRouter() {
           onOpenCourses={() => navigate('course-selection')}
           onOpenOnboarding={() => navigate('onboarding')}
           onStartPlacement={() => navigate('placement')} onOpenAITutor={() => navigate('ai-tutor')}
-          onOpenProgress={() => navigate('progress')} />;
+          onOpenProgress={() => navigate('progress')} onOpenProfile={() => navigate('profile')} />;
       case 'ai-tutor':
         return <LazyYolchiAIChatView key={profile?.id} onStartLesson={() => continueLesson()} />;
       case 'progress':

@@ -60,7 +60,7 @@ export const YolchiMessageBubble = memo(({
         }`}
       >
         <header className="mb-1 flex items-center justify-between gap-3 text-[11px] font-bold">
-          <span className={isYolchi ? 'text-cyan-300' : 'text-purple-100'}>
+          <span className={isYolchi ? 'text-brand-dark dark:text-sky-300' : 'text-purple-100'}>
             {isYolchi ? 'Yo‘lchi AI' : 'Siz'}
           </span>
         </header>
@@ -108,7 +108,7 @@ export const YolchiMessageBubble = memo(({
 
           <time
             className={`block text-[10px] ${
-              isYolchi ? 'text-slate-400' : 'text-indigo-200'
+              isYolchi ? 'text-slatefine' : 'text-indigo-100'
             } text-right`}
           >
             {timestamp}

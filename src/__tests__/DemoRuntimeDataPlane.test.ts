@@ -209,4 +209,15 @@ describe('hosted demo data plane', () => {
       body: expect.objectContaining({ action: 'askTutor', message: 'Savol' }),
     }));
   });
+
+  it.each([
+    [401, 'tutor.unauthorized'],
+    [429, 'tutor.rateLimit'],
+    [503, 'tutor.unavailable'],
+  ])('passes the safe error key for a real Tutor HTTP %i', async (status, messageKey) => {
+    setDemoRuntimeActive(false);
+    backend.invoke.mockResolvedValueOnce({ data: null, error: { context: { status } } });
+    await expect(new GeminiAITutorService().askTutor({ message: 'Savol', language: 'ru' }))
+      .rejects.toMatchObject({ messageKey });
+  });
 });

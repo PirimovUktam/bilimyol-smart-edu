@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { message, ru, uz, type MessageKey } from '../core/locales/messages';
+import { loadRussian, message, uz, type MessageKey } from '../core/locales/messages';
+import { ru } from '../core/locales/messages.ru';
 import { readPreference, usePreferences } from '../core/preferences/preferences';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -30,10 +31,10 @@ describe('preferences at first paint', () => {
     vi.stubGlobal('localStorage', { getItem: () => { throw Error('denied'); } });
     expect(readPreference('bilimyol.language', ['uz', 'ru'], 'uz')).toBe('uz');
   });
-  it('persists user choices while remaining usable if storage fails', () => {
+  it('persists user choices while remaining usable if storage fails', async () => {
     const setItem = vi.fn();
     vi.stubGlobal('localStorage', { setItem });
-    usePreferences.getState().setLanguage('ru');
+    await usePreferences.getState().setLanguage('ru');
     usePreferences.getState().setTheme('dark');
     expect(setItem).toHaveBeenCalledWith('bilimyol.language', 'ru');
     expect(setItem).toHaveBeenCalledWith('bilimyol.theme', 'dark');
@@ -44,7 +45,8 @@ describe('preferences at first paint', () => {
 });
 
 describe('typed interface dictionaries', () => {
-  it('has the same nonempty keys in both languages', () => {
+  it('has the same nonempty keys in both languages', async () => {
+    await loadRussian();
     expect(Object.keys(ru)).toEqual(Object.keys(uz));
     for (const namespace of Object.keys(uz) as (keyof typeof uz)[]) {
       expect(Object.keys(ru[namespace])).toEqual(Object.keys(uz[namespace]));
@@ -53,7 +55,8 @@ describe('typed interface dictionaries', () => {
       }
     }
   });
-  it('uses selected language without translating learner content', () => {
+  it('uses selected language without translating learner content', async () => {
+    await loadRussian();
     expect(message('uz', 'auth.login')).toBe('Kirish');
     expect(message('ru', 'auth.login')).toBe('Войти');
   });

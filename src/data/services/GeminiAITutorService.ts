@@ -12,15 +12,16 @@ import {
 } from './IAITutorService';
 import { DemoAITutorService } from './DemoAITutorService';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { LocalizedError } from '@/core/locales/LocalizedError';
+import type { MessageKey } from '@/core/locales/messages';
 import { publishQuestionWithRegisteredKey } from '@/core/runtime/questionAnswerKeys';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 
 /**
  * Thrown when the AI edge function is reachable but refuses the request
- * (auth / rate-limit / server errors). Must surface to the UI as a clear,
- * recoverable Uzbek error — never silently replaced by demo content.
+ * (auth / rate-limit / server errors). The UI translates safe message keys.
  */
-export class GeminiAIServiceError extends Error {}
+export class GeminiAIServiceError extends LocalizedError {}
 
 const extractStatus = (err: unknown): number | null => {
   if (!err || typeof err !== 'object') return null;
@@ -31,12 +32,13 @@ const extractStatus = (err: unknown): number | null => {
   return typeof raw === 'number' ? raw : null;
 };
 
-const describeEdgeError = (status: number): string => {
-  if (status === 401) return 'Sessiya tugagan. Yo‘lchi AI uchun qayta kiring.';
-  if (status === 403) return 'Bu amal uchun ruxsat yo‘q. Xato tahlili uchun avval javob topshiring.';
-  if (status === 429) return 'AI xizmatiga so‘rovlar limiti tugadi';
-  if (status >= 500) return 'AI xizmati vaqtincha ishlamayapti';
-  return `AI xizmati so‘rovni qabul qilmadi (xatolik kodi: ${status})`;
+const describeEdgeError = (status: number | null): MessageKey => {
+  if (status === null) return 'tutor.networkError';
+  if (status === 401) return 'tutor.unauthorized';
+  if (status === 403) return 'tutor.forbidden';
+  if (status === 429) return 'tutor.rateLimit';
+  if (status >= 500) return 'tutor.unavailable';
+  return 'tutor.invalidRequest';
 };
 
 export class GeminiAITutorService implements IAITutorService {
@@ -59,7 +61,7 @@ export class GeminiAITutorService implements IAITutorService {
 
       if (error || !data) {
         throw new GeminiAIServiceError(
-          error ? describeEdgeError(extractStatus(error) || 500) : 'Yo‘lchi AI hozircha javob bera olmadi.'
+          error ? describeEdgeError(extractStatus(error)) : 'tutor.noResponse'
         );
       }
 
@@ -76,7 +78,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      throw new GeminiAIServiceError('Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.');
+      throw new GeminiAIServiceError('tutor.networkError');
     }
   }
 
@@ -95,7 +97,7 @@ export class GeminiAITutorService implements IAITutorService {
 
       if (error || !data || !data.text) {
         throw new GeminiAIServiceError(
-          error ? describeEdgeError(extractStatus(error) || 500) : 'Savol generatsiya qilinmadi.'
+          error ? describeEdgeError(extractStatus(error)) : 'tutor.noResponse'
         );
       }
 
@@ -111,7 +113,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      throw new GeminiAIServiceError('Savol generatsiyasi xizmatiga ulanib bo‘lmadi.');
+      throw new GeminiAIServiceError('tutor.networkError');
     }
   }
 
@@ -130,7 +132,7 @@ export class GeminiAITutorService implements IAITutorService {
 
       if (error || !data || !data.text) {
         throw new GeminiAIServiceError(
-          error ? describeEdgeError(extractStatus(error) || 500) : 'Mustahkamlash savoli generatsiya qilinmadi.'
+          error ? describeEdgeError(extractStatus(error)) : 'tutor.noResponse'
         );
       }
 
@@ -146,7 +148,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      throw new GeminiAIServiceError('Mustahkamlash savoli xizmatiga ulanib bo‘lmadi.');
+      throw new GeminiAIServiceError('tutor.networkError');
     }
   }
 
@@ -170,11 +172,11 @@ export class GeminiAITutorService implements IAITutorService {
           // so the UI can offer retry instead of showing fake AI success.
           throw new GeminiAIServiceError(describeEdgeError(status));
         }
-        throw new GeminiAIServiceError(describeEdgeError(status || 500));
+        throw new GeminiAIServiceError(describeEdgeError(status ?? (error ? null : 503)));
       }
 
       if (!data || !data.title || !Array.isArray(data.steps)) {
-        throw new GeminiAIServiceError('Dars kontenti noto‘g‘ri formatda qaytdi. Qayta urinib ko‘ring.');
+        throw new GeminiAIServiceError('tutor.noResponse');
       }
 
       // Edge returns a deterministic fallback (isDeterministicFallback: true,
@@ -199,7 +201,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      throw new GeminiAIServiceError('Dars generatsiyasi xizmatiga ulanib bo‘lmadi.');
+      throw new GeminiAIServiceError('tutor.networkError');
     }
   }
 
@@ -229,7 +231,7 @@ export class GeminiAITutorService implements IAITutorService {
 
       if (error || !data || typeof data.answer !== 'string' || !data.answer.trim()) {
         throw new GeminiAIServiceError(
-          error ? describeEdgeError(extractStatus(error) ?? 503) : 'Yo‘lchi AI javobi o‘qilmadi. Qayta urinib ko‘ring.'
+          error ? describeEdgeError(extractStatus(error)) : 'tutor.noResponse'
         );
       }
 
@@ -241,13 +243,7 @@ export class GeminiAITutorService implements IAITutorService {
       };
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
-      const status = extractStatus(err);
-      if (status !== null && status >= 400) {
-        throw new GeminiAIServiceError(describeEdgeError(status));
-      }
-      throw new GeminiAIServiceError(
-        'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internet aloqasini tekshirib qayta urinib ko‘ring.'
-      );
+      throw new GeminiAIServiceError(describeEdgeError(extractStatus(err)));
     }
   }
 

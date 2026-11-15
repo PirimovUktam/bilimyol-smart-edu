@@ -148,6 +148,21 @@ try {
   await switchSubject(/Matematika fanini tanlash/);
   await heading(/Assalomu alaykum/);
   await screenshot('after-learn-1440.png');
+  await page.setViewportSize({ width: 360, height: 844 });
+  await click('Bildirishnomalar');
+  await checkWidth('open reminders', 360);
+  await main.getByRole('button', { name: 'Yopish', exact: true }).click();
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await click('Profil');
+  await main.getByRole('checkbox', { name: /eslatma/i }).uncheck();
+  await click('Bosh sahifa', nav);
+  await heading(/Assalomu alaykum/);
+  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor({ state: 'hidden' });
+  await click('Profil');
+  await main.getByRole('checkbox', { name: /eslatma/i }).check();
+  await click('Bosh sahifa', nav);
+  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor();
+  console.log('PASS reminder preference and 360px notification menu');
   await click('Natijalar', nav);
   await main.getByText('22', { exact: true }).first().waitFor();
   console.log('PASS demo login, course isolation, authoritative demo scorer and completion');
@@ -164,6 +179,9 @@ try {
   await click('Yo‘lchi AI', nav);
   await main.getByText('Kvadratni qanday ochaman?', { exact: true }).waitFor();
   await screenshot('yolchi-1440.png');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await screenshot('yolchi-390.png');
+  await page.setViewportSize({ width: 1440, height: 960 });
   console.log('PASS demo tutor, feedback and in-session conversation history');
 
   const views = [

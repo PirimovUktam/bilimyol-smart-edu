@@ -1,5 +1,5 @@
 import { useTranslation } from '@/core/locales/useTranslation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Atom,
@@ -49,6 +49,7 @@ interface DashboardViewProps {
   onStartPlacement: () => void;
   onOpenAITutor: () => void;
   onOpenProgress: () => void;
+  onOpenProfile: () => void;
 }
 
 type CourseFilterTab = 'active' | 'recommended' | 'all';
@@ -62,6 +63,7 @@ export function DashboardView({
   onStartPlacement,
   onOpenAITutor,
   onOpenProgress,
+  onOpenProfile,
 }: DashboardViewProps) {
   const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
@@ -80,6 +82,8 @@ export function DashboardView({
   const [courseTab, setCourseTab] = useState<CourseFilterTab>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [reminders, setReminders] = useState<{ accountId: string; enabled: boolean } | null>(null);
+  const [failedCourse, setFailedCourse] = useState<string | null>(null);
   const [premiumSoonOpen, setPremiumSoonOpen] = useState(false);
   const [activity, setActivity] = useState<DailyActivitySummary[] | null>(null);
   const [activityFailed, setActivityFailed] = useState(false);
@@ -91,6 +95,17 @@ export function DashboardView({
     const timer = window.setTimeout(() => setPremiumSoonOpen(false), 4200);
     return () => window.clearTimeout(timer);
   }, [premiumSoonOpen]);
+
+  const accountId = account?.id;
+  useEffect(() => {
+    if (!accountId) return;
+    let active = true;
+    void supabaseLearnerRepository.getLearningReminders().then(
+      (enabled) => { if (active) setReminders({ accountId, enabled }); },
+      () => { if (active) setReminders(null); },
+    );
+    return () => { active = false; };
+  }, [accountId, isDemoMode]);
 
   const started = Boolean(course && hasStartedCourse(course, profile));
 
@@ -230,6 +245,26 @@ export function DashboardView({
     return enrichedCourses;
   }, [enrichedCourses, courseTab]);
 
+  const handleCourseAction = useCallback(async (targetCourseId: string) => {
+    setFailedCourse(null);
+    if (targetCourseId === course?.id) {
+      setSearchQuery('');
+      if (!started) onOpenOnboarding();
+      else if (nextId) onContinueLesson(nextId);
+      else onOpenRoadmap();
+      return;
+    }
+    try {
+      await selectCourse(targetCourseId);
+      const chosen = useCourseStore.getState().activeCourse;
+      if (chosen?.id !== targetCourseId) return;
+      setSearchQuery('');
+      if (!hasStartedCourse(chosen, useLearnerStore.getState().profile)) onOpenOnboarding();
+    } catch {
+      setFailedCourse(targetCourseId);
+    }
+  }, [course?.id, started, nextId, selectCourse, onOpenOnboarding, onContinueLesson, onOpenRoadmap]);
+
   // Search filtering across courses and roadmap nodes
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -250,10 +285,7 @@ export function DashboardView({
           id: 'course_' + c.id,
           title: c.title,
           subtitle: t('dynamic.courseSummary', { count: c.lessons.length }),
-          onSelect: () => {
-            setSearchQuery('');
-            void selectCourse(c.id);
-          },
+          onSelect: () => void handleCourseAction(c.id),
         });
       }
     }
@@ -276,28 +308,14 @@ export function DashboardView({
       }
     }
     return results.slice(0, 5);
-  }, [searchQuery, courses, path?.nodes, course?.title, selectCourse, onContinueLesson, onOpenRoadmap, t]);
-
-  const handleCourseAction = async (targetCourseId: string) => {
-    if (targetCourseId === course?.id) {
-      if (!started) onOpenOnboarding();
-      else if (nextId) onContinueLesson(nextId);
-      else onOpenRoadmap();
-      return;
-    }
-    await selectCourse(targetCourseId);
-    const chosen = useCourseStore.getState().activeCourse;
-    if (chosen && !hasStartedCourse(chosen, useLearnerStore.getState().profile)) {
-      onOpenOnboarding();
-    }
-  };
+  }, [searchQuery, courses, path?.nodes, course?.title, handleCourseAction, onContinueLesson, onOpenRoadmap, t]);
 
   return (
     <div className="learning-page space-y-6 text-ink">
       {/* =====================================================================
           TOP NAVBAR ROW: Search (Ctrl+K), Notifications, Streak, User Profile
          ===================================================================== */}
-      <div className="fade-up flex flex-wrap items-center justify-between gap-3">
+      <div className="fade-up relative flex flex-wrap items-center justify-between gap-3">
         {/* Search Bar */}
         <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
           <div className="flex h-11 items-center gap-2.5 rounded-2xl border border-hairline bg-paper px-3.5 shadow-inner backdrop-blur-md focus-within:border-hairline">
@@ -352,10 +370,11 @@ export function DashboardView({
 
         {/* Right Cluster: Bell, Streak, Profile */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="relative">
+          {reminders?.accountId === accountId && reminders?.enabled && <div className="sm:relative">
             <button
               type="button"
               aria-label={t('dashboard.notifications')}
+              aria-expanded={showNotifications}
               onClick={() => setShowNotifications((prev) => !prev)}
               className="relative grid size-11 cursor-pointer place-items-center rounded-2xl border border-hairline bg-paper text-slatefine transition-all hover:border-hairline hover:text-ink"
             >
@@ -367,7 +386,7 @@ export function DashboardView({
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-hairline bg-paper p-4 shadow-2xl backdrop-blur-xl">
+              <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-2xl border border-hairline bg-paper p-4 shadow-2xl sm:left-auto sm:w-72">
                 <p className="text-xs font-extrabold text-ink">{t('dashboard.reminders')}</p>
                 <p className="mt-1.5 text-xs leading-relaxed text-slatefine">{t('dashboard.dailyGoal')}{' '}<strong>{profile?.dailyMinutes ?? 15}{t('courses.minutes')}</strong>.{' '}
                   {started
@@ -391,7 +410,7 @@ export function DashboardView({
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Streak Pill */}
           <div className="flex h-11 items-center gap-2 rounded-2xl border border-hairline bg-paper px-3.5">
@@ -408,7 +427,8 @@ export function DashboardView({
           {/* Profile Pill */}
           <button
             type="button"
-            onClick={onOpenCourses}
+            onClick={onOpenProfile}
+            aria-label={t('common.profile')}
             className="hidden cursor-pointer items-center gap-2.5 rounded-2xl border border-hairline bg-paper py-1.5 pr-3 pl-2 transition-all hover:border-hairline sm:flex"
           >
             <Avatar
@@ -428,9 +448,12 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* =====================================================================
-          MAIN 12-COLUMN GRID: Left (Hero + Courses + Subjects) | Right (Goal + AI + Achievements)
-         ===================================================================== */}
+      {failedCourse && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-coral/30 bg-paper p-4 text-sm text-ink">
+          <p>{t('dashboard.courseSwitchFailed')}</p>
+          <Button size="sm" variant="outline" onClick={() => void handleCourseAction(failedCourse)}>{t('courses.retry')}</Button>
+        </div>
+      )}
       <div className="grid items-start gap-5 xl:grid-cols-12">
         {/* LEFT 8 COLUMNS */}
         <div className="min-w-0 space-y-6 xl:col-span-8">

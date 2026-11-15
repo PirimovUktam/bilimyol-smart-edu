@@ -1,8 +1,8 @@
 import { translate as t } from '@/core/locales/useTranslation';
 import { useTranslation } from '@/core/locales/useTranslation';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { ArrowRight, BookOpen, HelpCircle, Lightbulb, Plus, RefreshCw, Send, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowRight, BookOpen, HelpCircle, Lightbulb, Plus, RefreshCw, Send, Sparkles } from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useLessonStore } from '@/app/store/useLessonStore';
@@ -10,6 +10,7 @@ import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { readTutorHistory, writeTutorHistory, type TutorMessage } from '@/core/runtime/tutorHistory';
 import { GeminiAITutorService, GeminiAIServiceError } from '@/data/services/GeminiAITutorService';
+import type { MessageKey } from '@/core/locales/messages';
 import { YolchiMessageBubble, YolchiTypingIndicator } from '@/features/ai-tutor/YolchiMessageBubble';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -46,7 +47,7 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
   const score = courseId && skillId ? learner?.scoresByCourse[courseId]?.[skillId]?.score : undefined;
   const conversation = (profile?.id ?? 'guest') + '/' + (courseId ?? 'general');
   return (
-    <div className="learning-page space-y-6 sm:space-y-8">
+    <div className="learning-page space-y-4 sm:space-y-8">
       <PageHeader
         eyebrow={t('tutor.mentor')}
         title="Yo‘lchi AI"
@@ -55,7 +56,7 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
         action={
           courseId && (
             <Button
-              variant="outline"
+              variant="outline" size="sm"
               onClick={onStartLesson}
               rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
             >{t('tutor.lesson')}</Button>
@@ -84,10 +85,11 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
   const [messages, setMessages] = useState(() => readTutorHistory(conversation));
   const [draft, setDraft] = useState('');
   const [waiting, setWaiting] = useState(false);
-  const [failure, setFailure] = useState<{ prompt: string; error: string } | null>(null);
+  const [failure, setFailure] = useState<{ prompt: string; error: MessageKey } | null>(null);
   const [streamingState, setStreamingState] = useState<{ id: string; visibleLength: number } | null>(null);
+  const [showLatest, setShowLatest] = useState(false);
   const stream = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const followLatest = useRef(true);
   const input = useRef<HTMLTextAreaElement>(null);
   const mounted = useRef(true);
   const busy = useRef(false);
@@ -98,18 +100,11 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     typeof window.matchMedia !== 'function' ||
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const scrollToBottomSmart = useCallback((force = false) => {
-    const el = stream.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (force || distanceFromBottom <= 120) {
-      if (typeof messagesEndRef.current?.scrollIntoView === 'function' && !isReducedMotion()) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      } else {
-        el.scrollTop = el.scrollHeight;
-      }
-    }
-  }, []);
+  const jumpToLatest = () => {
+    followLatest.current = true;
+    setShowLatest(false);
+    if (stream.current) stream.current.scrollTop = stream.current.scrollHeight;
+  };
 
   useEffect(() => {
     mounted.current = true;
@@ -119,9 +114,10 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     };
   }, []);
 
-  useEffect(() => {
-    scrollToBottomSmart(false);
-  }, [messages, waiting, failure, streamingState, scrollToBottomSmart]);
+  useLayoutEffect(() => {
+    const element = stream.current;
+    if (followLatest.current && element) element.scrollTop = element.scrollHeight;
+  }, [messages, waiting, failure, streamingState]);
 
   const keep = useCallback((next: TutorMessage[]) => {
     const recent = next.slice(-60);
@@ -160,6 +156,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     const text = prompt.trim();
     if (!text || busy.current) return;
     busy.current = true;
+    jumpToLatest();
     setWaiting(true);
     setFailure(null);
     const prior = retry ? messages.slice(0, -1) : messages;
@@ -167,7 +164,6 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     if (!retry) {
       keep(next);
       setDraft('');
-      scrollToBottomSmart(true);
     }
 
     try {
@@ -187,7 +183,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     } catch (error) {
       if (mounted.current) setFailure({
         prompt: text,
-        error: error instanceof GeminiAIServiceError ? error.message : t('tutor.noResponse'),
+        error: error instanceof GeminiAIServiceError ? error.messageKey : 'tutor.noResponse',
       });
     } finally {
       busy.current = false;
@@ -280,10 +276,15 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
         </div>
         <div
           ref={stream}
+          onScroll={(event) => {
+            const { scrollHeight, scrollTop, clientHeight } = event.currentTarget;
+            followLatest.current = scrollHeight - scrollTop - clientHeight <= 72;
+            setShowLatest(!followLatest.current);
+          }}
           role="log"
           aria-label={t('tutor.history')}
           aria-live="polite"
-          className="min-h-64 max-h-[min(55dvh,34rem)] space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-6"
+          className="min-h-36 max-h-[min(30dvh,18rem)] space-y-4 overflow-y-auto overscroll-contain p-4 sm:min-h-64 sm:max-h-[min(55dvh,34rem)] sm:p-6"
         >
           {messages.length === 0 && (
             <div className="mx-auto max-w-lg py-8 text-center">
@@ -324,7 +325,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
           </AnimatePresence>
           {failure && (
             <div role="alert" className="rounded-2xl border border-coral/20 bg-rose-50 p-3.5 text-sm text-coral">
-              <p>{failure.error}</p>
+              <p>{t(failure.error)}</p>
               <Button
                 className="mt-2"
                 variant="outline"
@@ -334,8 +335,14 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
               >{t('courses.retry')}</Button>
             </div>
           )}
-          <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
         </div>
+        {showLatest && (
+          <div className="flex justify-center border-t border-hairline bg-paper py-2">
+            <Button size="sm" variant="outline" onClick={jumpToLatest} leftIcon={<ArrowDown aria-hidden="true" className="size-4" />}>
+              {t('tutor.latest')}
+            </Button>
+          </div>
+        )}
         <form onSubmit={submit} className="space-y-2 border-t border-hairline bg-canvas/40 p-3.5 sm:p-5">
           <div className="flex items-end gap-2.5">
             <textarea
@@ -343,7 +350,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
               aria-label={t('tutor.questionLabel')}
               rows={2}
               maxLength={4000}
-              className="form-input min-w-0 flex-1 resize-y bg-white px-3.5 py-2.5"
+              className="form-input max-h-36 min-w-0 flex-1 resize-y bg-paper px-3.5 py-2.5"
               placeholder={t('tutor.placeholder')}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}

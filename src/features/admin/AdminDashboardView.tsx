@@ -1,5 +1,5 @@
 import { translate, useTranslation } from '@/core/locales/useTranslation';
-import React, { useCallback, useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import {
   ShieldAlert,
   PlusCircle,
@@ -31,6 +31,7 @@ import { Course } from '../../domain/entities/Course';
 import { Skill } from '../../domain/entities/Skill';
 
 type AdminTab = 'courses' | 'skills' | 'lessons' | 'questions';
+type ListedLesson = Omit<AdminLessonRecord, 'steps' | 'reinforcementExercise'>;
 
 export const AdminDashboardView: React.FC = () => {
   const { t } = useTranslation();
@@ -42,12 +43,20 @@ export const AdminDashboardView: React.FC = () => {
   // CMS Content States
   const [courses, setCourses] = useState<Course[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [lessons, setLessons] = useState<AdminLessonRecord[]>([]);
+  const [lessons, setLessons] = useState<ListedLesson[]>([]);
   const [questions, setQuestions] = useState<AdminQuestionRecord[]>([]);
-  const [isCmsLoading, setIsCmsLoading] = useState(false);
+  const [isCmsLoading, setIsCmsLoading] = useState(true);
+  const [courseLoading, setCourseLoading] = useState(true);
+  const [reload, setReload] = useState(0);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [listFailed, setListFailed] = useState(false);
+  const [editingLesson, setEditingLesson] = useState(false);
+  const [skillChoices, setSkillChoices] = useState<{ courseId: string; rows: Pick<Skill, 'id' | 'name'>[] }>();
+
 
   // Filter state for Skills/Lessons/Questions
-  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('course_math_01');
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedSkillFilter, setSelectedSkillFilter] = useState<string>('');
 
   // Course Form Modal state
@@ -119,29 +128,67 @@ export const AdminDashboardView: React.FC = () => {
     isPlacement: false,
   });
 
-  const loadAllCmsData = useCallback(async () => {
-    setIsCmsLoading(true);
-    try {
-      const [cList, sList, lList, qList] = await Promise.all([
-        adminContentService.getCourses(),
-        adminContentService.getSkills(),
-        adminContentService.getLessons(),
-        adminContentService.getQuestions(),
-      ]);
-      setCourses(cList);
-      setSkills(sList);
-      setLessons(lList);
-      setQuestions(qList);
-    } catch {
-      setStatusMsg({ text: translate('admin.loadFailed'), isError: true });
-    } finally {
-      setIsCmsLoading(false);
-    }
-  }, []);
+  const refresh = () => setReload((value) => value + 1);
+  const chooseCourse = (id: string) => {
+    setSelectedCourseFilter(id);
+    setSelectedSkillFilter('');
+    setPage(0);
+  };
 
   useEffect(() => {
-    void loadAllCmsData();
-  }, [loadAllCmsData]);
+    let active = true;
+    setCourseLoading(true);
+    void adminContentService.getCourses().then((items) => {
+      if (!active) return;
+      setCourses(items);
+      setSelectedCourseFilter((id) => items.some((item) => item.id === id) ? id : items[0]?.id ?? '');
+    }, () => {
+      if (active) setStatusMsg({ text: translate('admin.loadFailed'), isError: true });
+    }).finally(() => { if (active) setCourseLoading(false); });
+    return () => { active = false; };
+  }, [reload]);
+
+  useEffect(() => {
+    setListFailed(false);
+    setHasMore(false);
+    setSkills([]);
+    setLessons([]);
+    setQuestions([]);
+    if (activeTab === 'courses' || !selectedCourseFilter) {
+      setIsCmsLoading(false);
+      return;
+    }
+    let active = true;
+    setIsCmsLoading(true);
+    const update = <Row,>(setRows: (rows: Row[]) => void) => ({ rows, hasMore }: { rows: Row[]; hasMore: boolean }) => {
+      if (!active) return;
+      if (!rows.length && page > 0) { setPage(page - 1); return; }
+      setRows(rows);
+      setHasMore(hasMore);
+    };
+    const request = activeTab === 'skills'
+      ? adminContentService.getSkills(selectedCourseFilter, page).then(update(setSkills))
+      : activeTab === 'lessons'
+        ? adminContentService.getLessons(selectedCourseFilter, page).then(update(setLessons))
+        : adminContentService.getQuestions(selectedCourseFilter, selectedSkillFilter, page).then(update(setQuestions));
+    void request.catch(() => { if (active) setListFailed(true); })
+      .finally(() => { if (active) setIsCmsLoading(false); });
+    return () => { active = false; };
+  }, [activeTab, selectedCourseFilter, selectedSkillFilter, page, reload]);
+
+  const optionCourse = showLessonModal ? lessonForm.courseId : showQuestionModal ? questionForm.courseId
+    : activeTab === 'questions' ? selectedCourseFilter : undefined;
+  useEffect(() => {
+    if (!optionCourse) return;
+    let active = true;
+    void adminContentService.getSkillOptions(optionCourse).then((rows) => {
+      if (active) setSkillChoices({ courseId: optionCourse, rows });
+    }, () => {
+      if (active) setStatusMsg({ text: translate('admin.loadFailed'), isError: true });
+    });
+    return () => { active = false; };
+  }, [optionCourse, reload]);
+  const options = skillChoices?.courseId === optionCourse ? skillChoices?.rows ?? [] : [];
 
   // Handlers for Course CMS
   const handleSaveCourse = async (e: React.FormEvent) => {
@@ -150,7 +197,7 @@ export const AdminDashboardView: React.FC = () => {
     setIsSubmitting(true);
     try {
       await adminContentService.saveCourse(courseForm);
-      await loadAllCmsData();
+      refresh();
       setShowCourseModal(false);
       setStatusMsg({ text: t('admin.courseSaved'), isError: false });
     } catch (err: any) {
@@ -164,7 +211,7 @@ export const AdminDashboardView: React.FC = () => {
     if (!confirm(t('admin.confirmCourseDelete'))) return;
     try {
       await adminContentService.deleteCourse(courseId);
-      await loadAllCmsData();
+      refresh();
       setStatusMsg({ text: t('admin.courseDeleted'), isError: false });
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
@@ -178,7 +225,7 @@ export const AdminDashboardView: React.FC = () => {
     setIsSubmitting(true);
     try {
       await adminContentService.saveSkill(skillForm);
-      await loadAllCmsData();
+      refresh();
       setShowSkillModal(false);
       setStatusMsg({ text: t('admin.skillSaved'), isError: false });
     } catch (err: any) {
@@ -192,7 +239,7 @@ export const AdminDashboardView: React.FC = () => {
     if (!confirm(t('admin.confirmSkillDelete'))) return;
     try {
       await adminContentService.deleteSkill(skillId);
-      await loadAllCmsData();
+      refresh();
       setStatusMsg({ text: t('admin.skillDeleted'), isError: false });
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
@@ -202,11 +249,11 @@ export const AdminDashboardView: React.FC = () => {
   // Handlers for Lessons CMS
   const handleSaveLesson = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lessonForm.title?.trim()) return;
+    if (!lessonForm.title?.trim() || !lessonForm.skillId) return;
     setIsSubmitting(true);
     try {
       await adminContentService.saveLesson(lessonForm);
-      await loadAllCmsData();
+      refresh();
       setShowLessonModal(false);
       setStatusMsg({ text: t('admin.lessonSaved'), isError: false });
     } catch (err: any) {
@@ -219,7 +266,7 @@ export const AdminDashboardView: React.FC = () => {
   const handleTogglePublish = async (lessonId: string, current: boolean) => {
     try {
       await adminContentService.toggleLessonPublish(lessonId, !current);
-      await loadAllCmsData();
+      refresh();
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
     }
@@ -228,7 +275,7 @@ export const AdminDashboardView: React.FC = () => {
   const handleToggleArchive = async (lessonId: string, current: boolean) => {
     try {
       await adminContentService.toggleLessonArchive(lessonId, !current);
-      await loadAllCmsData();
+      refresh();
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
     }
@@ -238,7 +285,7 @@ export const AdminDashboardView: React.FC = () => {
     if (!confirm(t('admin.confirmLessonDelete'))) return;
     try {
       await adminContentService.deleteLesson(lessonId);
-      await loadAllCmsData();
+      refresh();
       setStatusMsg({ text: t('admin.lessonDeleted'), isError: false });
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
@@ -269,7 +316,7 @@ export const AdminDashboardView: React.FC = () => {
         formulaLatex: questionForm.formulaLatex || undefined,
         isPlacement: questionForm.isPlacement,
       });
-      await loadAllCmsData();
+      refresh();
       setShowQuestionModal(false);
       setStatusMsg({ text: t('admin.questionSaved'), isError: false });
     } catch (err: any) {
@@ -283,24 +330,14 @@ export const AdminDashboardView: React.FC = () => {
     if (!confirm(t('admin.confirmQuestionDelete'))) return;
     try {
       await adminContentService.deleteQuestion(questionId);
-      await loadAllCmsData();
+      refresh();
       setStatusMsg({ text: t('admin.questionDeleted'), isError: false });
     } catch (err: any) {
       setStatusMsg({ text: err.message, isError: true });
     }
   };
 
-  const filteredSkills = selectedCourseFilter
-    ? skills.filter((s) => s.courseId === selectedCourseFilter)
-    : skills;
-  const filteredLessons = selectedCourseFilter
-    ? lessons.filter((l) => l.courseId === selectedCourseFilter)
-    : lessons;
-  const filteredQuestions = questions.filter((q) => {
-    if (selectedCourseFilter && q.courseId !== selectedCourseFilter) return false;
-    if (selectedSkillFilter && q.skillId !== selectedSkillFilter) return false;
-    return true;
-  });
+
 
   const formError = statusMsg?.isError && <p role="alert" className="text-sm text-coral">{statusMsg.text}</p>;
 
@@ -321,42 +358,15 @@ export const AdminDashboardView: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            loadAllCmsData();
-          }}
-          isLoading={isCmsLoading}
+          onClick={refresh}
+          isLoading={courseLoading || isCmsLoading}
           className="flex items-center gap-2"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>{t('admin.refreshAll')}</span>
+          <span>{t('admin.refresh')}</span>
         </Button>
       </div>
 
-      {/* Global Overview Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="p-4 border-brand/10 dark:border-brand-dark/40">
-          <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5 text-brand" />{t('dashboard.subjects')}</div>
-          <div className="text-2xl font-black text-foreground mt-1">{courses.length}</div>
-        </Card>
-        <Card className="p-4 border-path/15 dark:border-path/40">
-          <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <Target className="w-3.5 h-3.5 text-path" />{t('path.skills')}</div>
-          <div className="text-2xl font-black text-foreground mt-1">{skills.length}</div>
-        </Card>
-        <Card className="p-4 border-mint/10 dark:border-mint/40">
-          <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <FileText className="w-3.5 h-3.5 text-mint" />{t('admin.lessons')}</div>
-          <div className="text-2xl font-black text-foreground mt-1">{lessons.length}</div>
-        </Card>
-        <Card className="p-4 border-amber-100 dark:border-amber-900/40">
-          <div className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-amber-500" />{t('admin.questions')}</div>
-          <div className="text-2xl font-black text-foreground mt-1">{questions.length}</div>
-        </Card>
-      </div>
-
-      {/* Status Alert Notification */}
       {statusMsg && (
         <div
           className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm ${
@@ -377,7 +387,7 @@ export const AdminDashboardView: React.FC = () => {
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
         <button
           aria-pressed={activeTab === 'courses'}
-          onClick={() => startTransition(() => setActiveTab('courses'))}
+          onClick={() => startTransition(() => { setActiveTab('courses'); setPage(0); })}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'courses'
               ? 'bg-brand text-white shadow-md shadow-brand/20'
@@ -390,7 +400,7 @@ export const AdminDashboardView: React.FC = () => {
 
         <button
           aria-pressed={activeTab === 'skills'}
-          onClick={() => startTransition(() => setActiveTab('skills'))}
+          onClick={() => startTransition(() => { setActiveTab('skills'); setPage(0); })}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'skills'
               ? 'bg-path text-white shadow-md shadow-path/20'
@@ -398,12 +408,12 @@ export const AdminDashboardView: React.FC = () => {
           }`}
         >
           <Target className="w-3.5 h-3.5" />
-          <span>{t('admin.skillsCount')}{skills.length})</span>
+          <span>{t('path.skills')}</span>
         </button>
 
         <button
           aria-pressed={activeTab === 'lessons'}
-          onClick={() => startTransition(() => setActiveTab('lessons'))}
+          onClick={() => startTransition(() => { setActiveTab('lessons'); setPage(0); })}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'lessons'
               ? 'bg-mint text-white shadow-md shadow-mint/20'
@@ -411,12 +421,12 @@ export const AdminDashboardView: React.FC = () => {
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
-          <span>{t('admin.lessonsCount')}{lessons.length})</span>
+          <span>{t('admin.lessons')}</span>
         </button>
 
         <button
           aria-pressed={activeTab === 'questions'}
-          onClick={() => startTransition(() => setActiveTab('questions'))}
+          onClick={() => startTransition(() => { setActiveTab('questions'); setPage(0); })}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'questions'
               ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
@@ -424,7 +434,7 @@ export const AdminDashboardView: React.FC = () => {
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
-          <span>{t('admin.questionBank')}{questions.length})</span>
+          <span>{t('admin.questions')}</span>
         </button>
       </div>
 
@@ -519,7 +529,7 @@ export const AdminDashboardView: React.FC = () => {
               <label className="text-xs font-bold text-foreground">{t('admin.chooseSubject')}</label>
               <select
                 value={selectedCourseFilter}
-                onChange={(e) => setSelectedCourseFilter(e.target.value)}
+                onChange={(e) => chooseCourse(e.target.value)}
                 className="px-3 py-1.5 bg-secondary/60 border border-border rounded-xl text-xs text-foreground font-medium outline-none"
               >
                 {courses.map((c) => (
@@ -536,11 +546,11 @@ export const AdminDashboardView: React.FC = () => {
               onClick={() => {
                 setSkillForm({
                   id: `skill_${Date.now()}`,
-                  courseId: selectedCourseFilter || 'course_math_01',
+                  courseId: selectedCourseFilter,
                   name: '',
                   code: 'SKILL_',
                   description: '',
-                  orderIndex: filteredSkills.length + 1,
+                  orderIndex: skills.length + 1,
                 });
                 setShowSkillModal(true);
               }}
@@ -564,7 +574,7 @@ export const AdminDashboardView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
-                  {filteredSkills.map((s) => (
+                  {skills.map((s) => (
                     <tr key={s.id} className="hover:bg-secondary/20 transition-colors">
                       <td className="py-3 pl-2 font-bold text-foreground font-mono">#{s.orderIndex}</td>
                       <td className="py-3 font-bold text-foreground">{s.name}</td>
@@ -597,7 +607,7 @@ export const AdminDashboardView: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-              {filteredSkills.length === 0 && (
+              {skills.length === 0 && (
                 <div className="p-8 text-center text-xs text-muted-foreground">{t('admin.noSkills')}</div>
               )}
             </div>
@@ -615,7 +625,7 @@ export const AdminDashboardView: React.FC = () => {
               <label className="text-xs font-bold text-foreground">{t('admin.filterSubject')}</label>
               <select
                 value={selectedCourseFilter}
-                onChange={(e) => setSelectedCourseFilter(e.target.value)}
+                onChange={(e) => chooseCourse(e.target.value)}
                 className="px-3 py-1.5 bg-secondary/60 border border-border rounded-xl text-xs text-foreground font-medium outline-none"
               >
                 {courses.map((c) => (
@@ -633,7 +643,7 @@ export const AdminDashboardView: React.FC = () => {
                 setLessonForm({
                   id: `lesson_${Date.now()}`,
                   courseId: selectedCourseFilter || 'course_math_01',
-                  skillId: filteredSkills[0]?.id || 'skill_math_functions',
+                  skillId: '',
                   title: '',
                   summary: '',
                   estimatedMinutes: 15,
@@ -650,21 +660,21 @@ export const AdminDashboardView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredLessons.map((l) => (
+            {lessons.map((l) => (
               <Card key={l.id} className="p-5 border-border flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-mono text-muted-foreground">{t('admin.duration')}{l.estimatedMinutes}{t('courses.minutes')}</span>
                     <div className="flex items-center gap-1.5">
                       <Badge variant={l.isPublished ? 'emerald' : 'slate'}>
-                        {l.isPublished ? t('admin.published') : 'Qoralama'}
+                        {l.isPublished ? t('admin.published') : t('admin.draftHidden')}
                       </Badge>
                       {l.isArchived && <Badge variant="rose">{t('admin.archived')}</Badge>}
                     </div>
                   </div>
                   <h3 className="text-base font-bold text-foreground">{l.title}</h3>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{l.summary || t('admin.noSummary')}</p>
-                  <div className="mt-3 text-xs text-brand font-semibold">{t('admin.stepCount')}{l.steps?.length || 0}{t('admin.steps')}</div>
+
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-4">
@@ -691,9 +701,16 @@ export const AdminDashboardView: React.FC = () => {
 
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => {
-                        setLessonForm({ ...l });
-                        setShowLessonModal(true);
+                      disabled={editingLesson}
+                      onClick={async () => {
+                        setEditingLesson(true);
+                        try {
+                          const details = await adminContentService.getLessonDetails(l.id);
+                          setLessonForm({ ...l, ...details });
+                          setShowLessonModal(true);
+                        } catch {
+                          setStatusMsg({ text: t('admin.loadFailed'), isError: true });
+                        } finally { setEditingLesson(false); }
                       }}
                       className="p-1.5 rounded-lg hover:bg-secondary text-brand transition-colors cursor-pointer"
                     >
@@ -711,7 +728,7 @@ export const AdminDashboardView: React.FC = () => {
             ))}
           </div>
 
-          {filteredLessons.length === 0 && (
+          {lessons.length === 0 && (
             <Card className="p-8 text-center text-xs text-muted-foreground border-border">{t('admin.noLessons')}</Card>
           )}
         </div>
@@ -727,10 +744,7 @@ export const AdminDashboardView: React.FC = () => {
               <div>
                 <select
                   value={selectedCourseFilter}
-                  onChange={(e) => {
-                    setSelectedCourseFilter(e.target.value);
-                    setSelectedSkillFilter('');
-                  }}
+                  onChange={(e) => chooseCourse(e.target.value)}
                   className="px-3 py-1.5 bg-secondary/60 border border-border rounded-xl text-xs text-foreground font-medium outline-none"
                 >
                   {courses.map((c) => (
@@ -744,11 +758,11 @@ export const AdminDashboardView: React.FC = () => {
               <div>
                 <select
                   value={selectedSkillFilter}
-                  onChange={(e) => setSelectedSkillFilter(e.target.value)}
+                  onChange={(e) => { setSelectedSkillFilter(e.target.value); setPage(0); }}
                   className="px-3 py-1.5 bg-secondary/60 border border-border rounded-xl text-xs text-foreground font-medium outline-none"
                 >
                   <option value="">{t('admin.allSkills')}</option>
-                  {filteredSkills.map((s) => (
+                  {options.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>
@@ -764,7 +778,7 @@ export const AdminDashboardView: React.FC = () => {
                 setQuestionForm({
                   id: `q_${Date.now()}`,
                   courseId: selectedCourseFilter || 'course_math_01',
-                  skillId: selectedSkillFilter || filteredSkills[0]?.id || 'skill_math_algebra',
+                  skillId: selectedSkillFilter,
                   text: '',
                   option0: '',
                   option1: '',
@@ -786,7 +800,7 @@ export const AdminDashboardView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {filteredQuestions.map((q, qIdx) => (
+            {questions.map((q, qIdx) => (
               <Card key={q.id} className="p-4 border-border space-y-3 hover:border-brand/25 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -841,7 +855,7 @@ export const AdminDashboardView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Question Options */}
+                      {/* Question Options */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                   {q.options.map((opt, oIdx) => {
                     const isCorrect = q.correctIndex === oIdx;
@@ -874,7 +888,7 @@ export const AdminDashboardView: React.FC = () => {
               </Card>
             ))}
 
-            {filteredQuestions.length === 0 && (
+            {questions.length === 0 && (
               <Card className="p-8 text-center text-xs text-muted-foreground border-border">{t('admin.noQuestions')}</Card>
             )}
           </div>
@@ -884,6 +898,20 @@ export const AdminDashboardView: React.FC = () => {
       {/* ========================================================================= */}
       {/* MODALS */}
       {/* ========================================================================= */}
+      {activeTab !== 'courses' && (
+        <div className="flex flex-wrap items-center justify-between gap-3" aria-busy={isCmsLoading}>
+          {listFailed && <p role="alert" className="text-sm text-coral">{t('admin.loadFailed')}</p>}
+          {(page > 0 || hasMore) && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" disabled={!page || isCmsLoading} onClick={() => setPage(page - 1)}>{t('admin.previousPage')}</Button>
+              <span className="text-sm text-muted-foreground">{page + 1}</span>
+              <Button size="sm" variant="outline" disabled={!hasMore || isCmsLoading} onClick={() => setPage(page + 1)}>{t('admin.nextPage')}</Button>
+            </div>
+          )}
+        </div>
+      )}
+
+
         {/* Course Modal */}
         {showCourseModal && (
           <Modal isOpen onClose={() => setShowCourseModal(false)} title={t('admin.courseDetails')} maxWidth="md" dismissable={!isSubmitting}>
@@ -1033,7 +1061,7 @@ export const AdminDashboardView: React.FC = () => {
                     <label className="font-bold text-foreground block mb-1">{t('admin.subject')}</label>
                     <select
                       value={lessonForm.courseId}
-                      onChange={(e) => setLessonForm({ ...lessonForm, courseId: e.target.value })}
+                      onChange={(e) => setLessonForm({ ...lessonForm, courseId: e.target.value, skillId: '' })}
                       className="w-full px-3 py-2 border border-border rounded-xl bg-secondary/50 outline-none"
                     >
                       {courses.map((c) => (
@@ -1044,11 +1072,13 @@ export const AdminDashboardView: React.FC = () => {
                   <div>
                     <label className="font-bold text-foreground block mb-1">{t('assessment.skill')}</label>
                     <select
-                      value={lessonForm.skillId}
+                      value={lessonForm.skillId || ''}
+                      required
                       onChange={(e) => setLessonForm({ ...lessonForm, skillId: e.target.value })}
                       className="w-full px-3 py-2 border border-border rounded-xl bg-secondary/50 outline-none"
                     >
-                      {skills.map((s) => (
+                      <option value="">{t('assessment.skill')}</option>
+                      {options.map((s) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
                     </select>
@@ -1115,7 +1145,7 @@ export const AdminDashboardView: React.FC = () => {
                     <label className="font-bold text-foreground block mb-1">{t('admin.subject')}</label>
                     <select
                       value={questionForm.courseId}
-                      onChange={(e) => setQuestionForm({ ...questionForm, courseId: e.target.value })}
+                      onChange={(e) => setQuestionForm({ ...questionForm, courseId: e.target.value, skillId: '' })}
                       className="w-full px-3 py-2 border border-border rounded-xl bg-secondary/50 outline-none"
                     >
                       {courses.map((c) => (
@@ -1126,11 +1156,13 @@ export const AdminDashboardView: React.FC = () => {
                   <div>
                     <label className="font-bold text-foreground block mb-1">{t('assessment.skill')}</label>
                     <select
-                      value={questionForm.skillId}
+                      value={questionForm.skillId || ''}
+                      required
                       onChange={(e) => setQuestionForm({ ...questionForm, skillId: e.target.value })}
                       className="w-full px-3 py-2 border border-border rounded-xl bg-secondary/50 outline-none"
                     >
-                      {skills.map((s) => (
+                      <option value="">{t('assessment.skill')}</option>
+                      {options.map((s) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
                     </select>
