@@ -48,6 +48,12 @@ async function checkWidth(view, width) {
 }
 
 try {
+  let releaseFonts;
+  const fontResponse = new Promise((resolve) => { releaseFonts = resolve; });
+  await page.route('https://fonts.googleapis.com/**', async (route) => {
+    await fontResponse;
+    await route.fulfill({ contentType: 'text/css', body: '/* Fonts intentionally delayed by this test. */' });
+  });
   await context.addInitScript(() => {
     localStorage.setItem('bilimyol_auth_session', JSON.stringify({
       isDemoMode: true, profile: { id: 'guest_user_01', role: 'student', firstName: 'Oldingi namuna' },
@@ -55,6 +61,10 @@ try {
   });
   await page.goto(base, { waitUntil: 'domcontentloaded' });
   await heading('O‘zingizga mos yo‘ldan o‘rganing.');
+  assert.equal(await page.locator('#bilimyol-fonts').getAttribute('media'), 'print');
+  releaseFonts();
+  await page.waitForFunction(() => document.querySelector('#bilimyol-fonts')?.media === 'all');
+  console.log('PASS delayed external fonts do not block the welcome screen');
   await screenshot('after-welcome-1440.png');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkWidth('welcome', 390);
