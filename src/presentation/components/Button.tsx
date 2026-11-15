@@ -36,11 +36,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary:
-      'commonBtn bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#FF8C42] text-white border border-transparent shadow-[0_10px_24px_-4px_rgba(236,72,153,0.45)] hover:shadow-[0_14px_30px_-4px_rgba(168,85,247,0.58)] hover:-translate-y-0.5',
+      'commonBtn bg-[#5B21B6] bg-gradient-to-r from-[#4338CA] via-[#6D28D9] to-[#9333EA] text-white border border-transparent shadow-[0_10px_24px_-4px_rgba(91,33,182,0.45)] hover:shadow-[0_14px_30px_-4px_rgba(109,40,217,0.58)] hover:-translate-y-0.5',
     secondary:
       'bg-sand hover:bg-muted text-ink shadow-sm border border-hairline',
     gradient:
-      'commonBtn bg-gradient-to-r from-[#7C3AED] via-[#A855F7] to-[#22D3EE] hover:brightness-105 text-white shadow-[0_10px_24px_-4px_rgba(139,92,246,0.5)] border-0 hover:-translate-y-0.5',
+      'commonBtn bg-[#4338CA] bg-gradient-to-r from-[#4338CA] via-[#6D28D9] to-[#0E7490] hover:brightness-105 text-white shadow-[0_10px_24px_-4px_rgba(79,70,229,0.5)] border-0 hover:-translate-y-0.5',
     cyan:
       'bg-gradient-to-r from-[#06B6D4] to-[#22D3EE] hover:brightness-105 text-white shadow-[0_8px_18px_-4px_rgba(34,211,238,0.42)] border-0 hover:-translate-y-0.5',
     coral:

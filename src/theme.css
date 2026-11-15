@@ -72,6 +72,18 @@ html, body, .workspace-shell, .workspace-shell[data-view="dashboard"] {
 }
 .preference-control:hover { background: var(--color-sand); }
 .heading { color: var(--color-ink); }
+.heading-accent {
+  color: #4636cb;
+  background: linear-gradient(135deg, #4338CA 0%, #7C3AED 55%, #C026D3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+:root[data-theme="dark"] .heading-accent {
+  color: #67E8F9;
+  background: linear-gradient(135deg, #22D3EE 0%, #A855F7 52%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 .highlight, .editorial-kicker { background: var(--color-sand); color: var(--color-brand-dark); border-color: var(--color-hairline); }
 .edtech-card, .edtech-card-hover, .cosmos-card {
   background: var(--color-paper);

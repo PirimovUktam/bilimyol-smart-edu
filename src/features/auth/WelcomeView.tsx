@@ -14,7 +14,7 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
         <BilimYolLogo variant="auto" />
         <div>
           <p className="highlight mb-3.5">
-            <Compass aria-hidden="true" className="size-4 text-cyan-300" />
+            <Compass aria-hidden="true" className="size-4 text-path" />
             {t('auth.welcomePath')}
           </p>
           <h1 id="welcome-title" className="heading max-w-xl text-[clamp(2.4rem,5.6vw,4.4rem)] leading-[1.06] font-extrabold tracking-tight">
@@ -28,7 +28,7 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
         {/* Highlight Stats Row */}
         <div className="flex flex-wrap items-center gap-2.5 pt-1">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
-            <Sparkles aria-hidden="true" className="size-3.5 text-cyan-300" />
+            <Sparkles aria-hidden="true" className="size-3.5 text-cyan-200" />
             {t('auth.diagnostics')}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-400/30 bg-[#171C4B]/90 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs">
@@ -50,7 +50,7 @@ export function WelcomeView({ onRegister, onLogin }: { onRegister: () => void; o
         </div>
         <button
           type="button"
-          className="min-h-11 cursor-pointer text-sm font-bold text-cyan-300 underline-offset-4 hover:text-cyan-200 hover:underline"
+          className="min-h-11 cursor-pointer rounded-lg px-1 text-sm font-bold text-brand-dark underline decoration-brand-dark/50 underline-offset-4 transition-colors hover:text-brand hover:decoration-brand"
           onClick={setDemoUser}
         >
           {t('auth.demo')}

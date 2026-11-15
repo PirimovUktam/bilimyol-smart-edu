@@ -2,7 +2,7 @@
 <html lang="uz" data-theme="light" class="h-full antialiased">
   <head>
     <meta charset="UTF-8" />
-    <script src="/preferences-init.js"></script>
+    <script>(()=>{let t='light',l='uz';try{if(localStorage.getItem('bilimyol.theme')==='dark')t='dark';if(localStorage.getItem('bilimyol.language')==='ru')l='ru'}catch{}document.documentElement.dataset.theme=t;document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.lang=l;document.documentElement.style.colorScheme=t})();</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BilimYo‘l Smart Edu — Shaxsiylashtirilgan Ta'lim Platformasi</title>
@@ -12,6 +12,8 @@
     <meta property="og:description" content="AI yordamida shaxsiylashtirilgan ta'lim: diagnostika, adaptiv yo‘l, interaktiv darslar va Yo‘lchi AI mentori." />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://bilimyol.uz/" />
+    <link rel="ard" type="application/json" href="/.well-known/ard.json" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLMs Context" />
     <meta property="og:url" content="https://bilimyol.uz/" />
     <meta property="og:site_name" content="BilimYo‘l Smart Edu" />
     <!-- Fonts: Space Grotesk (Editorial Display), Plus Jakarta Sans (Readable Interface), JetBrains Mono (Technical Data) -->

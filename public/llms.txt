@@ -1,0 +1,24 @@
+# BilimYo‘l Smart Edu
+
+> BilimYo‘l Smart Edu — sun’iy intellekt va 5 bosqichli adaptiv ta’lim sikli asosida har bir o‘quvchiga individual ta’lim yo‘li, bilim bo‘shliqlarini aniqlash va Explainable AI tavsiyalari beruvchi zamonaviy EdTech platformasi.
+
+BilimYo‘l oddiy AI chatbot emas — o‘quvchining darajasini aniqlab, bilim bo‘shliqlarini topadigan, 6 ta mezon bo‘yicha shaffof individual reja tuzadigan va har bir javobdan keyin progressni qayta o‘lchaydigan yopiq adaptiv o‘quv tizimidir.
+
+## Core Pages & Views
+
+- [Bosh sahifa (Welcome)](https://bilimyol.uz/): 5 bosqichli adaptiv sikl sharhi, ro‘yxatdan o‘tish va bir bosishda demo hisobga kirish.
+- [Taqdimot va innovatsiya (Pitch Showcase)](https://bilimyol.uz/pitch): Ta’limdagi muammo, 5 bosqichli yechim arxitekturasi va 6 mezonli Explainable AI taqqoslamasi.
+- [Interaktiv Demo](https://bilimyol.uz/demo): O‘quvchi sayohati, adaptiv yo‘l xaritasi va Yo‘lchi AI imkoniyatlari bilan tanishish.
+- [Kirish](https://bilimyol.uz/login): O‘quvchi va administratorlar uchun xavfsiz tizimga kirish sahifasi.
+- [Ro‘yxatdan o‘tish](https://bilimyol.uz/register): Yangi shaxsiy ta’lim yo‘lini boshlash sahifasi.
+
+## Adaptive Learning Architecture
+
+- **5 bosqichli sikl:** Diagnostika (`01`) → Bilim profili (`02`) → Individual yo‘l (`03`) → Adaptiv mashq (`04`) → Progressni qayta o‘lchash (`05`).
+- **6 ta Explainable AI mezoni:** Maqsad, Ko‘nikmalar profili, Bilim darajasi, Xatolar va bo‘shliqlar, O‘rganish tezligi, Kunlik vaqt byudjeti.
+- **Yo‘nalishlar:** Matematika, Ingliz tili, IT & Kodlash.
+
+## Agentic Discovery
+
+- [ARD Manifest](https://bilimyol.uz/.well-known/ard.json): Machine-readable Agentic Resource Discovery (ARD v0.91) catalog.
+- [Yo‘lchi AI Agent Card](https://bilimyol.uz/.well-known/agent-card.json): A2A capability descriptor for BilimYo‘l's adaptive learning tutor.

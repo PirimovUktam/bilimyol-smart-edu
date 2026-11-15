@@ -1,10 +1,5 @@
 import { useTranslation } from '@/core/locales/useTranslation';
 import { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
-import { Navbar } from '@/presentation/components/Navbar';
-import { LoginView } from '@/features/auth/LoginView';
-import { RegisterView } from '@/features/auth/RegisterView';
-import { ForgotPasswordView } from '@/features/auth/ForgotPasswordView';
-import { ResetPasswordView } from '@/features/auth/ResetPasswordView';
 import { WelcomeView } from '@/features/auth/WelcomeView';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
@@ -29,6 +24,23 @@ function lazyAnimated<Props extends object>(load: () => Promise<ComponentType<Pr
     return { default: withMotionPreferences(View) };
   });
 }
+
+// Navigation & auth forms are only needed when entering auth or logged-in workspace.
+const LazyNavbar = lazy(() =>
+  import('@/presentation/components/Navbar').then((m) => ({ default: m.Navbar }))
+);
+const LazyLoginView = lazy(() =>
+  import('@/features/auth/LoginView').then((m) => ({ default: m.LoginView }))
+);
+const LazyRegisterView = lazy(() =>
+  import('@/features/auth/RegisterView').then((m) => ({ default: m.RegisterView }))
+);
+const LazyForgotPasswordView = lazy(() =>
+  import('@/features/auth/ForgotPasswordView').then((m) => ({ default: m.ForgotPasswordView }))
+);
+const LazyResetPasswordView = lazy(() =>
+  import('@/features/auth/ResetPasswordView').then((m) => ({ default: m.ResetPasswordView }))
+);
 
 // Route-level code-splitting for heavy, rarely-opened surfaces. The marketing
 // slides (~2.7k lines) and the admin panel only load when actually visited.
@@ -234,13 +246,13 @@ export function AppRouter() {
           onNavigateAiTutor={() => navigate(hasUsableAuth ? 'ai-tutor' : 'login')}
           onNavigatePitch={() => navigate('pitch')} />;
       case 'login':
-        return <LoginView onNavigateRegister={() => navigate('register')} onNavigateForgotPassword={() => navigate('forgot-password')} />;
+        return <LazyLoginView onNavigateRegister={() => navigate('register')} onNavigateForgotPassword={() => navigate('forgot-password')} />;
       case 'register':
-        return <RegisterView onNavigateLogin={login} />;
+        return <LazyRegisterView onNavigateLogin={login} />;
       case 'forgot-password':
-        return <ForgotPasswordView onNavigateLogin={login} />;
+        return <LazyForgotPasswordView onNavigateLogin={login} />;
       case 'reset-password':
-        return <ResetPasswordView onNavigateLogin={login} />;
+        return <LazyResetPasswordView onNavigateLogin={login} />;
       case 'profile':
         return <LazyProfileView onSignOut={login} onChooseSubject={() => navigate('course-selection')}
           onOpenLearningPlan={() => navigate('onboarding')} />;
@@ -301,7 +313,11 @@ export function AppRouter() {
     <div className={showNavigation ? 'workspace-shell bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}
       data-learner={showNavigation && !isAdmin ? '' : undefined}
       data-view={view}>
-      {showNavigation && <Navbar currentView={view} onNavigate={navigate} />}
+      {showNavigation && (
+        <Suspense fallback={null}>
+          <LazyNavbar currentView={view} onNavigate={navigate} />
+        </Suspense>
+      )}
       <div className={isWorkspace ? 'workspace-content' : undefined}>
         {isWorkspace && <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-xl focus:bg-paper focus:p-3">{t('shell.skip')}</a>}
         <main ref={main} id="main-content" tabIndex={-1} className="focus:outline-none">

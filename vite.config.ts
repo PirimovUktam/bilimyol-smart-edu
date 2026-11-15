@@ -14,6 +14,19 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 20 },
+            { name: 'vendor-supabase', test: /node_modules[\\/]@supabase[\\/]/, priority: 15 },
+            { name: 'vendor-motion', test: /node_modules[\\/]framer-motion[\\/]/, priority: 15 },
+          ],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
