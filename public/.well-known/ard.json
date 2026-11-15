@@ -4,7 +4,8 @@
     {
       "identifier": "urn:air:bilimyol.uz:context:llms",
       "displayName": "BilimYo‘l Smart Edu — Platform Guide (llms.txt)",
-      "type": "text/markdown",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "mediaType": "text/markdown; profile=\"urn:air:agent-skills\"",
       "version": "1.0.0",
       "description": "Structured Markdown overview of BilimYo‘l Smart Edu, its 5-step adaptive learning cycle, 6-input Explainable AI model, subjects, and public routes.",
       "url": "https://bilimyol.uz/llms.txt",
@@ -18,6 +19,7 @@
       "identifier": "urn:air:bilimyol.uz:agent:yolchi-ai",
       "displayName": "Yo‘lchi AI Tutor",
       "type": "application/a2a-agent-card+json",
+      "mediaType": "application/a2a-agent-card+json",
       "version": "1.0.0",
       "description": "Adaptive learning mentor providing diagnostic feedback, mistake explanations, and personalized next-step study recommendations in Uzbek and Russian.",
       "url": "https://bilimyol.uz/.well-known/agent-card.json",

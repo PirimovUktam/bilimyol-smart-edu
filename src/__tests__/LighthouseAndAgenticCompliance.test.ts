@@ -13,6 +13,20 @@ describe('Lighthouse Accessibility, Agentic Browsing, and Security Compliance', 
     expect(welcome).toContain('text-brand-dark');
   });
 
+  it('keeps robots.txt strictly valid for Googlebot SEO without unknown directives', () => {
+    const robots = readFileSync(resolve(root, 'public/robots.txt'), 'utf8');
+    const lines = robots
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'));
+
+    const allowedDirectives = /^(User-agent|Allow|Disallow|Sitemap):/i;
+    for (const line of lines) {
+      expect(line).toMatch(allowedDirectives);
+    }
+    expect(robots.toLowerCase()).not.toContain('agentmap:');
+  });
+
   it('provides compliant /llms.txt starting with an H1 heading and links', () => {
     const llms = readFileSync(resolve(root, 'public/llms.txt'), 'utf8');
     expect(llms.trimStart().startsWith('# BilimYo‘l Smart Edu')).toBe(true);
@@ -27,6 +41,7 @@ describe('Lighthouse Accessibility, Agentic Browsing, and Security Compliance', 
         identifier: string;
         displayName: string;
         type: string;
+        mediaType?: string;
         url?: string;
       }>;
     };
@@ -34,6 +49,9 @@ describe('Lighthouse Accessibility, Agentic Browsing, and Security Compliance', 
     expect(manifest['@context']).toBe('https://agenticresourcediscovery.org/context/v1');
     expect(Array.isArray(manifest.entries)).toBe(true);
     expect(manifest.entries.length).toBeGreaterThanOrEqual(2);
+
+    const llmsEntry = manifest.entries.find((e) => e.url === 'https://bilimyol.uz/llms.txt');
+    expect(llmsEntry?.mediaType).toBe('text/markdown; profile="urn:air:agent-skills"');
 
     for (const entry of manifest.entries) {
       expect(entry.identifier.startsWith('urn:air:bilimyol.uz:')).toBe(true);

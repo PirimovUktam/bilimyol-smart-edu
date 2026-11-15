@@ -6,4 +6,3 @@ Disallow: /reset-password
 Disallow: /?view=
 
 Sitemap: https://bilimyol.uz/sitemap.xml
-Agentmap: https://bilimyol.uz/.well-known/ard.json
