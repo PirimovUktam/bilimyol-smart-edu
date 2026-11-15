@@ -32,6 +32,8 @@ function corsHeaders(req?: Request) {
 // GEMINI_API_KEY is read exclusively from Deno.env (Edge secret) below — never logged, never bundled.
 const AI_BASE_URL = (Deno.env.get("AI_BASE_URL") || "").replace(/\/$/, "");
 const GEMINI_MODEL = (Deno.env.get("AI_MODEL") || Deno.env.get("GEMINI_MODEL") || "").trim() || "gemini-3.6-flash";
+const OPENCODE_BASE_URL = (Deno.env.get("OPENCODE_BASE_URL") || "https://opencode.ai/zen/v1").replace(/\/$/, "");
+const OPENCODE_MODEL = (Deno.env.get("OPENCODE_MODEL") || "").trim() || "glm-5.3-flash-free";
 
 const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_TEXT_LENGTH = 4000;
@@ -165,7 +167,7 @@ serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    const geminiApiKey = Deno.env.get("AI_API_KEY") || Deno.env.get("GEMINI_API_KEY");
+    const geminiApiKey = Deno.env.get("OPENCODE_API_KEY") || Deno.env.get("AI_API_KEY") || Deno.env.get("GEMINI_API_KEY");
     if (!supabaseUrl || !supabaseServiceKey || !anonKey) {
       throw new TutorHttpError(503, "Yo‘lchi AI xizmati vaqtincha sozlanmagan.");
     }
@@ -899,40 +901,181 @@ Faqat {"answer":"..."} shaklida javob qaytar.`;
     question: payload.message.trim(),
   }), geminiApiKey);
   if (rawJson) {
-    try {
-      const { answer } = JSON.parse(rawJson);
-      if (isText(answer)) return { tutorName: "Yo‘lchi AI", answer, isAiGenerated: true, isDeterministicFallback: false };
-    } catch {
-      // The provider can return invalid JSON. Keep the chat retryable.
+    const answer = extractTutorAnswer(rawJson);
+    if (answer) {
+      return { tutorName: "Yo‘lchi AI", answer, isAiGenerated: true, isDeterministicFallback: false };
     }
   }
   throw new TutorHttpError(503, "Yo‘lchi AI javob bera olmadi. Qayta urinib ko‘ring.");
 }
 
+function sanitizeJsonStringLiterals(input: string): string {
+  let out = "";
+  let inString = false;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (!inString) {
+      if (ch === '"') inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === "\\") {
+      const next = input[i + 1] ?? "";
+      const isUnicode = next === "u" && /^[0-9a-fA-F]{4}$/.test(input.slice(i + 2, i + 6));
+      if ('"\\/bfnrt'.includes(next) || isUnicode) {
+        out += "\\" + next;
+        i++;
+      } else {
+        out += "\\\\";
+      }
+      continue;
+    }
+    if (ch === "\n") {
+      out += "\\n";
+    } else if (ch === "\r") {
+      out += "\\r";
+    } else if (ch === "\t") {
+      out += "\\t";
+    } else {
+      if (ch === '"') inString = false;
+      out += ch;
+    }
+  }
+  return out;
+}
+
+function extractTutorAnswer(rawJson: string): string | null {
+  const candidates = [rawJson, sanitizeJsonStringLiterals(rawJson)];
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed.answer === "string") {
+        const clean = parsed.answer.trim();
+        if (isText(clean)) return clean;
+      }
+    } catch {
+      // Try next recovery strategy.
+    }
+  }
+  const match = rawJson.match(/"answer"\s*:\s*"([\s\S]*?)"\s*(?:,\s*"[^"]+"\s*:|[\r\n]*\}\s*$)/);
+  if (match?.[1]) {
+    const recovered = match[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\").trim();
+    if (isText(recovered)) return recovered;
+  }
+  const trimmed = rawJson.trim();
+  if (!trimmed.startsWith("{") && isText(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
 // ==========================================
 // GEMINI HTTP API CALLER
 // ==========================================
-// Hard request timeout for the Gemini HTTP call (15 seconds).
 const GEMINI_TIMEOUT_MS = 45000;
 
-async function callGeminiAPI(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string | null> {
-  const url = AI_BASE_URL ? AI_BASE_URL + "/chat/completions" : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`;
+interface AIProviderCandidate {
+  kind: "openai" | "gemini";
+  url: string;
+  apiKey: string;
+  model: string;
+  timeoutMs: number;
+}
 
-  // Prompt-Injection defense: the system prompt is sent through Gemini's dedicated
-  // `system_instruction` field (trusted channel) instead of being concatenated with
-  // untrusted learner input into a single text part.
+function buildProviderChain(fallbackApiKey: string): AIProviderCandidate[] {
+  const candidates: AIProviderCandidate[] = [];
+  const openCodeKey = (Deno.env.get("OPENCODE_API_KEY") || "").trim();
+  const aiApiKey = (Deno.env.get("AI_API_KEY") || "").trim();
+  const googleKey = (Deno.env.get("GEMINI_API_KEY") || "").trim();
+
+  if (openCodeKey) {
+    candidates.push({
+      kind: "openai",
+      url: OPENCODE_BASE_URL + "/chat/completions",
+      apiKey: openCodeKey,
+      model: OPENCODE_MODEL,
+      timeoutMs: 12000,
+    });
+    if (OPENCODE_MODEL !== "deepseek-v4.1-flash-free") {
+      candidates.push({
+        kind: "openai",
+        url: OPENCODE_BASE_URL + "/chat/completions",
+        apiKey: openCodeKey,
+        model: "deepseek-v4.1-flash-free",
+        timeoutMs: 12000,
+      });
+    }
+  }
+
+  if (AI_BASE_URL && aiApiKey) {
+    candidates.push({
+      kind: "openai",
+      url: AI_BASE_URL + "/chat/completions",
+      apiKey: aiApiKey,
+      model: GEMINI_MODEL,
+      timeoutMs: 25000,
+    });
+    if (GEMINI_MODEL !== "glm-5.3-flash") {
+      candidates.push({
+        kind: "openai",
+        url: AI_BASE_URL + "/chat/completions",
+        apiKey: aiApiKey,
+        model: "glm-5.3-flash",
+        timeoutMs: 15000,
+      });
+    }
+  }
+
+  if (googleKey) {
+    const googleModel = (Deno.env.get("GEMINI_MODEL") || "").trim() || "gemini-3.6-flash";
+    candidates.push({
+      kind: "gemini",
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(googleModel)}:generateContent`,
+      apiKey: googleKey,
+      model: googleModel,
+      timeoutMs: 20000,
+    });
+  }
+
+  if (candidates.length === 0 && fallbackApiKey) {
+    candidates.push(AI_BASE_URL ? {
+      kind: "openai",
+      url: AI_BASE_URL + "/chat/completions",
+      apiKey: fallbackApiKey,
+      model: GEMINI_MODEL,
+      timeoutMs: GEMINI_TIMEOUT_MS,
+    } : {
+      kind: "gemini",
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+      apiKey: fallbackApiKey,
+      model: GEMINI_MODEL,
+      timeoutMs: GEMINI_TIMEOUT_MS,
+    });
+  }
+
+  return candidates;
+}
+
+async function fetchProviderCompletion(
+  candidate: AIProviderCandidate,
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string | null> {
+  // Prompt-Injection defense: system instructions are passed through the
+  // provider's dedicated system role / system_instruction channel.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), candidate.timeoutMs);
 
   try {
-    const res = await fetch(url, {
+    const isOpenAI = candidate.kind === "openai";
+    const res = await fetch(candidate.url, {
       method: "POST",
-      headers: AI_BASE_URL
-        ? { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }
-        : { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      headers: isOpenAI
+        ? { "Content-Type": "application/json", Authorization: `Bearer ${candidate.apiKey}` }
+        : { "Content-Type": "application/json", "x-goog-api-key": candidate.apiKey },
       signal: controller.signal,
-      body: JSON.stringify(AI_BASE_URL ? {
-        model: GEMINI_MODEL,
+      body: JSON.stringify(isOpenAI ? {
+        model: candidate.model,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
         temperature: 0.2,
         max_tokens: 2500,
@@ -958,12 +1101,12 @@ async function callGeminiAPI(systemPrompt: string, userPrompt: string, apiKey: s
       return null;
     }
     const data = await res.json();
-    const text = AI_BASE_URL ? data.choices?.[0]?.message?.content : data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (typeof text !== "string") return null;
+    const text = isOpenAI ? data.choices?.[0]?.message?.content : data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (typeof text !== "string" || !text.trim()) return null;
     return text.trim().replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/i, "$1");
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      console.warn(`[Yo‘lchi AI] Model API timed out after ${GEMINI_TIMEOUT_MS}ms`);
+      console.warn(`[Yo‘lchi AI] Model API timed out after ${candidate.timeoutMs}ms`);
     } else {
       console.warn("[Yo‘lchi AI] Model API request failed");
     }
@@ -971,7 +1114,15 @@ async function callGeminiAPI(systemPrompt: string, userPrompt: string, apiKey: s
   } finally {
     clearTimeout(timeoutId);
   }
+}
 
+async function callGeminiAPI(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string | null> {
+  const candidates = buildProviderChain(apiKey);
+  for (const candidate of candidates) {
+    const result = await fetchProviderCompletion(candidate, systemPrompt, userPrompt);
+    if (result) return result;
+  }
+  return null;
 }
 
 // ==========================================
