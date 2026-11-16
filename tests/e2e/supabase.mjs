@@ -132,9 +132,13 @@ try {
   await waitFor(heading('Qo‘shish va ayirishdan boshlaymiz'));
   await waitFor(heading('Asosiy tushuncha'));
   const goToFirstAssessment = async () => {
-    await main.getByRole('button', { name: 'Test', exact: true }).first().click();
+    await click('Keyingi qadam', main);
+    await waitFor(heading('Birga mashq qilamiz'));
+    await click('Keyingi qadam', main);
     await waitFor(heading(/Jami nechta tugma/));
   };
+  await click('Keyingi qadam', main);
+  await waitFor(heading('Birga misol ko‘ramiz'));
   await goToFirstAssessment();
   assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
   await main.getByText('1', { exact: true }).click();
