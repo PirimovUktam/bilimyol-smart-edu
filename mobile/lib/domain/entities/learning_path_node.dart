@@ -20,6 +20,9 @@ class LearningPathNode {
   final String? targetLessonId;
   final int estimatedMinutes;
   final double order;
+  final bool isOptional;
+  final bool serverMastery;
+  final bool reviewDue;
 
   const LearningPathNode({
     required this.id,
@@ -35,6 +38,9 @@ class LearningPathNode {
     this.targetLessonId,
     required this.estimatedMinutes,
     required this.order,
+    this.isOptional = false,
+    this.serverMastery = false,
+    this.reviewDue = false,
   });
 
   LearningPathNode copyWith({
@@ -66,6 +72,9 @@ class LearningPathNode {
       targetLessonId: targetLessonId ?? this.targetLessonId,
       estimatedMinutes: estimatedMinutes ?? this.estimatedMinutes,
       order: order ?? this.order,
+      isOptional: isOptional,
+      serverMastery: serverMastery,
+      reviewDue: reviewDue,
     );
   }
 }
@@ -86,4 +95,11 @@ class LearningPath {
     required this.activeNodeId,
     required this.updatedAt,
   });
+
+  int? get masteryPercent {
+    final objectives = nodes.where((node) => node.serverMastery && !node.isOptional);
+    if (objectives.isEmpty) return null;
+    final mastered = objectives.where((node) => node.status == NodeStatus.completed).length;
+    return (100 * mastered / objectives.length).round();
+  }
 }

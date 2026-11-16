@@ -18,22 +18,22 @@ INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
 INSERT INTO public.questions (
   id, course_id, skill_id, text, options, correct_index, difficulty, explanation, is_placement
 ) VALUES
-  ('q_p1_placement_a', 'course_math_01', 'skill_math_functions', 'A?', '["no", "yes"]', 1, 'easy', 'answer', true),
-  ('q_p1_placement_b', 'course_math_01', 'skill_math_functions', 'B?', '["no", "yes"]', 1, 'easy', 'answer', true);
+  ('q_p1_placement_a', 'course_eng_01', 'skill_eng_vocab', 'A?', '["no", "yes"]', 1, 'easy', 'answer', true),
+  ('q_p1_placement_b', 'course_eng_01', 'skill_eng_vocab', 'B?', '["no", "yes"]', 1, 'easy', 'answer', true);
 
 INSERT INTO public.lessons (id, course_id, skill_id, title, steps, reinforcement_exercise) VALUES (
-  'lesson_p1_fixture', 'course_math_01', 'skill_math_functions', 'Fixture',
+  'lesson_p1_fixture', 'course_eng_01', 'skill_eng_vocab', 'Fixture',
   '[{"id":"step","type":"interactive_question","interactive_question":{"id":"q_p1_curated","text":"Q?","options":["no","yes"],"correctIndex":1,"explanation":"secret","extra":{"correct_option":"yes"}}}]',
   '{"id":"q_p1_reinforcement","text":"R?","options":["no","yes"],"correct_index":1,"explanation":"secret"}'
 );
 INSERT INTO public.roadmap_nodes (
   id, course_id, skill_id, title, description, target_lesson_id, order_index
-) VALUES ('node_p1_fixture', 'course_math_01', 'skill_math_functions', 'Fixture', '', 'lesson_p1_fixture', 9);
+) VALUES ('node_p1_fixture', 'course_eng_01', 'skill_eng_vocab', 'Fixture', '', 'lesson_p1_fixture', 9);
 
 INSERT INTO public.generated_lessons (
   id, course_id, skill_id, topic, level, difficulty, title, summary, objective, steps, questions
 ) VALUES (
-  'lesson_p1_generated', 'course_math_01', 'skill_math_functions', 'Fixture', 'intermediate', 'easy', 'Fixture', '', '',
+  'lesson_p1_generated', 'course_eng_01', 'skill_eng_vocab', 'Fixture', 'intermediate', 'easy', 'Fixture', '', '',
   '[{"interactiveQuestion":{"id":"q_nested","correctIndex":1,"extra":[{"correct_option_id":"b"}]}},{"interactive_question":{"correct_index":0}}]',
   '[{"id":"q_generated","options":["a","b"],"correct_index":1,"explanation":"secret"}]'
 );
@@ -87,7 +87,7 @@ DO $$ BEGIN
   BEGIN
     INSERT INTO public.answer_attempts (user_id, course_id, skill_id, lesson_id, question_id,
       selected_index, selected_answer, is_correct)
-    VALUES (auth.uid(), 'course_math_01', 'skill_math_functions', 'reinf_node_p1_fixture', 'q_p1_reinforcement', 1, 'yes', true);
+    VALUES (auth.uid(), 'course_eng_01', 'skill_eng_vocab', 'reinf_node_p1_fixture', 'q_p1_reinforcement', 1, 'yes', true);
     RAISE EXCEPTION 'ASSERT: client forged answer evidence';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   BEGIN
@@ -99,16 +99,16 @@ DO $$ BEGIN
     RAISE EXCEPTION 'ASSERT: backdated streak accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
   BEGIN
-    PERFORM public.complete_reinforcement('reinf_node_p1_fixture', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement', 999999);
+    PERFORM public.complete_reinforcement('reinf_node_p1_fixture', 'course_eng_01', 'skill_eng_vocab', 'q_p1_reinforcement', 999999);
     RAISE EXCEPTION 'ASSERT: completion without verified answer accepted';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   BEGIN
-    PERFORM public.complete_lesson('lesson_p1_fixture', 'course_math_01');
+    PERFORM public.complete_lesson('lesson_p1_fixture', 'course_eng_01');
     RAISE EXCEPTION 'ASSERT: lesson completed without a verified answer';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   BEGIN
     INSERT INTO public.lesson_progress (user_id, lesson_id, course_id, status)
-      VALUES (auth.uid(), 'lesson_p1_fixture', 'course_math_01', 'completed');
+      VALUES (auth.uid(), 'lesson_p1_fixture', 'course_eng_01', 'completed');
     RAISE EXCEPTION 'ASSERT: client forged lesson progress';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END; $$;
@@ -123,30 +123,30 @@ DECLARE
   retry_result JSONB;
 BEGIN
   BEGIN
-    PERFORM public.save_placement_attempt('course_math_01',
+    PERFORM public.save_placement_attempt('course_eng_01',
       '[{"question_id":"q_p1_placement_a","selected_index":1},{"question_id":"q_p1_placement_a","selected_index":1}]', 'duplicate');
     RAISE EXCEPTION 'ASSERT: duplicate placement question accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
   BEGIN
-    PERFORM public.save_placement_attempt('course_math_01',
+    PERFORM public.save_placement_attempt('course_eng_01',
       '[{"question_id":"q_p1_placement_a","selected_index":null}]', 'null-index');
     RAISE EXCEPTION 'ASSERT: null placement answer accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
 
-  first_result := public.save_placement_attempt('course_math_01', payload, 'p1-placement');
-  retry_result := public.save_placement_attempt('course_math_01', payload, 'p1-placement');
+  first_result := public.save_placement_attempt('course_eng_01', payload, 'p1-placement');
+  retry_result := public.save_placement_attempt('course_eng_01', payload, 'p1-placement');
   PERFORM pg_temp.assert_true(first_result->>'score' = '50', 'placement ignores forged is_correct flags');
   PERFORM pg_temp.assert_true(first_result->>'attempt_id' = retry_result->>'attempt_id'
     AND (retry_result->>'already_processed')::BOOLEAN, 'placement retry returns the same row');
   PERFORM pg_temp.assert_true((SELECT score = 50 FROM public.learner_skill_scores
-    WHERE user_id = auth.uid() AND skill_id = 'skill_math_functions'), 'atomic placement persists skill score');
+    WHERE user_id = auth.uid() AND skill_id = 'skill_eng_vocab'), 'atomic placement persists skill score');
   PERFORM pg_temp.assert_true((SELECT xp = 22 FROM public.gamification_profiles WHERE user_id = auth.uid()),
     'answer and placement XP awarded once');
   PERFORM pg_temp.assert_true((SELECT questions_answered = 2 AND correct_answers = 1 AND xp_earned = 22
     FROM public.daily_learning_stats WHERE user_id = auth.uid()
     AND activity_date = (now() AT TIME ZONE 'Asia/Tashkent')::date), 'daily stats not doubled');
   BEGIN
-    PERFORM public.save_placement_attempt('course_math_01',
+    PERFORM public.save_placement_attempt('course_eng_01',
       '[{"question_id":"q_p1_placement_a","selected_index":0}]', 'p1-placement');
     RAISE EXCEPTION 'ASSERT: key reused with changed payload accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
@@ -160,15 +160,15 @@ DECLARE
   retry_result JSONB;
   old_xp INT;
 BEGIN
-  answer_result := public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_functions',
+  answer_result := public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab',
     'lesson_p1_fixture', 'q_p1_curated', 1, 'yes', 'p1-curated-answer');
   PERFORM pg_temp.assert_true((answer_result->>'is_correct')::BOOLEAN, 'curated camelCase key resolves on server');
   PERFORM pg_temp.assert_true(NOT answer_result ? 'correct_index' AND NOT answer_result ? 'correct_option',
     'scoring result does not disclose an answer key');
-  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_functions',
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab',
     'reinf_node_p1_fixture', 'q_p1_reinforcement', 1, 'yes', 'p1-reinforcement-answer');
-  first_result := public.complete_reinforcement('reinf_node_p1_fixture', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement', 999999);
-  retry_result := public.complete_reinforcement('reinf_node_p1_fixture', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement', 999999);
+  first_result := public.complete_reinforcement('reinf_node_p1_fixture', 'course_eng_01', 'skill_eng_vocab', 'q_p1_reinforcement', 999999);
+  retry_result := public.complete_reinforcement('reinf_node_p1_fixture', 'course_eng_01', 'skill_eng_vocab', 'q_p1_reinforcement', 999999);
   PERFORM pg_temp.assert_true(first_result->>'xp_awarded' = '30' AND retry_result->>'xp_awarded' = '0',
     'reinforcement XP fixed by server and not repeated');
   PERFORM pg_temp.assert_true(first_result->>'new_score' = retry_result->>'new_score'
@@ -178,7 +178,7 @@ BEGIN
     'reinforcement cannot complete an unpassed lesson');
 
   SELECT xp INTO old_xp FROM public.gamification_profiles WHERE user_id = auth.uid();
-  answer_result := public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_functions',
+  answer_result := public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab',
     'reinf_node_p1_fixture', 'q_p1_reinforcement', 1, 'yes', 'changed-idempotency-key');
   PERFORM pg_temp.assert_true(answer_result->>'xp_awarded' = '0'
     AND (SELECT xp = old_xp FROM public.gamification_profiles WHERE user_id = auth.uid()),
@@ -186,15 +186,15 @@ BEGIN
   PERFORM pg_temp.assert_true(answer_result->>'new_skill_score' = first_result->>'new_score',
     'retrying an unchanged answer preserves the persisted reinforcement score');
   BEGIN
-    PERFORM public.complete_reinforcement('reinf_invented_node', 'course_math_01', 'skill_math_functions', 'q_p1_reinforcement');
+    PERFORM public.complete_reinforcement('reinf_invented_node', 'course_eng_01', 'skill_eng_vocab', 'q_p1_reinforcement');
     RAISE EXCEPTION 'ASSERT: invented reinforcement node accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
-  first_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
-  retry_result := public.complete_lesson('lesson_p1_fixture', 'course_math_01');
+  first_result := public.complete_lesson('lesson_p1_fixture', 'course_eng_01');
+  retry_result := public.complete_lesson('lesson_p1_fixture', 'course_eng_01');
   PERFORM pg_temp.assert_true(first_result->>'xp_awarded' = '20' AND retry_result->>'xp_awarded' = '0',
     'atomic lesson completion awards XP once');
   BEGIN
-    PERFORM public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab',
+    PERFORM public.submit_answer_attempt(auth.uid(), 'course_logic', 'skill_logic_patterns',
       'lesson_p1_fixture', 'q_p1_curated', 1, 'yes', 'wrong-course');
     RAISE EXCEPTION 'ASSERT: cross-course question accepted';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
@@ -219,10 +219,10 @@ SET LOCAL ROLE authenticated;
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM public.admin_lessons WHERE id = 'lesson_p1_fixture'),
   'administrator can read raw lesson in gated CMS view');
 SELECT pg_temp.assert_true((public.admin_save_question(
-  '{"id":"q_p1_placement_a","course_id":"course_math_01","skill_id":"skill_math_functions","text":"Updated?","options":["no","yes"],"correct_index":1}'
+  '{"id":"q_p1_placement_a","course_id":"course_eng_01","skill_id":"skill_eng_vocab","text":"Updated?","options":["no","yes"],"correct_index":1}'
 )->>'saved')::BOOLEAN, 'administrator can upsert restricted question via RPC');
 SELECT pg_temp.assert_true((public.admin_save_lesson(
-  '{"id":"lesson_p1_fixture","course_id":"course_math_01","skill_id":"skill_math_functions","title":"Updated","steps":[]}'
+  '{"id":"lesson_p1_fixture","course_id":"course_eng_01","skill_id":"skill_eng_vocab","title":"Updated","steps":[]}'
 )->>'saved')::BOOLEAN, 'administrator can upsert restricted lesson via RPC');
 UPDATE public.lessons SET is_published = false WHERE id = 'lesson_p1_fixture';
 SELECT pg_temp.assert_true((SELECT NOT is_published FROM public.admin_lessons WHERE id = 'lesson_p1_fixture'),
@@ -234,7 +234,7 @@ SET LOCAL ROLE service_role;
 SELECT pg_temp.assert_true((SELECT correct_index = 1 FROM public.questions WHERE id = 'q_p1_placement_a'),
   'service role can resolve persisted answer keys');
 INSERT INTO public.questions (id, course_id, skill_id, text, options, correct_index, difficulty, explanation)
-VALUES ('q_p1_edge', 'course_math_01', 'skill_math_functions', 'Edge?', '["no","yes"]', 1, 'easy', '')
+VALUES ('q_p1_edge', 'course_eng_01', 'skill_eng_vocab', 'Edge?', '["no","yes"]', 1, 'easy', '')
 ON CONFLICT (id) DO UPDATE SET text = EXCLUDED.text;
 UPDATE public.generated_lessons SET title = 'Edge persisted' WHERE id = 'lesson_p1_generated';
 SELECT pg_temp.assert_true((SELECT title = 'Edge persisted' FROM public.generated_lessons WHERE id = 'lesson_p1_generated'),

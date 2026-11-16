@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/supabase_config.dart';
 import '../../domain/entities/learning_path_node.dart';
 import '../../domain/entities/lesson.dart';
+import '../../domain/personalization/learning_start.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/repositories/i_lesson_repository.dart';
 import 'in_memory_lesson_repository.dart';
@@ -192,6 +193,9 @@ class SupabaseLessonRepository implements ILessonRepository {
   }
 
   static Lesson parseLearnerLesson(Map<String, dynamic> raw) {
+    if (raw['is_locked'] == true) {
+      throw const FormatException('Dars hali ochilmagan. Avval tayanch mavzularni o‘zlashtiring.');
+    }
     final courseId = _string(raw['course_id']);
     final skillId = _string(raw['skill_id']);
     final rawQuestions = raw['questions'];
@@ -222,6 +226,9 @@ class SupabaseLessonRepository implements ILessonRepository {
       summary: _string(raw['summary']),
       steps: steps,
       reinforcementExercise: reinforcement,
+      requiresMastery: raw['steps'] is List && (raw['steps'] as List).whereType<Map>().any(
+        (step) => step['masteryCheckpoint'] == 'application' || step['masteryCheckpoint'] == 'retrieval',
+      ),
     );
   }
 
@@ -270,11 +277,13 @@ class SupabaseLessonRepository implements ILessonRepository {
     }
     final client = _requireClient();
     await _requireAuthenticated(client);
-    final row = await client
+    final query = client
         .from('learner_lessons')
         .select('*')
         .eq('course_id', courseId)
-        .eq('skill_id', skillId)
+        .eq('skill_id', skillId);
+    final eligible = courseId == mathMasteryCourse ? query.eq('is_locked', false) : query;
+    final row = await eligible
         .order('created_at', ascending: false)
         .limit(1)
         .maybeSingle();
@@ -316,7 +325,7 @@ class SupabaseLessonRepository implements ILessonRepository {
     }
     final client = _requireClient();
     await _requireAuthenticated(client);
-    final rows = await client
+    final Object? rows = courseId == mathMasteryCourse ? await client.rpc('get_math_progression') : await client
         .from('roadmap_nodes')
         .select(
           'id, course_id, skill_id, title, description, prerequisites, '
@@ -326,8 +335,11 @@ class SupabaseLessonRepository implements ILessonRepository {
         .eq('course_id', courseId)
         .eq('is_active', true)
         .order('order_index');
+    if (rows is! List || (courseId == mathMasteryCourse && rows.isEmpty)) {
+      throw const FormatException('Ta’lim yo‘li ma’lumotlari kelmadi.');
+    }
 
-    return (rows as List)
+    return rows
         .whereType<Map>()
         .map((raw) {
           final node = Map<String, dynamic>.from(raw);
@@ -348,6 +360,9 @@ class SupabaseLessonRepository implements ILessonRepository {
             estimatedMinutes:
                 (node['estimated_minutes'] as num?)?.toInt() ?? 15,
             order: (node['order_index'] as num?)?.toDouble() ?? 0,
+            isOptional: node['is_optional'] == true,
+            serverMastery: courseId == mathMasteryCourse,
+            reviewDue: node['review_due'] == true,
           );
         })
         .toList(growable: false);

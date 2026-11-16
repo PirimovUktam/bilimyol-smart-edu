@@ -33,6 +33,7 @@ import {
   foundationLessons,
   hasStartedCourse,
   pendingFoundationLesson,
+  usesMathMastery,
 } from '@/domain/personalization/learningStart';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { AdaptiveCycleEngine, type AdaptiveStepKey } from '@/domain/personalization/AdaptiveCycleEngine';
@@ -148,15 +149,18 @@ export function DashboardView({
   }, []);
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
+  const mathPilot = usesMathMastery(courseId);
+  const mathTopics = mathPilot ? path?.nodes.filter((node) => node.mastery && !node.isOptional) ?? [] : [];
   const foundation = pendingFoundationLesson(course, profile);
   const nextId = resolveNextLearningLesson(course, profile, path);
   const nextTopic = path?.nodes.find((node) => node.targetLessonId === nextId);
   const required = course?.lessons ?? [];
-  const completed = required.filter((id) =>
+  const requiredCount = mathPilot ? mathTopics.length : required.length;
+  const completed = mathPilot ? mathTopics.filter((node) => node.status === 'completed').length : required.filter((id) =>
     profile?.completedLessonIds.includes(id),
   ).length;
   const progressPct =
-    required.length > 0 ? Math.round((100 * completed) / required.length) : 0;
+    requiredCount > 0 ? Math.round((100 * completed) / requiredCount) : 0;
   const firstSteps = course ? foundationLessons(course) : [];
   const foundationPosition = foundation
     ? firstSteps.indexOf(foundation) + 1
@@ -174,17 +178,18 @@ export function DashboardView({
   );
   const scoreValues = Object.values(courseScores);
   const overallMastery =
-    scoreValues.length > 0
+    !mathPilot && scoreValues.length > 0
       ? SkillScoringEngine.computeOverallScore(courseScores)
       : progressPct;
   const adaptiveBundle = useMemo(() => {
+    if (mathPilot) return null;
     const input = { course, profile, skills, skillScores: courseScores, roadmap: path };
     return {
       cycle: AdaptiveCycleEngine.evaluateCycle(input),
       factors: AdaptiveCycleEngine.buildExplainableFactors(input),
       dailyTasks: AdaptiveCycleEngine.buildDailyMicroTasks(input),
     };
-  }, [course, profile, skills, courseScores, path]);
+  }, [course, profile, skills, courseScores, path, mathPilot]);
 
   const handleCycleStepAction = useCallback((stepKey: AdaptiveStepKey) => {
     switch (stepKey) {
@@ -208,7 +213,7 @@ export function DashboardView({
         break;
     }
   }, [onStartPlacement, onOpenKnowledgeMap, onOpenProgress, onOpenRoadmap, started, onOpenCourses, nextId, onContinueLesson]);
-  const masteredSkillsCount = scoreValues.filter((s) => s.score >= 70).length;
+  const masteredSkillsCount = mathPilot ? completed : scoreValues.filter((s) => s.score >= 70).length;
   const totalCompletedAllCourses = profile?.completedLessonIds.length ?? 0;
   const earnedBadgesCount =
     (totalCompletedAllCourses > 0 ? 1 : 0) +
@@ -667,7 +672,7 @@ export function DashboardView({
                     type="button"
                     onClick={onOpenRoadmap}
                     className="cursor-pointer rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-indigo-100 backdrop-blur-xs transition-colors hover:bg-white/20"
-                  >{t('dashboard.pathCount')}{' '}{completed}/{required.length || 1})
+                  >{t('dashboard.pathCount')}{' '}{completed}/{requiredCount})
                   </button>
                 )}
               </div>
@@ -921,8 +926,8 @@ export function DashboardView({
                 >{t('dashboard.todayGoal')}</h2>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <p className="text-sm font-extrabold text-slatefine">
-                    {started && required.length
-                      ? t('dynamic.lessonCompletion', { done: completed, total: required.length })
+                    {started && requiredCount
+                      ? t('dynamic.lessonCompletion', { done: completed, total: requiredCount })
                       : t('dynamic.lessonCount', { count: 0 })}
                   </p>
                   <span className="rounded-lg bg-purple-500/25 px-2 py-0.5 font-mono text-xs font-extrabold text-brand-dark">
@@ -1056,7 +1061,7 @@ export function DashboardView({
       {/* =====================================================================
           5-STEP ADAPTIVE LEARNING LOOP & EXPLAINABLE AI (6 PERSONALIZATION INPUTS)
          ===================================================================== */}
-      <AdaptiveCyclePanel
+      {adaptiveBundle && <AdaptiveCyclePanel
         cycle={adaptiveBundle.cycle}
         factors={adaptiveBundle.factors}
         dailyTasks={adaptiveBundle.dailyTasks}
@@ -1065,7 +1070,7 @@ export function DashboardView({
           !started ? onOpenCourses() : nextId ? onContinueLesson(nextId) : onOpenRoadmap()
         }
         primaryActionLabel={!started ? t('adaptive.cycleActionSetup') : t('adaptive.cycleActionOpen')}
-      />
+      />}
 
       {/* =====================================================================
           BOTTOM ROW: Davom eting | Umumiy rivojlanish | Haftalik natija
@@ -1140,7 +1145,7 @@ export function DashboardView({
                 </button>
               </div>
 
-              {!nextId && !roadmapLoading && !roadmapError && skills.length > 0 && (
+              {!mathPilot && !nextId && !roadmapLoading && !roadmapError && skills.length > 0 && (
                 <div className="pt-1">
                   <button
                     type="button"
@@ -1227,7 +1232,7 @@ export function DashboardView({
                 <span className="flex items-center gap-2 text-slatefine">
                   <span className="size-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_#C084FC]" />{t('path.evaluatedTopics')}</span>
                 <strong className="font-mono font-extrabold text-ink">
-                  {scoreValues.length}
+                  {mathPilot ? mathTopics.filter((node) => (node.mastery?.answered ?? 0) > 0).length : scoreValues.length}
                 </strong>
               </div>
               <div className="flex items-center justify-between gap-2">

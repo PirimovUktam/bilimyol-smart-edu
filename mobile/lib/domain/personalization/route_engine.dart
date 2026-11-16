@@ -11,6 +11,20 @@ class RouteEngine {
     required List<String> completedNodeIds,
     required List<String> completedReinforcementIds,
   }) {
+    if (baseNodes.any((node) => node.serverMastery)) {
+      final next = baseNodes
+          .where((node) => !node.isOptional && node.status != NodeStatus.locked &&
+              node.status != NodeStatus.completed)
+          .firstOrNull;
+      return LearningPath(
+        id: 'roadmap_$courseId',
+        courseId: courseId,
+        title: 'Moslashuvchan Yo‘l Xaritasi',
+        nodes: baseNodes,
+        activeNodeId: next?.id ?? '',
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+    }
     final List<LearningPathNode> adaptedNodes = [];
 
     for (final baseNode in baseNodes) {
@@ -92,6 +106,7 @@ class RouteEngine {
   /// Evaluates if a specific node can be started by the learner.
   static bool canStartNode(LearningPathNode node, List<String> completedNodeIds) {
     if (node.status == NodeStatus.locked) return false;
+    if (node.serverMastery) return true;
     return node.prerequisites.every((id) => completedNodeIds.contains(id));
   }
 }

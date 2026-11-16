@@ -11,6 +11,7 @@ import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { SectionState } from '@/presentation/components/SectionState';
 import { AudioSimWave } from '@/features/lesson/AudioSimWave';
+import { usesMathMastery } from '@/domain/personalization/learningStart';
 
 export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning }: {
   onComplete: () => void; onChooseCourse: () => void; onStartLearning: () => void;
@@ -29,6 +30,7 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
   const [selection, setSelection] = useState<number | null>(null);
   const [confirm, setConfirm] = useState(false);
   const courseId = course?.id;
+  const mathPilot = usesMathMastery(courseId);
   const finalQuestion = number >= total;
   const init = (id: string, restart = false) => {
     setSelection(null);
@@ -80,9 +82,9 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
           <p className="text-sm font-semibold text-slatefine">
             {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length}{t('assessment.correctCount')}</p>
           <p className="rounded-xl border border-brand/25 bg-sand px-3.5 py-2 text-xs font-bold text-brand-dark">
-            {t('adaptive.placementHandoff')}
+            {t(mathPilot ? 'assessment.pilotHandoff' : 'adaptive.placementHandoff')}
           </p>
-          <ul className="space-y-3" aria-label={t('assessment.bySkill')}>
+          {!mathPilot && <ul className="space-y-3" aria-label={t('assessment.bySkill')}>
             {Object.values(result.computedScores).map((score) => (
               <li key={score.skillId}>
                 <Progress
@@ -93,7 +95,7 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
                 />
               </li>
             ))}
-          </ul>
+          </ul>}
           <div className="flex flex-wrap gap-2.5 pt-1">
             <Button onClick={onComplete} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('assessment.viewPath')}</Button>
             {canRetake && (

@@ -11,6 +11,7 @@ import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../core/widgets/friendly_error_state.dart';
 import '../../app/providers.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
+import '../../domain/personalization/learning_start.dart';
 import '../../domain/repositories/i_learner_repository.dart';
 
 const _dayNames = ['Yak', 'Dsh', 'Ssh', 'Chor', 'Pay', 'Jum', 'Shan'];
@@ -68,6 +69,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     final courseState = ref.watch(courseStateNotifierProvider);
     final learnerAsync = ref.watch(learnerStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
+    final mathPilot = usesMathMastery(mathMasteryCourse);
+    final path = mathPilot ? ref.watch(roadmapStateNotifierProvider).valueOrNull : null;
+    final mathProgress = path?.courseId == mathMasteryCourse ? path?.masteryPercent : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -130,9 +134,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           data: (profile) {
             final courseScores =
                 profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
-            final overallScore = SkillScoringEngine.computeOverallScore(
-              courseScores,
-            );
+            final overallScore = usesMathMastery(activeCourse?.id)
+                ? mathProgress
+                : SkillScoringEngine.computeOverallScore(courseScores);
             final completedLessons = profile.completedLessonIds.length;
             final totalMinutes = _activity.fold<int>(
               0,
@@ -175,7 +179,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                           icon: Icons.percent_rounded,
                           iconColor: const Color(0xFF06B6D4),
                           bgColor: const Color(0xFFECFEFF),
-                          value: '$overallScore%',
+                          value: overallScore == null ? '—' : '$overallScore%',
                           label: 'O‘zlashtirish',
                         ),
                       ),
@@ -341,14 +345,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        _SubjectBar(
+                        if (!mathPilot || mathProgress != null) _SubjectBar(
                           title: 'Matematika',
                           percent:
-                              (profile.scoresByCourse['course_math_01'] != null)
+                              mathProgress ?? ((profile.scoresByCourse[mathMasteryCourse] != null)
                               ? SkillScoringEngine.computeOverallScore(
-                                  profile.scoresByCourse['course_math_01']!,
+                                  profile.scoresByCourse[mathMasteryCourse]!,
                                 )
-                              : 0,
+                              : 0),
                           color: AppColors.primary,
                           iconText: '📐',
                         ),
@@ -405,7 +409,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                         'title': 'Tushunish Chempioni',
                         'icon': '🎯',
                         'desc': '90%+ o‘zlashtirish',
-                        'earned': overallScore >= 90,
+                        'earned': (overallScore ?? 0) >= 90,
                       },
                       {
                         'title': 'Mavzu Master',

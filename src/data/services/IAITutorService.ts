@@ -68,6 +68,7 @@ export interface AskTutorRequest {
   language?: 'uz' | 'ru';
   courseId?: string;
   skillId?: string;
+  lessonId?: string;
   history?: { sender: 'user' | 'ai'; text: string }[];
   topic?: string;
   learnerName?: string;

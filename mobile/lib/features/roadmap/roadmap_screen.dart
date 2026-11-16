@@ -200,7 +200,9 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     final isLocked = node.status == NodeStatus.locked;
     final isAvailable =
         node.status == NodeStatus.available ||
-        node.status == NodeStatus.inProgress;
+        node.status == NodeStatus.inProgress ||
+        (node.serverMastery && node.status == NodeStatus.reinforcement);
+    final target = node.targetLessonId;
 
     Color iconBg;
     IconData iconData;
@@ -287,7 +289,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$stepNum-Bosqich',
+                        node.isOptional ? 'Ixtiyoriy' : '$stepNum-Bosqich',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -295,14 +297,19 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      if (isReinforcement)
+                      if (node.reviewDue)
+                        const AppBadge(
+                          text: 'Takrorlash vaqti',
+                          variant: AppBadgeVariant.amber,
+                        )
+                      else if (isReinforcement)
                         const AppBadge(
                           text: 'Mustahkamlash',
                           variant: AppBadgeVariant.amber,
                         )
                       else if (isCompleted)
-                        const AppBadge(
-                          text: 'Bajarildi (100%)',
+                        AppBadge(
+                          text: node.serverMastery ? 'O‘zlashtirilgan' : 'Bajarildi (100%)',
                           variant: AppBadgeVariant.emerald,
                         )
                       else if (isAvailable)
@@ -361,13 +368,11 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           ),
                         ],
                       ),
-                      if (isAvailable)
+                      if (isAvailable && target != null)
                         AppButton(
                           text: isReinforcement ? 'Mashq qilish' : 'Boshlash',
                           size: AppButtonSize.small,
-                          variant: isReinforcement
-                              ? AppButtonVariant.primary
-                              : AppButtonVariant.primary,
+                          variant: AppButtonVariant.primary,
                           rightIcon: const Icon(
                             Icons.arrow_forward_rounded,
                             size: 14,
@@ -376,11 +381,11 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           onPressed: () async {
                             await ref
                                 .read(lessonSessionNotifierProvider.notifier)
-                                .startLesson(node.id);
+                                .startLesson(target);
                             if (context.mounted) context.push('/lesson');
                           },
                         )
-                      else if (isCompleted)
+                      else if (isCompleted && target != null)
                         AppButton(
                           text: 'Takrorlash',
                           size: AppButtonSize.small,
@@ -388,7 +393,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           onPressed: () async {
                             await ref
                                 .read(lessonSessionNotifierProvider.notifier)
-                                .startLesson(node.id);
+                                .startLesson(target);
                             if (context.mounted) context.push('/lesson');
                           },
                         ),

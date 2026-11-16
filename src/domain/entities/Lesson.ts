@@ -1,4 +1,5 @@
 import { Question } from './Question';
+import type { LessonMedia } from './LessonMedia';
 
 export type LessonStepType = 'concept' | 'formula' | 'visual_example' | 'audio_simulation' | 'interactive_question';
 
@@ -23,6 +24,8 @@ export interface LessonStep {
     speakerName?: string;
   };
   interactiveQuestion?: Question;
+  masteryCheckpoint?: 'application' | 'retrieval';
+  media?: LessonMedia;
 }
 
 export interface Lesson {
@@ -34,6 +37,7 @@ export interface Lesson {
   summary: string;
   steps: LessonStep[];
   reinforcementExercise: Question;
+  requiresMastery?: boolean;
   /** Set when the lesson was produced by the live AI edge function. */
   isAiGenerated?: boolean;
   /** Set when AI failed and this is a deterministic demo fallback lesson. */

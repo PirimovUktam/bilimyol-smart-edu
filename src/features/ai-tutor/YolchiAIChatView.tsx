@@ -69,6 +69,7 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
         courseId={courseId}
         courseTitle={course?.title}
         skillId={skillId}
+        lessonId={activeLesson?.id ?? node?.targetLessonId}
         topic={topic}
         score={score}
         isDemoMode={isDemoMode}
@@ -77,8 +78,8 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
   );
 }
 
-export function TutorConversation({ conversation, courseId, courseTitle, skillId, topic, score, isDemoMode, compact = false }: {
-  conversation: string; courseId?: string; courseTitle?: string; skillId?: string; topic?: string;
+export function TutorConversation({ conversation, courseId, courseTitle, skillId, lessonId, topic, score, isDemoMode, compact = false }: {
+  conversation: string; courseId?: string; courseTitle?: string; skillId?: string; lessonId?: string; topic?: string;
   score?: number; isDemoMode: boolean; compact?: boolean;
 }) {
   const { t, language } = useTranslation();
@@ -172,6 +173,7 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
         language,
         courseId,
         skillId,
+        lessonId,
         ...(isDemoMode ? { topic: topic ?? courseTitle, learnerScore: score } : {}),
         history: prior.slice(-6).map(({ sender, text: value }) => ({ sender, text: value.slice(0, 800) })),
       });

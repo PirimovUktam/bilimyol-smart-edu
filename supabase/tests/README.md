@@ -23,6 +23,7 @@ psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/p1_persistence_regress
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/retired_relationship_absence.sql
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/tutor_and_learning_activity_regression.sql
 psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/placement_sessions_regression.sql
+psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/math_mastery_pilot_regression.sql
 ```
 
 If the database has already applied a different version of one of these

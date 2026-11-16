@@ -49,7 +49,8 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
   const nodes = path?.nodes ?? [];
-  const topics = nodes.filter((node) => !node.isReinforcement);
+  const topics = nodes.filter((node) => !node.isReinforcement && !node.isOptional);
+  const policy = topics.find((node) => node.mastery);
   const completed = topics.filter((node) => node.status === 'completed').length;
   const lesson = resolveNextLearningLesson(course, profile, path);
   const foundation = pendingFoundationLesson(course, profile);
@@ -57,12 +58,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const ready = Boolean(course && hasStartedCourse(course, profile));
   const foundationCompleted = foundationPath.filter((id) => profile?.completedLessonIds.includes(id)).length;
   const shown = nodes.filter((node) => filter === 'all' || (filter === 'active'
-    ? node.status !== 'locked' && node.status !== 'completed' : node.status === 'completed'));
+    ? node.status !== 'locked' && (node.status !== 'completed' || node.mastery?.reviewDue) : node.status === 'completed'));
   const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
-  const adaptiveCycle = path
+  const adaptiveCycle = path && !policy
     ? AdaptiveCycleEngine.evaluateCycle({ course, profile, skills, skillScores: courseScores, roadmap: path })
     : null;
-  const adaptiveRec = path
+  const adaptiveRec = path && !policy
     ? RecommendationEngine.generateRecommendation(courseId ?? '', skills, courseScores, path, profile)
     : null;
 
@@ -177,7 +178,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
                 <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />{t('path.yourPlan')}</span>
               <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
-                {completed} / {topics.length}{t('path.topicsDone')}</h2>
+                {completed} / {topics.length} {t(policy ? 'path.masteredTopics' : 'path.topicsDone')}</h2>
               {topics.length > 0 && (
                 <Progress
                   value={(100 * completed) / topics.length}
@@ -197,6 +198,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
               >{t('courses.continue')}</Button>
             )}
           </section>
+
+          {policy?.mastery && (
+            <p className="text-sm font-medium leading-relaxed text-slatefine">
+              {t('path.masteryPolicy', { items: policy.mastery.requiredItems, score: policy.requiredScore })}
+            </p>
+          )}
 
           {adaptiveCycle && adaptiveRec && (
             <AdaptiveCyclePanel
@@ -288,21 +295,26 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                           <Icon aria-hidden="true" className="size-5" />
                         </span>
                         <Badge
-                          variant={done ? 'emerald' : locked ? 'slate' : node.isReinforcement ? 'amber' : 'indigo'}
+                          variant={node.mastery?.reviewDue ? 'amber' : done ? 'emerald' : locked ? 'slate' :
+                            node.status === 'reinforcement' || node.isReinforcement ? 'amber' : 'indigo'}
                           size="sm"
                         >
-                          {done
-                            ? t('path.completed')
-                            : locked
-                            ? 'Qulflangan'
+                          {locked
+                            ? t('path.locked')
+                            : node.mastery?.reviewDue
+                            ? t('path.scheduledReview')
+                            : done
+                            ? t(node.mastery ? 'path.mastered' : 'path.completed')
+                            : node.mastery?.state === 'needs_review'
+                            ? t('path.needsReview')
                             : node.isReinforcement
                             ? t('path.reinforce')
                             : isActive
                             ? t('lesson.nextStep')
-                            : 'Ochiq'}
+                            : t('path.available')}
                         </Badge>
                       </div>
-                      <span className="font-mono text-xs font-bold text-slatefine">0{index + 1}</span>
+                      {node.isOptional && <Badge variant="slate" size="sm">{t('path.optionalChallenge')}</Badge>}
                     </div>
 
                     {/* (b) Middle: Title, Description & Progress */}
@@ -311,7 +323,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                       {node.description && (
                         <p className="line-clamp-2 text-sm leading-relaxed text-slatefine">{node.description}</p>
                       )}
-                      {(isActive || node.isReinforcement) && (
+                      {!node.mastery && (isActive || node.isReinforcement) && (
                         <div className="rounded-xl border border-brand/25 bg-sand/70 px-3 py-2 text-xs leading-relaxed text-graphite">
                           <span className="font-extrabold text-brand-dark">{t('adaptive.xaiEyebrow')}: </span>
                           <span>
@@ -320,6 +332,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                               : adaptiveCycle?.loopUpdateSummary || node.description}
                           </span>
                         </div>
+                      )}
+                      {node.mastery && !locked && (
+                        <p className="text-xs font-semibold text-slatefine">
+                          {node.mastery.correct}/{node.mastery.requiredItems} {t('path.masteryEvidence')}
+                          {' · '}{node.mastery.passedCheckpoints}/{node.mastery.requiredCheckpoints} {t('path.masteryCheckpoints')}
+                        </p>
                       )}
                       {node.score != null && (
                         <div className="max-w-md pt-1">
@@ -341,11 +359,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slatefine">
                         <span className="inline-flex items-center gap-1">
                           <Clock aria-hidden="true" className="size-3.5 text-brand" />
-                          {node.estimatedMinutes}{t('courses.minutes')}</span>
-                        <span className="inline-flex items-center gap-1 text-amber-600">
+                          {node.estimatedMinutes}{' '}{t('courses.minutes')}</span>
+                        {!done && !locked && <span className="inline-flex items-center gap-1 text-amber-600">
                           <Zap aria-hidden="true" className="size-3.5" />
                           +20 XP
-                        </span>
+                        </span>}
                         {node.score != null && <span>{t('tutor.mastery')}{' '}{node.score}%</span>}
                       </p>
 
@@ -369,7 +387,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                               }}
                               leftIcon={<Play aria-hidden="true" className="size-4" />}
                             >
-                              {done ? t('path.review') : t('path.startLesson')}
+                              {done || node.mastery?.state === 'needs_review' ? t('path.review') : t('path.startLesson')}
                             </Button>
                           ) : (
                             !done && <p className="text-xs text-slatefine">{t('path.noLesson')}</p>

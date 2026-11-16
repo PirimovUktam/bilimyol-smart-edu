@@ -134,6 +134,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
           message: query,
           courseId: widget.lesson?.courseId ?? course?.id,
           skillId: widget.lesson?.skillId,
+          lessonId: widget.lesson?.id,
           topic: widget.lesson?.title ?? course?.title,
           history: List.unmodifiable(_history),
         ),

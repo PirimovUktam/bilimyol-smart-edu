@@ -11,6 +11,9 @@ export class GetRoadmapUseCase {
 
   async execute(courseId: string): Promise<LearningPath> {
     const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
+    if (baseNodes.some((node) => node.mastery)) {
+      return RouteEngine.adaptRoadmap(courseId, baseNodes, {}, [], []);
+    }
     const profile = await this.learnerRepo.getProfile();
     const scores = profile.scoresByCourse[courseId] || {};
 

@@ -807,6 +807,9 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         isSubmittingAnswer: false,
         lessonError: null,
       );
+    } on FormatException catch (error) {
+      if (!mounted || generation != _lessonGeneration) return;
+      state = LessonSessionState(lessonError: error.message);
     } catch (_) {
       if (!mounted || generation != _lessonGeneration) return;
       // Missing/invalid lesson: expose an empty session so the screen can show
@@ -872,6 +875,22 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         showReinforcementSheet: false,
       );
     }
+  }
+
+  void reviewWorkedExample() {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    final index = lesson.steps.indexWhere((step) => step.type == LessonStepType.visualExample);
+    _stepGeneration++;
+    _answerGeneration++;
+    state = state.copyWith(
+      currentStepIndex: index < 0 ? 0 : index,
+      clearSelectedOption: true,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+      clearReinforcementResult: true,
+      showReinforcementSheet: false,
+    );
   }
 
   void selectOption(int index) {
@@ -988,9 +1007,8 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           question.options.length < 2 ||
           question.options.any((option) => option.trim().isEmpty);
     });
-    if (requiredIds.isEmpty ||
-        hasInvalidAssessment ||
-        !_passedQuestionIds.containsAll(requiredIds)) {
+    if (requiredIds.isEmpty || hasInvalidAssessment ||
+        (!lesson.requiresMastery && !_passedQuestionIds.containsAll(requiredIds))) {
       state = state.copyWith(
         answerError:
             'Avval darsdagi barcha interaktiv savollarga to‘g‘ri javob bering.',

@@ -1,5 +1,13 @@
 import type { Course } from '@/domain/entities/Course';
 import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
+import { isSupabaseConfigured } from '@/core/config/supabase';
+import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+
+export const MATH_MASTERY_COURSE = 'course_math_01';
+
+export function usesMathMastery(courseId: string | undefined): boolean {
+  return courseId === MATH_MASTERY_COURSE && isSupabaseConfigured && !isDemoRuntimeActive();
+}
 
 export function hasStartedCourse(course: Course, profile: LearnerProfile | null): boolean {
   if (!profile) return false;
@@ -14,6 +22,6 @@ export function foundationLessons(course: Course): string[] {
 }
 
 export function pendingFoundationLesson(course: Course | null, profile: LearnerProfile | null): string | null {
-  if (!course || profile?.courseLevels?.[course.id] !== 'beginner') return null;
+  if (!course || usesMathMastery(course.id) || profile?.courseLevels?.[course.id] !== 'beginner') return null;
   return foundationLessons(course).find((id) => !profile.completedLessonIds.includes(id)) ?? null;
 }

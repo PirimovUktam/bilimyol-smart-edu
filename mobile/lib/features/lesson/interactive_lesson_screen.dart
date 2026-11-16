@@ -396,7 +396,9 @@ class _InteractiveLessonScreenState
                                 lessonState.selectedOptionIndex == null ||
                                     lessonState.isSubmittingAnswer
                                 ? null
-                                : () => _handleQuizSubmit(context),
+                                : lesson.requiresMastery && lessonState.answerResult != null
+                                    ? () => _handleNextStep(context)
+                                    : () => _handleQuizSubmit(context),
                             child: lessonState.isSubmittingAnswer
                                 ? const SizedBox(
                                     width: 20,
@@ -407,7 +409,9 @@ class _InteractiveLessonScreenState
                                     ),
                                   )
                                 : Text(
-                                    'TEKSHIRISH',
+                                    lesson.requiresMastery && lessonState.answerResult != null
+                                        ? 'Keyingi qadam'
+                                        : 'TEKSHIRISH',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w800,
@@ -839,6 +843,10 @@ class _InteractiveLessonScreenState
     final step = notifier.stepGeneration;
     final lesson = ref.read(lessonSessionNotifierProvider).lesson;
     if (lesson == null) return;
+    if (lesson.requiresMastery) {
+      notifier.reviewWorkedExample();
+      return;
+    }
 
     showModalBottomSheet(
       context: context,

@@ -59,7 +59,7 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
         const roadmap = await useCase.execute(courseId);
         if (currentOperation !== operation) return;
         const activeNode =
-          roadmap.nodes.find((n) => n.status === 'reinforcement' || n.status === 'available') ||
+          roadmap.nodes.find((n) => n.id === roadmap.activeNodeId) ||
           roadmap.nodes[0] ||
           null;
 
