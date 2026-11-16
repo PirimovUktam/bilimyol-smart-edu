@@ -163,10 +163,10 @@ export function AppRouter() {
   const home: AppView = isAdmin ? 'admin' : 'dashboard';
 
   useEffect(() => {
-    if (!learnerId) return;
     let disposed = false;
     setSetupError(false);
     setReadyLearner(null);
+    if (!learnerId) return;
     void (async () => {
       try {
         await useLearnerStore.getState().loadProfile();
@@ -185,7 +185,7 @@ export function AppRouter() {
     else if (!hasUsableAuth && isWorkspace) navigate('login', undefined, true);
     else if (hasUsableAuth && !isWorkspace) {
       if (isAdmin) navigate('admin', undefined, true);
-      else if (readyLearner === learnerId || setupError) {
+      else if (setupError || (learnerId && readyLearner === learnerId && learnerProfile?.id === learnerId)) {
         navigate(setupError || (activeCourse && hasStartedCourse(activeCourse, learnerProfile)) ? 'dashboard' : 'course-selection', undefined, true);
       }
     } else if (hasUsableAuth && isAdmin && view !== 'admin' && view !== 'profile') {
