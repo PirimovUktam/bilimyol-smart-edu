@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
 
 const localUrl = (key) => {
+  if (!process.env[key]) throw new Error(key + ' must point to a running disposable local test service.');
   const url = new URL(process.env[key]);
   if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname) || url.username || url.password) {
     throw new Error(key + ' must point to a disposable loopback service.');
@@ -116,9 +117,9 @@ try {
   await click('Bosh sahifa', nav);
   await click('Davom etish', main);
   await waitFor(heading('Birinchi inglizcha so‘zlar'));
-  await page.goto(app + '/?view=lesson&lessonId=lesson_math_algebra_01', { waitUntil: 'domcontentloaded' });
+  await page.goto(app + '/?view=lesson&lessonId=lesson_math_starter', { waitUntil: 'domcontentloaded' });
   await waitFor(heading('Dars noto‘g‘ri fanda'));
-  assert.equal(await heading('Kvadratni ochish').count(), 0);
+  assert.equal(await heading('Qo‘shish va ayirishdan boshlaymiz').count(), 0);
   console.log('PASS configured beginner starts with English instruction, resumes after reload, and cannot open a foreign lesson');
 
   await click('Yo‘l xaritasiga qaytish', main);
@@ -128,29 +129,51 @@ try {
   await waitFor(heading('Mening ta’lim yo‘lim'));
   await click('Bosh sahifa', nav);
   await click('Davom etish', main);
-  await waitFor(heading('Kvadratni ochish'));
-  await click('Test', main);
-  await waitFor(heading(/yoyilmasida x oldidagi/));
+  await waitFor(heading('Qo‘shish va ayirishdan boshlaymiz'));
+  await waitFor(heading('Asosiy tushuncha'));
+  const goToFirstAssessment = async () => {
+    await click('Keyingi qadam', main);
+    await waitFor(heading('Birga mashq qilamiz'));
+    await click('Keyingi qadam', main);
+    await waitFor(heading(/Jami nechta tugma/));
+  };
+  await click('Keyingi qadam', main);
+  await waitFor(heading('Birga misol ko‘ramiz'));
+  await goToFirstAssessment();
   assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
-  await main.getByText('4', { exact: true }).click();
+  await main.getByText('1', { exact: true }).click();
   await click(/Tekshirish/i, main);
-  await waitFor(main.getByText('To‘g‘ri javob: 8', { exact: true }));
+  await waitFor(main.getByText('To‘g‘ri javob: 7', { exact: true }));
   assert.equal(diagnosisRequests.length, 0, 'Scoring does not depend on AI.');
   await click('Yo‘lchi AI tahlili', main);
   const diagnosisPanel = page.getByRole('dialog', { name: 'Yo‘lchi bilan xato tahlili' });
   await waitFor(diagnosisPanel.getByText('Tayyor izoh', { exact: true }));
   assert.equal(diagnosisRequests.length, 1);
   await click('Yopish', diagnosisPanel);
-  await click('Qayta urinish', main);
-  console.log('PASS wrong answer feedback is independent of AI, then explicit diagnosis and retry work');
-  await main.getByText('8', { exact: true }).click();
-  await click(/Tekshirish/i, main);
-  await waitFor(main.getByText('To‘g‘ri javob!', { exact: true }));
+  await click('Ishlangan misolga qaytish', main);
+  await waitFor(heading('Birga misol ko‘ramiz'));
+  await goToFirstAssessment();
+  const answer = async (text) => {
+    await main.getByText(text, { exact: true }).click();
+    await click(/Tekshirish/i, main);
+    await click('Keyingi savol', main);
+  };
+  await answer('7');
+  await answer('5');
+  await answer('6 toshga 2 tosh qo‘shildi');
+  await waitFor(heading('Qoidani eslang'));
+  await click('Keyingi qadam', main);
+  await answer('11 − 3');
+  await answer('1');
+  await click('Darsni yakunlash', main);
   await waitFor(page.getByRole('heading', { name: /Dars.*yakunlandi/i }));
   await click('Ta’lim yo‘liga o‘tish');
+  await waitFor(heading('Teng guruhlar va ko‘paytirish'));
+  assert.equal(await main.locator('li').filter({ has: heading('Tenglamalar') })
+    .getByRole('button', { name: 'Darsni boshlash' }).count(), 0);
   await click('Natijalar', nav);
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await waitFor(main.getByText('22', { exact: true }).first());
+  await waitFor(main.getByText('28', { exact: true }).first());
 
   const owner = api();
   const ownerAuth = await owner.auth.signInWithPassword(first);
@@ -159,10 +182,10 @@ try {
   const plans = await owner.from('learner_profiles').select('course_levels').eq('user_id', ownerId).single();
   assert.deepEqual(plans.data?.course_levels, { course_eng_01: 'beginner', course_math_01: 'intermediate' });
   const completed = await owner.from('lesson_progress').select('lesson_id,status').eq('user_id', ownerId).single();
-  assert.deepEqual(completed.data, { lesson_id: 'lesson_math_algebra_01', status: 'completed' });
+  assert.deepEqual(completed.data, { lesson_id: 'lesson_math_starter', status: 'completed' });
   const stats = await owner.from('gamification_profiles').select('xp').eq('user_id', ownerId).single();
-  assert.equal(stats.data?.xp, 22);
-  console.log('PASS answer scored, lesson completed, XP persisted after reload');
+  assert.equal(stats.data?.xp, 28);
+  console.log('PASS math remediation, two checkpoints, first prerequisite unlock and persisted XP');
 
   await switchSubject(/Ingliz tili fanini tanlash/);
   await click(/Ixtiyoriy diagnostika/, main);
@@ -268,14 +291,14 @@ try {
   const admin = await outsider.from('admin_lessons').select('id');
   assert.deepEqual(admin.data, []);
   const gradeAsOther = await outsider.rpc('submit_answer_attempt', {
-    p_user_id: ownerId, p_course_id: 'course_math_01', p_skill_id: 'skill_math_algebra',
-    p_lesson_id: 'lesson_math_algebra_01', p_question_id: 'q_live_math_algebra_01_quiz',
-    p_selected_index: 1, p_selected_text: '8',
+    p_user_id: ownerId, p_course_id: 'course_math_01', p_skill_id: 'skill_math_addition',
+    p_lesson_id: 'lesson_math_starter', p_question_id: 'q_pilot_lesson_math_starter_1',
+    p_selected_index: 0, p_selected_text: '7',
   });
   assert.equal(gradeAsOther.error?.code, '42501');
   const diagnosis = await outsider.functions.invoke('yolchi-tutor', { body: {
-    action: 'diagnose_mistake', courseId: 'course_math_01', skillId: 'skill_math_algebra',
-    questionId: 'q_live_math_algebra_01_quiz', correctOption: 'forged',
+    action: 'diagnose_mistake', courseId: 'course_math_01', skillId: 'skill_math_addition',
+    questionId: 'q_pilot_lesson_math_starter_1', correctOption: 'not evaluated',
   } });
   assert.equal(diagnosis.error?.context?.status, 403);
   console.log('PASS cross-user RLS, admin isolation, impersonated scoring and pre-answer AI diagnosis denied');

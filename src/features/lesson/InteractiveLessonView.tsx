@@ -20,6 +20,7 @@ import { useLessonStore } from '@/app/store/useLessonStore';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { foundationLessons } from '@/domain/personalization/learningStart';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { useAuth } from '@/core/context/AuthContext';
 import { isLessonCourseMismatch } from '@/app/router/lessonResolution';
 import { Button } from '@/presentation/components/Button';
@@ -28,6 +29,7 @@ import { MathFunctionGraph } from './MathFunctionGraph';
 import { AudioSimWave } from './AudioSimWave';
 import { AILessonGeneratingCard } from './AILessonGeneratingCard';
 import { LessonCompletionModal } from './LessonCompletionModal';
+import { LessonMediaPlayer } from './LessonMediaPlayer';
 import { YolchiAIPanel } from '../ai-tutor/YolchiAIPanel';
 import { ReinforcementModal } from '../reinforcement/ReinforcementModal';
 import { sounds } from '@/core/utils/soundEffects';
@@ -104,7 +106,12 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     if (!account || !currentLesson || currentLesson.id !== lessonId || currentLesson.courseId !== activeCourse?.id) return;
     if (restored.current !== currentLesson) {
       restored.current = currentLesson;
-      const position = readLessonPosition(account.id, currentLesson);
+      const needsReview = currentLesson.requiresMastery && useRoadmapStore.getState().roadmap?.nodes.some(
+        (node) => node.targetLessonId === currentLesson.id && node.status === 'reinforcement'
+      );
+      const position = needsReview
+        ? Math.max(0, currentLesson.steps.findIndex((step) => step.type === 'visual_example'))
+        : readLessonPosition(account.id, currentLesson);
       if (position !== currentStepIndex) {
         goToStep(position);
         return;
@@ -154,6 +161,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   }
 
   const currentStep = currentLesson.steps[currentStepIndex];
+  const reviewWorkedExample = () => {
+    const example = currentLesson.steps.findIndex((step) => step.type === 'visual_example');
+    goToStep(Math.max(0, example));
+  };
   const isFoundation = foundationLessons(activeCourse).includes(currentLesson.id);
   const isFinalStep = currentStepIndex === currentLesson.steps.length - 1;
 
@@ -196,7 +207,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   };
 
   const savedScore = profile?.scoresByCourse[currentLesson.courseId]?.[currentLesson.skillId]?.score;
-  const completedSkill = savedScore == null ? undefined : {
+  const completedSkill = currentLesson.requiresMastery || savedScore == null ? undefined : {
     name: activeCourseSkills.find((skill) => skill.id === currentLesson.skillId)?.name ?? currentLesson.title,
     score: savedScore,
   };
@@ -294,6 +305,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
             {/* Step Content Description */}
             <div className="text-sm text-slatefine sm:text-base"><LearningText text={currentStep.content} /></div>
 
+            {currentStep.media && (
+              <LessonMediaPlayer media={currentStep.media} accountId={account?.id} lessonId={currentLesson.id} />
+            )}
+
             {/* Highlights */}
             {currentStep.highlightNotes && currentStep.highlightNotes.length > 0 && (
               <div className="p-4 bg-canvas border-l-4 border-brand border-y border-r border-hairline rounded-xl space-y-2">
@@ -348,7 +363,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                 <div className="p-4 bg-canvas border border-hairline rounded-xl space-y-2">
                   <div className="flex items-center gap-2 text-xs font-mono font-bold text-brand-dark uppercase tracking-wider">
                     <Sparkles className="w-4 h-4 text-brand" />
-                    <span>{t('lesson.finalQuestion')}</span>
+                    <span>{t(currentStep.masteryCheckpoint ? 'lesson.masteryCheck' : 'lesson.finalQuestion')}</span>
                   </div>
                   <h3 className="font-display text-base sm:text-lg font-bold text-ink">
                     {currentStep.interactiveQuestion.text}
@@ -488,10 +503,10 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           <Button
                             variant="coral"
                             size="sm"
-                            onClick={openReinforcement}
+                            onClick={currentLesson.requiresMastery ? reviewWorkedExample : openReinforcement}
                             rightIcon={<ArrowRight className="w-4 h-4" />}
                             className="font-bold"
-                          >{t('tutor.reinforce')}</Button>
+                          >{t(currentLesson.requiresMastery ? 'lesson.reviewExample' : 'tutor.reinforce')}</Button>
                         </div>
                       </div>
                     )}
@@ -570,6 +585,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         {help === 'tutor' ? <TutorConversation compact
           conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
           courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
+          lessonId={currentLesson.id}
           topic={currentLesson.title} score={savedScore} isDemoMode={isDemoMode} /> : <DictionaryLookup />}
       </Modal>}
 
@@ -577,7 +593,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         {showAIPanel && lastAnswerResult && currentStep.interactiveQuestion && <YolchiAIPanel
           question={currentStep.interactiveQuestion}
           answer={lastAnswerResult}
-        onProceedToReinforcement={openReinforcement}
+        onProceedToReinforcement={currentLesson.requiresMastery ? reviewWorkedExample : openReinforcement}
         onClose={closeAIPanel}
         />}
 
@@ -600,6 +616,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         totalCount={currentLesson.steps.filter((step) => Boolean(step.interactiveQuestion)).length}
         lessonTitle={currentLesson.title}
         skill={completedSkill}
+        mastery={currentLesson.requiresMastery}
         onProceedToNext={() => {
           useLessonStore.getState().resetLessonState();
           onFinish();

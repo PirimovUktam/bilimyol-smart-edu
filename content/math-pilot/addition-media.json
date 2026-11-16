@@ -1,0 +1,36 @@
+{
+  "lessonId": "lesson_math_starter",
+  "objectiveId": "node_math_addition",
+  "title": "Birlashtirish va olib tashlash",
+  "objective": "Qo‘shish va ayirishni predmetlar bilan ko‘rsatib, ifodaga aylantirish.",
+  "language": "uz",
+  "reviewStatus": "draft",
+  "durationSeconds": 40,
+  "sourceIds": [],
+  "scenes": [
+    {
+      "start": 0,
+      "end": 9,
+      "narration": "Qo‘shishda guruhlarni birlashtiramiz. Bu yerda ikkita qizil doira va yana uchta ko‘k doira bor.",
+      "visual": "Chapda ikki doira, o‘ngda uch doira. Rang bilan birga har bir guruh ustida son yoziladi."
+    },
+    {
+      "start": 9,
+      "end": 20,
+      "narration": "Hammasini birga sanaymiz: bir, ikki, uch, to‘rt, besh. Demak, ikki qo‘shuv uch, teng besh.",
+      "visual": "Doiralar bir qatorga qo‘shiladi. Sanalganda har bir doira ajratiladi va 2 + 3 = 5 yozuvi chiqadi."
+    },
+    {
+      "start": 20,
+      "end": 31,
+      "narration": "Ayirishda bir qismini olib tashlaymiz. Beshta doiradan bittasini olsak, to‘rtta qoladi.",
+      "visual": "Oxirgi doira chetga suriladi va ustidan chiziq tortiladi. Qolgan to‘rt doira yonida 5 − 1 = 4 yoziladi."
+    },
+    {
+      "start": 31,
+      "end": 40,
+      "narration": "O‘zingiz sinab ko‘ring: oltita donadan ikkitasi olib tashlansa, qanday amal yozasiz?",
+      "visual": "Olti belgi va bo‘sh ifoda ko‘rsatiladi. Video javobni ochmaydi, o‘quvchiga o‘ylash vaqti beradi."
+    }
+  ]
+}

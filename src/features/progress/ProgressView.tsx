@@ -5,6 +5,7 @@ import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
+import { usesMathMastery } from '@/domain/personalization/learningStart';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import type { DailyActivitySummary } from '@/domain/repositories/ILearnerRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
@@ -53,7 +54,12 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
   const accuracy = totals && totals.questions > 0 ? Math.round(100 * totals.correct / totals.questions) : null;
   const scores = activeCourse ? profile?.scoresByCourse[activeCourse.id] ?? {} : {};
   const path = roadmap?.courseId === activeCourse?.id ? roadmap : null;
-  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
+  const courseId = activeCourse?.id;
+  const mathPilot = usesMathMastery(courseId);
+  useEffect(() => {
+    if (mathPilot && courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
+  }, [courseId, mathPilot]);
+  const effectiveness = mathPilot ? null : AdaptiveCycleEngine.measureEffectiveness({
     course: activeCourse,
     profile,
     skills,
@@ -61,8 +67,11 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
     roadmap: path,
   });
   const completed = new Set(profile?.completedLessonIds);
-  const evaluated = skills.flatMap((skill) => scores[skill.id] ? [{ ...skill, score: scores[skill.id].score }] : [])
-    .sort((a, b) => b.score - a.score);
+  const evaluated = (mathPilot ? path?.nodes.flatMap((node) =>
+    node.mastery?.answered && !node.isOptional ? [{
+      id: node.id, name: node.title, score: Math.round(100 * node.mastery.correct / node.mastery.answered),
+    }] : []) ?? [] : skills.flatMap((skill) =>
+    scores[skill.id] ? [{ ...skill, score: scores[skill.id].score }] : [])).sort((a, b) => b.score - a.score);
   const achievements = [
     { title: t('progress.firstStep'), description: t('progress.firstLesson'), earned: completed.size >= 1 },
     { title: t('progress.regular'), description: t('progress.sevenDays'), earned: (profile?.streakDays ?? 0) >= 7 },
@@ -89,7 +98,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
       </div>
 
       {/* ADAPTIVE CYCLE EFFECTIVENESS & COMPETITIVE ADVANTAGE */}
-      <section aria-labelledby="adaptive-effectiveness-heading" className="grid gap-5 lg:grid-cols-12">
+      {effectiveness && <section aria-labelledby="adaptive-effectiveness-heading" className="grid gap-5 lg:grid-cols-12">
         <Card className="fade-up stagger-2 space-y-5 lg:col-span-7" padding="md">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="space-y-1">
@@ -210,7 +219,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
             ))}
           </ul>
         </Card>
-      </section>
+      </section>}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,21rem)]">
         <Card className="fade-up stagger-2 min-w-0 space-y-4" padding="md">
@@ -322,6 +331,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
             <ul className="space-y-3.5">
               {evaluated.map((skill) => (
                 <li key={skill.id} className="rounded-2xl border border-hairline bg-canvas/50 p-3.5">
+                  {mathPilot && <p className="mb-2 text-sm font-semibold">{skill.name} · {t('path.assessmentAccuracy')}</p>}
                   <Progress
                     value={skill.score}
                     ariaLabel={skill.name}

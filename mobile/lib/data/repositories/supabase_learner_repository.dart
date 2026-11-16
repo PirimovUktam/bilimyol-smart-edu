@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/i_learner_repository.dart';
 import '../../domain/entities/learner_profile.dart';
@@ -5,11 +7,13 @@ import '../../domain/entities/placement_session.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../core/config/supabase_config.dart';
+import '../../domain/personalization/learning_start.dart';
 import 'in_memory_learner_repository.dart';
 import 'supabase_course_repository.dart';
 
 class SupabaseLearnerRepository extends ILearnerRepository {
   final InMemoryLearnerRepository _fallbackRepo = InMemoryLearnerRepository();
+  ({String scope, String key})? _pendingMasteryAnswer;
 
   @override
   bool get supportsNodeCompletion => !SupabaseConfig.hasRemoteConfiguration;
@@ -642,7 +646,18 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   }) async {
-    final rpcRes = await Supabase.instance.client.rpc(
+    final client = Supabase.instance.client;
+    final mastery = courseId == mathMasteryCourse && questionId.startsWith('q_pilot_');
+    final answerKey = '$lessonId:$questionId:$selectedIndex';
+    final scope = '${user.id}:$answerKey';
+    if (mastery && _pendingMasteryAnswer?.scope != scope) {
+      _pendingMasteryAnswer = (
+        scope: scope,
+        key: 'mastery:${DateTime.now().microsecondsSinceEpoch}:${Random.secure().nextInt(1 << 31)}',
+      );
+    }
+    final requestKey = mastery ? _pendingMasteryAnswer!.key : answerKey;
+    final rpcRes = await client.rpc(
       'submit_answer_attempt',
       params: {
         'p_user_id': user.id,
@@ -652,7 +667,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         'p_question_id': questionId,
         'p_selected_index': selectedIndex,
         'p_selected_text': selectedAnswer,
-        'p_idempotency_key': '$lessonId:$questionId:$selectedIndex',
+        'p_idempotency_key': requestKey,
       },
     );
     final data = rpcRes is Map
@@ -660,6 +675,20 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         : <String, dynamic>{};
     if (!data.containsKey('is_correct')) {
       throw Exception('Javobni serverda tekshirib bo‘lmadi.');
+    }
+    if (_pendingMasteryAnswer?.key == requestKey) _pendingMasteryAnswer = null;
+    String? correctOption;
+    if (mastery && data['is_correct'] == false) {
+      try {
+        final feedback = await client.rpc('get_mistake_feedback', params: {
+          'p_course_id': courseId, 'p_skill_id': skillId, 'p_question_id': questionId,
+        });
+        if (feedback is Map && feedback['correctOption'] is String) {
+          correctOption = feedback['correctOption'] as String;
+        }
+      } catch (_) {
+        // The graded answer is saved even when the additional feedback read fails.
+      }
     }
     return AnswerAttemptRecord(
       id: 'server_${DateTime.now().microsecondsSinceEpoch}',
@@ -672,7 +701,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       isCorrect: data['is_correct'] == true,
       timestamp: DateTime.now().millisecondsSinceEpoch,
       // The scoring RPC intentionally never returns the answer key.
-      correctOption: null,
+      correctOption: correctOption,
       explanation: data['explanation'] as String?,
       newSkillScore: (data['new_skill_score'] as num?)?.toInt(),
       xpAwarded: (data['xp_awarded'] as num?)?.toInt() ?? 0,

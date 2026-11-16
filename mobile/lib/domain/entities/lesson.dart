@@ -71,6 +71,7 @@ class Lesson {
   final String summary;
   final List<LessonStep> steps;
   final Question reinforcementExercise;
+  final bool requiresMastery;
 
   const Lesson({
     required this.id,
@@ -81,5 +82,6 @@ class Lesson {
     required this.summary,
     required this.steps,
     required this.reinforcementExercise,
+    this.requiresMastery = false,
   });
 }

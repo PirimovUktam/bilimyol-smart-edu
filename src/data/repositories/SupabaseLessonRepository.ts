@@ -1,9 +1,34 @@
 import { ILessonRepository } from '@/domain/repositories/ILessonRepository';
 import { Lesson } from '@/domain/entities/Lesson';
+import { readApprovedLessonMedia } from '@/domain/entities/LessonMedia';
 import { Question } from '@/domain/entities/Question';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
+import { LocalizedError } from '@/core/locales/LocalizedError';
+import { MATH_MASTERY_COURSE } from '@/domain/personalization/learningStart';
+
+interface MathProgressionRow {
+  id: string;
+  course_id: string;
+  skill_id: string;
+  title: string;
+  description: string;
+  prerequisites: string[];
+  required_score: number;
+  target_lesson_id: string;
+  estimated_minutes: number;
+  order_index: number;
+  status: LearningPathNode['status'];
+  mastery_state: NonNullable<LearningPathNode['mastery']>['state'];
+  answered: number;
+  correct: number;
+  required_items: number;
+  passed_checkpoints: number;
+  required_checkpoints: number;
+  review_due: boolean;
+  is_optional: boolean;
+}
 
 const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question => ({
   id: raw.id,
@@ -33,6 +58,9 @@ const sanitizeSteps = (steps: unknown, courseId: string, skillId: string, fallba
       highlightNotes: step.highlightNotes || step.highlight_notes,
       formulaData: step.formulaData || step.formula_data,
       visualModelData: step.visualModelData || step.visual_model_data,
+      masteryCheckpoint: step.masteryCheckpoint === 'application' || step.masteryCheckpoint === 'retrieval'
+        ? step.masteryCheckpoint : undefined,
+      media: courseId === MATH_MASTERY_COURSE ? readApprovedLessonMedia(step.media) : undefined,
       interactiveQuestion: rawQuestion
         ? sanitizeQuestion(rawQuestion, courseId, skillId)
         : (step.type === 'interactive_question' || index === steps.length - 1) ? fallbackQuestion : undefined,
@@ -42,6 +70,7 @@ const sanitizeSteps = (steps: unknown, courseId: string, skillId: string, fallba
 
 /** Maps safe views without inventing unscorable synthetic question ids. */
 export function mapLearnerLesson(row: any): Lesson {
+  if (row.is_locked === true) throw new LocalizedError('lesson.prerequisites');
   const firstQuestion = Array.isArray(row.questions) && row.questions.length > 0
     ? sanitizeQuestion(row.questions[0], row.course_id, row.skill_id) : undefined;
   const steps = sanitizeSteps(row.steps, row.course_id, row.skill_id, firstQuestion);
@@ -59,6 +88,7 @@ export function mapLearnerLesson(row: any): Lesson {
     estimatedMinutes: row.estimated_minutes || 15,
     summary: row.summary || '',
     steps,
+    requiresMastery: steps.some((step) => step.masteryCheckpoint),
     reinforcementExercise,
     isAiGenerated: Boolean(row.generation_model && row.generation_model !== 'deterministic-fallback'),
     isDeterministicFallback: row.generation_model === 'deterministic-fallback',
@@ -122,11 +152,13 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
     try {
       await this.requireAuthenticatedUser();
-      const { data, error } = await supabase
+      const query = supabase
         .from('learner_lessons')
         .select('*')
         .eq('course_id', courseId)
-        .eq('skill_id', skillId)
+        .eq('skill_id', skillId);
+      if (courseId === MATH_MASTERY_COURSE) query.eq('is_locked', false);
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -148,6 +180,21 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
     try {
       await this.requireAuthenticatedUser();
+      if (courseId === MATH_MASTERY_COURSE) {
+        const { data, error } = await supabase.rpc('get_math_progression');
+        if (error) throw error;
+        if (!Array.isArray(data) || !data.length) throw new LocalizedError('path.failed');
+        return (data as MathProgressionRow[]).map((n) => ({
+          id: n.id, courseId: n.course_id, skillId: n.skill_id, title: n.title,
+          description: n.description, prerequisites: n.prerequisites, requiredScore: n.required_score,
+          targetLessonId: n.target_lesson_id, estimatedMinutes: n.estimated_minutes, order: Number(n.order_index),
+          status: n.status, isReinforcement: false, isOptional: n.is_optional,
+          mastery: {
+            state: n.mastery_state, answered: n.answered, correct: n.correct, requiredItems: n.required_items,
+            passedCheckpoints: n.passed_checkpoints, requiredCheckpoints: n.required_checkpoints, reviewDue: n.review_due,
+          },
+        }));
+      }
       const { data, error } = await supabase
         .from('roadmap_nodes')
         .select('*')

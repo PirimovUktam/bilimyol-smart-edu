@@ -10,10 +10,11 @@ interface LessonCompletionModalProps {
   totalCount: number;
   lessonTitle: string;
   skill?: { name: string; score: number };
+  mastery?: boolean;
   onProceedToNext: () => void;
 }
 
-export function LessonCompletionModal({ isOpen, correctCount, totalCount, lessonTitle, skill, onProceedToNext }: LessonCompletionModalProps) {
+export function LessonCompletionModal({ isOpen, correctCount, totalCount, lessonTitle, skill, mastery, onProceedToNext }: LessonCompletionModalProps) {
   const { t } = useTranslation();
   return (
     <Modal isOpen={isOpen} title={t('lesson.completed')} maxWidth="sm" showClose={false} dismissable={false}>
@@ -22,9 +23,11 @@ export function LessonCompletionModal({ isOpen, correctCount, totalCount, lesson
           <Trophy aria-hidden="true" className="size-6" />
         </span>
         <p className="break-words font-bold">{lessonTitle}</p>
-        <p className="text-sm text-slatefine">{correctCount} / {totalCount}{' '}{t('lesson.resultSaved')}</p>
+        <p className="text-sm text-slatefine">
+          {mastery ? t('path.mastered') : `${correctCount} / ${totalCount} ${t('lesson.resultSaved')}`}
+        </p>
         <p className="rounded-xl border border-brand/25 bg-sand px-3 py-2 text-xs font-bold text-brand-dark">
-          {t('adaptive.completionCycleNote')}
+          {t(mastery ? 'lesson.masterySaved' : 'adaptive.completionCycleNote')}
         </p>
         {skill && <Progress value={skill.score} showLabel ariaLabel={skill.name} tone="emerald" />}
         <Button className="w-full" onClick={onProceedToNext} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>{t('lesson.openPath')}</Button>

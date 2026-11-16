@@ -163,10 +163,10 @@ export function AppRouter() {
   const home: AppView = isAdmin ? 'admin' : 'dashboard';
 
   useEffect(() => {
-    if (!learnerId) return;
     let disposed = false;
     setSetupError(false);
     setReadyLearner(null);
+    if (!learnerId) return;
     void (async () => {
       try {
         await useLearnerStore.getState().loadProfile();
@@ -185,13 +185,13 @@ export function AppRouter() {
     else if (!hasUsableAuth && isWorkspace) navigate('login', undefined, true);
     else if (hasUsableAuth && !isWorkspace) {
       if (isAdmin) navigate('admin', undefined, true);
-      else if (readyLearner === learnerId || setupError) {
+      else if (setupError || (learnerId && readyLearner === learnerId && (isDemoMode || learnerProfile?.id === learnerId))) {
         navigate(setupError || (activeCourse && hasStartedCourse(activeCourse, learnerProfile)) ? 'dashboard' : 'course-selection', undefined, true);
       }
     } else if (hasUsableAuth && isAdmin && view !== 'admin' && view !== 'profile') {
       navigate('admin', undefined, true);
     }
-  }, [isLoading, isShowcase, isPasswordRecovery, hasUsableAuth, isWorkspace, isAdmin, view, readyLearner, learnerId, setupError, activeCourse, learnerProfile, navigate]);
+  }, [isLoading, isShowcase, isPasswordRecovery, hasUsableAuth, isWorkspace, isAdmin, isDemoMode, view, readyLearner, learnerId, setupError, activeCourse, learnerProfile, navigate]);
 
   const courseId = activeCourse?.id;
   const trackLesson = useLessonStore((state) => {

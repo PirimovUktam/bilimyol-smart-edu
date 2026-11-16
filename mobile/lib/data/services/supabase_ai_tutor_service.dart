@@ -171,6 +171,7 @@ class SupabaseAITutorService implements IAITutorService {
           'message': message,
           'courseId': request.courseId,
           'skillId': request.skillId,
+          'lessonId': request.lessonId,
           'topic': request.topic,
           'history': [
             for (final turn in request.history)

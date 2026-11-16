@@ -36,7 +36,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final currentPath = path?.valueOrNull;
     final nodes =
         currentPath != null && currentPath.courseId == activeCourse?.id
-        ? currentPath.nodes.where((node) => !node.isReinforcement).toList()
+        ? currentPath.nodes.where((node) => !node.isReinforcement && !node.isOptional).toList()
         : <LearningPathNode>[];
     final next = nodes
         .where(
@@ -139,19 +139,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             }
 
             final needsPlan = !hasStartedCourse(activeCourse, profile);
+            final mathPilot = usesMathMastery(activeCourse.id);
             final starter = pendingFoundationLesson(activeCourse, profile);
             final lessonId = starter ?? continuationId;
             final greetingName = profile.name.isEmpty
                 ? 'O‘quvchi'
                 : profile.name;
 
-            final totalLessons = activeCourse.lessons.isNotEmpty
+            final totalLessons = mathPilot ? nodes.length : activeCourse.lessons.isNotEmpty
                 ? activeCourse.lessons.length
                 : (nodes.isNotEmpty ? nodes.length : 5);
             final completedInCourse = activeCourse.lessons
                 .where((id) => profile.completedLessonIds.contains(id))
                 .length;
-            final doneCount = completedInCourse > 0
+            final doneCount = !mathPilot && completedInCourse > 0
                 ? completedInCourse
                 : completed;
             final progressPct = totalLessons > 0
@@ -159,7 +160,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 : 0;
 
             final courseScores = profile.scoresByCourse[activeCourse.id] ?? {};
-            final overallScore = courseScores.isNotEmpty
+            final overallScore = !mathPilot && courseScores.isNotEmpty
                 ? SkillScoringEngine.computeOverallScore(courseScores)
                 : progressPct;
 

@@ -13,6 +13,13 @@ export class RouteEngine {
     completedNodeIds: string[],
     completedReinforcementIds: string[]
   ): LearningPath {
+    if (baseNodes.some((node) => node.mastery)) {
+      const next = baseNodes.find((node) => !node.isOptional && node.status !== 'locked' && node.status !== 'completed');
+      return {
+        id: `roadmap_${courseId}`, courseId, title: 'Moslashuvchan Yo‘l Xaritasi',
+        nodes: baseNodes, activeNodeId: next?.id ?? '', updatedAt: Date.now(),
+      };
+    }
     const adaptedNodes: LearningPathNode[] = [];
 
     for (const baseNode of baseNodes) {
@@ -97,6 +104,7 @@ export class RouteEngine {
    */
   public static canStartNode(node: LearningPathNode, completedNodeIds: string[]): boolean {
     if (node.status === 'locked') return false;
+    if (node.mastery) return true;
     return node.prerequisites.every((id) => completedNodeIds.includes(id));
   }
 }

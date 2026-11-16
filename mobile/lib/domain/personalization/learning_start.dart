@@ -1,5 +1,11 @@
 import '../entities/course.dart';
 import '../entities/learner_profile.dart';
+import '../../core/config/supabase_config.dart';
+
+const mathMasteryCourse = 'course_math_01';
+
+bool usesMathMastery(String? courseId) =>
+    courseId == mathMasteryCourse && SupabaseConfig.hasRemoteConfiguration;
 
 bool hasStartedCourse(Course course, LearnerProfile? profile) =>
     profile != null &&
@@ -15,6 +21,7 @@ List<String> foundationLessons(Course course) {
 
 String? pendingFoundationLesson(Course? course, LearnerProfile? profile) {
   if (course == null ||
+      usesMathMastery(course.id) ||
       profile == null ||
       profile.courseLevels[course.id] != InitialLevel.beginner) {
     return null;

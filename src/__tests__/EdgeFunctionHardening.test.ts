@@ -10,7 +10,7 @@ describe('yolchi-tutor edge function hardening', () => {
     const s = src();
     expect(s).toContain('MAX_ID_LENGTH');
     // identifier fields are validated, not interpolated unbounded
-    expect(s).toContain('["courseId", "skillId", "questionId"]');
+    expect(s).toContain('["courseId", "skillId", "lessonId", "questionId"]');
     expect(s).toMatch(/length <= MAX_ID_LENGTH/);
   });
 

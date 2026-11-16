@@ -16,26 +16,27 @@ SELECT pg_temp.assert_condition(NOT has_function_privilege('authenticated', 'pub
   'arbitrary evaluation and incomplete finalization denied');
 SELECT pg_temp.assert_condition(NOT has_schema_privilege('authenticated', 'bilimyol_private', 'USAGE'),
   'private question and answer state is inaccessible');
-SELECT pg_temp.assert_condition((SELECT count(*) = 12 FROM (
+SELECT pg_temp.assert_condition((SELECT count(*) = 8 FROM (
   SELECT course_id, skill_id FROM bilimyol_private.placement_question_bank
+  WHERE course_id <> 'course_math_01'
   GROUP BY course_id, skill_id HAVING count(DISTINCT difficulty) = 3
-) covered), 'twelve starter skills have separate questions at all three difficulties');
+) covered), 'all eight non-pilot skills still have separate questions at all three difficulties');
 SELECT pg_temp.assert_condition(NOT EXISTS (
   SELECT 1 FROM bilimyol_private.placement_question_bank
   WHERE id IN ('q_eng_p1', 'q_it_py_01', 'q_logic_pat_01', 'q_math_alg_01')
 ), 'bundled seeds are excluded even if loaded after migrations');
 DO $$
 DECLARE
-  history JSONB := '[{"question_id":"q_live_math_alg_square","is_correct":true},
-    {"question_id":"q_live_math_eq_fraction","is_correct":true},
-    {"question_id":"q_live_math_func_compose","is_correct":true},
-    {"question_id":"q_live_math_graph_slope","is_correct":true}]';
+  history JSONB := '[{"question_id":"q_live_eng_vocab_context","is_correct":true},
+    {"question_id":"q_live_eng_grammar_daily","is_correct":true},
+    {"question_id":"q_live_eng_listening_place","is_correct":true},
+    {"question_id":"q_live_eng_reading_evidence","is_correct":true}]';
 BEGIN
   PERFORM pg_temp.assert_condition(
-    bilimyol_private.next_placement_question('course_math_01', history) = 'q_live_math_alg_difference'
-      AND bilimyol_private.next_placement_question('course_math_01',
-        jsonb_set(history, '{0,is_correct}', 'false'::jsonb)) = 'q_live_math_alg_distribute',
-    'identical skill coverage adapts to the previous answer');
+    bilimyol_private.next_placement_question('course_eng_01', history) = 'q_live_eng_vocab_scarce'
+      AND bilimyol_private.next_placement_question('course_eng_01',
+        jsonb_set(history, '{0,is_correct}', 'false'::jsonb)) = 'q_live_eng_vocab_borrow',
+    'non-pilot skill coverage still adapts to the previous answer');
 END;
 $$;
 

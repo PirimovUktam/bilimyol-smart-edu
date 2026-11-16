@@ -1,10 +1,13 @@
 import { Course } from '@/domain/entities/Course';
 import { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
-import { hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
+import { hasStartedCourse, pendingFoundationLesson, usesMathMastery } from '@/domain/personalization/learningStart';
 
 export function resolveNextLearningLesson(course: Course | null, profile: LearnerProfile | null, roadmap: LearningPath | null): string | null {
   if (!course || !hasStartedCourse(course, profile)) return null;
+  if (roadmap?.courseId === course.id && roadmap.nodes.some((node) => node.mastery)) {
+    return resolveContinuationLessonId(course, roadmap);
+  }
   return pendingFoundationLesson(course, profile) ?? (roadmap?.courseId === course.id ? resolveContinuationLessonId(course, roadmap) : null);
 }
 
@@ -21,6 +24,10 @@ export function resolveContinuationLessonId(
   if (!activeCourse) return null;
 
   if (roadmap && roadmap.courseId === activeCourse.id) {
+    if (roadmap.nodes.some((node) => node.mastery)) {
+      const next = roadmap.nodes.find((node) => node.id === roadmap.activeNodeId);
+      return next ? resolveRoadmapNodeLessonId(next) : null;
+    }
     const topics = roadmap.nodes.filter((node) => !node.isReinforcement);
     const preferred = topics.find((node) => node.status === 'available' || node.status === 'reinforcement' || node.status === 'in_progress');
     if (preferred) return preferred.targetLessonId ?? null;
@@ -29,7 +36,7 @@ export function resolveContinuationLessonId(
       : null;
   }
 
-  if (activeCourse.lessons && activeCourse.lessons.length > 0) {
+  if (!usesMathMastery(activeCourse.id) && activeCourse.lessons && activeCourse.lessons.length > 0) {
     return activeCourse.lessons[0];
   }
 

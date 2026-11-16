@@ -11,6 +11,8 @@ import '../../core/widgets/edtech_reveal.dart';
 import '../../core/widgets/edtech_section_header.dart';
 import '../../app/providers.dart';
 import '../../domain/entities/skill_score.dart';
+import '../../domain/entities/learning_path_node.dart';
+import '../../domain/personalization/learning_start.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
 
 class KnowledgeMapScreen extends ConsumerWidget {
@@ -21,6 +23,9 @@ class KnowledgeMapScreen extends ConsumerWidget {
     final courseState = ref.watch(courseStateNotifierProvider);
     final learnerAsync = ref.watch(learnerStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
+    final mathPath = usesMathMastery(activeCourse?.id)
+        ? ref.watch(roadmapStateNotifierProvider)
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -104,7 +109,38 @@ class KnowledgeMapScreen extends ConsumerWidget {
               ),
             ),
             Expanded(
-              child: learnerAsync.when(
+              child: mathPath != null ? mathPath.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, _) => const Center(child: Text('Ta’lim yo‘lini yuklab bo‘lmadi.')),
+                data: (path) {
+                  if (path.courseId != activeCourse?.id || path.nodes.isEmpty) {
+                    return Center(child: AppButton(
+                      text: 'Ta’lim yo‘lini ochish',
+                      onPressed: () => context.push('/roadmap'),
+                    ));
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: path.nodes.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (_, index) {
+                      final node = path.nodes[index];
+                      final label = node.reviewDue ? 'Takrorlash vaqti keldi' : switch (node.status) {
+                        NodeStatus.locked => 'Tayanch mavzu talab qilinadi',
+                        NodeStatus.completed => 'O‘zlashtirilgan',
+                        NodeStatus.reinforcement => 'Qayta mashq kerak',
+                        NodeStatus.inProgress => 'Mashq qilinyapti',
+                        NodeStatus.available => 'Ochiq',
+                      };
+                      return AppCard(child: ListTile(
+                        title: Text(node.title),
+                        subtitle: Text(label),
+                        trailing: node.isOptional ? const Text('Ixtiyoriy') : null,
+                      ));
+                    },
+                  );
+                },
+              ) : learnerAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Xatolik: $e')),
                 data: (profile) {

@@ -17,7 +17,8 @@ export class SubmitLessonAnswerUseCase {
   async execute(
     question: Question,
     selectedIndex: number,
-    lessonId?: string
+    lessonId?: string,
+    idempotencyKey?: string,
   ): Promise<LessonAnswerResult> {
     const selectedOption = question.options[selectedIndex] || '';
 
@@ -37,7 +38,7 @@ export class SubmitLessonAnswerUseCase {
           questionId: question.id,
           selectedIndex,
           selectedAnswer: selectedOption,
-          idempotencyKey: `attempt_${lessonId || 'general'}_${question.id}_${selectedIndex}`,
+          idempotencyKey: idempotencyKey ?? `attempt_${lessonId || 'general'}_${question.id}_${selectedIndex}`,
         });
 
         isCorrect = serverResult.isCorrect;

@@ -94,6 +94,7 @@ class AskTutorRequest {
   final String message;
   final String? courseId;
   final String? skillId;
+  final String? lessonId;
   final String? topic;
   final List<({String sender, String text})> history;
 
@@ -101,6 +102,7 @@ class AskTutorRequest {
     required this.message,
     this.courseId,
     this.skillId,
+    this.lessonId,
     this.topic,
     this.history = const [],
   });

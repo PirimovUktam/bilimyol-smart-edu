@@ -6,6 +6,7 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
+import { usesMathMastery } from '@/domain/personalization/learningStart';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -22,6 +23,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   const skills = useCourseStore((state) => state.activeCourseSkills);
   const profile = useLearnerStore((state) => state.profile);
   const roadmap = useRoadmapStore((state) => state.roadmap);
+  const roadmapError = useRoadmapStore((state) => state.error);
   const courseId = course?.id;
 
   useEffect(() => {
@@ -31,17 +33,31 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   }, [courseId]);
 
   const scores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
-  const hasScores = Object.keys(scores).length > 0;
-  const overall = SkillScoringEngine.computeOverallScore(scores);
   const path = roadmap?.courseId === courseId ? roadmap : null;
-  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
+  const mathPilot = usesMathMastery(courseId);
+  const objectives = path?.nodes.filter((node) => node.mastery && !node.isOptional) ?? [];
+  const entries = mathPilot ? objectives.map((node) => ({
+    id: node.id, name: node.title, description: node.description, node,
+    score: node.mastery?.answered ? Math.round(100 * node.mastery.correct / node.mastery.answered) : undefined,
+  })) : skills.map((skill) => ({
+    ...skill, node: path?.nodes.find((item) => !item.isReinforcement && item.skillId === skill.id),
+    score: scores[skill.id]?.score,
+  }));
+  const evaluated = entries.filter((skill) => skill.score != null);
+  const hasScores = evaluated.length > 0;
+  const overall = mathPilot && objectives.length
+    ? Math.round(100 * objectives.filter((node) => node.status === 'completed').length / objectives.length)
+    : SkillScoringEngine.computeOverallScore(scores);
+  const effectiveness = mathPilot ? null : AdaptiveCycleEngine.measureEffectiveness({
     course,
     profile,
     skills,
     skillScores: scores,
     roadmap: path,
   });
-  const weak = skills.filter((skill) => scores[skill.id] && scores[skill.id].score < 50);
+  const weak = entries.filter((skill) => mathPilot
+    ? skill.node?.status === 'reinforcement' || skill.node?.mastery?.reviewDue
+    : skill.score != null && skill.score < 50);
 
   return (
     <div className="learning-page space-y-6 sm:space-y-8">
@@ -61,7 +77,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
         </Card>
       ) : (
         <>
-          <div className="grid gap-5 lg:grid-cols-2">
+          {!mathPilot || path ? <div className="grid gap-5 lg:grid-cols-2">
             <Card className="fade-up stagger-1 flex items-center gap-4" padding="md">
               {hasScores ? (
                 <CircularProgress value={overall} label={t('path.overallMastery')} />
@@ -71,11 +87,11 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                 </span>
               )}
               <div className="space-y-2">
-                <span className="highlight">{t('path.diagnosticStatus')}</span>
+                <span className="highlight">{t(mathPilot ? 'path.overallMastery' : 'path.diagnosticStatus')}</span>
                 <h2 className="heading text-lg font-extrabold">{t('path.evaluatedTopics')}</h2>
                 <p className="text-sm text-slatefine">
                   {hasScores
-                    ? Object.keys(scores).length + ' mavzu bo‘yicha natija mavjud.'
+                    ? evaluated.length + ' · ' + t('path.evaluatedTopics')
                     : t('path.diagnosticDescription')}
                 </p>
                 {!hasScores && (
@@ -94,7 +110,9 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                   <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
                     {weak.map((skill) => (
                       <li key={skill.id}>
-                        {skill.name} · <span className="font-bold text-coral">{scores[skill.id].score}%</span>
+                        {skill.name} · <span className="font-bold text-coral">
+                          {mathPilot ? t(skill.node?.mastery?.reviewDue ? 'path.scheduledReview' : 'path.needsReview') : skill.score + '%'}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -106,18 +124,20 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
               ) : (
                 <p className="text-sm text-slatefine">
                   {hasScores
-                    ? t('path.noWeak')
+                    ? t(mathPilot ? 'path.yourPlan' : 'path.noWeak')
                     : t('path.weakAfter')}
                 </p>
               )}
             </Card>
-          </div>
+          </div> : roadmapError ? (
+            <SectionState kind="error" title={t('path.failed')}
+              onRetry={() => void useRoadmapStore.getState().loadRoadmap(course.id)} />
+          ) : <SectionState kind="loading" title={t('path.loading')} />}
 
-          {skills.length ? (
+          {entries.length ? (
             <ol className="grid gap-5 lg:grid-cols-2">
-              {skills.map((skill, index) => {
-                const node = path?.nodes.find((item) => !item.isReinforcement && item.skillId === skill.id);
-                const score = scores[skill.id]?.score;
+              {entries.map((skill, index) => {
+                const { node, score } = skill;
                 const isCompleted = node?.status === 'completed';
                 const isLocked = node?.status === 'locked';
                 const Icon = isLocked ? Lock : isCompleted ? Check : Compass;
@@ -149,9 +169,9 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                           size="sm"
                         >
                           {index + 1}{t('path.topicNumber')}{' '}{isCompleted
-                            ? ' · Yakunlangan'
+                            ? ' · ' + t(node.mastery ? 'path.mastered' : 'path.completed')
                             : isLocked
-                            ? ' · Qulflangan'
+                            ? ' · ' + t('path.locked')
                             : node && node.id === path?.activeNodeId
                             ? ' · Joriy mavzu'
                             : ''}
@@ -162,7 +182,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <h3 className="heading break-words text-lg font-extrabold">{skill.name}</h3>
-                          {score != null && (() => {
+                          {effectiveness && score != null && (() => {
                             const delta = effectiveness.skillDeltas.find((d) => d.skillId === skill.id);
                             if (!delta) return null;
                             const gapLabel = delta.status === 'gap_detected'
@@ -187,7 +207,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                           ) : (
                             <Progress
                               value={score}
-                              ariaLabel={t('courses.mastery')}
+                              ariaLabel={t(mathPilot ? 'path.assessmentAccuracy' : 'courses.mastery')}
                               showLabel
                               tone={score < 50 ? 'amber' : 'emerald'}
                             />
@@ -211,7 +231,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                 );
               })}
             </ol>
-          ) : (
+          ) : (!mathPilot || path) && (
             <SectionState title={t('path.noSkills')} />
           )}
         </>

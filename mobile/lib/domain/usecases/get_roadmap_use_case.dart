@@ -11,6 +11,15 @@ class GetRoadmapUseCase {
 
   Future<LearningPath> execute(String courseId) async {
     final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
+    if (baseNodes.any((node) => node.serverMastery)) {
+      return RouteEngine.adaptRoadmap(
+        courseId: courseId,
+        baseNodes: baseNodes,
+        skillScores: const {},
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+      );
+    }
     final profile = await learnerRepository.getProfile();
     final scores = profile.scoresByCourse[courseId] ?? {};
 

@@ -6,7 +6,7 @@ export interface LearningPathNode {
   skillId: string;
   title: string;
   description?: string;
-  prerequisites: string[]; // Node IDs that must be completed
+  prerequisites: string[];
   requiredScore: number;
   status: NodeStatus;
   score?: number;
@@ -15,6 +15,16 @@ export interface LearningPathNode {
   estimatedMinutes: number;
   order: number;
   orderIndex?: number;
+  isOptional?: boolean;
+  mastery?: {
+    state: 'not_started' | 'practicing' | 'needs_review' | 'mastered';
+    answered: number;
+    correct: number;
+    requiredItems: number;
+    passedCheckpoints: number;
+    requiredCheckpoints: number;
+    reviewDue: boolean;
+  };
 }
 
 export interface LearningPath {

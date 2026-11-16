@@ -14,6 +14,7 @@ const aiService = new GeminiAITutorService();
 // step is reopened before an earlier request settles.
 let sessionToken = {};
 let evaluationToken = {};
+let pendingMasteryAnswer: { session: object; questionId: string; selectedIndex: number; key: string } | null = null;
 // Keep one persistence receipt for the active lesson session. Navigation can
 // discard UI work, but must not start a second RPC or repeat a confirmed write
 // when only the profile read-back needs retrying.
@@ -285,7 +286,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return;
     }
     if (get().isEvaluatingAnswer) return;
-    if (!hasPassedRequiredQuestions(currentLesson, get().answeredQuestionIds)) {
+    if (!currentLesson.requiresMastery && !hasPassedRequiredQuestions(currentLesson, get().answeredQuestionIds)) {
       set({ error: 'Darsni yakunlash uchun barcha yaroqli sinov savollariga to‘g‘ri javob bering. Savol yetishmasa, darsni qayta oching.' });
       return;
     }
@@ -389,7 +390,16 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
-      const result = await useCase.execute(question, selectedIndex, currentLesson.id);
+      let attemptKey: string | undefined;
+      if (currentLesson.requiresMastery) {
+        if (pendingMasteryAnswer?.session !== requestSession || pendingMasteryAnswer.questionId !== question.id ||
+            pendingMasteryAnswer.selectedIndex !== selectedIndex) {
+          pendingMasteryAnswer = { session: requestSession, questionId: question.id, selectedIndex, key: crypto.randomUUID() };
+        }
+        attemptKey = pendingMasteryAnswer.key;
+      }
+      const result = await useCase.execute(question, selectedIndex, currentLesson.id, attemptKey);
+      if (pendingMasteryAnswer?.key === attemptKey) pendingMasteryAnswer = null;
       if (!isCurrent()) return null;
 
       if (result.isCorrect) {

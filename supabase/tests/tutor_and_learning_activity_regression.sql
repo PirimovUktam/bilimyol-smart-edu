@@ -41,19 +41,19 @@ SELECT pg_temp.assert_condition(
   (public.record_learning_activity()->>'streak_days')::INT = 0,
   'a new learner cannot create a streak by directly invoking the activity function');
 SELECT pg_temp.assert_condition(
-  public.get_mistake_feedback('course_math_01', 'skill_math_algebra', 'q_live_math_algebra_01_quiz') IS NULL,
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1') IS NULL,
   'a quiz has no public answer key before evaluation');
-SELECT public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_algebra',
-  'lesson_math_algebra_01', 'q_live_math_algebra_01_quiz', 0, 'untrusted text', 'tutor-fixture');
+SELECT public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition',
+  'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 1, 'untrusted text', 'tutor-fixture');
 SELECT pg_temp.assert_condition(
-  public.get_mistake_feedback('course_math_01', 'skill_math_algebra', 'q_live_math_algebra_01_quiz')->>'correctOption' = '8',
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'correctOption' = '7',
   'own verified mistake provides an authoritative answer');
 SELECT pg_temp.assert_condition(
-  public.get_mistake_feedback('course_math_01', 'skill_math_algebra', 'q_live_math_algebra_01_quiz')->>'selectedOption' = '4',
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'selectedOption' = '1',
   'client submitted text does not control the explanation');
 SELECT pg_temp.assert_condition(public.set_learning_reminders(false) = false, 'learner reminder setting persisted');
 SELECT pg_temp.assert_condition(
-  (public.record_session_heartbeat('00000000-0000-0000-0000-000000000411', 'course_math_01', 'lesson_math_algebra_01')->>'added_active_seconds')::int BETWEEN 30 AND 60,
+  (public.record_session_heartbeat('00000000-0000-0000-0000-000000000411', 'course_math_01', 'lesson_math_starter')->>'added_active_seconds')::int BETWEEN 30 AND 60,
   'heartbeat adds elapsed active time');
 SELECT pg_temp.assert_condition(
   (public.record_session_heartbeat('00000000-0000-0000-0000-000000000412', 'course_math_01')->>'added_active_seconds')::int < 2,
@@ -67,7 +67,7 @@ RESET ROLE;
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000402', true);
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.assert_condition(
-  public.get_mistake_feedback('course_math_01', 'skill_math_algebra', 'q_live_math_algebra_01_quiz') IS NULL,
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1') IS NULL,
   'another learner cannot read the submitted answer');
 SELECT pg_temp.assert_condition(
   NOT EXISTS (SELECT 1 FROM public.user_preferences WHERE user_id='00000000-0000-0000-0000-000000000401'),

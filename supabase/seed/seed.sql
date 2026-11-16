@@ -96,4 +96,5 @@ VALUES
   ('node_logic_patterns', 'course_logic', 'skill_logic_patterns', 'Qonuniyatlar', 'Sonli va shakl qonuniyatlarini topish va davom ettirish.', '["node_logic_puzzles"]'::jsonb, 50, false, 'lesson_logic_patterns_01', 18, 2.0, true)
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
-  description = EXCLUDED.description;
+  description = EXCLUDED.description
+WHERE roadmap_nodes.course_id <> 'course_math_01';

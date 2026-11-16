@@ -1,0 +1,29 @@
+[
+  {
+    "id": "im-k5-equal-groups-2021",
+    "title": "Grade 3 Unit 1, Lesson 9: Multiplication as Equal Groups",
+    "author": "Illustrative Mathematics",
+    "originalUrl": "https://cms-assets.illustrativemathematics.org/9oq32odirwiswsobliuwi3qkgiwe",
+    "publication": "IM K–5 Math, Grade 3 Unit 1, © 2021 Illustrative Mathematics",
+    "license": "CC BY, manbaning o‘zida ko‘rsatilgan",
+    "attribution": "Muallif, nashr, litsenziya va manbani ko‘rsating. Moslashtirilsa, o‘zgarishlarni belgilang.",
+    "retrievedOn": "2026-11-16",
+    "subject": "Matematika",
+    "objectives": ["node_math_multiplication"],
+    "verificationStatus": "license_label_verified_reference_only"
+  },
+  {
+    "id": "im-68-expressions-2019",
+    "title": "6.6 Expressions and Equations",
+    "author": "Illustrative Mathematics, dastlab Open Up Resources tomonidan ishlab chiqilgan",
+    "originalUrl": "https://im.kendallhunt.com/MS/teachers/1/6/index.html",
+    "publication": "IM 6–8 Math, 3.1415-versiya, © 2017–2019 Open Up Resources, © 2019 Illustrative Mathematics yangilanishlari",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Muallif, nashr, litsenziya va URLni ko‘rsating. O‘zgarishlarni belgilang. Alohida uchinchi tomon materiallari va logotiplar uchun o‘z shartlari amal qiladi.",
+    "retrievedOn": "2026-11-16",
+    "subject": "Matematika",
+    "objectives": ["node_math_expressions", "node_math_eq"],
+    "verificationStatus": "license_verified_reference_only"
+  }
+]
