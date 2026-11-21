@@ -130,6 +130,13 @@ export async function launchDemoSession(page, baseUrl) {
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
   const main = page.getByRole('main');
 
+  const skipTourBtn = main.getByRole('button', {
+    name: /O‘tkazib yuborish|Пропустить/i,
+  });
+  if (await skipTourBtn.first().isVisible().catch(() => false)) {
+    await skipTourBtn.first().click();
+  }
+
   const demoBtn = page.getByRole('button', {
     name: /Namuna hisobi bilan kirish|Войти в деморежим/i,
   });

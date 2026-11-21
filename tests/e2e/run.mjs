@@ -12,12 +12,15 @@ const mode = 'e2e-offline';
 await build({ mode, build: { outDir } });
 const server = await preview({ mode, build: { outDir }, preview: { host, port, strictPort: true } });
 try {
-  const run = spawn(process.execPath, ['tests/e2e/journey.mjs'], {
-    stdio: 'inherit',
-    env: { ...process.env, BASE_URL: 'http://' + host + ':' + port },
-  });
-  const [exit] = await once(run, 'exit');
-  process.exitCode = exit ?? 1;
+  for (const script of ['tests/e2e/product-tour.mjs', 'tests/e2e/journey.mjs']) {
+    const run = spawn(process.execPath, [script], {
+      stdio: 'inherit',
+      env: { ...process.env, BASE_URL: 'http://' + host + ':' + port },
+    });
+    const [exit] = await once(run, 'exit');
+    process.exitCode = exit ?? 1;
+    if (process.exitCode !== 0) break;
+  }
 } finally {
   server.httpServer.closeAllConnections?.();
   await new Promise((resolve) => server.httpServer.close(resolve));

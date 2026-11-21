@@ -60,11 +60,13 @@ try {
     }));
   });
   await page.goto(base, { waitUntil: 'domcontentloaded' });
-  await heading('O‘zingizga mos yo‘ldan o‘rganing.');
+  await heading('Qaysi dars aynan sizga mos?');
   assert.equal(await page.locator('#bilimyol-fonts').getAttribute('media'), 'print');
   releaseFonts();
   await page.waitForFunction(() => document.querySelector('#bilimyol-fonts')?.media === 'all');
-  console.log('PASS delayed external fonts do not block the welcome screen');
+  console.log('PASS delayed external fonts do not block the first-visit product tour');
+  await click('O‘tkazib yuborish');
+  await heading('O‘zingizga mos yo‘ldan o‘rganing.');
   await screenshot('after-welcome-1440.png');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkWidth('welcome', 390);

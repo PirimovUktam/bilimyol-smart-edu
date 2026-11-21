@@ -154,6 +154,11 @@ async function enterEnglishStarter(context) {
   const heading = (name) =>
     main.getByRole('heading', { name }).first().waitFor({ state: 'visible' });
 
+  const tourSkipBtn = main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true });
+  if (await tourSkipBtn.isVisible().catch(() => false)) {
+    await tourSkipBtn.click();
+  }
+
   await click('Kirish');
   await heading('Xush kelibsiz!');
   await click('Namuna hisobi bilan kirish');

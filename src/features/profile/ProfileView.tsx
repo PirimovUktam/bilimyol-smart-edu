@@ -1,7 +1,7 @@
 import { translate as t } from '@/core/locales/useTranslation';
 import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { Bell, BookOpen, KeyRound, LogOut, Save, ShieldCheck, Sparkles } from 'lucide-react';
+import { Bell, BookOpen, Compass, KeyRound, LogOut, Save, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/core/context/AuthContext';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useCourseStore } from '@/app/store/useCourseStore';
@@ -20,9 +20,10 @@ interface ProfileViewProps {
   onSignOut: () => void;
   onChooseSubject: () => void;
   onOpenLearningPlan: () => void;
+  onReplayTour?: () => void;
 }
 
-export function ProfileView({ onSignOut, onChooseSubject, onOpenLearningPlan }: ProfileViewProps) {
+export function ProfileView({ onSignOut, onChooseSubject, onOpenLearningPlan, onReplayTour }: ProfileViewProps) {
   const { t } = useTranslation();
   const { profile, updateProfile, signOut, resetPassword, isDemoMode } = useAuth();
   const learner = useLearnerStore((state) => state.profile);
@@ -176,6 +177,27 @@ export function ProfileView({ onSignOut, onChooseSubject, onOpenLearningPlan }: 
           )}
           <Feedback error={securityError} status={securityStatus} />
         </Card>
+
+        {onReplayTour && (
+          <Card className="fade-up stagger-4 space-y-4 lg:col-span-2" padding="md">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="highlight mb-1.5">
+                  <Compass aria-hidden="true" className="size-3.5" />{t('tour.eyebrow')}
+                </span>
+                <h2 className="heading text-lg font-extrabold">{t('tour.replayFromProfile')}</h2>
+                <p className="text-sm text-slatefine">{t('tour.replayFromProfileDesc')}</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={onReplayTour}
+                leftIcon={<Compass aria-hidden="true" className="size-4" />}
+              >
+                {t('tour.replayFromProfile')}
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
 
       <Modal

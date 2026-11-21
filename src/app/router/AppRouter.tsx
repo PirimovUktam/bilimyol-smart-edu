@@ -1,6 +1,12 @@
 import { useTranslation } from '@/core/locales/useTranslation';
 import { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { WelcomeView } from '@/features/auth/WelcomeView';
+import { ProductTourView } from '@/features/tour/ProductTourView';
+import {
+  hasCompletedProductTour,
+  isRootWelcomeEntry,
+  markProductTourCompleted,
+} from '@/core/preferences/productTour';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
@@ -96,7 +102,7 @@ const RouteFallback = () => {
 };
 
 const views = [
-  'pitch', 'demo', 'course-selection', 'onboarding', 'placement', 'knowledge-map',
+  'pitch', 'demo', 'tour', 'course-selection', 'onboarding', 'placement', 'knowledge-map',
   'roadmap', 'lesson', 'dashboard', 'ai-tutor', 'progress', 'login', 'register',
   'forgot-password', 'reset-password', 'profile', 'admin', 'welcome',
 ] as const;
@@ -114,7 +120,7 @@ const readRoute = () => {
   return { view, lessonId: view === 'lesson' ? params.get('lessonId') : null };
 };
 
-const standaloneViews = new Set<AppView>(['welcome', 'login', 'register', 'forgot-password', 'reset-password', 'pitch', 'demo']);
+const standaloneViews = new Set<AppView>(['welcome', 'tour', 'login', 'register', 'forgot-password', 'reset-password', 'pitch', 'demo']);
 const learningViews = new Set<AppView>(['lesson', 'placement', 'roadmap', 'knowledge-map', 'ai-tutor']);
 
 export { type AppView };
@@ -158,7 +164,18 @@ export function AppRouter() {
   const hasUsableAuth = isProtectedAuthReady(session, profile, isDemoMode);
   const isAdmin = profile?.role === 'admin';
   const isShowcase = view === 'demo' || view === 'pitch';
+  const isTourView = view === 'tour';
   const isWorkspace = !standaloneViews.has(view);
+  const [tourCompleted, setTourCompleted] = useState(() => hasCompletedProductTour());
+  const finishFirstVisitTour = useCallback(() => {
+    markProductTourCompleted();
+    setTourCompleted(true);
+  }, []);
+  const finishReplayTour = useCallback(() => {
+    markProductTourCompleted();
+    setTourCompleted(true);
+    navigate(hasUsableAuth ? 'profile' : 'welcome');
+  }, [hasUsableAuth, navigate]);
   const learnerId = hasUsableAuth && !isAdmin && !isPasswordRecovery ? profile?.id : undefined;
   const home: AppView = isAdmin ? 'admin' : 'dashboard';
 
@@ -180,7 +197,7 @@ export function AppRouter() {
   }, [learnerId, setupRetry]);
 
   useEffect(() => {
-    if (isLoading || isShowcase || view === 'reset-password') return;
+    if (isLoading || isShowcase || isTourView || view === 'reset-password') return;
     if (isPasswordRecovery) navigate('reset-password', undefined, true);
     else if (!hasUsableAuth && isWorkspace) navigate('login', undefined, true);
     else if (hasUsableAuth && !isWorkspace) {
@@ -191,7 +208,7 @@ export function AppRouter() {
     } else if (hasUsableAuth && isAdmin && view !== 'admin' && view !== 'profile') {
       navigate('admin', undefined, true);
     }
-  }, [isLoading, isShowcase, isPasswordRecovery, hasUsableAuth, isWorkspace, isAdmin, isDemoMode, view, readyLearner, learnerId, setupError, activeCourse, learnerProfile, navigate]);
+  }, [isLoading, isShowcase, isTourView, isPasswordRecovery, hasUsableAuth, isWorkspace, isAdmin, isDemoMode, view, readyLearner, learnerId, setupError, activeCourse, learnerProfile, navigate]);
 
   const courseId = activeCourse?.id;
   const trackLesson = useLessonStore((state) => {
@@ -234,11 +251,30 @@ export function AppRouter() {
       );
     }
     if (isWorkspace && learnerId && view !== 'admin' && view !== 'profile' && (!learnerProfile || readyLearner !== learnerId)) return <RouteFallback />;
-    if (!isWorkspace && !isShowcase && view !== 'reset-password' && hasUsableAuth) return <RouteFallback />;
+    if (!isWorkspace && !isShowcase && !isTourView && view !== 'reset-password' && hasUsableAuth) return <RouteFallback />;
 
     switch (view) {
       case 'welcome':
+        if (isLoading || isPasswordRecovery) return <RouteFallback />;
+        if (!tourCompleted && isRootWelcomeEntry(window.location)) {
+          return (
+            <ProductTourView
+              mode="first-visit"
+              onComplete={finishFirstVisitTour}
+              onSkip={finishFirstVisitTour}
+            />
+          );
+        }
         return <WelcomeView onRegister={() => navigate('register')} onLogin={() => navigate('login')} />;
+      case 'tour':
+        if (isLoading) return <RouteFallback />;
+        return (
+          <ProductTourView
+            mode="replay"
+            onComplete={finishReplayTour}
+            onSkip={finishReplayTour}
+          />
+        );
       case 'pitch':
         return <LazyPitchShowcaseView onNavigateDemo={() => navigate('demo')}
           onNavigateApp={() => navigate(hasUsableAuth ? home : 'login')}
@@ -258,7 +294,7 @@ export function AppRouter() {
         return <LazyResetPasswordView onNavigateLogin={login} />;
       case 'profile':
         return <LazyProfileView onSignOut={login} onChooseSubject={() => navigate('course-selection')}
-          onOpenLearningPlan={() => navigate('onboarding')} />;
+          onOpenLearningPlan={() => navigate('onboarding')} onReplayTour={() => navigate('tour')} />;
       case 'course-selection':
         return <LazyCourseSelectionView onSelectCourse={(id) => {
           const chosen = useCourseStore.getState().activeCourse;
@@ -314,6 +350,13 @@ export function AppRouter() {
   };
 
   const showNavigation = isWorkspace && hasUsableAuth && view !== 'lesson';
+  const isShowingFirstVisitTour =
+    view === 'welcome' &&
+    !isLoading &&
+    !hasUsableAuth &&
+    !isPasswordRecovery &&
+    !tourCompleted &&
+    isRootWelcomeEntry(window.location);
   return (
     <div className={showNavigation ? 'workspace-shell bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}
       data-learner={showNavigation && !isAdmin ? '' : undefined}
@@ -330,7 +373,9 @@ export function AppRouter() {
             <Suspense fallback={<RouteFallback />}>{renderView()}</Suspense>
           </RouteErrorBoundary>
         </main>
-        {!isShowcase && <footer className="border-t border-hairline px-4 py-5 text-center text-xs text-slatefine">{t('shell.footer')}</footer>}
+        {!isShowcase && !isTourView && !isShowingFirstVisitTour && (
+          <footer className="border-t border-hairline px-4 py-5 text-center text-xs text-slatefine">{t('shell.footer')}</footer>
+        )}
       </div>
     </div>
   );

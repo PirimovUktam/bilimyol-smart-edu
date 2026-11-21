@@ -58,6 +58,10 @@ async function switchSubject(name) {
 
 async function signup(account) {
   await page.goto(app, { waitUntil: 'domcontentloaded' });
+  const skipTourBtn = page.getByRole('button', { name: 'O‘tkazib yuborish', exact: true });
+  if (await skipTourBtn.isVisible().catch(() => false)) {
+    await skipTourBtn.click();
+  }
   await click('Ro‘yxatdan o‘tish');
   await page.getByLabel('Ism', { exact: true }).fill('Sinovchi');
   await page.getByLabel('Familiya', { exact: true }).fill('Oquvchi');
