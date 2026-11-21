@@ -70,5 +70,44 @@ void main() {
       expect(updatedScore?.score, equals(63));
       expect(updatedProfile.completedReinforcementIds, contains('reinf_node_math_func'));
     });
+
+    test('wrong reinforcement answer in demo mode returns updated repository skill score', () async {
+      final learnerRepo = InMemoryLearnerRepository();
+      final lessonRepo = InMemoryLessonRepository();
+
+      await learnerRepo.saveSkillScores('course_math_01', {
+        'skill_math_functions': const SkillScore(
+          skillId: 'skill_math_functions',
+          courseId: 'course_math_01',
+          score: 41,
+          lastUpdated: 1000,
+          masteryLevel: MasteryLevel.needsRemediation,
+          isWeakestFocus: true,
+        ),
+      });
+
+      final useCase = SubmitReinforcementUseCase(learnerRepo, lessonRepo);
+      final lesson = seedLessons['lesson_math_functions_01']!;
+
+      // Wrong answer (correctIndex is 1, pick 0)
+      final result = await useCase.execute(
+        courseId: 'course_math_01',
+        skillId: 'skill_math_functions',
+        reinforcementNodeId: 'reinf_node_math_func',
+        reinforcementQuestion: lesson.reinforcementExercise,
+        selectedIndex: 0,
+      );
+
+      final updatedProfile = await learnerRepo.getProfile();
+      final repoScore = updatedProfile
+          .scoresByCourse['course_math_01']?['skill_math_functions']
+          ?.score;
+
+      expect(result.isCorrect, isFalse);
+      expect(result.oldScore, equals(41));
+      expect(repoScore, isNotNull);
+      expect(repoScore, lessThan(41));
+      expect(result.newScore, equals(repoScore));
+    });
   });
 }

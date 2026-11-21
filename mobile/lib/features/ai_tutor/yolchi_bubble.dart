@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
 
 void scrollToBottomSmart(ScrollController controller, {bool force = false}) {
   if (!controller.hasClients) return;
 
-  // Agar foydalanuvchi eng pastdan 120px dan ortiq yuqorida bo'lmasa, pastga skroll qilinadi
   final maxScroll = controller.position.maxScrollExtent;
   final currentScroll = controller.position.pixels;
 
@@ -45,20 +46,32 @@ class YolchiBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
     final disableAnimations =
         MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final dark = AppColors.isDark(context);
+
+    final aiBg = isError ? Color.alphaBlend(c.errorSoft, c.paper) : c.paper;
+    final aiBorder = isError ? c.error : c.hairline;
+    final bubbleColor = isYolchi ? aiBg : c.ctaPrimary;
+    final textColor =
+        isYolchi ? (isError ? c.errorText : c.ink) : Colors.white;
+    final timeColor =
+        isYolchi ? c.slatefine : Colors.white.withValues(alpha: 0.88);
+    final helpfulBg =
+        isHelpful ? Color.alphaBlend(c.successSoft, c.paper) : c.subtle;
+    final helpfulFg = isHelpful ? c.successText : c.slatefine;
+    final helpfulBorder =
+        isHelpful ? c.success.withValues(alpha: 0.5) : c.hairline;
 
     final bubbleContent = RepaintBoundary(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Row(
-          mainAxisAlignment: isYolchi
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.end,
+          mainAxisAlignment:
+              isYolchi ? MainAxisAlignment.start : MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (isYolchi) _buildAvatar(disableAnimations),
+            if (isYolchi) _buildAvatar(c, disableAnimations),
             if (isYolchi) const SizedBox(width: 8),
             Flexible(
               child: Container(
@@ -67,33 +80,24 @@ class YolchiBubble extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: isYolchi
-                      ? (isError
-                            ? AppColors.errorTint(context)
-                            : AppColors.surfaceColor(context))
-                      : const Color(0xFF4F46E5),
+                  color: bubbleColor,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(isYolchi ? 2 : 18),
-                    bottomRight: Radius.circular(isYolchi ? 18 : 2),
+                    bottomLeft: Radius.circular(isYolchi ? 4 : 18),
+                    bottomRight: Radius.circular(isYolchi ? 18 : 4),
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: isYolchi
-                          ? Colors.black.withValues(alpha: 0.04)
-                          : const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                          ? Colors.black.withValues(alpha: c.isDark ? 0.2 : 0.04)
+                          : c.ctaPrimary.withValues(alpha: 0.22),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
                   border: isYolchi
-                      ? Border.all(
-                          color: isError
-                              ? AppColors.errorTextOnTint(context)
-                              : AppColors.borderColor(context),
-                          width: 1,
-                        )
+                      ? Border.all(color: aiBorder, width: 1)
                       : null,
                 ),
                 child: Column(
@@ -102,24 +106,20 @@ class YolchiBubble extends StatelessWidget {
                       : CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    RichText(
-                      text: TextSpan(
+                    Text.rich(
+                      TextSpan(
                         text: message,
-                        style: TextStyle(
-                          color: isYolchi
-                              ? (isError
-                                    ? AppColors.errorTextOnTint(context)
-                                    : AppColors.textPrimaryColor(context))
-                              : Colors.white,
+                        style: AppTypography.ui(
+                          color: textColor,
                           fontSize: 14.5,
                           height: 1.45,
                           letterSpacing: 0.1,
                         ),
                         children: [
                           if (isStreaming)
-                            const WidgetSpan(
+                            WidgetSpan(
                               alignment: PlaceholderAlignment.middle,
-                              child: _StreamingCursor(),
+                              child: _StreamingCursor(color: c.brand),
                             ),
                         ],
                       ),
@@ -138,15 +138,9 @@ class YolchiBubble extends StatelessWidget {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: isHelpful
-                                ? AppColors.successTint(context)
-                                : AppColors.subtleSurface(context),
+                            color: helpfulBg,
                             borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: isHelpful
-                                  ? AppColors.success.withValues(alpha: 0.5)
-                                  : AppColors.borderColor(context),
-                            ),
+                            border: Border.all(color: helpfulBorder),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -156,9 +150,7 @@ class YolchiBubble extends StatelessWidget {
                                     ? Icons.thumb_up_alt_rounded
                                     : Icons.thumb_up_outlined,
                                 size: 13,
-                                color: isHelpful
-                                    ? AppColors.successTextOnTint(context)
-                                    : AppColors.textMutedColor(context),
+                                color: helpfulFg,
                               ),
                               const SizedBox(width: 5),
                               Flexible(
@@ -170,14 +162,10 @@ class YolchiBubble extends StatelessWidget {
                                       : (isHelpful
                                             ? 'Foydali deb belgilandi'
                                             : 'Foydali javob'),
-                                  style: TextStyle(
+                                  style: AppTypography.ui(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: isHelpful
-                                        ? (dark
-                                              ? const Color(0xFFA7F3D0)
-                                              : const Color(0xFF047857))
-                                        : AppColors.textMutedColor(context),
+                                    color: helpfulFg,
                                   ),
                                 ),
                               ),
@@ -190,11 +178,9 @@ class YolchiBubble extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         time,
-                        style: TextStyle(
+                        style: AppTypography.mono(
                           fontSize: 10,
-                          color: isYolchi
-                              ? AppColors.textMutedColor(context)
-                              : Colors.white.withValues(alpha: 0.85),
+                          color: timeColor,
                         ),
                       ),
                     ],
@@ -229,13 +215,13 @@ class YolchiBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(bool disableAnimations) {
+  Widget _buildAvatar(AppSemanticColors c, bool disableAnimations) {
     final avatar = Container(
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+        gradient: LinearGradient(
+          colors: [c.ctaPrimary, c.ctaPrimaryHover],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -259,7 +245,8 @@ class YolchiBubble extends StatelessWidget {
 }
 
 class _StreamingCursor extends StatefulWidget {
-  const _StreamingCursor();
+  final Color color;
+  const _StreamingCursor({required this.color});
 
   @override
   State<_StreamingCursor> createState() => _StreamingCursorState();
@@ -299,7 +286,7 @@ class _StreamingCursorState extends State<_StreamingCursor>
         width: 6,
         height: 13,
         decoration: BoxDecoration(
-          color: const Color(0xFF6366F1),
+          color: widget.color,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -341,11 +328,13 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
     final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
     final platformCode =
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     return Semantics(
+      container: true,
       label: isRu ? 'Yo‘lchi AI печатает...' : 'Yo‘lchi AI yozmoqda...',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -355,21 +344,22 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: AppColors.primaryTint(context),
+                color: c.brandSoft,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 Icons.auto_awesome,
                 size: 14,
-                color: AppColors.primaryAccentOnSurface(context),
+                color: c.isDark ? c.brandStrong : c.brand,
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.subtleSurface(context),
+                color: c.subtle,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: c.hairline),
               ),
               child: AnimatedBuilder(
                 animation: _controller,
@@ -391,8 +381,8 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
                             child: Container(
                               width: 6,
                               height: 6,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF6366F1),
+                              decoration: BoxDecoration(
+                                color: c.brand,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -410,4 +400,3 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
     );
   }
 }
-

@@ -1,15 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/config/supabase_config.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app/app.dart';
+import 'app/providers.dart';
+import 'core/auth/demo_session.dart';
+import 'core/config/supabase_config.dart';
+import 'core/storage/local_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
+
   await SupabaseConfig.initialize();
+  final storage = await LocalStorageService.load();
+
+  productTourCompleted.value = storage.getProductTourCompletedSync();
+  if (!SupabaseConfig.hasRemoteConfiguration) {
+    demoSessionActive.value = storage.getDemoSessionActiveSync();
+    activeSessionHasStartedCourse.value = demoSessionActive.value
+        ? hasStartedCourseInDemoSnapshot(
+            storage.getStringSync(LocalStorageService.demoLearnerSnapshotKey),
+          )
+        : false;
+    demoSessionActive.addListener(() {
+      storage.setDemoSessionActive(demoSessionActive.value);
+      if (demoSessionActive.value) {
+        if (!activeSessionHasStartedCourse.value) {
+          activeSessionHasStartedCourse.value = hasStartedCourseInDemoSnapshot(
+            storage.getStringSync(LocalStorageService.demoLearnerSnapshotKey),
+          );
+        }
+      } else {
+        activeSessionHasStartedCourse.value = false;
+      }
+    });
+  } else {
+    demoSessionActive.value = false;
+    activeSessionHasStartedCourse.value = false;
+  }
+
+  final initialSettings = AppSettingsState(
+    localeCode: storage.getLocaleCodeSync(),
+    themeMode: storage.getThemeModeSync(),
+    productTourCompleted: productTourCompleted.value,
+  );
 
   runApp(
-    const ProviderScope(
-      child: BilimYolApp(),
+    ProviderScope(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(storage),
+        initialAppSettingsProvider.overrideWithValue(initialSettings),
+      ],
+      child: const BilimYolApp(),
     ),
   );
 }

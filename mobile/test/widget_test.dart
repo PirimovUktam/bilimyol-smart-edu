@@ -28,7 +28,11 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      addTearDown(() => demoSessionActive.value = false);
+      addTearDown(() {
+        demoSessionActive.value = false;
+        productTourCompleted.value = false;
+        activeSessionHasStartedCourse.value = false;
+      });
       final tutor = _UnavailableTutor();
       await tester.pumpWidget(
         ProviderScope(
@@ -38,8 +42,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('O‘zingizga mos yo‘ldan o‘rganing.'), findsOneWidget);
-      expect(find.text('Tanlash va davom etish'), findsNothing);
+      expect(find.text('Nimadan boshlashni biling.'), findsOneWidget);
+      await tester.tap(find.text('O‘tkazib yuborish'));
+      await tester.pumpAndSettle();
+      expect(find.text('Xush kelibsiz!'), findsOneWidget);
+
       appRouter.go('/onboarding');
       await tester.pumpAndSettle();
       expect(find.text('Xush kelibsiz!'), findsOneWidget);
@@ -65,7 +72,7 @@ void main() {
       await tester.tap(find.byTooltip('Yo‘lchidan so‘rash'));
       await tester.pumpAndSettle();
       expect(find.text('Yo‘lchi AI'), findsWidgets);
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.textContaining('«Hello» — salom'), findsWidgets);
       await tester.tap(find.byTooltip('So‘z lug‘ati'));

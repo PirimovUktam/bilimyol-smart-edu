@@ -1086,7 +1086,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Какой предмет вы хотите изучать?'), findsOneWidget);
+      expect(find.text('Каталог предметов'), findsOneWidget);
       expect(find.text('Английский язык'), findsOneWidget);
 
       final container = ProviderContainer();
@@ -1105,7 +1105,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('С чего вы хотите начать?'), findsOneWidget);
+      expect(find.text('С чего хотите начать?'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -1130,7 +1130,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Продолжайте свой путь к знаниям!'), findsOneWidget);
+      expect(find.text('Выберите план обучения'), findsOneWidget);
     });
   });
 }

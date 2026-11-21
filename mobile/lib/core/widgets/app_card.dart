@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import '../theme/app_semantic_colors.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -25,18 +25,23 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final disableAnimations =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final Widget cardBody = AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.surfaceColor(context),
+        color: backgroundColor ?? c.paper,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? AppColors.borderColor(context),
+          color: borderColor ?? c.hairline,
           width: borderWidth,
         ),
-        boxShadow: boxShadow ?? AppColors.cardShadow,
+        boxShadow: boxShadow ?? c.cardShadow,
       ),
       child: child,
     );

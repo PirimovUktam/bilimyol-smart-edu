@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/app_card.dart';
+
+import '../../app/providers.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../core/widgets/edtech_reveal.dart';
 import '../../core/widgets/edtech_section_header.dart';
-import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../core/widgets/friendly_error_state.dart';
-import '../../app/providers.dart';
-import '../../domain/personalization/skill_scoring_engine.dart';
+import '../../core/widgets/subject_icon.dart';
+import '../../core/widgets/yolchi_ai_mascot.dart';
+import '../../data/datasources/courses_data.dart';
+import '../../domain/entities/course.dart';
 import '../../domain/personalization/learning_start.dart';
+import '../../domain/personalization/skill_scoring_engine.dart';
 import '../../domain/repositories/i_learner_repository.dart';
-
-const _dayNames = ['Yak', 'Dsh', 'Ssh', 'Chor', 'Pay', 'Jum', 'Shan'];
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -27,7 +30,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   String _timeframe = 'week';
   List<DailyActivitySummary> _activity = [];
   bool _isLoadingActivity = true;
-  String? _activityError;
+  bool _activityFailed = false;
   int _activityGeneration = 0;
 
   @override
@@ -47,14 +50,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       if (mounted && generation == _activityGeneration) {
         setState(() {
           _activity = data;
-          _activityError = null;
+          _activityFailed = false;
         });
       }
     } catch (_) {
       if (mounted && generation == _activityGeneration) {
         setState(() {
           _activity = [];
-          _activityError = 'Faollik ma’lumotlarini yuklab bo‘lmadi.';
+          _activityFailed = true;
         });
       }
     } finally {
@@ -64,685 +67,864 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     }
   }
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
+
+  Course _resolveCourse(List<Course> loadedCourses, String id, Course fallback) {
+    return loadedCourses.where((c) => c.id == id).firstOrNull ?? fallback;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
     final courseState = ref.watch(courseStateNotifierProvider);
     final learnerAsync = ref.watch(learnerStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
     final mathPilot = usesMathMastery(mathMasteryCourse);
-    final path = mathPilot ? ref.watch(roadmapStateNotifierProvider).valueOrNull : null;
-    final mathProgress = path?.courseId == mathMasteryCourse ? path?.masteryPercent : null;
+    final path =
+        mathPilot ? ref.watch(roadmapStateNotifierProvider).valueOrNull : null;
+    final mathProgress =
+        path?.courseId == mathMasteryCourse ? path?.masteryPercent : null;
+
+    final brandAccent = c.isDark ? c.brandStrong : c.brand;
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
+    final timeframeToggle = Semantics(
+      button: true,
+      label: _timeframe == 'week' ? s.timeframeWeek : s.timeframeMonth,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          setState(
+            () => _timeframe = _timeframe == 'week' ? 'month' : 'week',
+          );
+          _loadActivity();
+        },
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: c.brandSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: c.brand.withValues(alpha: 0.28),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _timeframe == 'week'
+                      ? s.timeframeWeek
+                      : s.timeframeMonth,
+                  style: AppTypography.ui(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: brandAccent,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16,
+                  color: brandAccent,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
     return Scaffold(
-      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         toolbarHeight: isLargeText ? 96 : null,
         title: Text(
-          'Mening natijalarim',
+          s.progressScreenTitle,
           softWrap: true,
-          maxLines: isLargeText ? 2 : 1,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-          ),
+          maxLines: isLargeText ? null : 1,
+          overflow: isLargeText ? TextOverflow.visible : TextOverflow.ellipsis,
         ),
         actions: [
-          if (!isLargeText) _buildTimeframeChip(context),
+          if (!isLargeText)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: timeframeToggle,
+            ),
         ],
       ),
       bottomNavigationBar: const BilimYolBottomNav(currentIndex: 3),
       body: SafeArea(
-        child: learnerAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => FriendlyErrorState(
-            message: 'Profil natijalarini yuklab bo‘lmadi.',
-            onRetry: () =>
-                ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
-          ),
-          data: (profile) {
-            final courseScores =
-                profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
-            final overallScore = usesMathMastery(activeCourse?.id)
-                ? mathProgress
-                : SkillScoringEngine.computeOverallScore(courseScores);
-            final completedLessons = profile.completedLessonIds.length;
-            final totalMinutes = _activity.fold<int>(
-              0,
-              (acc, d) => acc + d.activeMinutes,
-            );
-            final maxMinutes = _activity.fold<int>(
-              1,
-              (acc, d) => d.activeMinutes > acc ? d.activeMinutes : acc,
-            );
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: learnerAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => FriendlyErrorState(
+                message: s.profileLoadFailed,
+                onRetry: () => ref
+                    .read(learnerStateNotifierProvider.notifier)
+                    .loadProfile(),
+              ),
+              data: (profile) {
+                final courseScores =
+                    profile.scoresByCourse[activeCourse?.id ?? ''] ?? {};
+                final overallScore = usesMathMastery(activeCourse?.id)
+                    ? mathProgress
+                    : SkillScoringEngine.computeOverallScore(courseScores);
+                final completedLessons = profile.completedLessonIds.length;
+                final totalMinutes = _activity.fold<int>(
+                  0,
+                  (acc, d) => acc + d.activeMinutes,
+                );
+                final maxMinutes = _activity.fold<int>(
+                  1,
+                  (acc, d) => d.activeMinutes > acc ? d.activeMinutes : acc,
+                );
+                final textScale = MediaQuery.textScalerOf(context).scale(1.0);
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const EdTechReveal(
-                    index: 0,
-                    child: EdTechSectionHeader(
-                      pillText: 'Natijalar tahlili',
-                      title: 'Ta’lim ko‘rsatkichlari',
-                      highlightWord: 'ko‘rsatkichlari',
-                    ),
+                final statItems = [
+                  _StatTile(
+                    icon: Icons.check_circle_rounded,
+                    iconColor: c.successText,
+                    bgColor: c.successSoft,
+                    value: '$completedLessons',
+                    label: s.statCompletedLessons,
                   ),
-                  if (isLargeText) ...[
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _buildTimeframeChip(
-                        context,
-                        margin: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  // 4 Stat Cards Grid (Reference 2 style)
-                  if (isLargeText)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _StatTile(
-                          icon: Icons.check_circle_rounded,
-                          iconColor: const Color(0xFF10B981),
-                          bgColor: const Color(0xFFECFDF5),
-                          value: '$completedLessons',
-                          label: 'Bajarilgan dars',
-                        ),
-                        const SizedBox(height: 10),
-                        _StatTile(
-                          icon: Icons.percent_rounded,
-                          iconColor: const Color(0xFF06B6D4),
-                          bgColor: const Color(0xFFECFEFF),
-                          value: overallScore == null ? '—' : '$overallScore%',
-                          label: 'O‘zlashtirish',
-                        ),
-                        const SizedBox(height: 10),
-                        _StatTile(
-                          icon: Icons.local_fire_department_rounded,
-                          iconColor: const Color(0xFFEA580C),
-                          bgColor: const Color(0xFFFFF7ED),
-                          value: '${profile.streakDays} kun',
-                          label: 'Kun ketma-ket 🔥',
-                        ),
-                        const SizedBox(height: 10),
-                        _StatTile(
-                          icon: Icons.stars_rounded,
-                          iconColor: const Color(0xFFF59E0B),
-                          bgColor: const Color(0xFFFFFBEB),
-                          value: '${profile.xp} XP',
-                          label: 'Umumiy ballar ✨',
-                        ),
-                      ],
-                    )
-                  else ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatTile(
-                            icon: Icons.check_circle_rounded,
-                            iconColor: const Color(0xFF10B981),
-                            bgColor: const Color(0xFFECFDF5),
-                            value: '$completedLessons',
-                            label: 'Bajarilgan dars',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatTile(
-                            icon: Icons.percent_rounded,
-                            iconColor: const Color(0xFF06B6D4),
-                            bgColor: const Color(0xFFECFEFF),
-                            value: overallScore == null ? '—' : '$overallScore%',
-                            label: 'O‘zlashtirish',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatTile(
-                            icon: Icons.local_fire_department_rounded,
-                            iconColor: const Color(0xFFEA580C),
-                            bgColor: const Color(0xFFFFF7ED),
-                            value: '${profile.streakDays} kun',
-                            label: 'Kun ketma-ket 🔥',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatTile(
-                            icon: Icons.stars_rounded,
-                            iconColor: const Color(0xFFF59E0B),
-                            bgColor: const Color(0xFFFFFBEB),
-                            value: '${profile.xp} XP',
-                            label: 'Umumiy ballar ✨',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 20),
+                  _StatTile(
+                    icon: Icons.percent_rounded,
+                    iconColor: c.path,
+                    bgColor: c.pathSoft,
+                    value: overallScore == null ? '—' : '$overallScore%',
+                    label: s.statMastery,
+                  ),
+                  _StatTile(
+                    icon: Icons.local_fire_department_rounded,
+                    iconColor: c.warningText,
+                    bgColor: c.warningSoft,
+                    value: s.streakDays(profile.streakDays),
+                    label: s.statStreak,
+                  ),
+                  _StatTile(
+                    icon: Icons.stars_rounded,
+                    iconColor: brandAccent,
+                    bgColor: c.brandSoft,
+                    value: '${profile.xp} XP',
+                    label: s.statXpTotal,
+                  ),
+                ];
 
-                  // Weekly Study Time Bar Chart (Reference 2 style)
-                  AppCard(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                final mathCourse = _resolveCourse(
+                  courseState.courses,
+                  mathMasteryCourse,
+                  seedCourses[0],
+                );
+                final engCourse = _resolveCourse(
+                  courseState.courses,
+                  'course_eng_01',
+                  seedCourses[1],
+                );
+                final itCourse = _resolveCourse(
+                  courseState.courses,
+                  'course_it',
+                  seedCourses[2],
+                );
+                final logicCourse = _resolveCourse(
+                  courseState.courses,
+                  'course_logic',
+                  seedCourses[3],
+                );
+
+                final badges = [
+                  (
+                    title: s.badgeFirstStepTitle,
+                    desc: s.badgeFirstStepDesc,
+                    icon: Icons.flag_rounded,
+                    earned: completedLessons >= 1,
+                  ),
+                  (
+                    title: s.badge3DayStreakTitle,
+                    desc: s.badge3DayStreakDesc,
+                    icon: Icons.local_fire_department_rounded,
+                    earned: profile.streakDays >= 3,
+                  ),
+                  (
+                    title: s.badgeExpertTitle,
+                    desc: s.badgeExpertDesc,
+                    icon: Icons.auto_awesome_rounded,
+                    earned: profile.xp >= 100,
+                  ),
+                  (
+                    title: s.badgeMasterTitle,
+                    desc: s.badgeMasterDesc,
+                    icon: Icons.workspace_premium_rounded,
+                    earned: completedLessons >= 5,
+                  ),
+                ];
+                final earnedCount = badges.where((b) => b.earned).length;
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isLargeText) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: timeframeToggle,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      EdTechReveal(
+                        index: 0,
+                        child: EdTechSectionHeader(
+                          pillText: s.progressPill,
+                          title: s.progressSectionFull,
+                          highlightWord: s.progressSectionHighlight,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final twoCol =
+                              constraints.maxWidth >= 300 && textScale < 1.35;
+                          if (!twoCol) {
+                            return Column(
+                              children: [
+                                for (final (idx, tile) in statItems.indexed) ...[
+                                  tile,
+                                  if (idx < statItems.length - 1)
+                                    const SizedBox(height: 10),
+                                ],
+                              ],
+                            );
+                          }
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(child: statItems[0]),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: statItems[1]),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(child: statItems[2]),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: statItems[3]),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Study Time Bar Chart
+                      AppCard(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Text(
-                                'O‘qish vaqti',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimaryColor(context),
-                                ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    s.studyTimeTitle,
+                                    style: AppTypography.ui(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: c.ink,
+                                    ),
+                                  ),
+                                  Text(
+                                    s.studyTimeUnit,
+                                    style: AppTypography.ui(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: c.slatefine,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            if (!_isLoadingActivity &&
+                                !_activityFailed &&
+                                _activity.isNotEmpty &&
+                                totalMinutes > 0 &&
+                                _timeframe == 'month') ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                s.studyTimeSummary(
+                                  _activity.length,
+                                  totalMinutes,
+                                ),
+                                style: AppTypography.mono(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.slatefine,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 14),
+                            if (_isLoadingActivity)
+                              const SizedBox(
+                                height: 130,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            else if (_activityFailed)
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 130,
+                                ),
+                                child: Center(
+                                  child: _buildActivityError(c, s),
+                                ),
+                              )
+                            else if (_activity.isEmpty || totalMinutes == 0)
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minHeight: 110,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    s.progressEmptyActivity,
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.ui(
+                                      fontSize: 13,
+                                      color: c.slatefine,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if (_timeframe == 'week')
+                              _WeeklyBars(
+                                activity: _activity,
+                                maxMinutes: maxMinutes,
+                                c: c,
+                                s: s,
+                              )
+                            else
+                              _MonthlyBars(
+                                activity: _activity,
+                                maxMinutes: maxMinutes,
+                                c: c,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Subject Mastery Breakdown
+                      AppCard(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              'Soat / kun',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textMutedColor(context),
+                              s.subjectBreakdownTitle,
+                              style: AppTypography.ui(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w800,
+                                color: c.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            _SubjectBar(
+                              title: s.localizedCourseTitle(mathCourse),
+                              percent: mathProgress ??
+                                  ((profile.scoresByCourse[
+                                              mathMasteryCourse] !=
+                                          null)
+                                      ? SkillScoringEngine.computeOverallScore(
+                                          profile.scoresByCourse[
+                                              mathMasteryCourse]!,
+                                        )
+                                      : 0),
+                              visual: subjectVisual(
+                                SubjectType.mathematics,
+                                c,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _SubjectBar(
+                              title: s.localizedCourseTitle(engCourse),
+                              percent: (profile.scoresByCourse['course_eng_01'] !=
+                                      null)
+                                  ? SkillScoringEngine.computeOverallScore(
+                                      profile.scoresByCourse['course_eng_01']!,
+                                    )
+                                  : 0,
+                              visual: subjectVisual(SubjectType.english, c),
+                            ),
+                            const SizedBox(height: 12),
+                            _SubjectBar(
+                              title: s.localizedCourseTitle(itCourse),
+                              percent:
+                                  (profile.scoresByCourse['course_it'] != null)
+                                      ? SkillScoringEngine.computeOverallScore(
+                                          profile.scoresByCourse['course_it']!,
+                                        )
+                                      : 0,
+                              visual: subjectVisual(SubjectType.it, c),
+                            ),
+                            const SizedBox(height: 12),
+                            _SubjectBar(
+                              title: s.localizedCourseTitle(logicCourse),
+                              percent: (profile.scoresByCourse['course_logic'] !=
+                                      null)
+                                  ? SkillScoringEngine.computeOverallScore(
+                                      profile.scoresByCourse['course_logic']!,
+                                    )
+                                  : 0,
+                              visual: subjectVisual(SubjectType.logic, c),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Achievements & Badges
+                      AppCard(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final titleWidget = Text(
+                                  s.achievementsTitle,
+                                  style: AppTypography.ui(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: c.ink,
+                                  ),
+                                );
+                                final badgeWidget = AppBadge(
+                                  text: s.achievementsEarned(
+                                    earnedCount,
+                                    badges.length,
+                                  ),
+                                  variant: AppBadgeVariant.emerald,
+                                );
+                                if (textScale >= 1.3 ||
+                                    constraints.maxWidth < 260) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      titleWidget,
+                                      const SizedBox(height: 8),
+                                      badgeWidget,
+                                    ],
+                                  );
+                                }
+                                return Row(
+                                  children: [
+                                    Expanded(child: titleWidget),
+                                    const SizedBox(width: 8),
+                                    Flexible(child: badgeWidget),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 14),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final useTwoCols =
+                                    constraints.maxWidth >= 300 &&
+                                        textScale < 1.35;
+                                final itemWidth = useTwoCols
+                                    ? (constraints.maxWidth - 10) / 2
+                                    : constraints.maxWidth;
+                                return Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    for (final b in badges)
+                                      Container(
+                                        width: itemWidth,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: b.earned
+                                              ? Color.alphaBlend(
+                                                  c.successSoft.withValues(
+                                                    alpha: 0.45,
+                                                  ),
+                                                  c.subtle,
+                                                )
+                                              : c.subtle,
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: b.earned
+                                                ? c.success.withValues(
+                                                    alpha: 0.35,
+                                                  )
+                                                : c.hairline,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(7),
+                                              decoration: BoxDecoration(
+                                                color: b.earned
+                                                    ? c.successSoft
+                                                    : c.paper,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Icon(
+                                                b.earned
+                                                    ? b.icon
+                                                    : Icons.lock_outline_rounded,
+                                                size: 18,
+                                                color: b.earned
+                                                    ? c.successText
+                                                    : c.slatefine,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    b.title,
+                                                    style: AppTypography.ui(
+                                                      fontSize: 12.5,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color: b.earned
+                                                          ? c.ink
+                                                          : c.graphite,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    b.desc,
+                                                    style: AppTypography.ui(
+                                                      fontSize: 11,
+                                                      color: c.slatefine,
+                                                      height: 1.3,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Yo'lchi Encouragement Banner
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: c.heroGradient,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Row(
+                          children: [
+                            const YolchiAIMascot(
+                              size: 52,
+                              mood: YolchiMood.celebrating,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    completedLessons > 0
+                                        ? s.progressBannerTitleActive
+                                        : s.progressBannerTitleIdle,
+                                    style: AppTypography.ui(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    completedLessons > 0
+                                        ? s.progressBannerBodyActive(
+                                            completedLessons,
+                                            profile.xp,
+                                          )
+                                        : s.progressBannerBodyIdle,
+                                    style: AppTypography.ui(
+                                      fontSize: 12.5,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(minHeight: 130),
-                          child: _isLoadingActivity
-                              ? const Center(child: CircularProgressIndicator())
-                              : _activityError != null
-                              ? _buildActivityError()
-                              : (_activity.isEmpty || totalMinutes == 0)
-                              ? Center(
-                                  child: Text(
-                                    'Hali o‘quv faoliyati qayd etilmagan.',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 12,
-                                      color: AppColors.textMutedColor(context),
-                                    ),
-                                  ),
-                                )
-                              : LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final isDark = AppColors.isDark(context);
-                                    return
-                                      SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            minWidth: constraints.maxWidth,
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceAround,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: _activity.map((d) {
-                                              final hrs = d.activeMinutes / 60;
-                                              final peak =
-                                                  d.activeMinutes ==
-                                                      maxMinutes &&
-                                                  maxMinutes > 0;
-                                              final heightRatio =
-                                                  maxMinutes == 0
-                                                  ? 0.0
-                                                  : d.activeMinutes /
-                                                        maxMinutes;
-                                              final date = DateTime.tryParse(
-                                                d.date,
-                                              );
-                                              final dayLabel = date != null
-                                                  ? _dayNames[date.weekday % 7]
-                                                  : '';
-
-                                              return Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 4,
-                                                    ),
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    Text(
-                                                      hrs.toStringAsFixed(1),
-                                                      style:
-                                                          GoogleFonts.plusJakartaSans(
-                                                            fontSize: 10,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            color: peak
-                                                                ? AppColors.primaryAccentOnSurface(
-                                                                    context,
-                                                                  )
-                                                                : AppColors.textMutedColor(
-                                                                    context,
-                                                                  ),
-                                                          ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Container(
-                                                      width:
-                                                          _timeframe == 'week'
-                                                          ? 26
-                                                          : 8,
-                                                      height:
-                                                          80 * heightRatio +
-                                                          (d.activeMinutes > 0
-                                                              ? 6
-                                                              : 0),
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: peak
-                                                              ? (isDark
-                                                                  ? [
-                                                                      const Color(
-                                                                        0xFF818CF8,
-                                                                      ),
-                                                                      const Color(
-                                                                        0xFF06B6D4,
-                                                                      ),
-                                                                    ]
-                                                                  : [
-                                                                      const Color(
-                                                                        0xFF4F46E5,
-                                                                      ),
-                                                                      const Color(
-                                                                        0xFF0E7490,
-                                                                      ),
-                                                                    ])
-                                                              : (isDark
-                                                                  ? [
-                                                                      const Color(
-                                                                        0xFF38BDF8,
-                                                                      ),
-                                                                      const Color(
-                                                                        0xFF0EA5E9,
-                                                                      ),
-                                                                    ]
-                                                                  : [
-                                                                      const Color(
-                                                                        0xFF0284C7,
-                                                                      ),
-                                                                      const Color(
-                                                                        0xFF0369A1,
-                                                                      ),
-                                                                    ]),
-                                                          begin: Alignment
-                                                              .topCenter,
-                                                          end: Alignment
-                                                              .bottomCenter,
-                                                        ),
-                                                        borderRadius:
-                                                            const BorderRadius.vertical(
-                                                              top:
-                                                                  Radius.circular(
-                                                                    8,
-                                                                  ),
-                                                            ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 6),
-                                                    Text(
-                                                      _timeframe == 'week'
-                                                          ? dayLabel
-                                                          : '',
-                                                      style:
-                                                          GoogleFonts.plusJakartaSans(
-                                                            fontSize: 11,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            color:
-                                                                AppColors.textSecondaryColor(
-                                                                  context,
-                                                                ),
-                                                          ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ),
-                                      );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Subject Mastery Breakdown (Reference 2 style)
-                  AppCard(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mavzular bo‘yicha natija',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimaryColor(context),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        if (!mathPilot || mathProgress != null) _SubjectBar(
-                          title: 'Matematika',
-                          percent:
-                              mathProgress ?? ((profile.scoresByCourse[mathMasteryCourse] != null)
-                              ? SkillScoringEngine.computeOverallScore(
-                                  profile.scoresByCourse[mathMasteryCourse]!,
-                                )
-                              : 0),
-                          color: AppColors.primaryAccentOnSurface(context),
-                          iconText: '📐',
-                        ),
-                        const SizedBox(height: 12),
-                        _SubjectBar(
-                          title: 'Ingliz tili',
-                          percent:
-                              (profile.scoresByCourse['course_eng_01'] != null)
-                              ? SkillScoringEngine.computeOverallScore(
-                                  profile.scoresByCourse['course_eng_01']!,
-                                )
-                              : 0,
-                          color: AppColors.isDark(context)
-                              ? const Color(0xFFFB7185)
-                              : const Color(0xFFF43F5E),
-                          iconText: '🇬🇧',
-                        ),
-                        const SizedBox(height: 12),
-                        _SubjectBar(
-                          title: 'IT & Algoritmlar',
-                          percent: (profile.scoresByCourse['course_it'] != null)
-                              ? SkillScoringEngine.computeOverallScore(
-                                  profile.scoresByCourse['course_it']!,
-                                )
-                              : 0,
-                          color: AppColors.isDark(context)
-                              ? const Color(0xFF06B6D4)
-                              : const Color(0xFF0E7490),
-                          iconText: '💻',
-                        ),
-                        const SizedBox(height: 12),
-                        _SubjectBar(
-                          title: 'Mantiqiy fikrlash',
-                          percent:
-                              (profile.scoresByCourse['course_logic'] != null)
-                              ? SkillScoringEngine.computeOverallScore(
-                                  profile.scoresByCourse['course_logic']!,
-                                )
-                              : 0,
-                          color: AppColors.isDark(context)
-                              ? const Color(0xFFF59E0B)
-                              : const Color(0xFFB45309),
-                          iconText: '🧩',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Gamified Badges (derived from real learner metrics)
-                  (() {
-                    final realBadges = <Map<String, dynamic>>[
-                      {
-                        'title': 'Muntazam O‘quvchi',
-                        'icon': '🏆',
-                        'desc': '7 kun uzluksiz o‘qish',
-                        'earned': profile.streakDays >= 7,
-                      },
-                      {
-                        'title': 'Tushunish Chempioni',
-                        'icon': '🎯',
-                        'desc': '90%+ o‘zlashtirish',
-                        'earned': (overallScore ?? 0) >= 90,
-                      },
-                      {
-                        'title': 'Mavzu Master',
-                        'icon': '⭐',
-                        'desc': '5+ dars tugatilgan',
-                        'earned': completedLessons >= 5,
-                      },
-                      {
-                        'title': 'Ilk Qadam',
-                        'icon': '🤖',
-                        'desc': 'Birinchi dars yakunlandi',
-                        'earned': completedLessons >= 1,
-                      },
-                    ];
-                    final earnedCount = realBadges
-                        .where((b) => b['earned'] == true)
-                        .length;
-
-                    return AppCard(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Yutuqlar va nishonlar',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimaryColor(context),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: AppBadge(
-                                  text:
-                                      '$earnedCount/${realBadges.length} Olingan',
-                                  variant: AppBadgeVariant.emerald,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: realBadges.map((b) {
-                              final earned = b['earned'] == true;
-                              return Container(
-                                width: isLargeText
-                                    ? double.infinity
-                                    : (MediaQuery.of(context).size.width - 86) /
-                                          2,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.subtleSurface(context),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: AppColors.borderColor(context),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Opacity(
-                                      opacity: earned ? 1.0 : 0.4,
-                                      child: Text(
-                                        earned ? b['icon']! : '🔒',
-                                        style: const TextStyle(fontSize: 22),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            b['title']!,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.textPrimaryColor(context),
-                                            ),
-                                          ),
-                                          Text(
-                                            b['desc']!,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 9.5,
-                                              color: AppColors.textMutedColor(context),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
                       ),
-                    );
-                  })(),
-                  const SizedBox(height: 20),
-
-                  // Yo'lchi AI Mascot Tip Banner (honest, data-driven)
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.heroGradient,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        const YolchiAIMascot(
-                          size: 52,
-                          mood: YolchiMood.celebrating,
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                completedLessons > 0
-                                    ? 'Ajoyib natija! 🚀'
-                                    : 'Boshlashga tayyormisiz? 🚀',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                completedLessons > 0
-                                    ? 'Siz $completedLessons ta darsni yakunlab, ${profile.xp} XP to‘pladingiz. Shu sur’atda davom eting!'
-                                    : 'Birinchi darsni yakunlab, XP yig‘ishni boshlang!',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11.5,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimeframeChip(
-    BuildContext context, {
-    EdgeInsetsGeometry margin = const EdgeInsets.only(right: 16),
-  }) {
-    return GestureDetector(
-      onTap: () {
-        setState(
-          () => _timeframe = _timeframe == 'week' ? 'month' : 'week',
-        );
-        _loadActivity();
-      },
-      child: Container(
-        margin: margin,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.primaryTint(context),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.primaryAccentOnSurface(
-              context,
-            ).withValues(alpha: 0.25),
+                );
+              },
+            ),
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _timeframe == 'week' ? 'Bu hafta' : 'Bu oy',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryAccentOnSurface(context),
-              ),
-            ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 16,
-              color: AppColors.primaryAccentOnSurface(context),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildActivityError() {
+  Widget _buildActivityError(AppSemanticColors c, AppStrings s) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.cloud_off_rounded,
-          size: 28,
-          color: AppColors.textMutedColor(context),
-        ),
+        Icon(Icons.cloud_off_rounded, size: 28, color: c.slatefine),
         const SizedBox(height: 6),
         Text(
-          _activityError!,
+          s.progressActivityLoadFailed,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.5,
-            color: AppColors.textMutedColor(context),
-          ),
+          style: AppTypography.ui(fontSize: 12, color: c.slatefine),
         ),
+        const SizedBox(height: 4),
         TextButton(
           onPressed: _loadActivity,
-          child: const Text('Qayta urinish'),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(44, 44),
+          ),
+          child: Text(s.retry),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeeklyBars extends StatelessWidget {
+  final List<DailyActivitySummary> activity;
+  final int maxMinutes;
+  final AppSemanticColors c;
+  final AppStrings s;
+
+  const _WeeklyBars({
+    required this.activity,
+    required this.maxMinutes,
+    required this.c,
+    required this.s,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final weekdays = s.shortWeekdays;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final totalHeight = 88.0 + 48.0 * textScale.clamp(1.0, 2.5);
+    return SizedBox(
+      height: totalHeight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: activity.map((d) {
+          final hrs = d.activeMinutes / 60.0;
+          final peak = d.activeMinutes == maxMinutes && maxMinutes > 0;
+          final heightRatio =
+              maxMinutes == 0 ? 0.0 : (d.activeMinutes / maxMinutes);
+          final date = DateTime.tryParse(d.date);
+          final dayLabel = date != null ? weekdays[date.weekday % 7] : '';
+          final desiredBarHeight =
+              76 * heightRatio + (d.activeMinutes > 0 ? 6 : 2);
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      hrs.toStringAsFixed(1),
+                      style: AppTypography.mono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: peak ? c.brand : c.slatefine,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxBarHeight = constraints.maxHeight;
+                          final barHeight = desiredBarHeight > maxBarHeight
+                              ? maxBarHeight
+                              : desiredBarHeight;
+                          return Container(
+                            width: 24,
+                            height: barHeight,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: peak
+                                    ? [
+                                        c.isDark ? c.brandStrong : c.ctaPrimary,
+                                        c.path,
+                                      ]
+                                    : [
+                                        c.path,
+                                        c.isDark
+                                            ? c.brand
+                                            : c.brand.withValues(alpha: 0.72),
+                                      ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(7),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      dayLabel,
+                      maxLines: 1,
+                      style: AppTypography.ui(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: c.graphite,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _MonthlyBars extends StatelessWidget {
+  final List<DailyActivitySummary> activity;
+  final int maxMinutes;
+  final AppSemanticColors c;
+
+  const _MonthlyBars({
+    required this.activity,
+    required this.maxMinutes,
+    required this.c,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final len = activity.length;
+    final labelIndices = <int>{};
+    if (len > 0) {
+      for (var i = 0; i < 6; i++) {
+        labelIndices.add(((i * (len - 1)) / 5).round());
+      }
+    }
+    final sortedIndices = labelIndices.toList()..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 102,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: activity.map((d) {
+              final peak = d.activeMinutes == maxMinutes && maxMinutes > 0;
+              final heightRatio =
+                  maxMinutes == 0 ? 0.0 : (d.activeMinutes / maxMinutes);
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      height: 90 * heightRatio + (d.activeMinutes > 0 ? 5 : 2),
+                      decoration: BoxDecoration(
+                        color: d.activeMinutes == 0
+                            ? c.subtle
+                            : peak
+                                ? c.ctaPrimary
+                                : c.path,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: sortedIndices.map((idx) {
+            final rawDate = activity[idx].date;
+            final dayText =
+                rawDate.length >= 2 ? rawDate.substring(rawDate.length - 2) : '';
+            return Expanded(
+              child: Text(
+                dayText,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: AppTypography.mono(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: c.slatefine,
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -766,9 +948,11 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
     return AppCard(
       padding: const EdgeInsets.all(14),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
@@ -785,18 +969,23 @@ class _StatTile extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: AppTypography.mono(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryColor(context),
+                    color: c.ink,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   label,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    color: AppColors.textMutedColor(context),
+                  style: AppTypography.ui(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: c.slatefine,
+                    height: 1.25,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -810,36 +999,41 @@ class _StatTile extends StatelessWidget {
 class _SubjectBar extends StatelessWidget {
   final String title;
   final int percent;
-  final Color color;
-  final String iconText;
+  final SubjectVisual visual;
 
   const _SubjectBar({
     required this.title,
     required this.percent,
-    required this.color,
-    required this.iconText,
+    required this.visual,
   });
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Flexible(
+            Expanded(
               child: Row(
                 children: [
-                  Text(iconText, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 6),
-                  Flexible(
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: visual.softBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(visual.icon, size: 14, color: visual.accent),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       title,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
+                      style: AppTypography.ui(
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryColor(context),
+                        color: c.ink,
                       ),
                     ),
                   ),
@@ -849,21 +1043,21 @@ class _SubjectBar extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               '$percent%',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12.5,
+              style: AppTypography.mono(
+                fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryColor(context),
+                color: c.ink,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 7),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
-            value: percent / 100,
-            backgroundColor: AppColors.borderColor(context),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
+            value: (percent / 100).clamp(0.0, 1.0),
+            backgroundColor: c.subtle,
+            valueColor: AlwaysStoppedAnimation<Color>(visual.accent),
             minHeight: 7,
           ),
         ),

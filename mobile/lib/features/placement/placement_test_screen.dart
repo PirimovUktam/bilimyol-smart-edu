@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+
+import '../../app/providers.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
-import '../../core/widgets/app_badge.dart';
 import '../../data/datasources/english/cefr_skeleton_data.dart';
 import '../../domain/entities/question.dart';
-import '../../app/providers.dart';
+import '../../domain/personalization/learning_start.dart';
+import '../lesson/audio_sim_wave_widget.dart';
 import '../lesson/lesson_media_widget.dart';
 
 class PlacementTestScreen extends ConsumerStatefulWidget {
@@ -21,7 +25,9 @@ class PlacementTestScreen extends ConsumerStatefulWidget {
 
 class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
   int? _selectedOption;
-  bool _isConfirmingOrSubmitting = false;
+  bool _submitInFlight = false;
+  bool _confirmDialogOpen = false;
+  String? _submitError;
 
   @override
   void initState() {
@@ -43,6 +49,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
   }
 
   String _resolveLang(BuildContext context) {
+    if (Localizations.of<AppStrings>(context, AppStrings) case final strings?) {
+      return strings.isRu ? 'ru' : 'uz';
+    }
     final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
     final platformCode =
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
@@ -51,14 +60,14 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
         : 'uz';
   }
 
-  String _getDifficultyLabel(QuestionDifficulty diff, bool isRu) {
+  String _getDifficultyLabel(QuestionDifficulty diff, AppStrings s) {
     switch (diff) {
       case QuestionDifficulty.easy:
-        return isRu ? 'Лёгкий' : 'Oson';
+        return s.diffEasy;
       case QuestionDifficulty.medium:
-        return isRu ? 'Средний' : 'O‘rta';
+        return s.diffMedium;
       case QuestionDifficulty.hard:
-        return isRu ? 'Сложный' : 'Qiyin';
+        return s.diffHard;
     }
   }
 
@@ -68,127 +77,122 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
   }
 
   void _load(String courseId, {bool restart = false}) {
-    setState(() => _selectedOption = null);
+    setState(() {
+      _selectedOption = null;
+      _submitError = null;
+    });
     ref
         .read(placementStateNotifierProvider.notifier)
         .loadQuestions(courseId, restart: restart);
   }
 
-  Future<void> _submit(PlacementState placement, bool isRu) async {
+  Future<void> _submit(
+    PlacementState placement,
+    AppStrings s,
+    String lang,
+  ) async {
     final selected = _selectedOption;
-    if (_isConfirmingOrSubmitting ||
-        placement.isSubmitting ||
-        selected == null) {
+    if (selected == null ||
+        _submitInFlight ||
+        _confirmDialogOpen ||
+        placement.isSubmitting) {
       return;
     }
-    setState(() => _isConfirmingOrSubmitting = true);
-    try {
-      final isFinalQuestion =
-          placement.questionNumber >= placement.totalQuestionsToAsk;
-      if (isFinalQuestion) {
-        final confirmed = await showDialog<bool>(
+    final isFinalQuestion =
+        placement.questionNumber >= placement.totalQuestionsToAsk;
+    if (isFinalQuestion) {
+      setState(() => _confirmDialogOpen = true);
+      bool? confirmed;
+      try {
+        confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text(
-              isRu ? 'Отправить ответы?' : 'Javoblarni topshirasizmi?',
+              lang == 'ru' ? 'Отправить ответы?' : 'Javoblarni topshirasizmi?',
             ),
-            content: Text(
-              isRu
-                  ? 'После отправки последнего ответа результат будет сохранён.'
-                  : 'Oxirgi javob yuborilgach, natijangiz saqlanadi.',
-            ),
+            content: Text(s.placementConfirmBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(isRu ? 'Назад' : 'Qaytish'),
+                child: Text(s.back),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(isRu ? 'Отправить' : 'Topshirish'),
+                child: Text(s.placementConfirmSubmit),
               ),
             ],
           ),
         );
-        if (!mounted || confirmed != true) return;
+      } finally {
+        if (mounted) {
+          setState(() => _confirmDialogOpen = false);
+        }
       }
+      if (!mounted || confirmed != true) return;
+    }
+    setState(() {
+      _submitInFlight = true;
+      _submitError = null;
+    });
+    try {
       final notifier = ref.read(placementStateNotifierProvider.notifier);
       try {
-        await notifier.submitAnswer(
-          selected,
-          bypassRateLimit: isFinalQuestion,
-        );
+        await notifier.submitAnswer(selected);
         if (!mounted) return;
         final next = ref.read(placementStateNotifierProvider);
         if (next.currentQuestion?.id != placement.currentQuestion?.id ||
             next.sessionId != placement.sessionId ||
             next.result != null) {
           setState(() => _selectedOption = null);
-        } else if (next.result == null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  isRu
-                      ? 'Подождите немного и попробуйте снова.'
-                      : 'Iltimos, biroz kuting va qayta urinib ko‘ring.',
-                ),
-              ),
-            );
         }
       } catch (_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isRu
-                  ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
-                  : 'Javob yuborilmadi. Qayta urinib ko‘ring.',
-            ),
-            action: SnackBarAction(
-              label: isRu ? 'Обновить сессию' : 'Sessiyani yuklash',
-              onPressed: () => _load(placement.courseId),
-            ),
-          ),
-        );
+        setState(() => _submitError = s.placementSubmitError);
       }
     } finally {
       if (mounted) {
-        setState(() => _isConfirmingOrSubmitting = false);
+        setState(() => _submitInFlight = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
+    final s =
+        Localizations.of<AppStrings>(context, AppStrings) ??
+        AppStrings.forCode(lang);
     final courseState = ref.watch(courseStateNotifierProvider);
     final placementState = ref.watch(placementStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
-    final lang = _resolveLang(context);
-    final isRu = lang == 'ru';
-
     final currentQ = placementState.currentQuestion;
     final qNumber = placementState.questionNumber;
     final totalQ = placementState.totalQuestionsToAsk;
     final result = placementState.result;
-
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     if (result != null) {
+      final totalSubs = result.submissions.length;
       final correct = result.submissions
           .where((answer) => answer.isCorrect)
           .length;
+      final pct = totalSubs > 0 ? ((correct / totalSubs) * 100).round() : 0;
       final isEnglish = placementState.courseId == 'course_eng_01';
       final cefrTier = result.cefrLevel ?? 'Pre-A1';
-      final skillNamesById = {
-        for (final s in courseState.activeSkills) s.id: s.name,
+      final showSkillBreakdown =
+          !usesMathMastery(placementState.courseId) &&
+          result.computedScores.isNotEmpty;
+      final skillNames = {
+        for (final skill in courseState.activeSkills) skill.id: skill.name,
       };
+
       return Scaffold(
-        backgroundColor: AppColors.bg(context),
         appBar: AppBar(
           toolbarHeight: isLargeText ? 96 : null,
           title: Text(
-            isRu ? 'Результат диагностики' : 'Diagnostika natijasi',
+            s.diagnosticResultTitle,
             softWrap: true,
             maxLines: isLargeText ? null : 1,
             overflow: isLargeText
@@ -196,227 +200,429 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                 : TextOverflow.ellipsis,
           ),
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Icon(
-              Icons.fact_check_outlined,
-              size: 36,
-              color: AppColors.primaryAccentOnSurface(context),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isRu ? 'Диагностика завершена' : 'Diagnostika yakunlandi',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              isRu
-                  ? '$correct / ${result.submissions.length} ответов верно.'
-                  : '$correct / ${result.submissions.length} javob to‘g‘ri.',
-              textAlign: TextAlign.center,
-            ),
-            if (isEnglish) ...[
-              const SizedBox(height: 14),
-              AppCard(
-                padding: const EdgeInsets.all(16),
-                borderColor: AppColors.primary.withValues(alpha: 0.35),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                  AppCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AppBadge(
-                          text: cefrTier,
-                          variant: AppBadgeVariant.blue,
-                        ),
-                        Text(
-                          isRu
-                              ? 'Стартовый уровень: $cefrTier (${result.overallScore}%)'
-                              : 'Tavsiya etilgan bosqich: $cefrTier (${result.overallScore}%)',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimaryColor(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isRu
-                          ? 'Уровни B2–C2 появятся на следующем этапе (DEFERRED). Сейчас доступен маршрут A1–B1.'
-                          : 'B2–C2 darajalari keyingi bosqichda (DEFERRED) qo‘shiladi. Hozircha A1–B1 yo‘nalishida boshlashingiz mumkin.',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        color: AppColors.textSecondaryColor(context),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      isRu
-                          ? 'Результат диагностики определяет стартовый маршрут и не заменяет освоение уроков. $cefrOfficialDisclaimerRu'
-                          : 'Diagnostika natijasi boshlang‘ich yo‘lni ko‘rsatadi va mustaqil dars o‘zlashtirishidan alohida saqlanadi. $cefrOfficialDisclaimerUz',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11.5,
-                        color: AppColors.textMutedColor(context),
-                      ),
-                    ),
-                    if (result.computedScores.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      for (final entry in result.computedScores.entries)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: c.successSoft,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: c.success.withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.fact_check_rounded,
+                                size: 26,
+                                color: c.successText,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      skillNamesById[entry.key] ?? entry.key,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimaryColor(
-                                          context,
-                                        ),
-                                      ),
-                                    ),
+                                  AppBadge(
+                                    text: s.diagnosticReadyBadge,
+                                    variant: AppBadgeVariant.emerald,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    '${entry.value.score}%',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 12,
+                                    s.placementDoneTitle,
+                                    style: AppTypography.ui(
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.primaryAccentOnSurface(
-                                        context,
-                                      ),
+                                      color: c.ink,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
-                              ClipRRect(
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              s.placementCorrectSummary(correct, totalSubs),
+                              style: AppTypography.ui(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                color: c.ink,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: c.brandSoft,
                                 borderRadius: BorderRadius.circular(999),
-                                child: LinearProgressIndicator(
-                                  value: (entry.value.score / 100).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
-                                  minHeight: 5,
-                                  backgroundColor: AppColors.borderColor(
-                                    context,
-                                  ),
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(
-                                        AppColors.primaryAccentOnSurface(
-                                          context,
-                                        ),
-                                      ),
+                              ),
+                              child: Text(
+                                '$pct%',
+                                style: AppTypography.mono(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.isDark ? c.brandStrong : c.brand,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          s.diagnosticHandoffNote,
+                          style: AppTypography.ui(
+                            fontSize: 13,
+                            color: c.graphite,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isEnglish) ...[
+                    const SizedBox(height: 14),
+                    AppCard(
+                      padding: const EdgeInsets.all(16),
+                      borderColor: c.brand.withValues(alpha: 0.35),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              AppBadge(
+                                text: cefrTier,
+                                variant: AppBadgeVariant.blue,
+                              ),
+                              Text(
+                                isRu
+                                    ? 'Стартовый уровень: $cefrTier (${result.overallScore}%)'
+                                    : 'Tavsiya etilgan bosqich: $cefrTier (${result.overallScore}%)',
+                                style: AppTypography.ui(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.ink,
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isRu
+                                ? 'Уровни B2–C2 появятся на следующем этапе (DEFERRED). Сейчас доступен маршрут A1–B1.'
+                                : 'B2–C2 darajalari keyingi bosqichda (DEFERRED) qo‘shiladi. Hozircha A1–B1 yo‘nalishida boshlashingiz mumkin.',
+                            style: AppTypography.ui(
+                              fontSize: 12.5,
+                              color: c.graphite,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            isRu
+                                ? 'Результат диагностики определяет стартовый маршрут и не заменяет освоение уроков. $cefrOfficialDisclaimerRu'
+                                : 'Diagnostika natijasi boshlang‘ich yo‘lni ko‘rsatadi va mustaqil dars o‘zlashtirishidan alohida saqlanadi. $cefrOfficialDisclaimerUz',
+                            style: AppTypography.ui(
+                              fontSize: 11.5,
+                              color: c.slatefine,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  AppButton(
+                    text: s.viewPersonalPath,
+                    isFullWidth: true,
+                    size: AppButtonSize.large,
+                    onPressed: () => context.go('/roadmap'),
+                  ),
+                  if (placementState.canRetake) ...[
+                    const SizedBox(height: 10),
+                    AppButton(
+                      text: s.retakePlacement,
+                      isFullWidth: true,
+                      variant: AppButtonVariant.outline,
+                      onPressed: () =>
+                          _load(placementState.courseId, restart: true),
+                    ),
+                  ],
+                  if (showSkillBreakdown) ...[
+                    const SizedBox(height: 14),
+                    AppCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.skillBreakdownTitle,
+                            style: AppTypography.ui(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: c.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          for (final entry
+                              in result.computedScores.entries) ...[
+                            Builder(
+                              builder: (context) {
+                                final score = entry.value.score;
+                                final barColor = score < 50
+                                    ? c.warning
+                                    : c.success;
+                                final textColor = score < 50
+                                    ? c.warningText
+                                    : c.successText;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            skillNames[entry.key] ?? entry.key,
+                                            style: AppTypography.ui(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: c.ink,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '$score%',
+                                          style: AppTypography.mono(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: textColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(999),
+                                      child: LinearProgressIndicator(
+                                        value: (score / 100).clamp(0.0, 1.0),
+                                        minHeight: 7,
+                                        backgroundColor: c.subtle,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              barColor,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (result.review.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      s.answersReviewTitle,
+                      style: AppTypography.ui(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: c.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    for (final answer in result.review) ...[
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Theme(
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              leading: Icon(
+                                answer.submission.isCorrect
+                                    ? Icons.check_circle_rounded
+                                    : Icons.cancel_rounded,
+                                color: answer.submission.isCorrect
+                                    ? c.successText
+                                    : c.errorText,
+                              ),
+                              title: Text(
+                                answer.localizedQuestion(lang),
+                                style: AppTypography.ui(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.ink,
+                                ),
+                              ),
+                              subtitle: Text(
+                                answer.submission.isCorrect
+                                    ? s.answerCorrectTag
+                                    : s.answerWrongTag,
+                                style: AppTypography.ui(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: answer.submission.isCorrect
+                                      ? c.successText
+                                      : c.errorText,
+                                ),
+                              ),
+                              childrenPadding: const EdgeInsets.fromLTRB(
+                                16,
+                                0,
+                                16,
+                                16,
+                              ),
+                              expandedCrossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.yourAnswerLine(answer.selected),
+                                  style: AppTypography.ui(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: c.graphite,
+                                  ),
+                                ),
+                                if (!answer.submission.isCorrect) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    s.correctAnswerLine(answer.correct),
+                                    style: AppTypography.ui(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: c.successText,
+                                    ),
+                                  ),
+                                ],
+                                if (answer
+                                    .localizedExplanation(lang)
+                                    .isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    answer.localizedExplanation(lang),
+                                    style: AppTypography.ui(
+                                      fontSize: 12.5,
+                                      color: c.slatefine,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
+                      ),
+                      const SizedBox(height: 10),
                     ],
                   ],
+                ],
                 ),
               ),
-            ],
-            const SizedBox(height: 16),
-            AppButton(
-              text: isRu
-                  ? 'Открыть личный маршрут'
-                  : 'Shaxsiy yo‘lni ko‘rish',
-              onPressed: () => context.go('/roadmap'),
             ),
-            if (placementState.canRetake) ...[
-              const SizedBox(height: 8),
-              AppButton(
-                text: isRu ? 'Пройти заново' : 'Qayta topshirish',
-                variant: AppButtonVariant.outline,
-                onPressed: () => _load(placementState.courseId, restart: true),
-              ),
-            ],
-            if (result.review.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                isRu ? 'Разбор ответов' : 'Javoblar tahlili',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              for (final answer in result.review)
-                ExpansionTile(
-                  title: Text(answer.localizedQuestion(lang)),
-                  subtitle: Text(
-                    answer.submission.isCorrect
-                        ? (isRu ? 'Верно' : 'To‘g‘ri')
-                        : (isRu ? 'Ошибка' : 'Xato'),
-                  ),
-                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isRu
-                          ? 'Ваш ответ — ${answer.selected}'
-                          : 'Siz belgilagan javob — ${answer.selected}',
-                    ),
-                    if (!answer.submission.isCorrect)
-                      Text(
-                        isRu
-                            ? 'Правильный ответ — ${answer.correct}'
-                            : 'To‘g‘ri javob — ${answer.correct}',
-                      ),
-                    if (answer.localizedExplanation(lang).isNotEmpty)
-                      Text(answer.localizedExplanation(lang)),
-                  ],
-                ),
-            ],
-          ],
+          ),
         ),
       );
     }
 
     if (placementState.isSubmitting) {
       return Scaffold(
-        backgroundColor: AppColors.bg(context),
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                color: AppColors.primaryAccentOnSurface(context),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isRu
-                    ? 'Подсчёт результатов...'
-                    : 'Natijalar hisoblanmoqda...',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryColor(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: c.brand),
+                const SizedBox(height: 16),
+                Text(
+                  s.calculatingResults,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ui(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: c.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  s.buildingKnowledgeMap,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ui(fontSize: 13, color: c.slatefine),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (activeCourse == null && !courseState.isLoading && currentQ == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(s.diagnosticTitle)),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: AppCard(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.school_outlined, size: 40, color: c.brand),
+                      const SizedBox(height: 12),
+                      Text(
+                        s.chooseSubjectFirstPrompt,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.ui(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: c.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      AppButton(
+                        text: s.chooseSubject,
+                        isFullWidth: true,
+                        onPressed: () => context.go('/courses'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                isRu
-                    ? 'Строим карту знаний на основе ваших ответов'
-                    : 'Haqiqiy javoblaringiz asosida bilim xaritasi tuzilmoqda',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppColors.textMutedColor(context),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
         ),
       );
@@ -425,7 +631,6 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     if (currentQ == null) {
       final isLoadingQuestions = !placementState.hasLoaded;
       return Scaffold(
-        backgroundColor: AppColors.bg(context),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -437,47 +642,34 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                       ? Icons.hourglass_top_rounded
                       : Icons.error_outline_rounded,
                   size: 44,
-                  color: AppColors.textMutedColor(context),
+                  color: c.slatefine,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   isLoadingQuestions
-                      ? (isRu
-                            ? 'Вопросы загружаются...'
-                            : 'Savollar tayyorlanmoqda...')
-                      : (isRu
-                            ? 'Не удалось загрузить вопросы'
-                            : 'Savollarni yuklab bo‘lmadi'),
-                  style: GoogleFonts.plusJakartaSans(
+                      ? s.preparingQuestions
+                      : s.questionsLoadFailed,
+                  style: AppTypography.ui(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryColor(context),
+                    color: c.ink,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   isLoadingQuestions
-                      ? (isRu
-                            ? 'Загружаем задания для определения уровня знаний.'
-                            : 'Bilim darajasini aniqlash uchun savollar yuklanmoqda.')
-                      : (isRu
-                            ? 'Проверьте подключение к интернету и попробуйте снова.'
-                            : 'Internet aloqasini tekshirib, qayta urinib ko‘ring.'),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: AppColors.textMutedColor(context),
-                  ),
+                      ? s.questionsLoadingDesc
+                      : s.errorSubtitle,
+                  style: AppTypography.ui(fontSize: 13, color: c.slatefine),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 if (isLoadingQuestions)
-                  CircularProgressIndicator(
-                    color: AppColors.primaryAccentOnSurface(context),
-                  )
+                  CircularProgressIndicator(color: c.brand)
                 else ...[
                   AppButton(
-                    text: isRu ? 'Повторить' : 'Qayta urinish',
+                    text: s.retry,
                     isFullWidth: true,
                     leftIcon: const Icon(
                       Icons.refresh_rounded,
@@ -493,7 +685,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                   ),
                   const SizedBox(height: 8),
                   AppButton(
-                    text: isRu ? 'Назад' : 'Orqaga',
+                    text: s.back,
                     isFullWidth: true,
                     variant: AppButtonVariant.outline,
                     onPressed: () => context.go('/courses'),
@@ -506,17 +698,23 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
       );
     }
 
-    final progress = totalQ > 0 ? qNumber / totalQ : 0.0;
+    final safeTotalQ = totalQ <= 0 ? 1 : totalQ;
+    final progress = (qNumber / safeTotalQ).clamp(0.0, 1.0);
+    final disableInteraction = placementState.isSubmitting || _submitInFlight;
     final showQuickDemo = !ref
         .watch(learnerRepositoryProvider)
         .supportsServerPlacementPersistence;
     final quickDemoButton = showQuickDemo
         ? TextButton.icon(
-            onPressed: _runQuickDemo,
+            onPressed: disableInteraction ? null : _runQuickDemo,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(44, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
             icon: const Icon(Icons.bolt_rounded, size: 16),
             label: Text(
-              isRu ? 'Быстрое демо' : 'Tezkor demo',
-              style: GoogleFonts.plusJakartaSans(
+              s.quickDemoBtn,
+              style: AppTypography.ui(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
@@ -525,11 +723,12 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
         : null;
 
     return Scaffold(
-      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         toolbarHeight: isLargeText ? 144 : null,
         title: Text(
-          '${isRu ? 'Диагностика' : 'Diagnostika'} · ${activeCourse?.localizedTitle(lang) ?? ""}',
+          activeCourse == null
+              ? s.diagnosticTitle
+              : '${s.diagnosticTitle} · ${s.localizedCourseTitle(activeCourse)}',
           softWrap: true,
           maxLines: isLargeText ? null : 1,
           overflow: isLargeText
@@ -549,71 +748,108 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isLargeText && quickDemoButton != null) ...[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: quickDemoButton,
-                ),
-                const SizedBox(height: 4),
-              ],
-              // Progress Bar & Counter
-              SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    Text(
-                      isRu
-                          ? 'Вопрос $qNumber / $totalQ'
-                          : 'Savol $qNumber / $totalQ',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondaryColor(context),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final progressHeader = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isLargeText && quickDemoButton != null) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: quickDemoButton,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              s.questionCounter(qNumber, totalQ),
+                              style: AppTypography.ui(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: c.graphite,
+                              ),
+                            ),
+                            Text(
+                              '${(progress * 100).round()}%',
+                              style: AppTypography.mono(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w800,
+                                color: c.brand,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${(progress * 100).round()}%',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryAccentOnSurface(context),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 6,
+                          backgroundColor: c.subtle,
+                          valueColor: AlwaysStoppedAnimation<Color>(c.brand),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: AppColors.borderColor(context),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryAccentOnSurface(context),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (placementState.notice case final notice?)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(notice),
-                ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
 
-              // Question Card
-              Expanded(
-                child: SingleChildScrollView(
-                  child: AppCard(
+                  final noticeBanner = placementState.notice == null
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: c.warningSoft,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: c.warning.withValues(alpha: 0.45),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.hourglass_bottom_rounded,
+                                    size: 18,
+                                    color: c.warningText,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      placementState.notice!,
+                                      style: AppTypography.ui(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: c.warningText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+
+                  final questionCard = AppCard(
                     padding: const EdgeInsets.all(18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,19 +860,20 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 5,
+                              ),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryTint(context),
+                                color: c.brandSoft,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 'Q$qNumber',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: AppTypography.mono(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.primaryAccentOnSurface(
-                                    context,
-                                  ),
+                                  color: c.isDark ? c.brandStrong : c.brand,
                                 ),
                               ),
                             ),
@@ -644,7 +881,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                               AppBadge(
                                 text: _getDifficultyLabel(
                                   currentQ.difficulty,
-                                  isRu,
+                                  s,
                                 ),
                                 variant: AppBadgeVariant.slate,
                               ),
@@ -671,37 +908,42 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                         ],
                         Text(
                           currentQ.localizedText(lang),
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.ui(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimaryColor(context),
+                            color: c.ink,
                             height: 1.35,
                           ),
                         ),
+                        if (currentQ.audioSimText != null) ...[
+                          const SizedBox(height: 12),
+                          AudioSimWaveWidget(
+                            transcript: currentQ.audioSimText!,
+                            speakerName:
+                                currentQ.audioSimSpeaker ?? s.speakerDefault,
+                          ),
+                        ],
                         if (currentQ.formulaLatex != null) ...[
                           const SizedBox(height: 10),
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryTint(context).withValues(
-                                alpha: 0.5,
-                              ),
+                              color: c.brandSoft,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.2),
+                                color: c.brand.withValues(alpha: 0.25),
                               ),
                             ),
                             child: Text(
                               currentQ.formulaLatex!,
-                              style: GoogleFonts.firaCode(
+                              style: AppTypography.mono(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primaryAccentOnSurface(
-                                  context,
-                                ),
+                                color: c.isDark ? c.brandStrong : c.brand,
                               ),
                             ),
                           ),
@@ -709,27 +951,24 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                         if (currentQ.contextSnippet != null) ...[
                           const SizedBox(height: 10),
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.subtleSurface(context),
+                              color: c.subtle,
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: AppColors.borderColor(context),
-                              ),
+                              border: Border.all(color: c.hairline),
                             ),
                             child: Text(
                               currentQ.contextSnippet!,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: AppTypography.ui(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textMutedColor(context),
+                                color: c.graphite,
                               ),
                             ),
                           ),
                         ],
                         const SizedBox(height: 20),
-
-                        // Options
                         ...List.generate(currentQ.options.length, (idx) {
                           final optionText = currentQ.options[idx];
                           final isSelected = _selectedOption == idx;
@@ -739,87 +978,90 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: Material(
-                              color: isSelected
-                                  ? AppColors.primaryTint(context).withValues(
-                                      alpha: 0.7,
-                                    )
-                                  : AppColors.surfaceColor(context),
-                              borderRadius: BorderRadius.circular(14),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() => _selectedOption = idx);
-                                },
+                            child: Semantics(
+                              button: true,
+                              selected: isSelected,
+                              child: Material(
+                                color: isSelected
+                                    ? Color.alphaBlend(c.brandSoft, c.paper)
+                                    : c.paper,
                                 borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.primaryAccentOnSurface(
-                                              context,
-                                            )
-                                          : AppColors.borderColor(context),
-                                      width: isSelected ? 2 : 1.2,
+                                child: InkWell(
+                                  onTap: disableInteraction
+                                      ? null
+                                      : () {
+                                          ref
+                                              .read(
+                                                placementStateNotifierProvider
+                                                    .notifier,
+                                              )
+                                              .clearNotice();
+                                          setState(() => _selectedOption = idx);
+                                        },
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 48,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
                                           color: isSelected
-                                              ? AppColors.primary
-                                              : AppColors.subtleSurface(
-                                                  context,
-                                                ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                                              ? c.brand
+                                              : c.hairline,
+                                          width: isSelected ? 2 : 1.2,
                                         ),
-                                        child: Center(
-                                          child: Text(
-                                            letter,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
                                               color: isSelected
-                                                  ? Colors.white
-                                                  : AppColors.textMutedColor(
-                                                      context,
-                                                    ),
+                                                  ? c.ctaPrimary
+                                                  : c.subtle,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          optionText,
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimaryColor(
-                                              context,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        Icon(
-                                          Icons.check_circle_rounded,
-                                          color:
-                                              AppColors.primaryAccentOnSurface(
-                                                context,
+                                            child: Center(
+                                              child: Text(
+                                                letter,
+                                                style: AppTypography.mono(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : c.graphite,
+                                                ),
                                               ),
-                                          size: 20,
-                                        ),
-                                    ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              optionText,
+                                              style: AppTypography.ui(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: c.ink,
+                                              ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            Icon(
+                                              Icons.check_circle_rounded,
+                                              color: c.brand,
+                                              size: 20,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -828,32 +1070,206 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                         }),
                       ],
                     ),
-                  ),
-                ),
-              ),
+                  );
 
-              const SizedBox(height: 12),
-              // Submit button
-              AppButton(
-                text: qNumber >= totalQ
-                    ? (isRu ? 'Посмотреть результаты' : 'Natijalarni Ko‘rish')
-                    : (isRu ? 'Следующий вопрос' : 'Keyingi Savol'),
-                isFullWidth: true,
-                isLoading: placementState.isSubmitting,
-                size: AppButtonSize.large,
-                rightIcon: const Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: Colors.white,
-                ),
-                onPressed: (_selectedOption == null ||
-                        placementState.isSubmitting ||
-                        _isConfirmingOrSubmitting)
-                    ? null
-                    : () => _submit(placementState, isRu),
+                  final errorBanner = _submitError == null
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: c.errorSoft,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: c.error.withValues(alpha: 0.45),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        size: 18,
+                                        color: c.errorText,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _submitError!,
+                                          style: AppTypography.ui(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: c.errorText,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Align(
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: TextButton(
+                                      onPressed: disableInteraction
+                                          ? null
+                                          : () => _load(
+                                              activeCourse?.id ??
+                                                  placementState.courseId,
+                                            ),
+                                      style: TextButton.styleFrom(
+                                        minimumSize: const Size(44, 44),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 8,
+                                        ),
+                                        foregroundColor: c.errorText,
+                                      ),
+                                      child: Text(
+                                        s.reloadSession,
+                                        style: AppTypography.ui(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: c.errorText,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+
+                  final submitButton = Builder(
+                    builder: (context) {
+                      final lastSubmit = placementState.lastSubmittedAt;
+                      final elapsedMs = lastSubmit == null
+                          ? 800
+                          : DateTime.now().difference(lastSubmit).inMilliseconds;
+                      final remainingMs =
+                          placementState.sessionId == null && elapsedMs < 800
+                          ? (800 - elapsedMs).clamp(0, 800)
+                          : 0;
+                      final beginProgress = remainingMs == 0
+                          ? 1.0
+                          : (1.0 - remainingMs / 800.0).clamp(0.0, 1.0);
+                      return TweenAnimationBuilder<double>(
+                        key: ValueKey(lastSubmit?.microsecondsSinceEpoch ?? 0),
+                        tween: Tween<double>(begin: beginProgress, end: 1.0),
+                        duration: Duration(milliseconds: remainingMs),
+                        builder: (context, cooldownProgress, _) {
+                          final inCooldown = cooldownProgress < 1.0;
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (inCooldown) ...[
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: cooldownProgress,
+                                    minHeight: 3,
+                                    backgroundColor: c.subtle,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      c.warning,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                              ],
+                              AppButton(
+                                text: qNumber >= totalQ
+                                    ? s.viewResults
+                                    : s.nextQuestion,
+                                isFullWidth: true,
+                                size: AppButtonSize.large,
+                                isLoading: disableInteraction,
+                                rightIcon: const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                onPressed:
+                                    _selectedOption == null ||
+                                        disableInteraction ||
+                                        _confirmDialogOpen
+                                    ? null
+                                    : () => _submit(placementState, s, lang),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
+
+                  final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+                  final useCompactScrollableLayout =
+                      constraints.maxHeight < 360 ||
+                      ((errorBanner != null || noticeBanner != null) &&
+                          (constraints.maxHeight < 680 || textScale > 1.3));
+
+                  if (useCompactScrollableLayout) {
+                    return SingleChildScrollView(
+                      reverse: true,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                progressHeader,
+                                ?noticeBanner,
+                                questionCard,
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ?errorBanner,
+                                const SizedBox(height: 12),
+                                submitButton,
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      progressHeader,
+                      ?noticeBanner,
+                      Expanded(
+                        child: SingleChildScrollView(child: questionCard),
+                      ),
+                      ?errorBanner,
+                      const SizedBox(height: 12),
+                      submitButton,
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
           ),
         ),
       ),

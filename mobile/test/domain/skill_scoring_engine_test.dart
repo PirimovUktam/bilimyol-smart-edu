@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bilimyol_mobile/data/datasources/english/placement_questions_data.dart';
+import 'package:bilimyol_mobile/data/datasources/questions_data.dart';
 import 'package:bilimyol_mobile/domain/personalization/skill_scoring_engine.dart';
 import 'package:bilimyol_mobile/domain/entities/skill_score.dart';
 import 'package:bilimyol_mobile/domain/entities/question.dart';
@@ -225,6 +226,42 @@ void main() {
       expect(SkillScoringEngine.englishEntryTargetForCefr('A2').nodeId, 'node_eng_a2_m1_directions');
       expect(SkillScoringEngine.englishEntryTargetForCefr('B1').nodeId, 'node_eng_b1_m1_travel');
       expect(SkillScoringEngine.englishEntryTargetForCefr('B2').cefrLevel, 'B1');
+    });
+
+    test('computePlacementScores counts only submitted questions in partial adaptive banks', () {
+      final mathBank = placementQuestionsData['course_math_01']!;
+      final bySkill = <String, List<Question>>{};
+      for (final q in mathBank) {
+        bySkill.putIfAbsent(q.skillId, () => []).add(q);
+      }
+
+      // Submit 2 questions per skill from the 21-question bank
+      final submissions = <QuestionAnswerSubmission>[
+        // Algebra: 2/2 -> 100%
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_algebra']![0].id, selectedIndex: 0, isCorrect: true),
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_algebra']![1].id, selectedIndex: 0, isCorrect: true),
+        // Equations: 1/2 -> 50%
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_equations']![0].id, selectedIndex: 0, isCorrect: true),
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_equations']![1].id, selectedIndex: 0, isCorrect: false),
+        // Functions: 0/2 -> 0%
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_functions']![0].id, selectedIndex: 0, isCorrect: false),
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_functions']![1].id, selectedIndex: 0, isCorrect: false),
+        // Graphs: 2/2 -> 100%
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_graphs']![0].id, selectedIndex: 0, isCorrect: true),
+        QuestionAnswerSubmission(questionId: bySkill['skill_math_graphs']![1].id, selectedIndex: 0, isCorrect: true),
+      ];
+
+      final scores = SkillScoringEngine.computePlacementScores(
+        'course_math_01',
+        mathBank,
+        submissions,
+      );
+
+      expect(scores['skill_math_algebra']?.score, equals(100));
+      expect(scores['skill_math_equations']?.score, equals(50));
+      expect(scores['skill_math_functions']?.score, equals(0));
+      expect(scores['skill_math_graphs']?.score, equals(100));
+      expect(scores['skill_math_functions']?.isWeakestFocus, isTrue);
     });
   });
 }

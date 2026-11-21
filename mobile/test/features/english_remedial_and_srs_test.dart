@@ -91,20 +91,22 @@ void main() {
           .lesson!
           .steps[container.read(lessonSessionNotifierProvider).currentStepIndex]
           .interactiveQuestion!;
-      final wrongIdx = (q.correctIndex + 1) % q.options.length;
-      final wrongOption = find.text(q.options[wrongIdx]);
+      final wrongIdx1 = (q.correctIndex + 1) % q.options.length;
+      final wrongIdx2 = (q.correctIndex + 2) % q.options.length;
+      final wrongOption1 = find.text(q.options[wrongIdx1]);
+      final wrongOption2 = find.text(q.options[wrongIdx2]);
 
       // 1st wrong answer -> no repeated mistake banner yet
-      await tester.ensureVisible(wrongOption);
-      await tester.tap(wrongOption);
+      await tester.ensureVisible(wrongOption1);
+      await tester.tap(wrongOption1);
       await tester.pumpAndSettle();
       await tester.tap(find.text('TEKSHIRISH'));
       await tester.pumpAndSettle();
       expect(find.text('Takroriy xato aniqlandi'), findsNothing);
 
       // 2nd consecutive wrong answer -> remedial banner appears
-      await tester.ensureVisible(wrongOption);
-      await tester.tap(wrongOption);
+      await tester.ensureVisible(wrongOption2);
+      await tester.tap(wrongOption2);
       await tester.pumpAndSettle();
       await tester.tap(find.text('TEKSHIRISH'));
       await tester.pumpAndSettle();
@@ -161,12 +163,16 @@ void main() {
           .lesson!
           .steps[container.read(lessonSessionNotifierProvider).currentStepIndex]
           .interactiveQuestion!;
-      final wrongIdx = (q.correctIndex + 1) % q.options.length;
-      final wrongOption = find.text(q.options[wrongIdx]);
+      final wrongIdx1 = (q.correctIndex + 1) % q.options.length;
+      final wrongIdx2 = (q.correctIndex + 2) % q.options.length;
+      final wrongOptions = [
+        find.text(q.options[wrongIdx1]),
+        find.text(q.options[wrongIdx2]),
+      ];
 
       for (var attempt = 0; attempt < 2; attempt++) {
-        await tester.ensureVisible(wrongOption);
-        await tester.tap(wrongOption);
+        await tester.ensureVisible(wrongOptions[attempt]);
+        await tester.tap(wrongOptions[attempt]);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Проверить'));
         await tester.pumpAndSettle();

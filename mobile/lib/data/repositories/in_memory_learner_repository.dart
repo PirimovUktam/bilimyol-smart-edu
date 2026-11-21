@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/widgets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../core/storage/local_storage_service.dart';
 import '../../domain/entities/learner_profile.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
@@ -13,16 +11,50 @@ import '../../domain/repositories/i_learner_repository.dart';
 import '../datasources/lessons_data.dart';
 import '../datasources/questions_data.dart';
 import '../datasources/roadmaps_data.dart';
+import '../datasources/starter_lessons_data.dart';
+
+class _SkillBaseline {
+  final int score;
+  final int attemptCountAtBaseline;
+
+  const _SkillBaseline({
+    required this.score,
+    required this.attemptCountAtBaseline,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'score': score,
+    'attemptCountAtBaseline': attemptCountAtBaseline,
+  };
+
+  static _SkillBaseline? fromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final score = raw['score'];
+    final count = raw['attemptCountAtBaseline'];
+    if (score is! num || count is! num) return null;
+    return _SkillBaseline(
+      score: score.toInt().clamp(0, 100),
+      attemptCountAtBaseline: count.toInt().clamp(0, 1000000),
+    );
+  }
+}
 
 class InMemoryLearnerRepository extends ILearnerRepository {
-  static const String _storageKey = 'bilimyol_demo_progress_v1';
+  static const int _snapshotVersion = 1;
 
-  final Future<SharedPreferences> Function() _preferencesProvider;
+  final LocalStorageService storage;
+  Future<void>? _hydrationFuture;
+  bool _hydrated = false;
+  int _hydrationEpoch = 0;
+  bool _currentEpochHasPersisted = false;
+  bool _dirtySnapshotPendingPersist = false;
+  int _snapshotMutationSeq = 0;
+  Future<void> _storageWriteChain = Future.value();
+  Future<void> _pendingClearChain = Future.value();
+  Future<void>? _activeEpochMutation;
 
-  InMemoryLearnerRepository({
-    Future<SharedPreferences> Function()? preferencesProvider,
-  }) : _preferencesProvider =
-           preferencesProvider ?? SharedPreferences.getInstance;
+  InMemoryLearnerRepository({LocalStorageService? storage})
+    : storage = storage ?? LocalStorageService();
 
   @override
   bool get supportsNodeCompletion => true;
@@ -36,365 +68,220 @@ class InMemoryLearnerRepository extends ILearnerRepository {
   final List<AnswerAttemptRecord> _answerAttempts = [];
   final Set<String> _processedActionKeys = {};
   final Set<String> _recordedActivityDates = {};
-
-  bool _hydrated = false;
-  Future<void>? _loadFuture;
+  final Map<String, Map<String, _SkillBaseline>> _skillBaselines = {};
 
   LearnerProfile _profile = _defaultProfile();
 
-  static LearnerProfile _defaultProfile() {
-    return LearnerProfile(
-      id: 'learner_mobile_01',
-      name: 'Foydalanuvchi',
-      selectedCourseId: 'course_math_01',
-      goal: OnboardingGoal.mastery,
-      dailyMinutes: 15,
-      initialLevel: InitialLevel.intermediate,
-      xp: 0,
-      streakDays: 1,
-      lastActiveDate: DateTime.now().toIso8601String().split('T').first,
-      scoresByCourse: {},
-      completedLessonIds: [],
-      completedNodeIds: [],
-      completedReinforcementIds: [],
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-    );
+  static LearnerProfile _defaultProfile() => LearnerProfile(
+    id: 'learner_mobile_01',
+    name: 'Foydalanuvchi',
+    selectedCourseId: 'course_math_01',
+    goal: OnboardingGoal.mastery,
+    dailyMinutes: 15,
+    initialLevel: InitialLevel.intermediate,
+    xp: 0,
+    streakDays: 1,
+    lastActiveDate: DateTime.now().toIso8601String().split('T').first,
+    scoresByCourse: {},
+    completedLessonIds: [],
+    completedNodeIds: [],
+    completedReinforcementIds: [],
+    createdAt: DateTime.now().millisecondsSinceEpoch,
+  );
+
+  Future<void> _ensureHydrated() {
+    if (_hydrated) return Future.value();
+    return _hydrationFuture ??= _hydrateFromStorage();
   }
 
-  static bool _isWidgetTestBinding() {
+  Future<void> _hydrateFromStorage() async {
+    final epoch = _hydrationEpoch;
     try {
-      return WidgetsBinding.instance.runtimeType.toString().contains(
-        'TestWidgetsFlutterBinding',
-      );
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<SharedPreferences?> _getPrefs() async {
-    try {
-      final future = _preferencesProvider();
-      if (identical(_preferencesProvider, SharedPreferences.getInstance) &&
-          _isWidgetTestBinding()) {
-        // In WidgetTester (FakeAsync), an unmocked MethodChannel stalls
-        // indefinitely because platform replies are not pumped. Mocked
-        // InMemorySharedPreferencesStore resolves within a few microtasks.
-        SharedPreferences? resolved;
-        var done = false;
-        unawaited(
-          future.then(
-            (prefs) {
-              resolved = prefs;
-              done = true;
-            },
-            onError: (_, _) {
-              done = true;
-            },
-          ),
-        );
-        for (var i = 0; i < 32 && !done; i++) {
-          await Future<void>.microtask(() {});
-        }
-        return done ? resolved : null;
-      }
-      return await future;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<void> _ensureLoaded() async {
-    if (_hydrated) return;
-    _loadFuture ??= _loadFromPrefs();
-    await _loadFuture;
-  }
-
-  Future<void> _loadFromPrefs() async {
-    try {
-      final prefs = await _getPrefs();
-      if (prefs == null) {
-        _hydrated = true;
-        return;
-      }
-      final raw = prefs.getString(_storageKey);
+      final raw = await storage.getDemoLearnerSnapshot();
+      if (_hydrationEpoch != epoch) return;
       if (raw == null || raw.trim().isEmpty) {
-        _hydrated = true;
         return;
       }
       final decoded = jsonDecode(raw);
-      if (decoded is! Map) {
-        _hydrated = true;
+      if (decoded is! Map<String, dynamic> ||
+          decoded['version'] != _snapshotVersion) {
         return;
       }
-      final data = Map<String, dynamic>.from(decoded);
-      final rawProfile = data['profile'];
-      if (rawProfile is Map) {
-        _profile = _decodeProfile(Map<String, dynamic>.from(rawProfile));
+
+      final profileJson = decoded['profile'];
+      if (profileJson != null && profileJson is! Map<String, dynamic>) {
+        return;
       }
-      final rawAttempts = data['answerAttempts'];
-      if (rawAttempts is List) {
-        _answerAttempts
-          ..clear()
-          ..addAll(
-            rawAttempts
-                .whereType<Map>()
-                .map((item) => _decodeAttempt(Map<String, dynamic>.from(item))),
-          );
+      final parsedProfile = profileJson is Map<String, dynamic>
+          ? _profileFromJson(profileJson)
+          : _defaultProfile();
+
+      final attemptsJson = decoded['answerAttempts'];
+      if (attemptsJson != null && attemptsJson is! List) {
+        return;
       }
-      final rawKeys = data['processedActionKeys'];
-      if (rawKeys is List) {
-        _processedActionKeys
-          ..clear()
-          ..addAll(rawKeys.whereType<String>());
+      final parsedAttempts = <AnswerAttemptRecord>[];
+      if (attemptsJson is List) {
+        for (final item in attemptsJson) {
+          if (item is! Map<String, dynamic>) {
+            return;
+          }
+          final parsed = _attemptFromJson(item);
+          if (parsed == null) {
+            return;
+          }
+          parsedAttempts.add(parsed);
+        }
       }
-      final rawDates = data['recordedActivityDates'];
-      if (rawDates is List) {
-        _recordedActivityDates
-          ..clear()
-          ..addAll(rawDates.whereType<String>());
+
+      final actionKeysJson = decoded['processedActionKeys'];
+      if (actionKeysJson != null && actionKeysJson is! List) {
+        return;
       }
+      final parsedActionKeys = actionKeysJson is List
+          ? actionKeysJson.whereType<String>().toSet()
+          : const <String>{};
+
+      final activityDatesJson = decoded['recordedActivityDates'];
+      if (activityDatesJson != null && activityDatesJson is! List) {
+        return;
+      }
+      final parsedActivityDates = activityDatesJson is List
+          ? activityDatesJson.whereType<String>().toSet()
+          : const <String>{};
+
+      final baselinesJson = decoded['skillBaselines'];
+      if (baselinesJson != null && baselinesJson is! Map) {
+        return;
+      }
+      final parsedBaselines = <String, Map<String, _SkillBaseline>>{};
+      if (baselinesJson is Map) {
+        for (final courseEntry in baselinesJson.entries) {
+          final courseId = courseEntry.key;
+          final skillMapRaw = courseEntry.value;
+          if (courseId is! String || skillMapRaw is! Map) {
+            return;
+          }
+          final parsedSkills = <String, _SkillBaseline>{};
+          for (final skillEntry in skillMapRaw.entries) {
+            final skillId = skillEntry.key;
+            final parsed = _SkillBaseline.fromJson(skillEntry.value);
+            if (skillId is! String || parsed == null) {
+              return;
+            }
+            parsedSkills[skillId] = parsed;
+          }
+          if (parsedSkills.isNotEmpty) {
+            parsedBaselines[courseId] = parsedSkills;
+          }
+        }
+      }
+
+      if (_hydrationEpoch != epoch) return;
+      _profile = parsedProfile;
+      _answerAttempts
+        ..clear()
+        ..addAll(parsedAttempts);
+      _processedActionKeys
+        ..clear()
+        ..addAll(parsedActionKeys);
+      _recordedActivityDates
+        ..clear()
+        ..addAll(parsedActivityDates);
+      _skillBaselines
+        ..clear()
+        ..addAll(parsedBaselines);
     } catch (_) {
-      // Ignore corrupt or unavailable persisted demo snapshot.
+      // Corrupt snapshot payloads are ignored safely so fresh demo state loads.
     } finally {
-      _hydrated = true;
+      if (_hydrationEpoch == epoch) {
+        _hydrated = true;
+        _hydrationFuture = null;
+      }
     }
   }
 
-  Future<void> _persist() async {
-    final prefs = await _getPrefs();
-    if (prefs == null) return;
+  Future<T> _runSerializedMutation<T>(
+    Future<T> Function(int epoch) action,
+  ) async {
+    final epoch = _hydrationEpoch;
+    while (epoch == _hydrationEpoch && _activeEpochMutation != null) {
+      final pending = _activeEpochMutation!;
+      try {
+        await pending;
+      } catch (_) {
+        // Previous mutation failed and handled/rolled back its state.
+      }
+    }
+    if (epoch != _hydrationEpoch) {
+      return action(epoch);
+    }
+    final gate = Completer<void>();
+    _activeEpochMutation = gate.future;
     try {
-      final payload = jsonEncode({
-        'profile': _encodeProfile(_profile),
-        'answerAttempts': _answerAttempts.map(_encodeAttempt).toList(),
+      return await action(epoch);
+    } finally {
+      if (identical(_activeEpochMutation, gate.future)) {
+        _activeEpochMutation = null;
+      }
+      if (!gate.isCompleted) {
+        gate.complete();
+      }
+    }
+  }
+
+  void _markDirty() {
+    _dirtySnapshotPendingPersist = true;
+    _snapshotMutationSeq++;
+  }
+
+  Future<void> _persistSnapshot({int? expectedEpoch}) async {
+    final epoch = expectedEpoch ?? _hydrationEpoch;
+    if (epoch != _hydrationEpoch) return;
+    final store = storage;
+    final writeSeq = _snapshotMutationSeq;
+    final op = _storageWriteChain.then((_) async {
+      final clearToWait = _pendingClearChain;
+      await clearToWait;
+      if (epoch != _hydrationEpoch) return;
+      final payload = {
+        'version': _snapshotVersion,
+        'profile': _profileToJson(_profile),
+        'answerAttempts': _answerAttempts.map(_attemptToJson).toList(),
         'processedActionKeys': _processedActionKeys.toList(),
         'recordedActivityDates': _recordedActivityDates.toList(),
-      });
-      await prefs.setString(_storageKey, payload);
-    } catch (_) {
-      // Best-effort local persistence in demo mode.
-    }
-  }
-
-  static OnboardingGoal _parseGoal(Object? raw) {
-    for (final goal in OnboardingGoal.values) {
-      if (goal.name == raw) return goal;
-    }
-    return OnboardingGoal.mastery;
-  }
-
-  static InitialLevel _parseLevel(Object? raw) {
-    for (final level in InitialLevel.values) {
-      if (level.name == raw) return level;
-    }
-    return InitialLevel.intermediate;
-  }
-
-  static MasteryLevel _parseMastery(Object? raw) {
-    for (final level in MasteryLevel.values) {
-      if (level.name == raw) return level;
-    }
-    return MasteryLevel.developing;
-  }
-
-  static Map<String, dynamic> _encodeProfile(LearnerProfile profile) {
-    return {
-      'id': profile.id,
-      'name': profile.name,
-      'selectedCourseId': profile.selectedCourseId,
-      'goal': profile.goal.name,
-      'dailyMinutes': profile.dailyMinutes,
-      'initialLevel': profile.initialLevel.name,
-      'courseLevels': profile.courseLevels.map(
-        (key, value) => MapEntry(key, value.name),
-      ),
-      'xp': profile.xp,
-      'streakDays': profile.streakDays,
-      'lastActiveDate': profile.lastActiveDate,
-      'scoresByCourse': profile.scoresByCourse.map(
-        (courseId, skillMap) => MapEntry(
-          courseId,
-          skillMap.map(
-            (skillId, score) => MapEntry(skillId, {
-              'skillId': score.skillId,
-              'courseId': score.courseId,
-              'score': score.score,
-              'lastUpdated': score.lastUpdated,
-              'masteryLevel': score.masteryLevel.name,
-              'isWeakestFocus': score.isWeakestFocus,
-            }),
-          ),
-        ),
-      ),
-      'placementScoreByCourse': profile.placementScoreByCourse,
-      'placementCefrByCourse': profile.placementCefrByCourse,
-      'flashcardSrsByCourse': profile.flashcardSrsByCourse.map(
-        (courseId, cardsMap) => MapEntry(
-          courseId,
-          cardsMap.map((cardId, entry) => MapEntry(cardId, entry.toJson())),
-        ),
-      ),
-      'completedLessonIds': profile.completedLessonIds,
-      'completedNodeIds': profile.completedNodeIds,
-      'completedReinforcementIds': profile.completedReinforcementIds,
-      'createdAt': profile.createdAt,
-    };
-  }
-
-  static LearnerProfile _decodeProfile(Map<String, dynamic> raw) {
-    final fallback = _defaultProfile();
-    final rawCourseLevels = raw['courseLevels'];
-    final courseLevels = <String, InitialLevel>{};
-    if (rawCourseLevels is Map) {
-      for (final entry in rawCourseLevels.entries) {
-        courseLevels[entry.key.toString()] = _parseLevel(entry.value);
-      }
-    }
-
-    final rawScoresByCourse = raw['scoresByCourse'];
-    final scoresByCourse = <String, Map<String, SkillScore>>{};
-    if (rawScoresByCourse is Map) {
-      for (final courseEntry in rawScoresByCourse.entries) {
-        final courseId = courseEntry.key.toString();
-        final rawSkillMap = courseEntry.value;
-        if (rawSkillMap is! Map) continue;
-        final skillMap = <String, SkillScore>{};
-        for (final skillEntry in rawSkillMap.entries) {
-          final skillId = skillEntry.key.toString();
-          final rawScore = skillEntry.value;
-          if (rawScore is! Map) continue;
-          final scoreVal = (rawScore['score'] as num?)?.toInt() ?? 0;
-          skillMap[skillId] = SkillScore(
-            skillId: rawScore['skillId'] as String? ?? skillId,
-            courseId: rawScore['courseId'] as String? ?? courseId,
-            score: scoreVal,
-            lastUpdated:
-                (rawScore['lastUpdated'] as num?)?.toInt() ??
-                fallback.createdAt,
-            masteryLevel: _parseMastery(rawScore['masteryLevel']),
-            isWeakestFocus: rawScore['isWeakestFocus'] == true,
-          );
+        'skillBaselines': {
+          for (final entry in _skillBaselines.entries)
+            entry.key: {
+              for (final skillEntry in entry.value.entries)
+                skillEntry.key: skillEntry.value.toJson(),
+            },
+        },
+      };
+      final encoded = jsonEncode(payload);
+      await store.setDemoLearnerSnapshot(encoded);
+      if (epoch == _hydrationEpoch) {
+        _currentEpochHasPersisted = true;
+        if (writeSeq == _snapshotMutationSeq) {
+          _dirtySnapshotPendingPersist = false;
         }
-        scoresByCourse[courseId] = skillMap;
+      } else if (!_currentEpochHasPersisted) {
+        await store.clearDemoLearnerSnapshot();
       }
-    }
-
-    final rawPlacementScores = raw['placementScoreByCourse'];
-    final placementScoreByCourse = <String, int>{};
-    if (rawPlacementScores is Map) {
-      for (final entry in rawPlacementScores.entries) {
-        final score = (entry.value as num?)?.toInt();
-        if (score != null) {
-          placementScoreByCourse[entry.key.toString()] = score;
-        }
-      }
-    }
-
-    final rawPlacementCefr = raw['placementCefrByCourse'];
-    final placementCefrByCourse = <String, String>{};
-    if (rawPlacementCefr is Map) {
-      for (final entry in rawPlacementCefr.entries) {
-        final val = entry.value?.toString().trim();
-        if (val != null && val.isNotEmpty) {
-          placementCefrByCourse[entry.key.toString()] = val;
-        }
-      }
-    }
-
-    final rawSrsByCourse = raw['flashcardSrsByCourse'];
-    final flashcardSrsByCourse = <String, Map<String, FlashcardSrsRecord>>{};
-    if (rawSrsByCourse is Map) {
-      for (final courseEntry in rawSrsByCourse.entries) {
-        final courseId = courseEntry.key.toString();
-        final rawCardsMap = courseEntry.value;
-        if (rawCardsMap is! Map) continue;
-        final cardsMap = <String, FlashcardSrsRecord>{};
-        for (final cardEntry in rawCardsMap.entries) {
-          final cardId = cardEntry.key.toString();
-          final rawRecord = cardEntry.value;
-          if (rawRecord is! Map) continue;
-          cardsMap[cardId] = FlashcardSrsRecord.fromJson(
-            Map<String, dynamic>.from(rawRecord),
-          );
-        }
-        flashcardSrsByCourse[courseId] = cardsMap;
-      }
-    }
-
-    List<String> stringList(Object? value) =>
-        value is List ? value.whereType<String>().toList() : const [];
-
-    return LearnerProfile(
-      id: raw['id'] as String? ?? fallback.id,
-      name: raw['name'] as String? ?? fallback.name,
-      selectedCourseId:
-          raw['selectedCourseId'] as String? ?? fallback.selectedCourseId,
-      goal: _parseGoal(raw['goal']),
-      dailyMinutes: (raw['dailyMinutes'] as num?)?.toInt() ?? fallback.dailyMinutes,
-      initialLevel: _parseLevel(raw['initialLevel']),
-      courseLevels: courseLevels,
-      xp: (raw['xp'] as num?)?.toInt() ?? 0,
-      streakDays: (raw['streakDays'] as num?)?.toInt() ?? 1,
-      lastActiveDate:
-          raw['lastActiveDate'] as String? ?? fallback.lastActiveDate,
-      scoresByCourse: scoresByCourse,
-      placementScoreByCourse: placementScoreByCourse,
-      placementCefrByCourse: placementCefrByCourse,
-      flashcardSrsByCourse: flashcardSrsByCourse,
-      completedLessonIds: stringList(raw['completedLessonIds']),
-      completedNodeIds: stringList(raw['completedNodeIds']),
-      completedReinforcementIds: stringList(raw['completedReinforcementIds']),
-      createdAt: (raw['createdAt'] as num?)?.toInt() ?? fallback.createdAt,
-    );
-  }
-
-  static Map<String, dynamic> _encodeAttempt(AnswerAttemptRecord record) {
-    return {
-      'id': record.id,
-      'courseId': record.courseId,
-      'skillId': record.skillId,
-      'lessonId': record.lessonId,
-      'questionId': record.questionId,
-      'selectedIndex': record.selectedIndex,
-      'selectedAnswer': record.selectedAnswer,
-      'isCorrect': record.isCorrect,
-      'timestamp': record.timestamp,
-      'correctOption': record.correctOption,
-      'explanation': record.explanation,
-      'newSkillScore': record.newSkillScore,
-      'xpAwarded': record.xpAwarded,
-      'alreadyProcessed': record.alreadyProcessed,
-    };
-  }
-
-  static AnswerAttemptRecord _decodeAttempt(Map<String, dynamic> raw) {
-    return AnswerAttemptRecord(
-      id: raw['id'] as String? ?? '',
-      courseId: raw['courseId'] as String? ?? '',
-      skillId: raw['skillId'] as String? ?? '',
-      lessonId: raw['lessonId'] as String? ?? '',
-      questionId: raw['questionId'] as String? ?? '',
-      selectedIndex: (raw['selectedIndex'] as num?)?.toInt() ?? 0,
-      selectedAnswer: raw['selectedAnswer'] as String? ?? '',
-      isCorrect: raw['isCorrect'] == true,
-      timestamp: (raw['timestamp'] as num?)?.toInt() ?? 0,
-      correctOption: raw['correctOption'] as String?,
-      explanation: raw['explanation'] as String?,
-      newSkillScore: (raw['newSkillScore'] as num?)?.toInt(),
-      xpAwarded: (raw['xpAwarded'] as num?)?.toInt() ?? 0,
-      alreadyProcessed: raw['alreadyProcessed'] == true,
-    );
+    });
+    _storageWriteChain = op.catchError((_) {});
+    return op;
   }
 
   @override
   Future<LearnerProfile> getCurrentProfile() async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     return _profile;
   }
 
   @override
   Future<LearnerProfile> getProfile() async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     return _profile;
   }
 
@@ -402,81 +289,114 @@ class InMemoryLearnerRepository extends ILearnerRepository {
   Future<LearnerProfile> updateProfile(
     LearnerProfile updated, {
     Set<LearnerProfileField>? fields,
-  }) async {
-    await _ensureLoaded();
-    if (fields == null) {
-      _profile = updated;
-    } else {
-      _profile = _profile.copyWith(
-        name: fields.contains(LearnerProfileField.name) ? updated.name : null,
-        selectedCourseId: fields.contains(LearnerProfileField.selectedCourse)
-            ? updated.selectedCourseId
-            : null,
-        goal: fields.contains(LearnerProfileField.goal) ? updated.goal : null,
-        dailyMinutes: fields.contains(LearnerProfileField.dailyMinutes)
-            ? updated.dailyMinutes
-            : null,
-        initialLevel: fields.contains(LearnerProfileField.initialLevel)
-            ? updated.initialLevel
-            : null,
-        courseLevels: fields.contains(LearnerProfileField.courseLevels)
-            ? updated.courseLevels
-            : null,
-        placementScoreByCourse:
-            fields.contains(LearnerProfileField.placementScoreByCourse)
-            ? updated.placementScoreByCourse
-            : null,
-        placementCefrByCourse:
-            fields.contains(LearnerProfileField.placementCefrByCourse)
-            ? updated.placementCefrByCourse
-            : null,
-        flashcardSrsByCourse:
-            fields.contains(LearnerProfileField.flashcardSrsByCourse)
-            ? updated.flashcardSrsByCourse
-            : null,
-      );
-    }
-    await _persist();
-    return _profile;
+  }) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return _profile;
+      if (fields == null) {
+        _profile = updated;
+      } else {
+        _profile = _profile.copyWith(
+          name: fields.contains(LearnerProfileField.name) ? updated.name : null,
+          selectedCourseId: fields.contains(LearnerProfileField.selectedCourse)
+              ? updated.selectedCourseId
+              : null,
+          goal: fields.contains(LearnerProfileField.goal) ? updated.goal : null,
+          dailyMinutes: fields.contains(LearnerProfileField.dailyMinutes)
+              ? updated.dailyMinutes
+              : null,
+          initialLevel: fields.contains(LearnerProfileField.initialLevel)
+              ? updated.initialLevel
+              : null,
+          courseLevels: fields.contains(LearnerProfileField.courseLevels)
+              ? updated.courseLevels
+              : null,
+          placementScoreByCourse:
+              fields.contains(LearnerProfileField.placementScoreByCourse)
+              ? updated.placementScoreByCourse
+              : null,
+          placementCefrByCourse:
+              fields.contains(LearnerProfileField.placementCefrByCourse)
+              ? updated.placementCefrByCourse
+              : null,
+          flashcardSrsByCourse:
+              fields.contains(LearnerProfileField.flashcardSrsByCourse)
+              ? updated.flashcardSrsByCourse
+              : null,
+        );
+      }
+      _markDirty();
+      await _persistSnapshot(expectedEpoch: epoch);
+      return _profile;
+    });
   }
 
   @override
   Future<void> saveSkillScores(
     String courseId,
     Map<String, SkillScore> scores,
-  ) async {
-    await _ensureLoaded();
-    final currentScores = Map<String, Map<String, SkillScore>>.from(
-      _profile.scoresByCourse,
-    );
-    final courseMap = Map<String, SkillScore>.from(
-      currentScores[courseId] ?? {},
-    );
-    courseMap.addAll(scores);
-    currentScores[courseId] = courseMap;
+  ) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return;
+      final currentScores = Map<String, Map<String, SkillScore>>.from(
+        _profile.scoresByCourse,
+      );
+      final courseMap = Map<String, SkillScore>.from(
+        currentScores[courseId] ?? {},
+      );
+      courseMap.addAll(scores);
+      currentScores[courseId] = courseMap;
 
-    _profile = _profile.copyWith(scoresByCourse: currentScores);
-    await _persist();
+      final courseBaselines = Map<String, _SkillBaseline>.from(
+        _skillBaselines[courseId] ?? {},
+      );
+      for (final entry in scores.entries) {
+        final existingCount = _answerAttempts
+            .where(
+              (a) =>
+                  a.courseId == courseId &&
+                  a.skillId == entry.key &&
+                  !(courseId == 'course_eng_01' &&
+                      a.lessonId == 'placement_test'),
+            )
+            .length;
+        courseBaselines[entry.key] = _SkillBaseline(
+          score: entry.value.score,
+          attemptCountAtBaseline: existingCount,
+        );
+      }
+      _skillBaselines[courseId] = courseBaselines;
+
+      _profile = _profile.copyWith(scoresByCourse: currentScores);
+      _markDirty();
+      await _persistSnapshot(expectedEpoch: epoch);
+    });
   }
 
   @override
-  Future<String> savePlacementAttempt(PlacementAttemptData data) async {
-    await _ensureLoaded();
-    final nextPlacementScores = Map<String, int>.from(
-      _profile.placementScoreByCourse,
-    )..[data.courseId] = data.score;
-    final nextPlacementCefr = Map<String, String>.from(
-      _profile.placementCefrByCourse,
-    );
-    if (data.cefrLevel != null && data.cefrLevel!.trim().isNotEmpty) {
-      nextPlacementCefr[data.courseId] = data.cefrLevel!.trim();
-    }
-    _profile = _profile.copyWith(
-      placementScoreByCourse: nextPlacementScores,
-      placementCefrByCourse: nextPlacementCefr,
-    );
-    await _persist();
-    return 'plc_att_${DateTime.now().millisecondsSinceEpoch}';
+  Future<String> savePlacementAttempt(PlacementAttemptData data) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch == _hydrationEpoch) {
+        final nextPlacementScores = Map<String, int>.from(
+          _profile.placementScoreByCourse,
+        )..[data.courseId] = data.score;
+        final nextPlacementCefr = Map<String, String>.from(
+          _profile.placementCefrByCourse,
+        );
+        if (data.cefrLevel != null && data.cefrLevel!.trim().isNotEmpty) {
+          nextPlacementCefr[data.courseId] = data.cefrLevel!.trim();
+        }
+        _profile = _profile.copyWith(
+          placementScoreByCourse: nextPlacementScores,
+          placementCefrByCourse: nextPlacementCefr,
+        );
+        _markDirty();
+        await _persistSnapshot(expectedEpoch: epoch);
+      }
+      return 'plc_att_${DateTime.now().millisecondsSinceEpoch}';
+    });
   }
 
   @override
@@ -485,7 +405,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     required String questionId,
     required int selectedIndex,
   }) async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     final question = placementQuestionsData[courseId]
         ?.where((item) => item.id == questionId)
         .firstOrNull;
@@ -495,37 +415,52 @@ class InMemoryLearnerRepository extends ILearnerRepository {
   }
 
   @override
-  Future<void> markLessonCompleted(String lessonId, {String? courseId}) async {
-    await _ensureLoaded();
-    if (!_profile.completedLessonIds.contains(lessonId)) {
-      final list = List<String>.from(_profile.completedLessonIds)
-        ..add(lessonId);
-      final roadmapNodes = courseId != null
-          ? (seedRoadmapNodes[courseId] ?? const [])
-          : seedRoadmapNodes.values.expand((nodes) => nodes).toList();
-      final targetNodeIds = roadmapNodes
-          .where((node) => node.targetLessonId == lessonId)
-          .map((node) => node.id);
-      _profile = _profile.copyWith(
-        completedLessonIds: list,
-        completedNodeIds: [
-          ...<String>{..._profile.completedNodeIds, ...targetNodeIds},
-        ],
-      );
-      await addXp(20, 'lesson_completed_$lessonId');
-      await recordDailyActivity();
-      await _persist();
-    }
+  Future<void> markLessonCompleted(String lessonId, {String? courseId}) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return;
+      if (!_profile.completedLessonIds.contains(lessonId)) {
+        final list = List<String>.from(_profile.completedLessonIds)
+          ..add(lessonId);
+        final roadmapNodes = courseId != null
+            ? (seedRoadmapNodes[courseId] ?? const [])
+            : seedRoadmapNodes.values.expand((nodes) => nodes).toList();
+        final targetNodeIds = roadmapNodes
+            .where((node) => node.targetLessonId == lessonId)
+            .map((node) => node.id);
+        _profile = _profile.copyWith(
+          completedLessonIds: list,
+          completedNodeIds: [
+            ...<String>{..._profile.completedNodeIds, ...targetNodeIds},
+          ],
+        );
+        _addXpInMemory(20, 'lesson_completed_$lessonId');
+        _applyDailyActivityInMemory();
+        _markDirty();
+        await _persistSnapshot(expectedEpoch: epoch);
+      } else if (_dirtySnapshotPendingPersist) {
+        if (_applyDailyActivityInMemory()) {
+          _markDirty();
+        }
+        await _persistSnapshot(expectedEpoch: epoch);
+      }
+    });
   }
 
   @override
-  Future<void> markNodeCompleted(String nodeId, {String? courseId}) async {
-    await _ensureLoaded();
-    if (!_profile.completedNodeIds.contains(nodeId)) {
-      final list = List<String>.from(_profile.completedNodeIds)..add(nodeId);
-      _profile = _profile.copyWith(completedNodeIds: list);
-      await _persist();
-    }
+  Future<void> markNodeCompleted(String nodeId, {String? courseId}) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return;
+      if (!_profile.completedNodeIds.contains(nodeId)) {
+        final list = List<String>.from(_profile.completedNodeIds)..add(nodeId);
+        _profile = _profile.copyWith(completedNodeIds: list);
+        _markDirty();
+        await _persistSnapshot(expectedEpoch: epoch);
+      } else if (_dirtySnapshotPendingPersist) {
+        await _persistSnapshot(expectedEpoch: epoch);
+      }
+    });
   }
 
   @override
@@ -537,16 +472,93 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     required int beforeScore,
     required int afterScore,
     required int xpAwarded,
-  }) async {
-    await _ensureLoaded();
-    if (!_profile.completedReinforcementIds.contains(reinforcementId)) {
-      final list = List<String>.from(_profile.completedReinforcementIds)
-        ..add(reinforcementId);
-      _profile = _profile.copyWith(completedReinforcementIds: list);
-      await recordDailyActivity();
-      await _persist();
+  }) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return null;
+      if (!_profile.completedReinforcementIds.contains(reinforcementId)) {
+        final list = List<String>.from(_profile.completedReinforcementIds)
+          ..add(reinforcementId);
+        _profile = _profile.copyWith(completedReinforcementIds: list);
+        _applyDailyActivityInMemory();
+        _markDirty();
+        await _persistSnapshot(expectedEpoch: epoch);
+      } else if (_dirtySnapshotPendingPersist) {
+        if (_applyDailyActivityInMemory()) {
+          _markDirty();
+        }
+        await _persistSnapshot(expectedEpoch: epoch);
+      }
+      return null;
+    });
+  }
+
+  SkillScore? _computeCourseSkillScore(String courseId, String skillId) {
+    final skillAttempts = _answerAttempts
+        .where(
+          (a) =>
+              a.courseId == courseId &&
+              a.skillId == skillId &&
+              !(courseId == 'course_eng_01' && a.lessonId == 'placement_test'),
+        )
+        .toList();
+    final baseline = _skillBaselines[courseId]?[skillId];
+    final postBaselineAttempts = baseline != null &&
+            baseline.attemptCountAtBaseline <= skillAttempts.length
+        ? skillAttempts.skip(baseline.attemptCountAtBaseline).toList()
+        : skillAttempts;
+
+    if (postBaselineAttempts.isEmpty && baseline == null) {
+      return null;
     }
-    return null;
+
+    final int newScoreVal;
+    if (postBaselineAttempts.isEmpty) {
+      newScoreVal = baseline!.score;
+    } else if (courseId == 'course_eng_01' && baseline == null) {
+      // English lesson attempts without a prior baseline deduplicate by
+      // questionId (latest attempt wins) so retries yield full mastery.
+      final latestByQuestion = <String, AnswerAttemptRecord>{};
+      for (final attempt in postBaselineAttempts) {
+        latestByQuestion[attempt.questionId] = attempt;
+      }
+      final uniqueAttempts = latestByQuestion.values.toList();
+      final correctCount = uniqueAttempts.where((a) => a.isCorrect).length;
+      newScoreVal = SkillScoringEngine.computeSkillScore(
+        correctCount,
+        uniqueAttempts.length,
+      );
+    } else {
+      var weightedCorrect = 0.0;
+      var weightedTotal = 0.0;
+      var hasNonStarterAttempt = false;
+      for (final attempt in postBaselineAttempts) {
+        final isStarter = starterLessons.containsKey(attempt.lessonId);
+        final weight = isStarter ? 0.5 : 1.0;
+        if (!isStarter) {
+          hasNonStarterAttempt = true;
+        }
+        weightedTotal += weight;
+        if (attempt.isCorrect) {
+          weightedCorrect += weight;
+        }
+      }
+      newScoreVal = SkillScoringEngine.computeCalibratedSkillScore(
+        weightedCorrect: weightedCorrect,
+        weightedTotal: weightedTotal,
+        priorScore: baseline?.score,
+        starterOnly: baseline == null && !hasNonStarterAttempt,
+        hasNonStarterAttempt: hasNonStarterAttempt,
+      );
+    }
+
+    return SkillScore(
+      skillId: skillId,
+      courseId: courseId,
+      score: newScoreVal,
+      lastUpdated: DateTime.now().millisecondsSinceEpoch,
+      masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
+    );
   }
 
   @override
@@ -558,69 +570,110 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
     required bool isCorrect,
-  }) async {
-    await _ensureLoaded();
-    final record = AnswerAttemptRecord(
-      id: 'att_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}',
-      courseId: courseId,
-      skillId: skillId,
-      lessonId: lessonId,
-      questionId: questionId,
-      selectedIndex: selectedIndex,
-      selectedAnswer: selectedAnswer,
-      isCorrect: isCorrect,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      correctOption: isCorrect ? selectedAnswer : null,
-    );
-    _answerAttempts.add(record);
+  }) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      final record = AnswerAttemptRecord(
+        id: 'att_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}',
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lessonId,
+        questionId: questionId,
+        selectedIndex: selectedIndex,
+        selectedAnswer: selectedAnswer,
+        isCorrect: isCorrect,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        correctOption: isCorrect ? selectedAnswer : null,
+      );
+      if (epoch != _hydrationEpoch) return record;
 
-    if (isCorrect) {
-      await addXp(2, 'answer_${questionId}_${record.id}');
-    }
-    await recordDailyActivity();
+      final prevProfile = _profile;
+      final prevWasDirty = _dirtySnapshotPendingPersist;
+      final today = DateTime.now().toIso8601String().split('T').first;
+      final actionKey = isCorrect ? 'answer_${questionId}_${record.id}' : null;
 
-    // English placement scores remain isolated from independent lesson mastery.
-    if (courseId == 'course_eng_01' && lessonId == 'placement_test') {
-      await _persist();
-      return record;
-    }
+      _answerAttempts.add(record);
+      final addedActionKey =
+          actionKey != null && _processedActionKeys.add(actionKey);
+      final addedToday = _applyDailyActivityInMemory(today);
 
-    // Recalculate cumulative skill score over unique questionIds (latest attempt wins),
-    // excluding English placement attempts.
-    final latestByQuestion = <String, AnswerAttemptRecord>{};
-    for (final attempt in _answerAttempts) {
-      if (attempt.courseId == courseId &&
-          attempt.skillId == skillId &&
-          !(courseId == 'course_eng_01' &&
-              attempt.lessonId == 'placement_test')) {
-        latestByQuestion[attempt.questionId] = attempt;
+      // English placement scores remain isolated from independent lesson mastery.
+      final computedScore =
+          (courseId == 'course_eng_01' && lessonId == 'placement_test')
+              ? null
+              : _computeCourseSkillScore(courseId, skillId);
+      final currentScores = Map<String, Map<String, SkillScore>>.from(
+        _profile.scoresByCourse,
+      );
+      final courseMap = Map<String, SkillScore>.from(
+        currentScores[courseId] ?? {},
+      );
+      if (computedScore != null) {
+        courseMap[skillId] = computedScore;
+        currentScores[courseId] = courseMap;
       }
-    }
-    final uniqueAttempts = latestByQuestion.values.toList();
-    final correctCount = uniqueAttempts.where((a) => a.isCorrect).length;
-    final newScoreVal = SkillScoringEngine.computeSkillScore(
-      correctCount,
-      uniqueAttempts.length,
-    );
+      _profile = _profile.copyWith(
+        xp: addedActionKey ? _profile.xp + 2 : _profile.xp,
+        scoresByCourse: currentScores,
+      );
+      _markDirty();
+      final mutationSeq = _snapshotMutationSeq;
 
-    final currentScores = Map<String, Map<String, SkillScore>>.from(
-      _profile.scoresByCourse,
-    );
-    final courseMap = Map<String, SkillScore>.from(
-      currentScores[courseId] ?? {},
-    );
-    courseMap[skillId] = SkillScore(
-      skillId: skillId,
-      courseId: courseId,
-      score: newScoreVal,
-      lastUpdated: DateTime.now().millisecondsSinceEpoch,
-      masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
-    );
-    currentScores[courseId] = courseMap;
-    _profile = _profile.copyWith(scoresByCourse: currentScores);
-    await _persist();
+      try {
+        await _persistSnapshot(expectedEpoch: epoch);
+      } catch (_) {
+        if (epoch == _hydrationEpoch) {
+          if (mutationSeq == _snapshotMutationSeq) {
+            _answerAttempts.remove(record);
+            if (addedActionKey) {
+              _processedActionKeys.remove(actionKey);
+            }
+            if (addedToday) {
+              _recordedActivityDates.remove(today);
+            }
+            _profile = prevProfile;
+            _dirtySnapshotPendingPersist = prevWasDirty;
+          } else {
+            _answerAttempts.remove(record);
+            if (addedActionKey && _processedActionKeys.remove(actionKey)) {
+              _profile = _profile.copyWith(
+                xp: (_profile.xp - 2).clamp(0, 1 << 30),
+              );
+            }
+            if (addedToday) {
+              _recordedActivityDates.remove(today);
+              if (_profile.lastActiveDate == today) {
+                _profile = _profile.copyWith(
+                  streakDays: prevProfile.streakDays,
+                  lastActiveDate: prevProfile.lastActiveDate,
+                );
+              }
+            }
+            final updatedScores = Map<String, Map<String, SkillScore>>.from(
+              _profile.scoresByCourse,
+            );
+            final courseScores = Map<String, SkillScore>.from(
+              updatedScores[courseId] ?? {},
+            );
+            final recomputed = _computeCourseSkillScore(courseId, skillId);
+            if (recomputed != null) {
+              courseScores[skillId] = recomputed;
+            } else {
+              courseScores.remove(skillId);
+            }
+            if (courseScores.isEmpty) {
+              updatedScores.remove(courseId);
+            } else {
+              updatedScores[courseId] = courseScores;
+            }
+            _profile = _profile.copyWith(scoresByCourse: updatedScores);
+          }
+        }
+        rethrow;
+      }
 
-    return record;
+      return record;
+    });
   }
 
   @override
@@ -632,7 +685,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   }) async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     Question? question;
     for (final candidate in placementQuestionsData.values.expand(
       (items) => items,
@@ -722,7 +775,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
 
   @override
   Future<List<AnswerAttemptRecord>> getAnswerAttempts([int limit = 10]) async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     if (_answerAttempts.length <= limit) {
       return List.from(_answerAttempts);
     }
@@ -731,7 +784,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
 
   @override
   Future<List<DailyActivitySummary>> getDailyActivity([int days = 7]) async {
-    await _ensureLoaded();
+    await _ensureHydrated();
     final result = <DailyActivitySummary>[];
     final now = DateTime.now();
     for (int i = days - 1; i >= 0; i--) {
@@ -756,27 +809,41 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     return result;
   }
 
-  @override
-  Future<int> addXp(int amount, [String? actionIdempotencyKey]) async {
-    await _ensureLoaded();
+  bool _addXpInMemory(int amount, [String? actionIdempotencyKey]) {
     if (actionIdempotencyKey != null) {
       if (_processedActionKeys.contains(actionIdempotencyKey)) {
-        return _profile.xp;
+        return false;
       }
       _processedActionKeys.add(actionIdempotencyKey);
     }
-    final newXp = _profile.xp + amount;
-    _profile = _profile.copyWith(xp: newXp);
-    await _persist();
-    return newXp;
+    _profile = _profile.copyWith(xp: _profile.xp + amount);
+    return true;
   }
 
   @override
-  Future<int> recordDailyActivity([String? dateStr]) async {
-    await _ensureLoaded();
+  Future<int> addXp(int amount, [String? actionIdempotencyKey]) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return _profile.xp;
+      final added = _addXpInMemory(amount, actionIdempotencyKey);
+      if (!added) {
+        if (_dirtySnapshotPendingPersist) {
+          await _persistSnapshot(expectedEpoch: epoch);
+        }
+        return _profile.xp;
+      }
+      final newXp = _profile.xp;
+      _markDirty();
+      await _persistSnapshot(expectedEpoch: epoch);
+      if (epoch != _hydrationEpoch) return _profile.xp;
+      return newXp;
+    });
+  }
+
+  bool _applyDailyActivityInMemory([String? dateStr]) {
     final today = dateStr ?? DateTime.now().toIso8601String().split('T').first;
     if (_recordedActivityDates.contains(today)) {
-      return _profile.streakDays;
+      return false;
     }
 
     _recordedActivityDates.add(today);
@@ -803,32 +870,321 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     }
 
     _profile = _profile.copyWith(streakDays: newStreak, lastActiveDate: today);
-    await _persist();
-    return newStreak;
+    return true;
+  }
+
+  @override
+  Future<int> recordDailyActivity([String? dateStr]) {
+    return _runSerializedMutation((epoch) async {
+      await _ensureHydrated();
+      if (epoch != _hydrationEpoch) return _profile.streakDays;
+      final added = _applyDailyActivityInMemory(dateStr);
+      if (!added) {
+        if (_dirtySnapshotPendingPersist) {
+          await _persistSnapshot(expectedEpoch: epoch);
+        }
+        return _profile.streakDays;
+      }
+
+      _markDirty();
+      await _persistSnapshot(expectedEpoch: epoch);
+      return _profile.streakDays;
+    });
   }
 
   @override
   Future<LearnerProfile> resetAll() async {
-    if (_loadFuture != null) {
-      await _loadFuture;
-    }
-    _profile = _defaultProfile();
+    _hydrationEpoch++;
+    _activeEpochMutation = null;
+    _currentEpochHasPersisted = false;
+    _dirtySnapshotPendingPersist = false;
+    _snapshotMutationSeq = 0;
+    _hydrationFuture = null;
+    _hydrated = true;
+    final resetProfile = _defaultProfile();
+    _profile = resetProfile;
     _answerAttempts.clear();
     _processedActionKeys.clear();
     _recordedActivityDates.clear();
-    _hydrated = true;
-    _loadFuture = null;
-    final prefs = await _getPrefs();
-    try {
-      await prefs?.remove(_storageKey);
-    } catch (_) {
-      // Ignore storage removal failures in unmocked environments.
-    }
-    return _profile;
+    _skillBaselines.clear();
+    final clearOp = _pendingClearChain.then(
+      (_) => storage.clearDemoLearnerSnapshot(),
+    );
+    _pendingClearChain = clearOp.catchError((_) {});
+    await clearOp;
+    return resetProfile;
   }
 
   @override
   Future<void> clearLocalState() async {
     await resetAll();
+  }
+
+  // --- JSON Serialization Helpers ---
+
+  static Map<String, dynamic> _profileToJson(LearnerProfile p) => {
+    'id': p.id,
+    'name': p.name,
+    'selectedCourseId': p.selectedCourseId,
+    'goal': p.goal.name,
+    'dailyMinutes': p.dailyMinutes,
+    'initialLevel': p.initialLevel.name,
+    'courseLevels': {
+      for (final entry in p.courseLevels.entries) entry.key: entry.value.name,
+    },
+    'xp': p.xp,
+    'streakDays': p.streakDays,
+    'lastActiveDate': p.lastActiveDate,
+    'scoresByCourse': {
+      for (final courseEntry in p.scoresByCourse.entries)
+        courseEntry.key: {
+          for (final skillEntry in courseEntry.value.entries)
+            skillEntry.key: _skillScoreToJson(skillEntry.value),
+        },
+    },
+    'placementScoreByCourse': p.placementScoreByCourse,
+    'placementCefrByCourse': p.placementCefrByCourse,
+    'flashcardSrsByCourse': {
+      for (final courseEntry in p.flashcardSrsByCourse.entries)
+        courseEntry.key: {
+          for (final cardEntry in courseEntry.value.entries)
+            cardEntry.key: cardEntry.value.toJson(),
+        },
+    },
+    'completedLessonIds': p.completedLessonIds,
+    'completedNodeIds': p.completedNodeIds,
+    'completedReinforcementIds': p.completedReinforcementIds,
+    'createdAt': p.createdAt,
+  };
+
+  static LearnerProfile _profileFromJson(Map<String, dynamic> json) {
+    final fallback = _defaultProfile();
+    final rawCourseLevels = json['courseLevels'];
+    final courseLevels = <String, InitialLevel>{};
+    if (rawCourseLevels is Map) {
+      for (final entry in rawCourseLevels.entries) {
+        if (entry.key is String && entry.value is String) {
+          final level = _parseInitialLevel(entry.value as String);
+          if (level != null) {
+            courseLevels[entry.key as String] = level;
+          }
+        }
+      }
+    }
+
+    final scoresByCourse = <String, Map<String, SkillScore>>{};
+    final rawScores = json['scoresByCourse'];
+    if (rawScores is Map) {
+      for (final courseEntry in rawScores.entries) {
+        final courseId = courseEntry.key;
+        final skillMap = courseEntry.value;
+        if (courseId is String && skillMap is Map) {
+          final parsedMap = <String, SkillScore>{};
+          for (final skillEntry in skillMap.entries) {
+            final skillScore = _skillScoreFromJson(skillEntry.value);
+            if (skillEntry.key is String && skillScore != null) {
+              parsedMap[skillEntry.key as String] = skillScore;
+            }
+          }
+          scoresByCourse[courseId] = parsedMap;
+        }
+      }
+    }
+
+    final placementScoreByCourse = <String, int>{};
+    final rawPlacementScores = json['placementScoreByCourse'];
+    if (rawPlacementScores is Map) {
+      for (final entry in rawPlacementScores.entries) {
+        if (entry.key is String && entry.value is num) {
+          placementScoreByCourse[entry.key as String] =
+              (entry.value as num).toInt();
+        }
+      }
+    }
+
+    final placementCefrByCourse = <String, String>{};
+    final rawPlacementCefr = json['placementCefrByCourse'];
+    if (rawPlacementCefr is Map) {
+      for (final entry in rawPlacementCefr.entries) {
+        if (entry.key is String && entry.value is String) {
+          final trimmed = (entry.value as String).trim();
+          if (trimmed.isNotEmpty) {
+            placementCefrByCourse[entry.key as String] = trimmed;
+          }
+        }
+      }
+    }
+
+    final flashcardSrsByCourse = <String, Map<String, FlashcardSrsRecord>>{};
+    final rawSrsByCourse = json['flashcardSrsByCourse'];
+    if (rawSrsByCourse is Map) {
+      for (final courseEntry in rawSrsByCourse.entries) {
+        final courseId = courseEntry.key;
+        final rawCardsMap = courseEntry.value;
+        if (courseId is String && rawCardsMap is Map) {
+          final cardsMap = <String, FlashcardSrsRecord>{};
+          for (final cardEntry in rawCardsMap.entries) {
+            final cardId = cardEntry.key;
+            final rawRecord = cardEntry.value;
+            if (cardId is String && rawRecord is Map) {
+              cardsMap[cardId] = FlashcardSrsRecord.fromJson(
+                Map<String, dynamic>.from(rawRecord),
+              );
+            }
+          }
+          flashcardSrsByCourse[courseId] = cardsMap;
+        }
+      }
+    }
+
+    return LearnerProfile(
+      id: json['id'] is String ? json['id'] as String : fallback.id,
+      name: json['name'] is String ? json['name'] as String : fallback.name,
+      selectedCourseId: json['selectedCourseId'] is String
+          ? json['selectedCourseId'] as String
+          : fallback.selectedCourseId,
+      goal: _parseGoal(json['goal'] is String ? json['goal'] as String : null) ??
+          fallback.goal,
+      dailyMinutes: json['dailyMinutes'] is num
+          ? (json['dailyMinutes'] as num).toInt()
+          : fallback.dailyMinutes,
+      initialLevel:
+          _parseInitialLevel(
+            json['initialLevel'] is String ? json['initialLevel'] as String : null,
+          ) ??
+          fallback.initialLevel,
+      courseLevels: courseLevels,
+      xp: json['xp'] is num ? (json['xp'] as num).toInt() : fallback.xp,
+      streakDays: json['streakDays'] is num
+          ? (json['streakDays'] as num).toInt()
+          : fallback.streakDays,
+      lastActiveDate: json['lastActiveDate'] is String
+          ? json['lastActiveDate'] as String
+          : fallback.lastActiveDate,
+      scoresByCourse: scoresByCourse,
+      placementScoreByCourse: placementScoreByCourse,
+      placementCefrByCourse: placementCefrByCourse,
+      flashcardSrsByCourse: flashcardSrsByCourse,
+      completedLessonIds: _stringList(json['completedLessonIds']),
+      completedNodeIds: _stringList(json['completedNodeIds']),
+      completedReinforcementIds: _stringList(json['completedReinforcementIds']),
+      createdAt: json['createdAt'] is num
+          ? (json['createdAt'] as num).toInt()
+          : fallback.createdAt,
+    );
+  }
+
+  static Map<String, dynamic> _skillScoreToJson(SkillScore s) => {
+    'skillId': s.skillId,
+    'courseId': s.courseId,
+    'score': s.score,
+    'lastUpdated': s.lastUpdated,
+    'masteryLevel': s.masteryLevel.name,
+    'isWeakestFocus': s.isWeakestFocus,
+  };
+
+  static SkillScore? _skillScoreFromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final skillId = raw['skillId'];
+    final courseId = raw['courseId'];
+    final score = raw['score'];
+    final lastUpdated = raw['lastUpdated'];
+    if (skillId is! String ||
+        courseId is! String ||
+        score is! num ||
+        lastUpdated is! num) {
+      return null;
+    }
+    final clampedScore = score.toInt().clamp(0, 100);
+    final masteryName =
+        raw['masteryLevel'] is String ? raw['masteryLevel'] as String : null;
+    final mastery = MasteryLevel.values
+            .where((m) => m.name == masteryName)
+            .firstOrNull ??
+        SkillScoringEngine.getMasteryLevel(clampedScore);
+    return SkillScore(
+      skillId: skillId,
+      courseId: courseId,
+      score: clampedScore,
+      lastUpdated: lastUpdated.toInt(),
+      masteryLevel: mastery,
+      isWeakestFocus: raw['isWeakestFocus'] == true,
+    );
+  }
+
+  static Map<String, dynamic> _attemptToJson(AnswerAttemptRecord a) => {
+    'id': a.id,
+    'courseId': a.courseId,
+    'skillId': a.skillId,
+    'lessonId': a.lessonId,
+    'questionId': a.questionId,
+    'selectedIndex': a.selectedIndex,
+    'selectedAnswer': a.selectedAnswer,
+    'isCorrect': a.isCorrect,
+    'timestamp': a.timestamp,
+    if (a.correctOption != null) 'correctOption': a.correctOption,
+    if (a.explanation != null) 'explanation': a.explanation,
+    if (a.newSkillScore != null) 'newSkillScore': a.newSkillScore,
+    'xpAwarded': a.xpAwarded,
+    'alreadyProcessed': a.alreadyProcessed,
+  };
+
+  static AnswerAttemptRecord? _attemptFromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final id = raw['id'];
+    final courseId = raw['courseId'];
+    final skillId = raw['skillId'];
+    final lessonId = raw['lessonId'];
+    final questionId = raw['questionId'];
+    final selectedIndex = raw['selectedIndex'];
+    final selectedAnswer = raw['selectedAnswer'];
+    final isCorrect = raw['isCorrect'];
+    final timestamp = raw['timestamp'];
+    if (id is! String ||
+        courseId is! String ||
+        skillId is! String ||
+        lessonId is! String ||
+        questionId is! String ||
+        selectedIndex is! num ||
+        selectedAnswer is! String ||
+        isCorrect is! bool ||
+        timestamp is! num) {
+      return null;
+    }
+    return AnswerAttemptRecord(
+      id: id,
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: lessonId,
+      questionId: questionId,
+      selectedIndex: selectedIndex.toInt(),
+      selectedAnswer: selectedAnswer,
+      isCorrect: isCorrect,
+      timestamp: timestamp.toInt(),
+      correctOption:
+          raw['correctOption'] is String ? raw['correctOption'] as String : null,
+      explanation:
+          raw['explanation'] is String ? raw['explanation'] as String : null,
+      newSkillScore: raw['newSkillScore'] is num
+          ? (raw['newSkillScore'] as num).toInt().clamp(0, 100)
+          : null,
+      xpAwarded: raw['xpAwarded'] is num ? (raw['xpAwarded'] as num).toInt() : 0,
+      alreadyProcessed: raw['alreadyProcessed'] == true,
+    );
+  }
+
+  static List<String> _stringList(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw.whereType<String>().toList();
+  }
+
+  static OnboardingGoal? _parseGoal(String? name) {
+    if (name == null) return null;
+    return OnboardingGoal.values.where((g) => g.name == name).firstOrNull;
+  }
+
+  static InitialLevel? _parseInitialLevel(String? name) {
+    if (name == null) return null;
+    return InitialLevel.values.where((l) => l.name == name).firstOrNull;
   }
 }

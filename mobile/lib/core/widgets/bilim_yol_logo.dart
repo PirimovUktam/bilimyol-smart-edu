@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import '../l10n/app_strings.dart';
+import '../theme/app_semantic_colors.dart';
+import '../theme/app_typography.dart';
 
 class BilimYolLogo extends StatelessWidget {
   final double size;
@@ -14,27 +16,25 @@ class BilimYolLogo extends StatelessWidget {
     this.onDark = false,
   });
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final effectiveDark = onDark || AppColors.isDark(context);
-    final bilimColor = effectiveDark
-        ? AppColors.darkTextPrimary
-        : AppColors.textPrimary;
-    final yolColor = effectiveDark
-        ? const Color(0xFFA5B4FC)
-        : AppColors.primary;
-    final badgeBg = effectiveDark
-        ? const Color(0xFF312E81)
-        : AppColors.primaryLight;
-    final badgeBorder = effectiveDark
-        ? AppColors.primary
-        : AppColors.primary.withValues(alpha: 0.3);
-    final badgeTextColor = effectiveDark
-        ? const Color(0xFFC7D2FE)
-        : AppColors.primary;
-    final subtitleColor = effectiveDark
-        ? AppColors.darkTextSecondary
-        : AppColors.textSecondary;
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
+    final primaryText = onDark ? AppColors.darkInk : c.ink;
+    final accentColor = onDark ? AppColors.darkBrand : c.brand;
+    final tagBg = onDark ? AppColors.darkSubtle : c.brandSoft;
+    final subtitleColor = onDark ? AppColors.darkSlatefine : c.slatefine;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -83,36 +83,38 @@ class BilimYolLogo extends StatelessWidget {
                 children: [
                   Text.rich(
                     TextSpan(
-                      style: GoogleFonts.plusJakartaSans(
+                      style: AppTypography.ui(
                         fontSize: size * 0.48,
                         fontWeight: FontWeight.w800,
-                        color: bilimColor,
+                        color: primaryText,
                       ),
                       children: [
                         const TextSpan(text: 'Bilim'),
                         TextSpan(
                           text: 'Yo‘l',
-                          style: TextStyle(color: yolColor),
+                          style: TextStyle(color: accentColor),
                         ),
                       ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
+                      horizontal: 6,
                       vertical: 1.5,
                     ),
                     decoration: BoxDecoration(
-                      color: badgeBg,
+                      color: tagBg,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: badgeBorder),
+                      border: Border.all(
+                        color: accentColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
-                      'SMART EDU',
-                      style: GoogleFonts.plusJakartaSans(
+                      s.brandTag,
+                      style: AppTypography.ui(
                         fontSize: size * 0.22,
                         fontWeight: FontWeight.w800,
-                        color: badgeTextColor,
+                        color: accentColor,
                       ),
                     ),
                   ),
@@ -120,8 +122,8 @@ class BilimYolLogo extends StatelessWidget {
               ),
               if (showSubtitle)
                 Text(
-                  'Moslashuvchan ta’lim platformasi',
-                  style: GoogleFonts.plusJakartaSans(
+                  s.brandSubtitle,
+                  style: AppTypography.ui(
                     fontSize: size * 0.26,
                     fontWeight: FontWeight.w500,
                     color: subtitleColor,

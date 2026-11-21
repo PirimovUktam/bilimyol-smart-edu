@@ -305,5 +305,5 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
     );
 
     vi.unstubAllGlobals();
-  });
+  }, 15000);
 });

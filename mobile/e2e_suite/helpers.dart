@@ -193,7 +193,9 @@ Future<void> simulateAppRestart(
 
 Future<Map<String, dynamic>> readDemoProgressSnapshot() async {
   final prefs = await SharedPreferences.getInstance();
-  final raw = prefs.getString('bilimyol_demo_progress_v1');
+  final raw =
+      prefs.getString('bilimyol.demo_learner_snapshot') ??
+      prefs.getString('bilimyol_demo_progress_v1');
   if (raw == null || raw.trim().isEmpty) {
     return <String, dynamic>{};
   }

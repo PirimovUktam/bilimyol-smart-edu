@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/bilim_yol_logo.dart';
-import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
+
 import '../../app/providers.dart';
 import '../../core/auth/auth_error_message.dart';
+import '../../core/config/supabase_config.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bilim_yol_logo.dart';
+import 'auth_error_banner.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -21,18 +24,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _scrollController = ScrollController();
   final _errorKey = GlobalKey();
   final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _passwordVisible = false;
+  bool _confirmVisible = false;
   String? _errorMsg;
+
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _firstNameController.dispose();
-    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -61,58 +75,71 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
   }
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
+    final s = _resolveStrings(context);
     final firstName = _firstNameController.text.trim();
-    final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
 
     if (firstName.isEmpty || email.isEmpty || password.isEmpty) {
-      _setError('Iltimos, barcha majburiy maydonlarni to‘ldiring.');
+      _setError(s.emptyRegisterFieldsError);
+      return;
+    }
+
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      _setError(s.invalidEmailError);
       return;
     }
 
     if (password.length < 6) {
-      _setError('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.');
+      _setError(s.shortPassword6Error);
       return;
     }
 
     if (password != confirm) {
-      _setError('Kiritilgan parollar bir-biriga mos kelmadi.');
+      _setError(s.passwordMismatchError);
       return;
     }
 
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      _setError(
+        SupabaseConfig.hasRemoteConfiguration
+            ? s.authServiceUnavailable
+            : s.demoNoRegisterError,
+      );
+      return;
+    }
+
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() {
       _isLoading = true;
       _errorMsg = null;
     });
 
     try {
-      final client = Supabase.instance.client;
       final res = await client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'first_name': firstName,
-          'last_name': lastName,
-        },
+        data: {'first_name': firstName},
       );
 
-      // The auth trigger provisions the profile. With email confirmation there
-      // is no session yet: do not attempt an anonymous profile write/read.
       if (res.session == null) {
         if (!mounted) return;
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Hisob yaratildi. Emaildagi tasdiqlash havolasini oching va tizimga kiring.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.registerEmailConfirmNotice)),
+        );
         context.go('/login');
         return;
       }
 
-      final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
-      await learnerNotifier.loadProfile();
+      container.invalidate(courseStateNotifierProvider);
+      container.invalidate(roadmapStateNotifierProvider);
+      container.invalidate(placementStateNotifierProvider);
+      container.invalidate(lessonSessionNotifierProvider);
+      await container.read(learnerStateNotifierProvider.notifier).loadProfile();
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -121,175 +148,118 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _setError(authErrorMessage(e));
+        _setError(authErrorMessage(e, strings: s));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary = AppColors.textPrimaryColor(context);
-    final textSecondary = AppColors.textSecondaryColor(context);
-    final textMuted = AppColors.textMutedColor(context);
-    final inputFill = AppColors.subtleSurface(context);
-    // Input boundary must reach 3:1 against the fill and card (WCAG 1.4.11).
-    final borderColor = AppColors.textMutedColor(context);
-    final focusColor = AppColors.primaryAccentOnSurface(context);
-    final errorFg = AppColors.errorTextOnTint(context);
-    final errorBg = AppColors.errorTint(context);
-
-    InputDecoration buildInputDecoration({
-      required String hintText,
-      required IconData icon,
-    }) {
-      return InputDecoration(
-        hintText: hintText,
-        hintStyle: GoogleFonts.plusJakartaSans(color: textMuted),
-        prefixIcon: Icon(icon, size: 18, color: textSecondary),
-        filled: true,
-        fillColor: inputFill,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: focusColor, width: 1.8),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: errorFg, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: errorFg, width: 1.8),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-      );
-    }
-
-    final inputTextStyle = GoogleFonts.plusJakartaSans(
-      fontSize: 14,
-      fontWeight: FontWeight.w600,
-      color: textPrimary,
-    );
-
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     return Scaffold(
-      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         toolbarHeight: isLargeText ? 96 : null,
         title: Text(
-          'Ro‘yxatdan o‘tish',
+          s.registerAction,
           softWrap: true,
           maxLines: isLargeText ? null : 1,
-          overflow: isLargeText
-              ? TextOverflow.visible
-              : TextOverflow.ellipsis,
+          overflow: isLargeText ? TextOverflow.visible : TextOverflow.ellipsis,
         ),
         leading: IconButton(
+          tooltip: s.back,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/login');
+            }
+          },
         ),
       ),
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const BilimYolLogo(size: 38),
+                  const Center(child: BilimYolLogo(size: 38)),
                   const SizedBox(height: 16),
                   Text(
-                    'Yangi hisob yaratish',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20,
+                    s.registerHeading,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ui(
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: textPrimary,
+                      color: c.ink,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
                   AppCard(
+                    borderRadius: 24,
                     padding: const EdgeInsets.all(20),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (_errorMsg != null) ...[
-                          Semantics(
-                            liveRegion: true,
-                            child: Container(
-                              key: _errorKey,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: errorBg,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: errorFg.withValues(alpha: 0.35),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.error_outline_rounded,
-                                    color: errorFg,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _errorMsg!,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: errorFg,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          KeyedSubtree(
+                            key: _errorKey,
+                            child: AuthErrorBanner(message: _errorMsg!),
                           ),
                           const SizedBox(height: 16),
                         ],
 
                         Text(
-                          'Ism *',
-                          style: GoogleFonts.plusJakartaSans(
+                          s.firstNameLabel,
+                          style: AppTypography.ui(
                             fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: textPrimary,
+                            fontWeight: FontWeight.w700,
+                            color: c.graphite,
                           ),
                         ),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _firstNameController,
                           textInputAction: TextInputAction.next,
-                          style: inputTextStyle,
-                          decoration: buildInputDecoration(
-                            hintText: 'Ismingiz',
-                            icon: Icons.person_outline_rounded,
+                          autofillHints: const [AutofillHints.givenName],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.firstNameHint,
+                            prefixIcon: Icon(
+                              Icons.person_outline_rounded,
+                              size: 18,
+                              color: c.brand,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 14),
 
                         Text(
-                          'Email *',
-                          style: GoogleFonts.plusJakartaSans(
+                          s.registerEmailLabel,
+                          style: AppTypography.ui(
                             fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: textPrimary,
+                            fontWeight: FontWeight.w700,
+                            color: c.graphite,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -297,61 +267,139 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          style: inputTextStyle,
-                          decoration: buildInputDecoration(
-                            hintText: 'nomingiz@misol.uz',
-                            icon: Icons.mail_outline_rounded,
+                          autofillHints: const [AutofillHints.email],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.emailHint,
+                            prefixIcon: Icon(
+                              Icons.mail_outline_rounded,
+                              size: 18,
+                              color: c.brand,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 14),
 
                         Text(
-                          'Parol *',
-                          style: GoogleFonts.plusJakartaSans(
+                          s.registerPasswordLabel,
+                          style: AppTypography.ui(
                             fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: textPrimary,
+                            fontWeight: FontWeight.w700,
+                            color: c.graphite,
                           ),
                         ),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: !_passwordVisible,
                           textInputAction: TextInputAction.next,
-                          style: inputTextStyle,
-                          decoration: buildInputDecoration(
-                            hintText: 'Kamida 6 ta belgi',
-                            icon: Icons.lock_outline_rounded,
+                          autofillHints: const [AutofillHints.newPassword],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.passwordMin6Hint,
+                            prefixIcon: Icon(
+                              Icons.lock_outline_rounded,
+                              size: 18,
+                              color: c.brand,
+                            ),
+                            suffixIcon: IconButton(
+                              tooltip: _passwordVisible
+                                  ? s.passwordHideTooltip
+                                  : s.passwordShowTooltip,
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
+                              onPressed: () => setState(
+                                () => _passwordVisible = !_passwordVisible,
+                              ),
+                              icon: Icon(
+                                _passwordVisible
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: c.slatefine,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 14),
 
                         Text(
-                          'Parolni tasdiqlang *',
-                          style: GoogleFonts.plusJakartaSans(
+                          s.confirmPasswordLabel,
+                          style: AppTypography.ui(
                             fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: textPrimary,
+                            fontWeight: FontWeight.w700,
+                            color: c.graphite,
                           ),
                         ),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _confirmPasswordController,
-                          obscureText: true,
+                          obscureText: !_confirmVisible,
                           textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.newPassword],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
                           onSubmitted: (_) {
                             if (!_isLoading) _handleRegister();
                           },
-                          style: inputTextStyle,
-                          decoration: buildInputDecoration(
-                            hintText: 'Parolni qayta kiriting',
-                            icon: Icons.lock_outline_rounded,
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.confirmPasswordHint,
+                            prefixIcon: Icon(
+                              Icons.lock_outline_rounded,
+                              size: 18,
+                              color: c.brand,
+                            ),
+                            suffixIcon: IconButton(
+                              tooltip: _confirmVisible
+                                  ? s.passwordHideTooltip
+                                  : s.passwordShowTooltip,
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
+                              onPressed: () => setState(
+                                () => _confirmVisible = !_confirmVisible,
+                              ),
+                              icon: Icon(
+                                _confirmVisible
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: c.slatefine,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
 
                         AppButton(
-                          text: 'Hisob Yaratish',
+                          text: s.createAccountAction,
                           isFullWidth: true,
                           size: AppButtonSize.large,
                           isLoading: _isLoading,
@@ -360,7 +408,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             size: 18,
                             color: Colors.white,
                           ),
-                          onPressed: _handleRegister,
+                          onPressed: _isLoading ? null : _handleRegister,
+                        ),
+                        const SizedBox(height: 12),
+
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          children: [
+                            Text(
+                              s.haveAccountQuestion,
+                              style: AppTypography.ui(
+                                fontSize: 13,
+                                color: c.slatefine,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go('/login');
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(44, 44),
+                                foregroundColor: c.brand,
+                              ),
+                              child: Text(
+                                s.loginAction,
+                                style: AppTypography.ui(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.brand,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

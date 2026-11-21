@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../app/providers.dart';
 import '../../core/auth/auth_error_message.dart';
 import '../../core/auth/demo_session.dart';
 import '../../core/config/supabase_config.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/bilim_yol_logo.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/storage/local_storage_service.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bilim_yol_logo.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
-import '../../app/providers.dart';
+import '../../domain/personalization/learning_start.dart';
+import 'auth_error_banner.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +31,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _passwordVisible = false;
   String? _errorMsg;
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,20 +49,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() async {
-    final client = SupabaseConfig.client;
-    if (client == null) {
-      setState(() => _errorMsg = 'Hisob xizmatiga ulanib bo‘lmadi.');
-      return;
-    }
+  Future<void> _handleLogin() async {
+    final s = _resolveStrings(context);
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMsg = 'Iltimos, email va parolni to‘liq kiriting.');
+      setState(() => _errorMsg = s.emptyLoginFieldsError);
       return;
     }
 
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      setState(() => _errorMsg = s.authServiceOfflineShort);
+      return;
+    }
+
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() {
       _isLoading = true;
       _errorMsg = null;
@@ -53,120 +73,133 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       await client.auth.signInWithPassword(email: email, password: password);
-      final learnerNotifier = ref.read(learnerStateNotifierProvider.notifier);
-      await learnerNotifier.loadProfile();
+      container.invalidate(courseStateNotifierProvider);
+      container.invalidate(roadmapStateNotifierProvider);
+      container.invalidate(placementStateNotifierProvider);
+      container.invalidate(lessonSessionNotifierProvider);
+      await container.read(learnerStateNotifierProvider.notifier).loadProfile();
 
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/dashboard');
+        context.go(
+          activeSessionHasStartedCourse.value ? '/dashboard' : '/courses',
+        );
       }
     } catch (error) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMsg = authErrorMessage(error);
+          _errorMsg = authErrorMessage(error, strings: s);
         });
       }
     }
   }
 
-  void _handleQuickDemo() {
+  Future<void> _handleQuickDemo() async {
     if (SupabaseConfig.hasRemoteConfiguration) return;
+    final storage = ref.read(localStorageServiceProvider);
+    final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
+    final courses = ref.read(courseStateNotifierProvider).courses;
+    var hasStarted =
+        activeSessionHasStartedCourse.value ||
+        (profile != null &&
+            (courses.isNotEmpty
+                ? courses.any((c) => hasStartedCourse(c, profile))
+                : (profile.courseLevels.isNotEmpty ||
+                      profile.scoresByCourse.values.any((m) => m.isNotEmpty) ||
+                      profile.completedLessonIds.isNotEmpty))) ||
+        hasStartedCourseInDemoSnapshot(
+          storage.getStringSync(LocalStorageService.demoLearnerSnapshotKey),
+        );
+    if (!hasStarted) {
+      final asyncSnapshot = await storage.getDemoLearnerSnapshot();
+      if (!mounted) return;
+      hasStarted = hasStartedCourseInDemoSnapshot(asyncSnapshot);
+    }
+    activeSessionHasStartedCourse.value = hasStarted;
     demoSessionActive.value = true;
-    context.go('/courses');
+    context.go(hasStarted ? '/dashboard' : '/courses');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0F2C),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top Brand & Header matching Reference
-              const SizedBox(height: 10),
-              Center(
-                child: Column(
-                  children: [
-                    const BilimYolLogo(size: 40, onDark: true),
-                    const SizedBox(height: 6),
-                    Text(
-                      'AI yordamida shaxsiylashtirilgan ta’lim',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFA5B4FC),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
 
-              // Hero Catchphrase & Yo'lchi AI Mascot banner
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF1E293B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Row(
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Column(
                       children: [
-                        const YolchiAIMascot(size: 58, mood: YolchiMood.waving),
+                        const BilimYolLogo(size: 38),
+                        const SizedBox(height: 6),
+                        Text(
+                          s.authTagline,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.ui(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: c.slatefine,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Single focal Hero Banner
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: c.heroGradient,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: c.cardShadow,
+                    ),
+                    child: Row(
+                      children: [
+                        const YolchiAIMascot(
+                          size: 54,
+                          mood: YolchiMood.waving,
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Kelajagingni',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    height: 1.1,
-                                  ),
+                              Text(
+                                s.authHeroHeadline1,
+                                style: AppTypography.ui(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  height: 1.15,
                                 ),
                               ),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'bilim bilan yarat!',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF67E8F9),
-                                    height: 1.1,
-                                  ),
+                              Text(
+                                s.authHeroHeadline2,
+                                style: AppTypography.ui(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF67E8F9),
+                                  height: 1.15,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Shaxsiy ta’lim yo‘lingizni bugun boshlang',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11,
-                                  color: const Color(0xFFC7D2FE),
+                                s.authHeroSubtitle,
+                                style: AppTypography.ui(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -175,361 +208,276 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 7,
-                      runSpacing: 6,
-                      children: [
-                        _FeatureMiniPill(icon: Icons.school_rounded, label: 'Shaxsiy yo‘l'),
-                        _FeatureMiniPill(icon: Icons.psychology_rounded, label: 'Yo‘lchi AI'),
-                        _FeatureMiniPill(icon: Icons.star_rounded, label: 'O‘sish'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
+                  ),
+                  const SizedBox(height: 18),
 
-              // Login Form Card matching Reference 2
-              AppCard(
-                backgroundColor: Colors.white,
-                borderRadius: 28,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Xush kelibsiz!',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Shaxsiy ta’lim yo‘lingizni davom ettirish uchun tizimga kiring',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    if (_errorMsg != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.errorLight,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline_rounded, color: Color(0xFFBE123C), size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _errorMsg!,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFBE123C),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    Text(
-                      'EMAIL MANZILINGIZ',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.email],
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'nomingiz@misol.uz',
-                        hintStyle: GoogleFonts.plusJakartaSans(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                        prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF6366F1)),
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.textMuted),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.textMuted),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          Text(
-                            'PAROL',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => context.push('/forgot-password'),
-                            child: Text(
-                              'Parolni unutdingizmi?',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF2563EB),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: !_passwordVisible,
-                      textInputAction: TextInputAction.done,
-                      autofillHints: const [AutofillHints.password],
-                      onSubmitted: (_) { if (!_isLoading) _handleLogin(); },
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        hintStyle: GoogleFonts.plusJakartaSans(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF6366F1)),
-                        suffixIcon: IconButton(
-                          tooltip: _passwordVisible ? 'Parolni yashirish' : 'Parolni ko‘rsatish',
-                          color: AppColors.textSecondary,
-                          onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                          icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.textMuted),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppColors.textMuted),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Primary Button: Kirish ->
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 48),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 3,
-                          shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
-                        ),
-                        onPressed: _isLoading ? null : _handleLogin,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      'Kirish',
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.arrow_forward_rounded, size: 16),
-                                ],
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    if (!SupabaseConfig.hasRemoteConfiguration) ...[
-                    // Divider yoki
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.grey.shade200)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'yoki',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: Colors.grey.shade200)),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Quick Demo Button
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        onPressed: _handleQuickDemo,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFFF59E0B)),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                'Namuna hisobi bilan kirish',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF334155),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ],
-
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      runSpacing: 5,
+                  // Unified Login Form Card
+                  AppCard(
+                    borderRadius: 24,
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Hisobingiz yo‘qmi? ',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
+                          s.loginTitle,
+                          style: AppTypography.ui(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: c.ink,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          s.loginSubtitle,
+                          style: AppTypography.ui(
+                            fontSize: 13,
+                            color: c.slatefine,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        InkWell(
-                          onTap: () => context.push('/register'),
-                          child: Text(
-                            'Ro‘yxatdan o‘tish',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF2563EB),
+                        const SizedBox(height: 18),
+
+                        if (_errorMsg != null) ...[
+                          AuthErrorBanner(message: _errorMsg!),
+                          const SizedBox(height: 14),
+                        ],
+
+                        Text(
+                          s.emailLabel,
+                          style: AppTypography.ui(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: c.graphite,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.emailHint,
+                            prefixIcon: Icon(
+                              Icons.mail_outline_rounded,
+                              size: 18,
+                              color: c.brand,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 14),
+
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              s.passwordLabel,
+                              style: AppTypography.ui(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: c.graphite,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => context.push('/forgot-password'),
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(44, 44),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 8,
+                                ),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                foregroundColor: c.brand,
+                              ),
+                              child: Text(
+                                s.forgotPassword,
+                                style: AppTypography.ui(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.brand,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: !_passwordVisible,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onChanged: (_) {
+                            if (_errorMsg != null) {
+                              setState(() => _errorMsg = null);
+                            }
+                          },
+                          onSubmitted: (_) {
+                            if (!_isLoading) _handleLogin();
+                          },
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: c.ink,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: s.passwordPlaceholder,
+                            prefixIcon: Icon(
+                              Icons.lock_outline_rounded,
+                              size: 18,
+                              color: c.brand,
+                            ),
+                            suffixIcon: IconButton(
+                              tooltip: _passwordVisible
+                                  ? s.passwordHideTooltip
+                                  : s.passwordShowTooltip,
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
+                              ),
+                              onPressed: () => setState(
+                                () => _passwordVisible = !_passwordVisible,
+                              ),
+                              icon: Icon(
+                                _passwordVisible
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: c.slatefine,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        AppButton(
+                          text: s.loginAction,
+                          isFullWidth: true,
+                          size: AppButtonSize.large,
+                          isLoading: _isLoading,
+                          rightIcon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          onPressed: _isLoading ? null : _handleLogin,
+                        ),
+                        const SizedBox(height: 14),
+
+                        if (!SupabaseConfig.hasRemoteConfiguration) ...[
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: c.hairline)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(
+                                  s.orDivider,
+                                  style: AppTypography.ui(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: c.faint,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: c.hairline)),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          AppButton(
+                            text: s.demoEnterAction,
+                            variant: AppButtonVariant.outline,
+                            isFullWidth: true,
+                            size: AppButtonSize.large,
+                            leftIcon: Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 18,
+                              color: c.warning,
+                            ),
+                            onPressed: _handleQuickDemo,
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              s.noAccountQuestion,
+                              style: AppTypography.ui(
+                                fontSize: 13,
+                                color: c.slatefine,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => context.push('/register'),
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(44, 44),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                foregroundColor: c.brand,
+                              ),
+                              child: Text(
+                                s.registerAction,
+                                style: AppTypography.ui(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.brand,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+                  ),
+                  const SizedBox(height: 12),
 
-class _FeatureMiniPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _FeatureMiniPill({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: const Color(0xFF67E8F9)),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => context.push('/welcome?replay=1'),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(44, 44),
+                        foregroundColor: c.slatefine,
+                      ),
+                      icon: Icon(
+                        Icons.explore_outlined,
+                        size: 17,
+                        color: c.path,
+                      ),
+                      label: Text(
+                        s.tourReplayAction,
+                        style: AppTypography.ui(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: c.path,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

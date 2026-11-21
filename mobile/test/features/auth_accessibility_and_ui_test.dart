@@ -403,28 +403,32 @@ void main() {
       );
 
       testWidgets(
-        'WelcomeScreen links and ListTile items meet contrast in $modeLabel',
+        'WelcomeScreen Product Tour controls and slides meet contrast in $modeLabel',
         (tester) async {
           await tester.pumpWidget(
             _wrapScreen(const WelcomeScreen(), theme: buildTheme()),
           );
           await tester.pumpAndSettle();
 
-          final loginBtn = tester.widget<TextButton>(
-            find.widgetWithText(TextButton, 'Kirish'),
-          );
-          final ctx = tester.element(find.widgetWithText(TextButton, 'Kirish'));
-          final btnFg =
-              loginBtn.style?.foregroundColor?.resolve({}) ??
-              Theme.of(ctx).textButtonTheme.style?.foregroundColor?.resolve({}) ??
-              Theme.of(ctx).colorScheme.primary;
-          expect(_contrastRatio(btnFg, bg), greaterThanOrEqualTo(4.5));
-
-          final stepTitle = tester.widget<Text>(find.text('Fanni tanlang'));
-          final tintBg =
-              isDark ? const Color(0xFF312E81) : AppColors.primaryLight;
+          final skipText = tester.widget<Text>(find.text('O‘tkazib yuborish'));
           expect(
-            _contrastRatio(stepTitle.style!.color!, tintBg),
+            _contrastRatio(skipText.style!.color!, bg),
+            greaterThanOrEqualTo(4.5),
+          );
+
+          final slideTitle = tester.widget<Text>(
+            find.text('Nimadan boshlashni biling.'),
+          );
+          expect(
+            _contrastRatio(slideTitle.style!.color!, bg),
+            greaterThanOrEqualTo(4.5),
+          );
+
+          final visualPillText = tester.widget<Text>(
+            find.text('Diagnostika nuqtani topadi'),
+          );
+          expect(
+            _contrastRatio(visualPillText.style!.color!, subtle),
             greaterThanOrEqualTo(4.5),
           );
         },
@@ -439,8 +443,12 @@ void main() {
           );
           await tester.pumpAndSettle();
 
+          final scaffoldEl = find.byType(Scaffold).evaluate().first;
           final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-          expect(scaffold.backgroundColor, equals(bg));
+          expect(
+            scaffold.backgroundColor ?? Theme.of(scaffoldEl).scaffoldBackgroundColor,
+            equals(bg),
+          );
 
           for (final label in [
             'Ism *',
@@ -460,9 +468,11 @@ void main() {
           expect(fields.length, equals(4));
           for (final field in fields) {
             final dec = field.decoration!;
-            final fill = dec.fillColor!;
+            final fill = dec.fillColor ?? theme.inputDecorationTheme.fillColor!;
             final textColor = field.style!.color!;
-            final hintColor = dec.hintStyle!.color!;
+            final hintColor =
+                dec.hintStyle?.color ??
+                theme.inputDecorationTheme.hintStyle!.color!;
             final iconColor = (dec.prefixIcon! as Icon).color!;
             expect(_contrastRatio(textColor, fill), greaterThanOrEqualTo(4.5));
             expect(_contrastRatio(hintColor, fill), greaterThanOrEqualTo(4.5));
@@ -474,9 +484,14 @@ void main() {
           );
           await tester.pumpAndSettle();
 
+          final forgotEl = find.byType(Scaffold).evaluate().first;
           final forgotScaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-          expect(forgotScaffold.backgroundColor, equals(bg));
-          final emailLabel = tester.widget<Text>(find.text('Email'));
+          expect(
+            forgotScaffold.backgroundColor ??
+                Theme.of(forgotEl).scaffoldBackgroundColor,
+            equals(bg),
+          );
+          final emailLabel = tester.widget<Text>(find.text('Email manzilingiz'));
           expect(
             _contrastRatio(emailLabel.style!.color!, surface),
             greaterThanOrEqualTo(4.5),
@@ -485,7 +500,8 @@ void main() {
           expect(
             _contrastRatio(
               forgotField.style!.color!,
-              forgotField.decoration!.fillColor!,
+              forgotField.decoration?.fillColor ??
+                  theme.inputDecorationTheme.fillColor!,
             ),
             greaterThanOrEqualTo(4.5),
           );
@@ -497,9 +513,14 @@ void main() {
         (tester) async {
           final theme = buildTheme();
           Color enabledSide(TextField field) =>
-              (field.decoration!.enabledBorder! as OutlineInputBorder)
+              ((field.decoration?.enabledBorder ??
+                          theme.inputDecorationTheme.enabledBorder!)
+                      as OutlineInputBorder)
                   .borderSide
                   .color;
+          Color fieldFill(TextField field) =>
+              field.decoration?.fillColor ??
+              theme.inputDecorationTheme.fillColor!;
 
           // Theme default (DictionarySheet, ResetPasswordScreen, ReinforcementSheet).
           final themeSide =
@@ -519,7 +540,7 @@ void main() {
           for (final field in registerFields) {
             final side = enabledSide(field);
             expect(
-              _contrastRatio(side, field.decoration!.fillColor!),
+              _contrastRatio(side, fieldFill(field)),
               greaterThanOrEqualTo(3.0),
             );
             expect(_contrastRatio(side, surface), greaterThanOrEqualTo(3.0));
@@ -533,7 +554,7 @@ void main() {
           expect(
             _contrastRatio(
               enabledSide(forgotField),
-              forgotField.decoration!.fillColor!,
+              fieldFill(forgotField),
             ),
             greaterThanOrEqualTo(3.0),
           );
@@ -552,11 +573,11 @@ void main() {
           for (final field in loginFields) {
             final side = enabledSide(field);
             expect(
-              _contrastRatio(side, field.decoration!.fillColor!),
+              _contrastRatio(side, fieldFill(field)),
               greaterThanOrEqualTo(3.0),
             );
             expect(
-              _contrastRatio(side, Colors.white),
+              _contrastRatio(side, surface),
               greaterThanOrEqualTo(3.0),
             );
           }
@@ -564,34 +585,38 @@ void main() {
       );
 
       testWidgets(
-        'LoginScreen onDark logo and white-card inputs meet contrast in $modeLabel',
+        'LoginScreen logo and card inputs meet contrast in $modeLabel',
         (tester) async {
+          final theme = buildTheme();
           await tester.pumpWidget(
-            _wrapScreen(const LoginScreen(), theme: buildTheme()),
+            _wrapScreen(const LoginScreen(), theme: theme),
           );
           await tester.pumpAndSettle();
 
           final logo = tester.widget<BilimYolLogo>(find.byType(BilimYolLogo));
-          expect(logo.onDark, isTrue);
+          expect(logo.onDark, isFalse);
 
           final fields = tester.widgetList<TextField>(find.byType(TextField));
           expect(fields.length, equals(2));
           for (final field in fields) {
             final dec = field.decoration!;
-            final fill = dec.fillColor!;
+            final fill = dec.fillColor ?? theme.inputDecorationTheme.fillColor!;
+            final hintColor =
+                dec.hintStyle?.color ??
+                theme.inputDecorationTheme.hintStyle!.color!;
             expect(
               _contrastRatio(field.style!.color!, fill),
               greaterThanOrEqualTo(4.5),
             );
             expect(
-              _contrastRatio(dec.hintStyle!.color!, fill),
+              _contrastRatio(hintColor, fill),
               greaterThanOrEqualTo(4.5),
             );
           }
 
           final yoki = tester.widget<Text>(find.text('yoki'));
           expect(
-            _contrastRatio(yoki.style!.color!, Colors.white),
+            _contrastRatio(yoki.style!.color!, surface),
             greaterThanOrEqualTo(4.5),
           );
         },
@@ -642,12 +667,8 @@ void main() {
                 matching: find.byType(AppCard),
               )
               .first;
-          final tintBg =
-              isDark ? const Color(0xFF312E81) : AppColors.primaryLight;
-          final selectedCardBg = Color.alphaBlend(
-            tintBg.withValues(alpha: 0.45),
-            bg,
-          );
+          final selectedCardBg =
+              tester.widget<AppCard>(selectedCard).backgroundColor!;
           final selectedDesc = tester.widget<Text>(
             find
                 .descendant(
@@ -698,8 +719,12 @@ void main() {
               .seedQuickDemo();
           await tester.pumpAndSettle();
 
+          final kmEl = find.byType(Scaffold).evaluate().first;
           final kmScaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-          expect(kmScaffold.backgroundColor, equals(bg));
+          expect(
+            kmScaffold.backgroundColor ?? Theme.of(kmEl).scaffoldBackgroundColor,
+            equals(bg),
+          );
           expect(find.byType(EdTechSectionHeader), findsOneWidget);
 
           final kmHeaderLabel = tester.widget<Text>(
@@ -751,8 +776,13 @@ void main() {
             _wrapScreen(const ProgressScreen(), theme: theme),
           );
           await tester.pumpAndSettle();
+          final progEl = find.byType(Scaffold).evaluate().first;
           final progScaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-          expect(progScaffold.backgroundColor, equals(bg));
+          expect(
+            progScaffold.backgroundColor ??
+                Theme.of(progEl).scaffoldBackgroundColor,
+            equals(bg),
+          );
           for (final label in [
             'Bajarilgan dars',
             'O‘zlashtirish',
@@ -765,9 +795,9 @@ void main() {
               reason: 'ProgressScreen "$label" contrast in $modeLabel',
             );
           }
-          final badgeTitle = tester.widget<Text>(find.text('Ilk Qadam'));
+          final badgeTitle = tester.widget<Text>(find.text('Birinchi qadam'));
           final badgeDesc = tester.widget<Text>(
-            find.text('Birinchi dars yakunlandi'),
+            find.text('Ilk darsni yakunlash'),
           );
           expect(
             _contrastRatio(badgeTitle.style!.color!, subtle),
@@ -2018,8 +2048,8 @@ void main() {
           final cardBg = surface;
           for (final subjectTitle in const [
             'Ingliz tili',
-            'IT & Algoritmlar',
-            'Mantiqiy fikrlash',
+            'IT & Kodlash',
+            'Mantiq',
           ]) {
             final titleFinder = find.text(subjectTitle);
             await tester.ensureVisible(titleFinder);
@@ -2328,7 +2358,6 @@ void main() {
             AsyncValue.error(Exception('offline'), StackTrace.empty);
         await tester.pumpAndSettle();
 
-        const cosmosBg = Color(0xFF090C22);
         final errMsg = tester.widget<Text>(
           find.text('Profil ma’lumotlarini yuklab bo‘lmadi.'),
         );
@@ -2336,11 +2365,11 @@ void main() {
           find.text('Internet aloqasini tekshirib, qayta urinib ko‘ring.'),
         );
         expect(
-          _contrastRatio(errMsg.style!.color!, cosmosBg),
+          _contrastRatio(errMsg.style!.color!, AppColors.background),
           greaterThanOrEqualTo(4.5),
         );
         expect(
-          _contrastRatio(errSub.style!.color!, cosmosBg),
+          _contrastRatio(errSub.style!.color!, AppColors.background),
           greaterThanOrEqualTo(4.5),
         );
 
@@ -2354,12 +2383,15 @@ void main() {
         await tester.pumpAndSettle();
         final searchField = tester.widget<TextField>(find.byType(TextField));
         final searchCtx = tester.element(find.byType(TextField));
+        final searchFill =
+            searchField.decoration?.fillColor ??
+            Theme.of(searchCtx).inputDecorationTheme.fillColor!;
         final effectiveCursor =
             searchField.cursorColor ?? Theme.of(searchCtx).colorScheme.primary;
         expect(
-          _contrastRatio(effectiveCursor, const Color(0xFF14183E)),
+          _contrastRatio(effectiveCursor, searchFill),
           greaterThanOrEqualTo(3.0),
-          reason: 'Dashboard search cursor on #14183E in Light mode',
+          reason: 'Dashboard search cursor contrast in Light mode',
         );
       },
     );
@@ -2799,9 +2831,9 @@ void main() {
           for (final label in [
             'Bajarilgan dars',
             'O‘zlashtirish',
-            'Kun ketma-ket 🔥',
-            'Umumiy ballar ✨',
-            'Ilk Qadam',
+            'Kun ketma-ket',
+            'Umumiy ballar',
+            'Birinchi qadam',
           ]) {
             final p = tester.renderObject<RenderParagraph>(find.text(label));
             expect(
@@ -3227,7 +3259,7 @@ void main() {
                     initialLevel: InitialLevel.beginner,
                   );
               await tester.pumpAndSettle();
-              final badgeLabel = localeCode == 'ru' ? 'Выбрано' : 'Tanlangan';
+              final badgeLabel = localeCode == 'ru' ? 'Выбран' : 'Tanlangan';
               await tester.scrollUntilVisible(find.text(badgeLabel), 200);
               await tester.pumpAndSettle();
               expect(find.text(badgeLabel), findsOneWidget);
@@ -3541,7 +3573,7 @@ void main() {
 
               // Trigger quick prompt -> online or offline state
               final chipLabel = localeCode == 'ru'
-                  ? 'Объясни правило проще'
+                  ? 'Объясни проще'
                   : 'Qoidani sodda tushuntir';
               await _pumpWithAllErrorsChecked(tester, () async {
                 await tester.tap(find.text(chipLabel));
@@ -3673,6 +3705,12 @@ void main() {
             );
             await tester.pumpAndSettle();
 
+            final skipTour = find.text('O‘tkazib yuborish');
+            if (skipTour.evaluate().isNotEmpty) {
+              await tester.tap(skipTour);
+              await tester.pumpAndSettle();
+            }
+
             final demoBtn = find.text('Namuna hisobi bilan kirish');
             await tester.ensureVisible(demoBtn);
             await tester.tap(demoBtn);
@@ -3721,6 +3759,12 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
+
+          final skipTour = find.text('O‘tkazib yuborish');
+          if (skipTour.evaluate().isNotEmpty) {
+            await tester.tap(skipTour);
+            await tester.pumpAndSettle();
+          }
 
           final demoBtn = find.text('Namuna hisobi bilan kirish');
           await tester.ensureVisible(demoBtn);

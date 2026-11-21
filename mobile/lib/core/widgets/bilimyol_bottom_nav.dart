@@ -1,59 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../constants/app_colors.dart';
+import '../l10n/app_strings.dart';
+import '../theme/app_semantic_colors.dart';
+import '../theme/app_typography.dart';
 
 class BilimYolBottomNav extends StatelessWidget {
   final int currentIndex;
 
   const BilimYolBottomNav({super.key, required this.currentIndex});
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
-    final platformCode =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
+    final disableAnimations =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final items = [
       _NavItem(
         icon: Icons.home_rounded,
-        label: isRu ? 'Главная' : 'Bosh sahifa',
+        label: s.navHome,
         route: '/dashboard',
       ),
       _NavItem(
         icon: Icons.alt_route_rounded,
-        label: isRu ? 'Учебный путь' : 'Ta’lim yo‘li',
+        label: s.navRoadmap,
         route: '/roadmap',
       ),
       _NavItem(
         icon: Icons.smart_toy_rounded,
-        label: 'Yo‘lchi AI',
+        label: s.navAiTutor,
         route: '/ai-tutor',
       ),
       _NavItem(
         icon: Icons.bar_chart_rounded,
-        label: isRu ? 'Прогресс' : 'Natijalar',
+        label: s.navProgress,
         route: '/progress',
       ),
       _NavItem(
         icon: Icons.person_rounded,
-        label: isRu ? 'Профиль' : 'Profil',
+        label: s.navProfile,
         route: '/profile',
       ),
     ];
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor(context),
+        color: c.paper,
         border: Border(
           top: BorderSide(
-            color: AppColors.borderColor(context),
+            color: c.hairline,
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            color: (c.isDark ? Colors.black : const Color(0xFF0F172A))
+                .withValues(alpha: c.isDark ? 0.28 : 0.05),
             blurRadius: 24,
             offset: const Offset(0, -6),
           ),
@@ -68,8 +81,6 @@ class BilimYolBottomNav extends StatelessWidget {
             children: List.generate(items.length, (index) {
               final item = items[index];
               final isSelected = currentIndex == index;
-              final activeColor = AppColors.primaryAccentOnSurface(context);
-              final inactiveColor = AppColors.textMutedColor(context);
 
               return Expanded(
                 child: Semantics(
@@ -83,16 +94,17 @@ class BilimYolBottomNav extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(14),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: disableAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      constraints: const BoxConstraints(minHeight: 44),
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 2,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primaryTint(context)
-                            : Colors.transparent,
+                        color: isSelected ? c.brandSoft : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
@@ -101,7 +113,7 @@ class BilimYolBottomNav extends StatelessWidget {
                           Icon(
                             item.icon,
                             size: 22,
-                            color: isSelected ? activeColor : inactiveColor,
+                            color: isSelected ? c.brand : c.slatefine,
                           ),
                           const SizedBox(height: 3),
                           FittedBox(
@@ -109,12 +121,13 @@ class BilimYolBottomNav extends StatelessWidget {
                             child: Text(
                               item.label,
                               maxLines: 1,
-                              style: GoogleFonts.plusJakartaSans(
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.ui(
                                 fontSize: 10,
                                 fontWeight: isSelected
                                     ? FontWeight.w800
                                     : FontWeight.w600,
-                                color: isSelected ? activeColor : inactiveColor,
+                                color: isSelected ? c.brand : c.slatefine,
                               ),
                             ),
                           ),

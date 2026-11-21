@@ -1,7 +1,11 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/audio/lesson_audio_controller.dart';
+import '../core/auth/demo_session.dart';
+import '../core/config/supabase_config.dart';
+import '../core/l10n/app_strings.dart';
+import '../core/storage/local_storage_service.dart';
 import '../data/repositories/supabase_course_repository.dart';
 import '../data/repositories/supabase_lesson_repository.dart';
 import '../domain/repositories/i_course_repository.dart';
@@ -25,14 +29,145 @@ import '../domain/entities/question.dart';
 import '../domain/entities/learning_path_node.dart';
 import '../domain/entities/lesson.dart';
 import '../domain/personalization/adaptive_question_selector.dart';
+import '../domain/personalization/learning_start.dart';
 
 import '../data/datasources/english/placement_questions_data.dart';
 import '../data/services/i_ai_tutor_service.dart';
 import '../data/services/demo_ai_tutor_service.dart';
 import '../data/services/supabase_ai_tutor_service.dart';
-import '../core/config/supabase_config.dart';
 import '../data/repositories/supabase_learner_repository.dart';
 import '../features/lesson/reading_position.dart';
+
+// --- App Storage & Settings ---
+final localStorageServiceProvider = Provider<LocalStorageService>(
+  (ref) => LocalStorageService(),
+);
+
+class AppSettingsState {
+  final String localeCode;
+  final ThemeMode themeMode;
+  final bool productTourCompleted;
+
+  const AppSettingsState({
+    this.localeCode = 'uz',
+    this.themeMode = ThemeMode.system,
+    this.productTourCompleted = false,
+  });
+
+  Locale get locale => Locale(localeCode == 'ru' ? 'ru' : 'uz');
+
+  AppSettingsState copyWith({
+    String? localeCode,
+    ThemeMode? themeMode,
+    bool? productTourCompleted,
+  }) {
+    return AppSettingsState(
+      localeCode: localeCode ?? this.localeCode,
+      themeMode: themeMode ?? this.themeMode,
+      productTourCompleted: productTourCompleted ?? this.productTourCompleted,
+    );
+  }
+}
+
+final initialAppSettingsProvider = Provider<AppSettingsState?>((ref) => null);
+
+class AppSettingsNotifier extends StateNotifier<AppSettingsState> {
+  final LocalStorageService _storage;
+  bool _localeMutated = false;
+  bool _themeModeMutated = false;
+  bool _tourMutated = false;
+  int _localeWriteSeq = 0;
+  int _themeModeWriteSeq = 0;
+  int _tourWriteSeq = 0;
+  String _latestLocaleCode = 'uz';
+  ThemeMode _latestThemeMode = ThemeMode.system;
+  bool _latestTourCompleted = false;
+
+  AppSettingsNotifier(this._storage, {AppSettingsState? initial})
+    : super(initial ?? const AppSettingsState()) {
+    if (initial == null) {
+      _hydrate();
+    } else {
+      _latestLocaleCode = initial.localeCode == 'ru' ? 'ru' : 'uz';
+      _latestThemeMode = initial.themeMode;
+      _latestTourCompleted = initial.productTourCompleted;
+      productTourCompleted.value = initial.productTourCompleted;
+    }
+  }
+
+  Future<void> _hydrate() async {
+    final localeCode = await _storage.getLocaleCode();
+    final themeMode = await _storage.getThemeMode();
+    final tourDone = await _storage.getProductTourCompleted();
+    if (!mounted) return;
+    if (!_localeMutated) _latestLocaleCode = localeCode;
+    if (!_themeModeMutated) _latestThemeMode = themeMode;
+    if (!_tourMutated) {
+      _latestTourCompleted = tourDone;
+      productTourCompleted.value = tourDone;
+    }
+    state = state.copyWith(
+      localeCode: _localeMutated ? null : localeCode,
+      themeMode: _themeModeMutated ? null : themeMode,
+      productTourCompleted: _tourMutated ? null : tourDone,
+    );
+  }
+
+  Future<void> setLocale(String code) async {
+    _localeMutated = true;
+    final normalized = code == 'ru' ? 'ru' : 'uz';
+    _latestLocaleCode = normalized;
+    var targetSeq = ++_localeWriteSeq;
+    var targetValue = normalized;
+    state = state.copyWith(localeCode: normalized);
+    while (true) {
+      await _storage.setLocaleCode(targetValue);
+      if (targetSeq == _localeWriteSeq) break;
+      targetSeq = _localeWriteSeq;
+      targetValue = _latestLocaleCode;
+    }
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeModeMutated = true;
+    _latestThemeMode = mode;
+    var targetSeq = ++_themeModeWriteSeq;
+    var targetValue = mode;
+    state = state.copyWith(themeMode: mode);
+    while (true) {
+      await _storage.setThemeMode(targetValue);
+      if (targetSeq == _themeModeWriteSeq) break;
+      targetSeq = _themeModeWriteSeq;
+      targetValue = _latestThemeMode;
+    }
+  }
+
+  Future<void> _setProductTourCompleted(bool completed) async {
+    _tourMutated = true;
+    _latestTourCompleted = completed;
+    var targetSeq = ++_tourWriteSeq;
+    var targetValue = completed;
+    state = state.copyWith(productTourCompleted: completed);
+    productTourCompleted.value = completed;
+    while (true) {
+      await _storage.setProductTourCompleted(targetValue);
+      if (targetSeq == _tourWriteSeq) break;
+      targetSeq = _tourWriteSeq;
+      targetValue = _latestTourCompleted;
+    }
+  }
+
+  Future<void> completeProductTour() => _setProductTourCompleted(true);
+
+  Future<void> resetProductTour() => _setProductTourCompleted(false);
+}
+
+final appSettingsProvider =
+    StateNotifierProvider<AppSettingsNotifier, AppSettingsState>((ref) {
+      final storage = ref.watch(localStorageServiceProvider);
+      final initial = ref.watch(initialAppSettingsProvider);
+      return AppSettingsNotifier(storage, initial: initial);
+    });
 
 // --- Singleton Service & Repository Providers ---
 final aiTutorServiceProvider = Provider<IAITutorService>(
@@ -47,7 +182,9 @@ final lessonRepositoryProvider = Provider<ILessonRepository>(
   (ref) => SupabaseLessonRepository(),
 );
 final learnerRepositoryProvider = Provider<ILearnerRepository>(
-  (ref) => SupabaseLearnerRepository(),
+  (ref) => SupabaseLearnerRepository(
+    storage: ref.watch(localStorageServiceProvider),
+  ),
 );
 
 bool _isFlutterTestBinding() => WidgetsBinding.instance.runtimeType
@@ -162,6 +299,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
         return;
       }
       state = AsyncValue.data(profile);
+      _syncHasStartedCourse(profile);
     } catch (e, st) {
       if (!mounted ||
           generation != _loadGeneration ||
@@ -189,15 +327,63 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
         ref.read(courseStateNotifierProvider).activeCourse?.id == courseId) {
       state = AsyncValue.data(saved);
     }
+    if (mounted) {
+      _syncHasStartedCourse(saved);
+    }
+  }
+
+  Future<void> updateDisplayName(String rawName) async {
+    final trimmed = rawName.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError('Name must not be empty');
+    }
+    final repo = ref.read(learnerRepositoryProvider);
+    final current = state.valueOrNull ?? await repo.getProfile();
+    final saved = await repo.updateProfile(
+      current.copyWith(name: trimmed),
+      fields: const {LearnerProfileField.name},
+    );
+    if (mounted) {
+      state = AsyncValue.data(saved);
+      _syncHasStartedCourse(saved);
+    }
+  }
+
+  void _syncHasStartedCourse(LearnerProfile profile) {
+    final courses = ref.read(courseStateNotifierProvider).courses;
+    if (courses.isNotEmpty) {
+      activeSessionHasStartedCourse.value = courses.any(
+        (c) => hasStartedCourse(c, profile),
+      );
+    } else {
+      activeSessionHasStartedCourse.value =
+          profile.courseLevels.isNotEmpty ||
+          profile.scoresByCourse.values.any((m) => m.isNotEmpty) ||
+          profile.placementScoreByCourse.isNotEmpty ||
+          profile.placementCefrByCourse.isNotEmpty ||
+          profile.completedLessonIds.isNotEmpty;
+    }
   }
 
   Future<void> resetAll() async {
+    final generation = ++_loadGeneration;
     state = const AsyncValue.loading();
-    final resetUseCase = ref.read(resetDemoUseCaseProvider);
-    final resetProfile = await resetUseCase.execute();
-    state = AsyncValue.data(resetProfile);
-    ref.invalidate(courseStateNotifierProvider);
-    ref.invalidate(roadmapStateNotifierProvider);
+    try {
+      final resetUseCase = ref.read(resetDemoUseCaseProvider);
+      final resetProfile = await resetUseCase.execute();
+      if (!mounted || generation != _loadGeneration) return;
+      activeSessionHasStartedCourse.value = false;
+      state = AsyncValue.data(resetProfile);
+      ref.invalidate(courseStateNotifierProvider);
+      ref.invalidate(roadmapStateNotifierProvider);
+      ref.invalidate(placementStateNotifierProvider);
+      ref.invalidate(lessonSessionNotifierProvider);
+    } catch (e, st) {
+      if (mounted && generation == _loadGeneration) {
+        state = AsyncValue.error(e, st);
+      }
+      rethrow;
+    }
   }
 
   /// Seeds a ready-made adaptive state so judges can reach the personalised
@@ -211,7 +397,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     final skills = courseState.activeSkills;
     if (course == null || skills.isEmpty) return;
 
-    const preset = [82, 74, 41, 68];
+    const preset = [82, 84, 41, 68];
     final scores = <String, SkillScore>{};
     for (var i = 0; i < skills.length; i++) {
       final score = preset[i % preset.length];
@@ -234,7 +420,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
       ),
     );
     await loadProfile();
-    ref.invalidate(roadmapStateNotifierProvider);
+    await ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(course.id);
   }
 
   Future<void> recordFlashcardReview({
@@ -296,14 +482,27 @@ class CourseState {
 class CourseStateNotifier extends StateNotifier<CourseState> {
   final Ref ref;
   int _initGeneration = 0;
+  Future<void>? _initFuture;
+  bool _isSelecting = false;
 
   CourseStateNotifier(this.ref)
     : super(const CourseState(courses: [], activeSkills: [], isLoading: true)) {
     init();
   }
 
-  Future<void> init() async {
+  Future<void> init() {
     final generation = ++_initGeneration;
+    late final Future<void> future;
+    future = _runInit(generation).whenComplete(() {
+      if (identical(_initFuture, future)) {
+        _initFuture = null;
+      }
+    });
+    _initFuture = future;
+    return future;
+  }
+
+  Future<void> _runInit(int generation) async {
     state = state.copyWith(isLoading: true);
     try {
       final courseRepo = ref.read(courseRepositoryProvider);
@@ -332,6 +531,9 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
         activeSkills: skills,
         isLoading: false,
       );
+      activeSessionHasStartedCourse.value = allCourses.any(
+        (c) => hasStartedCourse(c, profile),
+      );
 
       if (active != null) {
         ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(active.id);
@@ -340,7 +542,8 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
       if (!mounted || generation != _initGeneration) return;
       state = state.copyWith(
         isLoading: false,
-        error: _isRuPlatformLocale()
+        error: (ref.read(appSettingsProvider).localeCode == 'ru' ||
+                _isRuPlatformLocale())
             ? 'Не удалось загрузить предметы. Попробуйте снова.'
             : 'Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
       );
@@ -348,9 +551,15 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
   }
 
   Future<void> selectCourse(String courseId) async {
-    if (!mounted || state.isLoading) return;
-    state = state.copyWith(isLoading: true);
+    if (!mounted || _isSelecting) return;
+    _isSelecting = true;
     try {
+      final pendingInit = _initFuture;
+      if (pendingInit != null) {
+        await pendingInit;
+        if (!mounted) return;
+      }
+      state = state.copyWith(isLoading: true);
       final courseRepo = ref.read(courseRepositoryProvider);
       final skills = await courseRepo.getSkillsByCourseId(courseId);
       if (!mounted) return;
@@ -371,10 +580,13 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
       if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
-        error: _isRuPlatformLocale()
+        error: (ref.read(appSettingsProvider).localeCode == 'ru' ||
+                _isRuPlatformLocale())
             ? 'Не удалось выбрать предмет. Попробуйте снова.'
             : 'Kursni tanlab bo‘lmadi. Qayta urinib ko‘ring.',
       );
+    } finally {
+      _isSelecting = false;
     }
   }
 }
@@ -439,6 +651,8 @@ class PlacementState {
     DateTime? questionStartedAt,
     DateTime? lastSubmittedAt,
     bool? canRetake,
+    String? notice,
+    bool clearNotice = false,
   }) {
     return PlacementState(
       courseId: courseId ?? this.courseId,
@@ -457,7 +671,7 @@ class PlacementState {
       lastSubmittedAt: lastSubmittedAt ?? this.lastSubmittedAt,
       sessionId: sessionId,
       canRetake: canRetake ?? this.canRetake,
-      notice: notice,
+      notice: clearNotice ? null : (notice ?? this.notice),
     );
   }
 }
@@ -619,10 +833,13 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         timestamp: completed.completedAt.millisecondsSinceEpoch,
         review: completed.review,
       );
-      await ref
-          .read(roadmapStateNotifierProvider.notifier)
-          .loadRoadmap(courseId);
-      if (!isCurrent()) return;
+      final activeCourse = ref.read(courseStateNotifierProvider).activeCourse;
+      if (activeCourse == null || activeCourse.id == courseId) {
+        await ref
+            .read(roadmapStateNotifierProvider.notifier)
+            .loadRoadmap(courseId);
+        if (!isCurrent()) return;
+      }
     }
     state = PlacementState(
       courseId: courseId,
@@ -637,11 +854,18 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       hasLoaded: true,
       canRetake: session.canRetake,
       notice: session.wasReset
-          ? (_isRuPlatformLocale()
+          ? ((ref.read(appSettingsProvider).localeCode == 'ru' ||
+                    _isRuPlatformLocale())
                 ? 'Вопросы обновлены или срок сессии истёк. Диагностика началась заново.'
                 : 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.')
           : null,
     );
+  }
+
+  void clearNotice() {
+    if (state.notice != null) {
+      state = state.copyWith(clearNotice: true);
+    }
   }
 
   Future<bool> submitAnswer(
@@ -660,6 +884,10 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         state.sessionId == null &&
         state.lastSubmittedAt != null &&
         now.difference(state.lastSubmittedAt!).inMilliseconds < 800) {
+      final localeCode = ref.read(appSettingsProvider).localeCode;
+      state = state.copyWith(
+        notice: AppStrings.forCode(localeCode).placementFastTapNotice,
+      );
       return false;
     }
 
@@ -674,7 +902,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
     final courseId = state.courseId;
     bool isCurrent() => mounted && identical(_request, request);
     final sessionId = state.sessionId;
-    state = state.copyWith(isSubmitting: true);
+    state = state.copyWith(isSubmitting: true, clearNotice: true);
     final learnerRepository = ref.read(learnerRepositoryProvider);
     if (sessionId != null) {
       try {
@@ -747,44 +975,42 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         nextQ == null || state.questionNumber >= state.totalQuestionsToAsk;
 
     if (isDone) {
-      state = state.copyWith(
-        history: updatedHistory,
-        submissions: updatedSubmissions,
-        clearCurrentQuestion: true,
-        isSubmitting: true,
-        lastSubmittedAt: now,
-      );
-
       final submitUseCase = ref.read(submitPlacementTestUseCaseProvider);
       late final AssessmentResult result;
       try {
         result = await submitUseCase.execute(
-          state.courseId,
+          courseId,
           updatedSubmissions,
         );
       } catch (_) {
         if (isCurrent()) {
-          state = state.copyWith(
-            currentQuestion: currentQ,
-            isSubmitting: false,
-          );
+          state = state.copyWith(isSubmitting: false);
         }
         rethrow;
       }
       if (!isCurrent()) return false;
 
-      await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
-      if (!isCurrent()) return false;
       await ref
-          .read(roadmapStateNotifierProvider.notifier)
-          .loadRoadmap(state.courseId);
+          .read(learnerStateNotifierProvider.notifier)
+          .loadProfile(isCurrent: isCurrent);
       if (!isCurrent()) return false;
+      final activeCourse = ref.read(courseStateNotifierProvider).activeCourse;
+      if (activeCourse == null || activeCourse.id == courseId) {
+        await ref
+            .read(roadmapStateNotifierProvider.notifier)
+            .loadRoadmap(courseId);
+        if (!isCurrent()) return false;
+      }
 
       state = state.copyWith(
+        history: updatedHistory,
+        submissions: updatedSubmissions,
+        clearCurrentQuestion: true,
         isSubmitting: false,
         result: result,
         canRetake: true,
         lastSubmittedAt: DateTime.now(),
+        clearNotice: true,
       );
 
       return true;
@@ -797,6 +1023,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
         isSubmitting: false,
         questionStartedAt: DateTime.now(),
         lastSubmittedAt: now,
+        clearNotice: true,
       );
       return false;
     }
@@ -957,6 +1184,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   int _stepGeneration = 0;
   int _answerGeneration = 0;
   final Set<String> _passedQuestionIds = {};
+  final Map<String, LessonAnswerResult> _pendingSubmittedResults = {};
   ReinforcementResult? _completedReinforcement;
   String? _lastLessonId;
 
@@ -968,15 +1196,22 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   String? get _accountId =>
       ref.read(learnerStateNotifierProvider).valueOrNull?.id;
 
+  String _resolveLocale(String? uiLocale) =>
+      uiLocale ??
+      ((ref.read(appSettingsProvider).localeCode == 'ru' ||
+              _isRuPlatformLocale())
+          ? 'ru'
+          : 'uz');
+
   Future<void> startLesson(String lessonId, {String? uiLocale}) async {
     final generation = ++_lessonGeneration;
     _stepGeneration++;
     _answerGeneration++;
     _passedQuestionIds.clear();
+    _pendingSubmittedResults.clear();
     _completedReinforcement = null;
     _lastLessonId = lessonId;
-    final resolvedLocale =
-        uiLocale ?? (_isRuPlatformLocale() ? 'ru' : 'uz');
+    final resolvedLocale = _resolveLocale(uiLocale);
     state = const LessonSessionState(isLoading: true);
     final startUseCase = ref.read(startLessonUseCaseProvider);
     try {
@@ -1028,8 +1263,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   Future<void> nextStep({String? uiLocale}) async {
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
-    final resolvedLocale =
-        uiLocale ?? (_isRuPlatformLocale() ? 'ru' : 'uz');
+    final resolvedLocale = _resolveLocale(uiLocale);
     if (state.currentStepIndex < lesson.steps.length - 1) {
       final nextIndex = state.currentStepIndex + 1;
       _stepGeneration++;
@@ -1154,6 +1388,12 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     if (question == null || index < 0 || index >= question.options.length) {
       return;
     }
+    if (!lesson.requiresMastery &&
+        state.answerResult != null &&
+        !state.answerResult!.isCorrect &&
+        state.selectedOptionIndex == index) {
+      return;
+    }
     state = state.copyWith(
       selectedOptionIndex: index,
       clearAnswerResult: true,
@@ -1264,14 +1504,16 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     state = state.copyWith(checkedRubricIds: updated);
   }
 
-  Future<void> submitInteractiveQuiz({String uiLocale = 'uz'}) async {
+  Future<void> submitInteractiveQuiz({String? uiLocale}) async {
     final lesson = state.lesson;
     if (lesson == null ||
         state.isSubmittingAnswer ||
         state.isCompleted) {
       return;
     }
+    final resolvedLocale = _resolveLocale(uiLocale);
 
+    final currentStepIndex = state.currentStepIndex;
     final currentStep = _activeStep(lesson);
     final question = currentStep?.interactiveQuestion;
     if (question == null) return;
@@ -1293,8 +1535,20 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         ? state.selectedOptionIndex!
         : 0;
     final selectedText = isTextOrSelf ? state.textAnswer.trim() : null;
+    final inputKey = isTextOrSelf
+        ? selectedText!
+        : isWordMatch
+        ? (state.selectedMatchPairs.entries
+                .map((e) => '${e.key}=${e.value}')
+                .toList()
+              ..sort())
+            .join('&')
+        : isSentenceOrder
+        ? state.selectedOrderTokens.join('\u0001')
+        : '$selectedIndex';
     final session = _lessonGeneration;
     final step = _stepGeneration;
+    final cacheKey = '$currentStepIndex:${question.id}:$inputKey';
 
     final generation = ++_answerGeneration;
     state = state.copyWith(
@@ -1303,19 +1557,27 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       clearAnswerError: true,
     );
 
+    var justSubmitted = false;
     try {
       if (!_isCurrent(session, step, generation)) return;
-      final submitUseCase = ref.read(submitLessonAnswerUseCaseProvider);
-      final result = await submitUseCase.execute(
-        question: question,
-        lessonId: lesson.id,
-        selectedIndex: selectedIndex,
-        selectedText: selectedText,
-        matchedPairs: isWordMatch ? state.selectedMatchPairs : null,
-        orderedTokens: isSentenceOrder ? state.selectedOrderTokens : null,
-        uiLocale: uiLocale,
-      );
-      if (!_isCurrent(session, step, generation)) return;
+      var result = _pendingSubmittedResults[cacheKey];
+      if (result == null) {
+        final submitUseCase = ref.read(submitLessonAnswerUseCaseProvider);
+        result = await submitUseCase.execute(
+          question: question,
+          lessonId: lesson.id,
+          selectedIndex: selectedIndex,
+          selectedText: selectedText,
+          matchedPairs: isWordMatch ? state.selectedMatchPairs : null,
+          orderedTokens: isSentenceOrder ? state.selectedOrderTokens : null,
+          uiLocale: resolvedLocale,
+        );
+        if (!_isCurrent(session, step, generation)) return;
+        justSubmitted = true;
+        if (result.isCorrect) {
+          _pendingSubmittedResults[cacheKey] = result;
+        }
+      }
       final updatedSkillStreaks = Map<String, int>.from(
         state.consecutiveMistakesBySkill,
       );
@@ -1323,25 +1585,41 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         state.consecutiveMistakesByQuestion,
       );
       var roadmapRefreshed = false;
+      final completedOnFinalStep =
+          result.isCorrect &&
+          currentStepIndex == lesson.steps.length - 1 &&
+          !question.isSelfAssessed;
       if (result.isCorrect) {
         updatedSkillStreaks[question.skillId] = 0;
         updatedQuestionStreaks[question.id] = 0;
         _passedQuestionIds.add(question.id);
-        if (state.currentStepIndex == lesson.steps.length - 1 &&
-            !question.isSelfAssessed) {
+        if (completedOnFinalStep) {
           final completed = await _completeLesson(
             lesson,
             session,
             step,
             generation,
-            uiLocale: uiLocale,
+            uiLocale: resolvedLocale,
           );
           if (!_isCurrent(session, step, generation)) return;
           if (!completed) {
-            await ref
-                .read(roadmapStateNotifierProvider.notifier)
-                .loadRoadmap(lesson.courseId);
-            if (!_isCurrent(session, step, generation)) return;
+            if (justSubmitted) {
+              await ref
+                  .read(learnerStateNotifierProvider.notifier)
+                  .loadProfile(
+                    isCurrent: () => _isCurrent(session, step, generation),
+                  );
+              if (!_isCurrent(session, step, generation)) return;
+              final activeCourseId =
+                  ref.read(courseStateNotifierProvider).activeCourse?.id;
+              if (activeCourseId == null ||
+                  activeCourseId == lesson.courseId) {
+                await ref
+                    .read(roadmapStateNotifierProvider.notifier)
+                    .loadRoadmap(lesson.courseId);
+                if (!_isCurrent(session, step, generation)) return;
+              }
+            }
             state = state.copyWith(
               isSubmittingAnswer: false,
               consecutiveMistakesBySkill: updatedSkillStreaks,
@@ -1357,12 +1635,26 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         updatedQuestionStreaks[question.id] =
             (updatedQuestionStreaks[question.id] ?? 0) + 1;
       }
-      if (!roadmapRefreshed) {
+      if (!completedOnFinalStep) {
         await ref
-            .read(roadmapStateNotifierProvider.notifier)
-            .loadRoadmap(lesson.courseId);
+            .read(learnerStateNotifierProvider.notifier)
+            .loadProfile(
+              isCurrent: () => _isCurrent(session, step, generation),
+            );
         if (!_isCurrent(session, step, generation)) return;
       }
+      if (!roadmapRefreshed) {
+        final activeCourseId =
+            ref.read(courseStateNotifierProvider).activeCourse?.id;
+        if (activeCourseId == null || activeCourseId == lesson.courseId) {
+          await ref
+              .read(roadmapStateNotifierProvider.notifier)
+              .loadRoadmap(lesson.courseId);
+          if (!_isCurrent(session, step, generation)) return;
+        }
+      }
+      if (!_isCurrent(session, step, generation)) return;
+      _pendingSubmittedResults.remove(cacheKey);
       state = state.copyWith(
         isSubmittingAnswer: false,
         answerResult: result,
@@ -1372,9 +1664,17 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       );
     } catch (_) {
       if (!_isCurrent(session, step, generation)) return;
+      if (justSubmitted) {
+        await ref
+            .read(learnerStateNotifierProvider.notifier)
+            .loadProfile(
+              isCurrent: () => _isCurrent(session, step, generation),
+            );
+        if (!_isCurrent(session, step, generation)) return;
+      }
       state = state.copyWith(
         isSubmittingAnswer: false,
-        answerError: uiLocale == 'ru'
+        answerError: resolvedLocale == 'ru'
             ? 'Не удалось проверить ответ. Проверьте интернет и попробуйте снова.'
             : 'Javobni tekshirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
       );
@@ -1459,10 +1759,14 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         .read(learnerStateNotifierProvider.notifier)
         .loadProfile(isCurrent: () => _isCurrent(session, step, answer));
     if (!_isCurrent(session, step, answer)) return false;
-    await ref
-        .read(roadmapStateNotifierProvider.notifier)
-        .loadRoadmap(lesson.courseId);
-    if (!_isCurrent(session, step, answer)) return false;
+    final activeCourseId =
+        ref.read(courseStateNotifierProvider).activeCourse?.id;
+    if (activeCourseId == null || activeCourseId == lesson.courseId) {
+      await ref
+          .read(roadmapStateNotifierProvider.notifier)
+          .loadRoadmap(lesson.courseId);
+      if (!_isCurrent(session, step, answer)) return false;
+    }
     state = state.copyWith(isCompleted: true);
     return true;
   }
@@ -1529,18 +1833,21 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       state = state.copyWith(reinforcementResult: result);
       if (!_isCurrent(session, step, generation)) return null;
 
-      if (result.isCorrect) {
+      final activeCourseId =
+          ref.read(courseStateNotifierProvider).activeCourse?.id;
+      if (result.isCorrect &&
+          (activeCourseId == null || activeCourseId == courseId)) {
         ref
             .read(roadmapStateNotifierProvider.notifier)
             .updateRoadmapDirect(result.updatedRoadmap);
         if (!_isCurrent(session, step, generation)) return null;
-        await ref
-            .read(learnerStateNotifierProvider.notifier)
-            .loadProfile(
-              isCurrent: () => _isCurrent(session, step, generation),
-            );
-        if (!_isCurrent(session, step, generation)) return null;
       }
+      await ref
+          .read(learnerStateNotifierProvider.notifier)
+          .loadProfile(
+            isCurrent: () => _isCurrent(session, step, generation),
+          );
+      if (!_isCurrent(session, step, generation)) return null;
 
       return result;
     } catch (_) {

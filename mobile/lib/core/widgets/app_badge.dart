@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../constants/app_colors.dart';
+import '../theme/app_semantic_colors.dart';
+import '../theme/app_typography.dart';
 
 enum AppBadgeVariant {
   blue,
@@ -27,41 +27,41 @@ class AppBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = AppColors.isDark(context);
+    final c = AppSemanticColors.of(context);
     Color bg;
     Color fg;
     Color border;
 
     switch (variant) {
       case AppBadgeVariant.blue:
-        bg = AppColors.primary.withValues(alpha: dark ? 0.24 : 0.1);
-        fg = dark ? const Color(0xFFC7D2FE) : AppColors.primary;
-        border = AppColors.primary.withValues(alpha: dark ? 0.4 : 0.22);
+        bg = c.brandSoft;
+        fg = c.isDark ? c.brandStrong : c.brand;
+        border = c.brand.withValues(alpha: 0.28);
         break;
       case AppBadgeVariant.teal:
-        bg = dark ? const Color(0xFF0C4A6E) : AppColors.secondaryLight;
-        fg = dark ? const Color(0xFFBAE6FD) : const Color(0xFF0369A1);
-        border = AppColors.secondary.withValues(alpha: dark ? 0.45 : 0.25);
+        bg = c.pathSoft;
+        fg = c.path;
+        border = c.path.withValues(alpha: 0.28);
         break;
       case AppBadgeVariant.amber:
-        bg = dark ? const Color(0xFF78350F) : AppColors.warningLight;
-        fg = dark ? const Color(0xFFFDE68A) : const Color(0xFFB45309);
-        border = AppColors.warning.withValues(alpha: dark ? 0.5 : 0.28);
+        bg = c.warningSoft;
+        fg = c.warningText;
+        border = c.warning.withValues(alpha: 0.3);
         break;
       case AppBadgeVariant.rose:
-        bg = dark ? const Color(0xFF881337) : AppColors.errorLight;
-        fg = dark ? const Color(0xFFFECDD3) : const Color(0xFFBE123C);
-        border = AppColors.error.withValues(alpha: dark ? 0.5 : 0.25);
+        bg = c.errorSoft;
+        fg = c.errorText;
+        border = c.error.withValues(alpha: 0.28);
         break;
       case AppBadgeVariant.emerald:
-        bg = dark ? const Color(0xFF064E3B) : AppColors.successLight;
-        fg = dark ? const Color(0xFFA7F3D0) : const Color(0xFF047857);
-        border = AppColors.success.withValues(alpha: dark ? 0.5 : 0.28);
+        bg = c.successSoft;
+        fg = c.successText;
+        border = c.success.withValues(alpha: 0.3);
         break;
       case AppBadgeVariant.slate:
-        bg = AppColors.subtleSurface(context);
-        fg = dark ? AppColors.darkTextSecondary : const Color(0xFF475569);
-        border = AppColors.borderColor(context);
+        bg = c.subtle;
+        fg = c.graphite;
+        border = c.hairline;
         break;
     }
 
@@ -82,8 +82,7 @@ class AppBadge extends StatelessWidget {
           Flexible(
             child: Text(
               text,
-              softWrap: true,
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.ui(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w700,
                 color: fg,

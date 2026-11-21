@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'providers.dart';
 import '../core/auth/demo_session.dart';
 import '../core/config/supabase_config.dart';
+import '../core/l10n/app_strings.dart';
+import '../domain/personalization/learning_start.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/welcome_screen.dart';
 import '../features/auth/register_screen.dart';
@@ -55,38 +59,102 @@ const Set<String> _publicRoutes = {
   '/forgot-password',
 };
 
+bool _resolveHasStartedCourse(BuildContext context) {
+  try {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final courses = container.read(courseStateNotifierProvider).courses;
+    final profile = container.read(learnerStateNotifierProvider).valueOrNull;
+    if (courses.isNotEmpty && profile != null) {
+      return courses.any((c) => hasStartedCourse(c, profile));
+    }
+  } catch (_) {
+    // Standalone router tests without ProviderScope fall back to notifier.
+  }
+  return activeSessionHasStartedCourse.value;
+}
+
+@visibleForTesting
+String? resolveAppRedirect({
+  required String path,
+  required Uri uri,
+  required bool recoveryActive,
+  required bool isRemoteConfigured,
+  required bool isLoggedIn,
+  required bool isDemoActive,
+  required bool isTourCompleted,
+  required bool hasStartedAnyCourse,
+}) {
+  if (recoveryActive) {
+    return path == '/reset-password' ? null : '/reset-password';
+  }
+
+  if (path == '/welcome' && uri.queryParameters['replay'] == '1') {
+    return null;
+  }
+
+  final isSessionActive = isRemoteConfigured ? isLoggedIn : isDemoActive;
+  if (isSessionActive) {
+    final destination = hasStartedAnyCourse ? '/dashboard' : '/courses';
+    if (path == '/' ||
+        _publicRoutes.contains(path) ||
+        path == '/reset-password' ||
+        (uri.scheme == 'uz.bilimyol.mobile' && uri.path == '/reset-password')) {
+      return destination;
+    }
+    return null;
+  }
+
+  if (path == '/reset-password' ||
+      (uri.scheme == 'uz.bilimyol.mobile' && uri.path == '/reset-password')) {
+    return '/login';
+  }
+
+  final isPublic = _publicRoutes.contains(path);
+  if (!isTourCompleted) {
+    if (path == '/' || !isPublic) {
+      return '/welcome';
+    }
+    return null;
+  }
+
+  if (path == '/' || path == '/welcome' || !isPublic) {
+    return '/login';
+  }
+  return null;
+}
+
 final _authRefresh = _AuthRefreshNotifier();
 final GoRouter appRouter = GoRouter(
   initialLocation: '/welcome',
-  refreshListenable: Listenable.merge([_authRefresh, demoSessionActive]),
+  refreshListenable: Listenable.merge([
+    _authRefresh,
+    demoSessionActive,
+    productTourCompleted,
+    activeSessionHasStartedCourse,
+  ]),
   redirect: (context, state) {
-    final path = state.matchedLocation;
-    if (!SupabaseConfig.hasRemoteConfiguration) {
-      final isPublic = _publicRoutes.contains(path);
-      if (demoSessionActive.value) return isPublic ? '/courses' : null;
-      return isPublic ? null : '/login';
-    }
-
-    if (_authRefresh.recoveryActive) {
-      return path == '/reset-password' ? null : '/reset-password';
-    }
-    final isLoggedIn = SupabaseConfig.client?.auth.currentUser != null;
-    if (path == '/reset-password') return isLoggedIn ? '/dashboard' : '/login';
-    final isPublic = _publicRoutes.contains(path);
-
-    if (!isLoggedIn && !isPublic) {
-      return '/login';
-    }
-    if (isLoggedIn && isPublic) {
-      return '/dashboard';
-    }
-    return null;
+    return resolveAppRedirect(
+      path: state.matchedLocation,
+      uri: state.uri,
+      recoveryActive: _authRefresh.recoveryActive,
+      isRemoteConfigured: SupabaseConfig.hasRemoteConfiguration,
+      isLoggedIn: SupabaseConfig.client?.auth.currentUser != null,
+      isDemoActive: demoSessionActive.value,
+      isTourCompleted: productTourCompleted.value,
+      hasStartedAnyCourse: _resolveHasStartedCourse(context),
+    );
   },
   routes: [
-    GoRoute(path: '/', redirect: (context, state) => '/welcome'),
+    GoRoute(
+      path: '/',
+      redirect: (context, state) =>
+          productTourCompleted.value ? '/login' : '/welcome',
+    ),
     GoRoute(
       path: '/welcome',
-      builder: (context, state) => const WelcomeScreen(),
+      builder: (context, state) => WelcomeScreen(
+        isReplay: state.uri.queryParameters['replay'] == '1',
+      ),
     ),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
@@ -142,21 +210,36 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const AITutorScreen(),
     ),
   ],
-  errorBuilder: (context, state) => Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
-          const SizedBox(height: 12),
-          Text('Sahifa topilmadi: ${state.uri}'),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => context.go('/courses'),
-            child: const Text('Bosh sahifaga qaytish'),
+  errorBuilder: (context, state) {
+    final s = AppStrings.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+                size: 48,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                s.pageNotFound(state.uri.toString()),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => context.go(
+                  activeSessionHasStartedCourse.value ? '/dashboard' : '/courses',
+                ),
+                child: Text(s.goHomeBtn),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
+    );
+  },
 );

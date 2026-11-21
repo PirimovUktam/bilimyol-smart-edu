@@ -861,6 +861,12 @@ void main() {
       appRouter.go('/onboarding');
       await tester.pumpAndSettle();
 
+      final skipTour = find.text('O‘tkazib yuborish');
+      if (skipTour.evaluate().isNotEmpty) {
+        await tester.tap(skipTour);
+        await tester.pumpAndSettle();
+      }
+
       final demo = find.text('Namuna hisobi bilan kirish');
       await tester.ensureVisible(demo);
       await tester.tap(demo);
@@ -885,11 +891,18 @@ void main() {
       expect(find.text('Aziza va Ben tanishuv dialogi'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
       expect(audioControllers.first.loadedAssets, contains('assets/lesson_media/english/a1-starter-dialogue.wav'));
-      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      final playIcon = find.byIcon(Icons.play_arrow_rounded);
+      await tester.ensureVisible(playIcon);
+      await tester.pumpAndSettle();
+      await tester.tap(playIcon);
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.pause_rounded));
+      final pauseIcon = find.byIcon(Icons.pause_rounded);
+      await tester.ensureVisible(pauseIcon);
+      await tester.tap(pauseIcon);
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.replay_rounded));
+      final replayIcon = find.byIcon(Icons.replay_rounded);
+      await tester.ensureVisible(replayIcon);
+      await tester.tap(replayIcon);
       await tester.pump();
       expect(audioControllers.first.replayCalls, 1);
 

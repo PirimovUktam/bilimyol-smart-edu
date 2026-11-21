@@ -45,11 +45,53 @@ class SkillScoringEngine {
     return ConfidenceLevel.high;
   }
 
+  static const int starterOnlyMaxScore = 55;
+
   /// Real statistical score calculation: (correct / total) * 100
   static int computeSkillScore(int correctCount, int totalCount) {
     if (totalCount <= 0) return 0;
     final ratio = (correctCount / totalCount) * 100;
     return clampScore(ratio);
+  }
+
+  /// Calibrates skill mastery from lesson attempts while respecting starter
+  /// difficulty bounds and preserving prior diagnostic/demo evidence.
+  static int computeCalibratedSkillScore({
+    required double weightedCorrect,
+    required double weightedTotal,
+    int? priorScore,
+    int priorWeight = 4,
+    bool starterOnly = false,
+    bool hasNonStarterAttempt = false,
+  }) {
+    if (priorScore != null) {
+      if (!hasNonStarterAttempt &&
+          priorScore >= starterOnlyMaxScore &&
+          weightedTotal > 0 &&
+          weightedCorrect == weightedTotal) {
+        return priorScore;
+      }
+      final priorCorrect = (priorScore / 100.0) * priorWeight;
+      final blended =
+          ((priorCorrect + weightedCorrect) / (priorWeight + weightedTotal)) *
+          100;
+      final clamped = clampScore(blended);
+      if (!hasNonStarterAttempt) {
+        final starterCeiling = priorScore > starterOnlyMaxScore
+            ? priorScore
+            : starterOnlyMaxScore;
+        return clamped > starterCeiling ? starterCeiling : clamped;
+      }
+      return clamped;
+    }
+    if (weightedTotal <= 0) return 0;
+    if (starterOnly) {
+      if (weightedCorrect <= 0) return 0;
+      final raw = ((weightedCorrect + 0.25) / (weightedTotal + 0.75)) * 85;
+      return clampScore(raw).clamp(0, starterOnlyMaxScore);
+    }
+    final smoothed = ((weightedCorrect + 0.5) / (weightedTotal + 1)) * 100;
+    return clampScore(smoothed);
   }
 
   /// Computes overall knowledge score as exact arithmetic mean of skill scores

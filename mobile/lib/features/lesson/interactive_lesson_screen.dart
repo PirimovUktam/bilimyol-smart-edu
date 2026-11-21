@@ -4,26 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+
+import '../../app/providers.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
-import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/friendly_error_state.dart';
-import '../../app/providers.dart';
 import '../../data/services/i_ai_tutor_service.dart';
 import '../../domain/entities/course.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/usecases/submit_lesson_answer_use_case.dart';
-import 'math_function_graph_widget.dart';
-import 'audio_sim_wave_widget.dart';
-import 'lesson_media_widget.dart';
-import 'flashcard_deck_widget.dart';
-import 'dictionary_sheet.dart';
 import '../ai_tutor/ai_tutor_screen.dart';
 import '../ai_tutor/yolchi_ai_sheet.dart';
 import '../reinforcement/reinforcement_sheet.dart';
+import 'audio_sim_wave_widget.dart';
+import 'dictionary_sheet.dart';
+import 'flashcard_deck_widget.dart';
+import 'lesson_media_widget.dart';
+import 'math_function_graph_widget.dart';
 
 class InteractiveLessonScreen extends ConsumerStatefulWidget {
   const InteractiveLessonScreen({super.key});
@@ -39,6 +41,19 @@ class _InteractiveLessonScreenState
   String? _lastTextStepKey;
   String? _inlineSuccessMessage;
   Timer? _successBannerTimer;
+
+  static AppStrings _resolveStrings(BuildContext context) {
+    final registered = Localizations.of<AppStrings>(context, AppStrings);
+    if (registered != null) return registered;
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
+    return isRu ? AppStrings.ru : AppStrings.uz;
+  }
+
+  static String _optionLabel(int idx) =>
+      idx < 26 ? String.fromCharCode(65 + idx) : '${idx + 1}';
 
   @override
   void dispose() {
@@ -65,28 +80,23 @@ class _InteractiveLessonScreenState
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
     final lessonState = ref.watch(lessonSessionNotifierProvider);
     final lesson = lessonState.lesson;
-    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
-    final platformCode =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    final lang = (locCode == 'ru' ||
-            (locCode != 'uz' && platformCode == 'ru'))
-        ? 'ru'
-        : 'uz';
-
-    final isRu = lang == 'ru';
+    final lang = s.isRu ? 'ru' : 'uz';
+    final isRu = s.isRu;
 
     if (lessonState.isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(isRu ? 'Урок' : 'Dars')),
+        appBar: AppBar(title: Text(s.lessonLabel)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (lesson == null && lessonState.lessonError != null) {
       return Scaffold(
-        appBar: AppBar(title: Text(isRu ? 'Урок' : 'Dars')),
+        appBar: AppBar(title: Text(s.lessonLabel)),
         body: FriendlyErrorState(
           message: lessonState.lessonError!,
           onRetry: () => ref
@@ -98,57 +108,24 @@ class _InteractiveLessonScreenState
 
     if (lesson == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(isRu ? 'Урок' : 'Dars')),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isRu
-                    ? 'Данные урока не загружены'
-                    : 'Dars ma’lumotlari yuklanmadi',
-              ),
-              const SizedBox(height: 12),
-              AppButton(
-                text: isRu
-                    ? 'Вернуться к маршруту'
-                    : 'Yo‘l xaritasiga qaytish',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  context.pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Cross-course isolation: refuse to render a lesson from a different course.
-    final activeCourse = ref.watch(courseStateNotifierProvider).activeCourse;
-    if (activeCourse != null && lesson.courseId != activeCourse.id) {
-      return Scaffold(
-        appBar: AppBar(title: Text(isRu ? 'Урок' : 'Dars')),
+        appBar: AppBar(title: Text(s.lessonLabel)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  isRu
-                      ? 'Этот урок относится к другому предмету и не может быть показан.\nПожалуйста, выберите свой предмет и попробуйте снова.'
-                      : 'Ushbu dars boshqa fanga tegishli va ko‘rsatilmaydi.\nIltimos, yo‘nalishingizni tanlab qayta urinib ko‘ring.',
-                  textAlign: TextAlign.center,
-                ),
+                Text(s.lessonDataMissing, textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 AppButton(
-                  text: isRu
-                      ? 'Вернуться к маршруту'
-                      : 'Yo‘l xaritasiga qaytish',
+                  text: s.returnToRoadmap,
                   onPressed: () {
                     ScaffoldMessenger.of(context).clearSnackBars();
-                    context.pop();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/roadmap');
+                    }
                   },
                 ),
               ],
@@ -158,7 +135,39 @@ class _InteractiveLessonScreenState
       );
     }
 
-    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
+    // Cross-course isolation: refuse to render a lesson from a different course.
+    final activeCourse = ref.watch(courseStateNotifierProvider).activeCourse;
+    if (activeCourse != null && lesson.courseId != activeCourse.id) {
+      return Scaffold(
+        appBar: AppBar(title: Text(s.lessonLabel)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(s.crossCourseLessonError, textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                AppButton(
+                  text: s.returnToRoadmap,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/roadmap');
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final isLargeText = textScale > 1.35;
 
     if (lesson.steps.isEmpty) {
       return Scaffold(
@@ -166,7 +175,7 @@ class _InteractiveLessonScreenState
           toolbarHeight: isLargeText ? 64 : null,
           title: isLargeText
               ? Text(
-                  isRu ? 'Урок' : 'Dars',
+                  s.lessonLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 )
@@ -182,10 +191,10 @@ class _InteractiveLessonScreenState
                   Text(
                     lesson.localizedTitle(lang),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.ui(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryAccentOnSurface(context),
+                      color: c.brand,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -198,9 +207,7 @@ class _InteractiveLessonScreenState
                 ),
                 const SizedBox(height: 12),
                 AppButton(
-                  text: isRu
-                      ? 'Вернуться к маршруту'
-                      : 'Yo‘l xaritasiga qaytish',
+                  text: s.returnToRoadmap,
                   onPressed: () {
                     ScaffoldMessenger.of(context).clearSnackBars();
                     context.go('/roadmap');
@@ -226,17 +233,17 @@ class _InteractiveLessonScreenState
       if (_textController.text != lessonState.textAnswer) {
         _textController.text = lessonState.textAnswer;
       }
-    } else if (lessonState.textAnswer.isEmpty && _textController.text.isNotEmpty) {
+    } else if (lessonState.textAnswer.isEmpty &&
+        _textController.text.isNotEmpty) {
       _textController.clear();
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         toolbarHeight: isLargeText ? 64 : null,
         title: isLargeText
             ? Text(
-                isRu ? 'Урок' : 'Dars',
+                s.lessonLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               )
@@ -248,7 +255,8 @@ class _InteractiveLessonScreenState
               ),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          tooltip: lang == 'ru' ? 'К карте обучения' : 'Ta’lim yo‘liga qaytish',
+          tooltip: s.backToRoadmapTooltip,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           onPressed: () {
             ScaffoldMessenger.of(context).clearSnackBars();
             context.go('/roadmap');
@@ -257,7 +265,8 @@ class _InteractiveLessonScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome_rounded),
-            tooltip: lang == 'ru' ? 'Спросить Yo‘lchi' : 'Yo‘lchidan so‘rash',
+            tooltip: s.askYolchiTooltip,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             onPressed: () {
               ScaffoldMessenger.of(context).clearSnackBars();
               Navigator.of(context).push<void>(
@@ -273,7 +282,8 @@ class _InteractiveLessonScreenState
           if (activeCourse?.subject == SubjectType.english)
             IconButton(
               icon: const Icon(Icons.menu_book_rounded),
-              tooltip: lang == 'ru' ? 'Словарь' : 'So‘z lug‘ati',
+              tooltip: s.dictionaryTooltip,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               onPressed: () {
                 ScaffoldMessenger.of(context).clearSnackBars();
                 showModalBottomSheet<void>(
@@ -287,465 +297,485 @@ class _InteractiveLessonScreenState
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Step Progress Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          lang == 'ru'
-                              ? 'Шаг ${currentStepIndex + 1} / $totalSteps'
-                              : 'Qadam ${currentStepIndex + 1} / $totalSteps',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondaryColor(context),
-                          ),
-                        ),
-                        Text(
-                          '${(progress * 100).round()}%',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryAccentOnSurface(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 5,
-                      backgroundColor: AppColors.borderColor(context),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primaryAccentOnSurface(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (_inlineSuccessMessage != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                child: Container(
-                  width: double.infinity,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              children: [
+                // Step Progress Bar
+                Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 20,
+                    vertical: 10,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.successTint(context),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.success.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Icon(
-                        Icons.check_circle_rounded,
-                        size: 18,
-                        color: AppColors.successTextOnTint(context),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _inlineSuccessMessage!,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimaryColor(context),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _clearInlineSuccess,
-                        icon: Icon(
-                          Icons.close_rounded,
-                          size: 16,
-                          color: AppColors.textSecondaryColor(context),
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 28,
-                          minHeight: 28,
-                        ),
-                        tooltip: isRu ? 'Закрыть' : 'Yopish',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Step Content Body
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isLargeText) ...[
-                      Text(
-                        lesson.localizedTitle(lang),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryAccentOnSurface(context),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                    ],
-                    // Step Title & Subtitle
-                    Text(
-                      currentStep.localizedTitle(lang),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryColor(context),
-                      ),
-                    ),
-                    if (currentStep.localizedSubtitle(lang) != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        currentStep.localizedSubtitle(lang)!,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          color: AppColors.textMutedColor(context),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-
-                    // Content text
-                    Text(
-                      currentStep.localizedContent(lang),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        color: AppColors.textPrimaryColor(context),
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Concept Highlights
-                    if (currentStep.localizedHighlightNotes(lang) != null) ...[
-                      AppCard(
-                        padding: const EdgeInsets.all(14),
-                        backgroundColor: AppColors.subtleSurface(context),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: currentStep
-                              .localizedHighlightNotes(lang)!
-                              .map((note) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 16,
-                                    color: AppColors.primaryAccentOnSurface(
-                                      context,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      note,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimaryColor(
-                                          context,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Formula Card
-                    if (currentStep.formulaData != null) ...[
-                      AppCard(
-                        backgroundColor: AppColors.primaryTint(context)
-                            .withValues(alpha: 0.5),
-                        borderColor: AppColors.primary.withValues(alpha: 0.3),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             Text(
-                              currentStep.formulaData!.description,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.secondaryTextOnTint(context),
+                              s.stepOf(currentStepIndex + 1, totalSteps),
+                              style: AppTypography.ui(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: c.slatefine,
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceColor(context),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  currentStep.formulaData!.latex,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.primaryAccentOnSurface(
-                                      context,
-                                    ),
-                                  ),
-                                ),
+                            Text(
+                              '${(progress * 100).round()}%',
+                              style: AppTypography.mono(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w800,
+                                color: c.brand,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            ...currentStep.formulaData!.variables.map((v) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  '• ${v['symbol']}: ${v['meaning']}',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimaryColor(context),
-                                  ),
-                                ),
-                              );
-                            }),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Visual model: Math function graph
-                    if (currentStep.visualModelData?.type ==
-                        'function_graph') ...[
-                      const MathFunctionGraphWidget(),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Lesson Media (approved real audio / illustration) or legacy Audio wave fallback
-                    if (currentStep.media != null &&
-                        currentStep.media!.isApproved) ...[
-                      LessonMediaWidget(
-                        key: ValueKey('media_${lesson.id}_${currentStep.id}'),
-                        media: currentStep.media!,
-                        uiLocale: lang,
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 6,
+                          backgroundColor: c.hairline,
+                          valueColor: AlwaysStoppedAnimation<Color>(c.brand),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                    ] else if (currentStep.visualModelData?.type ==
-                        'audio_wave') ...[
-                      AudioSimWaveWidget(
-                        transcript:
-                            currentStep.visualModelData?.audioTranscript ?? '',
-                        speakerName:
-                            currentStep.visualModelData?.speakerName ??
-                            'Speaker',
-                      ),
-                      const SizedBox(height: 16),
                     ],
-
-            // Flashcard Deck Step
-            if (currentStep.type == LessonStepType.flashcard &&
-                (currentStep.flashcards?.isNotEmpty ?? false)) ...[
-              FlashcardDeckWidget(
-                key: ValueKey('flashcard_${lesson.id}_${currentStep.id}'),
-                flashcards: currentStep.flashcards!,
-                courseId: lesson.courseId,
-                uiLocale: lang,
-              ),
-              const SizedBox(height: 16),
-            ],
-
-                    // Interactive Quiz Step
-                    if (currentStep.interactiveQuestion != null) ...[
-                      _buildInteractiveQuizCard(
-                        context,
-                        currentStep.interactiveQuestion!,
-                        lang,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    if (lessonState.answerError != null)
-                      _buildAnswerError(lessonState.answerError!),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            // Bottom Navigation Actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Builder(
-                builder: (context) {
-                  final q = currentStep.interactiveQuestion;
-                  final isRu = lang == 'ru';
-                  final hasQuizInput = q != null &&
-                      ((q.usesTextEvaluation || q.isSelfAssessed)
-                          ? lessonState.textAnswer.trim().isNotEmpty
-                          : q.mode == QuestionMode.wordMatch
-                          ? lessonState.selectedMatchPairs.values.any(
-                              (v) => v.trim().isNotEmpty,
-                            )
-                          : q.mode == QuestionMode.sentenceOrder
-                          ? lessonState.selectedOrderTokens.any(
-                              (t) => t.trim().isNotEmpty,
-                            )
-                          : lessonState.selectedOptionIndex != null);
-                  final canAdvanceAfterQuiz = q != null &&
-                      lessonState.answerResult != null &&
-                      ((q.isSelfAssessed && lessonState.answerResult!.isCorrect) ||
-                          (lesson.requiresMastery &&
-                              lesson.alternateExercise == null));
-
-                  final isLargeText =
-                      MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
-                  final backButton = currentStepIndex > 0
-                      ? AppButton(
-                          text: isRu ? 'Назад' : 'Orqaga',
-                          variant: AppButtonVariant.outline,
-                          isFullWidth: isLargeText,
-                          onPressed: lessonState.isSubmittingAnswer
-                              ? null
-                              : () {
-                                  _clearInlineSuccess();
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).clearSnackBars();
-                                  ref
-                                      .read(
-                                        lessonSessionNotifierProvider.notifier,
-                                      )
-                                      .previousStep();
-                                },
-                        )
-                      : null;
-                  final primaryAction = q != null
-                      ? ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
+                if (_inlineSuccessMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color.alphaBlend(c.successSoft, c.paper),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: c.success.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: c.successText,
                           ),
-                          onPressed:
-                              (!hasQuizInput ||
-                                      lessonState.isSubmittingAnswer) &&
-                                  !canAdvanceAfterQuiz
-                              ? null
-                              : canAdvanceAfterQuiz
-                              ? () => _handleNextStep(context)
-                              : () => _handleQuizSubmit(context, lang),
-                          child: lessonState.isSubmittingAnswer
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _inlineSuccessMessage!,
+                              style: AppTypography.ui(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: c.ink,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _clearInlineSuccess,
+                            icon: Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: c.graphite,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              minHeight: 28,
+                            ),
+                            tooltip: isRu ? 'Закрыть' : 'Yopish',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Step Content Body
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isLargeText) ...[
+                          Text(
+                            lesson.localizedTitle(lang),
+                            style: AppTypography.ui(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: c.brand,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                        ],
+                        Text(
+                          currentStep.localizedTitle(lang),
+                          style: AppTypography.ui(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: c.ink,
+                            height: 1.22,
+                          ),
+                        ),
+                        if (currentStep.localizedSubtitle(lang) != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            currentStep.localizedSubtitle(lang)!,
+                            style: AppTypography.ui(
+                              fontSize: 13.5,
+                              color: c.slatefine,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+
+                        // Content text
+                        Text(
+                          currentStep.localizedContent(lang),
+                          style: AppTypography.ui(
+                            fontSize: 15,
+                            color: c.graphite,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Concept Highlights
+                        if (currentStep.localizedHighlightNotes(lang) !=
+                            null) ...[
+                          AppCard(
+                            padding: const EdgeInsets.all(14),
+                            backgroundColor: c.subtle,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: currentStep
+                                  .localizedHighlightNotes(lang)!
+                                  .map((note) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 17,
+                                        color: c.brand,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          note,
+                                          style: AppTypography.ui(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: c.ink,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                )
-                              : Text(
-                                  canAdvanceAfterQuiz
-                                      ? (currentStepIndex < totalSteps - 1
-                                            ? (isRu
-                                                  ? 'Следующий шаг'
-                                                  : 'Keyingi qadam')
-                                            : (isRu
-                                                  ? 'Завершить'
-                                                  : 'Yakunlash'))
-                                      : (isRu ? 'Проверить' : 'TEKSHIRISH'),
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Formula Card
+                        if (currentStep.formulaData != null) ...[
+                          AppCard(
+                            backgroundColor: Color.alphaBlend(
+                              c.brandSoft,
+                              c.paper,
+                            ),
+                            borderColor: c.brand.withValues(alpha: 0.3),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  currentStep.formulaData!.description,
+                                  style: AppTypography.ui(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: c.graphite,
                                   ),
                                 ),
-                        )
-                      : AppButton(
-                          text: currentStepIndex < totalSteps - 1
-                              ? (isRu ? 'Следующий шаг' : 'Keyingi qadam')
-                              : (isRu ? 'Завершить' : 'Yakunlash'),
-                          isFullWidth: true,
-                          isLoading: lessonState.isSubmittingAnswer,
-                          size: AppButtonSize.large,
-                          rightIcon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 18,
-                            color: Colors.white,
+                                const SizedBox(height: 10),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: c.paper,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: c.brand.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    currentStep.formulaData!.latex,
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    style: AppTypography.mono(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: c.brand,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                ...currentStep.formulaData!.variables.map((v) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      '• ${v['symbol']}: ${v['meaning']}',
+                                      style: AppTypography.ui(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: c.ink,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
                           ),
-                          onPressed: lessonState.isSubmittingAnswer
-                              ? null
-                              : () => _handleNextStep(context),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Visual model: Math function graph
+                        if (currentStep.visualModelData?.type ==
+                            'function_graph') ...[
+                          const MathFunctionGraphWidget(),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Lesson Media (approved real audio / illustration) or legacy Audio wave fallback
+                        if (currentStep.media != null &&
+                            currentStep.media!.isApproved) ...[
+                          LessonMediaWidget(
+                            key: ValueKey(
+                              'media_${lesson.id}_${currentStep.id}',
+                            ),
+                            media: currentStep.media!,
+                            uiLocale: lang,
+                          ),
+                          const SizedBox(height: 16),
+                        ] else if (currentStep.visualModelData?.type ==
+                            'audio_wave') ...[
+                          AudioSimWaveWidget(
+                            transcript:
+                                currentStep.visualModelData?.audioTranscript ??
+                                '',
+                            speakerName:
+                                currentStep.visualModelData?.speakerName ??
+                                s.speakerDefault,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Flashcard Deck Step
+                        if (currentStep.type == LessonStepType.flashcard &&
+                            (currentStep.flashcards?.isNotEmpty ?? false)) ...[
+                          FlashcardDeckWidget(
+                            key: ValueKey(
+                              'flashcard_${lesson.id}_${currentStep.id}',
+                            ),
+                            flashcards: currentStep.flashcards!,
+                            courseId: lesson.courseId,
+                            uiLocale: lang,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Interactive Quiz Step
+                        if (currentStep.interactiveQuestion != null) ...[
+                          _buildInteractiveQuizCard(
+                            context,
+                            currentStep.interactiveQuestion!,
+                            lang,
+                            c,
+                            s,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (lessonState.answerError != null)
+                          _buildAnswerError(lessonState.answerError!, c),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bottom Navigation Actions (responsive at 360dp @ 2.0x)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final q = currentStep.interactiveQuestion;
+                      final hasQuizInput = q != null &&
+                          ((q.usesTextEvaluation || q.isSelfAssessed)
+                              ? lessonState.textAnswer.trim().isNotEmpty
+                              : q.mode == QuestionMode.wordMatch
+                              ? lessonState.selectedMatchPairs.values.any(
+                                  (v) => v.trim().isNotEmpty,
+                                )
+                              : q.mode == QuestionMode.sentenceOrder
+                              ? lessonState.selectedOrderTokens.any(
+                                  (t) => t.trim().isNotEmpty,
+                                )
+                              : lessonState.selectedOptionIndex != null);
+                      final canAdvanceAfterQuiz = q != null &&
+                          lessonState.answerResult != null &&
+                          ((q.isSelfAssessed &&
+                                  lessonState.answerResult!.isCorrect) ||
+                              (lesson.requiresMastery &&
+                                  lesson.alternateExercise == null));
+                      final wrongRevealNonMastery =
+                          !lesson.requiresMastery &&
+                          lessonState.answerResult != null &&
+                          !lessonState.answerResult!.isCorrect;
+                      final quizCtaDisabled =
+                          ((!hasQuizInput || lessonState.isSubmittingAnswer) &&
+                              !canAdvanceAfterQuiz) ||
+                          (!canAdvanceAfterQuiz && wrongRevealNonMastery);
+
+                      final primaryAction = q != null
+                          ? SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: c.ctaPrimary,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(44, 48),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                onPressed: quizCtaDisabled
+                                    ? null
+                                    : canAdvanceAfterQuiz
+                                    ? () => _handleNextStep(context)
+                                    : () => _handleQuizSubmit(context, lang),
+                                child: lessonState.isSubmittingAnswer
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        canAdvanceAfterQuiz
+                                            ? (currentStepIndex < totalSteps - 1
+                                                  ? s.nextStep
+                                                  : s.lessonFinish)
+                                            : s.checkAnswer,
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.ui(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.4,
+                                          color: quizCtaDisabled
+                                              ? c.slatefine
+                                              : Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            )
+                          : AppButton(
+                              text: currentStepIndex < totalSteps - 1
+                                  ? s.nextStep
+                                  : s.lessonFinish,
+                              isFullWidth: true,
+                              isLoading: lessonState.isSubmittingAnswer,
+                              size: AppButtonSize.large,
+                              rightIcon: const Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              onPressed: lessonState.isSubmittingAnswer
+                                  ? null
+                                  : () => _handleNextStep(context),
+                            );
+
+                      if (currentStepIndex == 0) {
+                        return primaryAction;
+                      }
+
+                      final backButton = AppButton(
+                        text: s.back,
+                        isFullWidth: true,
+                        variant: AppButtonVariant.outline,
+                        onPressed: lessonState.isSubmittingAnswer
+                            ? null
+                            : () {
+                                _clearInlineSuccess();
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ref
+                                    .read(
+                                      lessonSessionNotifierProvider.notifier,
+                                    )
+                                    .previousStep();
+                              },
+                      );
+
+                      if (textScale >= 1.7 && constraints.maxWidth < 360) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            primaryAction,
+                            const SizedBox(height: 8),
+                            backButton,
+                          ],
                         );
+                      }
 
-                  if (isLargeText && backButton != null) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        primaryAction,
-                        const SizedBox(height: 10),
-                        backButton,
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      if (backButton != null) ...[
-                        backButton,
-                        const SizedBox(width: 10),
-                      ],
-                      Expanded(child: primaryAction),
-                    ],
-                  );
-                },
-              ),
+                      return Row(
+                        children: [
+                          Flexible(flex: 2, child: backButton),
+                          const SizedBox(width: 10),
+                          Expanded(flex: 3, child: primaryAction),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -755,6 +785,8 @@ class _InteractiveLessonScreenState
     BuildContext context,
     Question question,
     String lang,
+    AppSemanticColors c,
+    AppStrings s,
   ) {
     final lessonState = ref.watch(lessonSessionNotifierProvider);
     final notifier = ref.read(lessonSessionNotifierProvider.notifier);
@@ -774,7 +806,7 @@ class _InteractiveLessonScreenState
             runSpacing: 6,
             children: [
               AppBadge(
-                text: isRu ? 'Интерактивный вопрос' : 'Interaktiv Savol',
+                text: s.interactiveQuestionBadge,
                 variant: AppBadgeVariant.blue,
               ),
               if (_richModeLabel(question.mode, isRu) != null)
@@ -811,16 +843,16 @@ class _InteractiveLessonScreenState
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: AppColors.subtleSurface(context),
+                color: c.subtle,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderColor(context)),
+                border: Border.all(color: c.hairline),
               ),
               child: Text(
                 question.contextSnippet!,
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.ui(
                   fontSize: 13,
                   height: 1.45,
-                  color: AppColors.textPrimaryColor(context),
+                  color: c.ink,
                 ),
               ),
             ),
@@ -831,9 +863,9 @@ class _InteractiveLessonScreenState
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: AppColors.subtleSurface(context),
+                color: c.subtle,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderColor(context)),
+                border: Border.all(color: c.hairline),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -843,10 +875,10 @@ class _InteractiveLessonScreenState
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
                           line,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.ui(
                             fontSize: 13,
                             height: 1.4,
-                            color: AppColors.textPrimaryColor(context),
+                            color: c.ink,
                           ),
                         ),
                       ),
@@ -862,18 +894,16 @@ class _InteractiveLessonScreenState
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: AppColors.errorTint(context),
+                color: Color.alphaBlend(c.errorSoft, c.paper),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.35),
-                ),
+                border: Border.all(color: c.error.withValues(alpha: 0.35)),
               ),
               child: Text(
                 question.sentenceWithError!,
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.ui(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryColor(context),
+                  color: c.ink,
                 ),
               ),
             ),
@@ -885,28 +915,26 @@ class _InteractiveLessonScreenState
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: AppColors.primaryTint(context).withValues(alpha: 0.45),
+                color: Color.alphaBlend(c.brandSoft, c.paper),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: c.brand.withValues(alpha: 0.3)),
               ),
               child: Text(
                 question.blankTemplate!,
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.ui(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryColor(context),
+                  color: c.ink,
                 ),
               ),
             ),
           ],
           Text(
             question.localizedText(lang),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 15,
+            style: AppTypography.ui(
+              fontSize: 15.5,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryColor(context),
+              color: c.ink,
               height: 1.35,
             ),
           ),
@@ -918,10 +946,10 @@ class _InteractiveLessonScreenState
               controller: _textController,
               enabled: !lessonState.isSubmittingAnswer,
               textInputAction: TextInputAction.done,
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.ui(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimaryColor(context),
+                color: c.ink,
               ),
               decoration: InputDecoration(
                 hintText: question.mode == QuestionMode.fillBlank
@@ -931,30 +959,27 @@ class _InteractiveLessonScreenState
                     : (isRu
                           ? 'Напишите ответ на английском...'
                           : 'Javobingizni ingliz tilida yozing...'),
-                hintStyle: GoogleFonts.plusJakartaSans(
+                hintStyle: AppTypography.ui(
                   fontSize: 13.5,
-                  color: AppColors.textMutedColor(context),
+                  color: c.slatefine,
                 ),
                 filled: true,
-                fillColor: AppColors.subtleSurface(context),
+                fillColor: c.subtle,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 14,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.textMutedColor(context)),
+                  borderSide: BorderSide(color: c.slatefine),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.textMutedColor(context)),
+                  borderSide: BorderSide(color: c.slatefine),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                    color: AppColors.primaryAccentOnSurface(context),
-                    width: 1.8,
-                  ),
+                  borderSide: BorderSide(color: c.brand, width: 1.8),
                 ),
               ),
               onChanged: notifier.setTextAnswer,
@@ -968,10 +993,10 @@ class _InteractiveLessonScreenState
               enabled: !lessonState.isSubmittingAnswer,
               maxLines: 3,
               textInputAction: TextInputAction.newline,
-              style: GoogleFonts.plusJakartaSans(
+              style: AppTypography.ui(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimaryColor(context),
+                color: c.ink,
               ),
               decoration: InputDecoration(
                 hintText: question.mode == QuestionMode.speakingPrompt
@@ -981,20 +1006,24 @@ class _InteractiveLessonScreenState
                     : (isRu
                           ? 'Напишите ваш короткий текст на английском...'
                           : 'Qisqa matningizni ingliz tilida yozing...'),
-                hintStyle: GoogleFonts.plusJakartaSans(
+                hintStyle: AppTypography.ui(
                   fontSize: 13,
-                  color: AppColors.textMutedColor(context),
+                  color: c.slatefine,
                 ),
                 filled: true,
-                fillColor: AppColors.subtleSurface(context),
+                fillColor: c.subtle,
                 contentPadding: const EdgeInsets.all(14),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.textMutedColor(context)),
+                  borderSide: BorderSide(color: c.slatefine),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.textMutedColor(context)),
+                  borderSide: BorderSide(color: c.slatefine),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: c.brand, width: 1.8),
                 ),
               ),
               onChanged: notifier.setTextAnswer,
@@ -1007,18 +1036,18 @@ class _InteractiveLessonScreenState
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.warningTint(context),
+                    color: Color.alphaBlend(c.warningSoft, c.paper),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.warning.withValues(alpha: 0.4),
+                      color: c.warning.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
                     question.localizedSelfAssessmentNotice(lang)!,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.ui(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryColor(context),
+                      color: c.ink,
                     ),
                   ),
                 ),
@@ -1029,10 +1058,10 @@ class _InteractiveLessonScreenState
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.successTint(context),
+                    color: Color.alphaBlend(c.successSoft, c.paper),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.success.withValues(alpha: 0.4),
+                      color: c.success.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Column(
@@ -1040,19 +1069,19 @@ class _InteractiveLessonScreenState
                     children: [
                       Text(
                         isRu ? 'Пример ответа:' : 'Namuna javob:',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.ui(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.successTextOnTint(context),
+                          color: c.successText,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         question.sampleResponse!,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.ui(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimaryColor(context),
+                          color: c.ink,
                         ),
                       ),
                     ],
@@ -1062,28 +1091,28 @@ class _InteractiveLessonScreenState
               if (question.rubricCriteria.isNotEmpty) ...[
                 Text(
                   isRu ? 'Чек-лист самопроверки:' : 'O‘zini tekshirish mezoni:',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: AppTypography.ui(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryColor(context),
+                    color: c.ink,
                   ),
                 ),
                 const SizedBox(height: 6),
                 ...question.rubricCriteria.map(
-                  (c) => Material(
+                  (crit) => Material(
                     type: MaterialType.transparency,
                     child: CheckboxListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
-                      value: lessonState.checkedRubricIds.contains(c.id),
-                      onChanged: (_) => notifier.toggleRubricCriterion(c.id),
+                      value: lessonState.checkedRubricIds.contains(crit.id),
+                      onChanged: (_) => notifier.toggleRubricCriterion(crit.id),
                       title: Text(
-                        c.localizedLabel(lang),
-                        style: GoogleFonts.plusJakartaSans(
+                        crit.localizedLabel(lang),
+                        style: AppTypography.ui(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimaryColor(context),
+                          color: c.ink,
                         ),
                       ),
                     ),
@@ -1092,7 +1121,7 @@ class _InteractiveLessonScreenState
               ],
             ],
           ] else if (question.mode == QuestionMode.wordMatch) ...[
-            _buildWordMatchUi(context, question, lessonState, notifier, isRu),
+            _buildWordMatchUi(context, question, lessonState, notifier, isRu, c),
           ] else if (question.mode == QuestionMode.sentenceOrder) ...[
             _buildSentenceOrderUi(
               context,
@@ -1100,6 +1129,7 @@ class _InteractiveLessonScreenState
               lessonState,
               notifier,
               isRu,
+              c,
             ),
           ] else
             ...List.generate(question.options.length, (idx) {
@@ -1108,157 +1138,160 @@ class _InteractiveLessonScreenState
               final isCorrectOption =
                   reveal && correctText.isNotEmpty && opt == correctText;
               final isWrongPick = reveal && isSelected && !isCorrectOption;
-              final badgeLetter = idx < 26
-                  ? String.fromCharCode(65 + idx)
-                  : '${idx + 1}';
+              final solidSuccessBg = c.isDark ? c.success : c.successText;
+              final solidErrorBg = c.isDark ? c.error : c.errorText;
+              final solidBrandBg = c.isDark ? c.brand : c.ctaPrimary;
+              final solidFg = c.isDark ? c.canvas : Colors.white;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Material(
-                  color: isCorrectOption
-                      ? AppColors.successTint(context)
-                      : isWrongPick
-                      ? AppColors.errorTint(context)
-                      : isSelected
-                      ? AppColors.primaryTint(context)
-                      : AppColors.surfaceColor(context),
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    onTap: lessonState.isSubmittingAnswer
-                        ? null
-                        : () => notifier.selectOption(idx),
+                child: Semantics(
+                  button: true,
+                  selected: isSelected,
+                  child: Material(
+                    color: isCorrectOption
+                        ? Color.alphaBlend(c.successSoft, c.paper)
+                        : isWrongPick
+                        ? Color.alphaBlend(c.errorSoft, c.paper)
+                        : isSelected
+                        ? Color.alphaBlend(c.brandSoft, c.paper)
+                        : c.paper,
                     borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isCorrectOption
-                              ? AppColors.successTextOnTint(context)
-                              : isWrongPick
-                              ? AppColors.errorTextOnTint(context)
-                              : isSelected
-                              ? AppColors.primaryAccentOnSurface(context)
-                              : AppColors.borderColor(context),
-                          width: (isSelected || isCorrectOption || isWrongPick)
-                              ? 2
-                              : 1.2,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (isSelected || isCorrectOption || isWrongPick)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isCorrectOption
-                                      ? const Color(0xFF047857)
-                                      : isWrongPick
-                                      ? AppColors.error
-                                      : AppColors.primary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  isCorrectOption
-                                      ? (isRu
-                                            ? 'правильный ответ'
-                                            : 'to‘g‘ri javob')
-                                      : isWrongPick
-                                      ? (isRu ? 'ваш выбор' : 'siz tanladingiz')
-                                      : (isRu ? 'выбрано ✓' : 'tanlangan ✓'),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                    child: InkWell(
+                      onTap: lessonState.isSubmittingAnswer
+                          ? null
+                          : () => notifier.selectOption(idx),
+                      borderRadius: BorderRadius.circular(14),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isCorrectOption
+                                  ? c.success
+                                  : isWrongPick
+                                  ? c.error
+                                  : isSelected
+                                  ? c.brand
+                                  : c.hairline,
+                              width:
+                                  (isSelected || isCorrectOption || isWrongPick)
+                                  ? 2
+                                  : 1.2,
                             ),
-                          Row(
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 26,
-                                height: 26,
-                                decoration: BoxDecoration(
-                                  color: isCorrectOption
-                                      ? const Color(0xFF047857)
-                                      : isWrongPick
-                                      ? AppColors.error
-                                      : isSelected
-                                      ? AppColors.primary
-                                      : AppColors.subtleSurface(context),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    badgeLetter,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w800,
-                                      color:
-                                          (isSelected ||
-                                              isCorrectOption ||
-                                              isWrongPick)
-                                          ? Colors.white
-                                          : AppColors.textMutedColor(
-                                              context,
-                                            ),
+                              if (isSelected || isCorrectOption || isWrongPick)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isCorrectOption
+                                          ? solidSuccessBg
+                                          : isWrongPick
+                                          ? solidErrorBg
+                                          : solidBrandBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      isCorrectOption
+                                          ? s.correctOptionBadge
+                                          : isWrongPick
+                                          ? s.yourChoiceBadge
+                                          : s.selectedBadge,
+                                      style: AppTypography.ui(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: solidFg,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  opt,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 14,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                    color: AppColors.textPrimaryColor(context),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: isCorrectOption
+                                          ? solidSuccessBg
+                                          : isWrongPick
+                                          ? solidErrorBg
+                                          : isSelected
+                                          ? solidBrandBg
+                                          : c.subtle,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _optionLabel(idx),
+                                        style: AppTypography.mono(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color:
+                                              (isSelected ||
+                                                  isCorrectOption ||
+                                                  isWrongPick)
+                                              ? solidFg
+                                              : c.graphite,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              if (isCorrectOption)
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  color: AppColors.successTextOnTint(context),
-                                  size: 20,
-                                )
-                              else if (isWrongPick)
-                                Icon(
-                                  Icons.cancel_rounded,
-                                  color: AppColors.errorTextOnTint(context),
-                                  size: 20,
-                                )
-                              else if (isSelected)
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  color: AppColors.primaryAccentOnSurface(
-                                    context,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      opt,
+                                      style: AppTypography.ui(
+                                        fontSize: 14.5,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                        color: c.ink,
+                                      ),
+                                    ),
                                   ),
-                                  size: 20,
-                                ),
+                                  if (isCorrectOption)
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: c.successText,
+                                      size: 20,
+                                    )
+                                  else if (isWrongPick)
+                                    Icon(
+                                      Icons.cancel_rounded,
+                                      color: c.errorText,
+                                      size: 20,
+                                    )
+                                  else if (isSelected)
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: c.brandStrong,
+                                      size: 20,
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               );
             }),
-          if (reveal) _buildInlineAnswerReveal(question, lang),
+          if (reveal) _buildInlineAnswerReveal(question, lang, c, s),
         ],
       ),
     );
@@ -1292,6 +1325,7 @@ class _InteractiveLessonScreenState
     LessonSessionState lessonState,
     LessonSessionNotifier notifier,
     bool isRu,
+    AppSemanticColors c,
   ) {
     final sortedRights = question.matchPairs.map((p) => p.right).toList()
       ..sort();
@@ -1306,10 +1340,10 @@ class _InteractiveLessonScreenState
                 isRu
                     ? 'Выберите пару слева и справа:'
                     : 'Chapdan so‘zni tanlang va o‘ngdagi mosini bosing:',
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.ui(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondaryColor(context),
+                  color: c.graphite,
                 ),
               ),
             ),
@@ -1343,17 +1377,17 @@ class _InteractiveLessonScreenState
                 ),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppColors.primaryTint(context)
+                      ? Color.alphaBlend(c.brandSoft, c.paper)
                       : matchedRight != null
-                      ? AppColors.successTint(context)
-                      : AppColors.subtleSurface(context),
+                      ? Color.alphaBlend(c.successSoft, c.paper)
+                      : c.subtle,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isActive
-                        ? AppColors.primaryAccentOnSurface(context)
+                        ? c.brand
                         : matchedRight != null
-                        ? AppColors.successTextOnTint(context)
-                        : AppColors.borderColor(context),
+                        ? c.successText
+                        : c.hairline,
                     width: isActive ? 1.8 : 1.0,
                   ),
                 ),
@@ -1362,23 +1396,27 @@ class _InteractiveLessonScreenState
                     Expanded(
                       child: Text(
                         pair.left,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.ui(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimaryColor(context),
+                          color: c.ink,
                         ),
                       ),
                     ),
                     if (matchedRight != null) ...[
-                      const Icon(Icons.arrow_forward_rounded, size: 16),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: c.ink,
+                      ),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
                           matchedRight,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.ui(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.successTextOnTint(context),
+                            color: c.successText,
                           ),
                         ),
                       ),
@@ -1414,18 +1452,18 @@ class _InteractiveLessonScreenState
                           rightText,
                           softWrap: true,
                           overflow: TextOverflow.visible,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: AppTypography.ui(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimaryColor(context),
+                            color: c.ink,
                           ),
                         ),
                       ),
                     ),
                   ),
                   backgroundColor: used
-                      ? AppColors.primaryTint(context)
-                      : AppColors.surfaceColor(context),
+                      ? Color.alphaBlend(c.brandSoft, c.paper)
+                      : c.paper,
                   onPressed: lessonState.isSubmittingAnswer
                       ? null
                       : () => notifier.selectMatchRight(rightText),
@@ -1444,6 +1482,7 @@ class _InteractiveLessonScreenState
     LessonSessionState lessonState,
     LessonSessionNotifier notifier,
     bool isRu,
+    AppSemanticColors c,
   ) {
     final sortedBank = List<String>.from(question.orderedTokens)..sort();
     final remainingCounts = <String, int>{};
@@ -1473,10 +1512,10 @@ class _InteractiveLessonScreenState
             Expanded(
               child: Text(
                 isRu ? 'Соберите предложение:' : 'Gapni tartib bilan tuzing:',
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.ui(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondaryColor(context),
+                  color: c.graphite,
                 ),
               ),
             ),
@@ -1497,18 +1536,18 @@ class _InteractiveLessonScreenState
           constraints: const BoxConstraints(minHeight: 54),
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.subtleSurface(context),
+            color: c.subtle,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderColor(context)),
+            border: Border.all(color: c.hairline),
           ),
           child: lessonState.selectedOrderTokens.isEmpty
               ? Text(
                   isRu
                       ? 'Нажимайте на слова ниже по порядку'
                       : 'Quyidagi so‘zlarni ketma-ket bosing',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: AppTypography.ui(
                     fontSize: 12.5,
-                    color: AppColors.textMutedColor(context),
+                    color: c.slatefine,
                   ),
                 )
               : LayoutBuilder(
@@ -1522,8 +1561,9 @@ class _InteractiveLessonScreenState
                         lessonState.selectedOrderTokens.length,
                         (i) => InputChip(
                           label: ConstrainedBox(
-                            constraints:
-                                BoxConstraints(maxWidth: maxLabelWidth),
+                            constraints: BoxConstraints(
+                              maxWidth: maxLabelWidth,
+                            ),
                             child: Builder(
                               builder: (chipCtx) => DefaultTextStyle(
                                 style: DefaultTextStyle.of(chipCtx).style,
@@ -1534,6 +1574,11 @@ class _InteractiveLessonScreenState
                                   lessonState.selectedOrderTokens[i],
                                   softWrap: true,
                                   overflow: TextOverflow.visible,
+                                  style: AppTypography.ui(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: c.ink,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1570,16 +1615,16 @@ class _InteractiveLessonScreenState
                               token,
                               softWrap: true,
                               overflow: TextOverflow.visible,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: AppTypography.ui(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimaryColor(context),
+                                color: c.ink,
                               ),
                             ),
                           ),
                         ),
                       ),
-                      backgroundColor: AppColors.surfaceColor(context),
+                      backgroundColor: c.paper,
                       onPressed: lessonState.isSubmittingAnswer
                           ? null
                           : () => notifier.addOrderToken(token),
@@ -1593,7 +1638,12 @@ class _InteractiveLessonScreenState
     );
   }
 
-  Widget _buildInlineAnswerReveal(Question question, String lang) {
+  Widget _buildInlineAnswerReveal(
+    Question question,
+    String lang,
+    AppSemanticColors c,
+    AppStrings s,
+  ) {
     final lessonState = ref.read(lessonSessionNotifierProvider);
     final result = lessonState.answerResult;
     final lesson = lessonState.lesson;
@@ -1631,155 +1681,198 @@ class _InteractiveLessonScreenState
     final hasRepeatedMistake =
         skillMistakeStreak >= 2 || questionMistakeStreak >= 2;
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.errorTint(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            isTextOrRich
-                ? (isRu
-                      ? 'Ваш ответ: ${result.selectedOption}'
-                      : 'Sizning javobingiz: ${result.selectedOption}')
-                : (isRu
-                      ? 'Вы выбрали: ${result.selectedOption}'
-                      : 'Siz tanladingiz: ${result.selectedOption}'),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.errorTextOnTint(context),
-            ),
-          ),
-          if (!isTextOrRich) ...[
-            const SizedBox(height: 3),
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(c.errorSoft, c.paper),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: c.error.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              isRu
-                  ? 'Правильный ответ: $correctText'
-                  : 'To‘g‘ri javob: $correctText',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: AppColors.successTextOnTint(context),
-              ),
-            ),
-          ],
-          if (wrongFeedback != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              wrongFeedback,
-              style: GoogleFonts.plusJakartaSans(
+              isTextOrRich
+                  ? (isRu
+                        ? 'Ваш ответ: ${result.selectedOption}'
+                        : 'Sizning javobingiz: ${result.selectedOption}')
+                  : s.youSelected(result.selectedOption),
+              style: AppTypography.ui(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                height: 1.4,
-                color: AppColors.textPrimaryColor(context),
+                color: c.errorText,
               ),
             ),
-          ],
-          if (explanation.trim().isNotEmpty && explanation != wrongFeedback) ...[
-            const SizedBox(height: 6),
-            Text(
-              explanation,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                height: 1.4,
-                color: AppColors.secondaryTextOnTint(context),
-              ),
-            ),
-          ],
-          if (hasRepeatedMistake) ...[
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warningTint(context),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.warning.withValues(alpha: 0.45),
+            if (!isTextOrRich) ...[
+              const SizedBox(height: 3),
+              Text(
+                s.correctAnswerIs(correctText),
+                style: AppTypography.ui(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: c.successText,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isRu ? 'Повторная ошибка' : 'Takroriy xato aniqlandi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryColor(context),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isRu
-                        ? 'Несколько ошибок подряд. Выполните дополнительное упражнение для закрепления.'
-                        : 'Ketma-ket xato qilindi. Mavzuni mustahkamlash uchun qo‘shimcha mashqni bajaring.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      height: 1.35,
-                      color: AppColors.textSecondaryColor(context),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      AppButton(
-                        text: isRu
-                            ? 'Дополнительное упражнение'
-                            : 'Qo‘shimcha mashq',
-                        size: AppButtonSize.small,
-                        variant: AppButtonVariant.primary,
-                        onPressed: () => _openReinforcementModal(
-                          context,
-                          useAlternate: isCheckpointOrAlt,
-                        ),
-                      ),
-                      AppButton(
-                        text: isRu ? 'Посмотреть пример' : 'Namuna misolni ko‘rish',
-                        size: AppButtonSize.small,
-                        variant: AppButtonVariant.outline,
-                        onPressed: () => ref
-                            .read(lessonSessionNotifierProvider.notifier)
-                            .reviewWorkedExample(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              TextButton(
-                onPressed: () => _openMistakeAnalysis(question, result, lang),
-                child: Text(isRu ? 'Разбор с Yo‘lchi AI' : 'Yo‘lchi AI tahlili'),
-              ),
-              TextButton(
-                onPressed: () => _openReinforcementModal(context),
-                child: Text(
-                  isRu ? 'Закрепить тему' : 'Mavzuni mustahkamlash',
-                ),
-              ),
-              if (isCheckpointOrAlt)
-                TextButton(
-                  onPressed: () =>
-                      _openReinforcementModal(context, useAlternate: true),
-                  child: Text(isRu ? 'Повторить упражнение' : 'Qayta mashq'),
-                ),
             ],
-          ),
-        ],
+            if (wrongFeedback != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                wrongFeedback,
+                style: AppTypography.ui(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                  color: c.ink,
+                ),
+              ),
+            ],
+            if (explanation.trim().isNotEmpty &&
+                explanation != wrongFeedback) ...[
+              const SizedBox(height: 6),
+              Text(
+                explanation,
+                style: AppTypography.ui(
+                  fontSize: 12.5,
+                  height: 1.4,
+                  color: c.graphite,
+                ),
+              ),
+            ],
+            if (hasRepeatedMistake) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color.alphaBlend(c.warningSoft, c.paper),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: c.warning.withValues(alpha: 0.45),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isRu ? 'Повторная ошибка' : 'Takroriy xato aniqlandi',
+                      style: AppTypography.ui(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: c.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isRu
+                          ? 'Несколько ошибок подряд. Выполните дополнительное упражнение для закрепления.'
+                          : 'Ketma-ket xato qilindi. Mavzuni mustahkamlash uchun qo‘shimcha mashqni bajaring.',
+                      style: AppTypography.ui(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: c.graphite,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        AppButton(
+                          text: isRu
+                              ? 'Дополнительное упражнение'
+                              : 'Qo‘shimcha mashq',
+                          size: AppButtonSize.small,
+                          variant: AppButtonVariant.primary,
+                          onPressed: () => _openReinforcementModal(
+                            context,
+                            useAlternate: isCheckpointOrAlt,
+                          ),
+                        ),
+                        AppButton(
+                          text: isRu
+                              ? 'Посмотреть пример'
+                              : 'Namuna misolni ko‘rish',
+                          size: AppButtonSize.small,
+                          variant: AppButtonVariant.outline,
+                          onPressed: () => ref
+                              .read(lessonSessionNotifierProvider.notifier)
+                              .reviewWorkedExample(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Divider(color: c.error.withValues(alpha: 0.2), height: 1),
+            const SizedBox(height: 10),
+            Text(
+              s.nextStepHint,
+              style: AppTypography.ui(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: c.ink,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              s.nextStepWrongGuidance,
+              style: AppTypography.ui(
+                fontSize: 12,
+                color: c.slatefine,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _openMistakeAnalysis(question, result, lang),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                  icon: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 16,
+                    color: c.brand,
+                  ),
+                  label: Text(s.yolchiAnalysisBtn),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => _openReinforcementModal(context),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                  icon: const Icon(Icons.bolt_rounded, size: 16),
+                  label: Text(s.reinforceTopicBtn),
+                ),
+                if (isCheckpointOrAlt)
+                  TextButton(
+                    onPressed: () =>
+                        _openReinforcementModal(context, useAlternate: true),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                    ),
+                    child: Text(isRu ? 'Повторить упражнение' : 'Qayta mashq'),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1835,6 +1928,7 @@ class _InteractiveLessonScreenState
   Future<void> _handleQuizSubmit(BuildContext context, String lang) async {
     _clearInlineSuccess();
     ScaffoldMessenger.of(context).clearSnackBars();
+    final s = _resolveStrings(context);
     final notifier = ref.read(lessonSessionNotifierProvider.notifier);
     final session = notifier.sessionGeneration;
     final step = notifier.stepGeneration;
@@ -1865,7 +1959,7 @@ class _InteractiveLessonScreenState
     } else if (answerResult != null && answerResult.isCorrect) {
       HapticFeedback.lightImpact();
       if (lessonState.isCompleted) {
-        _showLessonCompleted(context, lang);
+        _showLessonCompleted(context);
       } else if (currentQuestion?.isSelfAssessed == true) {
         // Leave self-assessed sample response & rubric checklist visible without blocking bottom actions.
         _showInlineSuccess(
@@ -1874,9 +1968,7 @@ class _InteractiveLessonScreenState
               : 'Javobingizni namuna bilan solishtirib, mezonlarni belgilang.',
         );
       } else {
-        _showInlineSuccess(
-          lang == 'ru' ? 'Правильный ответ!' : 'To‘g‘ri javob!',
-        );
+        _showInlineSuccess(s.correctAnswerToast);
         await notifier.nextStep(uiLocale: lang);
       }
     }
@@ -1885,14 +1977,10 @@ class _InteractiveLessonScreenState
   Future<void> _handleNextStep(BuildContext context) async {
     _clearInlineSuccess();
     ScaffoldMessenger.of(context).clearSnackBars();
+    final s = _resolveStrings(context);
+    final lang = s.isRu ? 'ru' : 'uz';
     final notifier = ref.read(lessonSessionNotifierProvider.notifier);
     final session = notifier.sessionGeneration;
-    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
-    final platformCode =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    final lang = (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
-        ? 'ru'
-        : 'uz';
     await notifier.nextStep(uiLocale: lang);
     if (!context.mounted ||
         !identical(
@@ -1903,58 +1991,60 @@ class _InteractiveLessonScreenState
       return;
     }
     if (ref.read(lessonSessionNotifierProvider).isCompleted) {
-      _showLessonCompleted(context, lang);
+      _showLessonCompleted(context);
     }
   }
 
-  void _showLessonCompleted(BuildContext context, [String lang = 'uz']) {
+  void _showLessonCompleted(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
+    final snackBg = c.isDark ? c.success : c.successText;
+    final snackFg = c.isDark ? c.canvas : Colors.white;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(
-            lang == 'ru'
-                ? 'Правильный ответ! Урок успешно завершён.'
-                : 'To‘g‘ri javob! Dars muvaffaqiyatli yakunlandi.',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+            s.lessonCompletedToast,
+            style: AppTypography.ui(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: snackFg,
             ),
           ),
-          backgroundColor: const Color(0xFF047857),
+          backgroundColor: snackBg,
         ),
       );
     context.go('/roadmap');
   }
 
-  Widget _buildAnswerError(String message) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.errorTint(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.cloud_off_rounded,
-            size: 18,
-            color: AppColors.errorTextOnTint(context),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.errorTextOnTint(context),
+  Widget _buildAnswerError(String message, AppSemanticColors c) {
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(c.errorSoft, c.paper),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: c.error.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 18, color: c.errorText),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: AppTypography.ui(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: c.errorText,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

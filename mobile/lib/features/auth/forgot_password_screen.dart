@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../core/auth/auth_error_message.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../core/auth/auth_error_message.dart';
 import '../../core/config/supabase_config.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/bilim_yol_logo.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bilim_yol_logo.dart';
+import 'auth_error_banner.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -21,24 +24,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isLoading = false;
   String? _errorMsg;
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final localized = Localizations.of<AppStrings>(context, AppStrings);
+    if (localized != null) return localized;
+    final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+    if (appLang == 'ru') return AppStrings.ru;
+    if (appLang == 'uz') return AppStrings.uz;
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+        ? AppStrings.ru
+        : AppStrings.uz;
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
   }
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/login');
+    }
+  }
+
   Future<void> _handleReset() async {
+    final s = _resolveStrings(context);
     final email = _emailController.text.trim();
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      setState(() => _errorMsg = 'Email manzilini to‘g‘ri kiriting.');
+      setState(() => _errorMsg = s.invalidEmailError);
       return;
     }
     final client = SupabaseConfig.client;
     if (client == null) {
       setState(
         () => _errorMsg = SupabaseConfig.hasRemoteConfiguration
-            ? 'Hisob xizmatiga ulanib bo‘lmadi. Qayta urinib ko‘ring.'
-            : 'Namuna rejimida tiklash xati yuborilmaydi.',
+            ? s.authServiceUnavailable
+            : s.demoNoResetError,
       );
       return;
     }
@@ -63,7 +86,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMsg = authErrorMessage(error);
+          _errorMsg = authErrorMessage(error, strings: s);
         });
       }
     }
@@ -71,108 +94,116 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textPrimary = AppColors.textPrimaryColor(context);
-    final textSecondary = AppColors.textSecondaryColor(context);
-    final textMuted = AppColors.textMutedColor(context);
-    final inputFill = AppColors.subtleSurface(context);
-    // Input boundary must reach 3:1 against the fill and card (WCAG 1.4.11).
-    final borderColor = AppColors.textMutedColor(context);
-    final focusColor = AppColors.primaryAccentOnSurface(context);
-    final errorFg = AppColors.errorTextOnTint(context);
-    final errorBg = AppColors.errorTint(context);
-
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     return Scaffold(
-      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         toolbarHeight: isLargeText ? 96 : null,
         title: Text(
-          'Parolni tiklash',
+          s.resetPasswordTitle,
           softWrap: true,
           maxLines: isLargeText ? null : 1,
-          overflow: isLargeText
-              ? TextOverflow.visible
-              : TextOverflow.ellipsis,
+          overflow: isLargeText ? TextOverflow.visible : TextOverflow.ellipsis,
         ),
         leading: IconButton(
+          tooltip: s.back,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: _goBack,
         ),
       ),
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const BilimYolLogo(size: 38),
+                  const Center(child: BilimYolLogo(size: 38)),
                   const SizedBox(height: 16),
                   Text(
-                    'Parolni qayta tiklash',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20,
+                    s.forgotPasswordHeading,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ui(
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: textPrimary,
+                      color: c.ink,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 6),
+                  Text(
+                    s.forgotPasswordSubtitle,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ui(
+                      fontSize: 13,
+                      color: c.slatefine,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
 
                   AppCard(
+                    borderRadius: 24,
                     padding: const EdgeInsets.all(20),
                     child: _isSent
                         ? Column(
                             children: [
                               Container(
-                                width: 50,
-                                height: 50,
+                                width: 52,
+                                height: 52,
                                 decoration: BoxDecoration(
-                                  color: AppColors.successTint(context),
+                                  color: c.successSoft,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.check_circle_rounded,
-                                  color: AppColors.successTextOnTint(context),
+                                  color: c.successText,
                                   size: 28,
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Havola yuborildi!',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
+                                s.resetLinkSentTitle,
+                                textAlign: TextAlign.center,
+                                style: AppTypography.ui(
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w800,
-                                  color: textPrimary,
+                                  color: c.ink,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Text(
-                                '${_emailController.text} manziliga tiklash havolasi yuborildi.',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  color: textSecondary,
+                                s.resetLinkSentBody(_emailController.text.trim()),
+                                style: AppTypography.ui(
+                                  fontSize: 13,
+                                  color: c.slatefine,
+                                  height: 1.4,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 18),
                               AppButton(
-                                text: 'Kirish sahifasiga qaytish',
+                                text: s.backToLoginAction,
                                 isFullWidth: true,
-                                onPressed: () => context.pop(),
+                                size: AppButtonSize.large,
+                                onPressed: _goBack,
                               ),
                             ],
                           )
                         : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'Email',
-                                style: GoogleFonts.plusJakartaSans(
+                                s.emailLabel,
+                                style: AppTypography.ui(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.graphite,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -180,104 +211,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.done,
+                                autofillHints: const [AutofillHints.email],
+                                onChanged: (_) {
+                                  if (_errorMsg != null) {
+                                    setState(() => _errorMsg = null);
+                                  }
+                                },
                                 onSubmitted: (_) {
                                   if (!_isLoading) _handleReset();
                                 },
-                                style: GoogleFonts.plusJakartaSans(
+                                style: AppTypography.ui(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: textPrimary,
+                                  color: c.ink,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'nomingiz@misol.uz',
-                                  hintStyle: GoogleFonts.plusJakartaSans(
-                                    color: textMuted,
-                                  ),
+                                  hintText: s.emailHint,
                                   prefixIcon: Icon(
                                     Icons.mail_outline_rounded,
                                     size: 18,
-                                    color: textSecondary,
-                                  ),
-                                  filled: true,
-                                  fillColor: inputFill,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: borderColor),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: borderColor),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: focusColor,
-                                      width: 1.8,
-                                    ),
-                                  ),
-                                  errorBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: errorFg,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  focusedErrorBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: errorFg,
-                                      width: 1.8,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 12,
+                                    color: c.brand,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               if (_errorMsg != null) ...[
-                                Semantics(
-                                  liveRegion: true,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: errorBg,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: errorFg.withValues(alpha: 0.35),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.error_outline_rounded,
-                                          color: errorFg,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            _errorMsg!,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: errorFg,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
+                                AuthErrorBanner(message: _errorMsg!),
+                                const SizedBox(height: 14),
                               ],
                               AppButton(
-                                text: 'Tiklash havolasini yuborish',
+                                text: s.sendResetLinkAction,
                                 isFullWidth: true,
                                 size: AppButtonSize.large,
                                 isLoading: _isLoading,
-                                onPressed: _handleReset,
+                                onPressed: _isLoading ? null : _handleReset,
                               ),
                             ],
                           ),

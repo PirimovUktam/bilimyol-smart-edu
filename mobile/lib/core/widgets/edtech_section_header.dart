@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../constants/app_colors.dart';
+import '../theme/app_semantic_colors.dart';
+import '../theme/app_typography.dart';
 
 class EdTechSectionHeader extends StatelessWidget {
   final String title;
@@ -22,6 +22,7 @@ class EdTechSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
     final trimmed = title.trim();
     String before = trimmed;
     String accent = '';
@@ -45,6 +46,27 @@ class EdTechSectionHeader extends StatelessWidget {
       }
     }
 
+    final titleWidget = Text.rich(
+      TextSpan(
+        style: AppTypography.ui(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          color: c.ink,
+          height: 1.2,
+          letterSpacing: -0.4,
+        ),
+        children: [
+          if (before.isNotEmpty) TextSpan(text: before),
+          if (accent.isNotEmpty)
+            TextSpan(
+              text: accent,
+              style: TextStyle(color: c.brand),
+            ),
+          if (after.isNotEmpty) TextSpan(text: after),
+        ],
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -52,27 +74,23 @@ class EdTechSectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.primaryTint(context),
+              color: c.brandSoft,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (pillIcon != null) ...[
-                  Icon(
-                    pillIcon,
-                    size: 13,
-                    color: AppColors.primaryAccentOnSurface(context),
-                  ),
+                  Icon(pillIcon, size: 13, color: c.brand),
                   const SizedBox(width: 6),
                 ],
                 Flexible(
                   child: Text(
                     pillText!,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: AppTypography.ui(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryAccentOnSurface(context),
+                      color: c.brand,
                     ),
                   ),
                 ),
@@ -81,47 +99,48 @@ class EdTechSectionHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
         ],
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryColor(context),
-                    height: 1.2,
-                    letterSpacing: -0.4,
-                  ),
+        if (trailing == null)
+          titleWidget
+        else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+              final stackVertically =
+                  textScale >= 1.25 || constraints.maxWidth < 320;
+              if (stackVertically) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (before.isNotEmpty) TextSpan(text: before),
-                    if (accent.isNotEmpty)
-                      TextSpan(
-                        text: accent,
-                        style: TextStyle(
-                          color: AppColors.primaryAccentOnSurface(context),
-                        ),
-                      ),
-                    if (after.isNotEmpty) TextSpan(text: after),
+                    titleWidget,
+                    const SizedBox(height: 10),
+                    trailing!,
                   ],
-                ),
-              ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: 12),
-              trailing!,
-            ],
-          ],
-        ),
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: titleWidget),
+                  const SizedBox(width: 12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: (constraints.maxWidth - 12) * 0.52,
+                    ),
+                    child: trailing!,
+                  ),
+                ],
+              );
+            },
+          ),
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(
             subtitle!,
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.ui(
               fontSize: 13.5,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondaryColor(context),
+              color: c.graphite,
               height: 1.45,
             ),
           ),
@@ -130,4 +149,3 @@ class EdTechSectionHeader extends StatelessWidget {
     );
   }
 }
-

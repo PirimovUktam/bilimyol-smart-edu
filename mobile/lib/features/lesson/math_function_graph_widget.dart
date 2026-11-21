@@ -1,22 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_card.dart';
 
 class MathFunctionGraphWidget extends StatefulWidget {
   const MathFunctionGraphWidget({super.key});
 
   @override
-  State<MathFunctionGraphWidget> createState() => _MathFunctionGraphWidgetState();
+  State<MathFunctionGraphWidget> createState() =>
+      _MathFunctionGraphWidgetState();
 }
 
 class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
   double _currentX = 2.0;
 
+  static AppStrings _resolveStrings(BuildContext context) {
+    final registered = Localizations.of<AppStrings>(context, AppStrings);
+    if (registered != null) return registered;
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
+    return isRu ? AppStrings.ru : AppStrings.uz;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
     final yValue = 2 * _currentX + 3;
-    final dark = AppColors.isDark(context);
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -32,28 +47,28 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
               runSpacing: 6,
               children: [
                 Text(
-                  'Interaktiv Grafik: f(x) = 2x + 3',
-                  style: GoogleFonts.plusJakartaSans(
+                  s.interactiveGraphTitle,
+                  style: AppTypography.ui(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryColor(context),
+                    color: c.ink,
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
+                    horizontal: 10,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryTint(context),
+                    color: c.brandSoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     'f(${_currentX.toStringAsFixed(1)}) = ${yValue.toStringAsFixed(1)}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
+                    style: AppTypography.mono(
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.primaryAccentOnSurface(context),
+                      color: c.brand,
                     ),
                   ),
                 ),
@@ -72,37 +87,52 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
                 painter: _GraphPainter(
                   currentX: _currentX,
                   currentY: yValue,
-                  isDark: dark,
+                  c: c,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 12),
 
-          // Interactive X slider
-          Row(
-            children: [
-              Text(
+          // Interactive X slider (responsive at 360dp @ 2.0x)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final label = Text(
                 'x = ${_currentX.toStringAsFixed(1)}',
-                style: GoogleFonts.plusJakartaSans(
+                style: AppTypography.mono(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondaryColor(context),
+                  color: c.graphite,
                 ),
-              ),
-              Expanded(
-                child: Slider(
-                  value: _currentX,
-                  min: 0,
-                  max: 4,
-                  divisions: 8,
-                  activeColor: AppColors.primaryAccentOnSurface(context),
-                  onChanged: (val) {
-                    setState(() => _currentX = val);
-                  },
-                ),
-              ),
-            ],
+              );
+              final slider = Slider(
+                value: _currentX,
+                min: 0,
+                max: 4,
+                divisions: 8,
+                activeColor: c.brand,
+                inactiveColor: c.hairline,
+                onChanged: (val) => setState(() => _currentX = val),
+              );
+
+              if (textScale >= 1.5 || constraints.maxWidth < 260) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    label,
+                    slider,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Flexible(flex: 0, child: label),
+                  const SizedBox(width: 8),
+                  Expanded(child: slider),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -113,28 +143,27 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
 class _GraphPainter extends CustomPainter {
   final double currentX;
   final double currentY;
-  final bool isDark;
+  final AppSemanticColors c;
 
   _GraphPainter({
     required this.currentX,
     required this.currentY,
-    required this.isDark,
+    required this.c,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()
-      ..color = isDark ? AppColors.darkSubtleSurface : const Color(0xFFF8FAFC);
+    final bgPaint = Paint()..color = c.subtle;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
     final gridPaint = Paint()
-      ..color = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)
+      ..color = c.hairline
       ..strokeWidth = 1.0;
 
-    const double originX = 40;
-    final double originY = size.height - 25;
-    const double scaleX = 50.0;
-    const double scaleY = 11.0;
+    const double originX = 32;
+    final double originY = size.height - 22;
+    final double scaleX = ((size.width - originX - 20) / 5.0).clamp(24.0, 56.0);
+    final double scaleY = ((originY - 16) / 12.0).clamp(8.0, 12.0);
 
     // Draw grid lines
     for (double x = 0; x <= 5; x += 1) {
@@ -143,27 +172,35 @@ class _GraphPainter extends CustomPainter {
     }
     for (double y = 0; y <= 12; y += 3) {
       final py = originY - y * scaleY;
-      canvas.drawLine(Offset(20, py), Offset(size.width - 20, py), gridPaint);
+      canvas.drawLine(Offset(16, py), Offset(size.width - 16, py), gridPaint);
     }
 
     // Draw axes
     final axisPaint = Paint()
-      ..color = isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)
+      ..color = c.slatefine
       ..strokeWidth = 1.5;
 
     // X Axis
-    canvas.drawLine(Offset(20, originY), Offset(size.width - 15, originY), axisPaint);
+    canvas.drawLine(
+      Offset(16, originY),
+      Offset(size.width - 14, originY),
+      axisPaint,
+    );
     // Y Axis
-    canvas.drawLine(Offset(originX, size.height - 15), Offset(originX, 15), axisPaint);
+    canvas.drawLine(
+      Offset(originX, size.height - 12),
+      Offset(originX, 12),
+      axisPaint,
+    );
 
     // Draw function line y = 2x + 3
     final linePaint = Paint()
-      ..color = isDark ? const Color(0xFF818CF8) : AppColors.primary
-      ..strokeWidth = 2.5
+      ..color = c.brand
+      ..strokeWidth = 2.6
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    for (double x = 0; x <= 5; x += 0.2) {
+    for (double x = 0; x <= 4.5; x += 0.2) {
       final y = 2 * x + 3;
       final px = originX + x * scaleX;
       final py = originY - y * scaleY;
@@ -175,15 +212,18 @@ class _GraphPainter extends CustomPainter {
     }
     canvas.drawPath(path, linePaint);
 
-    // Draw current active point
+    // Draw current active point (originY - currentY * scaleY)
     final activePx = originX + currentX * scaleX;
-    final activePy = originY + currentY * scaleY;
+    final activePy = originY - currentY * scaleY;
 
-    final dotPaint = Paint()..color = AppColors.error;
+    final dotHaloPaint = Paint()..color = c.error.withValues(alpha: 0.2);
+    canvas.drawCircle(Offset(activePx, activePy), 11, dotHaloPaint);
+
+    final dotPaint = Paint()..color = c.error;
     canvas.drawCircle(Offset(activePx, activePy), 6, dotPaint);
 
     final dotRingPaint = Paint()
-      ..color = Colors.white
+      ..color = c.paper
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(Offset(activePx, activePy), 6, dotRingPaint);
@@ -193,6 +233,6 @@ class _GraphPainter extends CustomPainter {
   bool shouldRepaint(covariant _GraphPainter oldDelegate) {
     return oldDelegate.currentX != currentX ||
         oldDelegate.currentY != currentY ||
-        oldDelegate.isDark != isDark;
+        oldDelegate.c != c;
   }
 }

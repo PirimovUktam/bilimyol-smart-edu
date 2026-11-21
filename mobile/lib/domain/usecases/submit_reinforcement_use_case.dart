@@ -99,10 +99,7 @@ class SubmitReinforcementUseCase {
     final isCorrect = answerAttempt.isCorrect;
 
     if (!isCorrect) {
-      final currentProfile =
-          learnerRepository.supportsServerReinforcementPersistence
-          ? await learnerRepository.getProfile()
-          : profile;
+      final currentProfile = await learnerRepository.getProfile();
       final currentScores = currentProfile.scoresByCourse[courseId] ?? {};
       final actualScore = currentScores[skillId]?.score ??
           answerAttempt.newSkillScore ??

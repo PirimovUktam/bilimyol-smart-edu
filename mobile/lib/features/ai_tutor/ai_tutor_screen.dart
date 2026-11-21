@@ -1,11 +1,15 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../app/providers.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/config/supabase_config.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/bilimyol_bottom_nav.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../data/datasources/demo_ai_data.dart';
@@ -30,9 +34,15 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final _history = <({String sender, String text})>[];
-  final List<_ChatMessage> _messages = [];
   final Set<String> _helpfulMessageIds = <String>{};
-  bool _seededWelcome = false;
+  final List<_ChatMessage> _messages = [
+    _ChatMessage(
+      id: 'welcome_0',
+      isAI: true,
+      text: '',
+      time: '',
+    ),
+  ];
   bool _isSending = false;
   bool? _serviceOnline;
   int _requestGeneration = 0;
@@ -40,33 +50,16 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
   String? _streamingMessageId;
   int _streamingVisibleLength = 0;
   Timer? _streamingTimer;
+  String? _lastFailedPrompt;
 
-  String _resolveUiLocale(BuildContext context) {
+  static AppStrings _resolveStrings(BuildContext context) {
+    final registered = Localizations.of<AppStrings>(context, AppStrings);
+    if (registered != null) return registered;
     final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
     final platformCode =
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
-        ? 'ru'
-        : 'uz';
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_seededWelcome) {
-      _seededWelcome = true;
-      final lang = _resolveUiLocale(context);
-      _messages.add(
-        _ChatMessage(
-          id: 'welcome_0',
-          isAI: true,
-          text: lang == 'ru'
-              ? 'Привет, я Yo‘lchi AI! Напишите, что именно непонятно, или попросите ещё один пример.'
-              : 'Salom, men Yo‘lchi AI! Tushunmagan joyingizni yozing yoki yana bir misol so‘rang.',
-          time: '',
-        ),
-      );
-    }
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
+    return isRu ? AppStrings.ru : AppStrings.uz;
   }
 
   @override
@@ -152,12 +145,13 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
     _controller.clear();
     _scrollToBottom(force: true);
 
+    final s = _resolveStrings(context);
+    final lang = s.isRu ? 'ru' : 'uz';
     final course = ref.read(courseStateNotifierProvider).activeCourse;
     final lessonState = ref.read(lessonSessionNotifierProvider);
     final roadmap = ref.read(roadmapStateNotifierProvider).valueOrNull;
     final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
 
-    final lang = _resolveUiLocale(context);
     final effectiveCourseId =
         widget.lesson?.courseId ?? course?.id ?? lessonState.lesson?.courseId;
     final activeNode = (roadmap != null && roadmap.courseId == effectiveCourseId)
@@ -282,9 +276,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
           _ChatMessage(
             id: 'msg_${_msgSequence++}',
             isAI: true,
-            text: lang == 'ru'
-                ? 'Извините, произошла ошибка при ответе. Попробуйте ещё раз.'
-                : 'Kechirasiz, javob berishda xatolik yuz berdi. Qayta urinib ko‘ring.',
+            text: s.aiTutorGenericError,
             time: _now(),
             isError: true,
           ),
@@ -294,27 +286,40 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
     _scrollToBottom(force: false);
   }
 
-  String? _lastFailedPrompt;
-
   String _historyText(String value) =>
       value.length > 800 ? value.substring(0, 800) : value;
 
   @override
   Widget build(BuildContext context) {
-    final lang = _resolveUiLocale(context);
-    final quickChips = lang == 'ru'
-        ? const [
-            'Объясни правило проще',
-            'Дай ещё один пример',
-            'Дай тренировочный вопрос',
-          ]
-        : const [
-            'Qoidani sodda tushuntir',
-            'Yana bitta misol ber',
-            'Mashq savoli ber',
-          ];
-
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
+    final lang = s.isRu ? 'ru' : 'uz';
+    final quickChips = s.aiTutorQuickPrompts;
+    final course = ref.watch(courseStateNotifierProvider).activeCourse;
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 100;
+    final showChips = !keyboardOpen;
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
+
+    final String statusLabel;
+    final AppBadgeVariant statusVariant;
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      statusLabel = s.aiTutorStatusDemo;
+      statusVariant = AppBadgeVariant.blue;
+    } else if (_serviceOnline == false) {
+      statusLabel = s.aiTutorStatusOffline;
+      statusVariant = AppBadgeVariant.rose;
+    } else if (_serviceOnline == true) {
+      statusLabel = s.aiTutorStatusOnline;
+      statusVariant = AppBadgeVariant.emerald;
+    } else {
+      statusLabel = s.aiTutorStatusPrompt;
+      statusVariant = AppBadgeVariant.slate;
+    }
+
+    final headerSubtitle = widget.lesson?.localizedTitle(lang) ??
+        (course != null
+            ? '${s.aiTutorSubtitle} · ${s.localizedCourseTitle(course)}'
+            : s.aiTutorSubtitle);
 
     return CallbackShortcuts(
       bindings: {
@@ -323,58 +328,47 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
       },
       child: Focus(
         autofocus: true,
+        includeSemantics: false,
         child: Scaffold(
-          backgroundColor: AppColors.bg(context),
           appBar: AppBar(
             toolbarHeight: isLargeText
-                ? ((_serviceOnline == null && widget.lesson != null) ? 212 : 112)
+                ? (widget.lesson != null ? 156 : 84)
                 : null,
             title: Row(
               children: [
-                const YolchiAIMascot(size: 36, mood: YolchiMood.explaining),
+                const YolchiAIMascot(size: 34, mood: YolchiMood.explaining),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Yo‘lchi AI',
+                        s.navAiTutor,
                         softWrap: true,
                         maxLines: isLargeText ? null : 1,
                         overflow: isLargeText
                             ? TextOverflow.visible
                             : TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.ui(
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
+                          color: c.ink,
                         ),
                       ),
                       Text(
-                        !SupabaseConfig.hasRemoteConfiguration
-                            ? (lang == 'ru' ? 'Демо-режим' : 'Namuna rejimi')
-                            : _serviceOnline == true
-                            ? (lang == 'ru'
-                                  ? 'Педагогический помощник'
-                                  : 'Pedagogik yordamchi')
-                            : _serviceOnline == false
-                            ? (lang == 'ru'
-                                  ? 'Офлайн • Попробуйте снова'
-                                  : 'Offline • Qayta urinib ko‘ring')
-                            : widget.lesson?.localizedTitle(lang) ??
-                                  (lang == 'ru'
-                                      ? 'Введите ваш вопрос'
-                                      : 'Savolingizni yozing'),
+                        headerSubtitle,
                         softWrap: true,
                         maxLines: isLargeText ? null : 1,
                         overflow: isLargeText
                             ? TextOverflow.visible
                             : TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: AppTypography.ui(
                           fontWeight: FontWeight.w600,
-                          fontSize: 10.5,
+                          fontSize: 11,
                           color: _serviceOnline == true
-                              ? AppColors.successTextOnTint(context)
-                              : AppColors.textMutedColor(context),
+                              ? c.successText
+                              : c.slatefine,
                         ),
                       ),
                     ],
@@ -387,191 +381,320 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
               ? const BilimYolBottomNav(currentIndex: 2)
               : null,
           body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = _messages[index];
-                      final isStreaming = _streamingMessageId == msg.id;
-                      final visibleText = isStreaming
-                          ? msg.text.substring(
-                              0,
-                              _streamingVisibleLength.clamp(0, msg.text.length),
-                            )
-                          : msg.text;
-                      return YolchiBubble(
-                        key: ValueKey(msg.id),
-                        id: msg.id,
-                        message: visibleText,
-                        isYolchi: msg.isAI,
-                        isStreaming: isStreaming,
-                        isError: msg.isError,
-                        time: msg.time,
-                        uiLocale: lang,
-                        showHelpfulAction:
-                            msg.isAI && !msg.isError && msg.id != 'welcome_0',
-                        isHelpful: _helpfulMessageIds.contains(msg.id),
-                        onToggleHelpful: () {
-                          setState(() {
-                            if (!_helpfulMessageIds.add(msg.id)) {
-                              _helpfulMessageIds.remove(msg.id);
-                            }
-                          });
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+                    final isUltraTight = constraints.maxHeight < 300;
+                    final isCompactVertical =
+                        constraints.maxHeight < 440 && textScale > 1.3;
+                    final showStatusBadge =
+                        !keyboardOpen && !isUltraTight && !isCompactVertical;
+                    final useHorizontalChips =
+                        constraints.maxHeight < 460 || textScale > 1.3;
+
+                    Widget buildMessageList({required bool shrinkWrap}) {
+                      return ListView.builder(
+                        controller: shrinkWrap ? null : _scrollController,
+                        shrinkWrap: shrinkWrap,
+                        physics: shrinkWrap
+                            ? const NeverScrollableScrollPhysics()
+                            : null,
+                        padding: EdgeInsets.symmetric(
+                          vertical: shrinkWrap ? 6 : 12,
+                        ),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = _messages[index];
+                          final resolvedText = msg.id == 'welcome_0'
+                              ? s.aiTutorWelcomeMessage
+                              : msg.text;
+                          final isStreaming = _streamingMessageId == msg.id;
+                          final visibleText = isStreaming
+                              ? resolvedText.substring(
+                                  0,
+                                  _streamingVisibleLength.clamp(
+                                    0,
+                                    resolvedText.length,
+                                  ),
+                                )
+                              : resolvedText;
+                          return YolchiBubble(
+                            key: ValueKey(msg.id),
+                            id: msg.id,
+                            message: visibleText,
+                            isYolchi: msg.isAI,
+                            isStreaming: isStreaming,
+                            isError: msg.isError,
+                            time: msg.time,
+                            uiLocale: lang,
+                            showHelpfulAction:
+                                msg.isAI && !msg.isError && msg.id != 'welcome_0',
+                            isHelpful: _helpfulMessageIds.contains(msg.id),
+                            onToggleHelpful: () {
+                              setState(() {
+                                if (!_helpfulMessageIds.add(msg.id)) {
+                                  _helpfulMessageIds.remove(msg.id);
+                                }
+                              });
+                            },
+                          );
                         },
                       );
-                    },
-                  ),
-                ),
+                    }
 
-                if (_isSending) const YolchiTypingIndicator(),
+                    final retryButton = (!_isSending && _lastFailedPrompt != null)
+                        ? Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: isUltraTight ? 0 : 4,
+                            ),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(44, 44),
+                                  foregroundColor: c.isDark
+                                      ? c.brandStrong
+                                      : c.brand,
+                                ),
+                                onPressed: () {
+                                  final failed = _lastFailedPrompt;
+                                  if (failed != null) {
+                                    _sendMessage(prompt: failed, retry: true);
+                                  }
+                                },
+                                icon: const Icon(Icons.refresh_rounded, size: 17),
+                                label: Text(
+                                  s.retry,
+                                  style: AppTypography.ui(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: c.isDark ? c.brandStrong : c.brand,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : null;
 
-                if (!_isSending && _lastFailedPrompt != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: Row(
+                    final composer = Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: isUltraTight ? 6 : 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: c.paper,
+                        border: Border(top: BorderSide(color: c.hairline)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              textField: true,
+                              label: s.aiTutorInputHint,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: c.subtle,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: c.hairline),
+                                ),
+                                child: TextField(
+                                  controller: _controller,
+                                  maxLength: 4000,
+                                  minLines: 1,
+                                  maxLines: isUltraTight
+                                      ? 1
+                                      : (keyboardOpen || isCompactVertical
+                                            ? 2
+                                            : 4),
+                                  textInputAction: TextInputAction.send,
+                                  style: AppTypography.ui(
+                                    fontSize: 13.5,
+                                    color: c.ink,
+                                  ),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    filled: false,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: isUltraTight ? 6 : 10,
+                                    ),
+                                    hintText: s.aiTutorInputHint,
+                                    hintStyle: AppTypography.ui(
+                                      fontSize: 13.5,
+                                      color: c.slatefine,
+                                    ),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                  ),
+                                  onSubmitted: (_) => _sendMessage(),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Semantics(
+                            button: true,
+                            label: s.aiTutorSendTooltip,
+                            child: Tooltip(
+                              message: s.aiTutorSendTooltip,
+                              child: Material(
+                                type: MaterialType.transparency,
+                                shape: const CircleBorder(),
+                                clipBehavior: Clip.antiAlias,
+                                child: InkWell(
+                                  onTap: _isSending
+                                      ? null
+                                      : () => _sendMessage(),
+                                  customBorder: const CircleBorder(),
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: _isSending
+                                            ? [
+                                                c.ctaPrimary.withValues(
+                                                  alpha: 0.55,
+                                                ),
+                                                c.ctaPrimaryHover.withValues(
+                                                  alpha: 0.55,
+                                                ),
+                                              ]
+                                            : [
+                                                c.ctaPrimary,
+                                                c.ctaPrimaryHover,
+                                              ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_upward_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    Widget buildQuickChip(String chip) {
+                      return ActionChip(
+                        label: Text(
+                          chip,
+                          style: AppTypography.ui(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: c.isDark ? c.brandStrong : c.brand,
+                          ),
+                        ),
+                        backgroundColor: c.paper,
+                        side: BorderSide(
+                          color: c.isDark ? c.brandStrong : c.brand,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 8,
+                        ),
+                        onPressed: _isSending
+                            ? null
+                            : () => _sendMessage(prompt: chip),
+                      );
+                    }
+
+                    final Widget? chipsStrip = !showChips
+                        ? null
+                        : useHorizontalChips
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  for (var i = 0; i < quickChips.length; i++) ...[
+                                    if (i > 0) const SizedBox(width: 8),
+                                    buildQuickChip(quickChips[i]),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: quickChips.map(buildQuickChip).toList(),
+                              ),
+                            ),
+                          );
+
+                    if (isUltraTight) {
+                      return SingleChildScrollView(
+                        reverse: true,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              buildMessageList(shrinkWrap: true),
+                              if (_isSending) const YolchiTypingIndicator(),
+                              ?retryButton,
+                              ?chipsStrip,
+                              composer,
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
                       children: [
-                        Flexible(
-                          child: TextButton.icon(
-                            onPressed: () {
-                              final failed = _lastFailedPrompt;
-                              if (failed != null) {
-                                _sendMessage(prompt: failed, retry: true);
-                              }
-                            },
-                            icon: Icon(
-                              Icons.refresh_rounded,
-                              size: 16,
-                              color: AppColors.primaryAccentOnSurface(context),
-                            ),
-                            label: Text(
-                              lang == 'ru' ? 'Повторить' : 'Qayta urinish',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primaryAccentOnSurface(context),
+                        if (showStatusBadge)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: AppBadge(
+                                text: statusLabel,
+                                variant: statusVariant,
                               ),
                             ),
                           ),
-                        ),
+                        Expanded(child: buildMessageList(shrinkWrap: false)),
+                        if (_isSending) const YolchiTypingIndicator(),
+                        ?retryButton,
+                        ?chipsStrip,
+                        composer,
                       ],
-                    ),
-                  ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  child: SizedBox(
-                    height: isLargeText ? 52 : 36,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: quickChips.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, i) {
-                        return ActionChip(
-                          label: Text(
-                            quickChips[i],
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryAccentOnSurface(context),
-                            ),
-                          ),
-                          backgroundColor: AppColors.surfaceColor(context),
-                          side: BorderSide(
-                            color: AppColors.primaryAccentOnSurface(context),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          onPressed: _isSending
-                              ? null
-                              : () => _sendMessage(prompt: quickChips[i]),
-                        );
-                      },
-                    ),
-                  ),
+                    );
+                  },
                 ),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  color: AppColors.surfaceColor(context),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: AppColors.bg(context),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: AppColors.borderColor(context),
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _controller,
-                            maxLength: 4000,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              color: AppColors.textPrimaryColor(context),
-                            ),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              hintText: lang == 'ru'
-                                  ? 'Введите ваш вопрос...'
-                                  : 'Savol yozing...',
-                              hintStyle: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                color: AppColors.textMutedColor(context),
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                            ),
-                            onSubmitted: (_) => _sendMessage(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: _isSending ? null : () => _sendMessage(),
-                        borderRadius: BorderRadius.circular(24),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.primaryHover,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_upward_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -7,14 +7,18 @@ import '../../domain/entities/placement_session.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../core/config/supabase_config.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../domain/personalization/learning_start.dart';
 import 'in_memory_learner_repository.dart';
 import 'supabase_course_repository.dart';
 
 class SupabaseLearnerRepository extends ILearnerRepository {
-  final InMemoryLearnerRepository _fallbackRepo = InMemoryLearnerRepository();
+  final InMemoryLearnerRepository _fallbackRepo;
   Future<void> _srsWriteChain = Future<void>.value();
   ({String scope, String key})? _pendingMasteryAnswer;
+
+  SupabaseLearnerRepository({LocalStorageService? storage})
+    : _fallbackRepo = InMemoryLearnerRepository(storage: storage);
 
   @override
   bool get supportsNodeCompletion => !SupabaseConfig.hasRemoteConfiguration;

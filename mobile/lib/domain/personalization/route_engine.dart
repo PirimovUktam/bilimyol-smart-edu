@@ -31,8 +31,12 @@ class RouteEngine {
     );
     if (baseNodes.any((node) => node.serverMastery)) {
       final next = baseNodes
-          .where((node) => !node.isOptional && node.status != NodeStatus.locked &&
-              node.status != NodeStatus.completed)
+          .where(
+            (node) =>
+                !node.isOptional &&
+                node.status != NodeStatus.locked &&
+                node.status != NodeStatus.completed,
+          )
           .firstOrNull;
       return LearningPath(
         id: 'roadmap_$courseId',
@@ -43,18 +47,19 @@ class RouteEngine {
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
     }
+
+    final orderedBase = [...baseNodes]
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final effectiveCompletedIds = <String>{...completedNodeIds};
     final List<LearningPathNode> adaptedNodes = [];
 
-    for (final baseNode in baseNodes) {
+    for (final baseNode in orderedBase) {
       final skillScoreObj = skillScores[baseNode.skillId];
       final int? score = skillScoreObj?.score;
       final bool needsPractice =
           score != null && score < AdaptiveThresholds.targetedPracticeMin;
-      final isCompleted = completedNodeIds.contains(baseNode.id);
-
-      // Check prerequisites (or placement-guided entry for English A2/B1)
       final prerequisitesMet = baseNode.prerequisites.every(
-        (prereqId) => completedNodeIds.contains(prereqId),
+        (prereqId) => effectiveCompletedIds.contains(prereqId),
       );
       final placementUnlocked =
           courseId == 'course_eng_01' &&
@@ -63,21 +68,33 @@ class RouteEngine {
               (effectivePlacementTier == 'B1' &&
                   (baseNode.id == 'node_eng_a2_m1_directions' ||
                       baseNode.id == 'node_eng_b1_m1_travel')));
+      // Diagnostic >= 80% skips linear/foundational skill nodes, while keeping
+      // rich CEFR modules, unit checkpoints, and level exit exams gated.
+      final allowDiagnosticSkip =
+          courseId != 'course_eng_01' ||
+          (!baseNode.hasRichExercise && !baseNode.isCheckpoint);
+      final masteredViaDiagnostic =
+          allowDiagnosticSkip &&
+          skillScoreObj != null &&
+          prerequisitesMet &&
+          score! >= AdaptiveThresholds.diagnosticMasteryMin;
+      final isCompleted =
+          completedNodeIds.contains(baseNode.id) || masteredViaDiagnostic;
+
+      if (isCompleted) {
+        effectiveCompletedIds.add(baseNode.id);
+      }
 
       NodeStatus status = NodeStatus.locked;
-
       if (isCompleted) {
         status = NodeStatus.completed;
       } else if (!prerequisitesMet && !placementUnlocked) {
         status = NodeStatus.locked;
+      } else if (needsPractice) {
+        // Score < 50 => requires reinforcement
+        status = NodeStatus.reinforcement;
       } else {
-        // Prerequisites are met or placement-unlocked
-        if (needsPractice) {
-          // Score < 50 => requires reinforcement
-          status = NodeStatus.reinforcement;
-        } else {
-          status = NodeStatus.available;
-        }
+        status = NodeStatus.available;
       }
 
       final updatedNode = baseNode.copyWith(
@@ -85,13 +102,13 @@ class RouteEngine {
         status: status,
       );
 
-      adaptedNodes.pushOrAdd(updatedNode);
+      adaptedNodes.add(updatedNode);
 
-      // If the node has a low assessed score (< 50), attach reinforcement node
-      if ((needsPractice && !isCompleted) ||
-          completedReinforcementIds.contains('reinf_${baseNode.id}')) {
+      // Attach reinforcement node for low scores (< 50) not yet completed
+      if (needsPractice && !isCompleted) {
         final reinforcementId = 'reinf_${baseNode.id}';
-        final isReinforcementCompleted = completedReinforcementIds.contains(reinforcementId);
+        final isReinforcementCompleted =
+            completedReinforcementIds.contains(reinforcementId);
 
         final reinforcementNode = LearningPathNode(
           id: reinforcementId,
@@ -107,28 +124,29 @@ class RouteEngine {
           titleRu: baseNode.titleRu != null
               ? 'Закрепление: ${baseNode.titleRu}'
               : null,
-          description: 'Yo‘lchi AI tavsiyasi: ${baseNode.title} bo‘yicha tushunchalarni mustahkamlash mashqi',
+          description:
+              'Yo‘lchi AI tavsiyasi: ${baseNode.title} bo‘yicha tushunchalarni mustahkamlash mashqi',
           descriptionRu: baseNode.titleRu != null
               ? 'Рекомендация Yo‘lchi AI: закрепление темы «${baseNode.titleRu}»'
               : null,
-          prerequisites: [baseNode.id],
+          prerequisites: baseNode.prerequisites,
           requiredScore: AdaptiveThresholds.targetedPracticeMin,
           status: isReinforcementCompleted
               ? NodeStatus.completed
               : ((prerequisitesMet || placementUnlocked)
                     ? NodeStatus.available
                     : NodeStatus.locked),
+          targetLessonId: baseNode.targetLessonId,
           isReinforcement: true,
           estimatedMinutes: 5,
           order: baseNode.order + 0.5,
           score: score,
         );
 
-        adaptedNodes.pushOrAdd(reinforcementNode);
+        adaptedNodes.add(reinforcementNode);
       }
     }
 
-    // Sort nodes by order
     adaptedNodes.sort((a, b) => a.order.compareTo(b.order));
 
     // Determine active node (respect placed English entry when unlocked)
@@ -190,10 +208,11 @@ class RouteEngine {
                     node.id == 'node_eng_b1_m1_travel')))) {
       return true;
     }
+    if (node.status == NodeStatus.available ||
+        node.status == NodeStatus.inProgress ||
+        node.status == NodeStatus.reinforcement) {
+      return true;
+    }
     return node.prerequisites.every((id) => completedNodeIds.contains(id));
   }
-}
-
-extension _ListExt<T> on List<T> {
-  void pushOrAdd(T item) => add(item);
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import '../theme/app_semantic_colors.dart';
+import '../theme/app_typography.dart';
 
 enum AppButtonVariant { primary, secondary, outline, ghost, danger }
 
@@ -30,6 +31,9 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppSemanticColors.of(context);
+    final disableAnimations =
+        MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     Color backgroundColor;
     Color foregroundColor;
     BorderSide? borderSide;
@@ -38,17 +42,17 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        backgroundColor = AppColors.primary;
+        backgroundColor = c.ctaPrimary;
         foregroundColor = Colors.white;
-        gradient = const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryHover],
+        gradient = LinearGradient(
+          colors: [c.ctaPrimary, c.ctaPrimaryHover],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
         shadows = AppColors.commonBtnShadow;
         break;
       case AppButtonVariant.secondary:
-        backgroundColor = const Color(0xFF0369A1);
+        backgroundColor = AppColors.secondary;
         foregroundColor = Colors.white;
         shadows = [
           BoxShadow(
@@ -60,16 +64,13 @@ class AppButton extends StatelessWidget {
         ];
         break;
       case AppButtonVariant.outline:
-        backgroundColor = AppColors.surfaceColor(context);
-        foregroundColor = AppColors.textPrimaryColor(context);
-        borderSide = BorderSide(
-          color: AppColors.borderColor(context),
-          width: 1.2,
-        );
+        backgroundColor = c.paper;
+        foregroundColor = c.ink;
+        borderSide = BorderSide(color: c.hairline, width: 1.2);
         break;
       case AppButtonVariant.ghost:
         backgroundColor = Colors.transparent;
-        foregroundColor = AppColors.textSecondaryColor(context);
+        foregroundColor = c.graphite;
         break;
       case AppButtonVariant.danger:
         backgroundColor = AppColors.error;
@@ -125,7 +126,7 @@ class AppButton extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: AppTypography.ui(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
               color: foregroundColor,
@@ -148,7 +149,9 @@ class AppButton extends StatelessWidget {
           onTap: isLoading ? null : onPressed,
           borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: disableAnimations
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
             constraints: const BoxConstraints(minHeight: 44),
             padding: EdgeInsets.symmetric(
               vertical: verticalPadding,

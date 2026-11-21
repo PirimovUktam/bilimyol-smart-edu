@@ -12,6 +12,7 @@ class AdaptiveThresholds {
   static const int standardMin = 70;
   static const int standardMax = 84;
   static const int advancedMin = 85;
+  static const int diagnosticMasteryMin = 80;
 
   static const int reinforcementScoreBump = 22; // e.g. 41% -> 63% or 43% -> 65%
   static const int reinforcementXpReward = 30; // +30 XP

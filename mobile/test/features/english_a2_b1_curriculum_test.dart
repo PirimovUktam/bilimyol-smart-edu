@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bilimyol_mobile/app/providers.dart';
 import 'package:bilimyol_mobile/core/audio/lesson_audio_controller.dart';
 import 'package:bilimyol_mobile/core/config/supabase_config.dart';
+import 'package:bilimyol_mobile/core/storage/local_storage_service.dart';
 import 'package:bilimyol_mobile/core/utils/question_option_order.dart';
 import 'package:bilimyol_mobile/core/widgets/app_card.dart';
 import 'package:bilimyol_mobile/data/datasources/courses_data.dart';
@@ -1119,7 +1120,9 @@ void main() {
 
       // Verify jsonDecode / persistence round-trip
       final prefs = await SharedPreferences.getInstance();
-      final savedRaw = prefs.getString('bilimyol_demo_progress_v1');
+      final savedRaw =
+          prefs.getString(LocalStorageService.demoLearnerSnapshotKey) ??
+          prefs.getString('bilimyol_demo_progress_v1');
       expect(savedRaw, isNotNull);
       final decoded = jsonDecode(savedRaw!) as Map<String, dynamic>;
       expect(decoded['profile'], isNotNull);

@@ -177,5 +177,131 @@ void main() {
       expect(b1Entry.status, equals(NodeStatus.available));
       expect(RouteEngine.canStartNode(b1Entry, const [], placementCefrTier: 'B1'), isTrue);
     });
+
+    test('<50% on skill 1 produces actionable reinforcement node with targetLessonId while keeping downstream locked', () {
+      final baseNodes = seedRoadmapNodes['course_math_01']!;
+      final skillScores = {
+        for (final skill in [
+          'skill_math_algebra',
+          'skill_math_equations',
+          'skill_math_functions',
+          'skill_math_graphs',
+        ])
+          skill: SkillScore(
+            skillId: skill,
+            courseId: 'course_math_01',
+            score: 25,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.needsRemediation,
+          ),
+      };
+
+      final roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_math_01',
+        baseNodes: baseNodes,
+        skillScores: skillScores,
+        completedNodeIds: [],
+        completedReinforcementIds: [],
+      );
+
+      final reinfAlg = roadmap.nodes.firstWhere((n) => n.id == 'reinf_node_math_alg');
+      expect(reinfAlg.status, equals(NodeStatus.available));
+      expect(reinfAlg.targetLessonId, equals('lesson_math_algebra_01'));
+      expect(RouteEngine.canStartNode(reinfAlg, const []), isTrue);
+
+      final reinfEq = roadmap.nodes.firstWhere((n) => n.id == 'reinf_node_math_eq');
+      expect(reinfEq.status, equals(NodeStatus.locked));
+      expect(RouteEngine.canStartNode(reinfEq, const []), isFalse);
+    });
+
+    test('>=80% early diagnostic skills unlock downstream steps and advance activeNodeId', () {
+      final baseNodes = seedRoadmapNodes['course_math_01']!;
+      final skillScores = {
+        'skill_math_algebra': const SkillScore(
+          skillId: 'skill_math_algebra',
+          courseId: 'course_math_01',
+          score: 82,
+          lastUpdated: 1000,
+          masteryLevel: MasteryLevel.mastered,
+        ),
+        'skill_math_equations': const SkillScore(
+          skillId: 'skill_math_equations',
+          courseId: 'course_math_01',
+          score: 74,
+          lastUpdated: 1000,
+          masteryLevel: MasteryLevel.proficient,
+        ),
+        'skill_math_functions': const SkillScore(
+          skillId: 'skill_math_functions',
+          courseId: 'course_math_01',
+          score: 41,
+          lastUpdated: 1000,
+          masteryLevel: MasteryLevel.developing,
+        ),
+        'skill_math_graphs': const SkillScore(
+          skillId: 'skill_math_graphs',
+          courseId: 'course_math_01',
+          score: 68,
+          lastUpdated: 1000,
+          masteryLevel: MasteryLevel.proficient,
+        ),
+      };
+
+      final roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_math_01',
+        baseNodes: baseNodes,
+        skillScores: skillScores,
+        completedNodeIds: [],
+        completedReinforcementIds: [],
+      );
+
+      final algNode = roadmap.nodes.firstWhere((n) => n.id == 'node_math_alg');
+      final eqNode = roadmap.nodes.firstWhere((n) => n.id == 'node_math_eq');
+      expect(algNode.status, equals(NodeStatus.completed));
+      expect(eqNode.status, equals(NodeStatus.available));
+      expect(roadmap.activeNodeId, equals('node_math_eq'));
+      expect(RouteEngine.canStartNode(eqNode, const []), isTrue);
+
+      // English Reading node also has a playable targetLessonId when unlocked
+      final engRoadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_eng_01',
+        baseNodes: seedRoadmapNodes['course_eng_01']!,
+        skillScores: {
+          'skill_eng_vocab': const SkillScore(
+            skillId: 'skill_eng_vocab',
+            courseId: 'course_eng_01',
+            score: 90,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.mastered,
+          ),
+          'skill_eng_grammar': const SkillScore(
+            skillId: 'skill_eng_grammar',
+            courseId: 'course_eng_01',
+            score: 85,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.mastered,
+          ),
+          'skill_eng_listening': const SkillScore(
+            skillId: 'skill_eng_listening',
+            courseId: 'course_eng_01',
+            score: 80,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.mastered,
+          ),
+          'skill_eng_reading': const SkillScore(
+            skillId: 'skill_eng_reading',
+            courseId: 'course_eng_01',
+            score: 55,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.developing,
+          ),
+        },
+        completedNodeIds: [],
+        completedReinforcementIds: [],
+      );
+      final readNode = engRoadmap.nodes.firstWhere((n) => n.id == 'node_eng_read');
+      expect(readNode.status, equals(NodeStatus.available));
+      expect(readNode.targetLessonId, equals('lesson_eng_reading_01'));
+    });
   });
 }

@@ -1,57 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../app/providers.dart';
-import '../../core/constants/app_colors.dart';
+import '../../core/l10n/app_strings.dart';
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/edtech_reveal.dart';
 import '../../core/widgets/friendly_error_state.dart';
+import '../../core/widgets/subject_icon.dart';
 import '../../domain/entities/course.dart';
-import '../../domain/personalization/learning_start.dart';
 import '../../domain/entities/learner_profile.dart';
+import '../../domain/personalization/learning_start.dart';
+
+AppStrings _resolveStrings(BuildContext context) {
+  final localized = Localizations.of<AppStrings>(context, AppStrings);
+  if (localized != null) return localized;
+  final appLang = Localizations.maybeLocaleOf(context)?.languageCode;
+  if (appLang == 'ru') return AppStrings.ru;
+  if (appLang == 'uz') return AppStrings.uz;
+  return WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+      ? AppStrings.ru
+      : AppStrings.uz;
+}
 
 class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
-  String _resolveLang(BuildContext context) {
-    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
-    final platformCode =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
-        ? 'ru'
-        : 'uz';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = _resolveStrings(context);
     final courses = ref.watch(courseStateNotifierProvider);
     final learner = ref.watch(learnerStateNotifierProvider);
     final course = courses.activeCourse;
-    final lang = _resolveLang(context);
-    final isRu = lang == 'ru';
-
     final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: isLargeText ? 96 : null,
         title: Text(
-          isRu ? 'План обучения' : 'O‘rganish rejasi',
+          s.studyPlanTitle,
           softWrap: true,
           maxLines: isLargeText ? null : 1,
-          overflow: isLargeText
-              ? TextOverflow.visible
-              : TextOverflow.ellipsis,
+          overflow: isLargeText ? TextOverflow.visible : TextOverflow.ellipsis,
         ),
       ),
       body: SafeArea(
         child: learner.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => FriendlyErrorState(
-            message: isRu
-                ? 'Не удалось загрузить профиль.'
-                : 'Profilni yuklab bo‘lmadi.',
+            message: s.profileLoadFailed,
             onRetry: () =>
                 ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
           ),
@@ -61,12 +62,30 @@ class OnboardingScreen extends ConsumerWidget {
             }
             if (course == null) {
               return Center(
-                child: AppButton(
-                  text: isRu ? 'Выбрать предмет' : 'Fan tanlash',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    context.go('/courses');
-                  },
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        s.chooseCoursePrompt,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.ui(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppSemanticColors.of(context).graphite,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      AppButton(
+                        text: s.chooseSubject,
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          context.go('/courses');
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -81,39 +100,6 @@ class OnboardingScreen extends ConsumerWidget {
     );
   }
 }
-
-List<(InitialLevel, String, String)> _levelChoicesFor(bool isRu) => [
-  (
-    InitialLevel.beginner,
-    isRu ? 'Начать с нуля' : 'Noldan boshlayman',
-    isRu
-        ? 'Начните с понятных объяснений и разобранных примеров.'
-        : 'O‘zbekcha izoh va ishlangan misoldan boshlang.',
-  ),
-  (
-    InitialLevel.intermediate,
-    isRu ? 'Знаю основы' : 'Asoslarini bilaman',
-    isRu
-        ? 'Изучайте темы или проверьте текущий уровень.'
-        : 'Mavzularni o‘rganing yoki darajangizni tekshiring.',
-  ),
-  (
-    InitialLevel.advanced,
-    isRu ? 'У меня крепкие знания' : 'Mustahkam bilimim bor',
-    isRu
-        ? 'Откройте учебный маршрут или пройдите необязательную диагностику.'
-        : 'Ta’lim rejasini oching yoki ixtiyoriy diagnostikani tanlang.',
-  ),
-];
-
-Map<OnboardingGoal, String> _goalsFor(bool isRu) => {
-  OnboardingGoal.mastery:
-      isRu ? 'Изучить основные темы' : 'Asosiy mavzularni o‘rganish',
-  OnboardingGoal.examPrep:
-      isRu ? 'Подготовиться к экзамену' : 'Imtihonga tayyorlanish',
-  OnboardingGoal.skillsBoost:
-      isRu ? 'Развить практические навыки' : 'Amaliy ko‘nikmalarni rivojlantirish',
-};
 
 class _LearningPlanForm extends ConsumerStatefulWidget {
   const _LearningPlanForm({
@@ -148,21 +134,11 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     });
   }
 
-  String _resolveLang(BuildContext context) {
-    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
-    final platformCode =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
-        ? 'ru'
-        : 'uz';
-  }
-
   Future<void> _start({bool diagnostic = false}) async {
     final level = _level;
+    final s = _resolveStrings(context);
     if (_saving || level == null) return;
     final course = widget.course;
-    final lang = _resolveLang(context);
-    final isRu = lang == 'ru';
     setState(() {
       _saving = true;
       _error = null;
@@ -185,22 +161,21 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
         return;
       }
 
-      final starter = pendingFoundationLesson(course, ref.read(learnerStateNotifierProvider).valueOrNull);
+      final starter = pendingFoundationLesson(
+        course,
+        ref.read(learnerStateNotifierProvider).valueOrNull,
+      );
       if (level == InitialLevel.beginner && starter != null) {
         await ref
             .read(lessonSessionNotifierProvider.notifier)
-            .startLesson(starter, uiLocale: lang);
+            .startLesson(starter, uiLocale: s.isRu ? 'ru' : 'uz');
         if (!mounted ||
             ref.read(courseStateNotifierProvider).activeCourse?.id !=
                 course.id) {
           return;
         }
         if (ref.read(lessonSessionNotifierProvider).lesson?.id != starter) {
-          setState(
-            () => _error = isRu
-                ? 'Не удалось загрузить первый урок. Попробуйте снова.'
-                : 'Birinchi darsni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
-          );
+          setState(() => _error = s.starterLessonLoadFailed);
           return;
         }
         context.pushReplacement('/lesson');
@@ -209,11 +184,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
       }
     } catch (_) {
       if (mounted) {
-        setState(
-          () => _error = isRu
-              ? 'Не удалось сохранить план. Попробуйте снова.'
-              : 'Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.',
-        );
+        setState(() => _error = s.planSaveFailed);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -222,18 +193,59 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-    final lang = _resolveLang(context);
-    final isRu = lang == 'ru';
-    final levelChoices = _levelChoicesFor(isRu);
-    final goals = _goalsFor(isRu);
-    final hasStarter = widget.course.starterLessonId != null;
+    final c = AppSemanticColors.of(context);
+    final s = _resolveStrings(context);
+    final vis = subjectVisual(widget.course.subject, c);
     final beginner = _level == InitialLevel.beginner;
+    final hasPendingStarter = pendingFoundationLesson(
+          widget.course,
+          widget.profile.copyWith(
+            courseLevels: {
+              ...widget.profile.courseLevels,
+              widget.course.id: ?_level,
+            },
+          ),
+        ) !=
+        null;
+
+    final levelChoices = [
+      (
+        level: InitialLevel.beginner,
+        title: s.startFromZero,
+        detail: s.levelBeginnerDesc,
+        pill: s.levelPillBeginner,
+        badgeVariant: AppBadgeVariant.emerald,
+        icon: Icons.spa_outlined,
+      ),
+      (
+        level: InitialLevel.intermediate,
+        title: s.levelIntermediateTitle,
+        detail: s.levelIntermediateDesc,
+        pill: s.levelPillIntermediate,
+        badgeVariant: AppBadgeVariant.blue,
+        icon: Icons.trending_up_rounded,
+      ),
+      (
+        level: InitialLevel.advanced,
+        title: s.levelAdvancedTitle,
+        detail: s.levelAdvancedDesc,
+        pill: s.levelPillAdvanced,
+        badgeVariant: AppBadgeVariant.teal,
+        icon: Icons.bolt_rounded,
+      ),
+    ];
+
+    final goals = {
+      OnboardingGoal.mastery: s.goalMastery,
+      OnboardingGoal.examPrep: s.goalExamPrep,
+      OnboardingGoal.skillsBoost: s.goalSkillsBoost,
+    };
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             EdTechReveal(
               index: 0,
@@ -242,147 +254,318 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryTint(context),
+                      color: vis.softBg,
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: vis.border),
                     ),
-                    child: Text(
-                      widget.course.localizedTitle(lang),
-                      style: theme.labelLarge?.copyWith(
-                        color: AppColors.primaryAccentOnSurface(context),
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(vis.icon, size: 15, color: vis.accent),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            s.localizedCourseTitle(widget.course),
+                            style: AppTypography.ui(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: c.ink,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
-                    isRu
-                        ? 'С чего вы хотите начать?'
-                        : 'Qayerdan boshlamoqchisiz?',
-                    style: theme.headlineSmall,
+                    s.onboardingQuestion,
+                    style: AppTypography.ui(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: c.ink,
+                      height: 1.2,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    isRu
-                        ? 'Выберите уровень для этого предмета. Его можно изменить позже.'
-                        : 'Bu fan uchun darajangizni tanlang. Uni keyin ham o‘zgartirishingiz mumkin.',
+                    s.onboardingSubtitle,
+                    style: AppTypography.ui(
+                      fontSize: 14,
+                      color: c.graphite,
+                      height: 1.45,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            for (final (idx, (level, title, detail))
-                in levelChoices.indexed) ...[
+            const SizedBox(height: 18),
+            for (final (idx, choice) in levelChoices.indexed) ...[
               EdTechReveal(
                 index: idx + 1,
-                child: AppCard(
-                  padding: EdgeInsets.zero,
-                  borderColor: _level == level
-                      ? AppColors.primaryAccentOnSurface(context)
-                      : AppColors.borderColor(context),
-                  borderWidth: _level == level ? 1.6 : 1.0,
-                  backgroundColor: _level == level
-                      ? AppColors.primaryTint(context).withValues(alpha: 0.5)
-                      : AppColors.surfaceColor(context),
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: ListTile(
-                      title: Text(
-                        title,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(detail),
-                      leading: Icon(
-                        _level == level
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
-                        color: _level == level
-                            ? AppColors.primaryAccentOnSurface(context)
-                            : AppColors.textMutedColor(context),
-                      ),
-                      selected: _level == level,
-                      onTap: _saving
-                          ? null
-                          : () => setState(() => _level = level),
+                child: Semantics(
+                  button: true,
+                  selected: _level == choice.level,
+                  inMutuallyExclusiveGroup: true,
+                  label: '${choice.title}, ${choice.pill}',
+                  child: AppCard(
+                    padding: const EdgeInsets.all(14),
+                    borderColor:
+                        _level == choice.level ? c.brand : c.hairline,
+                    borderWidth: _level == choice.level ? 1.8 : 1.0,
+                    backgroundColor: _level == choice.level
+                        ? Color.alphaBlend(c.brandSoft, c.paper)
+                        : c.paper,
+                    onTap: _saving
+                        ? null
+                        : () => setState(() => _level = choice.level),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(
+                            _level == choice.level
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: _level == choice.level
+                                ? c.brand
+                                : c.slatefine,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    choice.title,
+                                    style: AppTypography.ui(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: c.ink,
+                                    ),
+                                  ),
+                                  AppBadge(
+                                    text: choice.pill,
+                                    variant: choice.badgeVariant,
+                                    icon: Icon(
+                                      choice.icon,
+                                      size: 12,
+                                      color: switch (choice.badgeVariant) {
+                                        AppBadgeVariant.emerald =>
+                                          c.successText,
+                                        AppBadgeVariant.teal => c.path,
+                                        _ => c.isDark
+                                            ? c.brandStrong
+                                            : c.brand,
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                choice.detail,
+                                style: AppTypography.ui(
+                                  fontSize: 13,
+                                  color: c.graphite,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
             const SizedBox(height: 8),
             DropdownButtonFormField<OnboardingGoal>(
               initialValue: _goal,
               isExpanded: true,
-              decoration: InputDecoration(
-                labelText: isRu ? 'Цель' : 'Maqsad',
+              dropdownColor: c.paper,
+              style: AppTypography.ui(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: c.ink,
               ),
+              decoration: InputDecoration(labelText: s.goalLabel),
               items: [
                 for (final entry in goals.entries)
                   DropdownMenuItem(
                     value: entry.key,
-                    child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      entry.value,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.ui(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: c.ink,
+                      ),
+                    ),
                   ),
               ],
               onChanged: _saving
                   ? null
                   : (value) => setState(() => _goal = value ?? _goal),
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: _minutes,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: isRu ? 'Ежедневное время' : 'Kunlik vaqt',
+            const SizedBox(height: 16),
+            Text(
+              s.dailyTimeLabel,
+              style: AppTypography.ui(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: c.graphite,
               ),
-              items: [
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
                 for (final time in [15, 30, 60])
-                  DropdownMenuItem(
-                    value: time,
-                    child: Text(
-                      isRu ? '$time минут' : '$time daqiqa',
-                      overflow: TextOverflow.ellipsis,
+                  Semantics(
+                    button: true,
+                    selected: _minutes == time,
+                    inMutuallyExclusiveGroup: true,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: _saving
+                          ? null
+                          : () => setState(() => _minutes = time),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _minutes == time ? c.ctaPrimary : c.subtle,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _minutes == time
+                                  ? c.ctaPrimary
+                                  : c.hairline,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 15,
+                                color: _minutes == time
+                                    ? Colors.white
+                                    : c.slatefine,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                s.minutesOption(time),
+                                style: AppTypography.ui(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: _minutes == time
+                                      ? Colors.white
+                                      : c.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
               ],
-              onChanged: _saving
-                  ? null
-                  : (value) => setState(() => _minutes = value ?? _minutes),
             ),
-            const SizedBox(height: 16),
+            if (_level != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: c.subtle,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: c.hairline),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      beginner && hasPendingStarter
+                          ? Icons.auto_awesome_rounded
+                          : Icons.alt_route_rounded,
+                      size: 18,
+                      color: c.brand,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        beginner && hasPendingStarter
+                            ? s.beginnerTrackNote
+                            : s.adaptiveTrackNote,
+                        style: AppTypography.ui(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: c.graphite,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
             if (_error case final message?)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 10),
                 child: Semantics(
                   liveRegion: true,
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: c.errorSoft,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: c.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      message,
+                      style: AppTypography.ui(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: c.errorText,
+                      ),
                     ),
                   ),
                 ),
               ),
             AppButton(
-              text: beginner && hasStarter
-                  ? (isRu
-                        ? 'Начать первый урок'
-                        : 'Birinchi darsni boshlash')
-                  : (isRu
-                        ? 'Открыть маршрут обучения'
-                        : 'Ta’lim yo‘lini ochish'),
+              text: beginner && hasPendingStarter
+                  ? s.startFirstLesson
+                  : s.openRoadmap,
+              isFullWidth: true,
+              size: AppButtonSize.large,
               isLoading: _saving,
               onPressed: _level == null ? null : _start,
             ),
             if (_level != null && !beginner) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               AppButton(
-                text: isRu
-                    ? 'Дополнительная диагностика'
-                    : 'Ixtiyoriy diagnostika',
+                text: s.optionalDiagnosticBtn,
+                isFullWidth: true,
                 variant: AppButtonVariant.outline,
                 onPressed: _saving ? null : () => _start(diagnostic: true),
               ),

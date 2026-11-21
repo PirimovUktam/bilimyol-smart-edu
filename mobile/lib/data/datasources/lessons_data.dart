@@ -181,10 +181,23 @@ final Map<String, Lesson> seedLessons = {
         ),
       ),
       const LessonStep(
-        id: 'math_step_3',
+        id: 'math_step_graph',
         stepNumber: 3,
+        type: LessonStepType.visualExample,
+        title: '3. Interaktiv Funksiya Grafiki',
+        subtitle: 'f(x) = 2x + 3 grafigini kuzating',
+        content:
+            'Slayderni surib, x argumenti o‘zgarganda f(x) qiymati qanday o‘zgarishini grafikda ko‘ring.',
+        visualModelData: LessonVisualModelData(
+          type: 'function_graph',
+          functionExpr: 'f(x) = 2x + 3',
+        ),
+      ),
+      const LessonStep(
+        id: 'math_step_3',
+        stepNumber: 4,
         type: LessonStepType.interactiveQuestion,
-        title: '3. Sinov Savoli',
+        title: '4. Sinov Savoli',
         subtitle: 'Tushunchani tekshirish',
         content: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) nechaga teng?',
         interactiveQuestion: Question(
