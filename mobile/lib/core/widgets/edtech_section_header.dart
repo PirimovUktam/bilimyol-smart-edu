@@ -52,14 +52,18 @@ class EdTechSectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primaryTint(context),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (pillIcon != null) ...[
-                  Icon(pillIcon, size: 13, color: AppColors.primary),
+                  Icon(
+                    pillIcon,
+                    size: 13,
+                    color: AppColors.primaryAccentOnSurface(context),
+                  ),
                   const SizedBox(width: 6),
                 ],
                 Flexible(
@@ -68,7 +72,7 @@ class EdTechSectionHeader extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: AppColors.primaryAccentOnSurface(context),
                     ),
                   ),
                 ),
@@ -86,7 +90,7 @@ class EdTechSectionHeader extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryColor(context),
                     height: 1.2,
                     letterSpacing: -0.4,
                   ),
@@ -95,7 +99,9 @@ class EdTechSectionHeader extends StatelessWidget {
                     if (accent.isNotEmpty)
                       TextSpan(
                         text: accent,
-                        style: const TextStyle(color: AppColors.primary),
+                        style: TextStyle(
+                          color: AppColors.primaryAccentOnSurface(context),
+                        ),
                       ),
                     if (after.isNotEmpty) TextSpan(text: after),
                   ],
@@ -115,7 +121,7 @@ class EdTechSectionHeader extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13.5,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: AppColors.textSecondaryColor(context),
               height: 1.45,
             ),
           ),

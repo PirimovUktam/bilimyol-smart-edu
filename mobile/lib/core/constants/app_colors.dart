@@ -19,7 +19,7 @@ class AppColors {
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A); // Slate 900
   static const Color textSecondary = Color(0xFF64748B); // Slate 500
-  static const Color textMuted = Color(0xFF94A3B8); // Slate 400
+  static const Color textMuted = Color(0xFF5B6B82); // WCAG >= 4.5:1 on light surfaces
 
   // Status & Feedback Colors
   static const Color success = Color(0xFF10B981); // Emerald 500
@@ -78,4 +78,61 @@ class AppColors {
       offset: Offset(0, 8),
     ),
   ];
+
+  // Theme-aware surface & typography tokens (Light & Dark WCAG >= 4.5:1)
+  static const Color darkBackground = Color(0xFF0B1120);
+  static const Color darkSurface = Color(0xFF1E293B);
+  static const Color darkSubtleSurface = Color(0xFF0F172A);
+  static const Color darkBorder = Color(0xFF334155);
+  static const Color darkTextPrimary = Color(0xFFF8FAFC);
+  static const Color darkTextSecondary = Color(0xFFCBD5E1);
+  static const Color darkTextMuted = Color(0xFF94A3B8);
+
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static Color bg(BuildContext context) =>
+      isDark(context) ? darkBackground : background;
+
+  static Color surfaceColor(BuildContext context) =>
+      isDark(context) ? darkSurface : surface;
+
+  static Color subtleSurface(BuildContext context) =>
+      isDark(context) ? darkSubtleSurface : const Color(0xFFF1F5F9);
+
+  static Color borderColor(BuildContext context) =>
+      isDark(context) ? darkBorder : cardBorder;
+
+  static Color textPrimaryColor(BuildContext context) =>
+      isDark(context) ? darkTextPrimary : textPrimary;
+
+  static Color textSecondaryColor(BuildContext context) =>
+      isDark(context) ? darkTextSecondary : textSecondary;
+
+  static Color textMutedColor(BuildContext context) =>
+      isDark(context) ? darkTextMuted : textMuted;
+
+  static Color primaryTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFF312E81) : primaryLight;
+
+  static Color successTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFF064E3B) : successLight;
+
+  static Color warningTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFF78350F) : warningLight;
+
+  static Color errorTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFF881337) : errorLight;
+
+  static Color primaryAccentOnSurface(BuildContext context) =>
+      isDark(context) ? const Color(0xFFA5B4FC) : primary;
+
+  static Color successTextOnTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFF6EE7B7) : const Color(0xFF047857);
+
+  static Color errorTextOnTint(BuildContext context) =>
+      isDark(context) ? const Color(0xFFFECDD3) : const Color(0xFFBE123C);
+
+  static Color secondaryTextOnTint(BuildContext context) =>
+      isDark(context) ? darkTextSecondary : textMuted;
 }

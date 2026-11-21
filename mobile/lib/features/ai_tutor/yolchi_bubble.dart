@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 void scrollToBottomSmart(ScrollController controller, {bool force = false}) {
   if (!controller.hasClients) return;
@@ -23,6 +24,10 @@ class YolchiBubble extends StatelessWidget {
   final bool isStreaming;
   final bool isError;
   final String time;
+  final bool showHelpfulAction;
+  final bool isHelpful;
+  final VoidCallback? onToggleHelpful;
+  final String uiLocale;
 
   const YolchiBubble({
     super.key,
@@ -32,12 +37,17 @@ class YolchiBubble extends StatelessWidget {
     this.isStreaming = false,
     this.isError = false,
     required this.time,
+    this.showHelpfulAction = false,
+    this.isHelpful = false,
+    this.onToggleHelpful,
+    this.uiLocale = 'uz',
   });
 
   @override
   Widget build(BuildContext context) {
     final disableAnimations =
         MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final dark = AppColors.isDark(context);
 
     final bubbleContent = RepaintBoundary(
       child: Padding(
@@ -58,7 +68,9 @@ class YolchiBubble extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isYolchi
-                      ? (isError ? const Color(0xFFFEF2F2) : Colors.white)
+                      ? (isError
+                            ? AppColors.errorTint(context)
+                            : AppColors.surfaceColor(context))
                       : const Color(0xFF4F46E5),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
@@ -78,8 +90,8 @@ class YolchiBubble extends StatelessWidget {
                   border: isYolchi
                       ? Border.all(
                           color: isError
-                              ? const Color(0xFFFCA5A5)
-                              : const Color(0xFFE2E8F0),
+                              ? AppColors.errorTextOnTint(context)
+                              : AppColors.borderColor(context),
                           width: 1,
                         )
                       : null,
@@ -96,8 +108,8 @@ class YolchiBubble extends StatelessWidget {
                         style: TextStyle(
                           color: isYolchi
                               ? (isError
-                                    ? const Color(0xFFDC2626)
-                                    : const Color(0xFF0F172A))
+                                    ? AppColors.errorTextOnTint(context)
+                                    : AppColors.textPrimaryColor(context))
                               : Colors.white,
                           fontSize: 14.5,
                           height: 1.45,
@@ -112,6 +124,68 @@ class YolchiBubble extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (showHelpfulAction &&
+                        isYolchi &&
+                        !isError &&
+                        !isStreaming) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: onToggleHelpful,
+                        borderRadius: BorderRadius.circular(999),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isHelpful
+                                ? AppColors.successTint(context)
+                                : AppColors.subtleSurface(context),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: isHelpful
+                                  ? AppColors.success.withValues(alpha: 0.5)
+                                  : AppColors.borderColor(context),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isHelpful
+                                    ? Icons.thumb_up_alt_rounded
+                                    : Icons.thumb_up_outlined,
+                                size: 13,
+                                color: isHelpful
+                                    ? AppColors.successTextOnTint(context)
+                                    : AppColors.textMutedColor(context),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  uiLocale == 'ru'
+                                      ? (isHelpful
+                                            ? 'Отмечено полезным'
+                                            : 'Полезный ответ')
+                                      : (isHelpful
+                                            ? 'Foydali deb belgilandi'
+                                            : 'Foydali javob'),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isHelpful
+                                        ? (dark
+                                              ? const Color(0xFFA7F3D0)
+                                              : const Color(0xFF047857))
+                                        : AppColors.textMutedColor(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     if (time.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -119,8 +193,8 @@ class YolchiBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 10,
                           color: isYolchi
-                              ? const Color(0xFF94A3B8)
-                              : Colors.white.withValues(alpha: 0.7),
+                              ? AppColors.textMutedColor(context)
+                              : Colors.white.withValues(alpha: 0.85),
                         ),
                       ),
                     ],
@@ -267,8 +341,12 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     return Semantics(
-      label: 'Yo‘lchi AI yozmoqda...',
+      label: isRu ? 'Yo‘lchi AI печатает...' : 'Yo‘lchi AI yozmoqda...',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Row(
@@ -277,20 +355,20 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
+                color: AppColors.primaryTint(context),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.auto_awesome,
                 size: 14,
-                color: Color(0xFF4F46E5),
+                color: AppColors.primaryAccentOnSurface(context),
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: AppColors.subtleSurface(context),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: AnimatedBuilder(

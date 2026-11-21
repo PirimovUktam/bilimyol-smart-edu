@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Soft Map Canvas -->
+  <rect width="800" height="600" fill="#F8FAFC"/>
+  <rect x="24" y="24" width="752" height="552" rx="24" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Roads Grid -->
+  <!-- Horizontal Main Street (bottom-mid) -->
+  <rect x="24" y="370" width="752" height="90" fill="#334155"/>
+  <line x1="36" y1="415" x2="764" y2="415" stroke="#F8FAFC" stroke-width="3" stroke-dasharray="18 14" opacity="0.65"/>
+
+  <!-- Horizontal Upper Avenue -->
+  <rect x="24" y="130" width="752" height="66" fill="#475569"/>
+  <line x1="36" y1="163" x2="764" y2="163" stroke="#F8FAFC" stroke-width="2.5" stroke-dasharray="14 12" opacity="0.55"/>
+
+  <!-- Vertical Left Street -->
+  <rect x="190" y="24" width="72" height="552" fill="#334155"/>
+  <line x1="226" y1="36" x2="226" y2="564" stroke="#F8FAFC" stroke-width="3" stroke-dasharray="18 14" opacity="0.65"/>
+
+  <!-- Vertical Right Street -->
+  <rect x="520" y="24" width="72" height="552" fill="#475569"/>
+  <line x1="556" y1="36" x2="556" y2="564" stroke="#F8FAFC" stroke-width="2.5" stroke-dasharray="14 12" opacity="0.55"/>
+
+  <!-- Crosswalk Stripes -->
+  <g fill="#F8FAFC" opacity="0.85">
+    <rect x="266" y="380" width="8" height="70" rx="2"/>
+    <rect x="280" y="380" width="8" height="70" rx="2"/>
+    <rect x="294" y="380" width="8" height="70" rx="2"/>
+    <rect x="486" y="380" width="8" height="70" rx="2"/>
+    <rect x="500" y="380" width="8" height="70" rx="2"/>
+  </g>
+
+  <!-- 1. Bookshop (Bottom-Left Block) -->
+  <g filter="url(#cardShadow)">
+    <rect x="46" y="476" width="126" height="84" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="46" y="476" width="126" height="22" rx="10" fill="#F59E0B"/>
+    <!-- Open Book Icon -->
+    <path d="M84 514 Q96 508 109 514 L109 544 Q96 538 84 544 Z" fill="#FEF3C7" stroke="#D97706" stroke-width="2.5"/>
+    <path d="M134 514 Q122 508 109 514 L109 544 Q122 538 134 544 Z" fill="#FDE68A" stroke="#D97706" stroke-width="2.5"/>
+  </g>
+
+  <!-- 2. Post Office (Middle-Left Block) -->
+  <g filter="url(#cardShadow)">
+    <rect x="46" y="220" width="126" height="126" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="46" y="220" width="126" height="24" rx="10" fill="#0284C7"/>
+    <!-- Envelope Icon -->
+    <rect x="74" y="264" width="70" height="48" rx="8" fill="#E0F2FE" stroke="#0284C7" stroke-width="3"/>
+    <path d="M76 268 L109 294 L142 268" stroke="#0284C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- 3. Pharmacy (Center Block at Corner) -->
+  <g filter="url(#cardShadow)">
+    <rect x="286" y="220" width="132" height="126" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="286" y="220" width="132" height="24" rx="10" fill="#10B981"/>
+    <!-- Medical Cross Icon -->
+    <circle cx="352" cy="292" r="32" fill="#ECFDF5" stroke="#10B981" stroke-width="2.5"/>
+    <rect x="345" y="272" width="14" height="40" rx="4" fill="#10B981"/>
+    <rect x="332" y="285" width="40" height="14" rx="4" fill="#10B981"/>
+  </g>
+
+  <!-- 4. City Park (Top-Right Block) -->
+  <g filter="url(#cardShadow)">
+    <rect x="612" y="42" width="146" height="308" rx="18" fill="#DCFCE7" stroke="#86EFAC" stroke-width="2"/>
+    <!-- Park Path & Pond -->
+    <path d="M645 330 Q685 240 650 150 Q630 100 680 60" stroke="#FEF9C3" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <ellipse cx="705" cy="220" rx="34" ry="48" fill="#7DD3FC" stroke="#38BDF8" stroke-width="2"/>
+    <!-- Trees -->
+    <circle cx="652" cy="95" r="24" fill="#22C55E"/>
+    <circle cx="718" cy="108" r="28" fill="#16A34A"/>
+    <circle cx="655" cy="282" r="26" fill="#16A34A"/>
+    <circle cx="712" cy="306" r="22" fill="#22C55E"/>
+    <circle cx="648" cy="182" r="20" fill="#4ADE80"/>
+  </g>
+
+  <!-- 5. Stylized Metro Station Archway (Across from Park, Top-Center) -->
+  <g filter="url(#cardShadow)">
+    <rect x="330" y="34" width="160" height="78" rx="16" fill="#FFFFFF" stroke="#4F46E5" stroke-width="2.5"/>
+    <!-- Tunnel Arch & Train Nose Icon (Purely Geometric, No Text) -->
+    <path d="M356 102 L356 70 Q356 46 384 46 Q412 46 412 70 L412 102 Z" fill="#1E1B4B"/>
+    <rect x="366" y="62" width="36" height="32" rx="8" fill="#4F46E5"/>
+    <rect x="372" y="68" width="24" height="12" rx="3" fill="#DBEAFE"/>
+    <circle cx="375" cy="87" r="3" fill="#FDE047"/>
+    <circle cx="393" cy="87" r="3" fill="#FDE047"/>
+    <!-- Escalator / Underground Steps Emblem -->
+    <path d="M432 92 L446 92 L446 80 L460 80 L460 68 L474 68" stroke="#10B981" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="436" cy="60" r="5" fill="#4F46E5"/>
+  </g>
+
+  <!-- 6. Bus Stop Shelter (Bottom-Right Block) -->
+  <g filter="url(#cardShadow)">
+    <rect x="612" y="476" width="146" height="84" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <!-- Bus Icon -->
+    <rect x="642" y="492" width="86" height="46" rx="10" fill="#4F46E5"/>
+    <rect x="650" y="500" width="32" height="16" rx="3" fill="#E0EAFF"/>
+    <rect x="688" y="500" width="32" height="16" rx="3" fill="#E0EAFF"/>
+    <circle cx="660" cy="540" r="8" fill="#0F172A"/>
+    <circle cx="710" cy="540" r="8" fill="#0F172A"/>
+    <circle cx="660" cy="540" r="3.5" fill="#CBD5E1"/>
+    <circle cx="710" cy="540" r="3.5" fill="#CBD5E1"/>
+  </g>
+
+  <!-- Clear Directional Route Path (Start near Bookshop -> straight along street past Post Office -> turn right at Pharmacy -> Metro across from Park) -->
+  <circle cx="226" cy="516" r="11" fill="#F59E0B" stroke="#FFFFFF" stroke-width="3"/>
+  <path d="M226 504 L226 163 L410 163 L410 128" stroke="#4F46E5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="14 10" fill="none"/>
+  <!-- Arrowhead pointing to Metro -->
+  <polygon points="410,112 397,134 423,134" fill="#4F46E5"/>
+</svg>

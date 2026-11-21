@@ -1,3 +1,6 @@
+import 'english/a1_roadmap_data.dart';
+import 'english/a2_roadmap_data.dart';
+import 'english/b1_roadmap_data.dart';
 import '../../domain/entities/learning_path_node.dart';
 
 const Map<String, List<LearningPathNode>> seedRoadmapNodes = {
@@ -65,65 +68,9 @@ const Map<String, List<LearningPathNode>> seedRoadmapNodes = {
   ],
 
   'course_eng_01': [
-    LearningPathNode(
-      id: 'node_eng_vocab',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_vocab',
-      title: 'Vocabulary',
-      description: 'Akademik so‘z boyligi va asosiy iboralar.',
-      prerequisites: [],
-      requiredScore: 50,
-      status: NodeStatus.completed,
-      score: 84,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_vocab_01',
-      estimatedMinutes: 15,
-      order: 1.0,
-    ),
-    LearningPathNode(
-      id: 'node_eng_gram',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_grammar',
-      title: 'Grammar',
-      description: 'Shart ergash gaplar va murakkab tuzilmalar.',
-      prerequisites: ['node_eng_vocab'],
-      requiredScore: 50,
-      status: NodeStatus.completed,
-      score: 72,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_grammar_01',
-      estimatedMinutes: 20,
-      order: 2.0,
-    ),
-    LearningPathNode(
-      id: 'node_eng_list',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_listening',
-      title: 'Listening',
-      description: 'Audio xabarlar va vaqt ko‘rsatkichlarini farqlash.',
-      prerequisites: ['node_eng_gram'],
-      requiredScore: 50,
-      status: NodeStatus.reinforcement,
-      score: 43,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_listening_01',
-      estimatedMinutes: 12,
-      order: 3.0,
-    ),
-    LearningPathNode(
-      id: 'node_eng_read',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_reading',
-      title: 'Reading',
-      description: 'Matnni tahlil qilish va xulosa chiqarish.',
-      prerequisites: ['node_eng_list'],
-      requiredScore: 70,
-      status: NodeStatus.locked,
-      score: 79,
-      isReinforcement: false,
-      estimatedMinutes: 25,
-      order: 4.0,
-    ),
+    ...a1RoadmapNodes,
+    ...a2RoadmapNodes,
+    ...b1RoadmapNodes,
   ],
 
   'course_it': [

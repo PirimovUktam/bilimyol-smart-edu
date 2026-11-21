@@ -1,0 +1,2810 @@
+{
+  "schemaVersion": 1,
+  "documentType": "level_curriculum",
+  "courseId": "course_eng_01",
+  "cefrLevel": "A2",
+  "starterLessonId": "lesson_eng_starter",
+  "foundationLessonIds": ["lesson_eng_starter", "lesson_eng_foundation_02"],
+  "skills": [
+    "skill_eng_vocab",
+    "skill_eng_grammar",
+    "skill_eng_listening",
+    "skill_eng_reading"
+  ],
+  "lessonsOrder": [
+    "lesson_eng_a2_m1_directions",
+    "lesson_eng_a2_u1_checkpoint",
+    "lesson_eng_a2_m2_shopping",
+    "lesson_eng_a2_u2_checkpoint",
+    "lesson_eng_a2_m3_plans",
+    "lesson_eng_a2_u3_checkpoint",
+    "lesson_eng_a2_m4_messages",
+    "lesson_eng_a2_exit"
+  ],
+  "officialCefrDisclaimerUz": "Ichki modul sinovlari va A2 chiqish testi o‘quv dasturi doirasidagi tayyorgarlikni tekshiradi; ular rasmiy xalqaro CEFR sertifikatini bermaydi.",
+  "officialCefrDisclaimerRu": "Внутренние модульные проверки и итоговый тест A2 оценивают учебный прогресс и не выдают официальный международный сертификат CEFR.",
+  "modules": [
+    {
+      "id": "mod_eng_a2_m1",
+      "cefrLevel": "A2",
+      "order": 1,
+      "titleUz": "Transport va yo‘l so‘rash",
+      "titleRu": "Транспорт и ориентирование в городе",
+      "canDoObjectiveUz": "Shahar xaritasida manzilni tushuntiradi va burilish yo‘nalishlarini ajratadi.",
+      "canDoObjectiveRu": "Объясняет маршрут по городу и понимает указания поворотов.",
+      "prerequisites": ["node_eng_a1_exit"],
+      "units": [
+        {
+          "id": "unit_eng_a2_u1",
+          "moduleId": "mod_eng_a2_m1",
+          "order": 1,
+          "titleUz": "1-bo‘lim: Metro, avtobus va yo‘nalishlar",
+          "titleRu": "Раздел 1: Метро, автобус и направления",
+          "canDoObjectiveUz": "Bekat va manzilgacha yo‘l ko‘rsatishni tinglab tushunadi.",
+          "canDoObjectiveRu": "Понимает на слух объяснение дороги до остановки.",
+          "prerequisites": ["node_eng_a1_exit"],
+          "plannedLessonIds": [
+            "lesson_eng_a2_m1_directions",
+            "lesson_eng_a2_u1_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_a2_u1_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Imperatives for directions",
+        "Prepositions of movement (along, past, across)"
+      ],
+      "vocabularyThemes": [
+        "City landmarks",
+        "Public transport",
+        "Turn left/right"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_a2_m1_directions",
+        "lesson_eng_a2_u1_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_a2_u1_checkpoint"
+    },
+    {
+      "id": "mod_eng_a2_m2",
+      "cefrLevel": "A2",
+      "order": 2,
+      "titleUz": "Xarid, narxlar va taqqoslash",
+      "titleRu": "Покупки, цены и сравнения",
+      "canDoObjectiveUz": "Narx va o‘lchamlarni so‘raydi, ikkita mahsulotni qiyoslaydi.",
+      "canDoObjectiveRu": "Спрашивает цену и размер, сравнивает два товара.",
+      "prerequisites": ["node_eng_a2_u1_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_a2_u2",
+          "moduleId": "mod_eng_a2_m2",
+          "order": 1,
+          "titleUz": "2-bo‘lim: Do‘kon suhbatlari va sifat darajalari",
+          "titleRu": "Раздел 2: Диалоги в магазине и степени сравнения",
+          "canDoObjectiveUz": "Chegirma e’lonidan foyda va narxni topadi.",
+          "canDoObjectiveRu": "Находит выгоду и итоговую цену в объявлении о скидке.",
+          "prerequisites": ["node_eng_a2_u1_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_a2_m2_shopping",
+            "lesson_eng_a2_u2_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_a2_u2_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Countable/uncountable nouns (much/many)",
+        "Comparative adjectives (-er / more)"
+      ],
+      "vocabularyThemes": [
+        "Prices and currency",
+        "Clothing and groceries"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_a2_m2_shopping",
+        "lesson_eng_a2_u2_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_a2_u2_checkpoint"
+    },
+    {
+      "id": "mod_eng_a2_m3",
+      "cefrLevel": "A2",
+      "order": 3,
+      "titleUz": "Takliflar, o‘tgan voqealar va rejalar",
+      "titleRu": "Приглашения, прошлые события и планы",
+      "canDoObjectiveUz": "«Would you like...» bilan taklif bildiradi va dam olish rejasini tuzadi.",
+      "canDoObjectiveRu": "Делает вежливые приглашения и обсуждает планы на выходные.",
+      "prerequisites": ["node_eng_a2_u2_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_a2_u3",
+          "moduleId": "mod_eng_a2_m3",
+          "order": 1,
+          "titleUz": "3-bo‘lim: Past Simple va «be going to»",
+          "titleRu": "Раздел 3: Past Simple и «be going to»",
+          "canDoObjectiveUz": "Kecha bo‘lgan voqea va ertangi rejani farqlab aytadi.",
+          "canDoObjectiveRu": "Различает события прошлого и планы на ближайшее будущее.",
+          "prerequisites": ["node_eng_a2_u2_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_a2_m3_plans",
+            "lesson_eng_a2_u3_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_a2_u3_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Past Simple (regular and common irregular verbs)",
+        "Future plans with going to"
+      ],
+      "vocabularyThemes": [
+        "Weekend activities",
+        "Accepting and declining invitations"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_a2_m3_plans",
+        "lesson_eng_a2_u3_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_a2_u3_checkpoint"
+    },
+    {
+      "id": "mod_eng_a2_m4",
+      "cefrLevel": "A2",
+      "order": 4,
+      "titleUz": "Qisqa e’lonlar va uchrashuv xabarlari",
+      "titleRu": "Короткие объявления и сообщения о встрече",
+      "canDoObjectiveUz": "Vokzal/tadbir e’lonini tushunadi va uchrashuv vaqti haqida qisqa xat yozadi.",
+      "canDoObjectiveRu": "Понимает расписание объявлений и пишет сообщение о встрече.",
+      "prerequisites": ["node_eng_a2_u3_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_a2_u4",
+          "moduleId": "mod_eng_a2_m4",
+          "order": 1,
+          "titleUz": "4-bo‘lim: Amaliy yozish va A2 yakuniy sinovi",
+          "titleRu": "Раздел 4: Практическое письмо и итоговый тест A2",
+          "canDoObjectiveUz": "O‘zgarishlar haqidagi e’lonni o‘qib to‘g‘ri qaror qabul qiladi.",
+          "canDoObjectiveRu": "Читает уведомление об изменении времени и принимает верное решение.",
+          "prerequisites": ["node_eng_a2_u3_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_a2_m4_messages",
+            "lesson_eng_a2_exit"
+          ],
+          "checkpointNodeId": "node_eng_a2_u4_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Time connectors (before, after, then)",
+        "Modals can/have to for polite requests"
+      ],
+      "vocabularyThemes": [
+        "Messages and emails",
+        "Public notices and delays"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_a2_m4_messages",
+        "lesson_eng_a2_exit"
+      ],
+      "checkpointNodeId": "node_eng_a2_u4_checkpoint"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson_eng_a2_m1_directions",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "communicativeFocus": "listening",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m1",
+      "unitId": "unit_eng_a2_u1",
+      "canDoObjective": "Shahar ko‘chalarida metro yoki avtobus bekatiga yo‘l so‘raydi va berilgan yo‘nalishni tinglab tushunadi.",
+      "canDoObjectiveRu": "Спрашивает дорогу к метро или остановке и понимает устные указания маршрута.",
+      "prerequisites": ["node_eng_a1_exit"],
+      "title": "Transport va shahar bo‘ylab yo‘l so‘rash",
+      "titleRu": "Транспорт и ориентирование в городе",
+      "estimatedMinutes": 8,
+      "summary": "Buyruq fe’llari (Go straight, Turn right) va harakat predloglari (along, past, across from) yordamida Oybek metrosiga yo‘l topishni o‘rganasiz.",
+      "summaryRu": "Вы научитесь понимать и объяснять маршрут в городе с глаголами направления и предлогами along, past, across from.",
+      "requiresMastery": false,
+      "officialCefrDisclaimerUz": "Ushbu darsdagi og‘zaki mashq mustaqil amaliyot uchun mo‘ljallangan; rasmiy CEFR sertifikati bermaydi.",
+      "officialCefrDisclaimerRu": "Устное задание в уроке предназначено для самостоятельной практики и не заменяет официальный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Yangi shaharda metro yoki avtobus bekatini topish uchun qisqa yo‘nalish iboralarini aniq tushunish kerak.",
+          "ru": "Чтобы легко найти метро или остановку в новом районе, важно уверенно понимать указания маршрута."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi «along, past, across from» predloglari bilan audio yo‘nalishni aniqlaydi va 3 bosqichli yo‘l ko‘rsatishni aytadi.",
+          "ru": "Ученик определяет маршрут по аудио с предлогами «along, past, across from» и составляет устный маршрут из 3 шагов."
+        },
+        "warmUp": {
+          "uz": "A1 darajasidagi «beside, behind» so‘zlarini eslab, endi harakat yo‘nalishini ko‘rsatuvchi fe’llarga o‘tamiz.",
+          "ru": "Вспомните предлоги «beside, behind» из A1 и перейдите к глаголам движения по улице."
+        },
+        "vocabularyItems": [
+          { "word": "turn left", "uz": "chapga burilmoq", "ru": "повернуть налево", "ipa": "/tɜːn left/" },
+          { "word": "go past", "uz": "yonidan o‘tmoq", "ru": "пройти мимо", "ipa": "/ɡəʊ pɑːst/" },
+          { "word": "across from", "uz": "qarama-qarshi tomonda", "ru": "напротив", "ipa": "/əˈkrɒs frɒm/" },
+          { "word": "bus stop", "uz": "avtobus bekati", "ru": "автобусная остановка", "ipa": "/ˈbʌs stɒp/" }
+        ],
+        "grammarNote": {
+          "rule": "Imperatives + Prepositions of Movement (along / past / across from)",
+          "simpleExplanationUz": "Yo‘l ko‘rsatishda gap to‘g‘ridan-to‘g‘ri buyruq fe’li bilan boshlanadi (ega «you» yozilmaydi): «Go straight along...», «Walk past...», «Turn right at...».",
+          "simpleExplanationRu": "При объяснении маршрута используйте повелительное наклонение без «you»: «Go straight along...», «Walk past...», «Turn right at...».",
+          "structure": "[Base Verb] + [along / past / at] + [Landmark]",
+          "positiveExamples": [
+            "Go straight along Navoi Street.",
+            "Walk past the post office and turn right at the pharmacy."
+          ],
+          "negativeExamples": [
+            "Don't turn left before the bridge."
+          ],
+          "questions": [
+            "Excuse me, how do I get to Oybek Metro Station?",
+            "Where is the nearest bus stop?"
+          ],
+          "commonMistakes": [
+            "«Go past» (yonidan o‘tib ketmoq) o‘rniga «Go across» (ko‘chani kesib o‘tmoq) ni almashtirib yuborish."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "«past» BrE da cho‘ziq /pɑːst/, AmE da /pæst/ aytiladi; «turn» so‘zidagi /ɜː/ tovushi cho‘ziladi.",
+          "ru": "В слове «past» в BrE звучит долгий /ɑː/, в AmE /æ/; в «turn» гласный /ɜː/ произносится протяжно."
+        },
+        "examples": [
+          "Go straight along Navoi Street, walk past the post office, and turn right at the pharmacy.",
+          "The metro entrance is across from the park."
+        ],
+        "guidedPractice": {
+          "uz": "Xarita tasviri va Kamolaning ovozli tushuntirishini tinglab, 4 ta flashcard iborasini mustahkamlang.",
+          "ru": "Изучите карту и диалог Камолы, затем закрепите 4 фразы на карточках."
+        },
+        "independentPractice": {
+          "uz": "Audio bo‘yicha metro kirish joyini toping va kitob do‘konidan bekatgacha yo‘lni og‘zaki tushuntiring.",
+          "ru": "Определите вход в метро по аудио и составьте устное объяснение маршрута к остановке."
+        },
+        "listeningRef": "media_eng_a2_m1_directions_dialogue",
+        "readingRef": "lesson_eng_a2_m1_concept",
+        "speakingTask": {
+          "uz": "Kitob do‘konidan avtobus bekatigacha bo‘lgan yo‘lni 3 ta qisqa buyruq gapi bilan ayting.",
+          "ru": "Объясните дорогу от книжного магазина до остановки в 3 коротких предложениях."
+        },
+        "writingTask": {
+          "uz": "«Walk past ... and turn left.» qolipida 1 ta yo‘nalish gapini tartiblang.",
+          "ru": "Соберите предложение по модели «Walk past ... and turn left.»."
+        },
+        "knowledgeCheck": "q_eng_a2_m1_listen_mcq",
+        "finalQuiz": "q_eng_a2_m1_speaking",
+        "feedbackRules": {
+          "uz": "Har bir chalg‘ituvchi variant burilish yoki mo‘ljal xatosini aniq ko‘rsatadi.",
+          "ru": "Каждый неверный вариант объясняет путаницу в повороте или ориентире."
+        },
+        "summaryAndRevision": {
+          "uz": "Yo‘nalish iboralari SRS kartochkalarida va 1-bo‘lim sinovida qayta tekshiriladi.",
+          "ru": "Фразы ориентирования закрепляются в карточках SRS и в проверке раздела 1."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_m1_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Yo‘l ko‘rsatish formulasi",
+          "titleRu": "Формула объяснения маршрута",
+          "content": "Ingliz tilida yo‘l tushuntirishda fe’lning oddiy shakli (Go, Walk, Turn) ishlatiladi. «along» ko‘cha bo‘ylab yurishni, «past» bino yonidan o‘tishni, «across from» esa ko‘chaning narigi tomonidagi joyni bildiradi.",
+          "contentRu": "При объяснении дороги используют повелительную форму глагола (Go, Walk, Turn). «along» означает движение вдоль улицы, «past» — мимо здания, а «across from» — напротив через дорогу.",
+          "highlightNotes": [
+            "Go straight along Navoi Street — Navoiy ko‘chasi bo‘ylab to‘g‘ri yuring",
+            "Walk past the post office — Pochta yonidan o‘ting",
+            "Turn right at the pharmacy — Dorixonada o‘ngga buriling",
+            "Across from the park — Bog‘ning qarama-qarshi tomonida"
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m1_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Tinglash: Oybek metrosiga yo‘l",
+          "titleRu": "Аудирование: Дорога к метро Ойбек",
+          "content": "Sayyoh va Kamolaning suhbatini tinglang. Qaysi bino yonidan o‘tish va qayerda burilish kerakligiga e’tibor bering.",
+          "contentRu": "Прослушайте диалог туриста и Камолы. Обратите внимание, мимо какого здания нужно пройти и где повернуть.",
+          "media": {
+            "id": "media_eng_a2_m1_directions_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m1-directions-dialogue.wav",
+            "title": "Oybek metrosiga yo‘l so‘rash suhbati",
+            "titleUz": "Oybek metrosiga yo‘l so‘rash suhbati",
+            "titleRu": "Диалог о дороге к станции метро Ойбек",
+            "transcript": "Tourist: Excuse me, how do I get to Oybek Metro Station?\nKamola: Go straight along Navoi Street, walk past the post office, and turn right at the pharmacy. The metro entrance is across from the park.\nTourist: Thank you! And where is the bus stop?\nKamola: Turn left after the bookshop. The bus stop is right there.",
+            "posterImage": "/lesson-media/english/a2/a2-m1-city-map.png",
+            "posterAlt": "Ko‘chalar kesishmasi, bino belgilari va punktir yo‘nalish chizig‘i ko‘rsatilgan shahar xaritasi",
+            "posterAltUz": "Ko‘chalar kesishmasi, bino belgilari va punktir yo‘nalish chizig‘i ko‘rsatilgan shahar xaritasi",
+            "posterAltRu": "Городская карта с перекрёстками, значками зданий и пунктирным маршрутом",
+            "durationSeconds": 20.2,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Tourist: Excuse me, how do I get to Oybek Metro Station?\nKamola: Go straight along Navoi Street, walk past the post office, and turn right at the pharmacy. The metro entrance is across from the park.\nTourist: Thank you! And where is the bus stop?\nKamola: Turn left after the bookshop. The bus stop is right there.",
+            "speakerName": "Tourist & Kamola"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m1_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "Yo‘nalish kartochkalari",
+          "titleRu": "Карточки направлений",
+          "content": "Talaffuzni tinglang, avval ma’nosini eslang, so‘ng «Javobni ko‘rish» tugmasini bosing.",
+          "contentRu": "Прослушайте произношение, вспомните значение и откройте перевод.",
+          "flashcards": [
+            {
+              "id": "fc_eng_a2_m1_1",
+              "front": "turn left",
+              "backUz": "chapga burilmoq",
+              "backRu": "повернуть налево",
+              "partOfSpeech": "phrase",
+              "ipa": "/tɜːn left/",
+              "ipaAmE": "/tɜːrn left/",
+              "cefrLevel": "A2",
+              "example": "Turn left after the bookshop to reach the bus stop.",
+              "exampleUz": "Bekatga chiqish uchun kitob do‘konidan keyin chapga buriling.",
+              "exampleRu": "Поверните налево после книжного магазина, чтобы выйти к остановке.",
+              "audioSrc": "/lesson-media/english/a2/a2-m1-turn-left.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m1-city-map.png",
+              "alt": "Shahar xaritasi: bino belgilari, ko‘chalar va punktir yo‘l chizig‘i",
+              "altRu": "Городская карта со значками зданий, улицами и пунктирной линией пути",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m1_2",
+              "front": "go past",
+              "backUz": "yonidan o‘tmoq",
+              "backRu": "пройти мимо",
+              "partOfSpeech": "phrase",
+              "ipa": "/ɡəʊ pɑːst/",
+              "ipaAmE": "/ɡoʊ pæst/",
+              "cefrLevel": "A2",
+              "example": "Go past the post office and stay on Navoi Street.",
+              "exampleUz": "Pochta yonidan o‘ting va Navoiy ko‘chasida davom eting.",
+              "exampleRu": "Пройдите мимо почты и идите дальше по улице Навои.",
+              "audioSrc": "/lesson-media/english/a2/a2-m1-go-past.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m1-city-map.png",
+              "alt": "Pochta, dorixona va yashil bog‘ tasvirlangan shahar chorrahasi",
+              "altRu": "Городской перекрёсток со значками почты, аптеки и зелёного сквера",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m1_3",
+              "front": "across from",
+              "backUz": "qarama-qarshi tomonda",
+              "backRu": "напротив",
+              "partOfSpeech": "preposition",
+              "ipa": "/əˈkrɒs frɒm/",
+              "ipaAmE": "/əˈkrɔːs frʌm/",
+              "cefrLevel": "A2",
+              "example": "The metro entrance is across from the green park.",
+              "exampleUz": "Metro kirish joyi yashil bog‘ning qarama-qarshi tomonida.",
+              "exampleRu": "Вход в метро находится напротив зелёного парка.",
+              "audioSrc": "/lesson-media/english/a2/a2-m1-across-from.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m1-city-map.png",
+              "alt": "Piyoda o‘tish chizig‘ining ikki chetida joylashgan bino va yashil bog‘",
+              "altRu": "Здание и зелёный парк по две стороны от городской дороги",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m1_4",
+              "front": "bus stop",
+              "backUz": "avtobus bekati",
+              "backRu": "автобусная остановка",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈbʌs stɒp/",
+              "ipaAmE": "/ˈbʌs stɑːp/",
+              "cefrLevel": "A2",
+              "example": "Wait at the bus stop near the corner bookshop.",
+              "exampleUz": "Burchakdagi kitob do‘koni yaqinidagi bekatda kuting.",
+              "exampleRu": "Подождите на остановке рядом с угловым книжным магазином.",
+              "audioSrc": "/lesson-media/english/a2/a2-m1-bus-stop.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m1-city-map.png",
+              "alt": "Shahar ko‘chasi burchagida oq kartochkada chizilgan ko‘k transport belgisi",
+              "altRu": "Синий дорожный значок с городским транспортом в углу схемы",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m1_listen_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Tinglab tushunish tekshiruvi",
+          "titleRu": "Проверка понимания диалога",
+          "content": "Kamolaning ko‘rsatmalariga ko‘ra, metro kirish joyi qayerda va u yerga qanday boriladi?",
+          "contentRu": "Согласно объяснению Камолы, где находится вход в метро и как до него дойти?",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m1_listen_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "A2",
+            "topic": "Listening: Metro directions",
+            "difficulty": "easy",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Audiodagi suhbatga ko‘ra, Oybek metrosiga borish uchun sayyoh qayerda o‘ngga burilishi kerak?",
+            "textRu": "Где турист должен повернуть направо по дороге к метро Ойбек согласно диалогу?",
+            "options": [
+              "Dorixonada o‘ngga buriladi, metro bog‘ning qarama-qarshi tomonida",
+              "Kitob do‘konidan keyin chapga buriladi, metro pochta yonida",
+              "Pochtada o‘ngga buriladi, metro kitob do‘koni orqasida",
+              "Bog‘ ichidan to‘g‘ri yuradi, avtobus bekati metro ichida"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Kitob do‘konidan keyin chapga buriladi, metro pochta yonida": {
+                "uz": "Kitob do‘konidan keyin chapga burilish metroga emas, avtobus bekatiga olib boradi.",
+                "ru": "Поворот налево после книжного магазина ведёт к автобусной остановке, а не к метро."
+              },
+              "Pochtada o‘ngga buriladi, metro kitob do‘koni orqasida": {
+                "uz": "Kamola «walk past the post office» (pochta yonidan o‘tib keting) va «turn right at the pharmacy» dedi.",
+                "ru": "Камола сказала «walk past the post office» (пройдите мимо почты) и поверните направо у аптеки."
+              },
+              "Bog‘ ichidan to‘g‘ri yuradi, avtobus bekati metro ichida": {
+                "uz": "Metro bog‘ning ichida emas, «across from the park» (bog‘ning qarama-qarshi tomonida) joylashgan.",
+                "ru": "Метро находится не внутри парка, а «across from the park» (напротив парка)."
+              }
+            },
+            "explanation": "Kamola «walk past the post office, and turn right at the pharmacy. The metro entrance is across from the park» deb aniq tushuntirdi.",
+            "explanationRu": "Камола чётко сказала: пройти мимо почты, повернуть направо у аптеки, вход в метро напротив парка.",
+            "wrongFeedback": "Audioda sayyoh qaysi bino yonida burilishi va metro kirish joyi nimaning qarshisida ekanini diqqat bilan qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте в аудио, у какого здания нужно повернуть направо и напротив чего находится вход в метро."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m1_speak_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Speaking: Yo‘l tushuntirish mashqi",
+          "titleRu": "Speaking: Устное объяснение маршрута",
+          "content": "O‘zingizni mahalliy yo‘lboshchi deb tasavvur qiling va mehmonlarga metroga borishni 3 qadamda og‘zaki tushuntiring.",
+          "contentRu": "Представьте, что вы объясняете дорогу гостю города, и сформулируйте маршрут из 3 шагов вслух.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m1_speaking",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "speaking",
+            "cefrLevel": "A2",
+            "topic": "Speaking: Giving directions",
+            "difficulty": "medium",
+            "questionType": "speaking_prompt",
+            "evaluationMode": "self_assessed",
+            "text": "Do‘stingizga kitob do‘konidan bekat yoki metroga borish yo‘lini 3 ta qisqa inglizcha gap bilan tushuntiring.",
+            "textRu": "Объясните другу дорогу от книжного магазина до остановки или метро в 3 коротких предложениях по-английски.",
+            "options": [],
+            "sampleResponse": "Go straight along Navoi Street and walk past the post office. Turn right at the pharmacy. The metro entrance is across from the park.",
+            "rubricCriteria": [
+              {
+                "id": "crit_a2_m1_imp",
+                "labelUz": "Buyruq fe’llari ishlatildi (Go straight / Walk past / Turn right or left)",
+                "labelRu": "Использованы глаголы направления (Go straight / Walk past / Turn right or left)"
+              },
+              {
+                "id": "crit_a2_m1_prep",
+                "labelUz": "Kamida bitta harakat/joy predlogi to‘g‘ri qo‘llandi (along / past / across from)",
+                "labelRu": "Верно применён хотя бы один предлог (along / past / across from)"
+              },
+              {
+                "id": "crit_a2_m1_landmark",
+                "labelUz": "Aniq mo‘ljal va manzil aytildi (post office, pharmacy, park)",
+                "labelRu": "Указаны чёткие ориентиры и цель (post office, pharmacy, park)"
+              }
+            ],
+            "selfAssessmentNoticeUz": "O‘zini baholash (mustaqil nutq mashqi): bu topshiriq rasmiy CEFR sertifikati bermaydi.",
+            "selfAssessmentNoticeRu": "Самооценка (самостоятельная речевая практика): задание не выдаёт официальный сертификат CEFR.",
+            "explanation": "Qisqa buyruq fe’llari va aniq mo‘ljallar (along, past, across from) A2 darajasida tushunarli yo‘l ko‘rsatishni ta’minlaydi.",
+            "explanationRu": "Короткие повелительные фразы с ориентирами (along, past, across from) соответствуют уровню A2.",
+            "wrongFeedback": "Gaplaringizda buyruq fe’li, predlog va bino mo‘ljallari borligini mezonlar asosida tekshiring.",
+            "wrongFeedbackRu": "Проверьте наличие глаголов направления, предлогов и ориентиров по критериям."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_m1_order",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_listening",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Directions sentence ordering",
+        "difficulty": "easy",
+        "questionType": "sentence_order",
+        "evaluationMode": "deterministic",
+        "text": "«Novvoyxona yonidan o‘ting va chapga buriling» gapini to‘g‘ri tartibda tuzing:",
+        "textRu": "Составьте предложение «Пройдите мимо пекарни и поверните налево» в правильном порядке:",
+        "options": [],
+        "orderedTokens": ["Walk", "past", "the bakery", "and", "turn", "left."],
+        "acceptedAnswers": ["Walk past the bakery and turn left."],
+        "explanation": "To‘g‘ri tartib: Walk past + the bakery + and + turn + left.",
+        "explanationRu": "Правильный порядок: Walk past + the bakery + and + turn + left.",
+        "wrongFeedback": "Avval yo‘nalish bildiruvchi buyruq iborasi va joy nomini, keyin bog‘lovchi va oxirida burilish ko‘rsatmasini joylang.",
+        "wrongFeedbackRu": "Сначала поставьте глагольную фразу направления и ориентир, затем союз и указание поворота в конце."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_u1_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m1",
+      "unitId": "unit_eng_a2_u1",
+      "canDoObjective": "Avtobusdagi almashish ko‘rsatmasini tinglab, keyingi harakatni to‘g‘ri tanlaydi.",
+      "canDoObjectiveRu": "Понимает устное указание о пересадке в автобусе и выбирает верное действие.",
+      "prerequisites": ["node_eng_a2_m1_directions"],
+      "title": "1-bo‘lim sinovi: Avtobus va almashish",
+      "titleRu": "Проверка раздела 1: Автобус и пересадка",
+      "estimatedMinutes": 6,
+      "summary": "Timur va avtobus haydovchisining suhbatini tinglab, Chorsu bozoriga borish uchun qaysi bekatda tushish va qaysi transportga o‘tishni aniqlaysiz.",
+      "summaryRu": "Прослушав диалог Тимура и водителя автобуса, вы определите нужную остановку и пересадку.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 1-bo‘lim yakuniy sinovi bo‘lib, rasmiy CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 1; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Avtobusda haydovchidan almashish bekatini so‘rash kundalik hayotda tez-tez uchraydi.",
+          "ru": "Уточнить остановку пересадки у водителя — частая городская ситуация."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi 2-bekat, mo‘ljal va avtobus raqamini audiodan ajratib oladi.",
+          "ru": "Ученик извлекает из аудио номер остановки, ориентир и номер автобуса для пересадки."
+        },
+        "warmUp": {
+          "uz": "«Get off», «walk past», «across from» iboralarini eslang.",
+          "ru": "Вспомните выражения «Get off», «walk past», «across from»."
+        },
+        "vocabularyItems": [
+          { "word": "get off", "uz": "transportdan tushmoq", "ru": "выйти из транспорта", "ipa": "/ɡet ɒf/" },
+          { "word": "corner cafe", "uz": "burchakdagi kafe", "ru": "кафе на углу", "ipa": "/ˈkɔːnə ˈkæfeɪ/" }
+        ],
+        "grammarNote": {
+          "rule": "Sequential Directions (Get off at ... -> Walk past ... -> Take bus ...)",
+          "simpleExplanationUz": "Bir nechta bosqichli yo‘lda har bir harakat buyruq fe’li bilan ketma-ket beriladi.",
+          "simpleExplanationRu": "В маршруте с пересадкой действия перечисляются последовательно глаголами в повелительной форме.",
+          "structure": "Get off at [stop], walk past [landmark], and take [bus number].",
+          "positiveExamples": ["Get off at the second stop across from the museum."],
+          "negativeExamples": ["Do not stay on the first bus after the second stop."],
+          "questions": ["Does this bus go to Chorsu Bazaar?"],
+          "commonMistakes": ["«Get off» (tushmoq) va «Get on» (chiqmoq) fe’llarini adashtirish."]
+        },
+        "pronunciationFocus": {
+          "uz": "«twenty-eight» /ˌtwenti ˈeɪt/ sonida ikkinchi qismga urg‘u tushadi.",
+          "ru": "В числительном «twenty-eight» /ˌtwenti ˈeɪt/ основное ударение падает на «eight»."
+        },
+        "examples": ["Get off at the second stop across from the history museum."],
+        "guidedPractice": {
+          "uz": "Haydovchining javobini diqqat bilan tinglang.",
+          "ru": "Внимательно прослушайте ответ водителя."
+        },
+        "independentPractice": {
+          "uz": "Suhbatni yakunlang va so‘zlarni moslash hamda muqobil savollarni yeching.",
+          "ru": "Завершите диалог и выполните задания на сопоставление и альтернативную проверку."
+        },
+        "listeningRef": "media_eng_a2_u1_cp_bus",
+        "readingRef": "lesson_eng_a2_u1_cp_concept",
+        "speakingTask": {
+          "uz": "Haydovchining 3 qadamli ko‘rsatmasini ovoz chiqarib takrorlang.",
+          "ru": "Повторите вслух три шага маршрута от водителя."
+        },
+        "writingTask": {
+          "uz": "Juftliklarni to‘g‘ri moslash bilan ma’nolarni mustahkamlang.",
+          "ru": "Закрепите значения фраз в задании на сопоставление."
+        },
+        "knowledgeCheck": "q_eng_a2_u1_cp_conv",
+        "finalQuiz": "q_eng_a2_u1_cp_reinf",
+        "feedbackRules": {
+          "uz": "70% dan yuqori natija 2-modulni (Xarid va narxlar) ochadi.",
+          "ru": "Результат 70% и выше открывает модуль 2 (Покупки и цены)."
+        },
+        "summaryAndRevision": {
+          "uz": "Xato qilinsa, muqobil vaziyat orqali qayta tekshiruv beriladi.",
+          "ru": "При ошибке доступна повторная проверка с новым вопросом."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_u1_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "1-bo‘lim sinovi qoidasi",
+          "titleRu": "Правила проверки раздела 1",
+          "content": "Bu sinovda Timur avtobusda haydovchidan Chorsu bozoriga qanday borishni so‘raydi. Qaysi bekatda tushish («get off»), qaysi bino yonidan o‘tish («walk past») va qaysi avtobusga chiqishni tinglab aniqlang.",
+          "contentRu": "В этой проверке Тимур спрашивает водителя, как добраться до базара Чорсу. Определите остановку для выхода («get off»), ориентир и номер автобуса для пересадки."
+        },
+        {
+          "id": "lesson_eng_a2_u1_cp_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Tinglash: Avtobusda almashish",
+          "titleRu": "Аудирование: Пересадка в автобусе",
+          "content": "Timur va haydovchining suhbatini tinglang.",
+          "contentRu": "Прослушайте диалог Тимура и водителя.",
+          "media": {
+            "id": "media_eng_a2_u1_cp_bus",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-u1-cp-bus-announcement.wav",
+            "title": "1-bo‘lim sinovi: Avtobusda almashish suhbati",
+            "titleUz": "1-bo‘lim sinovi: Avtobusda almashish suhbati",
+            "titleRu": "Проверка раздела 1: Разговор в автобусе о пересадке",
+            "transcript": "Timur: Excuse me, does this bus go to Chorsu Bazaar?\nDriver: Not directly. Get off at the second stop across from the history museum, walk past the corner cafe, and take bus number twenty-eight.\nTimur: Second stop across from the museum, then bus twenty-eight. Got it, thanks!",
+            "posterImage": "/lesson-media/english/a2/a2-m1-city-map.png",
+            "posterAlt": "Shahar ko‘chalari, bekat belgisi va piyoda yo‘laklari chizilgan xarita",
+            "posterAltUz": "Shahar ko‘chalari, bekat belgisi va piyoda yo‘laklari chizilgan xarita",
+            "posterAltRu": "Городские улицы, значок транспорта и пешеходные переходы на карте",
+            "durationSeconds": 19.018,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Timur: Excuse me, does this bus go to Chorsu Bazaar?\nDriver: Not directly. Get off at the second stop across from the history museum, walk past the corner cafe, and take bus number twenty-eight.\nTimur: Second stop across from the museum, then bus twenty-eight. Got it, thanks!",
+            "speakerName": "Timur & Driver"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_u1_cp_q",
+          "stepNumber": 3,
+          "type": "interactive_question",
+          "title": "Suhbatni yakunlash",
+          "titleRu": "Завершение диалога",
+          "content": "Haydovchining javobini to‘liq va aniq yakunlovchi qatorni tanlang.",
+          "contentRu": "Выберите реплику водителя, соответствующую услышанному маршруту.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_u1_cp_conv",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "A2",
+            "topic": "Unit 1 Checkpoint: Bus transfer",
+            "difficulty": "medium",
+            "questionType": "conversation_completion",
+            "evaluationMode": "deterministic",
+            "dialogueContext": [
+              "Timur: «Excuse me, does this bus go to Chorsu Bazaar?»",
+              "Driver: «___»"
+            ],
+            "text": "Audiodagi ma’lumotga mos ravishda haydovchining to‘liq ko‘rsatmasini tanlang:",
+            "textRu": "Выберите верную реплику водителя согласно прослушанному диалогу:",
+            "options": [
+              "Get off at the second stop across from the history museum and take bus 28.",
+              "Get off at the first stop along the park and take bus 18.",
+              "Stay on this bus behind the museum until the final stop.",
+              "Walk across the museum and wait for bus 82."
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Get off at the first stop along the park and take bus 18.": {
+                "uz": "Audioda «first stop» emas «second stop» va «twenty-eight» (28) avtobusi aytildi.",
+                "ru": "В аудио звучало «second stop» (вторая остановка) и автобус 28 («twenty-eight»), а не 18."
+              },
+              "Stay on this bus behind the museum until the final stop.": {
+                "uz": "Haydovchi «Not directly» (to‘g‘ridan-to‘g‘ri bormaydi) dedi va muzey qarshisida tushishni aytdi.",
+                "ru": "Водитель сказал «Not directly» (прямо не идёт) и указал выйти напротив музея."
+              },
+              "Walk across the museum and wait for bus 82.": {
+                "uz": "«Walk across the museum» noto‘g‘ri — bino yonidan o‘tiladi («walk past the corner cafe») va avtobus raqami 28, 82 emas.",
+                "ru": "Нужно пройти мимо кафе («walk past»), а не через музей, и номер автобуса 28, а не 82."
+              }
+            },
+            "explanation": "Haydovchi «second stop across from the history museum» va «bus number twenty-eight» (28) ni aniq aytdi.",
+            "explanationRu": "Водитель назвал вторую остановку напротив исторического музея и автобус №28.",
+            "wrongFeedback": "Audiodagi bekat tartib raqami, qaysi bino qarshisida tushish va keyingi avtobus raqamini qayta tinglab tekshiring.",
+            "wrongFeedbackRu": "Переслушайте в аудио порядковый номер остановки, ориентир для выхода и номер следующего автобуса."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_u1_cp_reinf",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_listening",
+        "skillDomain": "vocabulary",
+        "cefrLevel": "A2",
+        "topic": "Transport phrases matching",
+        "difficulty": "easy",
+        "questionType": "word_match",
+        "evaluationMode": "deterministic",
+        "text": "Transport va yo‘l ko‘rsatish iboralarini o‘zbekcha ma’nosi bilan juftlang:",
+        "textRu": "Соедините фразы о транспорте и маршруте с их узбекским переводом:",
+        "options": [],
+        "matchPairs": [
+          { "id": "pair_a2_u1_1", "left": "get off", "right": "tushmoq" },
+          { "id": "pair_a2_u1_2", "left": "turn right", "right": "o‘ngga burilmoq" },
+          { "id": "pair_a2_u1_3", "left": "go past", "right": "yonidan o‘tmoq" },
+          { "id": "pair_a2_u1_4", "left": "corner cafe", "right": "burchakdagi kafe" }
+        ],
+        "explanation": "«get off» — tushmoq, «turn right» — o‘ngga burilmoq, «go past» — yonidan o‘tmoq, «corner cafe» — burchakdagi kafe.",
+        "explanationRu": "Все четыре пары транспортной лексики сопоставлены точно.",
+        "wrongFeedback": "Transportdan tushish, burilish yo‘nalishi, yonidan o‘tish va burchakdagi joy nomini anglatuvchi inglizcha iboralarni ma’nosi bilan solishtiring.",
+        "wrongFeedbackRu": "Сопоставьте английские выражения выхода из транспорта, поворота, движения мимо объекта и расположения на углу с их переводом."
+      },
+      "alternateExercise": {
+        "id": "q_eng_a2_u1_cp_alt",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_reading",
+        "skillDomain": "reading",
+        "cefrLevel": "A2",
+        "topic": "Unit 1 alternate route check",
+        "difficulty": "medium",
+        "questionType": "multiple_choice",
+        "evaluationMode": "deterministic",
+        "contextSnippet": "City Guide: To reach Amir Temur Square from the library, walk along Mustaqillik Avenue for five minutes and turn left at the fountain. The metro stairs are directly across from the fountain.",
+        "text": "Qayta sinov: E’longa ko‘ra, metro zinapoyasi qayerda joylashgan?",
+        "textRu": "Повторная проверка: где находится вход в метро согласно памятке?",
+        "options": [
+          "Favvoraning qarama-qarshi tomonida",
+          "Kutubxona ichida, chap burilishdan oldin",
+          "Mustaqillik shoh ko‘chasidan o‘ng tomonda",
+          "Favvoradan besh daqiqa orqada"
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "Kutubxona ichida, chap burilishdan oldin": {
+            "uz": "Matnda kutubxonadan yurib chiqish aytilgan, metro kutubxona ichida emas.",
+            "ru": "Библиотека — это точка старта, а не расположение метро."
+          },
+          "Mustaqillik shoh ko‘chasidan o‘ng tomonda": {
+            "uz": "Matnda «turn left at the fountain» (favvorada chapga buriling) deyilgan.",
+            "ru": "В тексте сказано «turn left at the fountain» (поверните налево у фонтана)."
+          },
+          "Favvoradan besh daqiqa orqada": {
+            "uz": "Besh daqiqa — shoh ko‘cha bo‘ylab piyoda yurish vaqti; metro favvoraning ro‘parasida («across from»).",
+            "ru": "Пять минут — время пути по проспекту, а спуск в метро прямо напротив фонтана."
+          }
+        },
+        "explanation": "Matndagi «across from the fountain» iborasi favvoraning qarama-qarshi tomonini bildiradi.",
+        "explanationRu": "Фраза «across from the fountain» означает прямо напротив фонтана.",
+        "wrongFeedback": "Matndagi favvora atrofidagi harakat yo‘nalishi va metro zinapoyasi joylashuvini qayta o‘qing.",
+        "wrongFeedbackRu": "Перечитайте в тексте ориентир у фонтана и точное расположение входа в метро."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_m2_shopping",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "vocabulary",
+      "communicativeFocus": "vocabulary",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m2",
+      "unitId": "unit_eng_a2_u2",
+      "canDoObjective": "Do‘konda narx va miqdor so‘raydi («How much / How many»), ikkita buyumni qiyoslaydi.",
+      "canDoObjectiveRu": "Спрашивает цену и количество («How much / How many») и сравнивает два товара.",
+      "prerequisites": ["node_eng_a2_u1_checkpoint"],
+      "title": "Xarid qilish, narxlar va taqqoslash",
+      "titleRu": "Покупки, цены и сравнения",
+      "estimatedMinutes": 8,
+      "summary": "Kiyim do‘konida «How much / How many» savollari, chegirma lug‘ati va qiyosiy sifatlar (-er / more) yordamida eng foydali xaridni tanlaysiz.",
+      "summaryRu": "Вы научитесь задавать вопросы о цене и количестве, понимать скидки и сравнивать товары с помощью сравнительной степени.",
+      "requiresMastery": false,
+      "pedagogy17": {
+        "intro": {
+          "uz": "Do‘kon yoki bozorda narx so‘rash, chegirma hisoblash va ikki kiyimni solishtirish har kuni kerak bo‘ladi.",
+          "ru": "Умение спросить цену, уточнить скидку и сравнить две вещи нужно в любом магазине."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi «How much / How many» ni farqlaydi, qiyosiy sifat (-er / more) xatosini tuzatadi va xarid so‘zlarini moslaydi.",
+          "ru": "Ученик различает «How much / How many», исправляет двойную сравнительную степень и сопоставляет лексику покупок."
+        },
+        "warmUp": {
+          "uz": "Ikki kurtkadan qaysi biri arzonroq ekanini inglizcha qanday aytasiz?",
+          "ru": "Как по-английски сказать, какая из двух курток дешевле?"
+        },
+        "vocabularyItems": [
+          { "word": "discount", "uz": "chegirma", "ru": "скидка", "ipa": "/ˈdɪskaʊnt/" },
+          { "word": "receipt", "uz": "xarid cheki", "ru": "чек оплаты", "ipa": "/rɪˈsiːt/" },
+          { "word": "cheaper", "uz": "arzonroq", "ru": "дешевле", "ipa": "/ˈtʃiːpə/" },
+          { "word": "how much", "uz": "qancha turadi", "ru": "сколько стоит", "ipa": "/haʊ mʌtʃ/" }
+        ],
+        "grammarNote": {
+          "rule": "How much vs How many + Comparatives (-er / more)",
+          "simpleExplanationUz": "Narx va sanalmaydigan otlar uchun «How much», sanaladigan ko‘plik otlar uchun «How many» ishlatiladi. Qisqa sifatga «-er» qo‘shiladi (cheaper), uzun sifat oldidan «more» keladi (more comfortable) — ikkalasi birga («more cheaper») ishlatilmaydi!",
+          "simpleExplanationRu": "Для цены и неисчисляемых существительных используется «How much», для исчисляемых во множественном числе — «How many». Коротким прилагательным добавляется «-er» (cheaper), перед длинными ставится «more» — но не оба сразу («more cheaper» — ошибка!).",
+          "structure": "How much is [item]? / [A] is cheaper / more comfortable than [B].",
+          "positiveExamples": [
+            "How much is the blue jacket?",
+            "The blue jacket is cheaper than the green coat."
+          ],
+          "negativeExamples": [
+            "This coat is more cheaper than that one. (Xato: more va -er birga kelmaydi!)"
+          ],
+          "questions": [
+            "How much does the green coat cost?",
+            "How many bags do you need?"
+          ],
+          "commonMistakes": [
+            "«more cheaper» kabi qo‘shaloq qiyosiy daraja ishlatish yoki «receipt» so‘zidagi «p» harfini o‘qib yuborish."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "«receipt» /rɪˈsiːt/ so‘zida «p» harfi talaffuz qilinmaydi; «cheaper» /ˈtʃiːpə/ so‘zida «ch» qattiq /tʃ/ chiqadi.",
+          "ru": "В слове «receipt» /rɪˈsiːt/ буква «p» немая; в «cheaper» начальный звук — чёткий /tʃ/."
+        },
+        "examples": [
+          "The blue jacket is cheaper today with our twenty percent student discount.",
+          "May I have a receipt, please?"
+        ],
+        "guidedPractice": {
+          "uz": "Do‘kon rasmini, kassa suhbatini va 4 ta xarid kartochkasini o‘rganing.",
+          "ru": "Изучите иллюстрацию магазина, диалог на кассе и 4 карточки лексики."
+        },
+        "independentPractice": {
+          "uz": "Xarid so‘zlarini juftlang, narx so‘roqidagi bo‘sh joyni to‘ldiring va qiyosiy sifat xatosini tuzating.",
+          "ru": "Сопоставьте термины покупок, заполните пропуск в вопросе о цене и исправьте ошибку сравнения."
+        },
+        "listeningRef": "media_eng_a2_m2_shop_dialogue",
+        "readingRef": "lesson_eng_a2_m2_concept",
+        "speakingTask": {
+          "uz": "Do‘kondagi ikkita mahsulot narxini solishtirib 2 ta gap ayting.",
+          "ru": "Сравните цены двух товаров в магазине в 2 предложениях вслух."
+        },
+        "writingTask": {
+          "uz": "«How ___ does ... cost?» savolini to‘g‘ri so‘z bilan to‘ldiring.",
+          "ru": "Заполните пропуск в вопросе «How ___ does ... cost?»."
+        },
+        "knowledgeCheck": "q_eng_a2_m2_word_match",
+        "finalQuiz": "q_eng_a2_m2_fill_much",
+        "feedbackRules": {
+          "uz": "Qo‘shaloq qiyosiy shakl («more cheaper») va «much/many» chalkashligi darhol izohlanadi.",
+          "ru": "Ошибки двойной сравнительной степени и путаница «much/many» подробно разбираются."
+        },
+        "summaryAndRevision": {
+          "uz": "Xarid lug‘ati va qiyosiy sifatlar 2-bo‘lim sinovida mustahkamlanadi.",
+          "ru": "Лексика покупок и степени сравнения проверяются в контрольной точке раздела 2."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_m2_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Narx so‘rash va taqqoslash qoidasi",
+          "titleRu": "Правило вопросов о цене и сравнений",
+          "content": "Narx so‘rashda «How much is...?» yoki «How much does ... cost?», dona sanashda esa «How many ...?» ishlatiladi. Qisqa sifatga «-er» (cheaper), 2+ bo‘g‘inli sifat oldidan esa «more» (more comfortable) qo‘yiladi.",
+          "contentRu": "Для цены используйте «How much is...?», а для количества штук — «How many...?». Коротким прилагательным добавляется «-er» (cheaper), а перед длинными ставится «more» (more comfortable).",
+          "highlightNotes": [
+            "How much does it cost? — Qancha turadi?",
+            "How many shirts? — Nechta ko‘ylak?",
+            "cheaper than ... — ...dan arzonroq",
+            "more comfortable than ... — ...dan qulayroq"
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m2_visual",
+          "stepNumber": 2,
+          "type": "visual_example",
+          "title": "Do‘kon peshtaxtasi va ikki kurtka",
+          "titleRu": "Прилавок магазина и две куртки",
+          "content": "Rasmda ikki xil kiyim ko‘rsatilgan: chapda uzun yashil palto, o‘ngda esa yulduzcha belgili chegirmali ko‘k kurtka. Kassa ustida paket, xarid cheki va tangalar turibdi.",
+          "contentRu": "На иллюстрации два товара: слева длинное зелёное пальто, справа синяя куртка со знаком скидки. На прилавке видны пакет, чек и монеты.",
+          "media": {
+            "id": "media_eng_a2_m2_shop_comparison_img",
+            "kind": "image",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+            "title": "Do‘kon peshtaxtasi va kiyimlar taqqoslovi",
+            "titleUz": "Do‘kon peshtaxtasi va kiyimlar taqqoslovi",
+            "titleRu": "Сравнение одежды в магазине",
+            "alt": "Kiyim ilgichida uzun yashil palto va yulduzcha belgili ko‘k kurtka, peshtaxtada esa sumka, tangalar va chek qog‘ozi",
+            "altUz": "Kiyim ilgichida uzun yashil palto va yulduzcha belgili ko‘k kurtka, peshtaxtada esa sumka, tangalar va chek qog‘ozi",
+            "altRu": "На вешалке длинное зелёное пальто и синяя куртка со значком звезды, на прилавке пакет, монеты и бумажная лента",
+            "reviewStatus": "approved"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m2_audio",
+          "stepNumber": 3,
+          "type": "audio_simulation",
+          "title": "Tinglash: Do‘konda chegirma va xarid",
+          "titleRu": "Аудирование: Скидка и покупка в магазине",
+          "content": "Xaridor va kassir suhbatini tinglang. Qaysi kurtka arzonroq ekanini va talaba chegirmasidan keyingi narxni aniqlang.",
+          "contentRu": "Прослушайте диалог покупателя и кассира. Обратите внимание на разницу цен и студенческую скидку.",
+          "media": {
+            "id": "media_eng_a2_m2_shop_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m2-shop-dialogue.wav",
+            "title": "Kiyim do‘konida narx va chegirma suhbati",
+            "titleUz": "Kiyim do‘konida narx va chegirma suhbati",
+            "titleRu": "Диалог в магазине одежды о цене и скидке",
+            "transcript": "Customer: Excuse me, how much is the green winter coat?\nCashier: The green coat is eighty dollars. The blue jacket is cheaper today — with our twenty percent student discount, it is only forty-eight dollars.\nCustomer: Forty-eight dollars? That is much better! I'll take the blue jacket, please. May I have a receipt?\nCashier: Of course! Here is your receipt and bag.",
+            "posterImage": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+            "posterAlt": "Do‘konda ikki xil kurtka, xarid sumkasi va kassa peshtaxtasi tasviri",
+            "posterAltUz": "Do‘konda ikki xil kurtka, xarid sumkasi va kassa peshtaxtasi tasviri",
+            "posterAltRu": "Две разные куртки на вешалке, пакет и кассовый прилавок в магазине",
+            "durationSeconds": 24.237,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Customer: Excuse me, how much is the green winter coat?\nCashier: The green coat is eighty dollars. The blue jacket is cheaper today — with our twenty percent student discount, it is only forty-eight dollars.\nCustomer: Forty-eight dollars? That is much better! I'll take the blue jacket, please. May I have a receipt?\nCashier: Of course! Here is your receipt and bag.",
+            "speakerName": "Customer & Cashier"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m2_flashcards",
+          "stepNumber": 4,
+          "type": "flashcard",
+          "title": "Xarid kartochkalari",
+          "titleRu": "Карточки для покупок",
+          "content": "Yangi xarid so‘zlarining talaffuzini tinglang va ma’nosini tekshiring.",
+          "contentRu": "Послушайте произношение новой лексики и проверьте перевод.",
+          "flashcards": [
+            {
+              "id": "fc_eng_a2_m2_1",
+              "front": "discount",
+              "backUz": "chegirma",
+              "backRu": "скидка",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈdɪskaʊnt/",
+              "ipaAmE": "/ˈdɪskaʊnt/",
+              "cefrLevel": "A2",
+              "example": "Students get a twenty percent discount on Friday.",
+              "exampleUz": "Talabalar juma kuni yigirma foizli chegirma oladi.",
+              "exampleRu": "По пятницам студенты получают скидку двадцать процентов.",
+              "audioSrc": "/lesson-media/english/a2/a2-m2-discount.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+              "alt": "Kiyim ilgichida oltin yulduzcha belgisi osilgan ko‘k kurtka",
+              "altRu": "Синяя куртка на вешалке с золотой звёздочкой на плече",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m2_2",
+              "front": "receipt",
+              "backUz": "xarid cheki",
+              "backRu": "чек оплаты",
+              "partOfSpeech": "noun",
+              "ipa": "/rɪˈsiːt/",
+              "ipaAmE": "/rɪˈsiːt/",
+              "cefrLevel": "A2",
+              "example": "Please keep your receipt after paying at the desk.",
+              "exampleUz": "Kassada to‘lagandan keyin qog‘oz hujjatni saqlab qo‘ying.",
+              "exampleRu": "Пожалуйста, сохраните бумажный документ после оплаты на кассе.",
+              "audioSrc": "/lesson-media/english/a2/a2-m2-receipt.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+              "alt": "Do‘kon peshtaxtasida qog‘oz lentali hujjat, yashil paket va tangalar",
+              "altRu": "На прилавке магазина длинный бумажный бланк с волнистым краем, пакет и монеты",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m2_3",
+              "front": "cheaper",
+              "backUz": "arzonroq",
+              "backRu": "дешевле",
+              "partOfSpeech": "adjective",
+              "ipa": "/ˈtʃiːpə/",
+              "ipaAmE": "/ˈtʃiːpər/",
+              "cefrLevel": "A2",
+              "example": "This blue jacket is cheaper than the winter coat.",
+              "exampleUz": "Bu ko‘k kurtka qishki paltodan arzonroq.",
+              "exampleRu": "Эта синяя куртка дешевле зимнего пальто.",
+              "audioSrc": "/lesson-media/english/a2/a2-m2-cheaper.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+              "alt": "Kiyim ilgichidagi uzun yashil palto va ixchamroq ko‘k kurtka yorliqlari",
+              "altRu": "Длинное зелёное пальто и короткая синяя куртка с разными бирками",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m2_4",
+              "front": "how much",
+              "backUz": "qancha turadi",
+              "backRu": "сколько стоит",
+              "partOfSpeech": "phrase",
+              "ipa": "/haʊ mʌtʃ/",
+              "ipaAmE": "/haʊ mʌtʃ/",
+              "cefrLevel": "A2",
+              "example": "Excuse me, how much is this green backpack?",
+              "exampleUz": "Kechirasiz, bu yashil ryukzak qancha turadi?",
+              "exampleRu": "Извините, сколько стоит этот зелёный рюкзак?",
+              "audioSrc": "/lesson-media/english/a2/a2-m2-how-much.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+              "alt": "Do‘kon peshtaxtasida sariq tangalar ustuni va yorliqli kiyimlar",
+              "altRu": "Ряд золотых монет на прилавке рядом с бирками на одежде",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m2_match_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Xarid so‘zlarini moslash",
+          "titleRu": "Сопоставление слов о покупках",
+          "content": "Har bir inglizcha atamani o‘zbekcha ma’nosi bilan juftlang.",
+          "contentRu": "Соедините каждый английский термин с точным переводом.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m2_word_match",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_vocab",
+            "skillDomain": "vocabulary",
+            "cefrLevel": "A2",
+            "topic": "Shopping vocabulary matching",
+            "difficulty": "easy",
+            "questionType": "word_match",
+            "evaluationMode": "deterministic",
+            "text": "Do‘kon va narxlarga oid so‘zlarni o‘zbekcha ma’nosi bilan moslang:",
+            "textRu": "Сопоставьте слова о магазине и ценах с их значением:",
+            "options": [],
+            "matchPairs": [
+              { "id": "pair_a2_m2_1", "left": "discount", "right": "chegirma" },
+              { "id": "pair_a2_m2_2", "left": "receipt", "right": "xarid cheki" },
+              { "id": "pair_a2_m2_3", "left": "cheaper", "right": "arzonroq" },
+              { "id": "pair_a2_m2_4", "left": "more expensive", "right": "qimmatroq" }
+            ],
+            "explanation": "«cheaper» (arzonroq) va «more expensive» (qimmatroq) juftliklari qiyosiy sifatlarning ikki qolipini ko‘rsatadi.",
+            "explanationRu": "Пара «cheaper» и «more expensive» наглядно показывает два способа образования сравнительной степени.",
+            "wrongFeedback": "«cheaper» va «more expensive» antonim juftligini hamda «receipt» so‘zini qayta tekshiring.",
+            "wrongFeedbackRu": "Перепроверьте антонимы «cheaper» — «more expensive» и слово «receipt»."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m2_fill_q",
+          "stepNumber": 6,
+          "type": "interactive_question",
+          "title": "Narx so‘rash mashqi",
+          "titleRu": "Вопрос о цене",
+          "content": "Bo‘sh joyni kerakli so‘z bilan to‘ldiring.",
+          "contentRu": "Заполните пропуск нужным словом.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m2_fill_much",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_vocab",
+            "skillDomain": "grammar",
+            "cefrLevel": "A2",
+            "topic": "How much for price",
+            "difficulty": "easy",
+            "questionType": "fill_blank",
+            "evaluationMode": "deterministic",
+            "blankTemplate": "Excuse me, how ___ does the blue jacket cost?",
+            "text": "Bo‘sh joyga sanalmaydigan «narx» so‘rog‘i uchun to‘g‘ri so‘zni yozing: «Excuse me, how ___ does the blue jacket cost?»",
+            "textRu": "Впишите верное слово для вопроса о цене: «Excuse me, how ___ does the blue jacket cost?»",
+            "options": [],
+            "acceptedAnswers": ["much"],
+            "explanation": "Narx va pul sanalmaydigan tushuncha bo‘lgani uchun «How much does ... cost?» deyiladi.",
+            "explanationRu": "Цена и деньги — неисчисляемое понятие, поэтому используется «How much does ... cost?».",
+            "wrongFeedback": "Narx so‘rashda «how» dan keyin sanalmaydigan otlar bilan ishlatiladigan miqdor so‘zini yozing.",
+            "wrongFeedbackRu": "Для вопроса о стоимости после «how» впишите слово, используемое с неисчисляемыми понятиями."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_m2_err_corr",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Error correction: Double comparative",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "This coat is more cheaper than that one.",
+        "text": "«This coat is more cheaper than that one.» gapidagi xatoni tuzatilgan to‘g‘ri variantni tanlang:",
+        "textRu": "Выберите правильно исправленный вариант предложения «This coat is more cheaper than that one.»:",
+        "options": [
+          "This coat is cheaper than that one.",
+          "This coat is most cheaper than that one.",
+          "This coat is more cheap than that one.",
+          "This coat is cheap than that one."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "This coat is most cheaper than that one.": {
+            "uz": "«most» orttirma daraja so‘zi va «-er» bilan birga ishlatilmaydi.",
+            "ru": "Слово «most» относится к превосходной степени и не сочетается с «-er»."
+          },
+          "This coat is more cheap than that one.": {
+            "uz": "«cheap» bir bo‘g‘inli qisqa sifat, shuning uchun «more» emas «-er» qo‘shiladi.",
+            "ru": "«cheap» — короткое односложное прилагательное, ему нужен суффикс «-er», а не «more»."
+          },
+          "This coat is cheap than that one.": {
+            "uz": "Ikki narsani «than» bilan taqqoslaganda sifat qiyosiy shaklda («-er») bo‘lishi shart.",
+            "ru": "При сравнении со словом «than» прилагательное должно стоять в сравнительной степени («-er»)."
+          }
+        },
+        "explanation": "Qisqa «cheap» sifatiga faqat «-er» qo‘shiladi: «cheaper than». «more» ortiqcha.",
+        "explanationRu": "К короткому «cheap» добавляется только суффикс «-er»: «cheaper than», слово «more» лишнее.",
+        "wrongFeedback": "Bir bo‘g‘inli sifatlar bilan «more» emas, faqat «-er» qo‘shimchasi ishlatilishini eslang.",
+        "wrongFeedbackRu": "Вспомните, что короткие прилагательные образуют сравнительную степень только с помощью «-er»."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_u2_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "reading",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m2",
+      "unitId": "unit_eng_a2_u2",
+      "canDoObjective": "Do‘kon e’lonidan chegirma va yakuniy narxni hisoblab topadi, «much/many» hamda qiyosiy sifatlarni qo‘llaydi.",
+      "canDoObjectiveRu": "Определяет скидку и итоговую цену из объявления, верно применяет «much/many» и сравнения.",
+      "prerequisites": ["node_eng_a2_m2_shopping"],
+      "title": "2-bo‘lim sinovi: Narx va chegirma tahlili",
+      "titleRu": "Проверка раздела 2: Анализ цен и скидок",
+      "estimatedMinutes": 6,
+      "summary": "Oziq-ovqat do‘konidagi aksiya e’lonini o‘qib foydali taklifni aniqlaysiz hamda sanaladigan va sanalmaydigan otlar bo‘yicha bilimingizni sinaysiz.",
+      "summaryRu": "Вы проанализируете объявление о скидке в продуктовом магазине и проверите употребление «much/many».",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 2-bo‘lim yakuniy sinovi bo‘lib, rasmiy CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 2; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Haqiqiy do‘konda chegirmali to‘plam va dona narxini taqqoslash to‘g‘ri qaror chiqarishga yordam beradi.",
+          "ru": "Умение сравнить акционный набор и обычную цену помогает выбрать выгодную покупку."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi e’londagi chegirma shartini aniqlaydi va «How many / How much» qoidasini qo‘llaydi.",
+          "ru": "Ученик находит условия скидки в объявлении и правильно применяет «How many / How much»."
+        },
+        "warmUp": {
+          "uz": "«apples» va «water» so‘zlaridan qaysi biri sanaladigan?",
+          "ru": "Какое из слов исчисляемое: «apples» или «water»?"
+        },
+        "vocabularyItems": [
+          { "word": "grocery bundle", "uz": "oziq-ovqat to‘plami", "ru": "продуктовый набор", "ipa": "/ˈɡrəʊsəri ˈbʌndl/" },
+          { "word": "half price", "uz": "yarim narx", "ru": "полцены", "ipa": "/hɑːf praɪs/" }
+        ],
+        "grammarNote": {
+          "rule": "Countable Plural (How many + -s) vs Uncountable (How much)",
+          "simpleExplanationUz": "Sanaladigan «apples, bottles» bilan «How many», sanalmaydigan «water, sugar, money» bilan «How much» ishlatiladi.",
+          "simpleExplanationRu": "С исчисляемыми во множественном числе («apples, bottles») ставится «How many», с неисчисляемыми («water, money») — «How much».",
+          "structure": "How many [countable plural]? / How much [uncountable]?",
+          "positiveExamples": ["How many bottles of water do we need?"],
+          "negativeExamples": ["How much bottles of water are there? (Xato: bottles sanaladi!)"],
+          "questions": ["Which fruit bundle is cheaper?"],
+          "commonMistakes": ["Ko‘plikdagi «bottles» so‘zini «water» bilan adashtirib «How much bottles» deyish."]
+        },
+        "pronunciationFocus": {
+          "uz": "«bottles» /ˈbɒtlz/ so‘zida oxirgi «-es» jarangli /z/ tovushi bilan aytiladi.",
+          "ru": "В слове «bottles» /ˈbɒtlz/ конечное «s» звучит звонко как /z/."
+        },
+        "examples": ["Two bottles of water cost less in the weekend bundle."],
+        "guidedPractice": {
+          "uz": "E’londagi narx va miqdor shartlarini solishtiring.",
+          "ru": "Сравните цены и условия акции в объявлении."
+        },
+        "independentPractice": {
+          "uz": "E’lon savolini, «much/many» bo‘sh joyini va muqobil xato tuzatishni bajaring.",
+          "ru": "Выполните тест по объявлению, задание с пропуском и альтернативную проверку."
+        },
+        "listeningRef": null,
+        "readingRef": "lesson_eng_a2_u2_cp_concept",
+        "speakingTask": {
+          "uz": "Qaysi to‘plam arzonroq ekanini inglizcha 1 gapda ayting.",
+          "ru": "Назовите в 1 предложении вслух, какой набор выгоднее."
+        },
+        "writingTask": {
+          "uz": "Sanaladigan otlar bilan «How ...?» savolini to‘ldiring.",
+          "ru": "Заполните пропуск в вопросе с исчисляемым существительным."
+        },
+        "knowledgeCheck": "q_eng_a2_u2_cp_main",
+        "finalQuiz": "q_eng_a2_u2_cp_reinf",
+        "feedbackRules": {
+          "uz": "70% dan yuqori natija 3-modulni (Takliflar va rejalar) ochadi.",
+          "ru": "Результат 70% и выше открывает модуль 3 (Приглашения и планы)."
+        },
+        "summaryAndRevision": {
+          "uz": "Xato bo‘lsa, «How much bottles» xatosini tuzatish muqobili beriladi.",
+          "ru": "При ошибке доступна альтернативная проверка на исправление «How much bottles»."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_u2_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "2-bo‘lim sinovi tayanchi",
+          "titleRu": "Опора к проверке раздела 2",
+          "content": "E’londan foydali xaridni topishda jami narx va dona soniga qarang. Shuningdek, «bottles of water» kabi iboralarda asosiy so‘z «bottles» (sanaladigan ko‘plik) ekanini unutmang.",
+          "contentRu": "При анализе акций сравнивайте итоговую цену и количество. Помните, что в выражении «bottles of water» счёт идёт по слову «bottles» (исчисляемое множественное число)."
+        },
+        {
+          "id": "lesson_eng_a2_u2_cp_q",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "Do‘kon e’lonini tahlil qilish",
+          "titleRu": "Анализ объявления о скидке",
+          "content": "E’lonni o‘qing va ikki taklifni solishtirib to‘g‘ri javobni tanlang.",
+          "contentRu": "Прочтите объявление, сравните два предложения и выберите верный вывод.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_u2_cp_main",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_vocab",
+            "skillDomain": "reading",
+            "cefrLevel": "A2",
+            "topic": "Unit 2 Checkpoint: Comparing prices",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "Fresh Market Notice: One bottle of apple juice costs 3 dollars. Our Family Bundle has two bottles of apple juice and one bag of oranges for 7 dollars total. With a student card, you get 1 dollar off the Family Bundle.",
+            "text": "Talaba kartasi bor xaridor Family Bundle (2 shisha sharbat + 1 paket apelsin) uchun qancha to‘laydi?",
+            "textRu": "Сколько заплатит покупатель со студенческой картой за Family Bundle (2 бутылки сока + 1 пакет апельсинов)?",
+            "options": [
+              "6 dollar to‘laydi, chunki talaba kartasi bilan 1 dollar chegirma bor",
+              "7 dollar to‘laydi, chunki chegirma faqat bitta shisha sharbatga ishlaydi",
+              "5 dollar to‘laydi, chunki ikki shisha sharbatning har biri yarim narxda",
+              "8 dollar to‘laydi, chunki apelsinlar alohida hisoblanadi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "7 dollar to‘laydi, chunki chegirma faqat bitta shisha sharbatga ishlaydi": {
+                "uz": "Matnda «With a student card, you get 1 dollar off the Family Bundle» deyilgan, ya’ni 7 dollardan 1 dollar ayriladi.",
+                "ru": "В тексте указана скидка 1 доллар именно на весь набор Family Bundle (7 - 1 = 6)."
+              },
+              "5 dollar to‘laydi, chunki ikki shisha sharbatning har biri yarim narxda": {
+                "uz": "Yarim narx haqida yozilmagan; to‘plam 7 dollar, chegirma esa 1 dollar.",
+                "ru": "Про полцены в объявлении ничего не сказано; скидка составляет 1 доллар."
+              },
+              "8 dollar to‘laydi, chunki apelsinlar alohida hisoblanadi": {
+                "uz": "«for 7 dollars total» — apelsin to‘plam ichiga kiradi va chegirma narxni kamaytiradi, oshirmaydi.",
+                "ru": "Апельсины уже включены в общую цену («for 7 dollars total»), а скидка уменьшает сумму."
+              }
+            },
+            "explanation": "Family Bundle narxi 7 dollar, talaba kartasi esa 1 dollar chegirma beradi: 7 - 1 = 6 dollar.",
+            "explanationRu": "Набор стоит 7 долларов, а по студенческой карте действует скидка 1 доллар: итого 6 долларов.",
+            "wrongFeedback": "«7 dollars total» va «1 dollar off» shartlarini birga hisoblang.",
+            "wrongFeedbackRu": "Сверьте общую стоимость набора («7 dollars total») и размер скидки («1 dollar off»)."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_u2_cp_reinf",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Quantifiers: How many",
+        "difficulty": "easy",
+        "questionType": "fill_blank",
+        "evaluationMode": "deterministic",
+        "blankTemplate": "How ___ apples are in the shopping bag?",
+        "text": "Sanaladigan ko‘plik ot oldidan keladigan so‘zni yozing: «How ___ apples are in the shopping bag?»",
+        "textRu": "Вставьте нужное слово перед исчисляемым существительным во множественном числе: «How ___ apples are in the shopping bag?»",
+        "options": [],
+        "acceptedAnswers": ["many"],
+        "explanation": "«apples» sanaladigan ko‘plik ot bo‘lgani uchun «How many apples...» deyiladi.",
+        "explanationRu": "Слово «apples» исчисляемое и стоит во множественном числе, поэтому используется «How many».",
+        "wrongFeedback": "«apples» sanaladigan ko‘plik ot bo‘lgani uchun «how» dan keyin ko‘plik miqdor so‘zini yozing.",
+        "wrongFeedbackRu": "Слово «apples» исчисляемое и стоит во множественном числе — выберите соответствующее слово после «how»."
+      },
+      "alternateExercise": {
+        "id": "q_eng_a2_u2_cp_alt",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Error correction: Countable bottles",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "How much bottles of water are there?",
+        "text": "«How much bottles of water are there?» gapidagi xatoni tuzatilgan to‘g‘ri shaklni tanlang:",
+        "textRu": "Выберите исправленный вариант вопроса «How much bottles of water are there?»:",
+        "options": [
+          "How many bottles of water are there?",
+          "How much bottle of water are there?",
+          "How many water bottles is there?",
+          "How more bottles of water are there?"
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "How much bottle of water are there?": {
+            "uz": "«bottles» sanaladigan va ko‘plikda («are there») turibdi, «much» bilan birlikka aylantirib bo‘lmaydi.",
+            "ru": "Глагол «are» требует множественного числа и слова «many», а не «much bottle»."
+          },
+          "How many water bottles is there?": {
+            "uz": "Ko‘plikdagi «bottles» bilan «is» emas «are» ishlatiladi.",
+            "ru": "С существительным во множественном числе «bottles» нужен глагол «are», а не «is»."
+          },
+          "How more bottles of water are there?": {
+            "uz": "«How more» ingliz tilida miqdor so‘rovi sifatida ishlatilmaydi.",
+            "ru": "Конструкция «How more» не используется для вопроса о количестве."
+          }
+        },
+        "explanation": "Suvning o‘zi sanalmasa ham, «bottles» (shishalar) sanaladigan ko‘plik ot — shuning uchun «How many bottles...» to‘g‘ri.",
+        "explanationRu": "Хотя вода неисчисляема, «bottles» (бутылки) считаются во множественном числе, поэтому верно «How many bottles...».",
+        "wrongFeedback": "Gapda «bottles» ko‘plikda va «are there» ishlatilganini hisobga oling.",
+        "wrongFeedbackRu": "Обратите внимание на множественное число «bottles» и глагол «are there»."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_m3_plans",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "communicativeFocus": "grammar",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m3",
+      "unitId": "unit_eng_a2_u3",
+      "canDoObjective": "O‘tgan voqealarni Past Simple da aytadi, «be going to» bilan reja tuzadi va «Would you like to...?» taklifiga javob beradi.",
+      "canDoObjectiveRu": "Рассказывает о прошлых событиях в Past Simple, строит планы с «be going to» и отвечает на приглашения.",
+      "prerequisites": ["node_eng_a2_u2_checkpoint"],
+      "title": "Takliflar, o‘tgan voqealar va dam olish rejasi",
+      "titleRu": "Приглашения, прошлые события и планы на выходные",
+      "estimatedMinutes": 9,
+      "summary": "Nilufar va Jasur suhbati orqali Past Simple (went, visited), «be going to» rejasi hamda «Would you like to...?» taklif iboralarini o‘rganasiz.",
+      "summaryRu": "На примере диалога Нилуфар и Жасура вы освоите Past Simple (went, visited), планы с «be going to» и вежливые приглашения.",
+      "requiresMastery": false,
+      "pedagogy17": {
+        "intro": {
+          "uz": "Do‘stingiz bilan kecha nima qilganingizni bo‘lishish va dam olish kuniga reja tuzish suhbatning asosiy qismidir.",
+          "ru": "Умение рассказать о вчерашнем дне и договориться о планах на выходные — основа живого общения."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi Past Simple savollarida «Did + V1» shaklini qo‘llaydi, taklifga odobli javob tanlaydi va «going to» bilan reja yozadi.",
+          "ru": "Ученик правильно строит вопросы в Past Simple («Did + V1»), вежливо принимает приглашения и пишет план с «going to»."
+        },
+        "warmUp": {
+          "uz": "«go» fe’lining o‘tgan zamon shakli qanday bo‘ladi? «goed» mi yoki «went»?",
+          "ru": "Как образуется прошедшее время глагола «go»: «goed» или «went»?"
+        },
+        "vocabularyItems": [
+          { "word": "yesterday", "uz": "kecha", "ru": "вчера", "ipa": "/ˈjestədeɪ/" },
+          { "word": "be going to", "uz": "rejalashtirmoq (...moqchi)", "ru": "собираться (сделать)", "ipa": "/biː ˈɡəʊɪŋ tuː/" },
+          { "word": "would you like", "uz": "xohlaysizmi", "ru": "хотели бы вы", "ipa": "/wʊd juː laɪk/" },
+          { "word": "weekend", "uz": "dam olish kunlari", "ru": "выходные", "ipa": "/ˌwiːkˈend/" }
+        ],
+        "grammarNote": {
+          "rule": "Past Simple (visited / went / Did + V1) vs Future Plans (am/is/are + going to + V1)",
+          "simpleExplanationUz": "Tugallangan o‘tgan ish uchun Past Simple (visited, went) ishlatiladi, ammo «Did» yoki «didn't» bo‘lsa fe’l asosiy shaklga qaytadi («Did you go?», «didn't go»). Oldindan o‘ylangan reja uchun esa «am/is/are + going to + fe’l» qo‘llaniladi.",
+          "simpleExplanationRu": "Для завершённых действий в прошлом используется Past Simple (visited, went), но после «Did / didn't» глагол возвращается в начальную форму («Did you go?»). Для планов используется «am/is/are + going to + глагол».",
+          "structure": "Subject + went / visited ... | Did + Subject + go? | Subject + am/is/are + going to + V1",
+          "positiveExamples": [
+            "Yesterday I went to the history museum.",
+            "I'm going to visit the science fair on Saturday."
+          ],
+          "negativeExamples": [
+            "Did you went to the park? (Xato! To‘g‘risi: Did you go to the park?)"
+          ],
+          "questions": [
+            "What did you do yesterday?",
+            "Would you like to come with me?"
+          ],
+          "commonMistakes": [
+            "«Did» yordamchi fe’lidan keyin yana o‘tgan zamon shaklini («Did you went») yozish yoki «going to» dan oldin «am/is/are» ni tushirib qoldirish."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "«I'd love to!» /aɪd lʌv tuː/ iborasida «d» qisqa eshitiladi va «love» ga urg‘u tushadi.",
+          "ru": "Во фразе «I'd love to!» /aɪd lʌv tuː/ главное ударение падает на «love»."
+        },
+        "examples": [
+          "Yesterday I went to the history museum.",
+          "Would you like to visit the science fair on Saturday? — I'd love to!"
+        ],
+        "guidedPractice": {
+          "uz": "Muzey va taqvim tasvirini, Nilufar va Jasur suhbatini hamda 4 ta flashcardni o‘rganing.",
+          "ru": "Рассмотрите иллюстрацию, прослушайте диалог Нилуфар и Жасура и изучите 4 карточки."
+        },
+        "independentPractice": {
+          "uz": "Taklifga mos javobni tanlang, «going to» bilan reja yozing va Past Simple savol xatosini tuzating.",
+          "ru": "Выберите ответ на приглашение, напишите план с «going to» и исправьте ошибку в Past Simple."
+        },
+        "listeningRef": "media_eng_a2_m3_plans_dialogue",
+        "readingRef": "lesson_eng_a2_m3_concept",
+        "speakingTask": {
+          "uz": "Do‘stingizni dam olish kunida kino yoki ko‘rgazmaga «Would you like to...?» bilan taklif qiling.",
+          "ru": "Пригласите друга на выставку или в кино на выходных с фразой «Would you like to...?»."
+        },
+        "writingTask": {
+          "uz": "Yakshanba kungi rejangiz haqida «be going to» bilan 1 ta to‘liq gap yozing.",
+          "ru": "Напишите 1 полное предложение о плане на воскресенье с конструкцией «be going to»."
+        },
+        "knowledgeCheck": "q_eng_a2_m3_invite_conv",
+        "finalQuiz": "q_eng_a2_m3_plan_text",
+        "feedbackRules": {
+          "uz": "«I'm going to» da bog‘lovchi fe’l tushib qolishi va «Did + went» xatosi batafsil izohlanadi.",
+          "ru": "Разбираются пропуск глагола «to be» перед «going to» и ошибка «Did + went»."
+        },
+        "summaryAndRevision": {
+          "uz": "O‘tgan zamon va kelajak rejasini ajratish 3-bo‘lim sinovida tekshiriladi.",
+          "ru": "Различение прошедшего времени и планов проверяется в контрольной точке раздела 3."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_m3_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Kecha (Past Simple) va Reja (be going to)",
+          "titleRu": "Прошлое (Past Simple) и Планы (be going to)",
+          "content": "Kecha bo‘lgan ish uchun Past Simple (visited, went) ishlatiladi. Savolda esa «Did» o‘tgan zamonni olgani uchun asosiy fe’l o‘zgarmaydi («Did you go?»). Dam olish rejasiga «am/is/are going to + fe’l», taklifga esa «Would you like to...?» — «I'd love to!» ishlatiladi.",
+          "contentRu": "О вчерашних событиях говорят в Past Simple (visited, went), а в вопросе с «Did» глагол остаётся в начальной форме («Did you go?»). Для планов служит «am/is/are going to + глагол», для приглашения — «Would you like to...?».",
+          "highlightNotes": [
+            "Past Simple: I went to the museum yesterday.",
+            "Question: Did you go to the park? (NOT Did you went)",
+            "Plan: I'm going to visit the science fair.",
+            "Invitation: Would you like to come? — I'd love to!"
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m3_visual",
+          "stepNumber": 2,
+          "type": "visual_example",
+          "title": "Kecha va dam olish kunlari taqvimi",
+          "titleRu": "Вчерашнее событие и план на выходные",
+          "content": "Chap tomonda kecha muzeyga borilgani, o‘ng tomonda esa dam olish kunlariga belgilangan reja va soat tasvirlangan.",
+          "contentRu": "Слева показан вчерашний поход в музей, а справа — отмеченные выходные дни, время и билет на мероприятие.",
+          "media": {
+            "id": "media_eng_a2_m3_weekend_calendar_img",
+            "kind": "image",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+            "title": "Kecha va dam olish kunlari taqqoslamasi",
+            "titleUz": "Kecha va dam olish kunlari taqqoslamasi",
+            "titleRu": "Сравнение прошедших событий и планов на выходные",
+            "alt": "Ikki bo‘lakli rasm: chapda ustunli muzey va fotoapparat, o‘ngda ikki katagi ajratilgan taqvim, strelkali soat va chipta",
+            "altUz": "Ikki bo‘lakli rasm: chapda ustunli muzey va fotoapparat, o‘ngda ikki katagi ajratilgan taqvim, strelkali soat va chipta",
+            "altRu": "Иллюстрация из двух панелей: слева музей и фотоаппарат, справа настенный календарь с двумя выделенными клетками, часы и билет",
+            "reviewStatus": "approved"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m3_audio",
+          "stepNumber": 3,
+          "type": "audio_simulation",
+          "title": "Tinglash: Nilufar va Jasurning rejalari",
+          "titleRu": "Аудирование: Планы Нилуфар и Жасура",
+          "content": "Suhbatni tinglang: Jasur kecha qayerga bordi va Nilufar shanba kuni soat nechada ko‘rgazmaga bormoqchi?",
+          "contentRu": "Послушайте диалог: куда вчера ходил Жасур и во сколько Нилуфар собирается на научную выставку в субботу?",
+          "media": {
+            "id": "media_eng_a2_m3_plans_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m3-plans-dialogue.wav",
+            "title": "O‘tgan kun va dam olish rejasi suhbati",
+            "titleUz": "O‘tgan kun va dam olish rejasi suhbati",
+            "titleRu": "Диалог о прошедшем дне и планах на выходные",
+            "transcript": "Nilufar: Hi Jasur! What did you do yesterday?\nJasur: Yesterday I went to the history museum with my cousin and took some photos. What about this weekend?\nNilufar: I'm going to visit the science fair on Saturday at half past two in the afternoon. Would you like to come with me?\nJasur: I'd love to! Let's meet outside the entrance at two fifteen.",
+            "posterImage": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+            "posterAlt": "Chapda ustunli bino va fotoapparat, o‘ngda kalendar va chipta tasvirlangan",
+            "posterAltUz": "Chapda ustunli bino va fotoapparat, o‘ngda kalendar va chipta tasvirlangan",
+            "posterAltRu": "Слева здание с колоннами и камера, справа настенный календарь и билет",
+            "durationSeconds": 20.962,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Nilufar: Hi Jasur! What did you do yesterday?\nJasur: Yesterday I went to the history museum with my cousin and took some photos. What about this weekend?\nNilufar: I'm going to visit the science fair on Saturday at half past two in the afternoon. Would you like to come with me?\nJasur: I'd love to! Let's meet outside the entrance at two fifteen.",
+            "speakerName": "Nilufar & Jasur"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m3_flashcards",
+          "stepNumber": 4,
+          "type": "flashcard",
+          "title": "Vaqt va taklif kartochkalari",
+          "titleRu": "Карточки времени и приглашений",
+          "content": "Talaffuzni tinglang va har bir iboraning vazifasini eslang.",
+          "contentRu": "Прослушайте произношение и закрепите употребление каждой фразы.",
+          "flashcards": [
+            {
+              "id": "fc_eng_a2_m3_1",
+              "front": "yesterday",
+              "backUz": "kecha",
+              "backRu": "вчера",
+              "partOfSpeech": "adverb",
+              "ipa": "/ˈjestədeɪ/",
+              "ipaAmE": "/ˈjestərdeɪ/",
+              "cefrLevel": "A2",
+              "example": "Yesterday I visited the history museum with my cousin.",
+              "exampleUz": "Kecha men amakivachcham bilan tarix muzeyiga bordim.",
+              "exampleRu": "Вчера я сходил в исторический музей с двоюродным братом.",
+              "audioSrc": "/lesson-media/english/a2/a2-m3-yesterday.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+              "alt": "Chap panelda ustunli bino va fotoapparat, o‘ngda esa oq katakli taqvim",
+              "altRu": "Левая карточка со зданием с колоннами и камерой, рядом настенная сетка дат",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m3_2",
+              "front": "be going to",
+              "backUz": "rejalashtirmoq",
+              "backRu": "намереваться",
+              "partOfSpeech": "phrase",
+              "ipa": "/biː ˈɡəʊɪŋ tuː/",
+              "ipaAmE": "/biː ˈɡoʊɪŋ tuː/",
+              "cefrLevel": "A2",
+              "example": "We are going to meet outside the entrance at two fifteen.",
+              "exampleUz": "Biz soat ikkiyu o‘n beshda kirish oldida uchrashamiz.",
+              "exampleRu": "Мы встретимся у входа в два пятнадцать.",
+              "audioSrc": "/lesson-media/english/a2/a2-m3-be-going-to.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+              "alt": "O‘rta ko‘k strelka orqali taqvim va tadbir chiptasiga ulangan rasm",
+              "altRu": "Синяя стрелка перехода от прошлой карточки к календарю и билету",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m3_3",
+              "front": "would you like",
+              "backUz": "istaysizmi",
+              "backRu": "желаете ли",
+              "partOfSpeech": "phrase",
+              "ipa": "/wʊd juː laɪk/",
+              "ipaAmE": "/wʊd juː laɪk/",
+              "cefrLevel": "A2",
+              "example": "Would you like to join our robotics club on Saturday?",
+              "exampleUz": "Shanba kuni robototexnika klubimizga qo‘shilishni istaysizmi?",
+              "exampleRu": "Хотите присоединиться к нашему клубу робототехники в субботу?",
+              "audioSrc": "/lesson-media/english/a2/a2-m3-would-you-like.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+              "alt": "Yulduzchali tadbir chiptasi va soat ko‘rsatilgan o‘ng panel",
+              "altRu": "Правая панель с билетом со звёздочкой и циферблатом часов",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m3_4",
+              "front": "weekend",
+              "backUz": "hafta oxiri",
+              "backRu": "суббота и воскресенье",
+              "partOfSpeech": "noun",
+              "ipa": "/ˌwiːkˈend/",
+              "ipaAmE": "/ˈwiːkend/",
+              "cefrLevel": "A2",
+              "example": "What are your plans for this weekend?",
+              "exampleUz": "Bu shanba-yakshanba uchun rejalaringiz qanday?",
+              "exampleRu": "Какие у вас планы на конец этой недели?",
+              "audioSrc": "/lesson-media/english/a2/a2-m3-weekend.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+              "alt": "O‘ng chetidagi ikki ustuni yashil rangda ajratilgan oy taqvimi jadvali",
+              "altRu": "Сетка календаря, где два последних столбца выделены зелёным цветом",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m3_conv_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Taklifga javob berish",
+          "titleRu": "Ответ на приглашение",
+          "content": "Do‘stingizning kutubxonaga borish taklifiga eng tabiiy va grammatik to‘g‘ri javobni tanlang.",
+          "contentRu": "Выберите естественный и грамматически верный ответ на приглашение друга.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m3_invite_conv",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "A2",
+            "topic": "Responding to invitations",
+            "difficulty": "easy",
+            "questionType": "conversation_completion",
+            "evaluationMode": "deterministic",
+            "dialogueContext": [
+              "Nilufar: «Would you like to come to the library on Sunday?»",
+              "Jasur: «___»"
+            ],
+            "text": "Jasur yakshanba kuni taklifni mamnuniyat bilan qabul qilsa, qaysi javobni aytadi?",
+            "textRu": "Какой фразой Жасур вежливо примет приглашение в библиотеку?",
+            "options": [
+              "Yes, I'd love to! What time shall we meet?",
+              "Yes, I am like to! When we meeting?",
+              "I went to the library yesterday afternoon.",
+              "No, I don't went there on Sunday."
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Yes, I am like to! When we meeting?": {
+                "uz": "«I am like to» xato — «Would you like to» taklifiga «I'd love to» (I would love to) deb javob beriladi.",
+                "ru": "Фраза «I am like to» неверна; на приглашение отвечают «I'd love to»."
+              },
+              "I went to the library yesterday afternoon.": {
+                "uz": "Bu javob kechagi ish haqida, ammo Nilufar yakshanba kungi taklif uchun rozilik so‘ramoqda.",
+                "ru": "Это рассказ о вчерашнем дне, а не ответ на приглашение на воскресенье."
+              },
+              "No, I don't went there on Sunday.": {
+                "uz": "«don't went» grammatik jihatdan xato (o‘tgan inkor — «didn't go», kelajak — «can't»).",
+                "ru": "Сочетание «don't went» грамматически ошибочно."
+              }
+            },
+            "explanation": "«Would you like to...?» taklifini qabul qilishda «Yes, I'd love to!» eng tabiiy ibora.",
+            "explanationRu": "Фраза «Yes, I'd love to!» — естественное согласие на приглашение «Would you like to...?».",
+            "wrongFeedback": "Taklifni xushmuomalalik bilan qabul qilish iborasi va uchrashuv vaqtini so‘raydigan to‘g‘ri savol tuzilishini tanlang.",
+            "wrongFeedbackRu": "Выберите вежливую форму согласия на приглашение и грамматически верный вопрос о времени встречи."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m3_text_q",
+          "stepNumber": 6,
+          "type": "interactive_question",
+          "title": "Reja tuzib yozish",
+          "titleRu": "Написание плана",
+          "content": "Berilgan ma’no asosida yakshanba kungi rejangizni ingliz tilida yozing.",
+          "contentRu": "Напишите предложение о своём плане на воскресенье по-английски.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m3_plan_text",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "writing",
+            "cefrLevel": "A2",
+            "topic": "Writing a plan with going to",
+            "difficulty": "medium",
+            "questionType": "text_input",
+            "evaluationMode": "deterministic",
+            "text": "«Men yakshanba kuni buvimni ziyorat qilmoqchiman» fikrini reja tuzilmasi bilan inglizcha to‘liq gap qilib yozing («I ...»):",
+            "textRu": "Переведите на английский предложение о плане: «Я собираюсь навестить бабушку в воскресенье» (начните с «I ...»):",
+            "options": [],
+            "acceptedAnswers": [
+              "I'm going to visit my grandmother on Sunday",
+              "I am going to visit my grandmother on Sunday",
+              "I'm going to visit my grandma on Sunday",
+              "I am going to visit my grandma on Sunday",
+              "I'm going to visit grandma on Sunday",
+              "I am going to visit grandma on Sunday",
+              "I'm going to see my grandmother on Sunday",
+              "I am going to see my grandmother on Sunday"
+            ],
+            "explanation": "Reja uchun «I'm / I am going to visit my grandmother on Sunday.» tuzilmasi ishlatiladi.",
+            "explanationRu": "Для плана используется конструкция «I'm / I am going to visit my grandmother on Sunday.».",
+            "wrongFeedback": "Ega + to be (am/is/are) + going to + asosiy fe’l + to‘ldiruvchi va vaqt holi tartibini saqlab, inglizcha to‘liq gap tuzing.",
+            "wrongFeedbackRu": "Соблюдайте порядок слов: подлежащее + to be (am/is/are) + going to + основной глагол + дополнение и указание времени."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_m3_err_did",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Error correction: Past Simple question",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "Did you went to the park yesterday?",
+        "text": "«Did you went to the park yesterday?» savolidagi grammatik xatoni tuzatilgan to‘g‘ri variantni tanlang:",
+        "textRu": "Выберите правильно исправленный вариант вопроса «Did you went to the park yesterday?»:",
+        "options": [
+          "Did you go to the park yesterday?",
+          "Do you went to the park yesterday?",
+          "Did you going to the park yesterday?",
+          "Were you go to the park yesterday?"
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "Do you went to the park yesterday?": {
+            "uz": "«yesterday» o‘tgan zamon bo‘lgani uchun yordamchi fe’l «Do» emas «Did» bo‘lishi kerak.",
+            "ru": "Со словом «yesterday» нужен прошедший вспомогательный глагол «Did», а не «Do»."
+          },
+          "Did you going to the park yesterday?": {
+            "uz": "«Did» dan keyin «-ing» shakli emas, fe’lning asosiy shakli («go») keladi.",
+            "ru": "После «Did» ставится начальная форма глагола («go»), а не форма с «-ing»."
+          },
+          "Were you go to the park yesterday?": {
+            "uz": "«go» harakat fe’li savolida «Were» emas «Did» yordamchi fe’li ishlatiladi.",
+            "ru": "Для вопроса с глаголом действия «go» используется «Did», а не «Were»."
+          }
+        },
+        "explanation": "Past Simple savolida «Did» o‘tgan zamonni ko‘rsatgani uchun asosiy fe’l boshlang‘ich shaklda («go») yoziladi.",
+        "explanationRu": "В вопросе Past Simple показатель времени уже в слове «Did», поэтому смысловой глагол ставится в начальную форму («go»).",
+        "wrongFeedback": "«Did» yordamchi fe’lidan keyin asosiy fe’lning birinchi (boshlang‘ich) shakli kelishini eslang.",
+        "wrongFeedbackRu": "Вспомните правило: после «Did» всегда используется начальная форма смыслового глагола (V1)."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_u3_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m3",
+      "unitId": "unit_eng_a2_u3",
+      "canDoObjective": "O‘tgan hafta voqealari va ertangi reja zamonlarini aralashtirmay qo‘llaydi, taklifni odob bilan rad etadi.",
+      "canDoObjectiveRu": "Чётко различает маркеры прошлого и будущего с «going to», вежливо отклоняет приглашение с причиной.",
+      "prerequisites": ["node_eng_a2_m3_plans"],
+      "title": "3-bo‘lim sinovi: O‘tgan zamon va kelajak rejasi",
+      "titleRu": "Проверка раздела 3: Прошлое и планы на будущее",
+      "estimatedMinutes": 6,
+      "summary": "Kecha bo‘lib o‘tgan futbol o‘yini va ertangi kino rejasini vaqt ko‘rsatkichlariga qarab farqlaysiz hamda taklifni muloyimlik bilan rad etishni sinaysiz.",
+      "summaryRu": "Вы отработаете различие между прошедшими событиями и планами на завтра, а также вежливый отказ от приглашения.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 3-bo‘lim yakuniy sinovi bo‘lib, rasmiy CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 3; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Suhbatda «last week» va «tomorrow» so‘zlariga qarab zamonni to‘g‘ri tanlash muhim.",
+          "ru": "В разговоре важно выбирать время глагола по маркерам «last week» и «tomorrow»."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi vaqt belgisiga mos zamonni tanlaydi, «going to» gapini tartiblaydi va rad javobini odobli beradi.",
+          "ru": "Ученик соотносит время с временным маркером, собирает фразу с «going to» и вежливо отказывается от приглашения."
+        },
+        "warmUp": {
+          "uz": "«tomorrow» so‘zi bilan «played» ishlatiladimi yoki «are going to»?",
+          "ru": "Что сочетается со словом «tomorrow»: «played» или «are going to»?"
+        },
+        "vocabularyItems": [
+          { "word": "last week", "uz": "o‘tgan hafta", "ru": "на прошлой неделе", "ipa": "/lɑːst wiːk/" },
+          { "word": "sorry, I can't", "uz": "uzr, bora olmayman", "ru": "извини, я не смогу", "ipa": "/ˈsɒri aɪ kɑːnt/" }
+        ],
+        "grammarNote": {
+          "rule": "Time Markers Control Tense (yesterday / last week -> Past Simple; tomorrow / next weekend -> be going to)",
+          "simpleExplanationUz": "«yesterday, last week» ko‘rsatkichlari Past Simple ni, «tomorrow, tonight, after lunch» esa reja tuzilmasini («be going to») talab qiladi.",
+          "simpleExplanationRu": "Маркеры «yesterday, last week» требуют Past Simple, а «tomorrow, tonight, after lunch» указывают на план с «be going to».",
+          "structure": "We watched ... last week. | We are going to watch ... tomorrow.",
+          "positiveExamples": ["Yesterday we played tennis, and tomorrow we are going to watch a film."],
+          "negativeExamples": ["Yesterday we are going to play tennis. (Xato: vaqt o‘tgan!)"],
+          "questions": ["Would you like to go to the cinema tonight?"],
+          "commonMistakes": ["Taklifni rad etganda sababsiz qo‘pol «No» deyish yoki vaqt ko‘rsatkichiga zid zamon tanlash."]
+        },
+        "pronunciationFocus": {
+          "uz": "«can't» BrE da /kɑːnt/, AmE da /kænt/ shaklida aniq talaffuz qilinadi.",
+          "ru": "Слово «can't» произносится чётко: в BrE /kɑːnt/, в AmE /kænt/."
+        },
+        "examples": ["I'm sorry, I can't come tonight because I have to help my parents."],
+        "guidedPractice": {
+          "uz": "Vaqt ko‘rsatkichlarini tekshiring.",
+          "ru": "Сверьте временные маркеры перед выбором ответа."
+        },
+        "independentPractice": {
+          "uz": "Zamon tanlash testi, gap tartiblash va taklifni rad etish muqobilini bajaring.",
+          "ru": "Выполните тест на выбор времени, порядок слов и альтернативный диалог."
+        },
+        "listeningRef": null,
+        "readingRef": "lesson_eng_a2_u3_cp_concept",
+        "speakingTask": {
+          "uz": "Kecha qilgan bitta ishingiz va ertangi bitta rejangizni aytib bering.",
+          "ru": "Назовите одно вчерашнее действие и один план на завтра."
+        },
+        "writingTask": {
+          "uz": "«We are going to meet after lunch.» gapini tartiblang.",
+          "ru": "Составьте предложение «We are going to meet after lunch.»."
+        },
+        "knowledgeCheck": "q_eng_a2_u3_cp_main",
+        "finalQuiz": "q_eng_a2_u3_cp_reinf",
+        "feedbackRules": {
+          "uz": "70% dan yuqori natija 4-modulni (E’lonlar va xabar yozish) ochadi.",
+          "ru": "Результат 70% и выше открывает модуль 4 (Объявления и сообщения)."
+        },
+        "summaryAndRevision": {
+          "uz": "Xato qilinsa, taklifni muloyim rad etish suhbati muqobil sifatida beriladi.",
+          "ru": "При ошибке предлагается альтернативное задание на вежливый отказ."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_u3_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Vaqt belgisiga qarab zamon tanlash",
+          "titleRu": "Выбор времени по временному маркеру",
+          "content": "Har bir gapda vaqt so‘ziga e’tibor bering: «yesterday / last Saturday» o‘tgan zamon (played, watched) talab qiladi, «tomorrow / this weekend» esa «am/is/are going to» rejasi bilan keladi.",
+          "contentRu": "Всегда проверяйте маркер времени в предложении: «yesterday / last Saturday» требуют Past Simple, а «tomorrow / this weekend» — конструкции «am/is/are going to»."
+        },
+        {
+          "id": "lesson_eng_a2_u3_cp_q",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "O‘tgan ish va ertangi reja farqi",
+          "titleRu": "Различие прошлого и будущего плана",
+          "content": "Suhbatdagi vaqt ko‘rsatkichlariga mos keladigan to‘g‘ri javobni tanlang.",
+          "contentRu": "Выберите реплику, которая верно согласуется с временными маркерами.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_u3_cp_main",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "A2",
+            "topic": "Unit 3 Checkpoint: Past vs Going to",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Sardorning «What did you do last Saturday, and what are your plans for tomorrow?» savoliga qaysi javob vaqt jihatdan to‘g‘ri?",
+            "textRu": "Какой ответ на вопрос Сардора «What did you do last Saturday, and what are your plans for tomorrow?» грамматически верен?",
+            "options": [
+              "Last Saturday we watched a football match, and tomorrow we are going to go to the cinema.",
+              "Last Saturday we are going to watch a football match, and tomorrow we watched the cinema.",
+              "Last Saturday we watch a football match, and tomorrow we going to visit the cinema.",
+              "Last Saturday we didn't watched a match, and tomorrow we visit the cinema yesterday."
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Last Saturday we are going to watch a football match, and tomorrow we watched the cinema.": {
+                "uz": "Zamonlar teskari qo‘yilgan: «Last Saturday» o‘tgan zamon («watched»), «tomorrow» esa reja («are going to»).",
+                "ru": "Времена перепутаны местами: для «Last Saturday» нужен Past Simple, а для «tomorrow» — «are going to»."
+              },
+              "Last Saturday we watch a football match, and tomorrow we going to visit the cinema.": {
+                "uz": "«Last Saturday» bilan «watched» kerak, «we going to» da esa «are» bog‘lovchi fe’li tushib qolgan.",
+                "ru": "Для «Last Saturday» нужна форма «watched», а перед «going to» пропущен глагол «are»."
+              },
+              "Last Saturday we didn't watched a match, and tomorrow we visit the cinema yesterday.": {
+                "uz": "«didn't» dan keyin «watched» emas «watch» keladi va «tomorrow» bilan «yesterday» bir gapda mantiqsiz.",
+                "ru": "После «didn't» ставится «watch» без «-ed», а «tomorrow» и «yesterday» противоречат друг другу."
+              }
+            },
+            "explanation": "«Last Saturday» -> Past Simple («watched»), «tomorrow» -> reja («are going to go»).",
+            "explanationRu": "«Last Saturday» требует Past Simple («watched»), а «tomorrow» — плана «are going to go».",
+            "wrongFeedback": "«Last Saturday» uchun o‘tgan zamon (-ed) va «tomorrow» uchun «to be + going to» reja shaklini tekshiring.",
+            "wrongFeedbackRu": "Сверьте прошедшее время для «Last Saturday» и конструкцию плана «to be + going to» для «tomorrow»."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_u3_cp_reinf",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Future plan word order",
+        "difficulty": "easy",
+        "questionType": "sentence_order",
+        "evaluationMode": "deterministic",
+        "text": "«Biz tushlikdan keyin uchrashamiz (uchrashmoqchimiz)» gapini to‘g‘ri tartibda tuzing:",
+        "textRu": "Составьте предложение «Мы собираемся встретиться после обеда» в правильном порядке:",
+        "options": [],
+        "orderedTokens": ["We", "are", "going to", "meet", "after", "lunch."],
+        "acceptedAnswers": ["We are going to meet after lunch."],
+        "explanation": "To‘g‘ri tartib: We + are + going to + meet + after + lunch.",
+        "explanationRu": "Правильный порядок: We + are + going to + meet + after + lunch.",
+        "wrongFeedback": "Gapni ega + to be + kelajak reja shakli + asosiy fe’l + oxirida vaqt iborasi tartibida tuzing.",
+        "wrongFeedbackRu": "Составьте предложение в порядке: подлежащее + to be + конструкция будущего плана + основной глагол + указание времени в конце."
+      },
+      "alternateExercise": {
+        "id": "q_eng_a2_u3_cp_alt",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "speaking",
+        "cefrLevel": "A2",
+        "topic": "Declining an invitation politely",
+        "difficulty": "medium",
+        "questionType": "conversation_completion",
+        "evaluationMode": "deterministic",
+        "dialogueContext": [
+          "Aziza: «Would you like to go to the concert with us tonight?»",
+          "Timur: «___»"
+        ],
+        "text": "Qayta sinov: Timur bugun kechqurun band bo‘lsa, taklifni qanday odob va sabab bilan rad etadi?",
+        "textRu": "Повторная проверка: как Тимур вежливо отклонит приглашение, объяснив причину?",
+        "options": [
+          "I'm sorry, I can't. I have to finish my history project tonight.",
+          "No, I don't want your concert. Goodbye.",
+          "Sorry, I couldn't went yesterday evening.",
+          "Yes, I'd love to, so I am staying at home."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "No, I don't want your concert. Goodbye.": {
+            "uz": "Bu juda qo‘pol rad javobi; A2 muloqotida «I'm sorry, I can't» va qisqa sabab aytiladi.",
+            "ru": "Это слишком резкий отказ; вежливо сказать «I'm sorry, I can't» и указать причину."
+          },
+          "Sorry, I couldn't went yesterday evening.": {
+            "uz": "«couldn't went» grammatik xato va savol bugun kechqurun («tonight») haqida.",
+            "ru": "«couldn't went» грамматически неверно, к тому же речь идёт о сегодняшнем вечере («tonight»)."
+          },
+          "Yes, I'd love to, so I am staying at home.": {
+            "uz": "«Yes, I'd love to» rozilik bildiradi, uyda qolish bilan mantiqan mos kelmaydi.",
+            "ru": "«Yes, I'd love to» означает согласие, что противоречит «staying at home»."
+          }
+        },
+        "explanation": "«I'm sorry, I can't» + sabab («I have to finish...») — taklifni odobli rad etish qolipi.",
+        "explanationRu": "«I'm sorry, I can't» с кратким объяснением причины — вежливая форма отказа.",
+        "wrongFeedback": "Taklifni odobli uzr bilan rad etish va bunga qisqa, mantiqiy sabab keltirish qolipidagi variantni tanlang.",
+        "wrongFeedbackRu": "Выберите вариант с вежливым извинением при отказе и краткой логичной причиной."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_m4_messages",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "writing",
+      "communicativeFocus": "writing",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m4",
+      "unitId": "unit_eng_a2_u4",
+      "canDoObjective": "Jadval o‘zgarishi haqidagi e’lonni o‘qib tushunadi va «before / after / then» hamda «can / have to» bilan qisqa xabar yozadi.",
+      "canDoObjectiveRu": "Понимает объявления об изменении расписания и пишет короткое сообщение с «before / after / then» и «can / have to».",
+      "prerequisites": ["node_eng_a2_u3_checkpoint"],
+      "title": "Qisqa e’lonlar va uchrashuv xabarlari",
+      "titleRu": "Короткие объявления и сообщения о встрече",
+      "estimatedMinutes": 9,
+      "summary": "Vokzal va klub e’lonlaridan yangi vaqt va joyni topishni, so‘ng do‘stingizga «before / then» va «have to / can» yordamida qisqa xabar yozishni o‘rganasiz.",
+      "summaryRu": "Вы научитесь находить новое время и место в объявлениях и писать другу сообщение с «before / then» и «have to / can».",
+      "requiresMastery": false,
+      "officialCefrDisclaimerUz": "Bu mustaqil yozma mashq va o‘zini baholash vositasidir; rasmiy CEFR sertifikati bermaydi.",
+      "officialCefrDisclaimerRu": "Это самостоятельное письменное задание и самооценка; оно не даёт официальный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Xona yoki poyezd vaqti o‘zgarganda e’londan aniq dalilni tez topish va do‘stga xabar berish juda muhim.",
+          "ru": "При изменении расписания важно быстро понять детали объявления и предупредить друга сообщением."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi e’londagi o‘zgarishni aniqlaydi, «before / after / then» bilan 3–4 gapli xabar yozadi va «have to» ni qo‘llaydi.",
+          "ru": "Ученик находит изменения в объявлении, пишет сообщение из 3–4 фраз с «before / then» и использует «have to»."
+        },
+        "warmUp": {
+          "uz": "Uchrashuv xona raqami o‘zgarsa, do‘stingizga xabarda qaysi 3 ma’lumotni albatta yozasiz?",
+          "ru": "Какие 3 детали вы обязательно напишете другу, если время и место встречи изменились?"
+        },
+        "vocabularyItems": [
+          { "word": "delayed", "uz": "kechiktirilgan", "ru": "задержан", "ipa": "/dɪˈleɪd/" },
+          { "word": "platform", "uz": "vokzal perroni", "ru": "перрон вокзала", "ipa": "/ˈplætfɔːm/" },
+          { "word": "have to", "uz": "majbur bo‘lmoq", "ru": "приходиться", "ipa": "/ˈhæf tuː/" },
+          { "word": "before", "uz": "oldin (avval)", "ru": "до (перед тем как)", "ipa": "/bɪˈfɔː/" }
+        ],
+        "grammarNote": {
+          "rule": "Time Connectors (before, after, then) + Modals (can / have to)",
+          "simpleExplanationUz": "Voqealar ketma-ketligini bog‘lash uchun «before» (oldin), «after» (keyin), «then» (so‘ng) ishlatiladi. Zarurat uchun «have to», imkoniyat yoki iltimos uchun «can» qo‘llanadi: «We have to arrive before four o'clock. Can you meet me at Gate 2?»",
+          "simpleExplanationRu": "Для последовательности действий используйте «before» (до), «after» (после), «then» (затем). Для необходимости — «have to», для просьбы — «can».",
+          "structure": "We have to [verb] before [time]. Then we can [verb].",
+          "positiveExamples": [
+            "We have to arrive at Platform 5 before 14:30.",
+            "Can you bring the tickets? Then we can sit together."
+          ],
+          "negativeExamples": [
+            "We have to arriving early. (Xato! «have to» dan keyin fe’l asosiy shaklda keladi.)"
+          ],
+          "questions": [
+            "Can you meet me outside Gate 2 before three o'clock?"
+          ],
+          "commonMistakes": [
+            "«have to» ni 3-shaxs birlikda «has to» qilmaslik yoki «before» bilan «after» ma’nosini almashtirib qo‘yish."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "«delayed» /dɪˈleɪd/ so‘zida urg‘u ikkinchi bo‘g‘inga tushadi; «have to» bog‘lanishda /ˈhæftə/ kabi eshitiladi.",
+          "ru": "В слове «delayed» /dɪˈleɪd/ ударение на втором слоге; сочетание «have to» в беглой речи звучит как /ˈhæftə/."
+        },
+        "examples": [
+          "The afternoon club moved from Room 12 to Room 24 after three o'clock.",
+          "We have to bring our notebooks before the session starts."
+        ],
+        "guidedPractice": {
+          "uz": "Vokzal soati va smartfon xabari tasvirini ko‘rib, 4 ta flashcardni mustahkamlang.",
+          "ru": "Изучите иллюстрацию вокзала и смартфона и закрепите 4 карточки."
+        },
+        "independentPractice": {
+          "uz": "Klub e’lonini tahlil qiling, do‘stingizga xabar yozing va modal zarurat bo‘sh joyini to‘ldiring.",
+          "ru": "Проанализируйте объявление клуба, напишите сообщение другу и заполните пропуск с «have to»."
+        },
+        "listeningRef": null,
+        "readingRef": "lesson_eng_a2_m4_visual",
+        "speakingTask": {
+          "uz": "Yozgan xabaringizni ovoz chiqarib o‘qing va o‘zingizni tekshiring.",
+          "ru": "Прочитайте написанное сообщение вслух."
+        },
+        "writingTask": {
+          "uz": "Yangi vaqt va joy haqida 3–4 gapli xabar yozish.",
+          "ru": "Написание сообщения из 3–4 предложений о новом времени и месте."
+        },
+        "knowledgeCheck": "q_eng_a2_m4_notice_mcq",
+        "finalQuiz": "q_eng_a2_m4_writing_prompt",
+        "feedbackRules": {
+          "uz": "O‘quvchi 3 mezon asosida xabarini tekshiradi va «have to» bo‘sh joyini mustahkamlaydi.",
+          "ru": "Ученик проверяет письмо по 3 критериям и закрепляет конструкцию «have to»."
+        },
+        "summaryAndRevision": {
+          "uz": "E’lon o‘qish va vaqt bog‘lovchilari A2 yakuniy imtihoniga tayyorlaydi.",
+          "ru": "Чтение объявлений и связки времени готовят к итоговому тесту A2."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_m4_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Xabarlarda vaqt bog‘lovchilari va modallar",
+          "titleRu": "Связки времени и модальные глаголы в сообщениях",
+          "content": "Qisqa xabarda harakat tartibini «before» (avval), «after» (keyin) va «then» (so‘ng) bilan bog‘lang. Zaruratni «have to», iltimosni esa «Can you...?» bilan ayting.",
+          "contentRu": "В коротком сообщении соединяйте шаги словами «before» (до), «after» (после) и «then» (затем). Необходимость передавайте через «have to», а вежливую просьбу — через «Can you...?».",
+          "highlightNotes": [
+            "before 16:00 — soat 16:00 dan oldin",
+            "after the class — darsdan keyin",
+            "then meet at Gate 2 — so‘ng 2-darvozada uchrashing",
+            "We have to arrive early / Can you call me?"
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m4_visual",
+          "stepNumber": 2,
+          "type": "visual_example",
+          "title": "Vokzal e’loni va mobil xabar",
+          "titleRu": "Вокзал и сообщение в телефоне",
+          "content": "Rasmda poyezd bekati, osma soat va telefonda kelgan ogohlantirish xabari ko‘rsatilgan. O‘zgarishni bilganingizdan so‘ng do‘stingizga aniq vaqt va joyni yozib yuboring.",
+          "contentRu": "На рисунке изображены перрон вокзала, часы и экран смартфона с уведомлением о задержке. Получив объявление, важно сразу сообщить другу новое время и место.",
+          "media": {
+            "id": "media_eng_a2_m4_station_message_img",
+            "kind": "image",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-m4-station-message.png",
+            "title": "Vokzal perroni va smartfon xabari",
+            "titleUz": "Vokzal perroni va smartfon xabari",
+            "titleRu": "Перрон вокзала и сообщение на смартфоне",
+            "alt": "Vokzal soyaboni ostida turgan poyezd, osma strelkali soat va ekranda rangli yozishma pufakchalari ko‘ringan smartfon",
+            "altUz": "Vokzal soyaboni ostida turgan poyezd, osma strelkali soat va ekranda rangli yozishma pufakchalari ko‘ringan smartfon",
+            "altRu": "Поезд под навесом вокзала, подвесные стрелочные часы и смартфон с цветными окнами сообщений",
+            "reviewStatus": "approved"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m4_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "E’lon va xabar kartochkalari",
+          "titleRu": "Карточки объявлений и сообщений",
+          "content": "So‘zlarning talaffuzini tinglang va ma’nosini tekshiring.",
+          "contentRu": "Послушайте произношение слов и проверьте перевод.",
+          "flashcards": [
+            {
+              "id": "fc_eng_a2_m4_1",
+              "front": "delayed",
+              "backUz": "kechikkan",
+              "backRu": "задержан",
+              "partOfSpeech": "adjective",
+              "ipa": "/dɪˈleɪd/",
+              "ipaAmE": "/dɪˈleɪd/",
+              "cefrLevel": "A2",
+              "example": "The train to Samarkand is delayed by thirty minutes.",
+              "exampleUz": "Samarqand poyezdi o‘ttiz daqiqaga ortga surildi.",
+              "exampleRu": "Поезд в Самарканд отложен на тридцать минут.",
+              "audioSrc": "/lesson-media/english/a2/a2-m4-delayed.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m4-station-message.png",
+              "alt": "Smartfon ekranida sariq undov belgisi tushirilgan ogohlantirish qutisi",
+              "altRu": "На экране смартфона жёлтое окно с восклицательным знаком",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m4_2",
+              "front": "platform",
+              "backUz": "vokzal perroni",
+              "backRu": "перрон вокзала",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈplætfɔːm/",
+              "ipaAmE": "/ˈplætfɔːrm/",
+              "cefrLevel": "A2",
+              "example": "Our train leaves from Platform 5 at two thirty.",
+              "exampleUz": "Bizning poyezd soat ikkiyu o‘ttizda beshinchi yo‘lakdan jo‘naydi.",
+              "exampleRu": "Наш поезд отправляется с пятого пути в два тридцать.",
+              "audioSrc": "/lesson-media/english/a2/a2-m4-platform.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m4-station-message.png",
+              "alt": "Ko‘k soyabon ostidagi poyezd vagonlari va sariq xavfsizlik chizig‘i",
+              "altRu": "Состав под навесом станции у жёлтой полосы безопасности",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m4_3",
+              "front": "have to",
+              "backUz": "majbur bo‘lmoq",
+              "backRu": "приходиться",
+              "partOfSpeech": "phrase",
+              "ipa": "/ˈhæf tuː/",
+              "ipaAmE": "/ˈhæf tuː/",
+              "cefrLevel": "A2",
+              "example": "We have to text Karim before we walk to the gate.",
+              "exampleUz": "Darvozaga yurishdan oldin Karimga xabar yozishimiz shart.",
+              "exampleRu": "Нам нужно написать Кариму перед тем, как пойти к выходу.",
+              "audioSrc": "/lesson-media/english/a2/a2-m4-have-to.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m4-station-message.png",
+              "alt": "Soat strelkasi va jo‘nab ketish chizig‘i oldidagi temir yo‘l bekati",
+              "altRu": "Стрелочный циферблат над поездом и экран переписки на смартфоне",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_a2_m4_4",
+              "front": "before",
+              "backUz": "oldin (avval)",
+              "backRu": "до (перед)",
+              "partOfSpeech": "preposition",
+              "ipa": "/bɪˈfɔː/",
+              "ipaAmE": "/bɪˈfɔːr/",
+              "cefrLevel": "A2",
+              "example": "Please arrive at the station ten minutes before departure.",
+              "exampleUz": "Iltimos, jo‘nashdan o‘n daqiqa oldin bekatga keling.",
+              "exampleRu": "Пожалуйста, приходите на станцию за десять минут до отправления.",
+              "audioSrc": "/lesson-media/english/a2/a2-m4-before.wav",
+              "imageSrc": "/lesson-media/english/a2/a2-m4-station-message.png",
+              "alt": "Osma soat va xabar yuborish tugmasi ko‘rsatilgan telefon rasmi",
+              "altRu": "Настенный циферблат рядом со смартфоном и зелёной кнопкой отправки",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_a2_m4_read_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Klub e’lonini o‘qish",
+          "titleRu": "Чтение объявления клуба",
+          "content": "E’londagi vaqt va xona o‘zgarishini o‘qing hamda to‘g‘ri qarorni tanlang.",
+          "contentRu": "Прочтите объявление о переносе занятия и выберите верное решение.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m4_notice_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "reading",
+            "cefrLevel": "A2",
+            "topic": "Reading public notices",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "Notice: Today's English Debate Club will not meet in Room 12 at 15:00. Because of repairs, we are moving to Room 24, and the meeting starts at 15:30. Please arrive five minutes before 15:30.",
+            "text": "E’longa ko‘ra, klub a’zolari bugun soat nechada va qaysi xonada bo‘lishi kerak?",
+            "textRu": "К какому времени и в какой кабинет должны прийти участники клуба согласно объявлению?",
+            "options": [
+              "Soat 15:25 gacha 24-xonaga kelishlari kerak, chunki majlis 15:30 da boshlanadi",
+              "Soat 15:00 da 12-xonada yig‘ilishadi, so‘ng 24-xonaga o‘tishadi",
+              "Ta’mirlash sababli bugungi klub mashg‘uloti bekor qilingan",
+              "Soat 15:35 da 24-xonaga kelishlari mumkin"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Soat 15:00 da 12-xonada yig‘ilishadi, so‘ng 24-xonaga o‘tishadi": {
+                "uz": "Matnda «will not meet in Room 12 at 15:00» deb aniq rad etilgan.",
+                "ru": "В тексте прямо сказано: «will not meet in Room 12 at 15:00»."
+              },
+              "Ta’mirlash sababli bugungi klub mashg‘uloti bekor qilingan": {
+                "uz": "Klub bekor qilinmagan, balki 24-xonaga va soat 15:30 ga ko‘chirilgan.",
+                "ru": "Занятие не отменено, а перенесено в кабинет 24 на 15:30."
+              },
+              "Soat 15:35 da 24-xonaga kelishlari mumkin": {
+                "uz": "«five minutes before 15:30» — 15:30 dan besh daqiqa oldin (15:25), keyin emas.",
+                "ru": "«five minutes before 15:30» означает за пять минут до 15:30 (в 15:25), а не позже."
+              }
+            },
+            "explanation": "Yangi joy — Room 24, boshlanish vaqti — 15:30, «five minutes before 15:30» esa 15:25 ni bildiradi.",
+            "explanationRu": "Новое место — Room 24, начало в 15:30, а прийти нужно за 5 минут до начала (к 15:25).",
+            "wrongFeedback": "«will not meet», «Room 24» va «five minutes before 15:30» dalillarini tekshiring.",
+            "wrongFeedbackRu": "Сверьте в тексте «will not meet», «Room 24» и «five minutes before 15:30»."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_m4_write_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Writing: Uchrashuv xabari yozish",
+          "titleRu": "Writing: Сообщение о встрече",
+          "content": "Do‘stingizga uchrashuv vaqti va joyi o‘zgargani haqida 3–4 gapli qisqa xabar yozing va namuna bilan solishtiring.",
+          "contentRu": "Напишите другу короткое сообщение из 3–4 предложений об изменении времени и места и сверьте с критериями.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_m4_writing_prompt",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "writing",
+            "cefrLevel": "A2",
+            "topic": "Writing a schedule change message",
+            "difficulty": "medium",
+            "questionType": "writing_prompt",
+            "evaluationMode": "self_assessed",
+            "text": "Do‘stingizga poyezd yoki klub vaqti 16:00 dan 16:30 ga ko‘chgani haqida «before / then» va «have to / can» ishlatib 3–4 gapli xabar yozing.",
+            "textRu": "Напишите другу сообщение из 3–4 фраз о переносе встречи с 16:00 на 16:30, используя «before / then» и «have to / can».",
+            "options": [],
+            "sampleResponse": "Hi Timur! Our club meeting is delayed until 16:30 today, and we have to go to Room 24. Can you meet me outside the library before 16:15? Then we can walk upstairs together.",
+            "rubricCriteria": [
+              {
+                "id": "crit_a2_w_change",
+                "labelUz": "Yangi vaqt va joy aniq ko‘rsatildi (16:30, Room 24 / Gate 2)",
+                "labelRu": "Чётко указаны новое время и место встречи"
+              },
+              {
+                "id": "crit_a2_w_conn",
+                "labelUz": "Kamida bitta vaqt bog‘lovchisi qatnashdi (before / after / then)",
+                "labelRu": "Использована хотя бы одна временная связка (before / after / then)"
+              },
+              {
+                "id": "crit_a2_w_modal",
+                "labelUz": "«have to» yoki «can» modal fe’li to‘g‘ri qo‘llandi",
+                "labelRu": "Верно использован глагол «have to» или «can»"
+              }
+            ],
+            "selfAssessmentNoticeUz": "O‘zini baholash (mustaqil yozma mashq): bu vazifa rasmiy CEFR sertifikati bermaydi.",
+            "selfAssessmentNoticeRu": "Самооценка (самостоятельное письмо): задание не выдаёт официальный сертификат CEFR.",
+            "explanation": "Namunadagi xabar salomlashish, o‘zgarish sababi, «have to», «before» va «then we can» tuzilmalarini aniq birlashtiradi.",
+            "explanationRu": "Образец объединяет новое время, глаголы «have to / can» и связки «before / then».",
+            "wrongFeedback": "Xabaringizda yangi vaqt/joy, «before/after/then» va «have to/can» borligini tekshiring.",
+            "wrongFeedbackRu": "Проверьте наличие нового времени/места, связок времени и «have to/can»."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_m4_reinf_fill",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_reading",
+        "skillDomain": "grammar",
+        "cefrLevel": "A2",
+        "topic": "Modals of necessity: have to",
+        "difficulty": "easy",
+        "questionType": "fill_blank",
+        "evaluationMode": "deterministic",
+        "blankTemplate": "We ___ leave early so we arrive before four o'clock.",
+        "text": "Zarurat bildiruvchi modal ifodani bo‘sh joyga yozing: «We ___ leave early so we arrive before four o'clock.»",
+        "textRu": "Впишите модальную конструкцию необходимости: «We ___ leave early so we arrive before four o'clock.»",
+        "options": [],
+        "acceptedAnswers": ["have to", "must", "need to"],
+        "explanation": "Tashqi jadval yoki vaqtga ulgurish zaruratini bildirishda «have to» (shuningdek «must» yoki «need to») ishlatiladi.",
+        "explanationRu": "Для выражения необходимости успеть к сроку используется «have to» (а также «must» или «need to»).",
+        "wrongFeedback": "Kechikmaslik uchun zaruratni bildiruvchi modal fe’l yoki iborani yozing.",
+        "wrongFeedbackRu": "Укажите модальный глагол или выражение необходимости действия перед основным глаголом."
+      }
+    },
+    {
+      "id": "lesson_eng_a2_exit",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "integrated",
+      "communicativeFocus": "exit_assessment",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m4",
+      "unitId": "unit_eng_a2_u4",
+      "canDoObjective": "A2 darajasining barcha ko‘nikmalarini (tinglash, o‘qish, grammatika, gap tuzish) integratsiyalashgan yakuniy sinovda namoyish etadi.",
+      "canDoObjectiveRu": "Демонстрирует навыки уровня A2 (аудирование, чтение, грамматику, составление фраз) в итоговом тесте.",
+      "prerequisites": ["node_eng_a2_m4_messages"],
+      "title": "A2 Yakuniy imtihoni (Integratsiyalashgan sinov)",
+      "titleRu": "Итоговый экзамен уровня A2",
+      "estimatedMinutes": 10,
+      "summary": "Vokzal e’loni, muzey chegirmasi, Past Simple va odobli iltimoslar bo‘yicha A2 yakuniy sinovini topshiring. Muvaffaqiyatli natija B1 darajasini ochadi.",
+      "summaryRu": "Пройдите комплексный тест A2 по объявлению на вокзале, скидкам, Past Simple и просьбам. Успех открывает уровень B1.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "A2 yakuniy sinovi platforma ichidagi tayyorgarlik darajasini o‘lchaydi; u rasmiy xalqaro CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Итоговый тест A2 оценивает учебную готовность внутри платформы и не заменяет официальный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Bu yakuniy sinov A2 darajasidagi 4 modul bo‘yicha mustaqil bilimingizni tekshiradi.",
+          "ru": "Итоговый тест проверяет вашу готовность по всем 4 модулям уровня A2."
+        },
+        "learningObjective": {
+          "uz": "O‘quvchi vokzal e’lonini tinglab tushunadi, chegirma matnini tahlil qiladi, Past Simple fe’lini yozadi va iltimos gapi tuzadi.",
+          "ru": "Ученик понимает объявление на слух, анализирует скидку в тексте, пишет глагол в Past Simple и строит просьбу."
+        },
+        "warmUp": {
+          "uz": "«Platform», «half past two», «visited», «before» tushunchalarini yodga oling.",
+          "ru": "Вспомните лексику вокзала, время «half past two», Past Simple и союз «before»."
+        },
+        "vocabularyItems": [
+          { "word": "express train", "uz": "tezyurar poyezd", "ru": "скорый поезд", "ipa": "/ɪkˈspres treɪn/" },
+          { "word": "half past two", "uz": "soat ikki yarim", "ru": "половина третьего", "ipa": "/hɑːf pɑːst tuː/" }
+        ],
+        "grammarNote": {
+          "rule": "Integrated A2 Mastery (Listening Disambiguation + Reading Evidence + Past Simple + Modals)",
+          "simpleExplanationUz": "Vaqtlarni va platformalarni tinglashda «not ... / will depart from ...» kabi tuzatishlarga diqqat qiling; o‘qishda esa shartlarni (yosh, talaba kartasi, vaqt) solishtiring.",
+          "simpleExplanationRu": "В объявлениях обращайте внимание на уточнения «not ... / will depart from ...», а при чтении сверяйте возраст, скидки и время.",
+          "structure": "Platform + Time | Subject + V-ed | Can we [verb] before [event]?",
+          "positiveExamples": [
+            "The train will depart from Platform 5 at half past two in the afternoon."
+          ],
+          "negativeExamples": [
+            "It will not leave from Platform 2 at two o'clock."
+          ],
+          "questions": [
+            "Can we meet before the train leaves?"
+          ],
+          "commonMistakes": [
+            "Eski vaqt («2:00 / Platform 2») bilan kechiktirilgan yangi vaqtni («14:30 / Platform 5») adashtirish."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "«Samarkand» va «Platform five» birikmalarida urg‘u so‘z oxiriga aniq beriladi.",
+          "ru": "В словосочетании «Platform five» ударение отчётливо выделяет номер пути."
+        },
+        "examples": [
+          "The afternoon express train is delayed by thirty minutes and will depart from Platform five at half past two."
+        ],
+        "guidedPractice": {
+          "uz": "Vokzal e’lonini oxirigacha tinglang — ikkinchi gapda tasdiq ham bor.",
+          "ru": "Дослушайте объявление до конца — во второй реплике пассажир повторяет важные детали."
+        },
+        "independentPractice": {
+          "uz": "4 ta bosqichli integratsiyalashgan savolni mustaqil yeching.",
+          "ru": "Самостоятельно выполните 4 задания по всем навыкам уровня A2."
+        },
+        "listeningRef": "media_eng_a2_exit_station_dialogue",
+        "readingRef": "lesson_eng_a2_exit_step_3",
+        "speakingTask": {
+          "uz": "E’londagi yangi platforma va vaqtni ingliz tilida ovoz chiqarib ayting.",
+          "ru": "Озвучьте новую платформу и время отправления по-английски."
+        },
+        "writingTask": {
+          "uz": "Past Simple fe’l shaklini va «before» li iltimos gapini tuzing.",
+          "ru": "Впишите форму Past Simple и составьте предложение с «before»."
+        },
+        "knowledgeCheck": "q_eng_a2_exit_listen",
+        "finalQuiz": "q_eng_a2_exit_read",
+        "feedbackRules": {
+          "uz": "70% dan yuqori natija A2 bosqichini yakunlab, B1 darajasiga yo‘l ochadi.",
+          "ru": "Результат 70% и выше завершает уровень A2 и открывает переход к B1."
+        },
+        "summaryAndRevision": {
+          "uz": "A2 yakuniy sinovi muvaffaqiyatli topshirilgach B1 darajasiga o‘tish mumkin.",
+          "ru": "Успешное прохождение теста A2 открывает уровень B1."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_a2_exit_step_1",
+          "stepNumber": 1,
+          "type": "audio_simulation",
+          "title": "1. Tinglash: Vokzal e’loni",
+          "titleRu": "1. Аудирование: Объявление на вокзале",
+          "content": "Samarqand poyezdi haqidagi e’lon va yo‘lovchi suhbatini tinglang. Qaysi platforma va soat bekor qilinganiga hamda yangi vaqtga diqqat qiling.",
+          "contentRu": "Прослушайте объявление о самаркандском поезде. Обратите внимание на отменённую и новую платформу и точное время отправления.",
+          "media": {
+            "id": "media_eng_a2_exit_station_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/a2/a2-exit-station-dialogue.wav",
+            "title": "A2 yakuniy tinglash: Vokzaldagi e’lon",
+            "titleUz": "A2 yakuniy tinglash: Vokzaldagi e’lon",
+            "titleRu": "Итоговое аудирование A2: Объявление на вокзале",
+            "transcript": "Announcer: Attention, passengers. The afternoon express train to Samarkand will not leave from Platform two at two o'clock. It is delayed by thirty minutes and will depart from Platform five at half past two in the afternoon.\nPassenger: Did you hear that? Platform five at two thirty, not two o'clock. Let's text Karim before we walk over.",
+            "posterImage": "/lesson-media/english/a2/a2-m4-station-message.png",
+            "posterAlt": "Poyezd perroni, osma devor soati va ekranda xabar pufakchalari ko‘rsatilgan telefon",
+            "posterAltUz": "Poyezd perroni, osma devor soati va ekranda xabar pufakchalari ko‘rsatilgan telefon",
+            "posterAltRu": "Железнодорожный перрон, подвесные часы и смартфон с пузырями сообщений",
+            "durationSeconds": 22.019,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Announcer: Attention, passengers. The afternoon express train to Samarkand will not leave from Platform two at two o'clock. It is delayed by thirty minutes and will depart from Platform five at half past two in the afternoon.\nPassenger: Did you hear that? Platform five at two thirty, not two o'clock. Let's text Karim before we walk over.",
+            "speakerName": "Announcer & Passenger"
+          }
+        },
+        {
+          "id": "lesson_eng_a2_exit_step_2",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "2. Tinglash dalili",
+          "titleRu": "2. Факты из аудирования",
+          "content": "E’longa asoslanib poyezdning yangi platformasi va jo‘nash vaqtini tanlang.",
+          "contentRu": "Выберите новую платформу и точное время отправления поезда по аудио.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_exit_listen",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "A2",
+            "topic": "A2 Exit: Station delay announcement",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Audiodagi e’longa ko‘ra, Samarqand tezyurar poyezdi qaysi platformadan va soat nechada jo‘naydi?",
+            "textRu": "С какой платформы и во сколько отправляется экспресс в Самарканд согласно объявлению?",
+            "options": [
+              "5-platformadan soat 14:30 da jo‘naydi",
+              "2-platformadan soat 14:00 da jo‘naydi",
+              "5-platformadan tungi soat 02:30 da jo‘naydi",
+              "2-platformadan soat 14:30 da jo‘naydi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "2-platformadan soat 14:00 da jo‘naydi": {
+                "uz": "E’londa «will NOT leave from Platform two at two o'clock» (eski reja bekor) deyildi.",
+                "ru": "Диктор чётко сказал «will NOT leave from Platform two at two o'clock» — это прежнее время."
+              },
+              "5-platformadan tungi soat 02:30 da jo‘naydi": {
+                "uz": "Diktor «in the afternoon» (kunduzi) dedi, shuning uchun 02:30 emas, 14:30 to‘g‘ri.",
+                "ru": "Уточнение «in the afternoon» означает день (14:30), а не ночь (02:30)."
+              },
+              "2-platformadan soat 14:30 da jo‘naydi": {
+                "uz": "Poyezd 2-platformadan emas, «Platform five» (5-platforma) dan jo‘naydi.",
+                "ru": "Поезд отправляется не со 2-й, а с 5-й платформы («Platform five»)."
+              }
+            },
+            "explanation": "E’londa «depart from Platform five at half past two in the afternoon» (5-platforma, kunduzi 14:30) deyildi.",
+            "explanationRu": "В объявлении указано: «Platform five at half past two in the afternoon» (5-я платформа, 14:30).",
+            "wrongFeedback": "Audiodagi poyezd jo‘naydigan platforma raqami, soat va kunning qaysi qismi (kunduzi/kechasi) aytilganini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте в аудио номер платформы, точное время отправления и указание времени суток."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_exit_step_3",
+          "stepNumber": 3,
+          "type": "interactive_question",
+          "title": "3. Muzey chegirma e’lonini o‘qish",
+          "titleRu": "3. Чтение объявления музея о скидке",
+          "content": "Dam olish kunlari uchun e’lonni o‘qing va to‘g‘ri javobni tanlang.",
+          "contentRu": "Прочтите объявление о скидках на выходных и выберите верный ответ.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_exit_read",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "reading",
+            "cefrLevel": "A2",
+            "topic": "A2 Exit: Museum discount notice",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "City Art Museum Weekend Offer: Adult tickets cost 40,000 UZS. Children under 12 enter free, and university students pay half price after 15:00 on Saturday and Sunday.",
+            "text": "E’longa ko‘ra, talaba shanba kuni soat 15:30 da muzeyga kirsa qancha to‘laydi?",
+            "textRu": "Сколько заплатит студент, если придёт в музей в субботу в 15:30?",
+            "options": [
+              "20,000 so‘m to‘laydi (soat 15:00 dan keyin yarim narx)",
+              "Bepul kiradi, chunki barcha talabalar bepul",
+              "40,000 so‘m to‘laydi, chunki chegirma faqat yakshanba kuni",
+              "12,000 so‘m to‘laydi, chunki yosh chegirmasi bor"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Bepul kiradi, chunki barcha talabalar bepul": {
+                "uz": "Faqat 12 yoshgacha bolalar («Children under 12») bepul kiradi; talabalarga esa yarim narx.",
+                "ru": "Бесплатный вход только для детей до 12 лет («Children under 12»); для студентов — полцены."
+              },
+              "40,000 so‘m to‘laydi, chunki chegirma faqat yakshanba kuni": {
+                "uz": "Chegirma «on Saturday and Sunday» (shanba va yakshanba) amal qiladi, 15:30 esa 15:00 dan keyin.",
+                "ru": "Скидка действует и в субботу, и в воскресенье после 15:00."
+              },
+              "12,000 so‘m to‘laydi, chunki yosh chegirmasi bor": {
+                "uz": "12 — bu so‘m miqdori emas, bepul kiradigan bolalar yosh chegarasi («under 12»).",
+                "ru": "12 в объявлении — это возраст детей, а не цена билета."
+              }
+            },
+            "explanation": "Kattalar chiptasi 40,000 so‘m; talabalar shanba kuni 15:00 dan keyin yarim narx (20,000 so‘m) to‘laydi.",
+            "explanationRu": "Взрослый билет — 40,000 сумов; студенты по субботам после 15:00 платят половину цены (20,000).",
+            "wrongFeedback": "«half price after 15:00 on Saturday and Sunday» shartini chipta narxi (40,000) bilan solishtiring.",
+            "wrongFeedbackRu": "Соотнесите полную цену (40,000) и условие «half price after 15:00»."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_exit_step_4",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "4. Past Simple fe’l shakli",
+          "titleRu": "4. Глагол в Past Simple",
+          "content": "O‘tgan zamon belgisiga qarab qavsdagi fe’lni to‘g‘ri shaklda yozing.",
+          "contentRu": "Поставьте глагол в скобках в правильную форму Past Simple.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_exit_grammar_fill",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "A2",
+            "topic": "A2 Exit: Past Simple regular verb",
+            "difficulty": "easy",
+            "questionType": "fill_blank",
+            "evaluationMode": "deterministic",
+            "blankTemplate": "Yesterday our class ___ the Registan museum in Samarkand.",
+            "text": "Qavsdagi fe’lni Past Simple shakliga o‘tkazib yozing: «Yesterday our class ___ (visit) the Registan museum in Samarkand.»",
+            "textRu": "Поставьте глагол в скобках в Past Simple: «Yesterday our class ___ (visit) the Registan museum in Samarkand.»",
+            "options": [],
+            "acceptedAnswers": ["visited"],
+            "explanation": "«Yesterday» o‘tgan zamon ko‘rsatkichi bo‘lib, «visit» to‘g‘ri fe’liga «-ed» qo‘shiladi: «visited».",
+            "explanationRu": "Маркер «Yesterday» требует Past Simple; к правильному глаголу «visit» добавляется «-ed»: «visited».",
+            "wrongFeedback": "«Yesterday» o‘tgan zamon belgisi bo‘lgani uchun to‘g‘ri fe’l oxiriga «-ed» qo‘shing.",
+            "wrongFeedbackRu": "Слово «Yesterday» указывает на прошлое — добавьте к правильному глаголу окончание «-ed»."
+          }
+        },
+        {
+          "id": "lesson_eng_a2_exit_step_5",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "5. Iltimos va vaqt bog‘lovchisi",
+          "titleRu": "5. Вежливая просьба и союз времени",
+          "content": "So‘zlarni to‘g‘ri tartibda joylashtirib, savol gap tuzing.",
+          "contentRu": "Расставьте фрагменты в верном порядке, чтобы получился вежливый вопрос.",
+          "interactiveQuestion": {
+            "id": "q_eng_a2_exit_order",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "A2",
+            "topic": "A2 Exit: Polite request with before",
+            "difficulty": "medium",
+            "questionType": "sentence_order",
+            "evaluationMode": "deterministic",
+            "text": "«Poyezd jo‘nashidan oldin uchrasha olamizmi?» savolini to‘g‘ri tartibda tuzing:",
+            "textRu": "Составьте вопрос «Можем ли мы встретиться до отправления поезда?» в правильном порядке:",
+            "options": [],
+            "orderedTokens": ["Can", "we", "meet", "before", "the train", "leaves?"],
+            "acceptedAnswers": ["Can we meet before the train leaves?"],
+            "explanation": "Savol modal «Can» bilan boshlanadi: Can + we + meet + before + the train + leaves?",
+            "explanationRu": "Вопрос начинается с модального «Can»: Can + we + meet + before + the train + leaves?",
+            "wrongFeedback": "Savolni iltimos/imkoniyat bildiruvchi modal fe’l + ega + asosiy fe’l + bog‘lovchi va so‘roq belgisi bilan tugaydigan vaqt ergash gapi tartibida tuzing.",
+            "wrongFeedbackRu": "Начните вопрос с модального глагола вежливой просьбы, затем подлежащее + основной глагол + союз и придаточное времени со знаком вопроса в конце."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_a2_exit_reinf",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "vocabulary",
+        "cefrLevel": "A2",
+        "topic": "A2 Exit: Ticket desk dialogue",
+        "difficulty": "medium",
+        "questionType": "conversation_completion",
+        "evaluationMode": "deterministic",
+        "dialogueContext": [
+          "Passenger: «Excuse me, is the faster train more expensive?»",
+          "Clerk: «___»"
+        ],
+        "text": "Chipta kassirining savolga mantiqiy va grammatik to‘g‘ri javobini tanlang:",
+        "textRu": "Выберите логичный и грамматически верный ответ кассира:",
+        "options": [
+          "Yes, it is faster, so a ticket costs ten dollars more.",
+          "Yes, it is more faster, and the platform was tomorrow.",
+          "No, how many money do you go past?",
+          "You have to visiting Platform 5 yesterday."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "Yes, it is more faster, and the platform was tomorrow.": {
+            "uz": "«more faster» qo‘shaloq qiyosiy xato («faster» kifoya) va «was tomorrow» zamon jihatdan mantiqsiz.",
+            "ru": "«more faster» — ошибка двойного сравнения, а «was tomorrow» нарушает логику времени."
+          },
+          "No, how many money do you go past?": {
+            "uz": "«money» sanalmaydigan ot («how much money») va gap ma’nosiz.",
+            "ru": "Со словом «money» используется «how much», а не «how many»."
+          },
+          "You have to visiting Platform 5 yesterday.": {
+            "uz": "«have to» dan keyin «visit» keladi, «yesterday» esa hozirgi harakatga mos emas.",
+            "ru": "После «have to» ставится начальная форма «visit», а «yesterday» не подходит к ситуации."
+          }
+        },
+        "explanation": "«faster» to‘g‘ri qiyosiy sifat va kassir chipta narxi farqini aniq tushuntirmoqda.",
+        "explanationRu": "Форма «faster» верна, и кассир логично объясняет разницу в цене билета.",
+        "wrongFeedback": "Bir bo‘g‘inli sifatning «more» siz to‘g‘ri qiyosiy darajasi va mantiqiy narx javobini tanlang.",
+        "wrongFeedbackRu": "Выберите грамматически верную сравнительную форму без «more» и логичный ответ о цене."
+      },
+      "alternateExercise": {
+        "id": "q_eng_a2_exit_alt",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_reading",
+        "skillDomain": "reading",
+        "cefrLevel": "A2",
+        "topic": "A2 Exit alternate notice",
+        "difficulty": "medium",
+        "questionType": "multiple_choice",
+        "evaluationMode": "deterministic",
+        "contextSnippet": "Bukhara Shuttle Notice: The morning shuttle to the train station leaves from Gate B across from the City Hotel at 07:45. Tickets are 15,000 UZS, and backpacks go inside the luggage rack.",
+        "text": "Qayta sinov: E’longa ko‘ra, avtobus qayerdan va soat nechada jo‘naydi?",
+        "textRu": "Повторная проверка: откуда и во сколько отправляется автобус до вокзала?",
+        "options": [
+          "City Hotel qarshisidagi B darvozadan soat 07:45 da jo‘naydi",
+          "City Hotel orqasidagi A darvozadan soat 19:45 da jo‘naydi",
+          "Vokzal ichidan soat 07:15 da jo‘naydi",
+          "B darvozadan faqat yuklarsiz soat 08:15 da jo‘naydi"
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "City Hotel orqasidagi A darvozadan soat 19:45 da jo‘naydi": {
+            "uz": "Matnda «Gate B», «across from the City Hotel» va «07:45» (ertalab) deb ko‘rsatilgan.",
+            "ru": "В объявлении указаны Gate B, «across from» (напротив) и утреннее время 07:45."
+          },
+          "Vokzal ichidan soat 07:15 da jo‘naydi": {
+            "uz": "Avtobus vokzalga boradi («to the train station»), jo‘nash joyi esa Gate B va vaqti 07:45.",
+            "ru": "Автобус едет к вокзалу, а отправляется от Gate B в 07:45."
+          },
+          "B darvozadan faqat yuklarsiz soat 08:15 da jo‘naydi": {
+            "uz": "Matnda ryukzaklar yuk javoniga qo‘yilishi va vaqt 07:45 ekani yozilgan.",
+            "ru": "Рюкзаки размещаются на багажной полке, а отправление в 07:45."
+          }
+        },
+        "explanation": "Matndagi «Gate B across from the City Hotel at 07:45» ma’lumoti birinchi javobga to‘liq mos.",
+        "explanationRu": "В тексте чётко указано: Gate B, напротив City Hotel, 07:45.",
+        "wrongFeedback": "Matndagi darvoza harfi, mehmonxona qarshisidagi joylashuv va jo‘nash vaqtini qayta tekshiring.",
+        "wrongFeedbackRu": "Перепроверьте в тексте букву выхода, ориентир напротив отеля и время отправления."
+      }
+    }
+  ],
+  "roadmapNodes": [
+    {
+      "id": "node_eng_a2_m1_directions",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m1",
+      "moduleTitle": "1-modul: Transport va yo‘l so‘rash",
+      "moduleTitleRu": "Модуль 1: Транспорт и ориентирование в городе",
+      "unitId": "unit_eng_a2_u1",
+      "canDoObjective": "Shahar xaritasida yo‘l so‘raydi va berilgan yo‘nalishni tinglab tushunadi",
+      "canDoObjectiveRu": "Спрашивает дорогу в городе и понимает устные указания маршрута",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "speaking_prompt",
+      "title": "Transport va yo‘l so‘rash",
+      "titleRu": "Транспорт и ориентирование",
+      "description": "Metro xaritasi, buyruq fe’llari, harakat predloglari va yo‘l ko‘rsatish nutq mashqi.",
+      "descriptionRu": "Карта метро, повелительные глаголы, предлоги движения и устная практика маршрута.",
+      "prerequisites": ["node_eng_a1_exit"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_m1_directions",
+      "estimatedMinutes": 8,
+      "order": 16
+    },
+    {
+      "id": "node_eng_a2_u1_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m1",
+      "moduleTitle": "1-modul: Transport va yo‘l so‘rash",
+      "moduleTitleRu": "Модуль 1: Транспорт и ориентирование в городе",
+      "unitId": "unit_eng_a2_u1",
+      "canDoObjective": "1-bo‘lim yakuniy sinovidan o‘tib xarid modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 1 и открывает модуль покупок",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "A2 1-bo‘lim sinovi: Avtobusda almashish",
+      "titleRu": "Итог раздела 1 A2: Пересадка",
+      "description": "Chorsu bozori yo‘nalishi bo‘yicha tinglash va transport iboralari sinovi.",
+      "descriptionRu": "Проверка аудирования о пересадке в автобусе и лексики транспорта.",
+      "prerequisites": ["node_eng_a2_m1_directions"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_u1_checkpoint",
+      "estimatedMinutes": 6,
+      "order": 17
+    },
+    {
+      "id": "node_eng_a2_m2_shopping",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "vocabulary",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m2",
+      "moduleTitle": "2-modul: Xarid, narxlar va taqqoslash",
+      "moduleTitleRu": "Модуль 2: Покупки, цены и сравнения",
+      "unitId": "unit_eng_a2_u2",
+      "canDoObjective": "Narx so‘raydi, chegirma shartini tushunadi va mahsulotlarni qiyoslaydi",
+      "canDoObjectiveRu": "Спрашивает цену, понимает скидки и сравнивает товары",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "Xarid, narxlar va taqqoslash",
+      "titleRu": "Покупки, цены и сравнения",
+      "description": "Do‘kon dialogi, chegirma lug‘ati, «How much/many» va qiyosiy sifatlar.",
+      "descriptionRu": "Диалог в магазине, лексика скидок, «How much/many» и сравнительная степень.",
+      "prerequisites": ["node_eng_a2_u1_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_m2_shopping",
+      "estimatedMinutes": 8,
+      "order": 18
+    },
+    {
+      "id": "node_eng_a2_u2_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "reading",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m2",
+      "moduleTitle": "2-modul: Xarid, narxlar va taqqoslash",
+      "moduleTitleRu": "Модуль 2: Покупки, цены и сравнения",
+      "unitId": "unit_eng_a2_u2",
+      "canDoObjective": "2-bo‘lim sinovidan o‘tib taklif va rejalar modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 2 и открывает модуль планов",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "A2 2-bo‘lim sinovi: Chegirma tahlili",
+      "titleRu": "Итог раздела 2 A2: Анализ цен",
+      "description": "Aksiya e’lonidan yakuniy narxni topish va sanaladigan otlar sinovi.",
+      "descriptionRu": "Расчёт стоимости по акции и проверка «How much/many».",
+      "prerequisites": ["node_eng_a2_m2_shopping"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_u2_checkpoint",
+      "estimatedMinutes": 6,
+      "order": 19
+    },
+    {
+      "id": "node_eng_a2_m3_plans",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m3",
+      "moduleTitle": "3-modul: Takliflar, o‘tgan voqealar va rejalar",
+      "moduleTitleRu": "Модуль 3: Приглашения, прошлые события и планы",
+      "unitId": "unit_eng_a2_u3",
+      "canDoObjective": "O‘tgan voqea va kelajak rejasini to‘g‘ri zamonlarda bayon qiladi",
+      "canDoObjectiveRu": "Описывает прошлые события и планы на выходные с «going to»",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "Takliflar, Past Simple va rejalar",
+      "titleRu": "Приглашения, Past Simple и планы",
+      "description": "Past Simple, «be going to» bilan reja yozish va «Would you like to...?» takliflari.",
+      "descriptionRu": "Past Simple, планы с «be going to» и вежливые приглашения.",
+      "prerequisites": ["node_eng_a2_u2_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_m3_plans",
+      "estimatedMinutes": 9,
+      "order": 20
+    },
+    {
+      "id": "node_eng_a2_u3_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m3",
+      "moduleTitle": "3-modul: Takliflar, o‘tgan voqealar va rejalar",
+      "moduleTitleRu": "Модуль 3: Приглашения, прошлые события и планы",
+      "unitId": "unit_eng_a2_u3",
+      "canDoObjective": "3-bo‘lim sinovidan o‘tib xabar yozish modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 3 и открывает модуль сообщений",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "A2 3-bo‘lim sinovi: Kecha va ertaga",
+      "titleRu": "Итог раздела 3 A2: Прошлое и планы",
+      "description": "Vaqt ko‘rsatkichlari bo‘yicha zamon tanlash va odobli rad javobi sinovi.",
+      "descriptionRu": "Проверка выбора времени по маркерам и вежливого отказа.",
+      "prerequisites": ["node_eng_a2_m3_plans"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_u3_checkpoint",
+      "estimatedMinutes": 6,
+      "order": 21
+    },
+    {
+      "id": "node_eng_a2_m4_messages",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "writing",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m4",
+      "moduleTitle": "4-modul: Qisqa e’lonlar va uchrashuv xabarlari",
+      "moduleTitleRu": "Модуль 4: Короткие объявления и сообщения о встрече",
+      "unitId": "unit_eng_a2_u4",
+      "canDoObjective": "Jadval o‘zgarishi e’lonini tushunadi va 3–4 gapli xabar yozadi",
+      "canDoObjectiveRu": "Понимает объявления о переносе и пишет короткое сообщение другу",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "writing_prompt",
+      "title": "Writing: E’lonlar va uchrashuv xabari",
+      "titleRu": "Writing: Объявления и сообщение",
+      "description": "«before/after/then» va «have to/can» bilan qisqa xabar yozish va rubrika tekshiruvi.",
+      "descriptionRu": "Чтение объявления и письмо с «before/after/then» и «have to/can».",
+      "prerequisites": ["node_eng_a2_u3_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_m4_messages",
+      "estimatedMinutes": 9,
+      "order": 22
+    },
+    {
+      "id": "node_eng_a2_exit",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "integrated",
+      "cefrLevel": "A2",
+      "moduleId": "mod_eng_a2_m4",
+      "moduleTitle": "4-modul: Qisqa e’lonlar va uchrashuv xabarlari",
+      "moduleTitleRu": "Модуль 4: Короткие объявления и сообщения о встрече",
+      "unitId": "unit_eng_a2_u4",
+      "canDoObjective": "A2 darajasini integratsiyalashgan yakuniy sinov bilan yakunlab B1 ga yo‘l ochadi",
+      "canDoObjectiveRu": "Завершает уровень A2 комплексным тестом и открывает переход к B1",
+      "nodeKind": "level_assessment",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "A2 Bosqich sinovi: Yakuniy imtihon",
+      "titleRu": "Итоговый экзамен уровня A2",
+      "description": "Vokzal e’loni, chegirma o‘qishi, Past Simple va iltimos gapini o‘z ichiga olgan A2 yakuni.",
+      "descriptionRu": "Комплексная итоговая проверка уровня A2 по всем навыкам.",
+      "prerequisites": ["node_eng_a2_m4_messages"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a2_exit",
+      "estimatedMinutes": 10,
+      "order": 23
+    }
+  ]
+}

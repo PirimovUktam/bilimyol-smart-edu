@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="boardBg" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <filter id="boardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#boardBg)"/>
+
+  <!-- Left Panel: Discussion Bubbles & Trade-Off Balance Scale -->
+  <g filter="url(#boardShadow)">
+    <rect x="42" y="54" width="316" height="492" rx="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="42" y="54" width="316" height="24" rx="12" fill="#4F46E5"/>
+
+    <!-- Speaker 1 Avatar + Indigo Speech Bubble -->
+    <circle cx="94" cy="144" r="24" fill="#4F46E5"/>
+    <circle cx="94" cy="138" r="9" fill="#FFFFFF"/>
+    <path d="M78 162 Q94 148 110 162" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <rect x="132" y="106" width="196" height="76" rx="16" fill="#E0E7FF" stroke="#818CF8" stroke-width="2"/>
+    <rect x="150" y="128" width="144" height="10" rx="5" fill="#4F46E5"/>
+    <rect x="150" y="148" width="106" height="10" rx="5" fill="#6366F1" opacity="0.65"/>
+
+    <!-- Speaker 2 Avatar + Amber Speech Bubble -->
+    <rect x="72" y="210" width="196" height="76" rx="16" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="90" y="232" width="138" height="10" rx="5" fill="#D97706"/>
+    <rect x="90" y="252" width="104" height="10" rx="5" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="306" cy="248" r="24" fill="#F59E0B"/>
+    <circle cx="306" cy="242" r="9" fill="#FFFFFF"/>
+    <path d="M290 266 Q306 252 322 266" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+    <!-- Trade-Off Balance Scale Icon (Bottom of Left Panel) -->
+    <rect x="116" y="486" width="168" height="14" rx="7" fill="#334155"/>
+    <rect x="194" y="346" width="12" height="140" rx="6" fill="#334155"/>
+    <line x1="112" y1="362" x2="288" y2="362" stroke="#4F46E5" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="200" cy="358" r="10" fill="#4F46E5"/>
+    <!-- Left Scale Pan -->
+    <line x1="114" y1="362" x2="94" y2="418" stroke="#64748B" stroke-width="3"/>
+    <line x1="114" y1="362" x2="134" y2="418" stroke="#64748B" stroke-width="3"/>
+    <path d="M84 418 Q114 440 144 418 Z" fill="#10B981"/>
+    <!-- Right Scale Pan -->
+    <line x1="286" y1="362" x2="266" y2="418" stroke="#64748B" stroke-width="3"/>
+    <line x1="286" y1="362" x2="306" y2="418" stroke="#64748B" stroke-width="3"/>
+    <path d="M256 418 Q286 440 316 418 Z" fill="#0EA5E9"/>
+  </g>
+
+  <!-- Right Panel: 3-Row Action Prioritization Kanban Board -->
+  <g filter="url(#boardShadow)">
+    <rect x="386" y="54" width="372" height="492" rx="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="386" y="54" width="372" height="24" rx="12" fill="#10B981"/>
+
+    <!-- Row 1: Top Priority (Emerald Highlight + Star + Checkmark + Calendar Square) -->
+    <rect x="416" y="108" width="312" height="114" rx="18" fill="#ECFDF5" stroke="#10B981" stroke-width="3"/>
+    <!-- Star Priority Icon -->
+    <polygon points="454,136 462,154 482,156 467,169 471,188 454,178 437,188 441,169 426,156 446,154" fill="#F59E0B"/>
+    <!-- Progress Bars -->
+    <rect x="498" y="146" width="128" height="12" rx="6" fill="#065F46"/>
+    <rect x="498" y="170" width="90" height="10" rx="5" fill="#10B981" opacity="0.6"/>
+    <!-- Checkmark + Calendar Square -->
+    <rect x="648" y="136" width="56" height="56" rx="12" fill="#10B981"/>
+    <path d="M663 164 L673 174 L691 154" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Row 2: Postponed / Secondary Feature (Muted Slate + Pause Symbol) -->
+    <rect x="416" y="248" width="312" height="114" rx="18" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+    <circle cx="456" cy="305" r="22" fill="#CBD5E1"/>
+    <rect x="448" y="294" width="6" height="22" rx="2" fill="#475569"/>
+    <rect x="458" y="294" width="6" height="22" rx="2" fill="#475569"/>
+    <rect x="498" y="290" width="144" height="12" rx="6" fill="#94A3B8"/>
+    <rect x="498" y="314" width="102" height="10" rx="5" fill="#CBD5E1"/>
+    <rect x="656" y="290" width="44" height="28" rx="14" fill="#E2E8F0"/>
+
+    <!-- Row 3: Next Action / Target Bullseye (Sky Accent + Forward Arrow to Target) -->
+    <rect x="416" y="388" width="312" height="114" rx="18" fill="#F0F9FF" stroke="#0EA5E9" stroke-width="2.5"/>
+    <!-- Forward Arrow -->
+    <path d="M436 445 L506 445 M492 431 L508 445 L492 459" stroke="#0EA5E9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Action Bars -->
+    <rect x="528" y="428" width="104" height="12" rx="6" fill="#0369A1"/>
+    <rect x="528" y="452" width="76" height="10" rx="5" fill="#38BDF8"/>
+    <!-- Target Bullseye -->
+    <circle cx="678" cy="445" r="32" fill="#FFFFFF" stroke="#0EA5E9" stroke-width="4"/>
+    <circle cx="678" cy="445" r="20" fill="#E0F2FE" stroke="#4F46E5" stroke-width="3.5"/>
+    <circle cx="678" cy="445" r="8" fill="#10B981"/>
+  </g>
+</svg>

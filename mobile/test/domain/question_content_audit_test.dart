@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bilimyol_mobile/data/datasources/questions_data.dart';
 import 'package:bilimyol_mobile/data/datasources/lessons_data.dart';
+import 'package:bilimyol_mobile/domain/entities/question.dart';
 
 void main() {
   final forbiddenPatterns = [
@@ -40,12 +41,29 @@ void main() {
 
     test('verifies all English questions have clean options without spoiler text', () {
       final engQuestions = placementQuestionsData['course_eng_01'] ?? [];
-      expect(engQuestions.length, greaterThanOrEqualTo(5));
+      expect(engQuestions.length, equals(12));
 
+      var listeningCount = 0;
       for (final q in engQuestions) {
-        expect(q.options.length, greaterThanOrEqualTo(3));
+        expect(q.isPlacement, isTrue, reason: '${q.id} must have isPlacement=true');
+        expect({'A1', 'A2', 'B1'}, contains(q.cefrLevel), reason: '${q.id} cefrLevel must be A1..B1');
+        expect(q.text.contains('Audio context:'), isFalse, reason: '${q.id} must not leak inline audio script');
+        expect((q.textRu ?? '').trim().isNotEmpty, isTrue, reason: '${q.id} missing textRu');
+        expect((q.explanationRu ?? '').trim().isNotEmpty, isTrue, reason: '${q.id} missing explanationRu');
+        expect((q.wrongFeedback ?? '').trim().isNotEmpty, isTrue, reason: '${q.id} missing wrongFeedback');
+        expect((q.wrongFeedbackRu ?? '').trim().isNotEmpty, isTrue, reason: '${q.id} missing wrongFeedbackRu');
+        expect(q.options.length, equals(4));
         expect(q.correctIndex, greaterThanOrEqualTo(0));
         expect(q.correctIndex, lessThan(q.options.length));
+        expect(q.mistakeFeedbackByOption.keys.toSet(), containsAll(q.options));
+
+        if (q.skillId == 'skill_eng_listening') {
+          listeningCount++;
+          expect(q.media, isNotNull, reason: '${q.id} missing LessonMedia');
+          expect(q.media!.isApproved, isTrue);
+          expect(q.media!.source, startsWith('/lesson-media/english/placement/'));
+          expect(q.media!.resolvedSourceAssetPath, isNotNull);
+        }
 
         for (final opt in q.options) {
           for (final pattern in forbiddenPatterns) {
@@ -53,34 +71,54 @@ void main() {
           }
         }
       }
+      expect(listeningCount, equals(3));
     });
 
     test('verifies all interactive questions in seed lessons have clean options', () {
-      for (final lesson in seedLessons.values) {
-        for (final step in lesson.steps) {
-          if (step.interactiveQuestion != null) {
-            final q = step.interactiveQuestion!;
-            expect(q.options.length, greaterThanOrEqualTo(3));
-            expect(q.correctIndex, greaterThanOrEqualTo(0));
-            expect(q.correctIndex, lessThan(q.options.length));
+      void auditQuestion(Question q) {
+        if (q.usesTextEvaluation) {
+          expect(q.acceptedAnswers, isNotEmpty, reason: '${q.id} needs acceptedAnswers');
+          expect(q.explanation.trim().length, greaterThan(5));
+          for (final ans in q.acceptedAnswers) {
+            expect(ans.trim().length, greaterThan(0));
+            expect(
+              q.text.toLowerCase().contains(ans.toLowerCase()),
+              isFalse,
+              reason: 'Prompt for ${q.id} should not leak accepted answer "$ans"',
+            );
+            for (final pattern in forbiddenPatterns) {
+              expect(pattern.hasMatch(ans), isFalse, reason: 'Answer "$ans" matches forbidden pattern "$pattern"');
+            }
+          }
+        } else if (q.mode == QuestionMode.wordMatch) {
+          expect(q.matchPairs, isNotEmpty, reason: '${q.id} needs matchPairs');
+        } else if (q.mode == QuestionMode.sentenceOrder) {
+          expect(q.orderedTokens, isNotEmpty, reason: '${q.id} needs orderedTokens');
+        } else if (q.isSelfAssessed) {
+          expect(q.sampleResponse?.trim().isNotEmpty, isTrue, reason: '${q.id} needs sampleResponse');
+          expect(q.rubricCriteria, isNotEmpty, reason: '${q.id} needs rubricCriteria');
+        } else {
+          expect(q.options.length, greaterThanOrEqualTo(3), reason: '${q.id} needs >= 3 options');
+          expect(q.correctIndex, greaterThanOrEqualTo(0));
+          expect(q.correctIndex, lessThan(q.options.length));
 
-            for (final opt in q.options) {
-              for (final pattern in forbiddenPatterns) {
-                expect(pattern.hasMatch(opt), isFalse, reason: 'Option "$opt" matches forbidden pattern "$pattern"');
-              }
+          for (final opt in q.options) {
+            for (final pattern in forbiddenPatterns) {
+              expect(pattern.hasMatch(opt), isFalse, reason: 'Option "$opt" matches forbidden pattern "$pattern"');
             }
           }
         }
+      }
 
-        final reinf = lesson.reinforcementExercise;
-        expect(reinf.options.length, greaterThanOrEqualTo(3));
-        expect(reinf.correctIndex, greaterThanOrEqualTo(0));
-        expect(reinf.correctIndex, lessThan(reinf.options.length));
-
-        for (final opt in reinf.options) {
-          for (final pattern in forbiddenPatterns) {
-            expect(pattern.hasMatch(opt), isFalse, reason: 'Option "$opt" matches forbidden pattern "$pattern"');
+      for (final lesson in seedLessons.values) {
+        for (final step in lesson.steps) {
+          if (step.interactiveQuestion != null) {
+            auditQuestion(step.interactiveQuestion!);
           }
+        }
+        auditQuestion(lesson.reinforcementExercise);
+        if (lesson.alternateExercise != null) {
+          auditQuestion(lesson.alternateExercise!);
         }
       }
     });

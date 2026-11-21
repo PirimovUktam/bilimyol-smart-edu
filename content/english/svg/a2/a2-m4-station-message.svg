@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="stationSky" x1="0" y1="0" x2="0" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E0EAFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="390" fill="url(#stationSky)"/>
+  <rect y="390" width="800" height="210" fill="#E2E8F0"/>
+
+  <!-- Platform Canopy Roof & Pillars -->
+  <polygon points="36,118 524,118 552,150 24,150" fill="#4F46E5"/>
+  <rect x="92" y="150" width="18" height="240" fill="#64748B"/>
+  <rect x="424" y="150" width="18" height="240" fill="#64748B"/>
+
+  <!-- Hanging Analog Station Clock (14:30 / Half past two) -->
+  <rect x="256" y="150" width="10" height="26" fill="#334155"/>
+  <circle cx="261" cy="220" r="48" fill="#FFFFFF" stroke="#0F172A" stroke-width="5"/>
+  <circle cx="261" cy="180" r="3" fill="#475569"/>
+  <circle cx="301" cy="220" r="3" fill="#475569"/>
+  <circle cx="261" cy="260" r="3" fill="#475569"/>
+  <circle cx="221" cy="220" r="3" fill="#475569"/>
+  <line x1="261" y1="220" x2="286" y2="210" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="261" y1="220" x2="261" y2="252" stroke="#4F46E5" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="261" cy="220" r="4" fill="#0F172A"/>
+
+  <!-- Train Silhouette at Platform -->
+  <path d="M56 322 Q56 286 98 286 L454 286 L478 362 L56 362 Z" fill="#1E293B"/>
+  <path d="M74 298 L138 298 L138 330 L64 330 Z" fill="#38BDF8"/>
+  <rect x="154" y="298" width="66" height="32" rx="6" fill="#DBEAFE"/>
+  <rect x="234" y="298" width="66" height="32" rx="6" fill="#DBEAFE"/>
+  <rect x="314" y="298" width="66" height="32" rx="6" fill="#DBEAFE"/>
+  <rect x="394" y="298" width="52" height="32" rx="6" fill="#DBEAFE"/>
+  <rect x="56" y="344" width="416" height="8" fill="#10B981"/>
+  <!-- Platform Edge Safety Line -->
+  <rect x="24" y="390" width="490" height="12" fill="#F59E0B"/>
+  <rect x="24" y="402" width="490" height="44" fill="#CBD5E1"/>
+
+  <!-- Smartphone with Clean Chat Message Bubbles (Right Foreground) -->
+  <g filter="url(#phoneShadow)">
+    <rect x="524" y="92" width="232" height="432" rx="34" fill="#0F172A"/>
+    <rect x="536" y="108" width="208" height="400" rx="24" fill="#FFFFFF"/>
+    <!-- Speaker Notch -->
+    <rect x="610" y="118" width="60" height="8" rx="4" fill="#CBD5E1"/>
+
+    <!-- Top Status Header Bar -->
+    <rect x="536" y="138" width="208" height="42" fill="#EEF2FF"/>
+    <circle cx="564" cy="159" r="12" fill="#4F46E5"/>
+    <rect x="586" y="153" width="90" height="10" rx="5" fill="#94A3B8"/>
+
+    <!-- Incoming Message Bubble 1 (Slate) -->
+    <rect x="552" y="200" width="152" height="58" rx="14" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1.5"/>
+    <rect x="566" y="216" width="112" height="8" rx="4" fill="#64748B"/>
+    <rect x="566" y="232" width="84" height="8" rx="4" fill="#94A3B8"/>
+
+    <!-- Alert / Delay Badge Icon inside Bubble 2 -->
+    <rect x="552" y="274" width="152" height="54" rx="14" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+    <circle cx="576" cy="301" r="12" fill="#F59E0B"/>
+    <rect x="574" y="294" width="4" height="9" rx="2" fill="#FFFFFF"/>
+    <circle cx="576" cy="307" r="2" fill="#FFFFFF"/>
+    <rect x="598" y="291" width="86" height="8" rx="4" fill="#B45309"/>
+    <rect x="598" y="305" width="62" height="8" rx="4" fill="#D97706"/>
+
+    <!-- Outgoing Reply Bubble (Indigo) -->
+    <rect x="574" y="346" width="154" height="62" rx="14" fill="#4F46E5"/>
+    <rect x="590" y="362" width="118" height="8" rx="4" fill="#FFFFFF"/>
+    <rect x="590" y="378" width="92" height="8" rx="4" fill="#C7D2FE"/>
+
+    <!-- Bottom Input Bar & Send Button -->
+    <rect x="552" y="452" width="134" height="34" rx="17" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+    <circle cx="712" cy="469" r="17" fill="#10B981"/>
+    <path d="M706 469 L718 469 M713 463 L719 469 L713 475" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

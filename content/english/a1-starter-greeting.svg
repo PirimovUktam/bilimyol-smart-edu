@@ -1,0 +1,328 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DCEAFE"/>
+      <stop offset="55%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="122" cy="94" r="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FEF3C7" stop-opacity="0.95"/>
+      <stop offset="45%" stop-color="#FDE68A" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#FEF3C7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mountainBack" x1="0" y1="270" x2="0" y2="375" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="facadeGrad" x1="400" y1="130" x2="400" y2="410" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <linearGradient id="archRecess" x1="400" y1="185" x2="400" y2="405" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="windowGlass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E0EAFF"/>
+      <stop offset="100%" stop-color="#BFDBFE"/>
+    </linearGradient>
+    <linearGradient id="courtyardGrad" x1="400" y1="405" x2="400" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F1F5F9"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="pathGrad" x1="400" y1="405" x2="400" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+    <linearGradient id="azizaCardigan" x1="295" y1="275" x2="325" y2="395" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#4338CA"/>
+    </linearGradient>
+    <linearGradient id="benOvershirt" x1="475" y1="270" x2="515" y2="395" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- Sky & Morning Sun -->
+  <rect width="800" height="600" fill="url(#skyGrad)"/>
+  <circle cx="122" cy="94" r="115" fill="url(#sunGlow)"/>
+  <circle cx="122" cy="94" r="27" fill="#FDE68A" opacity="0.7"/>
+  <circle cx="122" cy="94" r="21" fill="#FBBF24" opacity="0.88"/>
+
+  <!-- Airy Clouds -->
+  <g fill="#FFFFFF" opacity="0.88">
+    <path d="M235 92 C235 79 249 70 264 74 C272 62 294 62 303 75 C318 74 330 85 328 98 C328 104 322 108 315 108 L244 108 C236 108 235 100 235 92 Z"/>
+    <path d="M565 112 C565 100 578 92 591 95 C600 83 622 83 630 96 C644 95 654 104 653 116 C653 122 647 125 640 125 L574 125 C567 125 565 118 565 112 Z"/>
+  </g>
+
+  <!-- Distant Tian Shan / Tashkent Morning Mountains -->
+  <path d="M0 365 L85 304 L158 338 L246 286 L345 344 L442 292 L540 342 L636 282 L732 332 L800 296 L800 415 L0 415 Z" fill="url(#mountainBack)" opacity="0.72"/>
+  <path d="M246 286 L278 308 L260 311 L246 299 L232 312 L219 306 Z" fill="#F8FAFC" opacity="0.78"/>
+  <path d="M636 282 L666 304 L648 307 L636 295 L622 307 L610 302 Z" fill="#F8FAFC" opacity="0.78"/>
+  <path d="M0 375 L110 338 L210 362 L330 340 L480 368 L620 334 L735 358 L800 342 L800 415 L0 415 Z" fill="#E2E8F0" opacity="0.65"/>
+
+  <!-- Tashkent School Architecture (Midground) -->
+  <g filter="url(#softShadow)">
+    <!-- Side Wings -->
+    <rect x="150" y="168" width="500" height="242" rx="8" fill="url(#facadeGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
+    <!-- Roof Cornice -->
+    <rect x="142" y="156" width="516" height="16" rx="4" fill="#E2E8F0"/>
+    <rect x="150" y="168" width="500" height="6" fill="#4F46E5" opacity="0.18"/>
+    <!-- Central Portal Risalit -->
+    <rect x="305" y="126" width="190" height="284" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+    <rect x="298" y="116" width="204" height="14" rx="4" fill="#CBD5E1"/>
+    <rect x="305" y="130" width="190" height="7" fill="#4F46E5"/>
+  </g>
+
+  <!-- Symmetrical School Windows (Left Wing) -->
+  <g>
+    <rect x="176" y="196" width="46" height="74" rx="23" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="199" y1="196" x2="199" y2="270" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="176" y1="234" x2="222" y2="234" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="240" y="196" width="46" height="74" rx="23" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="263" y1="196" x2="263" y2="270" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="240" y1="234" x2="286" y2="234" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="176" y="294" width="46" height="78" rx="6" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="199" y1="294" x2="199" y2="372" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="176" y1="332" x2="222" y2="332" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="240" y="294" width="46" height="78" rx="6" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="263" y1="294" x2="263" y2="372" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="240" y1="332" x2="286" y2="332" stroke="#FFFFFF" stroke-width="2"/>
+  </g>
+
+  <!-- Symmetrical School Windows (Right Wing) -->
+  <g>
+    <rect x="514" y="196" width="46" height="74" rx="23" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="537" y1="196" x2="537" y2="270" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="514" y1="234" x2="560" y2="234" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="578" y="196" width="46" height="74" rx="23" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="601" y1="196" x2="601" y2="270" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="578" y1="234" x2="624" y2="234" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="514" y="294" width="46" height="78" rx="6" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="537" y1="294" x2="537" y2="372" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="514" y1="332" x2="560" y2="332" stroke="#FFFFFF" stroke-width="2"/>
+
+    <rect x="578" y="294" width="46" height="78" rx="6" fill="url(#windowGlass)" stroke="#94A3B8" stroke-width="1.5"/>
+    <line x1="601" y1="294" x2="601" y2="372" stroke="#FFFFFF" stroke-width="2"/>
+    <line x1="578" y1="332" x2="624" y2="332" stroke="#FFFFFF" stroke-width="2"/>
+  </g>
+
+  <!-- Pointed Tashkent Entrance Archway + Geometric Mosaic Trim (Zero Text) -->
+  <g>
+    <!-- Outer Portal Frame -->
+    <rect x="322" y="152" width="156" height="258" rx="4" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+    <!-- Purely Geometric Mosaic Band -->
+    <g fill="#4F46E5">
+      <polygon points="334,160 342,168 334,176 326,168"/>
+      <polygon points="356,160 364,168 356,176 348,168"/>
+      <polygon points="378,160 386,168 378,176 370,168"/>
+      <polygon points="400,160 408,168 400,176 392,168"/>
+      <polygon points="422,160 430,168 422,176 414,168"/>
+      <polygon points="444,160 452,168 444,176 436,168"/>
+      <polygon points="466,160 474,168 466,176 458,168"/>
+    </g>
+    <g fill="#F59E0B">
+      <circle cx="345" cy="168" r="2.5"/>
+      <circle cx="367" cy="168" r="2.5"/>
+      <circle cx="389" cy="168" r="2.5"/>
+      <circle cx="411" cy="168" r="2.5"/>
+      <circle cx="433" cy="168" r="2.5"/>
+      <circle cx="455" cy="168" r="2.5"/>
+    </g>
+    <!-- Pointed Arch Niche -->
+    <path d="M336 410 L336 250 Q336 205 400 182 Q464 205 464 250 L464 410 Z" fill="url(#archRecess)"/>
+    <path d="M342 410 L342 252 Q342 212 400 190 Q458 212 458 252 L458 410 Z" fill="#4338CA" opacity="0.35"/>
+    <!-- School Double Doors -->
+    <rect x="352" y="266" width="46" height="128" rx="3" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+    <rect x="402" y="266" width="46" height="128" rx="3" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+    <rect x="360" y="276" width="30" height="62" rx="2" fill="url(#windowGlass)"/>
+    <rect x="410" y="276" width="30" height="62" rx="2" fill="url(#windowGlass)"/>
+    <circle cx="392" cy="348" r="3" fill="#F59E0B"/>
+    <circle cx="408" cy="348" r="3" fill="#F59E0B"/>
+    <!-- Fanlight Transom -->
+    <path d="M352 258 Q352 218 400 202 Q448 218 448 258 Z" fill="#E0EAFF" opacity="0.88"/>
+    <line x1="400" y1="202" x2="400" y2="258" stroke="#4F46E5" stroke-width="2"/>
+    <line x1="364" y1="258" x2="400" y2="202" stroke="#4F46E5" stroke-width="1.5" opacity="0.6"/>
+    <line x1="436" y1="258" x2="400" y2="202" stroke="#4F46E5" stroke-width="1.5" opacity="0.6"/>
+    <!-- Stone Entrance Steps -->
+    <rect x="326" y="394" width="148" height="10" rx="2" fill="#E2E8F0"/>
+    <rect x="314" y="404" width="172" height="10" rx="2" fill="#CBD5E1"/>
+  </g>
+
+  <!-- Framing Chinar Trees & Courtyard Hedges -->
+  <!-- Left Tree & Hedge -->
+  <g>
+    <path d="M58 415 Q62 325 56 260 L78 260 Q72 325 78 415 Z" fill="#64748B"/>
+    <path d="M68 308 L36 266 L46 260 L72 296 Z" fill="#64748B"/>
+    <path d="M72 296 L104 252 L114 258 L76 308 Z" fill="#64748B"/>
+    <circle cx="48" cy="212" r="64" fill="#059669"/>
+    <circle cx="112" cy="222" r="56" fill="#10B981"/>
+    <circle cx="78" cy="162" r="58" fill="#10B981"/>
+    <circle cx="130" cy="176" r="42" fill="#34D399"/>
+    <circle cx="24" cy="172" r="46" fill="#34D399"/>
+    <!-- Low Hedge Left -->
+    <path d="M0 412 Q0 374 42 374 Q74 366 105 376 Q142 368 172 386 Q192 396 196 414 L0 414 Z" fill="#10B981"/>
+    <path d="M18 394 Q55 378 92 390 Q135 378 172 398" stroke="#34D399" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- Right Tree & Hedge -->
+  <g>
+    <path d="M722 415 Q728 325 722 256 L744 256 Q738 325 744 415 Z" fill="#64748B"/>
+    <path d="M730 302 L696 258 L706 252 L734 290 Z" fill="#64748B"/>
+    <circle cx="752" cy="210" r="64" fill="#059669"/>
+    <circle cx="688" cy="222" r="56" fill="#10B981"/>
+    <circle cx="722" cy="160" r="58" fill="#10B981"/>
+    <circle cx="668" cy="178" r="42" fill="#34D399"/>
+    <circle cx="776" cy="170" r="46" fill="#34D399"/>
+    <!-- Low Hedge Right -->
+    <path d="M604 414 Q612 388 642 380 Q676 366 710 376 Q748 364 800 378 L800 414 Z" fill="#10B981"/>
+    <path d="M626 398 Q668 380 712 392 Q752 378 784 394" stroke="#34D399" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- Courtyard Walkway & Ground -->
+  <rect x="0" y="412" width="800" height="188" fill="url(#courtyardGrad)"/>
+  <polygon points="314,414 486,414 685,600 115,600" fill="url(#pathGrad)"/>
+  <line x1="0" y1="413" x2="800" y2="413" stroke="#CBD5E1" stroke-width="2"/>
+  <line x1="255" y1="468" x2="545" y2="468" stroke="#E2E8F0" stroke-width="1.5"/>
+  <line x1="196" y1="526" x2="604" y2="526" stroke="#E2E8F0" stroke-width="1.5"/>
+  <line x1="400" y1="414" x2="400" y2="600" stroke="#E2E8F0" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Character Contact Shadows -->
+  <ellipse cx="304" cy="524" rx="54" ry="12" fill="#0F172A" opacity="0.12"/>
+  <ellipse cx="496" cy="524" rx="54" ry="12" fill="#0F172A" opacity="0.12"/>
+
+  <!-- AZIZA (Left-center, 3/4 view facing Ben, waving right hand) -->
+  <g id="aziza">
+    <!-- Backpack (visible behind left shoulder) -->
+    <rect x="250" y="294" width="32" height="62" rx="14" fill="#4338CA"/>
+    <rect x="254" y="302" width="22" height="44" rx="10" fill="#6366F1"/>
+
+    <!-- Legs & Shoes -->
+    <rect x="282" y="422" width="16" height="80" rx="7" fill="#F3C6A5"/>
+    <rect x="308" y="422" width="16" height="80" rx="7" fill="#EBB894"/>
+    <!-- Socks -->
+    <rect x="282" y="486" width="16" height="14" rx="3" fill="#FFFFFF"/>
+    <rect x="308" y="486" width="16" height="14" rx="3" fill="#FFFFFF"/>
+    <!-- Sneakers -->
+    <path d="M272 503 Q272 496 286 496 L296 496 Q303 496 303 507 L303 516 L272 516 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+    <path d="M272 512 L303 512 L303 518 L272 518 Z" fill="#4F46E5"/>
+    <path d="M306 504 Q306 497 320 497 L332 497 Q342 498 342 509 L342 518 L306 518 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+    <path d="M306 513 L342 513 L342 519 L306 519 Z" fill="#4F46E5"/>
+
+    <!-- Skirt -->
+    <path d="M275 362 L329 362 L341 434 Q304 440 264 434 Z" fill="#1E293B"/>
+    <path d="M291 364 L285 434" stroke="#334155" stroke-width="2"/>
+    <path d="M312 364 L318 434" stroke="#334155" stroke-width="2"/>
+
+    <!-- Torso: White Shirt + Indigo Cardigan -->
+    <path d="M275 282 Q302 272 330 284 L334 366 L271 366 Z" fill="#FFFFFF"/>
+    <path d="M275 282 Q290 275 298 282 L302 366 L270 366 Z" fill="url(#azizaCardigan)"/>
+    <path d="M330 284 Q316 276 308 284 L306 366 L335 366 Z" fill="url(#azizaCardigan)"/>
+    <!-- Crisp Collar -->
+    <polygon points="295,279 304,292 313,279" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+    <!-- Backpack Strap -->
+    <path d="M282 280 Q288 318 282 355" stroke="#6366F1" stroke-width="7" stroke-linecap="round"/>
+
+    <!-- Left Arm holding Amber Notebook -->
+    <path d="M275 286 Q256 318 268 348" stroke="#4F46E5" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <!-- Notebook (solid Amber, zero text) -->
+    <rect x="256" y="330" width="32" height="42" rx="4" transform="rotate(-10 272 351)" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/>
+    <rect x="259" y="334" width="6" height="34" rx="2" transform="rotate(-10 272 351)" fill="#FEF3C7" opacity="0.65"/>
+    <!-- Left Hand -->
+    <circle cx="276" cy="348" r="8" fill="#F3C6A5"/>
+
+    <!-- Raised Right Arm (Welcoming Wave toward Ben) -->
+    <path d="M326 290 Q352 288 368 256" stroke="#4F46E5" stroke-width="15" stroke-linecap="round" fill="none"/>
+    <!-- Open Waving Hand -->
+    <g transform="translate(370,248) rotate(16)">
+      <ellipse cx="0" cy="4" rx="7.5" ry="9" fill="#F3C6A5"/>
+      <rect x="-6.5" y="-10" width="3.2" height="11" rx="1.6" fill="#F3C6A5"/>
+      <rect x="-2" y="-13" width="3.2" height="13" rx="1.6" fill="#F3C6A5"/>
+      <rect x="2.2" y="-11" width="3.2" height="11" rx="1.6" fill="#F3C6A5"/>
+      <rect x="6" y="-7" width="3" height="8" rx="1.5" fill="#F3C6A5"/>
+      <ellipse cx="-7.5" cy="3" rx="2.8" ry="5.5" transform="rotate(-32 -7.5 3)" fill="#F3C6A5"/>
+    </g>
+
+    <!-- Neck & Head -->
+    <rect x="295" y="264" width="14" height="18" rx="6" fill="#EBB894"/>
+    <!-- Back Ponytail -->
+    <path d="M278 232 Q252 238 254 274 Q264 282 278 268 Z" fill="#1E293B"/>
+    <!-- Amber Hair Clip -->
+    <rect x="274" y="232" width="10" height="5" rx="2.5" transform="rotate(-18 279 234)" fill="#F59E0B"/>
+    <!-- Head Shape -->
+    <ellipse cx="304" cy="240" rx="25" ry="27" fill="#F3C6A5"/>
+    <!-- Hair Top & Side Bangs -->
+    <path d="M278 242 Q278 210 306 210 Q329 211 329 234 Q316 224 298 228 Q286 232 282 246 Z" fill="#1E293B"/>
+    <!-- Facial Features (facing 3/4 right) -->
+    <circle cx="306" cy="240" r="2.5" fill="#0F172A"/>
+    <circle cx="320" cy="240" r="2.5" fill="#0F172A"/>
+    <path d="M302 233 Q306 231 310 233" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M316 233 Q320 231 324 233" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M314 242 L316 247 L313 248" stroke="#D99B78" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M306 253 Q313 259 320 253" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <ellipse cx="298" cy="248" rx="4.5" ry="2.5" fill="#F43F5E" opacity="0.22"/>
+  </g>
+
+  <!-- BEN (Right-center, 3/4 view facing Aziza, waving left hand) -->
+  <g id="ben">
+    <!-- Legs & Chinos -->
+    <rect x="472" y="366" width="22" height="134" rx="9" fill="#334155"/>
+    <rect x="498" y="366" width="22" height="134" rx="9" fill="#1E293B"/>
+    <!-- Sneakers -->
+    <path d="M460 509 Q460 497 472 497 L488 497 Q494 497 494 509 L494 518 L460 518 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+    <path d="M460 513 L494 513 L494 519 L460 519 Z" fill="#10B981"/>
+    <path d="M498 509 Q498 497 510 497 L526 497 Q532 497 532 509 L532 518 L498 518 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+    <path d="M498 513 L532 513 L532 519 L498 519 Z" fill="#10B981"/>
+
+    <!-- Torso: Light Tee + Emerald Overshirt -->
+    <path d="M468 278 Q496 268 525 280 L526 372 L466 372 Z" fill="#F8FAFC"/>
+    <path d="M466 278 Q482 272 488 280 L488 372 L464 372 Z" fill="url(#benOvershirt)"/>
+    <path d="M526 280 Q512 272 504 280 L504 372 L528 372 Z" fill="url(#benOvershirt)"/>
+
+    <!-- Crossbody Satchel Strap & Bag -->
+    <path d="M474 280 L522 362" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/>
+    <rect x="506" y="346" width="34" height="30" rx="6" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/>
+    <path d="M506 355 L540 355" stroke="#D97706" stroke-width="2"/>
+    <rect x="520" y="353" width="6" height="7" rx="2" fill="#FEF3C7"/>
+
+    <!-- Right Arm relaxed at side -->
+    <path d="M524 286 Q538 320 532 356" stroke="#059669" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <circle cx="531" cy="362" r="8" fill="#FAD7C0"/>
+
+    <!-- Raised Left Arm (Reciprocal Greeting Wave toward Aziza) -->
+    <path d="M469 288 Q444 292 429 264" stroke="#10B981" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <!-- Open Waving Hand -->
+    <g transform="translate(427,255) rotate(-18)">
+      <ellipse cx="0" cy="4" rx="7.5" ry="9" fill="#FAD7C0"/>
+      <rect x="-6.5" y="-10" width="3.2" height="11" rx="1.6" fill="#FAD7C0"/>
+      <rect x="-2" y="-13" width="3.2" height="13" rx="1.6" fill="#FAD7C0"/>
+      <rect x="2.2" y="-11" width="3.2" height="11" rx="1.6" fill="#FAD7C0"/>
+      <rect x="6" y="-7" width="3" height="8" rx="1.5" fill="#FAD7C0"/>
+      <ellipse cx="7.5" cy="3" rx="2.8" ry="5.5" transform="rotate(32 7.5 3)" fill="#FAD7C0"/>
+    </g>
+
+    <!-- Neck & Head -->
+    <rect x="488" y="258" width="15" height="19" rx="6" fill="#F3C6AA"/>
+    <ellipse cx="495" cy="234" rx="25" ry="27" fill="#FAD7C0"/>
+    <!-- Textured Chestnut Hair -->
+    <path d="M470 230 Q468 202 496 202 Q522 202 522 232 Q516 222 504 220 Q490 218 478 228 Z" fill="#78350F"/>
+    <path d="M478 212 Q492 204 510 210" stroke="#92400E" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <!-- Facial Features (facing 3/4 left) -->
+    <circle cx="480" cy="234" r="2.5" fill="#0F172A"/>
+    <circle cx="494" cy="234" r="2.5" fill="#0F172A"/>
+    <path d="M476 227 Q480 225 484 227" stroke="#78350F" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M490 227 Q494 225 498 227" stroke="#78350F" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M485 236 L483 241 L486 242" stroke="#DFA88B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M478 247 Q486 254 494 247" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <ellipse cx="499" cy="242" rx="4.5" ry="2.5" fill="#F43F5E" opacity="0.2"/>
+  </g>
+</svg>

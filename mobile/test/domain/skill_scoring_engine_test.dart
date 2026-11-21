@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bilimyol_mobile/data/datasources/english/placement_questions_data.dart';
 import 'package:bilimyol_mobile/domain/personalization/skill_scoring_engine.dart';
 import 'package:bilimyol_mobile/domain/entities/skill_score.dart';
 import 'package:bilimyol_mobile/domain/entities/question.dart';
@@ -102,6 +103,128 @@ void main() {
       expect(SkillScoringEngine.calculateReinforcementScore(41), equals(63));
       expect(SkillScoringEngine.calculateReinforcementScore(43), equals(65));
       expect(SkillScoringEngine.calculateReinforcementScore(90), equals(100));
+    });
+
+    test('computePlacementScores uses answered count as denominator in 8-of-12 adaptive English placement', () {
+      final answered8 = [
+        for (final q in englishPlacementQuestionsRaw.where((q) => q.difficulty != QuestionDifficulty.hard))
+          QuestionAnswerSubmission(
+            questionId: q.id,
+            selectedIndex: q.correctIndex,
+            isCorrect: true,
+          ),
+      ];
+      expect(answered8.length, equals(8));
+
+      final scores = SkillScoringEngine.computePlacementScores(
+        'course_eng_01',
+        englishPlacementQuestionsRaw,
+        answered8,
+      );
+      expect(scores.length, equals(4));
+      for (final s in scores.values) {
+        expect(s.score, equals(100));
+      }
+
+      final zeroScores = SkillScoringEngine.computePlacementScores(
+        'course_eng_01',
+        englishPlacementQuestionsRaw,
+        [
+          for (final q in englishPlacementQuestionsRaw.where((q) => q.difficulty != QuestionDifficulty.hard))
+            QuestionAnswerSubmission(
+              questionId: q.id,
+              selectedIndex: (q.correctIndex + 1) % q.options.length,
+              isCorrect: false,
+            ),
+        ],
+      );
+      for (final s in zeroScores.values) {
+        expect(s.score, equals(0));
+      }
+    });
+
+    test('computeEnglishPlacementCefr calibrates Pre-A1..B1 and strictly caps at B1', () {
+      final a1Qs = englishPlacementQuestionsRaw
+          .where((q) => q.cefrLevel == 'A1')
+          .toList();
+      final a2Qs = englishPlacementQuestionsRaw
+          .where((q) => q.cefrLevel == 'A2')
+          .toList();
+      final b1Qs = englishPlacementQuestionsRaw
+          .where((q) => q.cefrLevel == 'B1')
+          .toList();
+
+      // 0/8 -> Pre-A1
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in [...a1Qs, ...a2Qs])
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: 0, isCorrect: false),
+          ],
+        ),
+        equals('Pre-A1'),
+      );
+
+      // 4/8 A1-only -> A1
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in a1Qs)
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
+            for (final q in a2Qs)
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: 0, isCorrect: false),
+          ],
+        ),
+        equals('A1'),
+      );
+
+      // 6/8 (A1 + half A2) -> A2
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in a1Qs)
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
+            QuestionAnswerSubmission(questionId: a2Qs[0].id, selectedIndex: a2Qs[0].correctIndex, isCorrect: true),
+            QuestionAnswerSubmission(questionId: a2Qs[1].id, selectedIndex: a2Qs[1].correctIndex, isCorrect: true),
+            QuestionAnswerSubmission(questionId: a2Qs[2].id, selectedIndex: 0, isCorrect: false),
+            QuestionAnswerSubmission(questionId: a2Qs[3].id, selectedIndex: 0, isCorrect: false),
+          ],
+        ),
+        equals('A2'),
+      );
+
+      // 8/8 (A1 + A2 100%) -> B1 (capped)
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in [...a1Qs, ...a2Qs])
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
+          ],
+        ),
+        equals('B1'),
+      );
+
+      // 12/12 including B1 -> B1 (never B2/C1/C2)
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in [...a1Qs, ...a2Qs, ...b1Qs])
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
+          ],
+        ),
+        equals('B1'),
+      );
+
+      expect(SkillScoringEngine.englishEntryTargetForCefr('Pre-A1').lessonId, 'lesson_eng_starter');
+      expect(SkillScoringEngine.englishEntryTargetForCefr('A1').lessonId, 'lesson_eng_starter');
+      expect(SkillScoringEngine.englishEntryTargetForCefr('A2').nodeId, 'node_eng_a2_m1_directions');
+      expect(SkillScoringEngine.englishEntryTargetForCefr('B1').nodeId, 'node_eng_b1_m1_travel');
+      expect(SkillScoringEngine.englishEntryTargetForCefr('B2').cefrLevel, 'B1');
     });
   });
 }

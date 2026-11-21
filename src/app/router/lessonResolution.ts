@@ -28,6 +28,14 @@ export function resolveContinuationLessonId(
       const next = roadmap.nodes.find((node) => node.id === roadmap.activeNodeId);
       return next ? resolveRoadmapNodeLessonId(next) : null;
     }
+    const activeTopic = roadmap.nodes.find(
+      (node) =>
+        node.id === roadmap.activeNodeId &&
+        !node.isReinforcement &&
+        node.status !== 'locked' &&
+        node.status !== 'completed'
+    );
+    if (activeTopic?.targetLessonId) return activeTopic.targetLessonId;
     const topics = roadmap.nodes.filter((node) => !node.isReinforcement);
     const preferred = topics.find((node) => node.status === 'available' || node.status === 'reinforcement' || node.status === 'in_progress');
     if (preferred) return preferred.targetLessonId ?? null;

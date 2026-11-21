@@ -108,5 +108,74 @@ void main() {
       final graphNode = roadmap.nodes.firstWhere((n) => n.id == 'node_math_graphs');
       expect(graphNode.status, equals(NodeStatus.available));
     });
+
+    test('empty skillScores on course_eng_01 does not mark unlocked nodes as reinforcement or inject reinf_* nodes', () {
+      final engNodes = seedRoadmapNodes['course_eng_01']!;
+      final roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_eng_01',
+        baseNodes: engNodes,
+        skillScores: const {},
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+      );
+
+      expect(roadmap.nodes.any((n) => n.isReinforcement), isFalse);
+      final firstNode = roadmap.nodes.firstWhere((n) => n.id == 'node_eng_a1_m1_greetings');
+      expect(firstNode.status, equals(NodeStatus.available));
+      expect(firstNode.score, isNull);
+    });
+
+    test('50..69 score keeps node available with needsTargetedPractice and no reinf_* node', () {
+      final engNodes = seedRoadmapNodes['course_eng_01']!;
+      final roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_eng_01',
+        baseNodes: engNodes,
+        skillScores: const {
+          'skill_eng_vocab': SkillScore(
+            skillId: 'skill_eng_vocab',
+            courseId: 'course_eng_01',
+            score: 60,
+            lastUpdated: 1000,
+            masteryLevel: MasteryLevel.proficient,
+          ),
+        },
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+      );
+
+      final firstNode = roadmap.nodes.firstWhere((n) => n.id == 'node_eng_a1_m1_greetings');
+      expect(firstNode.status, equals(NodeStatus.available));
+      expect(firstNode.needsTargetedPractice, isTrue);
+      expect(roadmap.nodes.where((n) => n.skillId == 'skill_eng_vocab' && n.isReinforcement), isEmpty);
+    });
+
+    test('placementCefrTier A2/B1 unlocks placed entry node without marking prerequisites completed', () {
+      final engNodes = seedRoadmapNodes['course_eng_01']!;
+      final a2Roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_eng_01',
+        baseNodes: engNodes,
+        skillScores: const {},
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+        placementCefrTier: 'A2',
+      );
+      expect(a2Roadmap.activeNodeId, equals('node_eng_a2_m1_directions'));
+      final a2Entry = a2Roadmap.nodes.firstWhere((n) => n.id == 'node_eng_a2_m1_directions');
+      expect(a2Entry.status, equals(NodeStatus.available));
+      expect(RouteEngine.canStartNode(a2Entry, const [], placementCefrTier: 'A2'), isTrue);
+
+      final b1Roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_eng_01',
+        baseNodes: engNodes,
+        skillScores: const {},
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+        placementCefrTier: 'B1',
+      );
+      expect(b1Roadmap.activeNodeId, equals('node_eng_b1_m1_travel'));
+      final b1Entry = b1Roadmap.nodes.firstWhere((n) => n.id == 'node_eng_b1_m1_travel');
+      expect(b1Entry.status, equals(NodeStatus.available));
+      expect(RouteEngine.canStartNode(b1Entry, const [], placementCefrTier: 'B1'), isTrue);
+    });
   });
 }

@@ -16,14 +16,14 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const variantStyles = {
-    blue: 'bg-brand/10 text-brand border-brand/20',
-    indigo: 'bg-brand/10 text-brand border-brand/20',
-    teal: 'bg-path/12 text-[#0284C7] border-path/25',
-    amber: 'bg-amber/12 text-[#B45309] border-amber/30',
-    rose: 'bg-coral/10 text-[#BE123C] border-coral/25',
-    emerald: 'bg-mint/12 text-[#059669] border-mint/25',
-    purple: 'bg-[#6d28d9]/10 text-[#5b21b6] border-[#6d28d9]/25',
-    slate: 'bg-slate-100 text-graphite border-hairline',
+    blue: 'bg-brand/15 text-brand-dark border-brand/30',
+    indigo: 'bg-brand/15 text-brand-dark border-brand/30',
+    teal: 'bg-path/15 text-[#67E8F9] border-path/30',
+    amber: 'bg-amber/15 text-[#FCD34D] border-amber/30',
+    rose: 'bg-coral/15 text-[#FDA4AF] border-coral/30',
+    emerald: 'bg-mint/15 text-[#6EE7B7] border-mint/30',
+    purple: 'bg-[#6d28d9]/15 text-[#C4B5FD] border-[#6d28d9]/30',
+    slate: 'bg-sand text-graphite border-hairline',
   };
 
   const sizeStyles = {

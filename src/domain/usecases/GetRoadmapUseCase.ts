@@ -22,7 +22,8 @@ export class GetRoadmapUseCase {
       baseNodes,
       scores,
       profile.completedNodeIds || [],
-      profile.completedReinforcementIds || []
+      profile.completedReinforcementIds || [],
+      { placementCefr: profile.placementCefrByCourse?.[courseId] }
     );
   }
 }

@@ -17,16 +17,25 @@ import '../../core/widgets/subject_icon.dart';
 class CourseSelectionScreen extends ConsumerWidget {
   const CourseSelectionScreen({super.key});
 
-  String _subjectBadgeText(SubjectType subject) {
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
+  String _subjectBadgeText(SubjectType subject, bool isRu) {
     switch (subject) {
       case SubjectType.mathematics:
-        return 'Aniq fanlar';
+        return isRu ? 'Точные науки' : 'Aniq fanlar';
       case SubjectType.english:
-        return 'Xorijiy til';
+        return isRu ? 'Иностранный язык' : 'Xorijiy til';
       case SubjectType.it:
-        return 'Dasturlash';
+        return isRu ? 'Программирование' : 'Dasturlash';
       case SubjectType.logic:
-        return 'Tafakkur';
+        return isRu ? 'Мышление' : 'Tafakkur';
     }
   }
 
@@ -34,6 +43,8 @@ class CourseSelectionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(courseStateNotifierProvider);
     final learner = ref.watch(learnerStateNotifierProvider).value;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
     final activeCourse = state.activeCourse;
     final selectedId =
         activeCourse != null && hasStartedCourse(activeCourse, learner)
@@ -51,14 +62,17 @@ class CourseSelectionScreen extends ConsumerWidget {
               children: [
                 const BilimYolLogo(size: 40),
                 const SizedBox(height: 24),
-                const EdTechReveal(
+                EdTechReveal(
                   index: 0,
                   child: EdTechSectionHeader(
-                    pillText: 'Fanlar katalogi',
-                    title: 'Qaysi fanni o‘rganishni istaysiz?',
-                    highlightWord: 'istaysiz?',
-                    subtitle:
-                        'Har bir fan uchun alohida ta’lim yo‘li va natijalar saqlanadi.',
+                    pillText: isRu ? 'Каталог предметов' : 'Fanlar katalogi',
+                    title: isRu
+                        ? 'Какой предмет вы хотите изучать?'
+                        : 'Qaysi fanni o‘rganishni istaysiz?',
+                    highlightWord: isRu ? 'изучать?' : 'istaysiz?',
+                    subtitle: isRu
+                        ? 'Для каждого предмета сохраняются отдельный маршрут и результаты.'
+                        : 'Har bir fan uchun alohida ta’lim yo‘li va natijalar saqlanadi.',
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -87,15 +101,19 @@ class CourseSelectionScreen extends ConsumerWidget {
                         final progress = totalLessons > 0
                             ? completedLessons / totalLessons
                             : 0.0;
+                        final bodyTextColor =
+                            (isSelected && !AppColors.isDark(context))
+                            ? AppColors.textMuted
+                            : AppColors.textSecondaryColor(context);
 
                         return AppCard(
                           borderColor: isSelected
-                              ? AppColors.primary
-                              : AppColors.cardBorder,
+                              ? AppColors.primaryAccentOnSurface(context)
+                              : AppColors.borderColor(context),
                           borderWidth: isSelected ? 1.8 : 1.0,
                           backgroundColor: isSelected
-                              ? AppColors.primaryLight.withValues(alpha: 0.45)
-                              : AppColors.surface,
+                              ? AppColors.primaryTint(context).withValues(alpha: 0.45)
+                              : AppColors.surfaceColor(context),
                           onTap: state.isLoading
                               ? null
                               : () async {
@@ -115,6 +133,9 @@ class CourseSelectionScreen extends ConsumerWidget {
                                   final profile = ref
                                       .read(learnerStateNotifierProvider)
                                       .value;
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).clearSnackBars();
                                   if (hasStartedCourse(course, profile)) {
                                     context.go('/dashboard');
                                   } else {
@@ -132,49 +153,68 @@ class CourseSelectionScreen extends ConsumerWidget {
                                   Container(
                                     padding: const EdgeInsets.all(11),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryLight,
+                                      color: AppColors.primaryTint(context),
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: Icon(
                                       subjectIcon(course.subject),
-                                      color: AppColors.primary,
+                                      color: AppColors.primaryAccentOnSurface(
+                                        context,
+                                      ),
                                       size: 24,
                                     ),
                                   ),
-                                  Row(
-                                    children: [
-                                      AppBadge(
-                                        text: isSelected
-                                            ? 'Tanlangan'
-                                            : _subjectBadgeText(course.subject),
-                                        variant: isSelected
-                                            ? AppBadgeVariant.emerald
-                                            : AppBadgeVariant.blue,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        isSelected
-                                            ? Icons.check_circle_rounded
-                                            : Icons.radio_button_unchecked,
-                                        color: isSelected
-                                            ? AppColors.primary
-                                            : AppColors.textMuted,
-                                        semanticLabel: isSelected
-                                            ? 'Tanlangan'
-                                            : null,
-                                      ),
-                                    ],
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      alignment: WrapAlignment.end,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        AppBadge(
+                                          text: isSelected
+                                              ? (isRu ? 'Выбрано' : 'Tanlangan')
+                                              : _subjectBadgeText(
+                                                  course.subject,
+                                                  isRu,
+                                                ),
+                                          variant: isSelected
+                                              ? AppBadgeVariant.emerald
+                                              : AppBadgeVariant.blue,
+                                        ),
+                                        Icon(
+                                          isSelected
+                                              ? Icons.check_circle_rounded
+                                              : Icons.radio_button_unchecked,
+                                          color: isSelected
+                                              ? AppColors.primaryAccentOnSurface(
+                                                  context,
+                                                )
+                                              : AppColors.textMutedColor(context),
+                                          semanticLabel: isSelected
+                                              ? (isRu ? 'Выбрано' : 'Tanlangan')
+                                              : null,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 14),
 
                               // (b) Middle: Title, 2-line description & Visual progress
-                              Text(course.title, style: theme.titleMedium),
+                              Text(
+                                course.localizedTitle(lang),
+                                style: theme.titleMedium,
+                              ),
                               const SizedBox(height: 4),
                               Text(
-                                course.description,
-                                style: theme.bodySmall,
+                                course.localizedDescription(lang),
+                                style: theme.bodySmall?.copyWith(
+                                  color: bodyTextColor,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -185,11 +225,15 @@ class CourseSelectionScreen extends ConsumerWidget {
                                   child: LinearProgressIndicator(
                                     value: progress,
                                     minHeight: 6,
-                                    backgroundColor: const Color(0xFFF1F5F9),
+                                    backgroundColor: AppColors.isDark(context)
+                                        ? const Color(0xFF0F172A)
+                                        : const Color(0xFFE2E8F0),
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       progress >= 0.8
-                                          ? AppColors.success
-                                          : AppColors.primary,
+                                          ? AppColors.successTextOnTint(context)
+                                          : AppColors.primaryAccentOnSurface(
+                                              context,
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -197,61 +241,70 @@ class CourseSelectionScreen extends ConsumerWidget {
                               const SizedBox(height: 14),
 
                               // (c) Bottom: Meta data & Action indicator (.commonBtn style)
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: totalLessons > 0
-                                        ? Text(
-                                            '$completedLessons / $totalLessons dars · +${totalLessons * 20} XP',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          AppColors.primary,
-                                          AppColors.primaryHover,
-                                        ],
+                              SizedBox(
+                                width: double.infinity,
+                                child: Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    if (totalLessons > 0)
+                                      Text(
+                                        isRu
+                                            ? '$completedLessons / $totalLessons уроков · +${totalLessons * 20} XP'
+                                            : '$completedLessons / $totalLessons dars · +${totalLessons * 20} XP',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: bodyTextColor,
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: AppColors.commonBtnShadow,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          isSelected ? 'Davom etish' : 'Boshlash',
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w700,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            AppColors.primary,
+                                            AppColors.primaryHover,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: AppColors.commonBtnShadow,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              isSelected
+                                                  ? (isRu
+                                                        ? 'Продолжить'
+                                                        : 'Davom etish')
+                                                  : (isRu
+                                                        ? 'Начать'
+                                                        : 'Boshlash'),
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 13,
                                             color: Colors.white,
                                           ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        const Icon(
-                                          Icons.arrow_forward_rounded,
-                                          size: 13,
-                                          color: Colors.white,
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),

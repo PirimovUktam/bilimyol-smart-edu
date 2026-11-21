@@ -29,6 +29,7 @@ class GetRoadmapUseCase {
       skillScores: scores,
       completedNodeIds: profile.completedNodeIds,
       completedReinforcementIds: profile.completedReinforcementIds,
+      placementCefrTier: profile.placementCefrByCourse[courseId],
     );
   }
 }

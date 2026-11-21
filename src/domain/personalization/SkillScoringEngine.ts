@@ -84,16 +84,23 @@ export class SkillScoringEngine {
   ): Record<SkillId, SkillScore> {
     const skillScoreMap: Record<SkillId, SkillScore> = {};
     const skillStats: Record<SkillId, { correct: number; total: number }> = {};
+    const questionsById = new Map(questions.map((q) => [q.id, q]));
+    const dedupedSubmissions = new Map<string, QuestionAnswerSubmission>();
+    for (const sub of submissions) {
+      if (questionsById.has(sub.questionId)) {
+        dedupedSubmissions.set(sub.questionId, sub);
+      }
+    }
 
-    // Group submissions by skill
-    questions.forEach((q) => {
+    // Aggregate strictly from answered submissions so unasked bank items never deflate scores
+    dedupedSubmissions.forEach((sub) => {
+      const q = questionsById.get(sub.questionId);
+      if (!q) return;
       if (!skillStats[q.skillId]) {
         skillStats[q.skillId] = { correct: 0, total: 0 };
       }
       skillStats[q.skillId].total += 1;
-
-      const sub = submissions.find((s) => s.questionId === q.id);
-      if (sub && sub.isCorrect) {
+      if (sub.isCorrect) {
         skillStats[q.skillId].correct += 1;
       }
     });

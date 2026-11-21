@@ -21,7 +21,9 @@ interface RoadmapState {
     skillId: string,
     reinforcementNodeId: string,
     reinforcementQuestion: Question,
-    selectedIndex: number
+    selectedIndex: number,
+    selectedAnswerOverride?: string,
+    language?: 'uz' | 'ru',
   ) => Promise<ReinforcementResult>;
 }
 
@@ -84,7 +86,15 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
       set({ selectedNode: node });
     },
 
-    completeReinforcement: async (courseId, skillId, reinforcementNodeId, reinforcementQuestion, selectedIndex) => {
+    completeReinforcement: async (
+      courseId,
+      skillId,
+      reinforcementNodeId,
+      reinforcementQuestion,
+      selectedIndex,
+      selectedAnswerOverride,
+      language,
+    ) => {
       // A refresh may invalidate the result, but must not enable duplicate writes.
       if (pendingReinforcement?.courseId === courseId) {
         throw reinforcementCancelled();
@@ -101,7 +111,9 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
           skillId,
           reinforcementNodeId,
           reinforcementQuestion,
-          selectedIndex
+          selectedIndex,
+          selectedAnswerOverride,
+          language,
         );
         if (currentOperation !== operation) throw reinforcementCancelled();
 

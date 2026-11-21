@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { Lesson } from '@/domain/entities/Lesson';
-import { Question } from '@/domain/entities/Question';
+import { Question, normalizeFreeTextAnswer } from '@/domain/entities/Question';
 import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepository';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { GeminiAITutorService } from '@/data/services/GeminiAITutorService';
 import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases/SubmitLessonAnswerUseCase';
+import { usePreferences } from '@/core/preferences/preferences';
 
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 
@@ -14,7 +15,8 @@ const aiService = new GeminiAITutorService();
 // step is reopened before an earlier request settles.
 let sessionToken = {};
 let evaluationToken = {};
-let pendingMasteryAnswer: { session: object; questionId: string; selectedIndex: number; key: string } | null = null;
+let nextLessonSessionId = 0;
+let pendingMasteryAnswer: { session: object; questionId: string; answerKey: string; key: string } | null = null;
 // Keep one persistence receipt for the active lesson session. Navigation can
 // discard UI work, but must not start a second RPC or repeat a confirmed write
 // when only the profile read-back needs retrying.
@@ -38,18 +40,58 @@ const persistCompletion = (lesson: Lesson, session: object): Promise<void> => {
 
 const hasText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 
-const isValidAssessment = (question: unknown, courseId: string, skillId: string): question is Question => {
+export const isValidAssessment = (
+  question: unknown,
+  courseId: string,
+  skillId: string,
+  allowIntegratedEnglishSkills = false,
+): question is Question => {
   if (!question || typeof question !== 'object') return false;
   const candidate = question as Question;
-  return hasText(candidate.id) && candidate.courseId === courseId && candidate.skillId === skillId &&
-    hasText(candidate.text) && Array.isArray(candidate.options) && candidate.options.length >= 2 &&
+  const skillMatches = candidate.skillId === skillId || (
+    allowIntegratedEnglishSkills &&
+    courseId === 'course_eng_01' &&
+    typeof candidate.skillId === 'string' &&
+    candidate.skillId.startsWith('skill_eng_')
+  );
+  if (!hasText(candidate.id) || candidate.courseId !== courseId || !skillMatches ||
+    !hasText(candidate.text)) {
+    return false;
+  }
+  const qType = candidate.questionType ?? 'multiple_choice';
+  if (qType === 'text_input' || qType === 'fill_blank') {
+    return true;
+  }
+  if (qType === 'word_match') {
+    return Array.isArray(candidate.matchPairs) && candidate.matchPairs.length >= 2 &&
+      candidate.matchPairs.every((p) => hasText(p?.id) && hasText(p?.left) && hasText(p?.right));
+  }
+  if (qType === 'sentence_order') {
+    return Array.isArray(candidate.orderedTokens) && candidate.orderedTokens.length >= 2 &&
+      candidate.orderedTokens.every(hasText);
+  }
+  if (qType === 'speaking_prompt' || qType === 'writing_prompt') {
+    return candidate.evaluationMode === 'self_assessed' &&
+      hasText(candidate.sampleResponse) &&
+      Array.isArray(candidate.rubricCriteria) &&
+      candidate.rubricCriteria.length >= 1;
+  }
+  return Array.isArray(candidate.options) && candidate.options.length >= 2 &&
     candidate.options.every(hasText);
 };
 
+export const isIntegratedEnglishLesson = (lesson: Lesson): boolean =>
+  lesson.courseId === 'course_eng_01' &&
+  (lesson.skillDomain === 'integrated' ||
+    lesson.id.includes('_checkpoint') ||
+    lesson.id.includes('_exit') ||
+    ['A2', 'B1', 'B2', 'C1', 'C2'].includes(lesson.cefrLevel ?? ''));
+
 const hasPassedRequiredQuestions = (lesson: Lesson, answeredQuestionIds: string[]): boolean => {
+  const allowMultiSkill = isIntegratedEnglishLesson(lesson);
   if (!Array.isArray(lesson.steps) || lesson.steps.length === 0 || lesson.steps.some((step) =>
     !step || ((step.type === 'interactive_question' || step.interactiveQuestion != null) &&
-      !isValidAssessment(step.interactiveQuestion, lesson.courseId, lesson.skillId)))) return false;
+      !isValidAssessment(step.interactiveQuestion, lesson.courseId, lesson.skillId, allowMultiSkill)))) return false;
   const requiredIds = new Set(lesson.steps.flatMap((step) => step.interactiveQuestion ? [step.interactiveQuestion.id] : []));
   // complete_lesson currently rejects an empty required-assessment set too.
   return requiredIds.size > 0 && [...requiredIds].every((id) => hasText(id) && answeredQuestionIds.includes(id));
@@ -60,6 +102,7 @@ export const shouldCompleteLesson = (currentStepIndex: number, totalSteps: numbe
 
 interface LessonState {
   currentLesson: Lesson | null;
+  lessonSessionId: number;
   currentStepIndex: number;
   isLoading: boolean;
   error: string | null;
@@ -72,6 +115,8 @@ interface LessonState {
   isCompleted: boolean;
   answeredQuestionIds: string[];
   correctAnswerCount: number;
+  consecutiveMistakes: number;
+  consecutiveMistakeSkillId: string | null;
 
   loadLesson: (lessonId: string) => Promise<void>;
   generateAILesson: (
@@ -85,6 +130,16 @@ interface LessonState {
   prevStep: () => void;
   goToStep: (index: number) => void;
   submitAnswer: (selectedIndex: number) => Promise<LessonAnswerResult | null>;
+  submitTextAnswer: (answerText: string) => Promise<LessonAnswerResult | null>;
+  submitStructuredAnswer: (payload: {
+    matchPairs?: Record<string, string>;
+    orderedTokens?: string[];
+  }) => Promise<LessonAnswerResult | null>;
+  submitSelfAssessment: (
+    responseText: string,
+    checkedCriteriaIds: string[],
+  ) => Promise<LessonAnswerResult | null>;
+  switchToAlternateExercise: () => boolean;
   clearAnswerResult: () => void;
   openAIPanel: () => void;
   openReinforcement: () => void;
@@ -96,6 +151,7 @@ interface LessonState {
 
 export const useLessonStore = create<LessonState>((set, get) => ({
   currentLesson: null,
+  lessonSessionId: 0,
   currentStepIndex: 0,
   isLoading: false,
   error: null,
@@ -108,6 +164,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   isCompleted: false,
   answeredQuestionIds: [],
   correctAnswerCount: 0,
+  consecutiveMistakes: 0,
+  consecutiveMistakeSkillId: null,
 
   clearError: () => set({ error: null }),
 
@@ -122,10 +180,35 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     evaluationToken = {};
     completionRequest = null;
     const isCurrent = () => sessionToken === requestToken;
+    const syncDemoLesson = hasText(lessonId)
+      ? supabaseLessonRepository.getCachedDemoLessonSync?.(lessonId) ?? null
+      : null;
+    if (syncDemoLesson && syncDemoLesson.id === lessonId) {
+      set({
+        isLoading: false,
+        error: null,
+        currentLesson: syncDemoLesson,
+        lessonSessionId: ++nextLessonSessionId,
+        currentStepIndex: 0,
+        isEvaluatingAnswer: false,
+        isCompletingLesson: false,
+        selectedAnswerIndex: null,
+        lastAnswerResult: null,
+        showAIPanel: false,
+        showReinforcementModal: false,
+        isCompleted: false,
+        answeredQuestionIds: [],
+        correctAnswerCount: 0,
+        consecutiveMistakes: 0,
+        consecutiveMistakeSkillId: null,
+      });
+      return;
+    }
     set({
       isLoading: true,
       error: null,
       currentLesson: null,
+      lessonSessionId: 0,
       currentStepIndex: 0,
       isEvaluatingAnswer: false,
       isCompletingLesson: false,
@@ -136,6 +219,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       isCompleted: false,
       answeredQuestionIds: [],
       correctAnswerCount: 0,
+      consecutiveMistakes: 0,
+      consecutiveMistakeSkillId: null,
     });
 
     try {
@@ -146,13 +231,14 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!lesson) {
         set({
           currentLesson: null,
+          lessonSessionId: 0,
           isLoading: false,
           error: `Dars topilmadi ("${lessonId}"). Iltimos, boshqa darsni tanlang yoki yangi dars yarating.`,
         });
         return;
       }
       if (lesson.id !== lessonId) throw new Error('So‘ralgan dars o‘rniga boshqa dars qaytdi.');
-      set({ currentLesson: lesson, isLoading: false, error: null });
+      set({ currentLesson: lesson, lessonSessionId: ++nextLessonSessionId, isLoading: false, error: null });
     } catch (err: any) {
       if (!isCurrent()) return;
       set({
@@ -187,6 +273,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       isCompleted: false,
       answeredQuestionIds: [],
       correctAnswerCount: 0,
+      consecutiveMistakes: 0,
+      consecutiveMistakeSkillId: null,
     });
 
     try {
@@ -255,7 +343,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       await supabaseLessonRepository.saveLesson(lessonEntity);
       if (!isCurrent()) return null;
 
-      set({ currentLesson: lessonEntity, isLoading: false, error: null });
+      set({ currentLesson: lessonEntity, lessonSessionId: ++nextLessonSessionId, isLoading: false, error: null });
       return isCurrent() ? lessonEntity : null;
     } catch (err: any) {
       if (!isCurrent()) return null;
@@ -290,8 +378,15 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       set({ error: 'Darsni yakunlash uchun barcha yaroqli sinov savollariga to‘g‘ri javob bering. Savol yetishmasa, darsni qayta oching.' });
       return;
     }
-    // Final quizzes keep their existing submitAnswer completion flow.
-    if (currentLesson.steps[currentStepIndex].interactiveQuestion) return;
+    const activeQuestion = currentLesson.steps[currentStepIndex].interactiveQuestion;
+    const isAnsweredSelfAssessed = Boolean(
+      activeQuestion &&
+      (activeQuestion.questionType === 'speaking_prompt' || activeQuestion.questionType === 'writing_prompt') &&
+      get().answeredQuestionIds.includes(activeQuestion.id)
+    );
+    // Final quizzes keep their existing submitAnswer completion flow; answered
+    // self-assessed prompts allow reviewing the model/rubric before completing.
+    if (activeQuestion && !isAnsweredSelfAssessed) return;
 
     const requestSession = sessionToken;
     const requestEvaluation = evaluationToken = {};
@@ -359,7 +454,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     if (!currentLesson || isLoading || isEvaluatingAnswer || isCompletingLesson || isCompleted) return null;
 
     const question = currentLesson.steps[currentStepIndex]?.interactiveQuestion;
-    if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId) ||
+    const qType = question?.questionType ?? 'multiple_choice';
+    const isChoiceMode =
+      qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+    if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson)) ||
+        !isChoiceMode ||
         !Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= question.options.length) return null;
 
     const requestSession = sessionToken;
@@ -392,13 +491,15 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!isCurrent()) return null;
       let attemptKey: string | undefined;
       if (currentLesson.requiresMastery) {
+        const answerKey = `idx:${selectedIndex}`;
         if (pendingMasteryAnswer?.session !== requestSession || pendingMasteryAnswer.questionId !== question.id ||
-            pendingMasteryAnswer.selectedIndex !== selectedIndex) {
-          pendingMasteryAnswer = { session: requestSession, questionId: question.id, selectedIndex, key: crypto.randomUUID() };
+            pendingMasteryAnswer.answerKey !== answerKey) {
+          pendingMasteryAnswer = { session: requestSession, questionId: question.id, answerKey, key: crypto.randomUUID() };
         }
         attemptKey = pendingMasteryAnswer.key;
       }
-      const result = await useCase.execute(question, selectedIndex, currentLesson.id, attemptKey);
+      const language = usePreferences.getState().language;
+      const result = await useCase.execute(question, selectedIndex, currentLesson.id, attemptKey, language);
       if (pendingMasteryAnswer?.key === attemptKey) pendingMasteryAnswer = null;
       if (!isCurrent()) return null;
 
@@ -422,11 +523,15 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           showAIPanel: false,
           answeredQuestionIds,
           correctAnswerCount: answeredQuestionIds.length,
+          consecutiveMistakes: 0,
+          consecutiveMistakeSkillId: null,
           error: null,
         });
       } else {
         await refreshProfile();
         if (!isCurrent()) return null;
+        const nextMistakeCount =
+          get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
         // Wrong answer -> the inline feedback card already reveals the correct
         // answer + explanation. The detailed AI panel is opt-in so a blocking
         // modal never hides the answer from the learner.
@@ -434,6 +539,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
           showAIPanel: false,
+          consecutiveMistakes: nextMistakeCount,
+          consecutiveMistakeSkillId: question.skillId,
           error: null,
         });
       }
@@ -449,6 +556,360 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       });
       return null;
     }
+  },
+
+  submitTextAnswer: async (answerText: string) => {
+    const { currentLesson, currentStepIndex, isEvaluatingAnswer, isCompletingLesson, isLoading, isCompleted } = get();
+    if (!currentLesson || isLoading || isEvaluatingAnswer || isCompletingLesson || isCompleted) return null;
+
+    const question = currentLesson.steps[currentStepIndex]?.interactiveQuestion;
+    const trimmed = typeof answerText === 'string' ? answerText.trim() : '';
+    const normalized = normalizeFreeTextAnswer(trimmed);
+    const isTextMode = question?.questionType === 'text_input' || question?.questionType === 'fill_blank';
+    if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson)) ||
+        !isTextMode || !normalized) {
+      return null;
+    }
+
+    const requestSession = sessionToken;
+    const requestEvaluation = evaluationToken = {};
+    const learnerId = useLearnerStore.getState().profile?.id;
+    const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
+      get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
+    const refreshProfile = async (expectCompletion = false) => {
+      if (!isCurrent()) return;
+      const profile = await supabaseLearnerRepository.getProfile();
+      if (!isCurrent()) return;
+      if ((learnerId && profile.id !== learnerId) ||
+          (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+      }
+      useLearnerStore.setState({ profile, isLoading: false });
+    };
+    set({
+      isEvaluatingAnswer: true,
+      selectedAnswerIndex: 0,
+      lastAnswerResult: null,
+      showAIPanel: false,
+      error: null,
+    });
+
+    try {
+      const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
+      if (!isCurrent()) return null;
+      let attemptKey: string | undefined;
+      if (currentLesson.requiresMastery) {
+        const answerKey = `text:${normalized}`;
+        if (pendingMasteryAnswer?.session !== requestSession || pendingMasteryAnswer.questionId !== question.id ||
+            pendingMasteryAnswer.answerKey !== answerKey) {
+          pendingMasteryAnswer = { session: requestSession, questionId: question.id, answerKey, key: crypto.randomUUID() };
+        }
+        attemptKey = pendingMasteryAnswer.key;
+      }
+      const language = usePreferences.getState().language;
+      const result = await useCase.executeText(question, trimmed, currentLesson.id, attemptKey, language);
+      if (pendingMasteryAnswer?.key === attemptKey) pendingMasteryAnswer = null;
+      if (!isCurrent()) return null;
+
+      if (result.isCorrect) {
+        const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
+          ? get().answeredQuestionIds
+          : [...get().answeredQuestionIds, question.id];
+        const isCompleted = shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
+          hasPassedRequiredQuestions(currentLesson, answeredQuestionIds);
+        if (isCompleted && !get().isCompleted) {
+          if (!isCurrent()) return null;
+          await persistCompletion(currentLesson, requestSession);
+          if (!isCurrent()) return null;
+        }
+        await refreshProfile(isCompleted);
+        if (!isCurrent()) return null;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          isCompleted,
+          showAIPanel: false,
+          answeredQuestionIds,
+          correctAnswerCount: answeredQuestionIds.length,
+          consecutiveMistakes: 0,
+          consecutiveMistakeSkillId: null,
+          error: null,
+        });
+      } else {
+        await refreshProfile();
+        if (!isCurrent()) return null;
+        const nextMistakeCount =
+          get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          showAIPanel: false,
+          consecutiveMistakes: nextMistakeCount,
+          consecutiveMistakeSkillId: question.skillId,
+          error: null,
+        });
+      }
+
+      return isCurrent() ? result : null;
+    } catch (err: any) {
+      if (!isCurrent()) return null;
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      set({
+        isEvaluatingAnswer: false,
+        isCompleted: false,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+      });
+      return null;
+    }
+  },
+
+  submitStructuredAnswer: async (payload: {
+    matchPairs?: Record<string, string>;
+    orderedTokens?: string[];
+  }) => {
+    const { currentLesson, currentStepIndex, isEvaluatingAnswer, isCompletingLesson, isLoading, isCompleted } = get();
+    if (!currentLesson || isLoading || isEvaluatingAnswer || isCompletingLesson || isCompleted) return null;
+
+    const question = currentLesson.steps[currentStepIndex]?.interactiveQuestion;
+    const qType = question?.questionType;
+    if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson)) ||
+        (qType !== 'word_match' && qType !== 'sentence_order')) {
+      return null;
+    }
+    if (qType === 'word_match' && Object.keys(payload.matchPairs ?? {}).length === 0) {
+      return null;
+    }
+    if (
+      qType === 'sentence_order' &&
+      (payload.orderedTokens ?? []).filter((token) => typeof token === 'string' && token.trim().length > 0).length === 0
+    ) {
+      return null;
+    }
+
+    const serializedAnswer = qType === 'word_match'
+      ? JSON.stringify(
+          Object.fromEntries(
+            Object.entries(payload.matchPairs ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+          ),
+        )
+      : JSON.stringify(payload.orderedTokens ?? []);
+    const displayAnswer = qType === 'word_match'
+      ? Object.entries(payload.matchPairs ?? {})
+          .map(([leftId, rightVal]) => {
+            const pair = question.matchPairs?.find((p) => p.id === leftId);
+            const rightPair = question.matchPairs?.find((p) => p.id === rightVal);
+            return `${pair?.left ?? leftId} -> ${rightPair?.right ?? rightVal}`;
+          })
+          .join(', ')
+      : (payload.orderedTokens ?? []).join(' ');
+
+    const requestSession = sessionToken;
+    const requestEvaluation = evaluationToken = {};
+    const learnerId = useLearnerStore.getState().profile?.id;
+    const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
+      get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
+    const refreshProfile = async (expectCompletion = false) => {
+      if (!isCurrent()) return;
+      const profile = await supabaseLearnerRepository.getProfile();
+      if (!isCurrent()) return;
+      if ((learnerId && profile.id !== learnerId) ||
+          (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+      }
+      useLearnerStore.setState({ profile, isLoading: false });
+    };
+
+    set({
+      isEvaluatingAnswer: true,
+      selectedAnswerIndex: 0,
+      lastAnswerResult: null,
+      showAIPanel: false,
+      error: null,
+    });
+
+    try {
+      const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
+      if (!isCurrent()) return null;
+      const language = usePreferences.getState().language;
+      const result = await useCase.executeStructured(
+        question,
+        {
+          serializedAnswer,
+          displayAnswer,
+          matchPairs: payload.matchPairs,
+          orderedTokens: payload.orderedTokens,
+        },
+        currentLesson.id,
+        undefined,
+        language,
+      );
+      if (!isCurrent()) return null;
+
+      if (result.isCorrect) {
+        const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
+          ? get().answeredQuestionIds
+          : [...get().answeredQuestionIds, question.id];
+        const completed = shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
+          hasPassedRequiredQuestions(currentLesson, answeredQuestionIds);
+        if (completed && !get().isCompleted) {
+          if (!isCurrent()) return null;
+          await persistCompletion(currentLesson, requestSession);
+          if (!isCurrent()) return null;
+        }
+        await refreshProfile(completed);
+        if (!isCurrent()) return null;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          isCompleted: completed,
+          showAIPanel: false,
+          answeredQuestionIds,
+          correctAnswerCount: answeredQuestionIds.length,
+          consecutiveMistakes: 0,
+          consecutiveMistakeSkillId: null,
+          error: null,
+        });
+      } else {
+        await refreshProfile();
+        if (!isCurrent()) return null;
+        const nextMistakeCount =
+          get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          showAIPanel: false,
+          consecutiveMistakes: nextMistakeCount,
+          consecutiveMistakeSkillId: question.skillId,
+          error: null,
+        });
+      }
+
+      return isCurrent() ? result : null;
+    } catch (err: any) {
+      if (!isCurrent()) return null;
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      set({
+        isEvaluatingAnswer: false,
+        isCompleted: false,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+      });
+      return null;
+    }
+  },
+
+  submitSelfAssessment: async (responseText: string, checkedCriteriaIds: string[]) => {
+    const { currentLesson, currentStepIndex, isEvaluatingAnswer, isCompletingLesson, isLoading, isCompleted } = get();
+    if (!currentLesson || isLoading || isEvaluatingAnswer || isCompletingLesson || isCompleted) return null;
+
+    const question = currentLesson.steps[currentStepIndex]?.interactiveQuestion;
+    const trimmed = typeof responseText === 'string' ? responseText.trim() : '';
+    if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson)) ||
+        (question.questionType !== 'speaking_prompt' && question.questionType !== 'writing_prompt') ||
+        !trimmed) {
+      return null;
+    }
+
+    const requestSession = sessionToken;
+    const requestEvaluation = evaluationToken = {};
+    const learnerId = useLearnerStore.getState().profile?.id;
+    const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
+      get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
+    const refreshProfile = async (expectCompletion = false) => {
+      if (!isCurrent()) return;
+      const profile = await supabaseLearnerRepository.getProfile();
+      if (!isCurrent()) return;
+      if ((learnerId && profile.id !== learnerId) ||
+          (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+      }
+      useLearnerStore.setState({ profile, isLoading: false });
+    };
+
+    set({
+      isEvaluatingAnswer: true,
+      selectedAnswerIndex: 0,
+      lastAnswerResult: null,
+      showAIPanel: false,
+      error: null,
+    });
+
+    try {
+      const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
+      if (!isCurrent()) return null;
+      const language = usePreferences.getState().language;
+      const result = await useCase.executeSelfAssessed(
+        question,
+        trimmed,
+        checkedCriteriaIds,
+        currentLesson.id,
+        undefined,
+        language,
+      );
+      if (!isCurrent()) return null;
+
+      if (result.isCorrect) {
+        const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
+          ? get().answeredQuestionIds
+          : [...get().answeredQuestionIds, question.id];
+        // Do NOT complete immediately: allow reviewing model answer & rubric checkboxes,
+        // then complete via nextStep() when the learner clicks "Darsni yakunlash".
+        await refreshProfile(false);
+        if (!isCurrent()) return null;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          showAIPanel: false,
+          answeredQuestionIds,
+          correctAnswerCount: answeredQuestionIds.length,
+          error: null,
+        });
+      } else {
+        await refreshProfile();
+        if (!isCurrent()) return null;
+        set({
+          lastAnswerResult: result,
+          isEvaluatingAnswer: false,
+          showAIPanel: false,
+          error: null,
+        });
+      }
+      return isCurrent() ? result : null;
+    } catch (err: any) {
+      if (!isCurrent()) return null;
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      set({
+        isEvaluatingAnswer: false,
+        isCompleted: false,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+      });
+      return null;
+    }
+  },
+
+  switchToAlternateExercise: () => {
+    const { currentLesson, currentStepIndex } = get();
+    if (!currentLesson?.alternateExercise) return false;
+    const alt = currentLesson.alternateExercise;
+    if (!isValidAssessment(alt, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson))) return false;
+    const step = currentLesson.steps[currentStepIndex];
+    if (!step) return false;
+    if (currentLesson.steps.some((item) => item.interactiveQuestion?.id === alt.id)) {
+      return false;
+    }
+    const updatedSteps = currentLesson.steps.map((item, idx) =>
+      idx === currentStepIndex ? { ...item, interactiveQuestion: alt } : item
+    );
+    evaluationToken = {};
+    set({
+      currentLesson: { ...currentLesson, steps: updatedSteps },
+      selectedAnswerIndex: null,
+      lastAnswerResult: null,
+      showAIPanel: false,
+      consecutiveMistakes: 0,
+      consecutiveMistakeSkillId: null,
+      error: null,
+    });
+    return true;
   },
 
   clearAnswerResult: () => {
@@ -477,6 +938,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     completionRequest = null;
     set({
       currentLesson: null,
+      lessonSessionId: 0,
       currentStepIndex: 0,
       isLoading: false,
       error: null,
@@ -489,6 +951,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       isCompleted: false,
       answeredQuestionIds: [],
       correctAnswerCount: 0,
+      consecutiveMistakes: 0,
+      consecutiveMistakeSkillId: null,
     });
   },
 
@@ -509,6 +973,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       isCompleted: false,
       answeredQuestionIds: [],
       correctAnswerCount: 0,
+      consecutiveMistakes: 0,
+      consecutiveMistakeSkillId: null,
     });
   },
 }));

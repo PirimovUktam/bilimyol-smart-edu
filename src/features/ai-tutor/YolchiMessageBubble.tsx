@@ -53,11 +53,10 @@ export const YolchiMessageBubble = memo(({
       )}
 
       <div
-        className={`relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
-          isYolchi
+        className={`relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${isYolchi
             ? 'bg-paper border border-hairline text-ink rounded-tl-sm'
             : 'bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white rounded-tr-sm shadow-purple-600/20'
-        }`}
+          }`}
       >
         <header className="mb-1 flex items-center justify-between gap-3 text-[11px] font-bold">
           <span className={isYolchi ? 'text-brand-dark dark:text-sky-300' : 'text-purple-100'}>
@@ -107,9 +106,8 @@ export const YolchiMessageBubble = memo(({
           )}
 
           <time
-            className={`block text-[10px] ${
-              isYolchi ? 'text-slatefine' : 'text-indigo-100'
-            } text-right`}
+            className={`block text-[10px] ${isYolchi ? 'text-slatefine' : 'text-indigo-100'
+              } text-right`}
           >
             {timestamp}
           </time>

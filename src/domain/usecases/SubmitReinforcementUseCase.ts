@@ -28,13 +28,21 @@ export class SubmitReinforcementUseCase {
     skillId: string,
     reinforcementNodeId: string,
     reinforcementQuestion: Question,
-    selectedIndex: number
+    selectedIndex: number,
+    selectedAnswerOverride?: string,
+    language: 'uz' | 'ru' = 'uz',
   ): Promise<ReinforcementResult> {
     if (reinforcementQuestion.courseId !== courseId || reinforcementQuestion.skillId !== skillId) {
       throw new Error('Mustahkamlash savoli kurs va ko‘nikma bilan mos emas.');
     }
-    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= reinforcementQuestion.options.length) {
+    const qType = reinforcementQuestion.questionType ?? 'multiple_choice';
+    const isChoiceType =
+      qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+    if (isChoiceType && (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= reinforcementQuestion.options.length)) {
       throw new Error('Tanlangan javob indeksi noto‘g‘ri.');
+    }
+    if (!isChoiceType && typeof selectedAnswerOverride !== 'string') {
+      throw new Error('Mustahkamlash javobi kiritilmadi.');
     }
 
     // The learner payload is intentionally answer-key-free. Evaluation must
@@ -43,14 +51,22 @@ export class SubmitReinforcementUseCase {
     const profile = await this.learnerRepo.getProfile();
     const courseScores = profile.scoresByCourse[courseId] || {};
     const currentSkillScore = courseScores[skillId]?.score ?? 0;
+    const selectedAnswer = isChoiceType
+      ? reinforcementQuestion.options[selectedIndex] || ''
+      : (selectedAnswerOverride ?? '');
     const answerResult = await this.learnerRepo.submitAnswerAttempt({
       courseId,
       skillId,
       lessonId: reinforcementNodeId,
       questionId: reinforcementQuestion.id,
-      selectedIndex,
-      selectedAnswer: reinforcementQuestion.options[selectedIndex] || '',
-      idempotencyKey: `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${selectedIndex}`,
+      selectedIndex: isChoiceType ? selectedIndex : 0,
+      selectedAnswer,
+      questionType: reinforcementQuestion.questionType,
+      evaluationMode: reinforcementQuestion.evaluationMode,
+      language,
+      idempotencyKey: isChoiceType
+        ? `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${selectedIndex}`
+        : `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${qType}_${selectedAnswer}`,
     });
     const isCorrect = answerResult.isCorrect;
 
@@ -65,7 +81,8 @@ export class SubmitReinforcementUseCase {
         baseNodes,
         currentScores,
         currentProfile.completedNodeIds,
-        currentProfile.completedReinforcementIds
+        currentProfile.completedReinforcementIds,
+        { placementCefr: currentProfile.placementCefrByCourse?.[courseId] }
       );
       return {
         isCorrect: false,
@@ -104,7 +121,8 @@ export class SubmitReinforcementUseCase {
           baseNodes,
           updatedProfile.scoresByCourse[courseId] || {},
           updatedProfile.completedNodeIds,
-          updatedProfile.completedReinforcementIds
+          updatedProfile.completedReinforcementIds,
+          { placementCefr: updatedProfile.placementCefrByCourse?.[courseId] }
         ),
       };
     }
@@ -159,7 +177,8 @@ export class SubmitReinforcementUseCase {
       baseNodes,
       updatedScores,
       updatedProfile.completedNodeIds,
-      updatedProfile.completedReinforcementIds
+      updatedProfile.completedReinforcementIds,
+      { placementCefr: updatedProfile.placementCefrByCourse?.[courseId] }
     );
 
     return {

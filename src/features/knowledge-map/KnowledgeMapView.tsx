@@ -4,6 +4,7 @@ import { ArrowRight, Check, Compass, Lock, Sparkles, Target, Zap } from 'lucide-
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
+import { resolveNextLearningLesson } from '@/app/router/lessonResolution';
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
 import { usesMathMastery } from '@/domain/personalization/learningStart';
@@ -15,8 +16,11 @@ import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { SectionState } from '@/presentation/components/SectionState';
 
-export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChooseCourse }: {
-  onProceedToRoadmap: () => void; onStartPlacement: () => void; onChooseCourse: () => void;
+export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChooseCourse, onStartLesson }: {
+  onProceedToRoadmap: () => void;
+  onStartPlacement: () => void;
+  onChooseCourse: () => void;
+  onStartLesson?: (lessonId: string) => void;
 }) {
   const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
@@ -27,7 +31,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   const courseId = course?.id;
 
   useEffect(() => {
-    if (courseId && useRoadmapStore.getState().roadmap?.courseId !== courseId) {
+    if (courseId) {
       void useRoadmapStore.getState().loadRoadmap(courseId);
     }
   }, [courseId]);
@@ -45,9 +49,24 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   }));
   const evaluated = entries.filter((skill) => skill.score != null);
   const hasScores = evaluated.length > 0;
-  const overall = mathPilot && objectives.length
-    ? Math.round(100 * objectives.filter((node) => node.status === 'completed').length / objectives.length)
+  const overall = mathPilot
+    ? (objectives.length
+      ? Math.round(100 * objectives.filter((node) => node.status === 'completed').length / objectives.length)
+      : 0)
     : SkillScoringEngine.computeOverallScore(scores);
+  const diagnosticScores = Object.values(scores);
+  const hasDiagnosticScores = diagnosticScores.length > 0;
+  const hasPilotAnswers = mathPilot && (path?.nodes ?? []).some((node) => (node.mastery?.answered ?? 0) > 0);
+  const isPilotDiagnosticOnlyState = mathPilot && hasDiagnosticScores && !hasPilotAnswers;
+  const diagnosticScore = SkillScoringEngine.computeOverallScore(scores);
+  const diagnosticGaps = diagnosticScores
+    .filter((item) => item.score < 100)
+    .sort((a, b) => a.score - b.score || a.skillId.localeCompare(b.skillId));
+  const resolveSkillName = (skillId: string) =>
+    skills.find((item) => item.id === skillId)?.name
+    ?? path?.nodes.find((item) => item.skillId === skillId)?.title
+    ?? skillId;
+  const nextLessonId = resolveNextLearningLesson(course, profile, path);
   const effectiveness = mathPilot ? null : AdaptiveCycleEngine.measureEffectiveness({
     course,
     profile,
@@ -79,22 +98,28 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
         <>
           {!mathPilot || path ? <div className="grid gap-5 lg:grid-cols-2">
             <Card className="fade-up stagger-1 flex items-center gap-4" padding="md">
-              {hasScores ? (
+              {hasScores || isPilotDiagnosticOnlyState ? (
                 <CircularProgress value={overall} label={t('path.overallMastery')} />
               ) : (
                 <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-sand text-brand">
                   <Target aria-hidden="true" className="size-7" />
                 </span>
               )}
-              <div className="space-y-2">
-                <span className="highlight">{t(mathPilot ? 'path.overallMastery' : 'path.diagnosticStatus')}</span>
-                <h2 className="heading text-lg font-extrabold">{t('path.evaluatedTopics')}</h2>
+              <div className="min-w-0 space-y-2">
+                <span className="highlight">
+                  {isPilotDiagnosticOnlyState ? t('path.diagnosticStatus') : t(mathPilot ? 'path.overallMastery' : 'path.diagnosticStatus')}
+                </span>
+                <h2 className="heading text-lg font-extrabold">
+                  {isPilotDiagnosticOnlyState ? t('path.diagnosticResult') : t('path.evaluatedTopics')}
+                </h2>
                 <p className="text-sm text-slatefine">
-                  {hasScores
+                  {isPilotDiagnosticOnlyState
+                    ? t('path.diagnosticSummary', { score: diagnosticScore, count: diagnosticScores.length, mastery: overall })
+                    : hasScores
                     ? evaluated.length + ' · ' + t('path.evaluatedTopics')
                     : t('path.diagnosticDescription')}
                 </p>
-                {!hasScores && (
+                {!hasScores && !isPilotDiagnosticOnlyState && (
                   <Button size="sm" variant="outline" onClick={onStartPlacement}>{t('path.startDiagnostic')}</Button>
                 )}
               </div>
@@ -102,31 +127,68 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
 
             <Card className="fade-up stagger-2 space-y-2.5" padding="md">
               <span className="highlight">{t('path.focus')}</span>
-              <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
-                <Sparkles aria-hidden="true" className="size-5 text-brand" />{t('path.reinforce')}{' '}<span className="heading-accent">{t('path.needed')}</span>
-              </h2>
-              {weak.length ? (
-                <div className="space-y-3">
-                  <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
-                    {weak.map((skill) => (
-                      <li key={skill.id}>
-                        {skill.name} · <span className="font-bold text-coral">
-                          {mathPilot ? t(skill.node?.mastery?.reviewDue ? 'path.scheduledReview' : 'path.needsReview') : skill.score + '%'}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-coral/25 bg-coral/5 px-3 py-2 text-xs font-semibold text-graphite">
-                    <span>{t('adaptive.lessonImpactWrong')}</span>
-                    <Button size="sm" variant="outline" onClick={onProceedToRoadmap}>{t('path.path')}</Button>
+              {isPilotDiagnosticOnlyState ? (
+                <>
+                  <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
+                    <Sparkles aria-hidden="true" className="size-5 text-brand" />{t('lesson.nextStep')}
+                  </h2>
+                  {diagnosticGaps.length ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-slatefine">{t('path.diagnosticGapsIntro')}</p>
+                      <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
+                        {diagnosticGaps.map((item) => (
+                          <li key={item.skillId}>
+                            {resolveSkillName(item.skillId)} · <span className="font-bold text-coral">{item.score}%</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-sm text-slatefine">{t('path.diagnosticGapsNextStep')}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slatefine">{t('path.diagnosticAllCorrectNextStep')}</p>
+                  )}
+                  <div className="pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (nextLessonId && onStartLesson) onStartLesson(nextLessonId);
+                        else onProceedToRoadmap();
+                      }}
+                      rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
+                    >
+                      {t('path.startFirstExercise')}
+                    </Button>
                   </div>
-                </div>
+                </>
               ) : (
-                <p className="text-sm text-slatefine">
-                  {hasScores
-                    ? t(mathPilot ? 'path.yourPlan' : 'path.noWeak')
-                    : t('path.weakAfter')}
-                </p>
+                <>
+                  <h2 className="heading flex items-center gap-2 text-lg font-extrabold">
+                    <Sparkles aria-hidden="true" className="size-5 text-brand" />{t('path.reinforce')}{' '}<span className="heading-accent">{t('path.needed')}</span>
+                  </h2>
+                  {weak.length ? (
+                    <div className="space-y-3">
+                      <ul className="list-disc space-y-1.5 pl-5 text-sm font-medium text-slatefine">
+                        {weak.map((skill) => (
+                          <li key={skill.id}>
+                            {skill.name} · <span className="font-bold text-coral">
+                              {mathPilot ? t(skill.node?.mastery?.reviewDue ? 'path.scheduledReview' : 'path.needsReview') : skill.score + '%'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-coral/25 bg-coral/5 px-3 py-2 text-xs font-semibold text-graphite">
+                        <span>{t('adaptive.lessonImpactWrong')}</span>
+                        <Button size="sm" variant="outline" onClick={onProceedToRoadmap}>{t('path.path')}</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slatefine">
+                      {hasScores
+                        ? t(mathPilot ? 'path.yourPlan' : 'path.noWeak')
+                        : t('path.weakAfter')}
+                    </p>
+                  )}
+                </>
               )}
             </Card>
           </div> : roadmapError ? (
@@ -173,7 +235,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                             : isLocked
                             ? ' · ' + t('path.locked')
                             : node && node.id === path?.activeNodeId
-                            ? ' · Joriy mavzu'
+                            ? ' · ' + t('path.currentTopic')
                             : ''}
                         </Badge>
                       </div>
@@ -201,7 +263,15 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                           })()}
                         </div>
                         <p className="line-clamp-2 text-sm text-slatefine">{skill.description}</p>
-                        <div className="pt-2">
+                        <div className="space-y-1.5 pt-2">
+                          {mathPilot && node?.mastery && !isLocked && (
+                            <p className="text-xs font-semibold text-slatefine">
+                              {node.mastery.answered}/{node.mastery.requiredItems}
+                              {node.mastery.answered > 0
+                                ? ` · ${node.mastery.correct}/${node.mastery.requiredItems} ${t('path.masteryEvidence')}`
+                                : ''}
+                            </p>
+                          )}
                           {score == null ? (
                             <p className="text-xs font-bold text-slatefine">{t('path.unassessed')}</p>
                           ) : (

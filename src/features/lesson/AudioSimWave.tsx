@@ -88,14 +88,18 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={togglePlay}
+            aria-label={isPlaying ? t('lesson.pause') : t('lesson.playLabel')}
             className="w-11 h-11 rounded-xl bg-path hover:bg-path text-slate-950 font-bold flex items-center justify-center shadow-lg shadow-teal-500/20 transition-all cursor-pointer"
           >
             {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current translate-x-0.5" />}
           </button>
           <button
+            type="button"
             onClick={handleReplay}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            aria-label={t('lesson.listenAgain')}
+            className="min-h-11 min-w-11 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
             title={t('lesson.listenAgain')}
           >
             <RotateCcw className="w-4 h-4" />
@@ -103,7 +107,7 @@ export const AudioSimWave: React.FC<AudioSimWaveProps> = ({ transcript, speakerN
         </div>
 
         <div className="text-xs text-slate-400">
-          {isPlaying ? 'Tinglanmoqda...' : t('lesson.play')}
+          {isPlaying ? t('lesson.playing') : t('lesson.play')}
         </div>
       </div>
 

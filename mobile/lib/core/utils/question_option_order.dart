@@ -18,6 +18,7 @@ int _stableHash(String value) {
 }
 
 Question permuteQuestionOptions(Question question) {
+  if (!question.usesOptionSelection) return question;
   final options = question.options;
   if (options.length < 2) return question;
 
@@ -31,18 +32,8 @@ Question permuteQuestionOptions(Question question) {
   final remaining = [...options]..removeAt(current);
   remaining.insert(target, correctOption);
 
-  return Question(
-    id: question.id,
-    courseId: question.courseId,
-    skillId: question.skillId,
-    text: question.text,
-    contextSnippet: question.contextSnippet,
+  return question.copyWith(
     options: remaining,
     correctIndex: target,
-    difficulty: question.difficulty,
-    explanation: question.explanation,
-    formulaLatex: question.formulaLatex,
-    audioSimText: question.audioSimText,
-    audioSimSpeaker: question.audioSimSpeaker,
   );
 }

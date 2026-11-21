@@ -3,6 +3,7 @@ import { SkillScore } from '../entities/SkillScore';
 import { LearningPath } from '../entities/LearningPathNode';
 import { Skill } from '../entities/Skill';
 import { LearnerProfile } from '../entities/LearnerProfile';
+import { ADAPTIVE_THRESHOLDS } from '@/core/constants/adaptiveThresholds';
 import { AdaptiveCycleEngine } from './AdaptiveCycleEngine';
 
 export class RecommendationEngine {
@@ -36,6 +37,10 @@ export class RecommendationEngine {
 
     const isReinforcement = activeNode ? activeNode.isReinforcement || activeNode.status === 'reinforcement' : false;
     const weakestScoreValue = weakestSkill ? (weakestSkill as SkillScore).score : 100;
+    const isTargetedPractice =
+      !isReinforcement &&
+      weakestScoreValue >= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN &&
+      weakestScoreValue <= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MAX;
 
     const cycle = AdaptiveCycleEngine.evaluateCycle({ skills, skillScores, roadmap, profile });
     const explainableFactors = AdaptiveCycleEngine.buildExplainableFactors({
@@ -54,18 +59,26 @@ export class RecommendationEngine {
     return {
       id: `rec_${courseId}_${Date.now()}`,
       courseId,
-      title: isReinforcement ? `Mustahkamlash: ${targetSkillName}` : `Bugungi Reja: ${activeNode ? activeNode.title : targetSkillName}`,
+      title: isReinforcement
+        ? `Mustahkamlash: ${targetSkillName}`
+        : isTargetedPractice
+        ? `Maqsadli mashq: ${targetSkillName}`
+        : `Bugungi Reja: ${activeNode ? activeNode.title : targetSkillName}`,
       subtitle: isReinforcement
         ? `Aniqlangan bo‘shliqni to‘ldirish uchun maxsus 5 daqiqalik mashq`
+        : isTargetedPractice
+        ? `50–69% oraliqdagi natijani 70%+ darajaga ko‘tarish mashqi`
         : `Keyingi bosqichga o‘tish va o‘zlashtirish darajasini oshirish`,
       targetSkillId: targetSkill ? targetSkill.id : '',
       targetSkillName,
       targetNodeId: activeNode ? activeNode.id : '',
-      reason: weakestScoreValue < 50
+      reason: weakestScoreValue < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN
         ? `Ushbu ko‘nikma hozirda ${weakestScoreValue}% darajasida. Tavsiya etilgan mashq orqali uni 60%+ darajaga ko‘taring.`
+        : isTargetedPractice
+        ? `Ushbu ko‘nikma hozirda ${weakestScoreValue}% (50–69%) darajasida. 70%+ mustahkam bosqichga chiqish uchun maqsadli mashqni bajaring.`
         : `O‘zlashtirish sur’atini saqlab qolish uchun rejadagi darsni davom ettiring.`,
       suggestedMinutes: isReinforcement ? 5 : activeNode ? activeNode.estimatedMinutes : 15,
-      priority: weakestScoreValue < 50 ? 'high' : 'medium',
+      priority: weakestScoreValue < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN ? 'high' : 'medium',
       explainableFactors,
       cycleImpact: cycle.loopUpdateSummary,
       dailyMicroTasks,

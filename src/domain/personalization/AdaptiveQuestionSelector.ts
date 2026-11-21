@@ -15,7 +15,8 @@ export class AdaptiveQuestionSelector {
     questionBank: Question[],
     targetSkillIds: string[],
     history: AnswerHistoryItem[],
-    targetQuestionsPerSkill: number = 2
+    targetQuestionsPerSkill: number = 2,
+    initialDifficulty?: 'easy' | 'medium' | 'hard'
   ): Question | null {
     const answeredIds = new Set(history.map((h) => h.questionId));
     const unasked = questionBank.filter((q) => !answeredIds.has(q.id));
@@ -40,7 +41,12 @@ export class AdaptiveQuestionSelector {
 
     // 2. Determine target difficulty for candidateSkillId based on recent performance
     const skillHistory = history.filter((h) => h.skillId === candidateSkillId);
-    let targetDifficulty: 'easy' | 'medium' | 'hard' = 'medium';
+    const defaultInitial: 'easy' | 'medium' | 'hard' =
+      initialDifficulty ??
+      (unasked.some((q) => q.skillId === candidateSkillId && q.courseId === 'course_eng_01')
+        ? 'easy'
+        : 'medium');
+    let targetDifficulty: 'easy' | 'medium' | 'hard' = defaultInitial;
 
     if (skillHistory.length > 0) {
       const recent = skillHistory.slice(-2);
@@ -63,14 +69,17 @@ export class AdaptiveQuestionSelector {
       }
     }
 
-    // 3. Find matching question in unasked pool
-    let match = unasked.find(
-      (q) => q.skillId === candidateSkillId && q.difficulty === targetDifficulty
-    );
+    // 3. Find matching question in unasked pool with difficulty-proximity fallback
+    const proximityOrder: Record<'easy' | 'medium' | 'hard', Array<'easy' | 'medium' | 'hard'>> = {
+      easy: ['easy', 'medium', 'hard'],
+      medium: ['medium', 'easy', 'hard'],
+      hard: ['hard', 'medium', 'easy'],
+    };
 
-    // Fallback if exact difficulty is exhausted
-    if (!match) {
-      match = unasked.find((q) => q.skillId === candidateSkillId);
+    let match: Question | undefined;
+    for (const diff of proximityOrder[targetDifficulty]) {
+      match = unasked.find((q) => q.skillId === candidateSkillId && q.difficulty === diff);
+      if (match) break;
     }
 
     return match || null;

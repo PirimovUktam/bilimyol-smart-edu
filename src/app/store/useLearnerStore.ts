@@ -11,6 +11,12 @@ interface LearnerState {
   saveStudyPreferences: (goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment) => Promise<void>;
   saveCourseLearningPlan: (courseId: string, goal: OnboardingGoal, dailyMinutes: DailyTimeCommitment,
     initialLevel: InitialLevel, isCurrent: () => boolean) => Promise<void>;
+  recordFlashcardSrs: (
+    courseId: string,
+    cardId: string,
+    rating: 'need_practice' | 'remembered',
+    intervalsDays?: readonly number[],
+  ) => Promise<void>;
   clearSession: () => void;
   resetAll: () => Promise<void>;
 }
@@ -18,6 +24,8 @@ interface LearnerState {
 export const useLearnerStore = create<LearnerState>((set) => {
   // Replacing the identity invalidates every older read or write continuation.
   let currentOperation: object | null = null;
+  let sessionEpoch = 0;
+  let srsWriteChain: Promise<void> = Promise.resolve();
   const applyProfile = async (
     request: () => Promise<LearnerProfile>,
     isLoading = false,
@@ -68,8 +76,48 @@ export const useLearnerStore = create<LearnerState>((set) => {
       await applyProfile(() => supabaseLearnerRepository.saveCourseLearningPlan(courseId, goal, dailyMinutes, initialLevel), false, isCurrent);
     },
 
+    recordFlashcardSrs: async (courseId, cardId, rating, intervalsDays) => {
+      if (typeof supabaseLearnerRepository.recordFlashcardSrs !== 'function') return;
+      const expectedEpoch = sessionEpoch;
+      const runSrs = async () => {
+        if (sessionEpoch !== expectedEpoch) return;
+        const updatedProfile = await supabaseLearnerRepository.recordFlashcardSrs!(
+          courseId,
+          cardId,
+          rating,
+          intervalsDays,
+        );
+        if (sessionEpoch !== expectedEpoch) return;
+        set((state) => {
+          if (!state.profile || state.profile.id !== updatedProfile.id) {
+            return { profile: updatedProfile };
+          }
+          const mergedSrsByCourse = {
+            ...(state.profile.flashcardSrsByCourse ?? {}),
+            ...(updatedProfile.flashcardSrsByCourse ?? {}),
+          };
+          for (const [cid, deck] of Object.entries(updatedProfile.flashcardSrsByCourse ?? {})) {
+            mergedSrsByCourse[cid] = {
+              ...(state.profile.flashcardSrsByCourse?.[cid] ?? {}),
+              ...deck,
+            };
+          }
+          return {
+            profile: {
+              ...state.profile,
+              flashcardSrsByCourse: mergedSrsByCourse,
+            },
+          };
+        });
+      };
+      const next = srsWriteChain.then(runSrs, runSrs);
+      srsWriteChain = next.catch(() => {});
+      await next;
+    },
+
     clearSession: () => {
       currentOperation = null;
+      sessionEpoch += 1;
       set({ profile: null, isLoading: false });
     },
 

@@ -121,14 +121,14 @@ export function AdaptiveCyclePanel({
       </div>
 
       {/* 5 Connected Steps */}
-      <ol className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+      <div role="list" className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
         {cycle.steps.map((step) => {
           const meta = STEP_META[step.key];
           const isCompleted = step.status === 'completed';
           const isActive = step.status === 'active';
 
           return (
-            <li key={step.step} className="min-w-0">
+            <div role="listitem" key={step.step} className="min-w-0">
               <button
                 type="button"
                 onClick={() => onStepAction(step.key)}
@@ -179,10 +179,10 @@ export function AdaptiveCyclePanel({
                   {step.metricLabel}
                 </p>
               </button>
-            </li>
+            </div>
           );
         })}
-      </ol>
+      </div>
 
       {/* Dynamic Loop Feedback Banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-sand/75 px-4 py-3">

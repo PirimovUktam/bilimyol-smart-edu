@@ -32,6 +32,10 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
   @override
   Widget build(BuildContext context) {
     if (SupabaseConfig.hasRemoteConfiguration) return const SizedBox.shrink();
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -50,7 +54,9 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              'Namuna rejimi. Mashg‘ulotni qayta boshlashingiz mumkin.',
+              isRu
+                  ? 'Демо-режим. Вы можете начать обучение заново.'
+                  : 'Namuna rejimi. Mashg‘ulotni qayta boshlashingiz mumkin.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
@@ -81,7 +87,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
                   )
                 : const Icon(Icons.restart_alt_rounded, size: 15),
             label: Text(
-              'Reset',
+              isRu ? 'Сбросить' : 'Reset',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,

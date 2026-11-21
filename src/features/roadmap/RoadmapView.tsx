@@ -1,18 +1,38 @@
 import { translate as t } from '@/core/locales/useTranslation';
 import { useTranslation } from '@/core/locales/useTranslation';
-import { useEffect, useState } from 'react';
-import { ArrowRight, BookOpen, Check, Clock, Compass, Lock, Play, Sparkles, Zap } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Check,
+  Clock,
+  Compass,
+  Layers,
+  Lock,
+  Mic,
+  PenTool,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { resolveNextLearningLesson, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
+import { ENGLISH_ALL_FLASHCARD_ENTRIES } from '@/data/datasources/english/flashcards';
+import { ENGLISH_CEFR_LEVELS } from '@/data/datasources/english/curriculum';
 import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepository';
+import type { LessonFlashcard } from '@/domain/entities/Lesson';
 import type { LearningPathNode } from '@/domain/entities/LearningPathNode';
-import type { Question } from '@/domain/entities/Question';
+import type { CefrLevelId, Question } from '@/domain/entities/Question';
+import { isFlashcardDue } from '@/domain/personalization/FlashcardSrsEngine';
 import { foundationLessons, hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
 import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
 import { RecommendationEngine } from '@/domain/personalization/RecommendationEngine';
 import { AdaptiveCyclePanel } from '@/features/adaptive/AdaptiveCyclePanel';
+import { FlashcardDeck } from '@/features/lesson/FlashcardDeck';
 import { ReinforcementModal } from '@/features/reinforcement/ReinforcementModal';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
@@ -28,10 +48,11 @@ interface RoadmapViewProps {
   onOpenKnowledgeMap: () => void;
   onChooseCourse: () => void;
   onConfigure: () => void;
+  onStartPlacement?: () => void;
 }
 
-export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure }: RoadmapViewProps) {
-  const { t } = useTranslation();
+export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure, onStartPlacement }: RoadmapViewProps) {
+  const { language, t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const skills = useCourseStore((state) => state.activeCourseSkills);
   const profile = useLearnerStore((state) => state.profile);
@@ -41,14 +62,23 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const [practice, setPractice] = useState<Question | null>(null);
   const [practiceLoading, setPracticeLoading] = useState<string | null>(null);
   const [practiceError, setPracticeError] = useState('');
+  const [lockedNoticeNodeId, setLockedNoticeNodeId] = useState<string | null>(null);
+  const [showSrsHub, setShowSrsHub] = useState(false);
+  const [srsHubSession, setSrsHubSession] = useState<{
+    cards: LessonFlashcard[];
+    startEmpty: boolean;
+  }>({ cards: [], startEmpty: false });
   const courseId = course?.id;
+  const isEnglishCourse = courseId === 'course_eng_01';
 
   useEffect(() => {
     if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
+    setLockedNoticeNodeId(null);
+    setShowSrsHub(false);
   }, [courseId]);
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
-  const nodes = path?.nodes ?? [];
+  const nodes = useMemo(() => path?.nodes ?? [], [path?.nodes]);
   const topics = nodes.filter((node) => !node.isReinforcement && !node.isOptional);
   const policy = topics.find((node) => node.mastery);
   const completed = topics.filter((node) => node.status === 'completed').length;
@@ -66,6 +96,59 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const adaptiveRec = path && !policy
     ? RecommendationEngine.generateRecommendation(courseId ?? '', skills, courseScores, path, profile)
     : null;
+
+  const englishSrsMap = useMemo(
+    () => (isEnglishCourse ? (profile?.flashcardSrsByCourse?.['course_eng_01'] ?? {}) : {}),
+    [isEnglishCourse, profile?.flashcardSrsByCourse],
+  );
+
+  const unlockedEnglishFlashcards = useMemo(() => {
+    if (!isEnglishCourse) return [];
+    const unlockedLessonIds = new Set<string>([
+      'lesson_eng_starter',
+      'lesson_eng_foundation_02',
+      ...nodes
+        .filter((n) => n.status !== 'locked' && n.targetLessonId)
+        .map((n) => n.targetLessonId as string),
+      ...(profile?.completedLessonIds ?? []),
+    ]);
+    const pool = ENGLISH_ALL_FLASHCARD_ENTRIES
+      .filter((entry) => unlockedLessonIds.has(entry.lessonId))
+      .map((entry) => entry.card);
+    return pool.length > 0 ? pool : ENGLISH_ALL_FLASHCARD_ENTRIES.map((entry) => entry.card);
+  }, [isEnglishCourse, nodes, profile?.completedLessonIds]);
+
+  const dueEnglishFlashcards = useMemo(() => {
+    const due = unlockedEnglishFlashcards.filter((card) => isFlashcardDue(englishSrsMap[card.id]));
+    const rank = (cardId: string): number => {
+      const entry = englishSrsMap[cardId];
+      if (entry?.status === 'need_practice') return 0;
+      if (entry) return 1;
+      return 2;
+    };
+    return due.sort((a, b) => {
+      const ra = rank(a.id);
+      const rb = rank(b.id);
+      if (ra !== rb) return ra - rb;
+      if (ra === 1) {
+        return Date.parse(englishSrsMap[a.id]?.nextReviewAt ?? '') - Date.parse(englishSrsMap[b.id]?.nextReviewAt ?? '');
+      }
+      return 0;
+    });
+  }, [unlockedEnglishFlashcards, englishSrsMap]);
+
+  const handleToggleSrsHub = () => {
+    if (!showSrsHub) {
+      const hasDue = dueEnglishFlashcards.length > 0;
+      setSrsHubSession({
+        cards: hasDue ? dueEnglishFlashcards : unlockedEnglishFlashcards,
+        startEmpty: !hasDue,
+      });
+      setShowSrsHub(true);
+    } else {
+      setShowSrsHub(false);
+    }
+  };
 
   const loadPractice = async (node: LearningPathNode) => {
     setPracticeLoading(node.id);
@@ -86,6 +169,433 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     }
   };
 
+  const renderNodeCard = (node: LearningPathNode, index: number) => {
+    const locked = node.status === 'locked';
+    const done = node.status === 'completed';
+    const isActive = path ? node.id === path.activeNodeId : false;
+    const target = resolveRoadmapNodeLessonId(node);
+    const Icon = locked
+      ? Lock
+      : done
+      ? Check
+      : node.isReinforcement
+      ? Sparkles
+      : node.nodeKind === 'level_assessment' || node.nodeKind === 'unit_checkpoint'
+      ? Award
+      : node.taskKind === 'speaking_prompt'
+      ? Mic
+      : node.taskKind === 'writing_prompt'
+      ? PenTool
+      : BookOpen;
+
+    const localizedNodeTitle = (language === 'ru' && node.titleRu) ? node.titleRu : node.title;
+    const localizedNodeDesc = (language === 'ru' && node.descriptionRu) ? node.descriptionRu : node.description;
+    const localizedCanDo = (language === 'ru' && node.canDoObjectiveRu) ? node.canDoObjectiveRu : node.canDoObjective;
+    const prerequisites = node.prerequisites.flatMap((id) => {
+      const previous = nodes.find((item) => item.id === id);
+      if (!previous) return [];
+      return [(language === 'ru' && previous.titleRu) ? previous.titleRu : previous.title];
+    });
+
+    const iconBoxTone = done
+      ? 'bg-mint/15 text-[#6EE7B7]'
+      : locked
+      ? 'bg-sand text-slatefine'
+      : node.isReinforcement
+      ? 'bg-amber/15 text-[#FCD34D]'
+      : 'bg-brand/15 text-brand-dark';
+
+    const showLockNotice = locked && lockedNoticeNodeId === node.id;
+    const isCheckpointNode = node.nodeKind === 'unit_checkpoint' || node.nodeKind === 'level_assessment';
+    const actionLabel = done || node.mastery?.state === 'needs_review'
+      ? t('path.review')
+      : isCheckpointNode
+      ? t('path.startCheckpoint')
+      : t('path.startLesson');
+
+    return (
+      <li
+        key={node.id}
+        data-node-id={node.id}
+        data-node-kind={node.nodeKind ?? 'lesson'}
+        data-has-rich-exercise={node.hasRichExercise ? 'true' : undefined}
+        data-task-kind={node.taskKind ?? 'standard'}
+        aria-current={isActive ? 'step' : undefined}
+        style={{ animationDelay: `${index * 60}ms` }}
+        className="fade-up"
+      >
+        <span
+          className={
+            'timeline-marker ' +
+            (isActive
+              ? 'timeline-current'
+              : done
+              ? 'bg-emerald-500! text-white! border-emerald-500!'
+              : '')
+          }
+        >
+          <Icon aria-hidden="true" className="size-4" />
+        </span>
+        <Card
+          onClick={locked ? () => setLockedNoticeNodeId(node.id) : undefined}
+          className={
+            'edtech-card-hover flex min-w-0 flex-col justify-between gap-4 ' +
+            (isActive ? 'ring-2 ring-brand/30 border-brand!' : '') +
+            (locked ? ' cursor-pointer' : '')
+          }
+          padding="md"
+        >
+          {/* (a) Top: Icon Container + Status Badge + Kind Badge */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${iconBoxTone}`}>
+                <Icon aria-hidden="true" className="size-5" />
+              </span>
+              <Badge
+                variant={node.mastery?.reviewDue ? 'amber' : done ? 'emerald' : locked ? 'slate' :
+                  node.status === 'reinforcement' || node.isReinforcement ? 'amber' : 'indigo'}
+                size="sm"
+              >
+                {locked
+                  ? t('path.locked')
+                  : node.mastery?.reviewDue
+                  ? t('path.scheduledReview')
+                  : done
+                  ? t(node.mastery ? 'path.mastered' : 'path.completed')
+                  : node.mastery?.state === 'needs_review'
+                  ? t('path.needsReview')
+                  : node.isReinforcement
+                  ? t('path.reinforce')
+                  : isActive
+                  ? t('lesson.nextStep')
+                  : t('path.available')}
+              </Badge>
+              {node.nodeKind === 'unit_checkpoint' && (
+                <Badge variant="amber" size="sm">{t('path.unitCheckpoint')}</Badge>
+              )}
+              {node.nodeKind === 'level_assessment' && (
+                <Badge variant="purple" size="sm">{t('path.levelAssessment')}</Badge>
+              )}
+              {!locked && !done && !node.isReinforcement && node.routeStrategy === 'targeted_practice' && (
+                <Badge variant="amber" size="sm">{t('path.targetedPracticeBadge')}</Badge>
+              )}
+              {!locked && !done && node.isPlacementRecommended && (
+                <Badge variant="teal" size="sm">{t('path.placementRecommendedBadge')}</Badge>
+              )}
+              {node.taskKind === 'speaking_prompt' && (
+                <Badge variant="teal" size="sm">Speaking</Badge>
+              )}
+              {node.taskKind === 'writing_prompt' && (
+                <Badge variant="teal" size="sm">Writing</Badge>
+              )}
+            </div>
+            {node.isOptional && <Badge variant="slate" size="sm">{t('path.optionalChallenge')}</Badge>}
+          </div>
+
+          {/* (b) Middle: Title, Can-Do, Description & Progress */}
+          <div className="min-w-0 space-y-2">
+            <h3 className="heading break-words text-lg font-extrabold">{localizedNodeTitle}</h3>
+            {localizedCanDo && (
+              <p className="text-xs font-semibold text-brand-dark">
+                {t('path.canDoLabel')}: {localizedCanDo}
+              </p>
+            )}
+            {localizedNodeDesc && (
+              <p className="line-clamp-2 text-sm leading-relaxed text-slatefine">{localizedNodeDesc}</p>
+            )}
+            {!node.mastery && (isActive || node.isReinforcement || node.routeStrategy === 'targeted_practice') && (
+              <div className="rounded-xl border border-brand/25 bg-sand/70 px-3 py-2 text-xs leading-relaxed text-graphite">
+                <span className="font-extrabold text-brand-dark">{t('adaptive.xaiEyebrow')}: </span>
+                <span>
+                  {node.isReinforcement
+                    ? adaptiveRec?.reason || localizedNodeDesc
+                    : node.routeStrategy === 'targeted_practice' && !done
+                    ? t('path.targetedPracticeHint', { score: node.score ?? 50 })
+                    : adaptiveCycle?.loopUpdateSummary || localizedNodeDesc}
+                </span>
+              </div>
+            )}
+            {node.mastery && !locked && (
+              <p className="text-xs font-semibold text-slatefine">
+                {node.mastery.correct}/{node.mastery.requiredItems} {t('path.masteryEvidence')}
+                {' · '}{node.mastery.passedCheckpoints}/{node.mastery.requiredCheckpoints} {t('path.masteryCheckpoints')}
+              </p>
+            )}
+            {node.score != null && (
+              <div className="max-w-md pt-1">
+                <Progress
+                  value={node.score}
+                  size="sm"
+                  tone={node.score >= 80 ? 'emerald' : 'indigo'}
+                  ariaLabel={`${localizedNodeTitle} ${t('tutor.mastery')}`}
+                />
+              </div>
+            )}
+            {locked && prerequisites.length > 0 && (
+              <p className="text-xs font-medium text-slatefine">{t('path.prerequisite')}{' '}{prerequisites.join(', ')}</p>
+            )}
+            {showLockNotice && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="rounded-xl border border-amber/30 bg-amber/15 px-3 py-2 text-xs font-semibold text-ink"
+              >
+                {t('path.lockedInlineNotice', {
+                  prerequisites: prerequisites.join(', ') || t('path.locked'),
+                })}
+              </p>
+            )}
+          </div>
+
+          {/* (c) Bottom: Meta Data & Action Button */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-3">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slatefine">
+              <span className="inline-flex items-center gap-1">
+                <Clock aria-hidden="true" className="size-3.5 text-brand" />
+                {node.estimatedMinutes}{' '}{t('courses.minutes')}</span>
+              {!done && !locked && <span className="inline-flex items-center gap-1 text-[#FCD34D]">
+                <Zap aria-hidden="true" className="size-3.5" />
+                +20 XP
+              </span>}
+              {node.score != null && <span>{t('tutor.mastery')}{' '}{node.score}%</span>}
+            </p>
+
+            {locked ? (
+              <Button
+                size="sm"
+                variant="outline"
+                aria-expanded={showLockNotice}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLockedNoticeNodeId((prev) => (prev === node.id ? null : node.id));
+                }}
+                leftIcon={<Lock aria-hidden="true" className="size-3.5" />}
+                className="min-h-11 opacity-85"
+              >
+                {t('path.lockedNoticeTrigger')}
+              </Button>
+            ) : (
+              <div>
+                {node.isReinforcement && !done ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    isLoading={practiceLoading === node.id}
+                    disabled={practiceLoading !== null}
+                    onClick={() => void loadPractice(node)}
+                    className="min-h-11"
+                  >{t('path.startExercise')}</Button>
+                ) : target ? (
+                  <Button
+                    size="sm"
+                    variant={done ? 'outline' : 'primary'}
+                    onClick={() => {
+                      useRoadmapStore.getState().selectNode(node);
+                      onStartLesson(target);
+                    }}
+                    leftIcon={<Play aria-hidden="true" className="size-4" />}
+                    className="min-h-11"
+                  >
+                    {actionLabel}
+                  </Button>
+                ) : (
+                  !done && <p className="text-xs text-slatefine">{t('path.noLesson')}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+      </li>
+    );
+  };
+
+  const renderEnglishGroupedRoadmap = () => {
+    const completedNodeIds = new Set(
+      nodes.filter((n) => n.status === 'completed').map((n) => n.id),
+    );
+    return (
+      <div className="space-y-6">
+        {ENGLISH_CEFR_LEVELS.map((levelMeta, levelIdx) => {
+          const levelId: CefrLevelId = levelMeta.cefrLevel;
+          const levelTitle = language === 'ru' ? levelMeta.titleRu : levelMeta.titleUz;
+          const levelTitleClean = levelTitle.replace(new RegExp(`^${levelId}\\s*[—-]\\s*`), '');
+          const levelCanDos = language === 'ru' ? levelMeta.canDoObjectivesRu : levelMeta.canDoObjectivesUz;
+          const levelNodes = shown.filter((node) => (node.cefrLevel ?? 'A1') === levelId);
+          const allLevelTopics = topics.filter((node) => (node.cefrLevel ?? 'A1') === levelId);
+          const levelDoneCount = allLevelTopics.filter((n) => n.status === 'completed').length;
+          const isA1 = levelId === 'A1';
+          const prevLevelMeta = levelIdx > 0 ? ENGLISH_CEFR_LEVELS[levelIdx - 1] : undefined;
+          const prevLevel = prevLevelMeta?.cefrLevel ?? 'A1';
+          const requiredExitIds =
+            levelMeta.prerequisites.length > 0
+              ? levelMeta.prerequisites
+              : prevLevelMeta?.exitAssessmentNodeId
+              ? [prevLevelMeta.exitAssessmentNodeId]
+              : [];
+          const hasUnlockedTopic = allLevelTopics.some((n) => n.status !== 'locked');
+          const hasPlacementRecommendedTopic = allLevelTopics.some((n) => n.isPlacementRecommended);
+          const isDeferredLevel =
+            (levelId === 'B2' || levelId === 'C1' || levelId === 'C2') && allLevelTopics.length === 0;
+          const isLockedLevel =
+            !isA1 &&
+            !hasUnlockedTopic &&
+            (allLevelTopics.length === 0 ||
+              requiredExitIds.length === 0 ||
+              !requiredExitIds.every((id) => completedNodeIds.has(id)));
+
+          if (filter !== 'all' && levelNodes.length === 0 && !isA1) {
+            return null;
+          }
+
+          return (
+            <section
+              key={levelId}
+              data-cefr-level={levelId}
+              aria-labelledby={`cefr-heading-${levelId}`}
+              className="min-w-0 space-y-4"
+            >
+              {/* Level Header Card — NOTE: keep other CEFR level codes OUT of <h*> tags! */}
+              <div className="edtech-card min-w-0 space-y-3 border border-hairline bg-paper p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="highlight">{t('path.levelBadge', { level: levelId })}</span>
+                    <Badge variant={isLockedLevel ? 'slate' : levelDoneCount === allLevelTopics.length && allLevelTopics.length > 0 ? 'emerald' : 'indigo'} size="sm">
+                      {isLockedLevel ? t('path.locked') : t('path.available')}
+                    </Badge>
+                    {hasPlacementRecommendedTopic && (
+                      <Badge variant="teal" size="sm">{t('path.placementRecommendedBadge')}</Badge>
+                    )}
+                    {isDeferredLevel && (
+                      <Badge variant="amber" size="sm">{t('path.deferredStageBadge')}</Badge>
+                    )}
+                  </div>
+                  {allLevelTopics.length > 0 && (
+                    <span className="text-xs font-bold text-slatefine">
+                      {levelDoneCount} / {allLevelTopics.length} {t('path.topicsDone')}
+                    </span>
+                  )}
+                </div>
+
+                <h2 id={`cefr-heading-${levelId}`} className="heading break-words text-xl font-extrabold sm:text-2xl">
+                  {levelId} — <span className="heading-accent">{levelTitleClean}</span>
+                </h2>
+
+                {levelCanDos.length > 0 && (
+                  <ul className="space-y-1 text-xs leading-relaxed text-graphite sm:text-sm">
+                    {levelCanDos.slice(0, 2).map((obj, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <Check aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-mint" />
+                        <span>{obj}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {isLockedLevel && (
+                  <p className="rounded-xl border border-hairline bg-sand px-3 py-2 text-xs font-semibold text-slatefine">
+                    {t('path.prerequisite')} {prevLevel}
+                  </p>
+                )}
+
+                {isDeferredLevel && (
+                  <p className="rounded-xl border border-amber/30 bg-amber/10 px-3 py-2 text-xs font-semibold text-ink">
+                    {t('path.deferredStageNotice')}
+                  </p>
+                )}
+
+                {allLevelTopics.length > 0 && (
+                  <Progress
+                    value={(100 * levelDoneCount) / allLevelTopics.length}
+                    tone={levelDoneCount === allLevelTopics.length ? 'emerald' : 'indigo'}
+                    size="sm"
+                    ariaLabel={`${levelId} ${t('path.stageProgress')}`}
+                  />
+                )}
+              </div>
+
+              {/* Modules inside this level */}
+              <div className="space-y-4">
+                {levelMeta.modules.map((mod) => {
+                  const modTitle = language === 'ru' ? mod.titleRu : mod.titleUz;
+                  const modCanDo = language === 'ru' ? mod.canDoObjectiveRu : mod.canDoObjectiveUz;
+                  const modNodes = levelNodes.filter((n) => n.moduleId === mod.id);
+                  const modTopics = allLevelTopics.filter((n) => n.moduleId === mod.id);
+                  const modDone = modTopics.filter((n) => n.status === 'completed').length;
+                  const modPct = modTopics.length > 0 ? Math.round((100 * modDone) / modTopics.length) : 0;
+
+                  if (modTopics.length > 0 && filter !== 'all' && modNodes.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div
+                      key={mod.id}
+                      className="edtech-card min-w-0 space-y-4 rounded-[22px] border border-hairline bg-paper p-4 sm:p-6"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="highlight">{t('path.moduleNumber', { order: mod.order })}</span>
+                        {modTopics.length > 0 ? (
+                          <Badge variant={modDone === modTopics.length ? 'emerald' : 'slate'} size="sm">
+                            {modDone} / {modTopics.length}
+                          </Badge>
+                        ) : (
+                          <Badge variant="slate" size="sm">{t('path.locked')}</Badge>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 space-y-1.5">
+                        <p className="heading break-words text-base font-extrabold sm:text-lg">{modTitle}</p>
+                        <p className="text-xs font-medium leading-relaxed text-slatefine sm:text-sm">
+                          <span className="font-bold text-brand-dark">{t('path.canDoLabel')}: </span>
+                          {modCanDo}
+                        </p>
+                      </div>
+
+                      {modTopics.length > 0 ? (
+                        <>
+                          <Progress
+                            value={modPct}
+                            tone={modPct === 100 ? 'emerald' : 'indigo'}
+                            size="sm"
+                            ariaLabel={`${modTitle} ${t('path.progress')}`}
+                          />
+                          <ol className="learning-timeline">
+                            {modNodes.map((node, idx) => renderNodeCard(node, idx))}
+                          </ol>
+                        </>
+                      ) : (
+                        <div className="space-y-2 rounded-xl border border-hairline bg-canvas p-3.5 text-xs text-slatefine">
+                          <p className="font-bold text-graphite">{t('path.cefrPlannedScope')}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {mod.grammarScope.slice(0, 2).map((item) => (
+                              <span key={item} className="rounded-full border border-hairline bg-paper px-2.5 py-1 font-medium text-ink">
+                                {item}
+                              </span>
+                            ))}
+                            {mod.vocabularyThemes.slice(0, 2).map((item) => (
+                              <span key={item} className="rounded-full border border-hairline bg-sand px-2.5 py-1 font-medium text-graphite">
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+
+        <p className="flex items-start gap-2 rounded-2xl border border-hairline bg-paper px-4 py-3 text-xs leading-relaxed text-slatefine">
+          <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand" />
+          <span>{t('path.cefrDisclaimer')}</span>
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="learning-page space-y-6 sm:space-y-8">
       <PageHeader
@@ -99,6 +609,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
               variant="outline"
               leftIcon={<Compass aria-hidden="true" className="size-4 text-brand" />}
               onClick={onOpenKnowledgeMap}
+              className="min-h-11"
             >{t('path.map')}</Button>
           )
         }
@@ -139,7 +650,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                     >
                       <div className="space-y-1">
                         <Badge variant={done ? 'emerald' : current ? 'indigo' : 'slate'} size="sm">
-                          {done ? 'Tugallangan' : current ? t('path.nextLesson') : t('path.nextStage')}
+                          {done ? t('path.completed') : current ? t('path.nextLesson') : t('path.nextStage')}
                         </Badge>
                         <h3 className="heading text-base font-extrabold">{index + 1}{t('path.foundationNumber')}</h3>
                       </div>
@@ -160,6 +671,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             <p className="text-sm text-slatefine">
               {foundationCompleted} / {foundationPath.length}{t('path.lessonsDone')}</p>
             <Progress value={(100 * foundationCompleted) / foundationPath.length} tone="emerald" ariaLabel={t('path.foundationProgress')} />
+            {isEnglishCourse && onStartPlacement && (
+              <Button variant="outline" size="sm" onClick={onStartPlacement} className="min-h-11 w-full">
+                {t('path.takePlacementFromFoundation')}
+              </Button>
+            )}
           </Card>
         </div>
       ) : error && !path ? (
@@ -176,7 +692,9 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
           <section className="learning-hero fade-up stagger-1 grid items-center gap-5 rounded-3xl p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-8">
             <div className="min-w-0 space-y-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
-                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />{t('path.yourPlan')}</span>
+                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
+                {isEnglishCourse ? t('path.cefrLevelsEyebrow') : t('path.yourPlan')}
+              </span>
               <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
                 {completed} / {topics.length} {t(policy ? 'path.masteredTopics' : 'path.topicsDone')}</h2>
               {topics.length > 0 && (
@@ -189,15 +707,60 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                 />
               )}
             </div>
-            {lesson && (
-              <Button
-                variant="outline"
-                className="w-fit border-white bg-white text-brand hover:bg-indigo-50"
-                onClick={() => onStartLesson(lesson)}
-                rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
-              >{t('courses.continue')}</Button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {isEnglishCourse && (
+                <Button
+                  variant="outline"
+                  aria-expanded={showSrsHub}
+                  leftIcon={<Layers aria-hidden="true" className="size-4" />}
+                  className="min-h-11 w-fit border-white/60 bg-white/15 text-white hover:bg-white/25"
+                  onClick={handleToggleSrsHub}
+                >
+                  {t('path.srsHubButton')} ({dueEnglishFlashcards.length})
+                </Button>
+              )}
+              {lesson && (
+                <Button
+                  variant="outline"
+                  className="min-h-11 w-fit border-white bg-white text-brand hover:bg-indigo-50"
+                  onClick={() => onStartLesson(lesson)}
+                  rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
+                >{t('courses.continue')}</Button>
+              )}
+            </div>
           </section>
+
+          {isEnglishCourse && showSrsHub && (
+            <section
+              aria-label={t('path.srsHubTitle')}
+              className="edtech-card min-w-0 space-y-4 border border-hairline bg-paper p-5 sm:p-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="space-y-1">
+                  <span className="highlight">{t('path.srsDueCount', { count: dueEnglishFlashcards.length })}</span>
+                  <h2 className="heading text-lg font-extrabold sm:text-xl">{t('path.srsHubTitle')}</h2>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSrsHub(false)}
+                  className="min-h-11"
+                >
+                  {t('path.srsCloseHub')}
+                </Button>
+              </div>
+              <FlashcardDeck
+                cards={srsHubSession.cards}
+                srsMap={englishSrsMap}
+                startEmptyWhenAllDone={srsHubSession.startEmpty}
+                onRateCard={(cardId, rating, intervalsDays) => {
+                  void useLearnerStore
+                    .getState()
+                    .recordFlashcardSrs('course_eng_01', cardId, rating, intervalsDays);
+                }}
+              />
+            </section>
+          )}
 
           {policy?.mastery && (
             <p className="text-sm font-medium leading-relaxed text-slatefine">
@@ -227,6 +790,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                 aria-pressed={filter === key}
                 size="sm"
                 onClick={() => setFilter(key)}
+                className="min-h-11"
               >
                 {filters[key]}
               </Button>
@@ -234,7 +798,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
           </div>
 
           {practiceError && (
-            <p role="alert" className="rounded-2xl border border-coral/20 bg-rose-50 p-3.5 text-sm text-coral">
+            <p role="alert" className="rounded-2xl border border-coral/25 bg-coral/10 p-3.5 text-sm text-ink">
               {practiceError}
             </p>
           )}
@@ -242,164 +806,13 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
             <SectionState title={nodes.length ? t('path.emptyFilter') : t('path.empty')} />
           )}
 
-          <ol className="learning-timeline">
-            {shown.map((node, index) => {
-              const locked = node.status === 'locked';
-              const done = node.status === 'completed';
-              const isActive = node.id === path.activeNodeId;
-              const target = resolveRoadmapNodeLessonId(node);
-              const Icon = locked ? Lock : done ? Check : node.isReinforcement ? Sparkles : BookOpen;
-              const prerequisites = node.prerequisites.flatMap((id) => {
-                const previous = nodes.find((item) => item.id === id);
-                return previous ? [previous.title] : [];
-              });
-
-              const iconBoxTone = done
-                ? 'bg-emerald-50 text-mint'
-                : locked
-                ? 'bg-slate-100 text-slatefine'
-                : node.isReinforcement
-                ? 'bg-amber-50 text-amber-600'
-                : 'bg-indigo-50 text-brand';
-
-              return (
-                <li
-                  key={node.id}
-                  aria-current={isActive ? 'step' : undefined}
-                  style={{ animationDelay: `${index * 80}ms` }}
-                  className="fade-up"
-                >
-                  <span
-                    className={
-                      'timeline-marker ' +
-                      (isActive
-                        ? 'timeline-current'
-                        : done
-                        ? 'bg-emerald-500! text-white! border-emerald-500!'
-                        : '')
-                    }
-                  >
-                    <Icon aria-hidden="true" className="size-4" />
-                  </span>
-                  <Card
-                    className={
-                      'edtech-card-hover flex min-w-0 flex-col justify-between gap-4 ' +
-                      (isActive ? 'ring-2 ring-brand/30 border-brand!' : '')
-                    }
-                    padding="md"
-                  >
-                    {/* (a) Top: Icon Container + Status Badge */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${iconBoxTone}`}>
-                          <Icon aria-hidden="true" className="size-5" />
-                        </span>
-                        <Badge
-                          variant={node.mastery?.reviewDue ? 'amber' : done ? 'emerald' : locked ? 'slate' :
-                            node.status === 'reinforcement' || node.isReinforcement ? 'amber' : 'indigo'}
-                          size="sm"
-                        >
-                          {locked
-                            ? t('path.locked')
-                            : node.mastery?.reviewDue
-                            ? t('path.scheduledReview')
-                            : done
-                            ? t(node.mastery ? 'path.mastered' : 'path.completed')
-                            : node.mastery?.state === 'needs_review'
-                            ? t('path.needsReview')
-                            : node.isReinforcement
-                            ? t('path.reinforce')
-                            : isActive
-                            ? t('lesson.nextStep')
-                            : t('path.available')}
-                        </Badge>
-                      </div>
-                      {node.isOptional && <Badge variant="slate" size="sm">{t('path.optionalChallenge')}</Badge>}
-                    </div>
-
-                    {/* (b) Middle: Title, Description & Progress */}
-                    <div className="min-w-0 space-y-2">
-                      <h3 className="heading break-words text-lg font-extrabold">{node.title}</h3>
-                      {node.description && (
-                        <p className="line-clamp-2 text-sm leading-relaxed text-slatefine">{node.description}</p>
-                      )}
-                      {!node.mastery && (isActive || node.isReinforcement) && (
-                        <div className="rounded-xl border border-brand/25 bg-sand/70 px-3 py-2 text-xs leading-relaxed text-graphite">
-                          <span className="font-extrabold text-brand-dark">{t('adaptive.xaiEyebrow')}: </span>
-                          <span>
-                            {node.isReinforcement
-                              ? adaptiveRec?.reason || node.description
-                              : adaptiveCycle?.loopUpdateSummary || node.description}
-                          </span>
-                        </div>
-                      )}
-                      {node.mastery && !locked && (
-                        <p className="text-xs font-semibold text-slatefine">
-                          {node.mastery.correct}/{node.mastery.requiredItems} {t('path.masteryEvidence')}
-                          {' · '}{node.mastery.passedCheckpoints}/{node.mastery.requiredCheckpoints} {t('path.masteryCheckpoints')}
-                        </p>
-                      )}
-                      {node.score != null && (
-                        <div className="max-w-md pt-1">
-                          <Progress
-                            value={node.score}
-                            size="sm"
-                            tone={node.score >= 80 ? 'emerald' : 'indigo'}
-                            ariaLabel={`${node.title} o‘zlashtirish`}
-                          />
-                        </div>
-                      )}
-                      {locked && prerequisites.length > 0 && (
-                        <p className="text-xs font-medium text-slatefine">{t('path.prerequisite')}{' '}{prerequisites.join(', ')}</p>
-                      )}
-                    </div>
-
-                    {/* (c) Bottom: Meta Data & Action Button */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-slatefine">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock aria-hidden="true" className="size-3.5 text-brand" />
-                          {node.estimatedMinutes}{' '}{t('courses.minutes')}</span>
-                        {!done && !locked && <span className="inline-flex items-center gap-1 text-amber-600">
-                          <Zap aria-hidden="true" className="size-3.5" />
-                          +20 XP
-                        </span>}
-                        {node.score != null && <span>{t('tutor.mastery')}{' '}{node.score}%</span>}
-                      </p>
-
-                      {!locked && (
-                        <div>
-                          {node.isReinforcement && !done ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              isLoading={practiceLoading === node.id}
-                              disabled={practiceLoading !== null}
-                              onClick={() => void loadPractice(node)}
-                            >{t('path.startExercise')}</Button>
-                          ) : target ? (
-                            <Button
-                              size="sm"
-                              variant={done ? 'outline' : 'primary'}
-                              onClick={() => {
-                                useRoadmapStore.getState().selectNode(node);
-                                onStartLesson(target);
-                              }}
-                              leftIcon={<Play aria-hidden="true" className="size-4" />}
-                            >
-                              {done || node.mastery?.state === 'needs_review' ? t('path.review') : t('path.startLesson')}
-                            </Button>
-                          ) : (
-                            !done && <p className="text-xs text-slatefine">{t('path.noLesson')}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                </li>
-              );
-            })}
-          </ol>
+          {isEnglishCourse ? (
+            renderEnglishGroupedRoadmap()
+          ) : (
+            <ol className="learning-timeline">
+              {shown.map((node, index) => renderNodeCard(node, index))}
+            </ol>
+          )}
         </>
       )}
       {practice && (

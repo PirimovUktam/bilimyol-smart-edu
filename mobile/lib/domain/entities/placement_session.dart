@@ -3,17 +3,37 @@ import 'question.dart';
 class PlacementReview {
   final QuestionAnswerSubmission submission;
   final String question;
+  final String? questionRu;
   final String selected;
   final String correct;
   final String explanation;
+  final String? explanationRu;
 
   const PlacementReview({
     required this.submission,
     required this.question,
+    this.questionRu,
     required this.selected,
     required this.correct,
     required this.explanation,
+    this.explanationRu,
   });
+
+  String localizedQuestion(String uiLocale) {
+    if (uiLocale == 'ru') {
+      final ru = questionRu?.trim();
+      if (ru != null && ru.isNotEmpty) return ru;
+    }
+    return question;
+  }
+
+  String localizedExplanation(String uiLocale) {
+    if (uiLocale == 'ru') {
+      final ru = explanationRu?.trim();
+      if (ru != null && ru.isNotEmpty) return ru;
+    }
+    return explanation;
+  }
 }
 
 class CompletedPlacement {

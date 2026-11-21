@@ -71,10 +71,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textPrimary = AppColors.textPrimaryColor(context);
+    final textSecondary = AppColors.textSecondaryColor(context);
+    final textMuted = AppColors.textMutedColor(context);
+    final inputFill = AppColors.subtleSurface(context);
+    // Input boundary must reach 3:1 against the fill and card (WCAG 1.4.11).
+    final borderColor = AppColors.textMutedColor(context);
+    final focusColor = AppColors.primaryAccentOnSurface(context);
+    final errorFg = AppColors.errorTextOnTint(context);
+    final errorBg = AppColors.errorTint(context);
+
+    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
-        title: const Text('Parolni tiklash'),
+        toolbarHeight: isLargeText ? 96 : null,
+        title: Text(
+          'Parolni tiklash',
+          softWrap: true,
+          maxLines: isLargeText ? null : 1,
+          overflow: isLargeText
+              ? TextOverflow.visible
+              : TextOverflow.ellipsis,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -84,146 +104,186 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              children: [
-                const BilimYolLogo(size: 38),
-                const SizedBox(height: 16),
-                Text(
-                  'Parolni qayta tiklash',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                children: [
+                  const BilimYolLogo(size: 38),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Parolni qayta tiklash',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                AppCard(
-                  padding: const EdgeInsets.all(20),
-                  child: _isSent
-                      ? Column(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: const BoxDecoration(
-                                color: AppColors.successLight,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check_circle_rounded,
-                                color: AppColors.success,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Havola yuborildi!',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${_emailController.text} manziliga tiklash havolasi yuborildi.',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            AppButton(
-                              text: 'Kirish sahifasiga qaytish',
-                              isFullWidth: true,
-                              onPressed: () => context.pop(),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Email',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                hintText: 'nomingiz@misol.uz',
-                                prefixIcon: const Icon(
-                                  Icons.mail_outline_rounded,
-                                  size: 18,
-                                ),
-                                filled: true,
-                                fillColor: const Color(0xFFF8FAFC),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.cardBorder,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            if (_errorMsg != null) ...[
+                  AppCard(
+                    padding: const EdgeInsets.all(20),
+                    child: _isSent
+                        ? Column(
+                            children: [
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                width: 50,
+                                height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.errorLight,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.error.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                  ),
+                                  color: AppColors.successTint(context),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.error_outline_rounded,
-                                      color: AppColors.error,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _errorMsg!,
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.error,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.successTextOnTint(context),
+                                  size: 28,
                                 ),
                               ),
                               const SizedBox(height: 12),
+                              Text(
+                                'Havola yuborildi!',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_emailController.text} manziliga tiklash havolasi yuborildi.',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              AppButton(
+                                text: 'Kirish sahifasiga qaytish',
+                                isFullWidth: true,
+                                onPressed: () => context.pop(),
+                              ),
                             ],
-                            AppButton(
-                              text: 'Tiklash havolasini yuborish',
-                              isFullWidth: true,
-                              size: AppButtonSize.large,
-                              isLoading: _isLoading,
-                              onPressed: _handleReset,
-                            ),
-                          ],
-                        ),
-                ),
-              ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Email',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) {
+                                  if (!_isLoading) _handleReset();
+                                },
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: textPrimary,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'nomingiz@misol.uz',
+                                  hintStyle: GoogleFonts.plusJakartaSans(
+                                    color: textMuted,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.mail_outline_rounded,
+                                    size: 18,
+                                    color: textSecondary,
+                                  ),
+                                  filled: true,
+                                  fillColor: inputFill,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: borderColor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: borderColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: focusColor,
+                                      width: 1.8,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: errorFg,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedErrorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: errorFg,
+                                      width: 1.8,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              if (_errorMsg != null) ...[
+                                Semantics(
+                                  liveRegion: true,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: errorBg,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: errorFg.withValues(alpha: 0.35),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.error_outline_rounded,
+                                          color: errorFg,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _errorMsg!,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: errorFg,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              AppButton(
+                                text: 'Tiklash havolasini yuborish',
+                                isFullWidth: true,
+                                size: AppButtonSize.large,
+                                isLoading: _isLoading,
+                                onPressed: _handleReset,
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

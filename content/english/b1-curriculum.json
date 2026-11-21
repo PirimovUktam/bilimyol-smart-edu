@@ -1,0 +1,2839 @@
+{
+  "schemaVersion": 1,
+  "documentType": "level_curriculum",
+  "courseId": "course_eng_01",
+  "cefrLevel": "B1",
+  "starterLessonId": "lesson_eng_starter",
+  "foundationLessonIds": ["lesson_eng_starter", "lesson_eng_foundation_02"],
+  "skills": [
+    "skill_eng_vocab",
+    "skill_eng_grammar",
+    "skill_eng_listening",
+    "skill_eng_reading"
+  ],
+  "lessonsOrder": [
+    "lesson_eng_b1_m1_travel",
+    "lesson_eng_b1_u1_checkpoint",
+    "lesson_eng_b1_m2_work_study",
+    "lesson_eng_b1_u2_checkpoint",
+    "lesson_eng_b1_m3_narrative",
+    "lesson_eng_b1_u3_checkpoint",
+    "lesson_eng_b1_m4_decisions",
+    "lesson_eng_b1_exit"
+  ],
+  "officialCefrDisclaimerUz": "Ichki modul sinovlari va B1 chiqish testi o‘quv dasturi doirasidagi tayyorgarlikni tekshiradi; ular rasmiy xalqaro CEFR sertifikatini bermaydi.",
+  "officialCefrDisclaimerRu": "Внутренние модульные проверки и итоговый тест B1 оценивают учебный прогресс и не выдают официальный международный сертификат CEFR.",
+  "modules": [
+    {
+      "id": "mod_eng_b1_m1",
+      "cefrLevel": "B1",
+      "order": 1,
+      "titleUz": "Sayohat va kundalik tajribalar",
+      "titleRu": "Путешествия и личный опыт",
+      "canDoObjectiveUz": "Safar taassurotlari va tajribani Present Perfect yordamida bayon qiladi.",
+      "canDoObjectiveRu": "Описывает впечатления от поездок и опыт с помощью Present Perfect.",
+      "prerequisites": ["node_eng_a2_exit"],
+      "units": [
+        {
+          "id": "unit_eng_b1_u1",
+          "moduleId": "mod_eng_b1_m1",
+          "order": 1,
+          "titleUz": "1-bo‘lim: Aeroport, mehmonxona va tajriba",
+          "titleRu": "Раздел 1: Аэропорт, отель и опыт",
+          "canDoObjectiveUz": "Bron va safar o‘zgarishlari bo‘yicha muloqot olib boradi.",
+          "canDoObjectiveRu": "Ведёт диалог об изменениях бронирования и маршрута.",
+          "prerequisites": ["node_eng_a2_exit"],
+          "plannedLessonIds": [
+            "lesson_eng_b1_m1_travel",
+            "lesson_eng_b1_u1_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_b1_u1_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Present Perfect vs Past Simple",
+        "Experience markers (ever, never, already, yet)"
+      ],
+      "vocabularyThemes": [
+        "Travel logistics",
+        "Bookings and delays"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_b1_m1_travel",
+        "lesson_eng_b1_u1_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_b1_u1_checkpoint"
+    },
+    {
+      "id": "mod_eng_b1_m2",
+      "cefrLevel": "B1",
+      "order": 2,
+      "titleUz": "O‘qish, ish va kutilmagan muammolar",
+      "titleRu": "Учёба, работа и решение проблем",
+      "canDoObjectiveUz": "Ish yoki o‘qishdagi kechikish sababini tushuntiradi va muqobil reja tuzadi.",
+      "canDoObjectiveRu": "Объясняет причину задержки на работе или учёбе и предлагает альтернативу.",
+      "prerequisites": ["node_eng_b1_u1_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_b1_u2",
+          "moduleId": "mod_eng_b1_m2",
+          "order": 1,
+          "titleUz": "2-bo‘lim: Sabab-oqibat va shartli tuzilmalar",
+          "titleRu": "Раздел 2: Причина-следствие и условные конструкции",
+          "canDoObjectiveUz": "First Conditional bilan real shart va natijani bog‘laydi.",
+          "canDoObjectiveRu": "Связывает реальные условия и последствия через First Conditional.",
+          "prerequisites": ["node_eng_b1_u1_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_b1_m2_work_study",
+            "lesson_eng_b1_u2_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_b1_u2_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "First Conditional",
+        "Cause and reason clauses (because, since, so)"
+      ],
+      "vocabularyThemes": [
+        "Deadlines and teamwork",
+        "Troubleshooting"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_b1_m2_work_study",
+        "lesson_eng_b1_u2_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_b1_u2_checkpoint"
+    },
+    {
+      "id": "mod_eng_b1_m3",
+      "cefrLevel": "B1",
+      "order": 3,
+      "titleUz": "Voqealarni izchil hikoya qilish",
+      "titleRu": "Связное повествование и рассказ",
+      "canDoObjectiveUz": "O‘tgan davomli va sodda zamonlarni uyg‘unlashtirib voqeani so‘zlab beradi.",
+      "canDoObjectiveRu": "Сочетает Past Continuous и Past Simple в связном рассказе.",
+      "prerequisites": ["node_eng_b1_u2_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_b1_u3",
+          "moduleId": "mod_eng_b1_m3",
+          "order": 1,
+          "titleUz": "3-bo‘lim: Hikoya tuzish va bog‘lovchilar",
+          "titleRu": "Раздел 3: Построение рассказа и связки",
+          "canDoObjectiveUz": "Voqea rivoji va burilish nuqtalarini aniq bog‘lovchilar bilan ko‘rsatadi.",
+          "canDoObjectiveRu": "Передаёт ход событий и повороты сюжета с помощью связок.",
+          "prerequisites": ["node_eng_b1_u2_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_b1_m3_narrative",
+            "lesson_eng_b1_u3_checkpoint"
+          ],
+          "checkpointNodeId": "node_eng_b1_u3_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Past Continuous vs Past Simple",
+        "Relative clauses (who, which, where)"
+      ],
+      "vocabularyThemes": [
+        "Storytelling connectors",
+        "Life milestones"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_b1_m3_narrative",
+        "lesson_eng_b1_u3_checkpoint"
+      ],
+      "checkpointNodeId": "node_eng_b1_u3_checkpoint"
+    },
+    {
+      "id": "mod_eng_b1_m4",
+      "cefrLevel": "B1",
+      "order": 4,
+      "titleUz": "Muhokama, tavsiya va keyingi harakat",
+      "titleRu": "Обсуждение, советы и следующие шаги",
+      "canDoObjectiveUz": "Suhbatdan asosiy xulosa chiqaradi va maslahat hamda taklif bildiradi.",
+      "canDoObjectiveRu": "Делает вывод из беседы и формулирует рекомендации.",
+      "prerequisites": ["node_eng_b1_u3_checkpoint"],
+      "units": [
+        {
+          "id": "unit_eng_b1_u4",
+          "moduleId": "mod_eng_b1_m4",
+          "order": 1,
+          "titleUz": "4-bo‘lim: Fikr bildirish va B1 yakuniy sinovi",
+          "titleRu": "Раздел 4: Выражение мнения и итоговый тест B1",
+          "canDoObjectiveUz": "Dalil keltirib shaxsiy fikr yozadi va B1 chiqish sinovini topshiradi.",
+          "canDoObjectiveRu": "Пишет аргументированное мнение и проходит проверку уровня B1.",
+          "prerequisites": ["node_eng_b1_u3_checkpoint"],
+          "plannedLessonIds": [
+            "lesson_eng_b1_m4_decisions",
+            "lesson_eng_b1_exit"
+          ],
+          "checkpointNodeId": "node_eng_b1_u4_checkpoint"
+        }
+      ],
+      "grammarScope": [
+        "Modals of advice and obligation (should, ought to, must)",
+        "Reported statements (basic)"
+      ],
+      "vocabularyThemes": [
+        "Recommendations",
+        "Action plans"
+      ],
+      "plannedLessonIds": [
+        "lesson_eng_b1_m4_decisions",
+        "lesson_eng_b1_exit"
+      ],
+      "checkpointNodeId": "node_eng_b1_u4_checkpoint"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson_eng_b1_m1_travel",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "communicativeFocus": "listening",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m1",
+      "unitId": "unit_eng_b1_u1",
+      "canDoObjective": "Sayohat va o‘qish tajribalarini Present Perfect hamda Past Simple bilan aniq farqlab bayon qiladi; aeroportdagi bron o‘zgarishini tinglab tushunadi.",
+      "canDoObjectiveRu": "Различает Present Perfect и Past Simple при рассказе о поездках и опыте; понимает диалог об изменении рейса и бронирования.",
+      "prerequisites": ["node_eng_a2_exit"],
+      "title": "Travel Logistics & Experiences (Present Perfect vs Past Simple)",
+      "titleRu": "Поездки и опыт: Present Perfect и Past Simple",
+      "estimatedMinutes": 10,
+      "summary": "You learn how to separate current travel status (Present Perfect with already/yet) from finished past details (Past Simple with yesterday/ago) during airport check-in.",
+      "summaryRu": "Вы научитесь отделять текущий статус поездки (Present Perfect с already/yet) от завершённых деталей прошлого (Past Simple с yesterday/ago).",
+      "requiresMastery": false,
+      "officialCefrDisclaimerUz": "Ushbu darsdagi og‘zaki topshiriq mustaqil mashq uchun mo‘ljallangan; rasmiy CEFR sertifikati bermaydi.",
+      "officialCefrDisclaimerRu": "Устное задание в уроке предназначено для самостоятельной практики и не заменяет официальный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "When you travel or join an exchange program, staff ask what you have already arranged and what happened at a specific time. Safar va o‘qish hujjatlarida hozirgi natija va aniq o‘tgan vaqtni ajratish juda muhim.",
+          "ru": "В поездках и программах обмена важно различать уже готовый результат к настоящему моменту и действие, завершившееся в конкретный момент прошлого."
+        },
+        "learningObjective": {
+          "uz": "Distinguish Present Perfect (experience or present result) from Past Simple (finished time) and explain a travel update aloud.",
+          "ru": "Различать Present Perfect (опыт или результат сейчас) и Past Simple (завершённое время) и устно сообщать об изменении маршрута."
+        },
+        "warmUp": {
+          "uz": "In A2 you mastered Past Simple ('booked', 'went'). Ask yourself: why do travelers say 'I have lost my boarding pass' without 'yesterday'?",
+          "ru": "В A2 вы изучили Past Simple. Подумайте: почему путешественник говорит 'I have lost my boarding pass' без указания 'yesterday'?"
+        },
+        "vocabularyItems": [
+          { "word": "boarding pass", "uz": "samolyotga chiqish taloni", "ru": "посадочный талон", "ipa": "/ˈbɔːdɪŋ pɑːs/" },
+          { "word": "itinerary", "uz": "safar yo‘nalish jadvali", "ru": "маршрутный лист", "ipa": "/aɪˈtɪnərəri/" },
+          { "word": "reschedule", "uz": "vaqtini ko‘chirmoq", "ru": "перенести на другое время", "ipa": "/ˌriːˈʃedjuːl/" },
+          { "word": "accommodation", "uz": "turar joy (boshpana)", "ru": "жильё для проживания", "ipa": "/əˌkɒməˈdeɪʃn/" }
+        ],
+        "grammarNote": {
+          "rule": "Present Perfect (have/has + V3) vs Past Simple (V2 / did + V1)",
+          "simpleExplanationUz": "Use Present Perfect for life experience or a past action with a result right now. Use Past Simple when you name a finished time (yesterday, two days ago). O‘zbek tilida ikkalasi ham ko‘pincha '-gan/-di' bilan beriladi, ammo inglizchada aniq o‘tgan vaqt kelsa faqat Past Simple ishlatiladi.",
+          "simpleExplanationRu": "Используйте Present Perfect для опыта или результата в настоящем, а Past Simple, когда назван завершённый момент (yesterday, two days ago). В русском оба времени переводятся прошедшим, но маркеры законченного времени запрещают Present Perfect.",
+          "structure": "Subject + have/has (+ already/never) + V3 | Subject + haven't/hasn't + V3 ... yet | Subject + V2 + [finished time]",
+          "positiveExamples": [
+            "I have already checked in online for the Prague flight.",
+            "I booked my student accommodation two days ago."
+          ],
+          "negativeExamples": [
+            "The confirmation email hasn't arrived yet.",
+            "We didn't reschedule the hotel yesterday."
+          ],
+          "questions": [
+            "Have you ever missed a connecting flight?",
+            "When did the airline update the itinerary?"
+          ],
+          "commonMistakes": [
+            "Combining a finished time marker with Present Perfect ('I have booked it two days ago' is wrong; say 'I booked it two days ago'), or using 'yet' in positive statements instead of 'already'."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "Stress falls on the second syllable in 'itinerary' /aɪˈtɪnərəri/. Notice British 'reschedule' /ˌriːˈʃedjuːl/ vs American /ˌriːˈskedʒuːl/.",
+          "ru": "В 'itinerary' /aɪˈtɪnərəri/ ударение падает на второй слог. Сравните британское 'reschedule' /ˌriːˈʃedjuːl/ и американское /ˌriːˈskedʒuːl/."
+        },
+        "examples": [
+          "We have rescheduled passengers to 11:15 from Gate 19.",
+          "I checked the updated itinerary ten minutes ago."
+        ],
+        "guidedPractice": {
+          "uz": "Examine the airport boarding card illustration, listen to Sardor and the check-in agent, and review the 4 B1 flashcards.",
+          "ru": "Рассмотрите иллюстрацию посадки на рейс, прослушайте диалог Сардора и сотрудника стойки и повторите 4 карточки B1."
+        },
+        "independentPractice": {
+          "uz": "Answer the listening disambiguation check, complete the Past Simple gap, and deliver your own spoken travel update.",
+          "ru": "Выполните тест по аудированию, впишите глагол в Past Simple и запишите устное сообщение о поездке."
+        },
+        "listeningRef": "media_eng_b1_m1_travel_dialogue",
+        "readingRef": "lesson_eng_b1_m1_concept",
+        "speakingTask": {
+          "uz": "Explain a travel change in 3 to 4 sentences using Present Perfect ('already/yet') plus one finished-time Past Simple detail.",
+          "ru": "Расскажите об изменении плана поездки в 3–4 предложениях с Present Perfect ('already/yet') и одной деталью в Past Simple."
+        },
+        "writingTask": {
+          "uz": "Write a negative Present Perfect sentence with 'yet' explaining that transport has not arrived.",
+          "ru": "Напишите отрицательное предложение в Present Perfect с 'yet' о том, что транспорт ещё не прибыл."
+        },
+        "knowledgeCheck": "q_eng_b1_m1_listen_mcq",
+        "finalQuiz": "q_eng_b1_m1_speaking",
+        "feedbackRules": {
+          "uz": "Every distractor diagnoses time-marker conflict or listening detail confusion.",
+          "ru": "Каждый дистрактор разбирает конфликт маркеров времени или ошибку в деталях аудирования."
+        },
+        "summaryAndRevision": {
+          "uz": "Your 4 B1 travel cards enter spaced repetition before the Unit 1 hotel checkpoint.",
+          "ru": "Все 4 карточки модуля переходят в интервальное повторение перед проверкой раздела 1."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_m1_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Present Perfect vs Past Simple in Travel",
+          "titleRu": "Present Perfect и Past Simple в поездках",
+          "content": "Choose Present Perfect (have/has + V3) when the exact past time does not matter and the result affects right now. Use 'already' in positive updates and 'yet' at the end of questions or negatives. Switch to Past Simple the moment you mention a finished time such as 'yesterday' or 'two days ago'. O‘zbek tilida ikkala zamon ham '-gan/-di' bilan tarjima qilinishi mumkin, lekin inglizchada aniq vaqt ko‘rsatkichi kelsa Present Perfect ishlatilmaydi.",
+          "contentRu": "Выбирайте Present Perfect (have/has + V3), когда важно состояние и результат сейчас, а не точная дата в прошлом. Используйте 'already' в утверждениях и 'yet' в вопросах и отрицаниях. Как только вы называете завершённое время ('yesterday', 'two days ago'), переходите на Past Simple, хотя в русском оба варианта звучат как прошедшее время.",
+          "highlightNotes": [
+            "Result now: I have already checked in online.",
+            "Unfinished check: The confirmation email hasn't arrived yet.",
+            "Finished past time: I booked the room two days ago."
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m1_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Listening: Airport Check-in & Gate Change",
+          "titleRu": "Аудирование: Регистрация и перенос рейса",
+          "content": "Listen to Sardor speaking with the airline agent. Track which departure time and gate were cancelled, what the new schedule is, and which booking detail is still missing.",
+          "contentRu": "Прослушайте разговор Сардора с сотрудником авиакомпании. Обратите внимание на отменённое и новое время вылета, номер выхода и статус бронирования жилья.",
+          "media": {
+            "id": "media_eng_b1_m1_travel_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-m1-travel-dialogue.wav",
+            "title": "Aeroportda reys va turar joyni tekshirish suhbati",
+            "titleUz": "Aeroportda reys va turar joyni tekshirish suhbati",
+            "titleRu": "Диалог в аэропорту о переносе рейса и бронировании",
+            "transcript": "Sardor: Excuse me, I have already checked in online for the Prague flight, but my app shows a new itinerary.\nAgent: Let me check your boarding pass. Yes, because of morning fog, the nine thirty flight from Gate seven was cancelled. We have rescheduled passengers to eleven fifteen from Gate nineteen.\nSardor: Okay, eleven fifteen at Gate nineteen. Also, I booked my student accommodation two days ago, and the confirmation email hasn't arrived yet.\nAgent: I see it in our partner system. I have just sent a fresh copy to your inbox, so you can show it at reception.",
+            "posterImage": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+            "posterAlt": "Aeroport uchish jadvali o‘zgarishi, QR kodli chipta va mehmonxona kaliti tasvirlangan ikki panel",
+            "posterAltUz": "Aeroport uchish jadvali o‘zgarishi, QR kodli chipta va mehmonxona kaliti tasvirlangan ikki panel",
+            "posterAltRu": "Две панели: перенос времени вылета, посадочный бланк со штрих-кодом и ключ-карта отеля",
+            "durationSeconds": 37.075,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Sardor: Excuse me, I have already checked in online for the Prague flight, but my app shows a new itinerary.\nAgent: Let me check your boarding pass. Yes, because of morning fog, the nine thirty flight from Gate seven was cancelled. We have rescheduled passengers to eleven fifteen from Gate nineteen.\nSardor: Okay, eleven fifteen at Gate nineteen. Also, I booked my student accommodation two days ago, and the confirmation email hasn't arrived yet.\nAgent: I see it in our partner system. I have just sent a fresh copy to your inbox, so you can show it at reception.",
+            "speakerName": "Sardor & Agent"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m1_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "Travel Logistics Flashcards",
+          "titleRu": "Карточки: Поездки и бронирование",
+          "content": "Listen to each B1 term, recall its meaning first, and then tap to check the definition and natural sentence.",
+          "contentRu": "Прослушайте слово, вспомните перевод и только затем откройте карточку.",
+          "flashcards": [
+            {
+              "id": "fc_eng_b1_m1_1",
+              "front": "boarding pass",
+              "backUz": "samolyotga chiqish taloni",
+              "backRu": "посадочный талон",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈbɔːdɪŋ pɑːs/",
+              "ipaAmE": "/ˈbɔːrdɪŋ pæs/",
+              "cefrLevel": "B1",
+              "example": "Please keep your boarding pass ready at Gate 19.",
+              "exampleUz": "Iltimos, 19-darvozada samolyotga chiqish taloningizni tayyor tuting.",
+              "exampleRu": "Пожалуйста, держите посадочный талон наготове у выхода 19.",
+              "audioSrc": "/lesson-media/english/b1/b1-m1-boarding-pass.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+              "alt": "QR kodli qog‘oz varaq va uchishga tayyor havo layneri tasviri",
+              "altRu": "Бумажный бланк со штрих-кодом и силуэт самолёта",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m1_2",
+              "front": "itinerary",
+              "backUz": "safar yo‘nalish jadvali",
+              "backRu": "маршрутный лист",
+              "partOfSpeech": "noun",
+              "ipa": "/aɪˈtɪnərəri/",
+              "ipaAmE": "/aɪˈtɪnəreri/",
+              "cefrLevel": "B1",
+              "example": "We checked the updated itinerary before leaving the hotel.",
+              "exampleUz": "Mehmonxonadan chiqishdan oldin yangilangan safar jadvalini tekshirdik.",
+              "exampleRu": "Перед выходом из отеля мы проверили обновлённый маршрутный лист.",
+              "audioSrc": "/lesson-media/english/b1/b1-m1-itinerary.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+              "alt": "Ikki manzil nuqtasini bog‘lovchi chiziq va xarita belgilari",
+              "altRu": "Пунктирная линия между двумя точками на схеме",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m1_3",
+              "front": "reschedule",
+              "backUz": "vaqtini ko‘chirmoq",
+              "backRu": "перенести на другое время",
+              "partOfSpeech": "verb",
+              "ipa": "/ˌriːˈʃedjuːl/",
+              "ipaAmE": "/ˌriːˈskedʒuːl/",
+              "cefrLevel": "B1",
+              "example": "The airline had to reschedule our morning flight due to fog.",
+              "exampleUz": "Aviakompaniya tuman sababli ertalabki reysimiz vaqtini ko‘chirishga majbur bo‘ldi.",
+              "exampleRu": "Авиакомпании пришлось перенести утренний рейс из-за тумана.",
+              "audioSrc": "/lesson-media/english/b1/b1-m1-reschedule.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+              "alt": "Birining ustiga chiziq tortilgan va ikkinchisi yashil rangda ko‘rsatilgan ikki soat",
+              "altRu": "Два циферблата: один перечёркнут, второй отмечен зелёным",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m1_4",
+              "front": "accommodation",
+              "backUz": "turar joy (boshpana)",
+              "backRu": "жильё для проживания",
+              "partOfSpeech": "noun",
+              "ipa": "/əˌkɒməˈdeɪʃn/",
+              "ipaAmE": "/əˌkɑːməˈdeɪʃn/",
+              "cefrLevel": "B1",
+              "example": "Have you booked student accommodation near the campus yet?",
+              "exampleUz": "Kampus yaqinidan talabalar turar joyini hali bron qildingizmi?",
+              "exampleRu": "Вы уже забронировали жильё рядом с кампусом?",
+              "audioSrc": "/lesson-media/english/b1/b1-m1-accommodation.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+              "alt": "Oltin kalit belgisi tushirilgan ko‘p qavatli bino tasviri",
+              "altRu": "Многоэтажное здание рядом с золотым значком ключа",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m1_listen_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Listening Check: Flight & Booking Status",
+          "titleRu": "Проверка аудирования: Рейс и жильё",
+          "content": "Based on the airport conversation, identify Sardor's updated flight details and which item still needed action.",
+          "contentRu": "По разговору в аэропорту определите обновлённое время, выход на посадку и проблему с документами.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m1_listen_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "Listening: Rescheduled flight details",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Audiodagi suhbatga ko‘ra, Sardorning yangilangan reysi soat nechada va qaysi darvozadan uchadi, hamda qaysi hujjati hali kelmagan edi?",
+            "textRu": "Согласно диалогу, во сколько и с какого выхода вылетает обновлённый рейс Сардора, и какое подтверждение ещё не пришло?",
+            "options": [
+              "11:15 da 19-darvozadan; turar joy tasdiq xati hali kelmagan edi",
+              "09:30 da 7-darvozadan; hali onlayn ro‘yxatdan o‘tmagan edi",
+              "11:15 da 7-darvozadan; reys umuman bekor qilinmagan edi",
+              "09:30 da 19-darvozadan; chamadoni aeroportda yo‘qolgan edi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "09:30 da 7-darvozadan; hali onlayn ro‘yxatdan o‘tmagan edi": {
+                "uz": "09:30 va 7-darvoza tuman sababli bekor qilingan eski reys edi; Sardor esa onlayn ro‘yxatdan allaqachon o‘tgan.",
+                "ru": "09:30 и выход 7 — отменённый прежний рейс, а онлайн-регистрацию Сардор уже прошёл."
+              },
+              "11:15 da 7-darvozadan; reys umuman bekor qilinmagan edi": {
+                "uz": "Xodim 09:30 dagi reys bekor bo‘lib, yangisi 19-darvozaga ko‘chirilganini aytdi.",
+                "ru": "Сотрудник сообщил об отмене рейса на 09:30 и переносе нового вылета на выход 19."
+              },
+              "09:30 da 19-darvozadan; chamadoni aeroportda yo‘qolgan edi": {
+                "uz": "Sardor chamadon haqida emas, ikki kun oldin bron qilgan turar joy tasdiq xati kelmagani haqida so‘radi.",
+                "ru": "Речь шла не о багаже, а о подтверждении бронирования жилья, оформленного два дня назад."
+              }
+            },
+            "explanation": "Agent confirmed the 09:30 flight from Gate 7 was cancelled and rescheduled to 11:15 from Gate 19, while Sardor's accommodation confirmation email had not arrived yet.",
+            "explanationRu": "Сотрудник подтвердил перенос рейса с 09:30 (выход 7) на 11:15 (выход 19), а письмо о жилье ещё не поступило на почту.",
+            "wrongFeedback": "Eski reys va yangi ko‘chirilgan vaqt hamda Sardorning turar joy haqidagi izohini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте различие между отменённым и перенесённым рейсом, а также вопрос о бронировании жилья."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m1_fill_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Grammar Practice: Finished Past Time",
+          "titleRu": "Грамматика: Завершённое время",
+          "content": "Choose the accurate verb form to match the finished time expression in the sentence.",
+          "contentRu": "Поставьте глагол в правильную форму с учётом маркера завершённого времени.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m1_fill",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "B1",
+            "topic": "Past Simple with ago",
+            "difficulty": "easy",
+            "questionType": "fill_blank",
+            "evaluationMode": "deterministic",
+            "blankTemplate": "I ___ my passport at the hotel reception two hours ago.",
+            "text": "Qavsdagi «leave» fe’lini vaqt ko‘rsatkichiga moslab to‘g‘ri shaklda yozing: «I ___ (leave) my passport at the hotel reception two hours ago.»",
+            "textRu": "Поставьте глагол «leave» в правильную форму согласно маркеру времени: «I ___ (leave) my passport at the hotel reception two hours ago.»",
+            "options": [],
+            "acceptedAnswers": ["left"],
+            "explanation": "'two hours ago' marks a finished point in the past, so Past Simple ('left') is required instead of Present Perfect.",
+            "explanationRu": "Маркер 'two hours ago' обозначает завершённый момент в прошлом, поэтому нужен Past Simple ('left'), а не Present Perfect.",
+            "wrongFeedback": "Gapda aniq tugallangan vaqt ko‘rsatkichi borligi sababli noto‘g‘ri fe’lning ikkinchi shaklini yozing.",
+            "wrongFeedbackRu": "Из-за точного указания времени в прошлом требуется вторая форма неправильного глагола."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m1_speak_q",
+          "stepNumber": 6,
+          "type": "interactive_question",
+          "title": "Speaking: Travel Update Report",
+          "titleRu": "Speaking: Сообщение о поездке",
+          "content": "Record or say aloud a 3–4 sentence update for a classmate waiting at the airport, combining Present Perfect ('already/yet') and one Past Simple time detail.",
+          "contentRu": "Составьте устное сообщение из 3–4 предложений об изменении планов в поездке, сочетая Present Perfect ('already/yet') и Past Simple.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m1_speaking",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "speaking",
+            "cefrLevel": "B1",
+            "topic": "Speaking: Travel update with Present Perfect and Past Simple",
+            "difficulty": "medium",
+            "questionType": "speaking_prompt",
+            "evaluationMode": "self_assessed",
+            "text": "Sayohat rejangiz o‘zgargani haqida 3–4 ta gap ayting: nimalarni allaqachon bajarganingizni (already/yet) va kecha yoki bir soat oldin nima qilganingizni (Past Simple) tushuntiring.",
+            "textRu": "Расскажите в 3–4 предложениях об изменении маршрута: что уже сделано (already/yet) и что произошло в конкретный момент прошлого (Past Simple).",
+            "options": [],
+            "sampleResponse": "I have already printed my boarding pass, and the airline has rescheduled our departure to 11:15. I checked the updated itinerary ten minutes ago. However, my hotel confirmation hasn't arrived yet.",
+            "rubricCriteria": [
+              {
+                "id": "crit_b1_m1_pp",
+                "labelUz": "Kamida bitta Present Perfect ('already' yoki 'yet' bilan) to‘g‘ri ishlatildi",
+                "labelRu": "Верно использован Present Perfect (с 'already' или 'yet')"
+              },
+              {
+                "id": "crit_b1_m1_ps",
+                "labelUz": "Aniq vaqt ko‘rsatkichi bilan Past Simple gapi qo‘shildi",
+                "labelRu": "Добавлено предложение в Past Simple с точным маркером времени"
+              },
+              {
+                "id": "crit_b1_m1_vocab",
+                "labelUz": "Sayohat lug‘atidan kamida 2 ta so‘z qo‘llandi (boarding pass, itinerary, reschedule, accommodation)",
+                "labelRu": "Использовано минимум 2 термина темы (boarding pass, itinerary, reschedule, accommodation)"
+              }
+            ],
+            "selfAssessmentNoticeUz": "O‘zini baholash (mustaqil nutq mashqi): natija avtomatik nutq tekshiruvisiz mezonlar asosida baholanadi va rasmiy CEFR sertifikati bermaydi.",
+            "selfAssessmentNoticeRu": "Самооценка (самостоятельная практика): задание оценивается по критериям без автопроверки речи и не выдаёт официальный сертификат CEFR.",
+            "explanation": "Combining 'already/yet' for current readiness with a Past Simple timestamp makes travel updates accurate and natural at B1.",
+            "explanationRu": "Сочетание 'already/yet' для текущего статуса и Past Simple для конкретных событий прошлого делает сообщение естественным для B1.",
+            "wrongFeedback": "Gaplaringizda Present Perfect ('already/yet'), aniq vaqtli Past Simple va sayohat so‘zlari borligini tekshiring.",
+            "wrongFeedbackRu": "Проверьте наличие Present Perfect ('already/yet'), Past Simple с маркером времени и лексики модуля."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_m1_reinf_text",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Present Perfect negative with yet",
+        "difficulty": "medium",
+        "questionType": "text_input",
+        "evaluationMode": "deterministic",
+        "text": "«Avtobus hali yetib kelmadi» ma’nosini Present Perfect inkor shaklida ingliz tilida to‘liq gap bilan yozing.",
+        "textRu": "Напишите на английском полное отрицательное предложение в Present Perfect со значением «Автобус ещё не прибыл».",
+        "options": [],
+        "acceptedAnswers": [
+          "The bus hasn't arrived yet",
+          "The bus has not arrived yet",
+          "The airport shuttle hasn't arrived yet",
+          "The airport shuttle has not arrived yet",
+          "The shuttle bus hasn't arrived yet",
+          "The shuttle bus has not arrived yet"
+        ],
+        "explanation": "Negative Present Perfect puts 'hasn't / has not + V3' before 'yet' at the end of the clause: 'The bus hasn't arrived yet.'",
+        "explanationRu": "В отрицании Present Perfect ставится 'hasn't / has not + V3', а маркер ожидания выносится в конец предложения.",
+        "wrongFeedback": "Birlikdagi ega uchun inkor yordamchi fe’l, uchinchi shakl fe’li va gap oxirida kutish ravishini qo‘llang.",
+        "wrongFeedbackRu": "Для единственного числа используйте отрицательную форму вспомогательного глагола, третью форму и наречие ожидания в конце."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_u1_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m1",
+      "unitId": "unit_eng_b1_u1",
+      "canDoObjective": "Mehmonxona qabulxonasidagi suhbatni tinglab to‘g‘ri javobni tanlaydi va Present Perfect hamda Past Simple xatolarini tuzatadi.",
+      "canDoObjectiveRu": "Понимает диалог на стойке регистрации в отеле и исправляет ошибки в Present Perfect и Past Simple.",
+      "prerequisites": ["node_eng_b1_m1_travel"],
+      "title": "Unit 1 Checkpoint: Hotel & Itinerary Verification",
+      "titleRu": "Проверка раздела 1: Отель и проверка брони",
+      "estimatedMinutes": 7,
+      "summary": "Verify your Module 1 mastery by resolving a hotel room change conversation, fixing a finished-time tense clash, and applying experience markers.",
+      "summaryRu": "Проверьте знания модуля 1: выберите ответ администратора отеля, исправьте конфликт времён и вставьте маркер жизненного опыта.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 1-bo‘lim sinovi bo‘lib, rasmiy xalqaro CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 1; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Hotels often adjust reservations after check-in. Listening carefully helps you confirm the right room and keep keycards organized.",
+          "ru": "В отеле нередко меняют номер после заселения. Важно точно расслышать условия и номер новой комнаты."
+        },
+        "learningObjective": {
+          "uz": "Select the accurate reception reply from audio evidence and eliminate tense conflicts with 'yesterday' and 'ever'.",
+          "ru": "Выбрать точный ответ администратора по аудио и устранить ошибки с маркерами 'yesterday' и 'ever'."
+        },
+        "warmUp": {
+          "uz": "Remember: 'ever' asks about life experience up to now, while 'yesterday' locks the verb into Past Simple.",
+          "ru": "Помните: 'ever' спрашивает о жизненном опыте до настоящего момента, а 'yesterday' требует только Past Simple."
+        },
+        "vocabularyItems": [
+          { "word": "reservation", "uz": "oldindan band qilish", "ru": "бронирование", "ipa": "/ˌrezəˈveɪʃn/" },
+          { "word": "courtyard", "uz": "ichki hovli", "ru": "внутренний двор", "ipa": "/ˈkɔːtjɑːd/" }
+        ],
+        "grammarNote": {
+          "rule": "Experience Questions (Have you ever + V3?) vs Finished Time (Past Simple)",
+          "simpleExplanationUz": "Place 'ever' directly before V3 in questions ('Have you ever stayed...?'). Never pair Present Perfect with 'yesterday' or 'last night'.",
+          "simpleExplanationRu": "Ставьте 'ever' прямо перед V3 в вопросах ('Have you ever stayed...?'). Никогда не сочетайте Present Perfect со словами 'yesterday' или 'last night'.",
+          "structure": "Have/Has + Subject + ever + V3? | Subject + V2 + yesterday",
+          "positiveExamples": ["I checked in yesterday for a three-night stay."],
+          "negativeExamples": ["I have never stayed in Room 204 before."],
+          "questions": ["Have you ever asked to change a noisy hotel room?"],
+          "commonMistakes": ["Writing 'has landed yesterday' instead of 'landed yesterday'."]
+        },
+        "pronunciationFocus": {
+          "uz": "In fluent questions, 'Have you' reduces to /həv jə/ while stress stays on 'ever' and the main participle.",
+          "ru": "В беглой речи 'Have you' сокращается до /həv jə/, а ударение падает на 'ever' и смысловой глагол."
+        },
+        "examples": ["Since you still have two nights left, would you like to move to Room 412?"],
+        "guidedPractice": {
+          "uz": "Listen to the hotel guest and receptionist before completing the dialogue.",
+          "ru": "Прослушайте разговор гостя и администратора перед выбором реплики."
+        },
+        "independentPractice": {
+          "uz": "Solve the conversation completion, error correction, and alternate experience gap.",
+          "ru": "Выполните дополнение диалога, исправление ошибки и альтернативный пропуск."
+        },
+        "listeningRef": "media_eng_b1_u1_cp_hotel_dialogue",
+        "readingRef": "lesson_eng_b1_u1_cp_concept",
+        "speakingTask": {
+          "uz": "Politely request a quieter room away from street noise in two sentences.",
+          "ru": "Вежливо попросите более тихий номер вдали от улицы в двух предложениях."
+        },
+        "writingTask": {
+          "uz": "Identify and fix the tense error triggered by 'yesterday evening'.",
+          "ru": "Найдите и исправьте ошибку времени, вызванную маркером 'yesterday evening'."
+        },
+        "knowledgeCheck": "q_eng_b1_u1_cp_listen_conv",
+        "finalQuiz": "q_eng_b1_u1_cp_reinf_err",
+        "feedbackRules": {
+          "uz": "Checkpoint requires 70% mastery to unlock Module 2.",
+          "ru": "Для открытия модуля 2 требуется набрать 70% в этой проверке."
+        },
+        "summaryAndRevision": {
+          "uz": "Module 2 shifts from travel status to workplace deadlines and conditional backup plans.",
+          "ru": "В модуле 2 мы перейдём от поездок к рабочим срокам и условным запасным планам."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_u1_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Checkpoint Briefing: Reception & Tense Accuracy",
+          "titleRu": "Инструкция проверки: Отель и точность времён",
+          "content": "Before advancing to Module 2, confirm that you can catch exact room and duration facts in speech and keep finished-time markers separate from Present Perfect. Note that 'ever' fits experience questions before the past participle, whereas 'yesterday' always calls for Past Simple. Tinglashda eski va yangi xona raqamini ajrating.",
+          "contentRu": "Перед переходом к модулю 2 убедитесь, что вы точно различаете детали номера в диалоге и не смешиваете маркеры завершённого прошлого с Present Perfect. Слово 'ever' ставится перед третьей формой глагола в вопросах об опыте."
+        },
+        {
+          "id": "lesson_eng_b1_u1_cp_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Listening: Hotel Room Switch",
+          "titleRu": "Аудирование: Смена номера в отеле",
+          "content": "Listen to the guest and receptionist. Notice why the guest wants to move and which room number and side the receptionist offers.",
+          "contentRu": "Прослушайте диалог гостя и администратора. Обратите внимание на причину смены номера и предложенную новую комнату.",
+          "media": {
+            "id": "media_eng_b1_u1_cp_hotel_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-u1-cp-hotel-dialogue.wav",
+            "title": "1-bo‘lim sinovi: Mehmonxonada xonani almashtirish suhbati",
+            "titleUz": "1-bo‘lim sinovi: Mehmonxonada xonani almashtirish suhbati",
+            "titleRu": "Проверка раздела 1: Смена номера в отеле",
+            "transcript": "Guest: Good afternoon. I checked in yesterday for a three-night stay, and I've never stayed in Room two zero four before, but the street noise kept me awake.\nReceptionist: I'm really sorry about that. Since you still have two nights left, would you like to move to Room four twelve? It faces the quiet courtyard away from the elevator.\nGuest: Courtyard side away from the elevator sounds perfect. Should I return the old key card now?\nReceptionist: Yes, please. I have already updated your reservation, so here is your new card for Room four twelve.",
+            "posterImage": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+            "posterAlt": "Mehmonxona binosi, kalit belgisi va yangilangan safar kartochkasi tasviri",
+            "posterAltUz": "Mehmonxona binosi, kalit belgisi va yangilangan safar kartochkasi tasviri",
+            "posterAltRu": "Здание отеля, золотой значок ключа и обновлённая карта маршрута",
+            "durationSeconds": 34.267,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Guest: Good afternoon. I checked in yesterday for a three-night stay, and I've never stayed in Room two zero four before, but the street noise kept me awake.\nReceptionist: I'm really sorry about that. Since you still have two nights left, would you like to move to Room four twelve? It faces the quiet courtyard away from the elevator.\nGuest: Courtyard side away from the elevator sounds perfect. Should I return the old key card now?\nReceptionist: Yes, please. I have already updated your reservation, so here is your new card for Room four twelve.",
+            "speakerName": "Guest & Receptionist"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_u1_cp_q",
+          "stepNumber": 3,
+          "type": "interactive_question",
+          "title": "Conversation Completion: Receptionist's Offer",
+          "titleRu": "Дополнение диалога: Ответ администратора",
+          "content": "Choose the receptionist's reply that accurately reflects the audio recording.",
+          "contentRu": "Выберите ответ администратора, который соответствует аудиозаписи.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_u1_cp_listen_conv",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "Checkpoint: Hotel conversation completion",
+            "difficulty": "medium",
+            "questionType": "conversation_completion",
+            "evaluationMode": "deterministic",
+            "dialogueContext": [
+              "Guest: \"Room 204 is noisy, and I still have two nights left.\"",
+              "Receptionist: \"___\""
+            ],
+            "text": "Audiodagi suhbat mazmuniga mos keladigan mehmonxona xodimining javobini tanlang:",
+            "textRu": "Выберите реплику администратора, соответствующую аудиодиалогу:",
+            "options": [
+              "I have updated your booking to Room 412 on the quiet courtyard side.",
+              "You have to stay in Room 204 for three more nights near the elevator.",
+              "I cancelled your entire reservation because you checked in yesterday.",
+              "Would you like to move to Room 204 facing the main street?"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "You have to stay in Room 204 for three more nights near the elevator.": {
+                "uz": "Mehmon 204-xonadan shikoyat qildi va 2 kechasi qolgan edi; xodim tinch hovli tomondagi 412-xonani taklif qildi.",
+                "ru": "Гость жаловался на шум в 204-м номере (осталось 2 ночи), и ему предложили тихий 412-й номер."
+              },
+              "I cancelled your entire reservation because you checked in yesterday.": {
+                "uz": "Bron bekor qilinmadi, aksincha xodim uni yangi xonaga o‘tkazib yangiladi.",
+                "ru": "Бронирование не отменяли — его обновили на другую комнату."
+              },
+              "Would you like to move to Room 204 facing the main street?": {
+                "uz": "204-xona shovqinli ko‘cha tomondagi eski xona edi, yangisi esa hovli tomonda.",
+                "ru": "Номер 204 с окнами на улицу был как раз прежним шумным номером."
+              }
+            },
+            "explanation": "The receptionist apologizes for the street noise and updates the booking to Room 412 facing the quiet courtyard away from the elevator.",
+            "explanationRu": "Администратор извиняется за уличный шум и обновляет бронь на тихий номер 412 во внутренний двор.",
+            "wrongFeedback": "Xodim qaysi yangi xona raqamini va qaysi tinch tomonni taklif qilganini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте, какой новый номер комнаты и какую тихую сторону предложил администратор."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_u1_cp_reinf_err",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Checkpoint: Fixing Present Perfect + finished time",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "Our flight has landed at Tashkent airport yesterday evening.",
+        "text": "Tugallangan vaqt belgisi bilan mos kelmaydigan fe’l xatosini tuzating:",
+        "textRu": "Исправьте ошибку времени глагола при маркере завершённого прошлого:",
+        "options": [
+          "Our flight landed at Tashkent airport yesterday evening.",
+          "Our flight has land at Tashkent airport yesterday evening.",
+          "Our flight was landed at Tashkent airport yesterday evening.",
+          "Our flight had landing at Tashkent airport yesterday evening."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "Our flight has land at Tashkent airport yesterday evening.": {
+            "uz": "«yesterday evening» bilan Present Perfect ishlatilmaydi, bundan tashqari «has» dan keyin V1 kelmaydi.",
+            "ru": "Со словом «yesterday evening» Present Perfect запрещён, к тому же после «has» нужна 3-я форма."
+          },
+          "Our flight was landed at Tashkent airport yesterday evening.": {
+            "uz": "«land» (qo‘nmoq) bu yerda faol harakat bo‘lgani uchun majhul nisbat («was landed») kerak emas.",
+            "ru": "Самолёт совершил посадку сам (активный залог), страдательный «was landed» здесь лишний."
+          },
+          "Our flight had landing at Tashkent airport yesterday evening.": {
+            "uz": "«had» dan keyin «-ing» shakli emas, o‘tgan zamonning oddiy shakli (V2) qo‘llanadi.",
+            "ru": "После «had» не ставится «-ing»; здесь нужен обычный Past Simple."
+          }
+        },
+        "explanation": "'yesterday evening' specifies a finished past time, so Past Simple ('landed') is required.",
+        "explanationRu": "Маркер 'yesterday evening' указывает на завершённое время в прошлом, поэтому требуется Past Simple ('landed').",
+        "wrongFeedback": "Gapdagi aniq o‘tgan vaqt ko‘rsatkichiga mos keladigan to‘g‘ri faol o‘tgan zamon shaklini tanlang.",
+        "wrongFeedbackRu": "Выберите правильную форму активного прошедшего времени для завершённого момента в прошлом."
+      },
+      "alternateExercise": {
+        "id": "q_eng_b1_u1_cp_alt_fill",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Alternate: Experience marker ever",
+        "difficulty": "medium",
+        "questionType": "fill_blank",
+        "evaluationMode": "deterministic",
+        "blankTemplate": "Have you ___ missed a train because of heavy traffic?",
+        "text": "Savol gapda hayotiy tajribani («biror marta») so‘rash uchun bo‘sh joyga mos ravishni yozing: «Have you ___ missed a train because of heavy traffic?»",
+        "textRu": "Вставьте наречие жизненного опыта («когда-либо») в вопрос: «Have you ___ missed a train because of heavy traffic?»",
+        "options": [],
+        "acceptedAnswers": ["ever"],
+        "explanation": "'ever' is used in Present Perfect questions to ask 'at any time in your life up to now'.",
+        "explanationRu": "Наречие 'ever' используется в вопросах Present Perfect со значением «когда-либо в жизни».",
+        "wrongFeedback": "So‘roq gaplarda inkor ma’nosi o‘rniga hayotiy tajribani («biror marta») so‘rovchi qisqa ravishni qo‘llang.",
+        "wrongFeedbackRu": "В вопросах используется короткое наречие со значением «когда-либо в жизни»."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_m2_work_study",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "communicativeFocus": "grammar",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m2",
+      "unitId": "unit_eng_b1_u2",
+      "canDoObjective": "Ish yoki o‘qishdagi kechikish sababini (because, since, so) tushuntiradi va First Conditional bilan zaxira reja tuzadi.",
+      "canDoObjectiveRu": "Объясняет причину задержки на работе или учёбе (because, since, so) и формулирует запасной план в First Conditional.",
+      "prerequisites": ["node_eng_b1_u1_checkpoint"],
+      "title": "Work, Study & Unexpected Problems (First Conditional + Cause/Reason)",
+      "titleRu": "Учёба, работа и сбои: First Conditional и причина",
+      "estimatedMinutes": 10,
+      "summary": "You learn how to explain a technical setback clearly using 'because/since/so' and build realistic First Conditional backup plans without putting 'will' in the 'if'-clause.",
+      "summaryRu": "Вы научитесь объяснять причину сбоя через 'because/since/so' и строить реальные запасные планы в First Conditional без 'will' после 'if'.",
+      "requiresMastery": false,
+      "pedagogy17": {
+        "intro": {
+          "uz": "Unexpected server outages or tight deadlines happen in university and office life. Strong B1 speakers explain the cause quickly and offer a clear Plan B.",
+          "ru": "На учёбе и работе часто случаются технические сбои перед дедлайном. Важно быстро назвать причину и предложить чёткий запасной план."
+        },
+        "learningObjective": {
+          "uz": "Connect causes and results with 'because/since/so' and construct accurate First Conditional plans ('If + Present Simple, will + V1').",
+          "ru": "Связывать причину и следствие через 'because/since/so' и составлять планы по модели First Conditional ('If + Present Simple, will + V1')."
+        },
+        "warmUp": {
+          "uz": "In A2 you planned with 'going to'. Now imagine your upload portal breaks at 2:50 p.m. before a 4:00 p.m. deadline: what happens IF it stays offline?",
+          "ru": "В A2 вы использовали 'going to'. А как выразить условие: что вы сделаете, ЕСЛИ портал не заработает к трём часам?"
+        },
+        "vocabularyItems": [
+          { "word": "deadline", "uz": "topshirish oxirgi muddati", "ru": "крайний срок сдачи", "ipa": "/ˈdedlaɪn/" },
+          { "word": "backup plan", "uz": "zaxira chorasi", "ru": "запасной вариант действий", "ipa": "/ˈbækʌp plæn/" },
+          { "word": "postpone", "uz": "keyinga surmoq", "ru": "отложить на потом", "ipa": "/pəˈspəʊn/" },
+          { "word": "resubmit", "uz": "qaytadan topshirmoq", "ru": "отправить повторно", "ipa": "/ˌriːsəbˈmɪt/" }
+        ],
+        "grammarNote": {
+          "rule": "First Conditional (If + Present Simple, will + V1) & Cause/Result (because / since / so)",
+          "simpleExplanationUz": "Use First Conditional for real future possibilities: the 'if'-clause takes Present Simple, and the main clause takes 'will'. O‘zbek tilida ikkala qismda ham kelasi zamon ('agar ishlamasa, yuboramiz') ko‘rinadi, lekin inglizchada 'if' dan keyin hech qachon 'will' qo‘yilmaydi. Shuningdek, bitta gapda ham 'because', ham 'so' ni birga ishlatmang.",
+          "simpleExplanationRu": "В First Conditional после 'if' всегда ставится Present Simple (никогда 'will'!), а в главной части — 'will + V1'. В русском в обеих частях звучит будущее («если не сработает, отправим»), поэтому легко допустить ошибку. И не объединяйте 'because' и 'so' в одном предложении.",
+          "structure": "If + Subject + Present Simple, Subject + will + V1 | Because/Since + [cause], [result] | [cause], so + [result]",
+          "positiveExamples": [
+            "If the portal stays offline, we will email the PDF directly.",
+            "Since the server crashed, we exported a local backup."
+          ],
+          "negativeExamples": [
+            "If the portal does not come back online by three, we will postpone the demo.",
+            "We didn't lose the file because Timur saved a copy."
+          ],
+          "questions": [
+            "What will we do if the printer stops working before noon?",
+            "Why couldn't Timur upload the report on time?"
+          ],
+          "commonMistakes": [
+            "Putting 'will/won't' inside the 'if'-clause ('If it won't work...' -> wrong; say 'If it doesn't work...'), and writing double connectors ('Because it rained, so we stayed' -> remove 'so')."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "Notice the quick contraction 'we'll' /wiːl/ vs full 'will' /wɪl/, and second-syllable stress in 'postpone' /pəˈspəʊn/.",
+          "ru": "Обратите внимание на краткую форму 'we'll' /wiːl/ и ударение на второй слог в 'postpone' /pəˈspəʊn/."
+        },
+        "examples": [
+          "The upload portal stopped working because of server maintenance, so I exported a backup.",
+          "If the portal does not recover by 3:00 p.m., we will email the PDF."
+        ],
+        "guidedPractice": {
+          "uz": "Study the troubleshooting flowchart illustration, listen to Timur and Kamola, and review the 4 B1 cards.",
+          "ru": "Изучите схему запасного плана, прослушайте диалог Тимура и Камолы и повторите 4 карточки."
+        },
+        "independentPractice": {
+          "uz": "Identify the root cause and Plan B from audio, fill the negative conditional verb, and fix a double-connector error.",
+          "ru": "Определите причину и план Б по аудио, впишите условие в Present Simple и исправьте двойную связку."
+        },
+        "listeningRef": "media_eng_b1_m2_work_dialogue",
+        "readingRef": "lesson_eng_b1_m2_concept",
+        "speakingTask": {
+          "uz": "State a study problem with 'since' and offer a First Conditional backup step.",
+          "ru": "Назовите учебную проблему через 'since' и предложите запасной шаг в First Conditional."
+        },
+        "writingTask": {
+          "uz": "Remove redundant connectors in a cause-and-result sentence.",
+          "ru": "Уберите лишнюю связку в предложении с причиной и следствием."
+        },
+        "knowledgeCheck": "q_eng_b1_m2_listen_mcq",
+        "finalQuiz": "q_eng_b1_m2_cond_fill",
+        "feedbackRules": {
+          "uz": "Feedback targets 'if + will' L1 transfer and 'because... so...' double-conjunction errors.",
+          "ru": "Подсказки разбирают перенос будущего времени после 'if' и двойной союз 'because... so...'."
+        },
+        "summaryAndRevision": {
+          "uz": "You are ready for Unit 2's university IT memo checkpoint.",
+          "ru": "Вы готовы к проверке раздела 2 по объявлению университетской IT-службы."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_m2_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "First Conditional & Cause-Result Connectors",
+          "titleRu": "First Conditional и связки причины и следствия",
+          "content": "When a real problem threatens a deadline, First Conditional connects the condition ('If + Present Simple') to the action plan ('will + V1'). Never place 'will' inside the 'if'-clause, even though both Uzbek and Russian translate the condition with future meaning. Use 'because' or 'since' before a reason, or 'so' before a result, never both together. Inglizchada bitta gapda 'because' va 'so' yonma-yon kelmaydi.",
+          "contentRu": "Для реальных условий будущего используйте First Conditional: после 'if' ставится Present Simple (без 'will'), а в основной части — 'will + V1'. Слова 'because' и 'since' вводят причину, а 'so' — результат; в одном английском предложении их не совмещают.",
+          "highlightNotes": [
+            "Condition (Present Simple): If the portal doesn't work by 3:00,",
+            "Result (will + V1): we will email the PDF directly.",
+            "Single connector: Because the server crashed, we exported a backup."
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m2_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Listening: Server Outage Before Deadline",
+          "titleRu": "Аудирование: Сбой сервера перед дедлайном",
+          "content": "Listen to Timur and Kamola discussing a blocked submission portal. Pay attention to what caused the issue, whether the file is safe, and what Plan B they choose at 3:00 p.m.",
+          "contentRu": "Прослушайте диалог Тимура и Камолы о сбое портала. Запомните причину проблемы, сохранность файла и запасной план на 15:00.",
+          "media": {
+            "id": "media_eng_b1_m2_work_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-m2-work-dialogue.wav",
+            "title": "O‘qish va ish: Server muammosi va zaxira reja suhbati",
+            "titleUz": "O‘qish va ish: Server muammosi va zaxira reja suhbati",
+            "titleRu": "Работа и учёба: сбой сервера и запасной план",
+            "transcript": "Timur: Hi Kamola, the upload portal has stopped working because of unexpected server maintenance, so I can't submit our team report before the four o'clock deadline.\nKamola: Thanks for telling me early. Have you saved a local PDF copy on your laptop?\nTimur: Yes, I exported a backup ten minutes ago, so nothing is lost.\nKamola: Great. If the portal does not come back online by three o'clock, we will email the PDF directly to Dr. Karim and postpone the live demo until Thursday morning.",
+            "posterImage": "/lesson-media/english/b1/b1-m2-work-problem.png",
+            "posterAlt": "To‘xtatib qo‘yilgan yuklash oynasi, server ogohlantirish belgisi va zaxira yuborish sxemasi",
+            "posterAltUz": "To‘xtatib qo‘yilgan yuklash oynasi, server ogohlantirish belgisi va zaxira yuborish sxemasi",
+            "posterAltRu": "Приостановленная загрузка на ноутбуке, предупреждение о сервере и резервный канал отправки",
+            "durationSeconds": 31.019,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Timur: Hi Kamola, the upload portal has stopped working because of unexpected server maintenance, so I can't submit our team report before the four o'clock deadline.\nKamola: Thanks for telling me early. Have you saved a local PDF copy on your laptop?\nTimur: Yes, I exported a backup ten minutes ago, so nothing is lost.\nKamola: Great. If the portal does not come back online by three o'clock, we will email the PDF directly to Dr. Karim and postpone the live demo until Thursday morning.",
+            "speakerName": "Timur & Kamola"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m2_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "Troubleshooting & Deadlines Flashcards",
+          "titleRu": "Карточки: Сроки и запасной план",
+          "content": "Listen carefully to stress and syllable breaks, test your recall, and reveal the Uzbek/Russian explanation.",
+          "contentRu": "Прослушайте произношение, проверьте себя и откройте перевод.",
+          "flashcards": [
+            {
+              "id": "fc_eng_b1_m2_1",
+              "front": "deadline",
+              "backUz": "topshirish oxirgi muddati",
+              "backRu": "крайний срок сдачи",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈdedlaɪn/",
+              "ipaAmE": "/ˈdedlaɪn/",
+              "cefrLevel": "B1",
+              "example": "Our team submitted the slides two hours before the deadline.",
+              "exampleUz": "Jamoamiz slaydlarni oxirgi muddatdan ikki soat oldin topshirdi.",
+              "exampleRu": "Наша команда сдала слайды за два часа до крайнего срока.",
+              "audioSrc": "/lesson-media/english/b1/b1-m2-deadline.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m2-work-problem.png",
+              "alt": "Sariq ogohlantirish belgisi yonida turgan taqvim va soat",
+              "altRu": "Календарь и циферблат рядом с жёлтым треугольным знаком",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m2_2",
+              "front": "backup plan",
+              "backUz": "zaxira chorasi",
+              "backRu": "запасной вариант действий",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈbækʌp plæn/",
+              "ipaAmE": "/ˈbækʌp plæn/",
+              "cefrLevel": "B1",
+              "example": "Always prepare a backup plan in case the Wi-Fi drops.",
+              "exampleUz": "Wi-Fi uzilib qolsa deb har doim zaxira chorasini tayyorlab qo‘ying.",
+              "exampleRu": "Всегда готовьте запасной вариант на случай отключения Wi-Fi.",
+              "audioSrc": "/lesson-media/english/b1/b1-m2-backup-plan.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m2-work-problem.png",
+              "alt": "Asosiy yo‘ldan ajralib chiquvchi yashil yo‘nalish va hujjat belgisi",
+              "altRu": "Зелёная стрелка обхода со значком облачного файла",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m2_3",
+              "front": "postpone",
+              "backUz": "keyinga surmoq",
+              "backRu": "отложить на потом",
+              "partOfSpeech": "verb",
+              "ipa": "/pəˈspəʊn/",
+              "ipaAmE": "/pəˈspoʊn/",
+              "cefrLevel": "B1",
+              "example": "We had to postpone the presentation until Thursday morning.",
+              "exampleUz": "Taqdimotni payshanba tongigacha keyinga surishga majbur bo‘ldik.",
+              "exampleRu": "Нам пришлось отложить презентацию до утра четверга.",
+              "audioSrc": "/lesson-media/english/b1/b1-m2-postpone.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m2-work-problem.png",
+              "alt": "Ustiga chiziq tortilgan qizil soat yonidagi o‘ngga yo‘nalgan strelka",
+              "altRu": "Перечёркнутый красный циферблат рядом со стрелкой вправо",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m2_4",
+              "front": "resubmit",
+              "backUz": "qaytadan topshirmoq",
+              "backRu": "отправить повторно",
+              "partOfSpeech": "verb",
+              "ipa": "/ˌriːsəbˈmɪt/",
+              "ipaAmE": "/ˌriːsəbˈmɪt/",
+              "cefrLevel": "B1",
+              "example": "If the upload fails, please resubmit the PDF by email.",
+              "exampleUz": "Agar yuklash ishlamasa, PDF faylni elektron pochta orqali qaytadan topshiring.",
+              "exampleRu": "Если загрузка не пройдёт, отправьте PDF повторно по почте.",
+              "audioSrc": "/lesson-media/english/b1/b1-m2-resubmit.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m2-work-problem.png",
+              "alt": "Noutbuk ekranidan xat konverti tomon yo‘nalgan yashil tasdiq belgisi",
+              "altRu": "Зелёный маркер передачи файла от ноутбука к почтовому конверту",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m2_listen_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Listening Check: Cause & Plan B",
+          "titleRu": "Проверка аудирования: Причина и запасной план",
+          "content": "Identify why the upload failed and what the team will do if the system stays down at 3:00 p.m.",
+          "contentRu": "Определите причину сбоя и действия команды, если портал не заработает к 15:00.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m2_listen_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "Listening: Problem cause and First Conditional plan",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Audiodagi suhbatga ko‘ra, Timur hisobotni yuklay olmasligiga nima sabab bo‘ldi va portal soat 15:00 gacha ishlamasa jamoa nima qiladi?",
+            "textRu": "Почему Тимур не смог загрузить отчёт и что сделает команда, если портал не заработает к 15:00?",
+            "options": [
+              "Server texnik xizmati portalni to‘xtatdi; PDF ni pochta orqali yuborib, jonli taqdimotni payshanbaga ko‘chirishadi",
+              "Timurning noutbuki buzilib fayl o‘chdi; loyihani butunlay bekor qilishadi",
+              "Muddat soat 15:00 da tugadi; portal ochilishini juma kunigacha kutishadi",
+              "Doktor Karim ta’tilga chiqdi; hisobotni qog‘ozda chop etishadi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Timurning noutbuki buzilib fayl o‘chdi; loyihani butunlay bekor qilishadi": {
+                "uz": "Timur 10 daqiqa oldin mahalliy PDF zaxirasini saqlab olganini aytdi, demak hech narsa yo‘qolmagan.",
+                "ru": "Тимур сохранил локальную копию PDF 10 минут назад, поэтому данные не потеряны."
+              },
+              "Muddat soat 15:00 da tugadi; portal ochilishini juma kunigacha kutishadi": {
+                "uz": "Asosiy muddat 16:00 edi; 15:00 esa pochta orqali yuborish qarori qabul qilinadigan nazorat vaqti, taqdimot esa payshanbaga ko‘chiriladi.",
+                "ru": "Дедлайн был в 16:00, а 15:00 — точка проверки перед отправкой по почте; демонстрация переносится на четверг."
+              },
+              "Doktor Karim ta’tilga chiqdi; hisobotni qog‘ozda chop etishadi": {
+                "uz": "Ular PDF faylni bevosita Doktor Karimga elektron pochta orqali yuborishga kelishib olishdi.",
+                "ru": "Команда договорилась отправить PDF напрямую доктору Кариму по электронной почте."
+              }
+            },
+            "explanation": "Unexpected server maintenance blocked the portal; if it stays offline at 3:00 p.m., they will email the saved PDF to Dr. Karim and postpone the live demo until Thursday morning.",
+            "explanationRu": "Причина — внезапное техобслуживание сервера; при сбое к 15:00 команда отправит PDF по почте и перенесёт демо на утро четверга.",
+            "wrongFeedback": "Suhbatda aytilgan uzilish sababi, PDF zaxirasi va payshanba kuni haqidagi rejasini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте в аудио причину сбоя, судьбу PDF-копии и решение на случай простоя в 15:00."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m2_fill_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Grammar Practice: First Conditional Clause",
+          "titleRu": "Грамматика: Условие в First Conditional",
+          "content": "Complete the negative 'if'-clause with the correct tense form of 'work'.",
+          "contentRu": "Дополните отрицательное условие правильной формой глагола 'work'.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m2_cond_fill",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "B1",
+            "topic": "First Conditional negative if-clause",
+            "difficulty": "medium",
+            "questionType": "fill_blank",
+            "evaluationMode": "deterministic",
+            "blankTemplate": "If the lab printer ___ tomorrow morning, we will submit digital copies.",
+            "text": "Qavsdagi «work» fe’lining inkor shaklini First Conditional qoidasiga moslab yozing: «If the lab printer ___ (not / work) tomorrow morning, we will submit digital copies.»",
+            "textRu": "Раскройте скобки в условии First Conditional: «If the lab printer ___ (not / work) tomorrow morning, we will submit digital copies.»",
+            "options": [],
+            "acceptedAnswers": ["doesn't work", "does not work"],
+            "explanation": "In First Conditional, the 'if'-clause requires Present Simple even when referring to 'tomorrow morning': 'doesn't work' (singular subject 'printer').",
+            "explanationRu": "В придаточном с 'if' всегда нужен Present Simple даже со словом 'tomorrow morning': для единственного числа — 'doesn't work'.",
+            "wrongFeedback": "Shart ergash gapida kelasi yordamchi fe’l ishlatmang; birlikdagi ega uchun hozirgi oddiy zamon inkorini qo‘ying.",
+            "wrongFeedbackRu": "Не ставьте будущее время в часть с условием: используйте отрицание настоящего простого времени для третьего лица."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_m2_cause_err",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Cause and result single connector",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "Because the power went out, so we postponed the meeting.",
+        "text": "Sabab va oqibat bog‘lovchilari qo‘shilib ketgan xatoni tuzating:",
+        "textRu": "Исправьте ошибку лишнего союза в предложении причины и следствия:",
+        "options": [
+          "Because the power went out, we postponed the meeting.",
+          "Because the power went out, therefore we postponed the meeting.",
+          "Since the power went out, so we postponed the meeting.",
+          "So the power went out, because we postponed the meeting."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "Because the power went out, therefore we postponed the meeting.": {
+            "uz": "«Because» ishlatilganda asosiy gap boshida «therefore» qo‘shish ham ortiqcha ikkilangan bog‘lovchi bo‘ladi.",
+            "ru": "При наличии «Because» добавлять «therefore» перед главной частью также избыточно."
+          },
+          "Since the power went out, so we postponed the meeting.": {
+            "uz": "«Since» sababni bildiradi, shuning uchun «so» natija bog‘lovchisi bilan bir gapda kelmaydi.",
+            "ru": "«Since» уже вводит причину, поэтому союз «so» во второй части лишний."
+          },
+          "So the power went out, because we postponed the meeting.": {
+            "uz": "Bu variantda sabab va oqibat o‘rni almashib ketgan va ma’no buzilgan.",
+            "ru": "Здесь перепутаны местами причина и следствие."
+          }
+        },
+        "explanation": "English uses either 'Because/Since + cause, result' OR 'cause, so + result' — never both connectors in the same sentence.",
+        "explanationRu": "В английском используется либо 'Because/Since' в начале, либо 'so' перед результатом, но не оба союза одновременно.",
+        "wrongFeedback": "Bitta gapda faqat bitta sabab yoki oqibat bog‘lovchisini qoldiradigan to‘g‘ri variantni tanlang.",
+        "wrongFeedbackRu": "Выберите вариант, где в одном предложении остаётся только одна связка причины или следствия."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_u2_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "reading",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m2",
+      "unitId": "unit_eng_b1_u2",
+      "canDoObjective": "Universitet IT bildirishnomasidan shart va muddat o‘zgarishini aniqlaydi hamda First Conditional jumlasini tuzadi.",
+      "canDoObjectiveRu": "Находит условия и перенос сроков в уведомлении IT-службы и составляет условное предложение.",
+      "prerequisites": ["node_eng_b1_m2_work_study"],
+      "title": "Unit 2 Checkpoint: Internship Troubleshooting Memo",
+      "titleRu": "Проверка раздела 2: Служебная записка о сбое",
+      "estimatedMinutes": 7,
+      "summary": "Read an official campus Wi-Fi maintenance memo, verify the automatic deadline extension, order a First Conditional sentence, and write a warning with 'unless'.",
+      "summaryRu": "Прочтите уведомление о техработах Wi-Fi, рассчитайте продлённый дедлайн, соберите условное предложение и составьте предупреждение с 'unless'.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 2-bo‘lim sinovi bo‘lib, rasmiy xalqaro CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 2; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Workplace memos often hide key conditions inside 'unless' clauses and extension rules. Reading accurately prevents missed deadlines.",
+          "ru": "В рабочих объявлениях важные условия часто выражены через 'unless' и правила продления сроков."
+        },
+        "learningObjective": {
+          "uz": "Extract deadline extensions from a memo and produce accurate 'if/unless' conditional sentences.",
+          "ru": "Извлекать условия продления сроков из текста и строить предложения с 'if' и 'unless'."
+        },
+        "warmUp": {
+          "uz": "Remember: 'unless' means 'if ... not', so the verb after 'unless' stays positive.",
+          "ru": "Помните: 'unless' означает «если не», поэтому глагол после него стоит в утвердительной форме."
+        },
+        "vocabularyItems": [
+          { "word": "outage", "uz": "tizim uzilishi", "ru": "сбой в работе сети", "ipa": "/ˈaʊtɪdʒ/" },
+          { "word": "extension", "uz": "muddatni uzaytirish", "ru": "продление срока", "ipa": "/ɪkˈstenʃn/" }
+        ],
+        "grammarNote": {
+          "rule": "Unless (= if not) + Positive Present Simple, will + V1",
+          "simpleExplanationUz": "'Unless' means 'if you do not'. Never add 'not' inside an 'unless'-clause: say 'Unless you save a backup', NOT 'Unless you don't save'.",
+          "simpleExplanationRu": "Союз 'unless' уже несёт отрицание («если не»), поэтому после него используется утвердительный Present Simple.",
+          "structure": "Unless + Subject + Present Simple, Subject + will + V1",
+          "positiveExamples": ["Unless you download the pack beforehand, you will need mobile data."],
+          "negativeExamples": ["Do not use 'won't' or 'don't' directly after 'unless' for this warning."],
+          "questions": ["When must a 14:00 assignment be submitted after the 3-hour extension?"],
+          "commonMistakes": ["Using double negation ('Unless you don't save...') or placing 'will' after 'unless'."]
+        },
+        "pronunciationFocus": {
+          "uz": "Stress the second syllable in 'unless' /ʌnˈles/ and 'extension' /ɪkˈstenʃn/.",
+          "ru": "Ударение падает на второй слог в словах 'unless' /ʌnˈles/ и 'extension' /ɪkˈstenʃn/."
+        },
+        "examples": ["Assignments due at 14:00 automatically receive a 3-hour extension."],
+        "guidedPractice": {
+          "uz": "Check every time window and condition in the campus IT memo carefully.",
+          "ru": "Внимательно сопоставьте временные интервалы и условия в памятке."
+        },
+        "independentPractice": {
+          "uz": "Answer the memo comprehension question, order the conditional clause, and write an 'unless' warning.",
+          "ru": "Ответьте на вопрос по тексту, соберите предложение и напишите предупреждение с 'unless'."
+        },
+        "listeningRef": null,
+        "readingRef": "lesson_eng_b1_u2_cp_concept",
+        "speakingTask": {
+          "uz": "Warn a teammate aloud about backing up slides before a network outage.",
+          "ru": "Устно предупредите коллегу о необходимости сохранить слайды до отключения сети."
+        },
+        "writingTask": {
+          "uz": "Write a First Conditional warning using 'unless' or 'if ... don't'.",
+          "ru": "Напишите предупреждение в First Conditional с 'unless' или 'if ... don't'."
+        },
+        "knowledgeCheck": "q_eng_b1_u2_cp_read_mcq",
+        "finalQuiz": "q_eng_b1_u2_cp_reinf_order",
+        "feedbackRules": {
+          "uz": "Score 70% or higher to unlock Module 3 narrative storytelling.",
+          "ru": "Наберите не менее 70%, чтобы открыть модуль 3."
+        },
+        "summaryAndRevision": {
+          "uz": "Next, Module 3 connects Past Continuous and Past Simple for coherent storytelling.",
+          "ru": "Далее в модуле 3 вы объедините Past Continuous и Past Simple для рассказа историй."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_u2_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Checkpoint Briefing: 'Unless' & Deadline Logic",
+          "titleRu": "Инструкция проверки: 'Unless' и логика сроков",
+          "content": "In official notices, 'unless' replaces 'if ... not' with a positive verb. For example, 'Unless you download the file before 13:00' equals 'If you do not download the file before 13:00'. Always calculate time extensions carefully against the original deadline. Qo‘shimcha soatlarni dastlabki muddatga qo‘shib hisoblang.",
+          "contentRu": "В деловых объявлениях союз 'unless' заменяет 'if ... not' и требует утвердительного глагола. Всегда прибавляйте время продления к исходному дедлайну."
+        },
+        {
+          "id": "lesson_eng_b1_u2_cp_read_q",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "Reading Check: IT Maintenance Memo",
+          "titleRu": "Чтение: Уведомление IT-службы",
+          "content": "Read the university IT notice carefully and determine the exact revised deadline and preparation step.",
+          "contentRu": "Прочтите объявление IT-службы и определите новый срок сдачи и способ избежать расхода мобильного трафика.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_u2_cp_read_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "reading",
+            "cefrLevel": "B1",
+            "topic": "Checkpoint: Reading IT maintenance memo",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "University IT Notice: Library Wi-Fi maintenance runs from 13:00 to 15:00 on Wednesday. Unless you download reading packs beforehand, you will need mobile data. Assignments due at 14:00 automatically receive a 3-hour extension.",
+            "text": "Bildirishnomaga ko‘ra, soat 14:00 ga belgilangan topshiriq eng kechi qachon topshirilishi kerak va talabalar mobil internet sarflamaslik uchun nima qilishi lozim?",
+            "textRu": "До какого времени можно сдать работу, назначенную на 14:00, и как студентам избежать траты мобильного интернета?",
+            "options": [
+              "Soat 17:00 gacha; o‘quv materiallarini 13:00 dan oldin yuklab olish kerak",
+              "Soat 15:00 gacha; soat 14:00 da kutubxona Wi-Fi tarmog‘iga ulanish kerak",
+              "Soat 14:00 gacha; hech qanday muddat uzaytirish berilmaydi",
+              "Soat 16:00 gacha; faqat mobil internet orqali yuklab olish kerak"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Soat 15:00 gacha; soat 14:00 da kutubxona Wi-Fi tarmog‘iga ulanish kerak": {
+                "uz": "13:00–15:00 oralig‘ida Wi-Fi ta’mirda bo‘ladi, uzaytirish esa 15:00 gacha emas, +3 soat (17:00 gacha).",
+                "ru": "С 13:00 до 15:00 Wi-Fi отключён, а продление составляет 3 часа от 14:00 (до 17:00)."
+              },
+              "Soat 14:00 gacha; hech qanday muddat uzaytirish berilmaydi": {
+                "uz": "Matnda 14:00 dagi topshiriqlar avtomatik ravishda 3 soatlik uzaytirish olishi aniq yozilgan.",
+                "ru": "В тексте прямо сказано, что задания на 14:00 автоматически продлеваются на 3 часа."
+              },
+              "Soat 16:00 gacha; faqat mobil internet orqali yuklab olish kerak": {
+                "uz": "14:00 + 3 soat = 17:00 bo‘ladi; materiallarni oldindan yuklab olsangiz mobil internet kerak bo‘lmaydi.",
+                "ru": "14:00 + 3 часа дают 17:00, а заблаговременная загрузка избавляет от мобильного трафика."
+              }
+            },
+            "explanation": "14:00 plus a 3-hour extension gives a 17:00 deadline, and downloading packs before 13:00 avoids needing mobile data during the 13:00–15:00 maintenance.",
+            "explanationRu": "14:00 плюс 3 часа продления дают 17:00, а скачивание материалов до 13:00 позволяет обойтись без мобильного интернета.",
+            "wrongFeedback": "14:00 ga berilgan uzaytirish soatini qo‘shing va «beforehand» so‘zi qaysi soatdan oldinni anglatishini tekshiring.",
+            "wrongFeedbackRu": "Прибавьте указанное продление к 14:00 и проверьте, что означает «beforehand»."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_u2_cp_reinf_order",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Checkpoint: First Conditional word order",
+        "difficulty": "medium",
+        "questionType": "sentence_order",
+        "evaluationMode": "deterministic",
+        "text": "«Agar avtobus kechiksa, biz taksi olamiz» shartli gapini to‘g‘ri tartibda tuzing:",
+        "textRu": "Составьте условное предложение «Если автобус опоздает, мы возьмём такси» в верном порядке:",
+        "options": [],
+        "orderedTokens": ["If", "the bus", "arrives late,", "we", "will take", "a taxi."],
+        "acceptedAnswers": ["If the bus arrives late, we will take a taxi."],
+        "explanation": "Condition clause comes first ('If the bus arrives late,'), followed by the future result ('we will take a taxi.').",
+        "explanationRu": "Сначала ставится условие с запятой, затем результат с модальным глаголом будущего действия.",
+        "wrongFeedback": "Avval shart ergash gapini vergul bilan yakunlang, so‘ng ega va kelajak harakat qismini joylashtiring.",
+        "wrongFeedbackRu": "Сначала соберите условную часть с запятой на конце, затем подлежащее и основное действие."
+      },
+      "alternateExercise": {
+        "id": "q_eng_b1_u2_cp_alt_text",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "vocabulary",
+        "cefrLevel": "B1",
+        "topic": "Alternate: First Conditional warning with unless",
+        "difficulty": "medium",
+        "questionType": "text_input",
+        "evaluationMode": "deterministic",
+        "text": "«Agar zaxira nusxa saqlamasangiz, faylni yo‘qotasiz» ma’nosidagi ogohlantirishni First Conditional shaklida («Unless ...» yoki «If you don't ...» bilan) ingliz tilida yozing.",
+        "textRu": "Напишите на английском предупреждение в First Conditional («Если не сохраните резервную копию, потеряете файл»), используя «Unless ...» или «If you don't ...».",
+        "options": [],
+        "acceptedAnswers": [
+          "Unless you save a backup, you will lose the file",
+          "Unless you save a backup, you'll lose the file",
+          "Unless you save a backup you will lose the file",
+          "Unless you save a backup you'll lose the file",
+          "If you don't save a backup, you will lose the file",
+          "If you don't save a backup, you'll lose the file",
+          "If you do not save a backup, you will lose the file",
+          "If you do not save a backup, you'll lose the file",
+          "If you don't save a backup you will lose the file",
+          "If you don't save a backup you'll lose the file",
+          "If you do not save a backup you will lose the file",
+          "If you do not save a backup you'll lose the file"
+        ],
+        "explanation": "Both 'Unless you save a backup, you will lose the file.' and 'If you don't save a backup, you will lose the file.' express the warning accurately.",
+        "explanationRu": "Оба варианта ('Unless you save...' и 'If you don't save...') грамматически точно передают предупреждение.",
+        "wrongFeedback": "Shart qismida hozirgi zamon fe’lini qo‘llang, natija qismida esa kelajak yordamchi fe’lini unutmang.",
+        "wrongFeedbackRu": "В условии используйте настоящее простое время, а в части результата — глагол будущего действия."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_m3_narrative",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "reading",
+      "communicativeFocus": "writing",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m3",
+      "unitId": "unit_eng_b1_u3",
+      "canDoObjective": "O‘tgan davomli (Past Continuous) va sodda (Past Simple) zamonlarni hamda nisbiy olmoshlarni (who, which, where) bog‘lab izchil hikoya tuzadi.",
+      "canDoObjectiveRu": "Сочетает Past Continuous, Past Simple и определительные придаточные (who, which, where) для связного рассказа.",
+      "prerequisites": ["node_eng_b1_u2_checkpoint"],
+      "title": "Sequential Storytelling & Relative Clauses (Past Continuous vs Past Simple)",
+      "titleRu": "Связный рассказ и определительные придаточные",
+      "estimatedMinutes": 11,
+      "summary": "You learn how to set a background scene with Past Continuous, introduce a sudden interruption with Past Simple, and connect people, objects, and places smoothly using 'who, which, where'.",
+      "summaryRu": "Вы научитесь задавать фон действия с помощью Past Continuous, вводить внезапное событие в Past Simple и уточнять детали через 'who, which, where'.",
+      "requiresMastery": false,
+      "officialCefrDisclaimerUz": "Ushbu darsdagi yozma hikoya mashqi mustaqil amaliyot bo‘lib, rasmiy CEFR sertifikati bermaydi.",
+      "officialCefrDisclaimerRu": "Письменное задание предназначено для самостоятельной практики и не заменяет официальный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Good stories never sound like flat lists of verbs. Speakers paint an ongoing background scene first, then drop in the turning point that changed the outcome.",
+          "ru": "Интересный рассказ не похож на сухой список глаголов: сначала задаётся фон процесса, а затем вводится поворотное событие."
+        },
+        "learningObjective": {
+          "uz": "Combine Past Continuous background actions with Past Simple interruptions and link nouns accurately with 'who, which, where'.",
+          "ru": "Сочетать фоновое действие в Past Continuous с прерывающим событием в Past Simple и связывать детали с помощью 'who, which, where'."
+        },
+        "warmUp": {
+          "uz": "Picture a hackathon workshop: your team is running a test, and suddenly the lights go out. How do English speakers show which action was longer?",
+          "ru": "Представьте хакатон: команда тестирует модель, и внезапно гаснет свет. Как показать, какое действие длилось дольше?"
+        },
+        "vocabularyItems": [
+          { "word": "meanwhile", "uz": "shu paytda (ayni vaqtda)", "ru": "тем временем", "ipa": "/ˈmiːnwaɪl/" },
+          { "word": "eventually", "uz": "oxir-oqibat", "ru": "в конце концов", "ipa": "/ɪˈventʃuəli/" },
+          { "word": "colleague", "uz": "hamkasb", "ru": "коллега по работе", "ipa": "/ˈkɒliːɡ/" },
+          { "word": "milestone", "uz": "muhim bosqich", "ru": "ключевая веха", "ipa": "/ˈmaɪlstəʊn/" }
+        ],
+        "grammarNote": {
+          "rule": "Past Continuous (was/were + V-ing) + Past Simple (V2) & Relative Clauses (who / which / where)",
+          "simpleExplanationUz": "Use Past Continuous ('was testing') for the ongoing background and Past Simple ('cut') for the sudden interruption. Use 'who' for people, 'which' for things, and 'where' for places (meaning 'in that place'). O‘zbek va rus tillaridan farqli o‘laroq, nisbiy gapda ortiqcha olmosh ('who she helped' emas, faqat 'who helped') qo‘shilmaydi.",
+          "simpleExplanationRu": "Используйте Past Continuous ('was testing') для длительного фона и Past Simple ('cut') для внезапного события. Для людей берите 'who', для предметов — 'which', для места действия («где») — 'where'. Не дублируйте подлежащее лишним местоимением ('who she helped' — ошибка).",
+          "structure": "While + Subject + was/were + V-ing, Subject + V2 | Noun + who/which/where + clause",
+          "positiveExamples": [
+            "While our team was testing the prototype, a storm cut the electricity.",
+            "A student who sat beside us lent us a battery which kept the laptop running."
+          ],
+          "negativeExamples": [
+            "We weren't expecting a storm while we were working in the lab."
+          ],
+          "questions": [
+            "What was your team doing when the power went out?",
+            "Where is the workshop where you built the prototype?"
+          ],
+          "commonMistakes": [
+            "Adding a duplicate pronoun after 'who/which' ('the colleague who he lent us' -> 'the colleague who lent us'), or confusing 'where' (action inside a place) with 'which' (describing the place as an object)."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "Use weak forms /wəz/ for 'was' and /wə/ for 'were' in background clauses. 'Colleague' /ˈkɒliːɡ/ has two syllables, not three.",
+          "ru": "В потоке речи 'was' /wəz/ и 'were' /wə/ звучат безударно. Слово 'colleague' /ˈkɒliːɡ/ состоит из двух слогов."
+        },
+        "examples": [
+          "While we were testing the sensor in the workshop where we built it, the electricity went out.",
+          "Eventually, we reached the final milestone."
+        ],
+        "guidedPractice": {
+          "uz": "Follow the 3-panel timeline illustration, listen to Bekzod's hackathon story, and practice the 4 narrative cards.",
+          "ru": "Изучите трёхшаговую схему рассказа, прослушайте историю Бекзода и закрепите 4 карточки."
+        },
+        "independentPractice": {
+          "uz": "Solve the listening event check, match narrative connectors, write a relative adverb, and compose a mini-story.",
+          "ru": "Выполните тест на понимание истории, сопоставьте связки, заполните пропуск с относительным наречием и напишите мини-рассказ."
+        },
+        "listeningRef": "media_eng_b1_m3_story_dialogue",
+        "readingRef": "lesson_eng_b1_m3_concept",
+        "speakingTask": {
+          "uz": "Retell Bekzod's turning point in 3 sentences using 'while', 'when', and 'eventually'.",
+          "ru": "Перескажите поворотный момент истории Бекзода в 3 предложениях со словами 'while', 'when' и 'eventually'."
+        },
+        "writingTask": {
+          "uz": "Write a 4–5 sentence mini-story about an unexpected event with Past Continuous, Past Simple, and a relative clause.",
+          "ru": "Напишите мини-историю из 4–5 предложений о неожиданном случае с Past Continuous, Past Simple и определительным придаточным."
+        },
+        "knowledgeCheck": "q_eng_b1_m3_word_match",
+        "finalQuiz": "q_eng_b1_m3_writing",
+        "feedbackRules": {
+          "uz": "Feedback distinguishes background duration vs interruption and clarifies 'who/which/where' roles.",
+          "ru": "Подсказки разграничивают фон и прерывание, а также функции 'who/which/where'."
+        },
+        "summaryAndRevision": {
+          "uz": "All 4 narrative cards enter SRS review before the Unit 3 story audit checkpoint.",
+          "ru": "Карточки модуля переходят в повторение перед проверкой раздела 3."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_m3_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Background Action, Interruption & Relative Clauses",
+          "titleRu": "Фон, прерывание и определительные придаточные",
+          "content": "Start a story by setting the ongoing scene with Past Continuous ('was/were + V-ing'), then introduce the sudden event in Past Simple. Connect extra detail smoothly with 'who' (people), 'which' (things), and 'where' (places where an action happens). Never repeat a subject pronoun right after 'who' or 'which'. O‘zbek tilida «yordam bergan hamkasb» iborasida ortiqcha olmosh bo‘lmaganidek, inglizchada ham «who he helped» deb yozilmaydi.",
+          "contentRu": "Начинайте рассказ с длительного фона в Past Continuous ('was/were + V-ing'), а внезапное событие подавайте в Past Simple. Уточняйте детали через 'who' (люди), 'which' (предметы) и 'where' (место действия), но не ставьте лишнее местоимение после 'who/which'.",
+          "highlightNotes": [
+            "Background + interruption: While we were testing the prototype, a storm cut the power.",
+            "Person: a student who sat beside us (NOT who he sat)",
+            "Place of action: the workshop where we built it"
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m3_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Listening: The Science Hackathon Rescue",
+          "titleRu": "Аудирование: Спасение проекта на хакатоне",
+          "content": "Listen to Bekzod telling Nodira about an unexpected power cut. Focus on what his team was doing when the power stopped and how they finished the presentation.",
+          "contentRu": "Прослушайте рассказ Бекзода Нодире о внезапном отключении электричества. Запомните, что делала команда в этот момент и что помогло выступить.",
+          "media": {
+            "id": "media_eng_b1_m3_story_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-m3-story-dialogue.wav",
+            "title": "Ilmiy xakatondagi kutilmagan voqea hikoyasi",
+            "titleUz": "Ilmiy xakatondagi kutilmagan voqea hikoyasi",
+            "titleRu": "История о неожиданном случае на научном хакатоне",
+            "transcript": "Bekzod: You won't believe what happened at the science hackathon last Friday! While our team was testing the sensor prototype in the workshop where we built it, a sudden storm cut the electricity.\nNodira: Oh no! Did you lose all your test data?\nBekzod: Almost! Fortunately, a student who sat at the table beside us lent us a portable battery which kept the laptop running.\nNodira: That was lucky! So did you eventually present on stage?\nBekzod: Yes, we eventually reached the final milestone and finished in second place!",
+            "posterImage": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+            "posterAlt": "Uch bosqichli voqea chizig‘i: taqdimot tayyorgarligi, elektr uzilishi va yutuq pog‘onasi",
+            "posterAltUz": "Uch bosqichli voqea chizig‘i: taqdimot tayyorgarligi, elektr uzilishi va yutuq pog‘onasi",
+            "posterAltRu": "Трёхэтапная линия событий: подготовка презентации, отключение света и призовой пьедестал",
+            "durationSeconds": 32.13,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Bekzod: You won't believe what happened at the science hackathon last Friday! While our team was testing the sensor prototype in the workshop where we built it, a sudden storm cut the electricity.\nNodira: Oh no! Did you lose all your test data?\nBekzod: Almost! Fortunately, a student who sat at the table beside us lent us a portable battery which kept the laptop running.\nNodira: That was lucky! So did you eventually present on stage?\nBekzod: Yes, we eventually reached the final milestone and finished in second place!",
+            "speakerName": "Bekzod & Nodira"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m3_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "Storytelling Connectors Flashcards",
+          "titleRu": "Карточки: Связки повествования",
+          "content": "Listen to each storytelling word, recall its role in a sequence, and reveal the full card.",
+          "contentRu": "Прослушайте слово, вспомните его роль в рассказе и откройте карточку.",
+          "flashcards": [
+            {
+              "id": "fc_eng_b1_m3_1",
+              "front": "meanwhile",
+              "backUz": "shu paytda (ayni vaqtda)",
+              "backRu": "тем временем",
+              "partOfSpeech": "adverb",
+              "ipa": "/ˈmiːnwaɪl/",
+              "ipaAmE": "/ˈmiːnwaɪl/",
+              "cefrLevel": "B1",
+              "example": "I wrote the summary; meanwhile, Ali checked the charts.",
+              "exampleUz": "Men xulosani yozdim; shu paytda Ali grafiklarni tekshirdi.",
+              "exampleRu": "Я написал резюме; тем временем Али проверил графики.",
+              "audioSrc": "/lesson-media/english/b1/b1-m3-meanwhile.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+              "alt": "Parallel ketayotgan ikki moviy to‘lqinli chiziq tasviri",
+              "altRu": "Две параллельные голубые волнистые полосы рядом",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m3_2",
+              "front": "eventually",
+              "backUz": "oxir-oqibat",
+              "backRu": "в конце концов",
+              "partOfSpeech": "adverb",
+              "ipa": "/ɪˈventʃuəli/",
+              "ipaAmE": "/ɪˈventʃuəli/",
+              "cefrLevel": "B1",
+              "example": "After three attempts, the code eventually worked smoothly.",
+              "exampleUz": "Uch urinishdan keyin kod oxir-oqibat ravon ishladi.",
+              "exampleRu": "После трёх попыток код в конце концов заработал плавно.",
+              "audioSrc": "/lesson-media/english/b1/b1-m3-eventually.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+              "alt": "Uch bosqichli chiziqning yakuniy nuqtasida ko‘ringan yashil bayroqcha",
+              "altRu": "Зелёный флажок в завершении трёхступенчатой линии",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m3_3",
+              "front": "colleague",
+              "backUz": "hamkasb",
+              "backRu": "коллега по работе",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈkɒliːɡ/",
+              "ipaAmE": "/ˈkɑːliːɡ/",
+              "cefrLevel": "B1",
+              "example": "A colleague who works in IT lent me a spare adapter.",
+              "exampleUz": "IT bo‘limida ishlaydigan bir hamkasb menga zaxira adapter berib turdi.",
+              "exampleRu": "Коллега из IT-отдела одолжил мне запасной адаптер.",
+              "audioSrc": "/lesson-media/english/b1/b1-m3-colleague.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+              "alt": "Quvvat manbaini uzatayotgan ikki jamoa a’zosi silueti",
+              "altRu": "Два силуэта команды, передающие друг другу батарею",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m3_4",
+              "front": "milestone",
+              "backUz": "muhim bosqich",
+              "backRu": "ключевая веха",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈmaɪlstəʊn/",
+              "ipaAmE": "/ˈmaɪlstoʊn/",
+              "cefrLevel": "B1",
+              "example": "Finishing the prototype was a major milestone for our group.",
+              "exampleUz": "Prototipni yakunlash guruhimiz uchun katta muhim bosqich bo‘ldi.",
+              "exampleRu": "Завершение прототипа стало важной частью пути для нашей группы.",
+              "audioSrc": "/lesson-media/english/b1/b1-m3-milestone.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+              "alt": "Pog‘onali zinapoya cho‘qqisidagi yulduzli nishon",
+              "altRu": "Звёздный значок на вершине ступенчатой диаграммы",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m3_listen_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Listening Check: Event & Rescue",
+          "titleRu": "Проверка аудирования: Событие и спасение",
+          "content": "Choose the statement that accurately reflects the background action and solution from Bekzod's story.",
+          "contentRu": "Выберите вариант, точно передающий фоновое действие и решение проблемы из рассказа Бекзода.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m3_listen_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "Listening: Hackathon story sequence",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Bekzodning hikoyasiga ko‘ra, bo‘ron elektrni o‘chirgan paytda jamoa nima qilayotgan edi va taqdimotni qanday saqlab qolishdi?",
+            "textRu": "Чем занималась команда в момент отключения электричества и как удалось спасти презентацию?",
+            "options": [
+              "Ustaxonada sensor prototipini sinovdan o‘tkazayotgan edi; qo‘shni stoldagi talaba ko‘chma batareya berib turdi",
+              "Sahnada taqdimot qilayotgan edi; barcha test ma’lumotlari butunlay o‘chib ketdi",
+              "Yangi generator sotib olgani chiqishgan edi; ular musobaqadan chiqib ketishdi",
+              "Loyiha rejalarini yozishayotgan edi; chiroq o‘chgani uchun birinchi o‘rinni olishdi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Sahnada taqdimot qilayotgan edi; barcha test ma’lumotlari butunlay o‘chib ketdi": {
+                "uz": "Elektr uzilganda ular hali ustaxonada prototipni sinab ko‘rishayotgan edi va ma’lumotlar saqlab qolindi.",
+                "ru": "В момент сбоя команда ещё тестировала прототип в мастерской, и данные удалось спасти."
+              },
+              "Yangi generator sotib olgani chiqishgan edi; ular musobaqadan chiqib ketishdi": {
+                "uz": "Ular musobaqadan chiqib ketishmadi, aksincha qo‘shni talabaning batareyasi yordamida 2-o‘rinni egallashdi.",
+                "ru": "Они не выбыли, а благодаря батарее соседа по столу выступили и заняли второе место."
+              },
+              "Loyiha rejalarini yozishayotgan edi; chiroq o‘chgani uchun birinchi o‘rinni olishdi": {
+                "uz": "Jamoa sensor prototipini sinovdan o‘tkazayotgan edi va yakunda ikkinchi o‘rinni qo‘lga kiritdi.",
+                "ru": "Команда тестировала прототип датчика и в итоге заняла второе место, а не первое."
+              }
+            },
+            "explanation": "They were testing the sensor prototype in the workshop when the storm hit, and a student beside them lent a portable battery so they could finish in second place.",
+            "explanationRu": "Во время шторма команда тестировала прототип в мастерской; сосед по столу одолжил переносную батарею.",
+            "wrongFeedback": "Elektr uzilgan vaqtdagi davomiy harakat va noutbukni ishlatib qolgan yordamchi buyum haqida qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте, какое действие длилось в момент отключения света и кто помог с питанием ноутбука."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m3_match_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Vocabulary Match: Narrative Connectors",
+          "titleRu": "Сопоставление: Связки повествования",
+          "content": "Match each English storytelling word or relative pronoun with its Uzbek meaning.",
+          "contentRu": "Сопоставьте каждое английское слово с его значением.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m3_word_match",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_vocab",
+            "skillDomain": "vocabulary",
+            "cefrLevel": "B1",
+            "topic": "Narrative connectors matching",
+            "difficulty": "easy",
+            "questionType": "word_match",
+            "evaluationMode": "deterministic",
+            "text": "Hikoya bog‘lovchilari va nisbiy so‘zlarni o‘zbekcha ma’nosi bilan moslang:",
+            "textRu": "Сопоставьте связки рассказа и относительные слова с их переводом:",
+            "options": [],
+            "matchPairs": [
+              { "id": "pair_b1_m3_1", "left": "meanwhile", "right": "shu paytda (ayni vaqtda)" },
+              { "id": "pair_b1_m3_2", "left": "eventually", "right": "oxir-oqibat" },
+              { "id": "pair_b1_m3_3", "left": "where", "right": "qaysi joyda (joy bog‘lovchisi)" },
+              { "id": "pair_b1_m3_4", "left": "who", "right": "kimki (shaxs bog‘lovchisi)" }
+            ],
+            "explanation": "'meanwhile' links parallel actions, 'eventually' marks the final outcome, 'where' refers to a place, and 'who' refers to a person.",
+            "explanationRu": "'meanwhile' связывает параллельные действия, 'eventually' указывает на итог, 'where' — на место, 'who' — на человека.",
+            "wrongFeedback": "Har bir bog‘lovchining vaqt yoki shaxs/joyga ishora qiluvchi vazifasini solishtiring.",
+            "wrongFeedbackRu": "Сравните, указывает ли слово на время, итог, место или человека."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m3_write_q",
+          "stepNumber": 6,
+          "type": "interactive_question",
+          "title": "Writing: Short Turning-Point Story",
+          "titleRu": "Writing: Короткий рассказ с поворотом",
+          "content": "Write a 4–5 sentence mini-story about an unexpected challenge you solved, using Past Continuous + Past Simple, one relative clause, and 'eventually'.",
+          "contentRu": "Напишите мини-историю (4–5 предложений) о неожиданном случае, используя Past Continuous + Past Simple, одно определительное придаточное и 'eventually'.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m3_writing",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "writing",
+            "cefrLevel": "B1",
+            "topic": "Writing: Sequential narrative",
+            "difficulty": "hard",
+            "questionType": "writing_prompt",
+            "evaluationMode": "self_assessed",
+            "text": "Kutilmagan muammo va uning yechimi haqida 4–5 gapli inglizcha hikoya yozing: Past Continuous + Past Simple, bitta nisbiy gap (who/which/where) va 'eventually' so‘zini ishlating.",
+            "textRu": "Напишите историю на 4–5 предложений о неожиданной проблеме и её решении с Past Continuous + Past Simple, союзом who/which/where и словом 'eventually'.",
+            "options": [],
+            "sampleResponse": "Last month, I was preparing my science slides in the library where our study group meets. Suddenly, the laptop screen froze before I saved the final chart. Fortunately, a colleague who was sitting nearby helped me recover the auto-saved draft. Eventually, we submitted the presentation on time.",
+            "rubricCriteria": [
+              {
+                "id": "crit_b1_m3_tenses",
+                "labelUz": "Davomiy fon (Past Continuous) va uzilish voqeasi (Past Simple) to‘g‘ri birlashtirildi",
+                "labelRu": "Верно объединены фон (Past Continuous) и прерывающее событие (Past Simple)"
+              },
+              {
+                "id": "crit_b1_m3_rel",
+                "labelUz": "Kamida bitta to‘g‘ri nisbiy gap (who / which / where) ortiqcha olmoshi bo‘lmagan holda yozildi",
+                "labelRu": "Использовано минимум одно придаточное с who/which/where без лишнего местоимения"
+              },
+              {
+                "id": "crit_b1_m3_seq",
+                "labelUz": "Voqea yakuni 'eventually' yoki 'meanwhile' bog‘lovchisi bilan izchil ko‘rsatildi",
+                "labelRu": "Финал или ход событий логично связан через 'eventually' или 'meanwhile'"
+              }
+            ],
+            "selfAssessmentNoticeUz": "O‘zini baholash (mustaqil yozma mashq): matningiz berilgan rubrika mezonlari bo‘yicha tekshiriladi va rasmiy CEFR sertifikati bermaydi.",
+            "selfAssessmentNoticeRu": "Самооценка (самостоятельное письмо): текст оценивается по критериям рубрики и не выдаёт официальный сертификат CEFR.",
+            "explanation": "Strong B1 narratives pair ongoing context ('was preparing') with a clear turning point ('froze'), precise noun links ('where', 'who'), and an outcome connector ('eventually').",
+            "explanationRu": "Хороший рассказ уровня B1 сочетает длительный фон, поворотное событие, точные придаточные (who/where) и итоговую связку.",
+            "wrongFeedback": "Hikoyangizda Past Continuous + Past Simple, nisbiy gap va 'eventually' borligini mezonlar orqali tekshiring.",
+            "wrongFeedbackRu": "Проверьте по критериям наличие Past Continuous + Past Simple, who/which/where и слова 'eventually'."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_m3_rel_fill",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Relative adverb where for places",
+        "difficulty": "easy",
+        "questionType": "fill_blank",
+        "evaluationMode": "deterministic",
+        "blankTemplate": "That is the science lab ___ our team built the winning prototype.",
+        "text": "Joy ichida bajarilgan harakatni bog‘lash uchun bo‘sh o‘ringa mos nisbiy so‘zni yozing: «That is the science lab ___ our team built the winning prototype.»",
+        "textRu": "Вставьте относительное слово, указывающее на место действия: «That is the science lab ___ our team built the winning prototype.»",
+        "options": [],
+        "acceptedAnswers": ["where"],
+        "explanation": "'where' links a place ('the science lab') with an action that happened inside it ('our team built the winning prototype').",
+        "explanationRu": "Слово 'where' связывает место ('the science lab') с действием, которое происходило внутри него.",
+        "wrongFeedback": "Shaxs yoki narsa emas, balki harakat sodir bo‘lgan joyni bog‘lovchi nisbiy so‘zni yozing.",
+        "wrongFeedbackRu": "Выберите относительное слово для обозначения места действия, а не человека или предмета."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_u3_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "communicativeFocus": "checkpoint",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m3",
+      "unitId": "unit_eng_b1_u3",
+      "canDoObjective": "Qisqa hikoya matnidan uzilish sababini topadi, nisbiy gap xatosini tuzatadi va hikoya bog‘lovchilarini moslaydi.",
+      "canDoObjectiveRu": "Находит причину сбоя в коротком рассказе, исправляет ошибку в определительном придаточном и сопоставляет связки.",
+      "prerequisites": ["node_eng_b1_m3_narrative"],
+      "title": "Unit 3 Checkpoint: Event Sequence & Connector Audit",
+      "titleRu": "Проверка раздела 3: Последовательность и связки",
+      "estimatedMinutes": 7,
+      "summary": "Audit a museum volunteer's story for background vs interruption details, eliminate a duplicate relative pronoun, and classify narrative connectors.",
+      "summaryRu": "Проанализируйте рассказ волонтёра музея, уберите лишнее местоимение в придаточном и распределите функции связок.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu ichki 3-bo‘lim sinovi bo‘lib, rasmiy xalqaro CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренняя проверка раздела 3; она не является официальным сертификатом CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Clean storytelling depends on accurate relative clauses and clear time markers so listeners never lose track of who did what.",
+          "ru": "Чёткий рассказ опирается на точные определительные придаточные и понятную смену фоновых и основных событий."
+        },
+        "learningObjective": {
+          "uz": "Identify narrative cause-effect in a text and remove redundant pronouns after 'who/which'.",
+          "ru": "Находить последовательность событий в тексте и убирать лишние местоимения после 'who/which'."
+        },
+        "warmUp": {
+          "uz": "Spot the trap: 'the engineer who she designed...' repeats the subject twice!",
+          "ru": "Обратите внимание на ловушку: в 'the engineer who she designed...' подлежащее повторяется дважды."
+        },
+        "vocabularyItems": [
+          { "word": "unexpectedly", "uz": "kutilmaganda", "ru": "неожиданно", "ipa": "/ˌʌnɪkˈspektɪdli/" },
+          { "word": "prototype", "uz": "dastlabki namuna", "ru": "прототип", "ipa": "/ˈprəʊtətaɪp/" }
+        ],
+        "grammarNote": {
+          "rule": "When + Past Simple vs While + Past Continuous | Zero Duplicate Pronoun in Relative Clauses",
+          "simpleExplanationUz": "Use 'while' before an ongoing action ('while she was scanning') and 'when' before a short event. Never place 'he/she/it' right after 'who/which' when it is the subject.",
+          "simpleExplanationRu": "'while' ставится перед длительным действием, а 'when' — перед коротким событием. После 'who/which' в роли подлежащего не добавляется 'he/she/it'.",
+          "structure": "While + was/were -ing | Person + who + Verb (no extra he/she)",
+          "positiveExamples": ["I met an engineer who designed solar panels."],
+          "negativeExamples": ["Do not write 'who she designed'."],
+          "questions": ["What interrupted the museum check-in queue?"],
+          "commonMistakes": ["Inserting 'she/it' after 'who/which'."]
+        },
+        "pronunciationFocus": {
+          "uz": "Link 'while we were' smoothly and pronounce the final /t/ in 'noticed' /ˈnəʊtɪst/.",
+          "ru": "Произносите связку 'while we were' плавно, а окончание в 'noticed' /ˈnəʊtɪst/ — как глухой звук /t/."
+        },
+        "examples": ["While she was scanning tickets, her tablet froze."],
+        "guidedPractice": {
+          "uz": "Read the museum check-in passage carefully before answering.",
+          "ru": "Внимательно прочтите отрывок о работе волонтёра перед ответом."
+        },
+        "independentPractice": {
+          "uz": "Solve the reading check, fix the duplicate-pronoun error, and match the 4 narrative functions.",
+          "ru": "Ответьте на вопрос по чтению, исправьте ошибку в придаточном и сопоставьте 4 грамматические функции."
+        },
+        "listeningRef": null,
+        "readingRef": "lesson_eng_b1_u3_cp_concept",
+        "speakingTask": {
+          "uz": "Explain in two sentences how the museum queue was cleared.",
+          "ru": "Объясните в двух предложениях, как удалось быстро обслужить очередь в музее."
+        },
+        "writingTask": {
+          "uz": "Correct a sentence containing a redundant pronoun after 'who'.",
+          "ru": "Исправьте предложение с лишним местоимением после 'who'."
+        },
+        "knowledgeCheck": "q_eng_b1_u3_cp_read_mcq",
+        "finalQuiz": "q_eng_b1_u3_cp_reinf_err",
+        "feedbackRules": {
+          "uz": "Passing at 70%+ unlocks Module 4 discussions and action planning.",
+          "ru": "Результат от 70% открывает модуль 4 об обсуждении и принятии решений."
+        },
+        "summaryAndRevision": {
+          "uz": "Module 4 brings everything together into advice modals and reported decisions.",
+          "ru": "Модуль 4 объединит навыки в модальных советах и косвенной речи."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_u3_cp_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Checkpoint Briefing: Sequence & Clean Relative Clauses",
+          "titleRu": "Инструкция проверки: Последовательность и 'who/which'",
+          "content": "When auditing a narrative, verify two details: first, whether the background action ('was/were + -ing') pairs cleanly with the interrupting event; second, whether 'who' or 'which' stands directly before the verb without an extra 'he/she/it'. Ortiqcha olmoshni olib tashlash gapni ravon qiladi.",
+          "contentRu": "При проверке рассказа следите за двумя правилами: фон в 'was/were + -ing' сочетается с кратким прерывающим событием, а после 'who/which' в роли подлежащего не ставится лишнее 'he/she/it'."
+        },
+        {
+          "id": "lesson_eng_b1_u3_cp_read_q",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "Reading Check: Museum Check-in Interruption",
+          "titleRu": "Чтение: Сбой на входе в музей",
+          "content": "Read the short museum narrative and identify what interrupted the process and how the problem was solved.",
+          "contentRu": "Прочтите короткий рассказ о музее и определите, что прервало регистрацию и кто помог решить проблему.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_u3_cp_read_mcq",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "reading",
+            "cefrLevel": "B1",
+            "topic": "Checkpoint: Reading narrative sequence",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "At the science museum entrance, Malika was scanning visitor tickets when her tablet suddenly froze. Because twenty guests were waiting in line, a colleague who worked at the next desk brought a printed guest list. Eventually, they checked everyone in within ten minutes.",
+            "text": "Matnga ko‘ra, chipta tekshiruvini nima to‘xtatib qo‘ydi va muammo qanday hal qilindi?",
+            "textRu": "Что прервало проверку билетов и как удалось решить проблему согласно тексту?",
+            "options": [
+              "Skanerlash paytida planshet qotib qoldi; hamkasbi bosma mehmonlar ro‘yxatini olib keldi",
+              "Yigirmata mehmon ketib qoldi; muzey eshiklari o‘n daqiqaga yopildi",
+              "Hamkasbi yangi planshet sotib oldi; chiptalar ertasi kuni tekshirildi",
+              "Elektr o‘chgani uchun ro‘yxat yo‘qoldi; mehmonlar chiptasiz kiritildi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Yigirmata mehmon ketib qoldi; muzey eshiklari o‘n daqiqaga yopildi": {
+                "uz": "Mehmonlar ketib qolmagan, navbatda kutib turishgan va 10 daqiqa ichida ro‘yxatdan o‘tkazilgan.",
+                "ru": "Гости не ушли — они ждали в очереди и были зарегистрированы за 10 минут."
+              },
+              "Hamkasbi yangi planshet sotib oldi; chiptalar ertasi kuni tekshirildi": {
+                "uz": "Hamkasbi planshet emas, qog‘ozga chop etilgan mehmonlar ro‘yxatini olib keldi.",
+                "ru": "Коллега принёс не новый планшет, а распечатанный список гостей."
+              },
+              "Elektr o‘chgani uchun ro‘yxat yo‘qoldi; mehmonlar chiptasiz kiritildi": {
+                "uz": "Muammo elektrda emas, planshetning qotib qolishida edi va hamma ro‘yxat bo‘yicha tekshirildi.",
+                "ru": "Проблема была в зависшем планшете, и всех отметили по бумажному списку."
+              }
+            },
+            "explanation": "Malika's tablet froze while she was scanning tickets, and a colleague solved it by bringing a printed guest list.",
+            "explanationRu": "Во время сканирования завис планшет Малики, а коллега принёс распечатанный список гостей.",
+            "wrongFeedback": "Matnda qaysi qurilma ishdan chiqqani va hamkasbi qanday yordam olib kelganini qayta o‘qing.",
+            "wrongFeedbackRu": "Перечитайте в тексте, какое устройство зависло и что принёс коллега."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_u3_cp_reinf_err",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Checkpoint: Relative clause redundant pronoun",
+        "difficulty": "medium",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "I met an engineer yesterday who she designed solar panels.",
+        "text": "Nisbiy gapdagi ortiqcha olmosh xatosini tuzating:",
+        "textRu": "Уберите лишнее местоимение в определительном придаточном предложении:",
+        "options": [
+          "I met an engineer yesterday who designed solar panels.",
+          "I met an engineer yesterday which designed solar panels.",
+          "I met an engineer yesterday where she designed solar panels.",
+          "I met an engineer yesterday who designing solar panels."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "I met an engineer yesterday which designed solar panels.": {
+            "uz": "«which» narsa-buyumlar uchun ishlatiladi; muhandis (shaxs) uchun «who» kerak.",
+            "ru": "«which» используется для предметов, а для человека (инженера) требуется «who»."
+          },
+          "I met an engineer yesterday where she designed solar panels.": {
+            "uz": "«where» joyga ishora qiladi va bu yerda ham «she» ortiqcha qolgan.",
+            "ru": "«where» обозначает место, и лишнее «she» по-прежнему мешает."
+          },
+          "I met an engineer yesterday who designing solar panels.": {
+            "uz": "«who» dan keyin yordamchi fe’lsiz «-ing» kelmaydi, tugallangan o‘tgan harakat uchun «designed» kerak.",
+            "ru": "После «who» нельзя ставить «-ing» без вспомогательного глагола; нужен Past Simple «designed»."
+          }
+        },
+        "explanation": "'who' already acts as the subject of 'designed', so 'she' must be removed.",
+        "explanationRu": "Местоимение 'who' уже выполняет роль подлежащего перед 'designed', поэтому 'she' нужно убрать.",
+        "wrongFeedback": "Shaxsni bildiruvchi nisbiy olmoshdan keyin ortiqcha olmoshsiz to‘g‘ri o‘tgan zamon fe’li keladigan variantni tanlang.",
+        "wrongFeedbackRu": "Выберите вариант с относительным местоимением для человека и глаголом в Past Simple без повторного местоимения."
+      },
+      "alternateExercise": {
+        "id": "q_eng_b1_u3_cp_alt_match",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_vocab",
+        "skillDomain": "vocabulary",
+        "cefrLevel": "B1",
+        "topic": "Alternate: Narrative structures matching",
+        "difficulty": "medium",
+        "questionType": "word_match",
+        "evaluationMode": "deterministic",
+        "text": "Hikoya tarkibidagi grammatik shakllarni ularning vazifasi bilan moslang:",
+        "textRu": "Сопоставьте грамматические конструкции рассказа с их функцией:",
+        "options": [],
+        "matchPairs": [
+          { "id": "pair_b1_u3_1", "left": "while + was/were -ing", "right": "davom etayotgan fon harakati" },
+          { "id": "pair_b1_u3_2", "left": "when + V2", "right": "to‘satdan sodir bo‘lgan uzilish" },
+          { "id": "pair_b1_u3_3", "left": "who", "right": "odamlarga aniqlik kiritish" },
+          { "id": "pair_b1_u3_4", "left": "which", "right": "narsa va buyumlarga aniqlik kiritish" }
+        ],
+        "explanation": "'while + was/were -ing' sets background duration, 'when + V2' marks interruption, 'who' describes people, and 'which' describes things.",
+        "explanationRu": "'while + was/were -ing' описывает длительный фон, 'when + V2' — прерывание, 'who' — людей, 'which' — предметы.",
+        "wrongFeedback": "Har bir konstruksiya davomiylik, uzilish, shaxs yoki narsadan qaysi birini bildirishini tekshiring.",
+        "wrongFeedbackRu": "Проверьте, к чему относится каждая форма: к длительному фону, прерыванию, человеку или предмету."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_m4_decisions",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "integrated",
+      "communicativeFocus": "writing",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m4",
+      "unitId": "unit_eng_b1_u4",
+      "canDoObjective": "Jamoaviy muhokamadan ustuvor qarorni ajratadi, 'should / ought to / must' bilan tavsiya beradi va suhbatni o‘zlashtirma gapda yetkazadi.",
+      "canDoObjectiveRu": "Выбирает приоритетный шаг из обсуждения, даёт советы с 'should / ought to / must' и передаёт чужую речь в косвенной форме.",
+      "prerequisites": ["node_eng_b1_u3_checkpoint"],
+      "title": "Discussions, Advice & Next Action (Modals + Reported Statements)",
+      "titleRu": "Обсуждение, советы и решения (Модальные глаголы и косвенная речь)",
+      "estimatedMinutes": 11,
+      "summary": "You learn how to weigh competing team ideas, distinguish strong obligation ('must') from advice ('should / ought to'), and report what someone said with basic tense backshift.",
+      "summaryRu": "Вы научитесь взвешивать предложения команды, отличать строгую обязанность ('must') от совета ('should / ought to') и передавать слова собеседника в косвенной речи.",
+      "requiresMastery": false,
+      "officialCefrDisclaimerUz": "Ushbu darsdagi yozma qaror rejasi mustaqil amaliyotdir; rasmiy CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Письменное задание на план действий предназначено для самостоятельной практики и не выдаёт сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "In team projects, people suggest competing ideas. B1 communicators identify top priorities, recommend practical steps, and report decisions clearly to others.",
+          "ru": "В командной работе звучат разные предложения. На уровне B1 важно выделить приоритет, дать точный совет и грамотно передать решение коллегам."
+        },
+        "learningObjective": {
+          "uz": "Select next actions from a discussion, apply 'should/ought to/must' accurately, and convert direct statements into basic reported speech.",
+          "ru": "Определять дальнейший шаг по итогам беседы, верно применять 'should/ought to/must' и переводить прямую речь в косвенную."
+        },
+        "warmUp": {
+          "uz": "Suppose 30% of app testers cannot sign in, while teammates ask for dark mode. Which task is a 'must', and how do you tell developers what the mentor said?",
+          "ru": "Допустим, 30% пользователей не могут войти в приложение, а коллеги просят тёмную тему. Что здесь обязательно ('must'), и как пересказать слова ментора?"
+        },
+        "vocabularyItems": [
+          { "word": "compromise", "uz": "o‘zaro kelishuv", "ru": "взаимная уступка", "ipa": "/ˈkɒmprəmaɪz/" },
+          { "word": "priority", "uz": "eng muhim vazifa", "ru": "первоочередная задача", "ipa": "/praɪˈɒrəti/" },
+          { "word": "recommend", "uz": "maslahat bermoq", "ru": "советовать", "ipa": "/ˌrekəˈmend/" },
+          { "word": "outcome", "uz": "yakuniy natija", "ru": "итоговый результат", "ipa": "/ˈaʊtkʌm/" }
+        ],
+        "grammarNote": {
+          "rule": "Advice & Obligation (should / ought to / must) & Reported Statements (said / told + backshift)",
+          "simpleExplanationUz": "'should' and 'ought to' give advice, whereas 'must' expresses strict urgency. Never add 'to' after 'should' or 'must', but always keep 'to' in 'ought to'. In reported speech after 'said/told', shift 'can -> could', 'will -> would', 'am/is -> was'. 'said' dan keyin bevosita shaxs olmoshi kelmaydi ('told us that', 'said that').",
+          "simpleExplanationRu": "'should' и 'ought to' выражают совет, а 'must' — строгую необходимость. После 'should/must' частица 'to' не ставится, а 'ought to' всегда требует 'to'. В косвенной речи после 'said/told' сдвигаем 'can -> could', 'will -> would'. После 'said' не ставится прямое дополнение ('told us', но 'said that').",
+          "structure": "Subject + should/must + V1 | Subject + ought to + V1 | Subject + told + [person] + (that) + [backshifted clause]",
+          "positiveExamples": [
+            "You must fix the timeout bug before Friday, and you ought to notify the testers.",
+            "The mentor told us that sign-in access was our top priority."
+          ],
+          "negativeExamples": [
+            "We should not postpone critical bug fixes."
+          ],
+          "questions": [
+            "Should we add dark mode before fixing the sign-in timeout?"
+          ],
+          "commonMistakes": [
+            "Writing 'should to test' or 'said me that' instead of 'should test' and 'told me that'."
+          ]
+        },
+        "pronunciationFocus": {
+          "uz": "The letter 'l' is silent in 'should' /ʃʊd/. In natural speech, 'ought to' blends smoothly into /ˈɔːtə/.",
+          "ru": "Буква 'l' в 'should' /ʃʊd/ не читается. В беглой речи 'ought to' сливается в /ˈɔːtə/."
+        },
+        "examples": [
+          "You must fix the timeout bug before Friday, and we ought to run a second test on Saturday.",
+          "I will tell the developers that we are postponing new design features."
+        ],
+        "guidedPractice": {
+          "uz": "Inspect the prioritization board illustration, listen to the mentor and Aziz, and practice the 4 decision cards.",
+          "ru": "Изучите доску приоритетов, прослушайте диалог ментора и Азиза и повторите 4 карточки."
+        },
+        "independentPractice": {
+          "uz": "Select the mentor's prioritized reply, write an action-plan message, and convert direct speech into reported speech.",
+          "ru": "Выберите приоритетное решение ментора, напишите сообщение с планом действий и преобразуйте прямую речь в косвенную."
+        },
+        "listeningRef": "media_eng_b1_m4_decisions_dialogue",
+        "readingRef": "lesson_eng_b1_m4_concept",
+        "speakingTask": {
+          "uz": "Report one teammate suggestion and recommend the top priority using 'ought to'.",
+          "ru": "Перескажите предложение коллеги и дайте рекомендацию с помощью 'ought to'."
+        },
+        "writingTask": {
+          "uz": "Write a 4-sentence team update reporting a comment and recommending two next actions.",
+          "ru": "Напишите сообщение команде из 4 предложений с косвенной речью и двумя советами."
+        },
+        "knowledgeCheck": "q_eng_b1_m4_listen_conv",
+        "finalQuiz": "q_eng_b1_m4_writing",
+        "feedbackRules": {
+          "uz": "Feedback catches 'said + object' errors, missing backshift, and reversed priorities.",
+          "ru": "Подсказки разбирают ошибки 'said + дополнение', отсутствие сдвига времени и неверный приоритет."
+        },
+        "summaryAndRevision": {
+          "uz": "All 4 B1 modules are now complete; proceed to the integrated B1 Exit Assessment.",
+          "ru": "Все 4 модуля B1 пройдены; переходите к итоговому экзамену B1."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_m4_concept",
+          "stepNumber": 1,
+          "type": "concept",
+          "title": "Advice Modals & Basic Reported Statements",
+          "titleRu": "Модальные глаголы совета и косвенная речь",
+          "content": "Choose 'should' or 'ought to' for balanced recommendations, and reserve 'must' for urgent rules or critical priorities. Notice that 'should' and 'must' connect directly to the base verb without 'to', while 'ought to' keeps 'to'. When reporting what someone decided earlier ('said / told us'), shift 'will -> would', 'can -> could', and 'am/is -> was', and remember 'tell' needs a listener ('told us') while 'say' does not. O‘zbek tilida «menga aytdi» iborasiga moslab «said me» deyish ko‘p uchraydigan xato — to‘g‘risi «told me».",
+          "contentRu": "Используйте 'should' или 'ought to' для рекомендаций и 'must' для срочных правил. После 'should/must' частица 'to' не нужна, а в 'ought to' она обязательна. Передавая слова в прошлом ('said / told us'), сдвигайте 'will -> would', 'can -> could', 'am/is -> was' и помните: 'told us', но 'said that' (без 'me/us').",
+          "highlightNotes": [
+            "Advice vs urgency: We ought to test on Saturday, and we must fix the bug first.",
+            "Listener rule: She told us that... / She said that... (NEVER said us)",
+            "Backshift: 'I can send it' -> She said that she could send it."
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m4_audio",
+          "stepNumber": 2,
+          "type": "audio_simulation",
+          "title": "Listening: Prioritizing the Product Fix",
+          "titleRu": "Аудирование: Выбор приоритета в проекте",
+          "content": "Listen to the mentor and Aziz reviewing user test feedback. Identify why sign-in is urgent, what feature is postponed, and what must happen before Friday.",
+          "contentRu": "Прослушайте беседу ментора и Азиза по результатам тестирования. Обратите внимание на главную проблему, отложенную функцию и срок исправления.",
+          "media": {
+            "id": "media_eng_b1_m4_decisions_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-m4-decisions-dialogue.wav",
+            "title": "Jamoaviy muhokama va keyingi harakatni tanlash suhbati",
+            "titleUz": "Jamoaviy muhokama va keyingi harakatni tanlash suhbati",
+            "titleRu": "Командное обсуждение и выбор следующего шага",
+            "transcript": "Mentor: I reviewed your user feedback notes. Thirty percent of mobile testers could not finish the sign-in screen because the verification code expired too fast.\nAziz: Earlier, some teammates suggested adding dark mode first, since users asked for it.\nMentor: Dark mode is helpful, but sign-in access is our top priority. You must fix the timeout bug before Friday, and you ought to notify the testers once it is ready.\nAziz: Good point. I will tell the developers that we are postponing new design features until Monday, and we should run a second test on Saturday morning.",
+            "posterImage": "/lesson-media/english/b1/b1-m4-decision-board.png",
+            "posterAlt": "Muhokama pufakchalari, tarozi belgisi va ustuvor vazifalar doskasi tasvirlangan panel",
+            "posterAltUz": "Muhokama pufakchalari, tarozi belgisi va ustuvor vazifalar doskasi tasvirlangan panel",
+            "posterAltRu": "Диалоговые окна обсуждения, весы выбора и доска приоритетных задач",
+            "durationSeconds": 35.381,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Mentor: I reviewed your user feedback notes. Thirty percent of mobile testers could not finish the sign-in screen because the verification code expired too fast.\nAziz: Earlier, some teammates suggested adding dark mode first, since users asked for it.\nMentor: Dark mode is helpful, but sign-in access is our top priority. You must fix the timeout bug before Friday, and you ought to notify the testers once it is ready.\nAziz: Good point. I will tell the developers that we are postponing new design features until Monday, and we should run a second test on Saturday morning.",
+            "speakerName": "Mentor & Aziz"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m4_flashcards",
+          "stepNumber": 3,
+          "type": "flashcard",
+          "title": "Decision & Action Flashcards",
+          "titleRu": "Карточки: Решения и приоритеты",
+          "content": "Listen to each B1 decision-making term, recall its Uzbek/Russian meaning, and review the example.",
+          "contentRu": "Прослушайте термин, вспомните значение и откройте пример.",
+          "flashcards": [
+            {
+              "id": "fc_eng_b1_m4_1",
+              "front": "compromise",
+              "backUz": "o‘zaro kelishuv",
+              "backRu": "взаимная уступка",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈkɒmprəmaɪz/",
+              "ipaAmE": "/ˈkɑːmprəmaɪz/",
+              "cefrLevel": "B1",
+              "example": "Both sides reached a fair compromise on the launch date.",
+              "exampleUz": "Har ikki tomon ishga tushirish sanasi bo‘yicha adolatli o‘zaro kelishuvga erishdi.",
+              "exampleRu": "Обе стороны пришли к разумному согласию по дате запуска.",
+              "audioSrc": "/lesson-media/english/b1/b1-m4-compromise.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m4-decision-board.png",
+              "alt": "Ikki suhbat pufakchasi orasidagi tenglik tarozisi",
+              "altRu": "Значок равновесия между двумя окнами диалога",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m4_2",
+              "front": "priority",
+              "backUz": "eng muhim vazifa",
+              "backRu": "первоочередная задача",
+              "partOfSpeech": "noun",
+              "ipa": "/praɪˈɒrəti/",
+              "ipaAmE": "/praɪˈɔːrəti/",
+              "cefrLevel": "B1",
+              "example": "Fixing the login bug is our highest priority this week.",
+              "exampleUz": "Kirish xatosini tuzatish shu haftadagi eng muhim vazifamizdir.",
+              "exampleRu": "Исправление ошибки входа — наш главный фокус на этой неделе.",
+              "audioSrc": "/lesson-media/english/b1/b1-m4-priority.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m4-decision-board.png",
+              "alt": "Reja doskasining eng yuqori qatoridagi oltin yulduz",
+              "altRu": "Золотая звезда в верхней строке рабочей доски",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m4_3",
+              "front": "recommend",
+              "backUz": "maslahat bermoq",
+              "backRu": "советовать",
+              "partOfSpeech": "verb",
+              "ipa": "/ˌrekəˈmend/",
+              "ipaAmE": "/ˌrekəˈmend/",
+              "cefrLevel": "B1",
+              "example": "I strongly recommend testing the app before Friday.",
+              "exampleUz": "Ilovani juma kunigacha tekshirib ko‘rishni qat’iy maslahat beraman.",
+              "exampleRu": "Я настоятельно рекомендую протестировать приложение до пятницы.",
+              "audioSrc": "/lesson-media/english/b1/b1-m4-recommend.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m4-decision-board.png",
+              "alt": "Yashil tasdiq belgisi tomon yo‘naltirilgan oq chiziq",
+              "altRu": "Символ выбора рядом с зелёной галочкой на карточке",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            },
+            {
+              "id": "fc_eng_b1_m4_4",
+              "front": "outcome",
+              "backUz": "yakuniy natija",
+              "backRu": "итоговый результат",
+              "partOfSpeech": "noun",
+              "ipa": "/ˈaʊtkʌm/",
+              "ipaAmE": "/ˈaʊtkʌm/",
+              "cefrLevel": "B1",
+              "example": "Everyone was pleased with the positive outcome of the meeting.",
+              "exampleUz": "Uchrashuvning ijobiy yakuniy natijasidan hamma mamnun bo‘ldi.",
+              "exampleRu": "Все остались довольны положительным итогом встречи.",
+              "audioSrc": "/lesson-media/english/b1/b1-m4-outcome.wav",
+              "imageSrc": "/lesson-media/english/b1/b1-m4-decision-board.png",
+              "alt": "Nishon markaziga kelib tushgan moviy strelka tasviri",
+              "altRu": "Голубая стрелка, направленная точно в центр мишени",
+              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+            }
+          ]
+        },
+        {
+          "id": "lesson_eng_b1_m4_listen_q",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "Listening Check: Choosing the Next Action",
+          "titleRu": "Проверка аудирования: Выбор действия",
+          "content": "Complete the dialogue turn to reflect the mentor's real decision in the recording.",
+          "contentRu": "Дополните диалог репликой ментора, соответствующей аудиозаписи.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m4_listen_conv",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "Listening: Prioritizing next action",
+            "difficulty": "medium",
+            "questionType": "conversation_completion",
+            "evaluationMode": "deterministic",
+            "dialogueContext": [
+              "Aziz: \"Should we add dark mode before fixing the sign-in timeout?\"",
+              "Mentor: \"___\""
+            ],
+            "text": "Audiodagi muhokamaga ko‘ra, mentorning ustuvor qarorini aks ettiruvchi javobni tanlang:",
+            "textRu": "Выберите ответ ментора, отражающий принятый приоритет в диалоге:",
+            "options": [
+              "No, sign-in access is our top priority, so you must fix the timeout bug before Friday.",
+              "Yes, add dark mode first and postpone the sign-in bug until next month.",
+              "You do not need to test again on Saturday or notify the mobile testers.",
+              "Ignore the verification code problem because thirty percent is a small number."
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Yes, add dark mode first and postpone the sign-in bug until next month.": {
+                "uz": "Aksincha, yangi dizayn funksiyalari dushanbagacha kechiktirildi, kirish xatosini tuzatish esa birinchi o‘ringa qo‘yildi.",
+                "ru": "Наоборот: новые функции дизайна отложены до понедельника, а исправление входа стало главным приоритетом."
+              },
+              "You do not need to test again on Saturday or notify the mobile testers.": {
+                "uz": "Mentor sinovchilarga xabar berishni aytdi, Aziz esa shanba tongida ikkinchi test o‘tkazishni taklif qildi.",
+                "ru": "Ментор посоветовал уведомить тестировщиков, а Азиз предложил повторный тест в субботу утром."
+              },
+              "Ignore the verification code problem because thirty percent is a small number.": {
+                "uz": "30% foydalanuvchi tizimga kira olmagani uchun mentor buni eng muhim muammo deb baholadi.",
+                "ru": "Из-за сбоя у 30% тестировщиков ментор назвал это главной проблемой."
+              }
+            },
+            "explanation": "The mentor rejects adding dark mode first and insists that fixing the sign-in timeout bug before Friday is the top priority.",
+            "explanationRu": "Ментор отклонил идею начинать с тёмной темы и подчеркнул, что ошибка входа должна быть исправлена до пятницы.",
+            "wrongFeedback": "Mentor tungi rejim va tizimga kirish muammosidan qaysi birini ustuvor deb aytganini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте, что ментор назвал главным приоритетом и какой срок установил."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_m4_write_q",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "Writing: Team Action-Plan Message",
+          "titleRu": "Writing: План действий для команды",
+          "content": "Write a 4-sentence message reporting what a teammate suggested and recommending two clear next steps.",
+          "contentRu": "Напишите сообщение из 4 предложений, передав слова коллеги в косвенной речи и предложив два следующих шага.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_m4_writing",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_vocab",
+            "skillDomain": "writing",
+            "cefrLevel": "B1",
+            "topic": "Writing: Reporting decisions and recommending next actions",
+            "difficulty": "hard",
+            "questionType": "writing_prompt",
+            "evaluationMode": "self_assessed",
+            "text": "Jamoaga 4 gapli ish xabari yozing: hamkasbingiz nima deganini o‘zlashtirma gapda (told/said) yetkazing va 'should' / 'ought to' hamda 'priority' so‘zi bilan ikki keyingi qadamni tavsiya qiling.",
+            "textRu": "Напишите командное сообщение из 4 предложений: передайте слова коллеги через told/said и порекомендуйте два шага со словами 'should' / 'ought to' и 'priority'.",
+            "options": [],
+            "sampleResponse": "Aziz told us that thirty percent of testers could not complete sign-in. Fixing that bug is our top priority before Friday. We ought to postpone new design changes until next week. We should also run a follow-up check on Saturday morning.",
+            "rubricCriteria": [
+              {
+                "id": "crit_b1_m4_rep",
+                "labelUz": "Kamida bitta to‘g‘ri o‘zlashtirma gap ('told us / said that' + zamon surilishi) yozildi",
+                "labelRu": "Использована минимум одна корректная фраза косвенной речи ('told us / said that' со сдвигом времени)"
+              },
+              {
+                "id": "crit_b1_m4_mod",
+                "labelUz": "'should' yoki 'ought to' bilan ikkita amaliy tavsiya berildi",
+                "labelRu": "Даны две практические рекомендации с 'should' или 'ought to'"
+              },
+              {
+                "id": "crit_b1_m4_voc",
+                "labelUz": "Qaror lug‘atidan ('priority', 'compromise', 'recommend', 'outcome') kamida bittasi ishlatildi",
+                "labelRu": "Применено минимум одно слово модуля ('priority', 'compromise', 'recommend', 'outcome')"
+              }
+            ],
+            "selfAssessmentNoticeUz": "O‘zini baholash (mustaqil yozma topshiriq): javob rubrika mezonlari bilan solishtiriladi; rasmiy CEFR sertifikati bermaydi.",
+            "selfAssessmentNoticeRu": "Самооценка (самостоятельное письмо): проверяется по критериям рубрики и не выдаёт официальный сертификат CEFR.",
+            "explanation": "Reporting the problem clearly first, naming the priority, and closing with 'ought to / should' actions produces concise B1 workplace communication.",
+            "explanationRu": "Чёткий пересказ проблемы, выделение приоритета и конкретные шаги с 'ought to / should' соответствуют деловой переписке уровня B1.",
+            "wrongFeedback": "Matningizda o‘zlashtirma gap, ikkita modal tavsiya va ustuvorlik so‘zi borligini mezonlar asosida tekshiring.",
+            "wrongFeedbackRu": "Проверьте наличие косвенной речи, двух модальных рекомендаций и лексики приоритетов."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_m4_rep_text",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "Basic reported statement with can -> could",
+        "difficulty": "hard",
+        "questionType": "text_input",
+        "evaluationMode": "deterministic",
+        "text": "Alining «Men bugun kun tartibini yubora olaman» («I can send the agenda today») degan gapini o‘zlashtirma gapga aylantirib, «Ali told us ...» bilan boshlab ingliz tilida to‘liq yozing.",
+        "textRu": "Преобразуйте слова Али «Я могу отправить повестку дня сегодня» («I can send the agenda today») в косвенную речь на английском, начав с «Ali told us ...».",
+        "options": [],
+        "acceptedAnswers": [
+          "Ali told us that he could send the agenda that day",
+          "Ali told us that he could send the agenda today",
+          "Ali told us he could send the agenda that day",
+          "Ali told us he could send the agenda today"
+        ],
+        "explanation": "In reported statements, 'I' changes to 'he' and 'can' shifts back to 'could': 'Ali told us that he could send the agenda that day.'",
+        "explanationRu": "В косвенной речи 'I' заменяется на 'he', а модальный глагол сдвигается на шаг назад ('could').",
+        "wrongFeedback": "O‘tgan zamondagi xabar fe’lidan keyin olmoshni uchinchi shaxsga o‘zgartiring va modal fe’lni bir bosqich orqaga suring.",
+        "wrongFeedbackRu": "После глагола речи в прошедшем времени замените местоимение и сдвиньте модальный глагол назад."
+      }
+    },
+    {
+      "id": "lesson_eng_b1_exit",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "integrated",
+      "communicativeFocus": "exit_assessment",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m4",
+      "unitId": "unit_eng_b1_u4",
+      "canDoObjective": "B1 darajasidagi tinglash, o‘qish, zamonlar, shartli reja, modal tavsiyalar va o‘zlashtirma gapni integratsiyalashgan yakuniy sinovda tasdiqlaydi.",
+      "canDoObjectiveRu": "Подтверждает владение всеми навыками уровня B1 в итоговом экзамене (аудирование, чтение, грамматика и порядок слов).",
+      "prerequisites": ["node_eng_b1_m4_decisions"],
+      "title": "B1 Integrated Exit Assessment (Travel + Problem + Narrative + Action)",
+      "titleRu": "Итоговый экзамен уровня B1",
+      "estimatedMinutes": 12,
+      "summary": "Complete the B1 integrated exit check combining conference listening disambiguation, reading comprehension, Present Perfect grammar, reported-speech ordering, error correction, and an alternate notice task.",
+      "summaryRu": "Пройдите итоговый тест B1: аудирование о конференции, чтение объявления, Present Perfect, построение косвенной речи и исправление ошибки.",
+      "requiresMastery": true,
+      "officialCefrDisclaimerUz": "Bu B1 ichki chiqish imtihoni bo‘lib, B2 bosqichini ochishga tayyorgarlikni tekshiradi; rasmiy xalqaro CEFR sertifikatini bermaydi.",
+      "officialCefrDisclaimerRu": "Это внутренний экзамен уровня B1 для перехода к B2; он не выдаёт официальный международный сертификат CEFR.",
+      "pedagogy17": {
+        "intro": {
+          "uz": "Real B1 situations combine everything at once: arriving on time, handling an unexpected equipment failure, and acting on reported advice.",
+          "ru": "В реальных ситуациях B1 все навыки работают вместе: прибытие в поездке, сбой техники и передача рекомендаций."
+        },
+        "learningObjective": {
+          "uz": "Demonstrate integrated B1 readiness across listening, reading, tense selection, reported speech, and sentence construction.",
+          "ru": "Подтвердить готовность уровня B1 в аудировании, чтении, выборе времён и косвенной речи."
+        },
+        "warmUp": {
+          "uz": "Recall the four B1 pillars: Present Perfect vs Past Simple, First Conditional, Past Continuous + Past Simple, and Modals + Reported Statements.",
+          "ru": "Вспомните 4 опоры B1: Present Perfect и Past Simple, First Conditional, Past Continuous + Past Simple и модальные советы с косвенной речью."
+        },
+        "vocabularyItems": [
+          { "word": "orientation", "uz": "tanishuv yig‘ilishi", "ru": "вводная встреча", "ipa": "/ˌɔːriənˈteɪʃn/" },
+          { "word": "alternative", "uz": "muqobil variant", "ru": "альтернатива", "ipa": "/ɔːlˈtɜːnətɪv/" }
+        ],
+        "grammarNote": {
+          "rule": "Integrated B1 Synthesis: Tense Contrast + First Conditional + Reported Action",
+          "simpleExplanationUz": "Check time markers before picking Present Perfect or Past Simple, keep 'if'-clauses in Present Simple, and remember 'told + person' + backshifted modal.",
+          "simpleExplanationRu": "Сверяйте маркеры времени перед выбором Present Perfect/Past Simple, оставляйте Present Simple после 'if' и сдвигайте глаголы после 'told + лицо'.",
+          "structure": "have/has + V3 | If + Present Simple, will/should + V1 | told + person + that + could/would",
+          "positiveExamples": ["The organizer said that if we don't find a cable, we should share the slide link."],
+          "negativeExamples": ["Never say 'She said me that the train will arrive late'."],
+          "questions": ["Has the technician checked the storage room yet?"],
+          "commonMistakes": ["Mixing 'said me' with missing modal backshift ('will' instead of 'would')."]
+        },
+        "pronunciationFocus": {
+          "uz": "Use clear rising-falling intonation on discourse markers like 'Actually,' and 'Glad you made it!'.",
+          "ru": "Выделяйте вводные слова 'Actually,' и 'Glad you made it!' чёткой интонацией."
+        },
+        "examples": ["While the opening speaker was connecting his laptop, the main projector cable broke."],
+        "guidedPractice": {
+          "uz": "Listen to the Samarkand conference dialogue before answering the integrated tasks.",
+          "ru": "Прослушайте диалог о конференции в Самарканде перед выполнением заданий."
+        },
+        "independentPractice": {
+          "uz": "Complete all 4 core steps plus reinforcement and alternate checks to pass B1 at 70%+.",
+          "ru": "Выполните все 4 задания и проверочные упражнения с результатом от 70%."
+        },
+        "listeningRef": "media_eng_b1_exit_dialogue",
+        "readingRef": "lesson_eng_b1_exit_step_3",
+        "speakingTask": {
+          "uz": "Summarize the conference backup plan aloud in two reported sentences.",
+          "ru": "Устно перескажите запасной план конференции в двух предложениях косвенной речи."
+        },
+        "writingTask": {
+          "uz": "Produce an accurate Present Perfect update and construct a reported advice sentence.",
+          "ru": "Составьте предложение в Present Perfect и соберите фразу с косвенным советом."
+        },
+        "knowledgeCheck": "q_eng_b1_exit_listen",
+        "finalQuiz": "q_eng_b1_exit_read",
+        "feedbackRules": {
+          "uz": "A score of 70% or above completes CEFR B1 and unlocks B2.",
+          "ru": "Результат 70% и выше завершает уровень B1 и открывает B2."
+        },
+        "summaryAndRevision": {
+          "uz": "Congratulations on completing CEFR B1; your next milestone is B2 interviews and source debates.",
+          "ru": "Поздравляем с завершением B1; на уровне B2 вас ждут интервью и сравнение источников."
+        }
+      },
+      "steps": [
+        {
+          "id": "lesson_eng_b1_exit_step_1",
+          "stepNumber": 1,
+          "type": "audio_simulation",
+          "title": "1. Listening: Conference Orientation Glitch",
+          "titleRu": "1. Аудирование: Сбой на конференции",
+          "content": "Listen to Malika and Rustam at the Samarkand youth center. Track what happened during setup, what the technician is doing, and the organizer's 10:15 backup plan.",
+          "contentRu": "Прослушайте разговор Малики и Рустама в молодёжном центре Самарканда. Запомните, что сломалось и какой план предложил организатор на 10:15.",
+          "media": {
+            "id": "media_eng_b1_exit_dialogue",
+            "kind": "audio",
+            "language": "en",
+            "source": "/lesson-media/english/b1/b1-exit-dialogue.wav",
+            "title": "B1 yakuniy tinglash: Konferensiyadagi texnik muammo va qaror",
+            "titleUz": "B1 yakuniy tinglash: Konferensiyadagi texnik muammo va qaror",
+            "titleRu": "Итоговое аудирование B1: Техническая проблема на конференции и решение",
+            "transcript": "Malika: Hi Rustam! I have just arrived at the Samarkand youth center. My morning train arrived on time, unlike last month.\nRustam: Glad you made it! Actually, we have a small problem. While the opening speaker was connecting his laptop, the main projector cable broke.\nMalika: Has the technician checked the storage room yet?\nRustam: He is looking right now. The organizer said that if we don't find a spare cable by ten fifteen, we should share the slide link with attendees and start the Q and A session fifteen minutes early.",
+            "posterImage": "/lesson-media/english/b1/b1-m4-decision-board.png",
+            "posterAlt": "Konferensiya muammosini muhokama qilayotgan ikki ishtirokchi va qarorlar doskasi",
+            "posterAltUz": "Konferensiya muammosini muhokama qilayotgan ikki ishtirokchi va qarorlar doskasi",
+            "posterAltRu": "Участники обсуждают техническую неполадку и план действий на доске",
+            "durationSeconds": 33.248,
+            "reviewStatus": "approved"
+          },
+          "visualModelData": {
+            "type": "audio_wave",
+            "audioTranscript": "Malika: Hi Rustam! I have just arrived at the Samarkand youth center. My morning train arrived on time, unlike last month.\nRustam: Glad you made it! Actually, we have a small problem. While the opening speaker was connecting his laptop, the main projector cable broke.\nMalika: Has the technician checked the storage room yet?\nRustam: He is looking right now. The organizer said that if we don't find a spare cable by ten fifteen, we should share the slide link with attendees and start the Q and A session fifteen minutes early.",
+            "speakerName": "Malika & Rustam"
+          }
+        },
+        {
+          "id": "lesson_eng_b1_exit_step_2",
+          "stepNumber": 2,
+          "type": "interactive_question",
+          "title": "2. Listening Evidence: Equipment Backup Plan",
+          "titleRu": "2. Факты аудирования: Запасной план",
+          "content": "Choose the statement that accurately matches the broken item and the organizer's contingency decision.",
+          "contentRu": "Выберите вариант, который точно описывает поломку и запасной план организатора.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_exit_listen",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_listening",
+            "skillDomain": "listening",
+            "cefrLevel": "B1",
+            "topic": "B1 Exit: Conference listening comprehension",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "text": "Audiodagi suhbatga ko‘ra, konferensiyada qanday nosozlik yuz berdi va 10:15 gacha zaxira kabel topilmasa nima qilinadi?",
+            "textRu": "Какая поломка произошла на конференции и что сделают, если запасной кабель не найдётся до 10:15?",
+            "options": [
+              "Proyektor kabeli uzildi; slayd havolasini ulashib, savol-javobni 15 daqiqa ertaroq boshlashadi",
+              "Malikaning poyezdi kechikdi; tadbir keyingi oyga ko‘chiriladi",
+              "Spikerning noutbuki buzildi; texnik xodim do‘kondan yangi kompyuter olib keladi",
+              "Omborxona qulflanib qoldi; savol-javob qismi butunlay bekor qilinadi"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Malikaning poyezdi kechikdi; tadbir keyingi oyga ko‘chiriladi": {
+                "uz": "Malika o‘tgan oydan farqli o‘laroq bugun poyezdi o‘z vaqtida yetib kelganini aytdi.",
+                "ru": "Малика сказала, что сегодня поезд прибыл вовремя (задержка была в прошлом месяце)."
+              },
+              "Spikerning noutbuki buzildi; texnik xodim do‘kondan yangi kompyuter olib keladi": {
+                "uz": "Noutbuk emas, asosiy proyektor kabeli uzilgan va texnik omborxonadan zaxira kabel qidirmoqda.",
+                "ru": "Сломался не ноутбук, а кабель проектора; техник ищет запасной в кладовой."
+              },
+              "Omborxona qulflanib qoldi; savol-javob qismi butunlay bekor qilinadi": {
+                "uz": "Savol-javob bekor qilinmaydi, aksincha 15 daqiqa ertaroq boshlanishi aytildi.",
+                "ru": "Сессию вопросов и ответов не отменяют, а переносят на 15 минут раньше."
+              }
+            },
+            "explanation": "The main projector cable broke while the speaker was connecting his laptop; if no spare cable is found by 10:15, they will share the slide link and start Q&A 15 minutes early.",
+            "explanationRu": "Сломался кабель проектора; если до 10:15 запасной не найдут, участникам отправят ссылку на слайды и начнут Q&A на 15 минут раньше.",
+            "wrongFeedback": "Proyektor bilan bog‘liq muammo va tashkilotchining 10:15 uchun aytgan ikki qadamini qayta tinglang.",
+            "wrongFeedbackRu": "Переслушайте, что случилось с проектором и какие два шага предложил организатор на 10:15."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_exit_step_3",
+          "stepNumber": 3,
+          "type": "interactive_question",
+          "title": "3. Reading: Community Scholarship Guidelines",
+          "titleRu": "3. Чтение: Правила стипендии",
+          "content": "Read the scholarship update carefully and select the accurate next step for applicants.",
+          "contentRu": "Прочтите объявление о стипендии и выберите правильный шаг для кандидата.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_exit_read",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_reading",
+            "skillDomain": "reading",
+            "cefrLevel": "B1",
+            "topic": "B1 Exit: Scholarship reading comprehension",
+            "difficulty": "medium",
+            "questionType": "multiple_choice",
+            "evaluationMode": "deterministic",
+            "contextSnippet": "Regional Youth Scholarship Update: Applicants who have already uploaded their essay do not need to resubmit it. However, if your mentor recommendation letter has not arrived by Friday at 18:00, you ought to contact the admissions desk before Monday morning.",
+            "text": "E’longa ko‘ra, inshosini yuklagan, ammo tavsiya xati juma soat 18:00 gacha yetib kelmagan nomzod nima qilishi kerak?",
+            "textRu": "Что должен сделать кандидат, который уже загрузил эссе, но рекомендательное письмо не пришло к 18:00 пятницы?",
+            "options": [
+              "Inshoni qayta yuklamaydi, lekin dushanba tongidan oldin qabul bo‘limi bilan bog‘lanishi kerak",
+              "Inshoni juma kuni qayta topshirishi va dushanba kuni kelishini kutishi kerak",
+              "Hujjatlari bekor qilingani uchun keyingi yilgacha kutishi kerak",
+              "Tavsiya xatini o‘zi yozib dushanba kuni kechqurun yuborishi kerak"
+            ],
+            "correctIndex": 0,
+            "mistakeFeedbackByOption": {
+              "Inshoni juma kuni qayta topshirishi va dushanba kuni kelishini kutishi kerak": {
+                "uz": "Matnda allaqachon yuklangan inshoni qayta topshirish shart emasligi («do not need to resubmit») yozilgan.",
+                "ru": "В тексте указано, что уже загруженное эссе повторно отправлять не нужно («do not need to resubmit»)."
+              },
+              "Hujjatlari bekor qilingani uchun keyingi yilgacha kutishi kerak": {
+                "uz": "Ariza bekor qilinmagan; nomzod dushanba tongidan oldin qabul bo‘limiga murojaat qilishi tavsiya etilgan.",
+                "ru": "Заявка не аннулирована — рекомендовано связаться с приёмной комиссией до утра понедельника."
+              },
+              "Tavsiya xatini o‘zi yozib dushanba kuni kechqurun yuborishi kerak": {
+                "uz": "Matnda xatni o‘zi yozish haqida gap yo‘q, balki dushanba tongidan oldin bog‘lanish aytilgan.",
+                "ru": "Нужно связаться с отделом до утра понедельника, а не писать рекомендацию самостоятельно."
+              }
+            },
+            "explanation": "Applicants who already uploaded their essay do not resubmit it, and if the recommendation letter is still missing at 18:00 Friday, they ought to contact admissions before Monday morning.",
+            "explanationRu": "Эссе повторно загружать не нужно, а при отсутствии письма к 18:00 пятницы следует связаться с комиссией до утра понедельника.",
+            "wrongFeedback": "«do not need to resubmit» va «before Monday morning» shartlarini diqqat bilan solishtiring.",
+            "wrongFeedbackRu": "Сопоставьте условия «do not need to resubmit» и «before Monday morning» в объявлении."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_exit_step_4",
+          "stepNumber": 4,
+          "type": "interactive_question",
+          "title": "4. Grammar Writing: Present Perfect Progress",
+          "titleRu": "4. Грамматика: Present Perfect с already",
+          "content": "Translate the Uzbek/Russian readiness update into natural English using Present Perfect.",
+          "contentRu": "Переведите сообщение о готовности на английский в Present Perfect.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_exit_grammar_text",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "B1",
+            "topic": "B1 Exit: Present Perfect with already",
+            "difficulty": "medium",
+            "questionType": "text_input",
+            "evaluationMode": "deterministic",
+            "text": "«Men allaqachon elektron chiptamni yuklab oldim» gapini Present Perfect zamonida ingliz tilida yozing.",
+            "textRu": "Напишите на английском в Present Perfect: «Я уже скачал свой электронный билет».",
+            "options": [],
+            "acceptedAnswers": [
+              "I have already downloaded my e-ticket",
+              "I've already downloaded my e-ticket",
+              "I have downloaded my e-ticket already",
+              "I've downloaded my e-ticket already",
+              "I have already downloaded my electronic ticket",
+              "I've already downloaded my electronic ticket",
+              "I have downloaded my electronic ticket already",
+              "I've downloaded my electronic ticket already",
+              "I have already downloaded my ticket",
+              "I've already downloaded my ticket",
+              "I have downloaded my ticket already",
+              "I've downloaded my ticket already"
+            ],
+            "explanation": "Use 'I have already downloaded' (or 'I've already downloaded') + 'my e-ticket' to express a completed action relevant right now.",
+            "explanationRu": "Для готового результата сейчас используется Present Perfect с 'already' между вспомогательным и смысловым глаголом.",
+            "wrongFeedback": "Hozirgi natijani ko‘rsatish uchun yordamchi fe’ldan keyin darhol ravish va to‘g‘ri o‘tgan sifatdosh shaklini qo‘ying.",
+            "wrongFeedbackRu": "Поставьте наречие готовности между вспомогательным глаголом и формой причастия прошедшего времени."
+          }
+        },
+        {
+          "id": "lesson_eng_b1_exit_step_5",
+          "stepNumber": 5,
+          "type": "interactive_question",
+          "title": "5. Sentence Construction: Reported Advice",
+          "titleRu": "5. Построение фразы: Косвенный совет",
+          "content": "Order the chunks to report the mentor's recommendation accurately.",
+          "contentRu": "Расставьте фрагменты в верном порядке, чтобы передать совет ментора.",
+          "interactiveQuestion": {
+            "id": "q_eng_b1_exit_order",
+            "courseId": "course_eng_01",
+            "skillId": "skill_eng_grammar",
+            "skillDomain": "grammar",
+            "cefrLevel": "B1",
+            "topic": "B1 Exit: Reported advice sentence order",
+            "difficulty": "hard",
+            "questionType": "sentence_order",
+            "evaluationMode": "deterministic",
+            "text": "«Mentor bugun zaxira rejamizni sinab ko‘rishimiz kerakligini aytdi» gapini to‘g‘ri tartibda tuzing:",
+            "textRu": "Составьте предложение «Ментор сказал, что нам следует проверить запасной план сегодня» в правильном порядке:",
+            "options": [],
+            "orderedTokens": ["The mentor", "said that", "we ought", "to test", "our backup", "plan today."],
+            "acceptedAnswers": ["The mentor said that we ought to test our backup plan today."],
+            "explanation": "Order: reporting clause ('The mentor said that') + subject + modal ('we ought') + infinitive ('to test') + object + time ('our backup plan today.').",
+            "explanationRu": "Порядок: вводная часть, затем подлежащее с модальной конструкцией и инфинитивом, дополнение и время в конце.",
+            "wrongFeedback": "Avval xabar qiluvchi shaxs va bog‘lovchi qismini, keyin modal tavsiya va harakat maqsadini oxirida vaqt bilan joylang.",
+            "wrongFeedbackRu": "Сначала поставьте подлежащее с глаголом речи, затем субъект и модальный оборот с инфинитивом и дополнением в конце."
+          }
+        }
+      ],
+      "reinforcementExercise": {
+        "id": "q_eng_b1_exit_reinf",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_grammar",
+        "skillDomain": "grammar",
+        "cefrLevel": "B1",
+        "topic": "B1 Exit: Reported speech listener and backshift",
+        "difficulty": "hard",
+        "questionType": "error_correction",
+        "evaluationMode": "deterministic",
+        "sentenceWithError": "She said me that the train will arrive late.",
+        "text": "O‘zlashtirma gapdagi tinglovchi fe’li va zamon surilishi xatosini tuzating:",
+        "textRu": "Исправьте две ошибки косвенной речи (глагол и сдвиг времени):",
+        "options": [
+          "She told me that the train would arrive late.",
+          "She said me that the train would arrive late.",
+          "She told to me that the train will arrive late.",
+          "She told me that the train will arriving late."
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "She said me that the train would arrive late.": {
+            "uz": "«said» dan keyin bevosita «me» qo‘yilmaydi; shaxs ko‘rsatilganda «told me» ishlatiladi.",
+            "ru": "После «said» нельзя сразу ставить «me» — при указании адресата нужен глагол «told me»."
+          },
+          "She told to me that the train will arrive late.": {
+            "uz": "«told» dan keyin «to» kelmaydi va «will» o‘tgan zamondan keyin «would» ga o‘tishi kerak.",
+            "ru": "После «told» предлог «to» не нужен, а «will» должно сдвинуться в «would»."
+          },
+          "She told me that the train will arriving late.": {
+            "uz": "«will» ham zamon jihatdan orqaga surilmagan, ham «will» dan keyin «-ing» kelmaydi.",
+            "ru": "Глагол «will» не сдвинут в прошедшую форму, и после него нельзя ставить «-ing»."
+          }
+        },
+        "explanation": "Use 'told me' (no 'to', never 'said me') and shift 'will' back to 'would' after a past reporting verb.",
+        "explanationRu": "С адресатом ставится 'told me' (без 'to'), а после глагола речи в прошлом 'will' переходит в 'would'.",
+        "wrongFeedback": "Tinglovchi oldida 'to' siz ishlatiladigan fe’lni va o‘tgan zamondagi modal siljishni tekshiring.",
+        "wrongFeedbackRu": "Проверьте правильный глагол речи с адресатом без 'to' и сдвиг модального глагола."
+      },
+      "alternateExercise": {
+        "id": "q_eng_b1_exit_alt",
+        "courseId": "course_eng_01",
+        "skillId": "skill_eng_reading",
+        "skillDomain": "reading",
+        "cefrLevel": "B1",
+        "topic": "B1 Exit: Alternate workshop notice",
+        "difficulty": "medium",
+        "questionType": "multiple_choice",
+        "evaluationMode": "deterministic",
+        "contextSnippet": "Internship Workshop Update: Because Room 201 is under repair until noon, the morning CV clinic has moved to Room 308. Participants who arrive after 10:15 should join the second group at 11:30.",
+        "text": "Qayta sinov: Soat 10:25 da kelgan ishtirokchi qayerga va soat nechada kirishi kerak?",
+        "textRu": "Повторная проверка: в какую аудиторию и во сколько должен пройти участник, пришедший в 10:25?",
+        "options": [
+          "308-xonaga soat 11:30 dagi ikkinchi guruhga qo‘shilishi kerak",
+          "201-xonaga soat 10:30 da kirishi kerak",
+          "308-xonaga soat 12:00 dan keyin kirishi kerak",
+          "201-xonadagi birinchi guruhga qo‘shilishi kerak"
+        ],
+        "correctIndex": 0,
+        "mistakeFeedbackByOption": {
+          "201-xonaga soat 10:30 da kirishi kerak": {
+            "uz": "201-xona tushgacha ta’mirda, seminar esa 308-xonaga ko‘chirilgan.",
+            "ru": "Аудитория 201 на ремонте до полудня, семинар перенесли в 308-ю."
+          },
+          "308-xonaga soat 12:00 dan keyin kirishi kerak": {
+            "uz": "10:15 dan keyin kelganlar uchun ikkinchi guruh soat 11:30 da boshlanadi.",
+            "ru": "Для опоздавших после 10:15 вторая группа начинается в 11:30, а не после 12:00."
+          },
+          "201-xonadagi birinchi guruhga qo‘shilishi kerak": {
+            "uz": "Ham xona 308 ga ko‘chgan, ham 10:25 10:15 dan keyin bo‘lgani uchun ikkinchi guruhga o‘tiladi.",
+            "ru": "Семинар проходит в 308-й аудитории, а после 10:15 нужно идти во вторую группу."
+          }
+        },
+        "explanation": "The clinic moved to Room 308, and anyone arriving after 10:15 joins the 11:30 second group.",
+        "explanationRu": "Семинар перенесён в аудиторию 308, а пришедшие после 10:15 присоединяются ко второй группе в 11:30.",
+        "wrongFeedback": "Ta’mirdagi xona va 10:15 dan keyin kelganlar uchun ko‘rsatilgan guruh vaqtini solishtiring.",
+        "wrongFeedbackRu": "Сравните номер заменённой аудитории и время группы для пришедших после 10:15."
+      }
+    }
+  ],
+  "roadmapNodes": [
+    {
+      "id": "node_eng_b1_m1_travel",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m1",
+      "moduleTitle": "1-modul: Sayohat va kundalik tajribalar",
+      "moduleTitleRu": "Модуль 1: Путешествия и личный опыт",
+      "unitId": "unit_eng_b1_u1",
+      "canDoObjective": "Sayohat va o‘qish tajribalarini Present Perfect hamda Past Simple bilan farqlaydi va aeroport o‘zgarishini tinglab tushunadi",
+      "canDoObjectiveRu": "Различает Present Perfect и Past Simple при рассказе о поездках и понимает диалог в аэропорту",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "speaking_prompt",
+      "title": "Sayohat logistikasi: Present Perfect vs Past Simple",
+      "titleRu": "Поездки и опыт: Present Perfect и Past Simple",
+      "description": "Aeroportdagi reys o‘zgarishi, already/yet, boarding pass kartochkalari va og‘zaki hisobot.",
+      "descriptionRu": "Перенос рейса в аэропорту, already/yet, карточки и устное сообщение о поездке.",
+      "prerequisites": ["node_eng_a2_exit"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_m1_travel",
+      "estimatedMinutes": 10,
+      "order": 24
+    },
+    {
+      "id": "node_eng_b1_u1_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_listening",
+      "skillDomain": "listening",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m1",
+      "moduleTitle": "1-modul: Sayohat va kundalik tajribalar",
+      "moduleTitleRu": "Модуль 1: Путешествия и личный опыт",
+      "unitId": "unit_eng_b1_u1",
+      "canDoObjective": "1-bo‘lim sinovidan o‘tib ish va muammo hal qilish modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 1 и открывает модуль рабочих ситуаций",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "B1 1-bo‘lim sinovi: Mehmonxona va bron",
+      "titleRu": "Итог раздела 1 B1: Отель и бронь",
+      "description": "Mehmonxonada xona almashtirish suhbati, yesterday xatosini tuzatish va ever mashqi.",
+      "descriptionRu": "Диалог о смене номера, исправление ошибки с yesterday и практика с ever.",
+      "prerequisites": ["node_eng_b1_m1_travel"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_u1_checkpoint",
+      "estimatedMinutes": 7,
+      "order": 25
+    },
+    {
+      "id": "node_eng_b1_m2_work_study",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m2",
+      "moduleTitle": "2-modul: O‘qish, ish va kutilmagan muammolar",
+      "moduleTitleRu": "Модуль 2: Учёба, работа и решение проблем",
+      "unitId": "unit_eng_b1_u2",
+      "canDoObjective": "Kechikish sababini because/since/so bilan tushuntiradi va First Conditional zaxira reja tuzadi",
+      "canDoObjectiveRu": "Объясняет причину сбоя через because/since/so и составляет запасной план в First Conditional",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "Ish, o‘qish va muammolar: First Conditional",
+      "titleRu": "Работа, учёба и сбои: First Conditional",
+      "description": "Server uzilishi suhbati, if-bandida will ishlatmaslik va sabab-oqibat bog‘lovchilari.",
+      "descriptionRu": "Диалог о сбое сервера, правило First Conditional без will после if и связки причины.",
+      "prerequisites": ["node_eng_b1_u1_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_m2_work_study",
+      "estimatedMinutes": 10,
+      "order": 26
+    },
+    {
+      "id": "node_eng_b1_u2_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "reading",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m2",
+      "moduleTitle": "2-modul: O‘qish, ish va kutilmagan muammolar",
+      "moduleTitleRu": "Модуль 2: Учёба, работа и решение проблем",
+      "unitId": "unit_eng_b1_u2",
+      "canDoObjective": "2-bo‘lim sinovidan o‘tib izchil hikoya qilish modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 2 и открывает модуль повествования",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "B1 2-bo‘lim sinovi: IT bildirishnomasi",
+      "titleRu": "Итог раздела 2 B1: Уведомление IT",
+      "description": "Wi-Fi uzilishi memo matni, First Conditional tartibi va unless ogohlantirishi.",
+      "descriptionRu": "Чтение памятки о техработах, порядок слов в First Conditional и предупреждение с unless.",
+      "prerequisites": ["node_eng_b1_m2_work_study"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_u2_checkpoint",
+      "estimatedMinutes": 7,
+      "order": 27
+    },
+    {
+      "id": "node_eng_b1_m3_narrative",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "reading",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m3",
+      "moduleTitle": "3-modul: Voqealarni izchil hikoya qilish",
+      "moduleTitleRu": "Модуль 3: Связное повествование и рассказ",
+      "unitId": "unit_eng_b1_u3",
+      "canDoObjective": "Past Continuous va Past Simple hamda who/which/where yordamida izchil hikoya yozadi",
+      "canDoObjectiveRu": "Сочетает Past Continuous, Past Simple и who/which/where в связном рассказе",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "writing_prompt",
+      "title": "Writing: Izchil hikoya va nisbiy gaplar",
+      "titleRu": "Writing: Связный рассказ и придаточные",
+      "description": "Xakaton hikoyasi, meanwhile/eventually kartochkalari va kutilmagan voqea yozish mashqi.",
+      "descriptionRu": "История о хакатоне, карточки связок и написание собственного мини-рассказа.",
+      "prerequisites": ["node_eng_b1_u2_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_m3_narrative",
+      "estimatedMinutes": 11,
+      "order": 28
+    },
+    {
+      "id": "node_eng_b1_u3_checkpoint",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m3",
+      "moduleTitle": "3-modul: Voqealarni izchil hikoya qilish",
+      "moduleTitleRu": "Модуль 3: Связное повествование и рассказ",
+      "unitId": "unit_eng_b1_u3",
+      "canDoObjective": "3-bo‘lim sinovidan o‘tib muhokama va qarorlar modulini ochadi",
+      "canDoObjectiveRu": "Проходит проверку раздела 3 и открывает модуль принятия решений",
+      "nodeKind": "unit_checkpoint",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "B1 3-bo‘lim sinovi: Hikoya va nisbiy olmosh",
+      "titleRu": "Итог раздела 3 B1: Сюжет и придаточные",
+      "description": "Muzey voqeasi o‘qishi, ortiqcha olmosh xatosini tuzatish va bog‘lovchilar mosligi.",
+      "descriptionRu": "Чтение истории о музее, исправление лишнего местоимения и сопоставление связок.",
+      "prerequisites": ["node_eng_b1_m3_narrative"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_u3_checkpoint",
+      "estimatedMinutes": 7,
+      "order": 29
+    },
+    {
+      "id": "node_eng_b1_m4_decisions",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "integrated",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m4",
+      "moduleTitle": "4-modul: Muhokama, tavsiya va keyingi harakat",
+      "moduleTitleRu": "Модуль 4: Обсуждение, советы и следующие шаги",
+      "unitId": "unit_eng_b1_u4",
+      "canDoObjective": "Muhokamadan ustuvor qarorni tanlaydi, modal tavsiya beradi va o‘zlashtirma gap yozadi",
+      "canDoObjectiveRu": "Выбирает приоритетный шаг из обсуждения, даёт советы и передаёт слова в косвенной речи",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "writing_prompt",
+      "title": "Writing: Muhokama, tavsiya va o‘zlashtirma gap",
+      "titleRu": "Writing: Решения, советы и косвенная речь",
+      "description": "Mentor bilan ustuvorlik suhbati, should/ought to/must, priority kartochkalari va harakat rejasi.",
+      "descriptionRu": "Беседа с ментором о приоритетах, should/ought to/must, карточки и письмо с планом действий.",
+      "prerequisites": ["node_eng_b1_u3_checkpoint"],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_m4_decisions",
+      "estimatedMinutes": 11,
+      "order": 30
+    },
+    {
+      "id": "node_eng_b1_exit",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_reading",
+      "skillDomain": "integrated",
+      "cefrLevel": "B1",
+      "moduleId": "mod_eng_b1_m4",
+      "moduleTitle": "4-modul: Muhokama, tavsiya va keyingi harakat",
+      "moduleTitleRu": "Модуль 4: Обсуждение, советы и следующие шаги",
+      "unitId": "unit_eng_b1_u4",
+      "canDoObjective": "B1 darajasini integratsiyalashgan yakuniy imtihon bilan yakunlab B2 ga yo‘l ochadi",
+      "canDoObjectiveRu": "Завершает уровень B1 комплексным экзаменом и открывает переход к B2",
+      "nodeKind": "level_assessment",
+      "isCheckpoint": true,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "B1 Bosqich sinovi: Yakuniy imtihon",
+      "titleRu": "Итоговый экзамен уровня B1",
+      "description": "Konferensiya tinglashi, stipendiya o‘qishi, Present Perfect, o‘zlashtirma gap tartibi va xato tuzatish.",
+      "descriptionRu": "Комплексная проверка B1: аудирование, чтение, Present Perfect, косвенная речь и исправление ошибок.",
+      "prerequisites": ["node_eng_b1_m4_decisions"],
+      "requiredScore": 70,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_b1_exit",
+      "estimatedMinutes": 12,
+      "order": 31
+    }
+  ]
+}

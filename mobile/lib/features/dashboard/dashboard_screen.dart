@@ -25,8 +25,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _courseTabIndex = 0; // 0: Aktiv, 1: Tavsiya etilgan, 2: Barchasi
   String _searchQuery = '';
 
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
     final state = ref.watch(courseStateNotifierProvider);
     final learner = ref.watch(learnerStateNotifierProvider);
     final activeCourse = state.activeCourse;
@@ -54,9 +65,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       lessonSessionNotifierProvider.select((state) => state.isLoading),
     );
 
+    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
+
     return Scaffold(
       backgroundColor: const Color(0xFF090C22),
       appBar: AppBar(
+        toolbarHeight: isLargeText ? 96 : null,
         backgroundColor: const Color(0xFF0B0E29),
         foregroundColor: Colors.white,
         elevation: 0,
@@ -78,12 +92,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              'BilimYo‘l Smart Edu',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                'BilimYo‘l Smart Edu',
+                softWrap: true,
+                maxLines: isLargeText ? null : 1,
+                overflow: isLargeText
+                    ? TextOverflow.visible
+                    : TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -91,8 +112,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white),
-            tooltip: 'Fanni almashtirish',
-            onPressed: () => context.go('/courses'),
+            tooltip: isRu ? 'Сменить предмет' : 'Fanni almashtirish',
+            onPressed: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              context.go('/courses');
+            },
           ),
         ],
       ),
@@ -101,7 +125,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: learner.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => FriendlyErrorState(
-            message: 'Profil ma’lumotlarini yuklab bo‘lmadi.',
+            onDark: true,
+            message: isRu
+                ? 'Не удалось загрузить данные профиля.'
+                : 'Profil ma’lumotlarini yuklab bo‘lmadi.',
             onRetry: () =>
                 ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
           ),
@@ -111,6 +138,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             }
             if (state.error != null) {
               return FriendlyErrorState(
+                onDark: true,
                 message: state.error!,
                 onRetry: () =>
                     ref.read(courseStateNotifierProvider.notifier).init(),
@@ -123,14 +151,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Davom etish uchun mavjud fanlardan birini tanlang.',
-                        style: TextStyle(color: Colors.white),
+                      Text(
+                        isRu
+                            ? 'Выберите предмет из списка, чтобы продолжить.'
+                            : 'Davom etish uchun mavjud fanlardan birini tanlang.',
+                        style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(height: 16),
                       AppButton(
-                        text: 'Fan tanlash',
-                        onPressed: () => context.go('/courses'),
+                        text: isRu ? 'Выбрать предмет' : 'Fan tanlash',
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          context.go('/courses');
+                        },
                       ),
                     ],
                   ),
@@ -143,7 +176,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final starter = pendingFoundationLesson(activeCourse, profile);
             final lessonId = starter ?? continuationId;
             final greetingName = profile.name.isEmpty
-                ? 'O‘quvchi'
+                ? (isRu ? 'Ученик' : 'O‘quvchi')
                 : profile.name;
 
             final totalLessons = mathPilot ? nodes.length : activeCourse.lessons.isNotEmpty
@@ -167,18 +200,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final allCourses = state.courses;
             final filteredCourses = allCourses.where((c) {
               if (_searchQuery.trim().isNotEmpty) {
-                return c.title.toLowerCase().contains(
-                      _searchQuery.trim().toLowerCase(),
-                    ) ||
-                    c.description.toLowerCase().contains(
-                      _searchQuery.trim().toLowerCase(),
-                    );
+                final q = _searchQuery.trim().toLowerCase();
+                return c.localizedTitle(lang).toLowerCase().contains(q) ||
+                    c.localizedDescription(lang).toLowerCase().contains(q) ||
+                    c.title.toLowerCase().contains(q);
               }
               return true;
             }).toList();
 
             Future<void> triggerContinueLesson() async {
               if (needsPlan) {
+                ScaffoldMessenger.of(context).clearSnackBars();
                 context.go('/courses');
                 return;
               }
@@ -188,7 +220,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               }
               await ref
                   .read(lessonSessionNotifierProvider.notifier)
-                  .startLesson(lessonId);
+                  .startLesson(lessonId, uiLocale: lang);
               if (!context.mounted ||
                   ref.read(courseStateNotifierProvider).activeCourse?.id !=
                       activeCourse.id) {
@@ -198,11 +230,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   lessonId) {
                 context.push('/lesson');
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Dars yuklanmadi. Qayta urinib ko‘ring.'),
-                  ),
-                );
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isRu
+                            ? 'Не удалось загрузить урок. Попробуйте снова.'
+                            : 'Dars yuklanmadi. Qayta urinib ko‘ring.',
+                      ),
+                    ),
+                  );
               }
             }
 
@@ -221,7 +259,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         children: [
                           Expanded(
                             child: Container(
-                              height: 44,
+                              constraints: const BoxConstraints(minHeight: 44),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
                               ),
@@ -244,6 +282,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextField(
+                                      cursorColor: const Color(0xFFA5B4FC),
                                       onChanged: (v) =>
                                           setState(() => _searchQuery = v),
                                       style: GoogleFonts.plusJakartaSans(
@@ -253,8 +292,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       decoration: InputDecoration(
                                         isDense: true,
                                         border: InputBorder.none,
-                                        hintText:
-                                            'Dars, kurs yoki mavzu qidiring...',
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        hintText: isRu
+                                            ? 'Поиск уроков, курсов или тем...'
+                                            : 'Dars, kurs yoki mavzu qidiring...',
                                         hintStyle: GoogleFonts.plusJakartaSans(
                                           fontSize: 12,
                                           color: const Color(0xFF818CF8),
@@ -268,8 +310,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                           const SizedBox(width: 10),
                           Container(
-                            height: 44,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            constraints: const BoxConstraints(minHeight: 44),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF151A42),
                               borderRadius: BorderRadius.circular(16),
@@ -288,7 +333,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${profile.streakDays} kun',
+                                  isRu
+                                      ? '${profile.streakDays} дн.'
+                                      : '${profile.streakDays} kun',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
@@ -339,7 +386,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Assalomu alaykum, $greetingName! 👋',
+                              isRu
+                                  ? 'Здравствуйте, $greetingName! 👋'
+                                  : 'Assalomu alaykum, $greetingName! 👋',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -348,7 +397,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Bilim yo‘lingizni davom ettiring!',
+                              isRu
+                                  ? 'Продолжайте свой путь к знаниям!'
+                                  : 'Bilim yo‘lingizni davom ettiring!',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
@@ -359,12 +410,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             const SizedBox(height: 8),
                             Text(
                               needsPlan
-                                  ? 'Fan va darajani tanlang. Keyingi darsni BilimYo‘l ko‘rsatadi.'
+                                  ? (isRu
+                                        ? 'Выберите предмет и уровень. BilimYo‘l подскажет следующий урок.'
+                                        : 'Fan va darajani tanlang. Keyingi darsni BilimYo‘l ko‘rsatadi.')
                                   : starter != null
-                                  ? 'Boshlang‘ich darslar: tushuntirish va ishlangan misoldan boshlang.'
-                                  : next?.description.isNotEmpty == true
-                                  ? next!.description
-                                  : 'Bugungi maqsadni bajaring va bilimingizni yangi bosqichga olib chiqing.',
+                                  ? (isRu
+                                        ? 'Начальные уроки: начните с объяснения и разобранного примера.'
+                                        : 'Boshlang‘ich darslar: tushuntirish va ishlangan misoldan boshlang.')
+                                  : next?.localizedDescription(lang).isNotEmpty == true
+                                  ? next!.localizedDescription(lang)
+                                  : (isRu
+                                        ? 'Выполните сегодняшнюю цель и поднимите свои знания на новый уровень.'
+                                        : 'Bugungi maqsadni bajaring va bilimingizni yangi bosqichga olib chiqing.'),
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
                                 color: Colors.white.withValues(alpha: 0.88),
@@ -402,18 +459,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      needsPlan
-                                          ? 'Fan tanlash'
-                                          : starter != null
-                                          ? 'Birinchi darsni ochish'
-                                          : lessonId == null
-                                          ? 'Ta’lim yo‘lini ochish'
-                                          : 'Davom etish',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
+                                    Flexible(
+                                      child: Text(
+                                        needsPlan
+                                            ? (isRu
+                                                  ? 'Выбрать предмет'
+                                                  : 'Fan tanlash')
+                                            : starter != null
+                                            ? (isRu
+                                                  ? 'Продолжить'
+                                                  : 'Birinchi darsni ochish')
+                                            : lessonId == null
+                                            ? (isRu
+                                                  ? 'Открыть маршрут обучения'
+                                                  : 'Ta’lim yo‘lini ochish')
+                                            : (isRu
+                                                  ? 'Продолжить'
+                                                  : 'Davom etish'),
+                                        softWrap: true,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -462,7 +530,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Bugungi maqsad',
+                                        isRu
+                                            ? 'Цель на сегодня'
+                                            : 'Bugungi maqsad',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w800,
@@ -471,7 +541,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '$doneCount/$totalLessons dars · Kunlik ${profile.dailyMinutes} daq',
+                                        isRu
+                                            ? '$doneCount/$totalLessons уроков · ${profile.dailyMinutes} мин/день'
+                                            : '$doneCount/$totalLessons dars · Kunlik ${profile.dailyMinutes} daq',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -529,23 +601,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                'Mening kurslarim',
+                                isRu ? 'Мои курсы' : 'Mening kurslarim',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
                                 ),
                               ),
-                              Row(
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
                                 children: [
                                   for (final entry in [
-                                    (0, 'Aktiv'),
-                                    (1, 'Tavsiya'),
-                                    (2, 'Barchasi'),
+                                    (0, isRu ? 'Активные' : 'Aktiv'),
+                                    (1, isRu ? 'Рекоменд.' : 'Tavsiya'),
+                                    (2, isRu ? 'Все' : 'Barchasi'),
                                   ])
                                     Padding(
                                       padding: const EdgeInsets.only(left: 4),
@@ -641,7 +718,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             children: [
                                               Expanded(
                                                 child: Text(
-                                                  c.title,
+                                                  c.localizedTitle(lang),
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -753,7 +830,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Har qanday mavzuda savol bering, tushuntirish oling va mashq qiling.',
+                                        isRu
+                                            ? 'Задавайте вопросы по любой теме, получайте объяснения и практикуйтесь.'
+                                            : 'Har qanday mavzuda savol bering, tushuntirish oling va mashq qiling.',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 12,
                                           color: const Color(0xFFC7D2FE),
@@ -770,19 +849,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               runSpacing: 8,
                               children: [
                                 AppButton(
-                                  text: 'Suhbatni ochish',
+                                  text: isRu
+                                      ? 'Открыть чат'
+                                      : 'Suhbatni ochish',
                                   onPressed: () => context.go('/ai-tutor'),
                                 ),
                                 if (!needsPlan)
                                   AppButton(
-                                    text: 'Boshlash darajasi',
+                                    text: isRu
+                                        ? 'Стартовый уровень'
+                                        : 'Boshlash darajasi',
                                     variant: AppButtonVariant.outline,
                                     onPressed: () =>
                                         context.push('/onboarding'),
                                   ),
                                 if (!needsPlan)
                                   AppButton(
-                                    text: 'Ixtiyoriy diagnostika',
+                                    text: isRu
+                                        ? 'Доп. диагностика'
+                                        : 'Ixtiyoriy diagnostika',
                                     variant: AppButtonVariant.outline,
                                     onPressed: () => context.push('/placement'),
                                   ),
@@ -798,29 +883,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     EdTechReveal(
                       index: 5,
                       child: _CosmosCard(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _StatBadge(
-                              icon: Icons.star_rounded,
-                              color: const Color(0xFFF59E0B),
-                              title: '${profile.streakDays} kun',
-                              subtitle: 'ketma-ket',
-                            ),
-                            _StatBadge(
-                              icon: Icons.menu_book_rounded,
-                              color: const Color(0xFF8B5CF6),
-                              title:
-                                  '${profile.completedLessonIds.length} dars',
-                              subtitle: 'tugallandi',
-                            ),
-                            _StatBadge(
-                              icon: Icons.donut_large_rounded,
-                              color: const Color(0xFF22D3EE),
-                              title: '$overallScore%',
-                              subtitle: 'rivojlanish',
-                            ),
-                          ],
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceAround,
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _StatBadge(
+                                icon: Icons.star_rounded,
+                                color: const Color(0xFFF59E0B),
+                                title: isRu
+                                    ? '${profile.streakDays} дн.'
+                                    : '${profile.streakDays} kun',
+                                subtitle: isRu ? 'подряд' : 'ketma-ket',
+                              ),
+                              _StatBadge(
+                                icon: Icons.menu_book_rounded,
+                                color: const Color(0xFF8B5CF6),
+                                title: isRu
+                                    ? '${profile.completedLessonIds.length} ур.'
+                                    : '${profile.completedLessonIds.length} dars',
+                                subtitle: isRu ? 'завершено' : 'tugallandi',
+                              ),
+                              _StatBadge(
+                                icon: Icons.donut_large_rounded,
+                                color: const Color(0xFF22D3EE),
+                                title: '$overallScore%',
+                                subtitle: isRu ? 'прогресс' : 'rivojlanish',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -878,7 +971,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     ),
                                   ),
                                   child: Text(
-                                    'Tez kunda',
+                                    isRu ? 'Скоро' : 'Tez kunda',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w800,
@@ -890,7 +983,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Premium Ta’lim',
+                              isRu ? 'Премиум-обучение' : 'Premium Ta’lim',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -899,7 +992,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Cheksiz darslar, AI yordam va ko‘proq imkoniyatlar',
+                              isRu
+                                  ? 'Безлимитные уроки, помощь ИИ и расширенные возможности'
+                                  : 'Cheksiz darslar, AI yordam va ko‘proq imkoniyatlar',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 color: const Color(0xFFC7D2FE),
@@ -934,7 +1029,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             ),
                                           ),
                                           content: Text(
-                                            'Tez orada ishga tushadi! Hozircha barcha darslar bepul ochiq.',
+                                            isRu
+                                                ? 'Скоро запуск! Пока все уроки открыты бесплатно.'
+                                                : 'Tez orada ishga tushadi! Hozircha barcha darslar bepul ochiq.',
                                             style: GoogleFonts.plusJakartaSans(
                                               fontSize: 12.5,
                                               fontWeight: FontWeight.w700,
@@ -957,7 +1054,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Obuna bo‘lish',
+                                        isRu ? 'Подписаться' : 'Obuna bo‘lish',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w800,

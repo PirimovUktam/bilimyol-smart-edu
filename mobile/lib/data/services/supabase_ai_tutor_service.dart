@@ -38,6 +38,9 @@ class SupabaseAITutorService implements IAITutorService {
           'selectedOption': request.selectedOption,
           'correctOption': request.correctOption,
           'learnerName': request.learnerName,
+          if (request.lessonId != null) 'lessonId': request.lessonId,
+          if (request.topic != null) 'topic': request.topic,
+          'language': request.language == 'ru' ? 'ru' : 'uz',
         },
       );
 
@@ -153,9 +156,12 @@ class SupabaseAITutorService implements IAITutorService {
 
   @override
   Future<AskTutorResponse> askTutor(AskTutorRequest request) async {
+    final isRu = request.language == 'ru';
     final message = request.message.trim();
     if (message.isEmpty) {
-      throw const AITutorUnavailableException('Iltimos, savolingizni yozing.');
+      throw AITutorUnavailableException(
+        isRu ? 'Пожалуйста, введите ваш вопрос.' : 'Iltimos, savolingizni yozing.',
+      );
     }
 
     try {
@@ -173,6 +179,15 @@ class SupabaseAITutorService implements IAITutorService {
           'skillId': request.skillId,
           'lessonId': request.lessonId,
           'topic': request.topic,
+          if (request.questionId != null) 'questionId': request.questionId,
+          if (request.questionPrompt != null)
+            'questionPrompt': request.questionPrompt,
+          if (request.questionSkillId != null)
+            'questionSkillId': request.questionSkillId,
+          if (request.learnerScore != null) 'learnerScore': request.learnerScore,
+          if (request.recentMistakes.isNotEmpty)
+            'recentMistakes': request.recentMistakes,
+          'language': isRu ? 'ru' : 'uz',
           'history': [
             for (final turn in request.history)
               {'sender': turn.sender, 'text': turn.text},
@@ -194,15 +209,19 @@ class SupabaseAITutorService implements IAITutorService {
         );
       }
 
-      throw const AITutorUnavailableException(
-        'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
+      throw AITutorUnavailableException(
+        isRu
+            ? 'Yo‘lchi AI пока не смог ответить. Пожалуйста, попробуйте ещё раз.'
+            : 'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
       );
     } on AITutorUnavailableException {
       rethrow;
     } catch (err) {
       debugPrint('[AITutor] askTutor failed: $err');
-      throw const AITutorUnavailableException(
-        'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internet aloqasini tekshirib qayta urinib ko‘ring.',
+      throw AITutorUnavailableException(
+        isRu
+            ? 'Не удалось подключиться к Yo‘lchi AI. Проверьте интернет и попробуйте снова.'
+            : 'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internet aloqasini tekshirib qayta urinib ko‘ring.',
       );
     }
   }

@@ -12,6 +12,8 @@ export function usesMathMastery(courseId: string | undefined): boolean {
 export function hasStartedCourse(course: Course, profile: LearnerProfile | null): boolean {
   if (!profile) return false;
   return Boolean(profile.courseLevels?.[course.id]) ||
+    profile.placementScoreByCourse?.[course.id] !== undefined ||
+    Boolean(profile.placementCefrByCourse?.[course.id]) ||
     Object.keys(profile.scoresByCourse[course.id] ?? {}).length > 0 ||
     course.lessons.some((id) => profile.completedLessonIds.includes(id));
 }
@@ -23,5 +25,7 @@ export function foundationLessons(course: Course): string[] {
 
 export function pendingFoundationLesson(course: Course | null, profile: LearnerProfile | null): string | null {
   if (!course || usesMathMastery(course.id) || profile?.courseLevels?.[course.id] !== 'beginner') return null;
+  const placedCefr = profile?.placementCefrByCourse?.[course.id];
+  if (placedCefr === 'A1' || placedCefr === 'A2' || placedCefr === 'B1') return null;
   return foundationLessons(course).find((id) => !profile.completedLessonIds.includes(id)) ?? null;
 }

@@ -10,15 +10,19 @@ class BilimYolBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     final items = [
       _NavItem(
         icon: Icons.home_rounded,
-        label: 'Bosh sahifa',
+        label: isRu ? 'Главная' : 'Bosh sahifa',
         route: '/dashboard',
       ),
       _NavItem(
         icon: Icons.alt_route_rounded,
-        label: 'Ta’lim yo‘li',
+        label: isRu ? 'Учебный путь' : 'Ta’lim yo‘li',
         route: '/roadmap',
       ),
       _NavItem(
@@ -28,18 +32,22 @@ class BilimYolBottomNav extends StatelessWidget {
       ),
       _NavItem(
         icon: Icons.bar_chart_rounded,
-        label: 'Natijalar',
+        label: isRu ? 'Прогресс' : 'Natijalar',
         route: '/progress',
       ),
-      _NavItem(icon: Icons.person_rounded, label: 'Profil', route: '/profile'),
+      _NavItem(
+        icon: Icons.person_rounded,
+        label: isRu ? 'Профиль' : 'Profil',
+        route: '/profile',
+      ),
     ];
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
+        color: AppColors.surfaceColor(context),
+        border: Border(
           top: BorderSide(
-            color: AppColors.cardBorder,
+            color: AppColors.borderColor(context),
             width: 1,
           ),
         ),
@@ -60,6 +68,8 @@ class BilimYolBottomNav extends StatelessWidget {
             children: List.generate(items.length, (index) {
               final item = items[index];
               final isSelected = currentIndex == index;
+              final activeColor = AppColors.primaryAccentOnSurface(context);
+              final inactiveColor = AppColors.textMutedColor(context);
 
               return Expanded(
                 child: Semantics(
@@ -81,7 +91,7 @@ class BilimYolBottomNav extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary.withValues(alpha: 0.1)
+                            ? AppColors.primaryTint(context)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -91,23 +101,21 @@ class BilimYolBottomNav extends StatelessWidget {
                           Icon(
                             item.icon,
                             size: 22,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textMuted,
+                            color: isSelected ? activeColor : inactiveColor,
                           ),
                           const SizedBox(height: 3),
-                          Text(
-                            item.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.textMuted,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              item.label,
+                              maxLines: 1,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                                color: isSelected ? activeColor : inactiveColor,
+                              ),
                             ),
                           ),
                         ],

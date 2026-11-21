@@ -33,3 +33,4 @@ dist-ssr
 public/videos/*audio_temp/
 public/videos/temp_frames/
 dist-e2e
+dist-pilot-e2e

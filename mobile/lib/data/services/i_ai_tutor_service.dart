@@ -6,6 +6,9 @@ class AIExplanationRequest {
   final String selectedOption;
   final String correctOption;
   final String? learnerName;
+  final String language;
+  final String? lessonId;
+  final String? topic;
 
   const AIExplanationRequest({
     required this.courseId,
@@ -15,6 +18,9 @@ class AIExplanationRequest {
     required this.selectedOption,
     required this.correctOption,
     this.learnerName,
+    this.language = 'uz',
+    this.lessonId,
+    this.topic,
   });
 }
 
@@ -96,7 +102,13 @@ class AskTutorRequest {
   final String? skillId;
   final String? lessonId;
   final String? topic;
+  final String language;
   final List<({String sender, String text})> history;
+  final int? learnerScore;
+  final List<String> recentMistakes;
+  final String? questionId;
+  final String? questionPrompt;
+  final String? questionSkillId;
 
   const AskTutorRequest({
     required this.message,
@@ -104,7 +116,13 @@ class AskTutorRequest {
     this.skillId,
     this.lessonId,
     this.topic,
+    this.language = 'uz',
     this.history = const [],
+    this.learnerScore,
+    this.recentMistakes = const [],
+    this.questionId,
+    this.questionPrompt,
+    this.questionSkillId,
   });
 }
 

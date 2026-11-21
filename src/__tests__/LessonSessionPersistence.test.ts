@@ -199,4 +199,73 @@ describe('lesson session and authoritative completion', () => {
     expect(useLessonStore.getState()).toMatchObject({ isCompleted: true, correctAnswerCount: 2, error: null });
     expect(useLearnerStore.getState().profile?.completedLessonIds).toContain('all');
   });
+
+  it('supports free-text submission and prevents blank or flashcard-only completion', async () => {
+    const textLesson: Lesson = {
+      id: 'lesson_eng_text_test',
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_vocab',
+      title: 'Intro Text Lesson',
+      summary: '',
+      estimatedMinutes: 5,
+      reinforcementExercise: question('q_reinf_text'),
+      steps: [
+        {
+          id: 'step_fc',
+          stepNumber: 1,
+          type: 'flashcard',
+          title: 'Flashcards',
+          content: 'Review',
+          flashcards: [
+            {
+              id: 'fc_1',
+              front: "What's your name?",
+              backUz: 'Ismingiz nima?',
+              backRu: 'Как вас зовут?',
+              example: "Hi, I'm Aziza. What's your name?",
+              exampleUz: 'Salom, men Azizaman. Ismingiz nima?',
+              exampleRu: 'Привет, я Азиза. Как тебя зовут?',
+            },
+          ],
+        },
+        {
+          id: 'step_txt',
+          stepNumber: 2,
+          type: 'interactive_question',
+          title: 'Practice',
+          content: 'Introduce yourself',
+          interactiveQuestion: {
+            id: 'q_eng_text_1',
+            courseId: 'course_eng_01',
+            skillId: 'skill_eng_vocab',
+            questionType: 'text_input',
+            text: "Lola: «Hi, I'm Lola. What's your name?»",
+            options: [],
+            difficulty: 'easy',
+            explanation: '',
+          },
+        },
+      ],
+    };
+
+    backend.load.mockResolvedValueOnce(textLesson);
+    await useLessonStore.getState().loadLesson('lesson_eng_text_test');
+    expect(useLessonStore.getState().isCompleted).toBe(false);
+
+    // Move to text_input step
+    await useLessonStore.getState().nextStep();
+    expect(useLessonStore.getState().currentStepIndex).toBe(1);
+
+    // Blank text must be rejected without calling scoring or completion
+    expect(await useLessonStore.getState().submitTextAnswer('   ')).toBeNull();
+    expect(backend.score).not.toHaveBeenCalled();
+    expect(backend.complete).not.toHaveBeenCalled();
+
+    // Valid text completes the lesson
+    const result = await useLessonStore.getState().submitTextAnswer("I'm Sam");
+    expect(result?.isCorrect).toBe(true);
+    expect(backend.score).toHaveBeenCalledOnce();
+    expect(backend.complete).toHaveBeenCalledExactlyOnceWith('lesson_eng_text_test', 'course_eng_01');
+    expect(useLessonStore.getState().isCompleted).toBe(true);
+  });
 });

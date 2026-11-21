@@ -22,3 +22,11 @@ try {
   server.httpServer.closeAllConnections?.();
   await new Promise((resolve) => server.httpServer.close(resolve));
 }
+if (!process.exitCode) {
+  const pilot = spawn(process.execPath, ['tests/e2e/pilot-knowledge-map.mjs'], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  const [pilotExit] = await once(pilot, 'exit');
+  process.exitCode = pilotExit ?? 1;
+}

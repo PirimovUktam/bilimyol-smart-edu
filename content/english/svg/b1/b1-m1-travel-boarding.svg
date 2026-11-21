@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Soft Background Canvas -->
+  <rect width="800" height="600" fill="url(#skyGrad)"/>
+
+  <!-- Left Card: Airport Gate, Rescheduled Time & Boarding Pass -->
+  <g filter="url(#cardShadow)">
+    <rect x="44" y="48" width="340" height="504" rx="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="44" y="48" width="340" height="28" rx="14" fill="#4F46E5"/>
+
+    <!-- Departure Airplane Silhouette -->
+    <rect x="76" y="100" width="276" height="106" rx="18" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="2"/>
+    <path d="M118 168 L174 148 L156 116 L176 112 L206 138 L254 122 Q274 116 282 126 Q286 136 268 144 L216 164 L226 188 L208 192 L190 172 L132 188 L118 176 Z" fill="#0EA5E9"/>
+    <path d="M96 184 Q168 196 294 166" stroke="#38BDF8" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round" fill="none"/>
+
+    <!-- Two Clock Dials: Old Cancelled vs New Confirmed -->
+    <!-- Old Clock (Muted & Crossed Out) -->
+    <circle cx="142" cy="272" r="42" fill="#F1F5F9" stroke="#94A3B8" stroke-width="3"/>
+    <line x1="142" y1="272" x2="142" y2="246" stroke="#64748B" stroke-width="4" stroke-linecap="round"/>
+    <line x1="142" y1="272" x2="162" y2="272" stroke="#64748B" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="142" cy="272" r="4" fill="#64748B"/>
+    <line x1="108" y1="306" x2="176" y2="238" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Arrow Between Clocks -->
+    <path d="M198 272 L226 272 M218 263 L228 272 L218 281" stroke="#4F46E5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- New Clock (Emerald Highlight) -->
+    <circle cx="286" cy="272" r="44" fill="#ECFDF5" stroke="#10B981" stroke-width="4"/>
+    <line x1="286" y1="272" x2="272" y2="246" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="286" y1="272" x2="312" y2="272" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="286" cy="272" r="4.5" fill="#0F172A"/>
+    <!-- Green Check Badge -->
+    <circle cx="318" cy="240" r="14" fill="#10B981" stroke="#FFFFFF" stroke-width="2.5"/>
+    <path d="M311 240 L316 245 L325 235" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Boarding Ticket Stub with Barcode Stripes & QR Squares (Pure Shapes) -->
+    <rect x="76" y="348" width="276" height="172" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="76" y="348" width="276" height="34" rx="12" fill="#EEF2FF"/>
+    <circle cx="102" cy="365" r="9" fill="#4F46E5"/>
+    <rect x="122" y="360" width="96" height="10" rx="5" fill="#4F46E5" opacity="0.65"/>
+    <rect x="284" y="357" width="48" height="16" rx="8" fill="#10B981"/>
+    <!-- Dashed Tear Line -->
+    <line x1="234" y1="386" x2="234" y2="516" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="6 6"/>
+    <!-- Barcode Stripes -->
+    <g fill="#334155">
+      <rect x="96" y="404" width="6" height="86" rx="2"/>
+      <rect x="108" y="404" width="3" height="86" rx="1"/>
+      <rect x="116" y="404" width="9" height="86" rx="2"/>
+      <rect x="131" y="404" width="4" height="86" rx="1"/>
+      <rect x="141" y="404" width="7" height="86" rx="2"/>
+      <rect x="154" y="404" width="3" height="86" rx="1"/>
+      <rect x="163" y="404" width="8" height="86" rx="2"/>
+      <rect x="177" y="404" width="4" height="86" rx="1"/>
+      <rect x="187" y="404" width="6" height="86" rx="2"/>
+      <rect x="199" y="404" width="4" height="86" rx="1"/>
+      <rect x="209" y="404" width="7" height="86" rx="2"/>
+    </g>
+    <!-- Pure Geometric QR Pattern -->
+    <g fill="#0F172A">
+      <rect x="256" y="406" width="24" height="24" rx="3"/>
+      <rect x="261" y="411" width="14" height="14" rx="2" fill="#FFFFFF"/>
+      <rect x="265" y="415" width="6" height="6" fill="#0F172A"/>
+      <rect x="304" y="406" width="24" height="24" rx="3"/>
+      <rect x="309" y="411" width="14" height="14" rx="2" fill="#FFFFFF"/>
+      <rect x="313" y="415" width="6" height="6" fill="#0F172A"/>
+      <rect x="256" y="454" width="24" height="24" rx="3"/>
+      <rect x="261" y="459" width="14" height="14" rx="2" fill="#FFFFFF"/>
+      <rect x="265" y="463" width="6" height="6" fill="#0F172A"/>
+      <rect x="288" y="408" width="8" height="8" rx="1"/>
+      <rect x="288" y="424" width="8" height="12" rx="1"/>
+      <rect x="288" y="446" width="16" height="8" rx="1"/>
+      <rect x="310" y="440" width="16" height="12" rx="1"/>
+      <rect x="292" y="462" width="14" height="16" rx="1"/>
+      <rect x="314" y="462" width="12" height="16" rx="1"/>
+    </g>
+  </g>
+
+  <!-- Right Card: Travel Route Pins, Suitcase & Hotel Keycard -->
+  <g filter="url(#cardShadow)">
+    <rect x="416" y="48" width="340" height="504" rx="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="416" y="48" width="340" height="28" rx="14" fill="#0EA5E9"/>
+
+    <!-- Route Map Zone -->
+    <rect x="448" y="100" width="276" height="186" rx="18" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <!-- Curved Dotted Route -->
+    <path d="M500 228 Q546 130 598 190 T674 146" stroke="#4F46E5" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round" fill="none"/>
+    <!-- Origin Pin (Indigo) -->
+    <path d="M500 176 C485 176 474 188 474 202 C474 222 500 242 500 242 C500 242 526 222 526 202 C526 188 515 176 500 176 Z" fill="#4F46E5"/>
+    <circle cx="500" cy="202" r="9" fill="#FFFFFF"/>
+    <!-- Destination Pin (Sky) -->
+    <path d="M674 106 C659 106 648 118 648 132 C648 152 674 172 674 172 C674 172 700 152 700 132 C700 118 689 106 674 106 Z" fill="#0EA5E9"/>
+    <circle cx="674" cy="132" r="9" fill="#FFFFFF"/>
+
+    <!-- Suitcase with Tag (Bottom Left of Right Card) -->
+    <g>
+      <path d="M490 344 L490 326 Q490 318 498 318 L526 318 Q534 318 534 326 L534 344" stroke="#334155" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <rect x="456" y="344" width="112" height="148" rx="16" fill="#4F46E5"/>
+      <rect x="472" y="362" width="80" height="112" rx="10" fill="#6366F1"/>
+      <line x1="488" y1="376" x2="488" y2="460" stroke="#C7D2FE" stroke-width="4" stroke-linecap="round"/>
+      <line x1="512" y1="376" x2="512" y2="460" stroke="#C7D2FE" stroke-width="4" stroke-linecap="round"/>
+      <line x1="536" y1="376" x2="536" y2="460" stroke="#C7D2FE" stroke-width="4" stroke-linecap="round"/>
+      <!-- Wheels -->
+      <circle cx="478" cy="502" r="9" fill="#0F172A"/>
+      <circle cx="546" cy="502" r="9" fill="#0F172A"/>
+      <!-- Luggage Tag -->
+      <rect x="548" y="364" width="26" height="40" rx="5" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2"/>
+      <circle cx="561" cy="374" r="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Stylized Hotel Building & Golden Keycard Badge (Bottom Right) -->
+    <g>
+      <rect x="596" y="324" width="124" height="178" rx="14" fill="#E2E8F0" stroke="#94A3B8" stroke-width="2"/>
+      <rect x="614" y="346" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="646" y="346" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="678" y="346" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="614" y="382" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="646" y="382" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="678" y="382" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="614" y="418" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="646" y="418" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <rect x="678" y="418" width="22" height="22" rx="4" fill="#FFFFFF"/>
+      <!-- Entrance Arch -->
+      <rect x="640" y="458" width="36" height="44" rx="6" fill="#0F172A"/>
+      <!-- Golden Keycard Badge -->
+      <circle cx="708" cy="330" r="28" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3"/>
+      <circle cx="700" cy="330" r="8" fill="none" stroke="#D97706" stroke-width="4"/>
+      <line x1="708" y1="330" x2="725" y2="330" stroke="#D97706" stroke-width="4" stroke-linecap="round"/>
+      <line x1="720" y1="330" x2="720" y2="338" stroke="#D97706" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

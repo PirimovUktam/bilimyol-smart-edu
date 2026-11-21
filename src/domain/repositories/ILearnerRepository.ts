@@ -1,4 +1,5 @@
 import { LearnerProfile } from '../entities/LearnerProfile';
+import type { QuestionType } from '../entities/Question';
 import { SkillScore } from '../entities/SkillScore';
 
 export interface AnswerAttemptRecord {
@@ -38,6 +39,9 @@ export interface SubmitAnswerAttemptRequest {
   questionId: string;
   selectedIndex: number;
   selectedAnswer: string;
+  questionType?: QuestionType;
+  evaluationMode?: 'deterministic' | 'self_assessed';
+  language?: 'uz' | 'ru';
   idempotencyKey?: string;
 }
 
@@ -110,5 +114,11 @@ export interface ILearnerRepository {
   getDailyActivity(days?: number): Promise<DailyActivitySummary[]>;
   addXp(amount: number, actionIdempotencyKey?: string): Promise<number>;
   recordDailyActivity(dateStr?: string): Promise<number>;
+  recordFlashcardSrs?(
+    courseId: string,
+    cardId: string,
+    rating: 'need_practice' | 'remembered',
+    intervalsDays?: readonly number[],
+  ): Promise<LearnerProfile>;
   resetAll(): Promise<LearnerProfile>;
 }

@@ -3,6 +3,10 @@ import { ILearnerRepository } from '../repositories/ILearnerRepository';
 import { QuestionAnswerSubmission } from '../entities/Question';
 import { AssessmentResult } from '../entities/Assessment';
 import { SkillScoringEngine } from '../personalization/SkillScoringEngine';
+import {
+  computeEnglishPlacementCefr,
+  getEnglishPlacementEntryNodeId,
+} from '../personalization/EnglishCefrPlacement';
 
 export class SubmitPlacementTestUseCase {
   constructor(
@@ -92,12 +96,38 @@ export class SubmitPlacementTestUseCase {
     // The production placement RPC already awards completion/answer XP and
     // records activity atomically. Keep the local path for demo mode only.
     assertCurrent();
+    const profileSnapshot = await this.learnerRepo.getProfile();
+    assertCurrent();
+    const placementCefr = courseId === 'course_eng_01'
+      ? computeEnglishPlacementCefr(questions, verifiedSubmissions, profileSnapshot.completedNodeIds ?? [])
+      : undefined;
+    const recommendedNodeId = placementCefr ? getEnglishPlacementEntryNodeId(placementCefr) : undefined;
+
     if (this.learnerRepo.supportsServerPlacementPersistence) {
-      const profile = await this.learnerRepo.getProfile();
-      computedScores = profile.scoresByCourse[courseId] || {};
-      weakestSkillId = findWeakestSkillId(computedScores);
+      if (courseId !== 'course_eng_01') {
+        computedScores = profileSnapshot.scoresByCourse[courseId] || {};
+        weakestSkillId = findWeakestSkillId(computedScores);
+      } else {
+        await this.learnerRepo.updateProfile({
+          placementScoreByCourse: { ...(profileSnapshot.placementScoreByCourse ?? {}), [courseId]: overallScore },
+          ...(placementCefr
+            ? { placementCefrByCourse: { ...(profileSnapshot.placementCefrByCourse ?? {}), [courseId]: placementCefr } }
+            : {}),
+          placementSkillScoresByCourse: { ...(profileSnapshot.placementSkillScoresByCourse ?? {}), [courseId]: computedScores },
+        });
+      }
     } else {
-      await this.learnerRepo.saveSkillScores(courseId, computedScores);
+      await this.learnerRepo.updateProfile({
+        placementScoreByCourse: { ...(profileSnapshot.placementScoreByCourse ?? {}), [courseId]: overallScore },
+        ...(placementCefr
+          ? { placementCefrByCourse: { ...(profileSnapshot.placementCefrByCourse ?? {}), [courseId]: placementCefr } }
+          : {}),
+        placementSkillScoresByCourse: { ...(profileSnapshot.placementSkillScoresByCourse ?? {}), [courseId]: computedScores },
+      });
+      // Isolate English placement scores from independent lesson/module mastery
+      if (courseId !== 'course_eng_01') {
+        await this.learnerRepo.saveSkillScores(courseId, computedScores);
+      }
       await this.learnerRepo.addXp(20, `placement_completed_${courseId}`);
       await this.learnerRepo.recordDailyActivity();
     }
@@ -107,13 +137,23 @@ export class SubmitPlacementTestUseCase {
       courseId,
       submissions: verifiedSubmissions,
       computedScores,
+      overallScore,
+      ...(placementCefr ? { placementCefr } : {}),
+      ...(recommendedNodeId ? { recommendedNodeId } : {}),
       weakestSkillId,
       timestamp: Date.now(),
       review: verifiedSubmissions.flatMap((answer) => {
         const question = questionsById.get(answer.questionId)!;
         if (question.correctIndex === undefined) return [];
-        return [{ ...answer, questionText: question.text, selectedOption: question.options[answer.selectedIndex],
-          correctOption: question.options[question.correctIndex], explanation: question.explanation }];
+        return [{
+          ...answer,
+          questionText: question.text,
+          questionTextRu: question.textRu,
+          selectedOption: question.options[answer.selectedIndex],
+          correctOption: question.options[question.correctIndex],
+          explanation: question.explanation,
+          explanationRu: question.explanationRu,
+        }];
       }),
     };
   }

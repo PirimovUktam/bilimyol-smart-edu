@@ -1,0 +1,644 @@
+{
+  "schemaVersion": 1,
+  "courseId": "course_eng_01",
+  "cefrLevel": "A2",
+  "language": "en",
+  "reviewStatus": "approved",
+  "sampleRate": 22050,
+  "channels": 1,
+  "sampleWidthBytes": 2,
+  "svgSourceDir": "content/english/svg/a2",
+  "copySvgToWeb": false,
+  "webOutputDir": "public/lesson-media/english/a2",
+  "flutterOutputDir": "mobile/assets/lesson_media/english/a2",
+  "audio": [
+    {
+      "id": "media_eng_a2_m1_directions_dialogue",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m1-directions-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-directions-dialogue.wav",
+      "posterImage": "/lesson-media/english/a2/a2-m1-city-map.png",
+      "posterAltUz": "Ko‘chalar kesishmasi, bino belgilari va punktir yo‘nalish chizig‘i ko‘rsatilgan shahar xaritasi",
+      "posterAltRu": "Городская карта с перекрёстками, значками зданий и пунктирным маршрутом",
+      "titleUz": "Oybek metrosiga yo‘l so‘rash suhbati",
+      "titleRu": "Диалог о дороге к станции метро Ойбек",
+      "transcript": "Tourist: Excuse me, how do I get to Oybek Metro Station?\nKamola: Go straight along Navoi Street, walk past the post office, and turn right at the pharmacy. The metro entrance is across from the park.\nTourist: Thank you! And where is the bus stop?\nKamola: Turn left after the bookshop. The bus stop is right there.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Tourist",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Excuse me, how do I get to Oybek Metro Station?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Go straight along Navoi Street, walk past the post office, and turn right at the pharmacy. The metro entrance is across from the park.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Tourist",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Thank you! And where is the bus stop?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Turn left after the bookshop. The bus stop is right there."
+        }
+      ],
+      "durationSeconds": 20.2
+    },
+    {
+      "id": "media_eng_a2_m1_turn_left",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m1-turn-left.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-turn-left.wav",
+      "titleUz": "Talaffuz: turn left",
+      "titleRu": "Произношение: turn left",
+      "transcript": "turn left",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "turn left"
+        }
+      ],
+      "durationSeconds": 0.858
+    },
+    {
+      "id": "media_eng_a2_m1_go_past",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m1-go-past.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-go-past.wav",
+      "titleUz": "Talaffuz: go past",
+      "titleRu": "Произношение: go past",
+      "transcript": "go past",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Tourist",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "go past"
+        }
+      ],
+      "durationSeconds": 0.834
+    },
+    {
+      "id": "media_eng_a2_m1_across_from",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m1-across-from.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-across-from.wav",
+      "titleUz": "Talaffuz: across from",
+      "titleRu": "Произношение: across from",
+      "transcript": "across from",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "across from"
+        }
+      ],
+      "durationSeconds": 1.016
+    },
+    {
+      "id": "media_eng_a2_m1_bus_stop",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m1-bus-stop.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-bus-stop.wav",
+      "titleUz": "Talaffuz: bus stop",
+      "titleRu": "Произношение: bus stop",
+      "transcript": "bus stop",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Tourist",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "bus stop"
+        }
+      ],
+      "durationSeconds": 0.861
+    },
+    {
+      "id": "media_eng_a2_u1_cp_bus",
+      "lessonId": "lesson_eng_a2_u1_checkpoint",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-u1-cp-bus-announcement.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-u1-cp-bus-announcement.wav",
+      "posterImage": "/lesson-media/english/a2/a2-m1-city-map.png",
+      "posterAltUz": "Shahar ko‘chalari, bekat belgisi va piyoda yo‘laklari chizilgan xarita",
+      "posterAltRu": "Городские улицы, значок транспорта и пешеходные переходы на карте",
+      "titleUz": "1-bo‘lim sinovi: Avtobusda almashish suhbati",
+      "titleRu": "Проверка раздела 1: Разговор в автобусе о пересадке",
+      "transcript": "Timur: Excuse me, does this bus go to Chorsu Bazaar?\nDriver: Not directly. Get off at the second stop across from the history museum, walk past the corner cafe, and take bus number twenty-eight.\nTimur: Second stop across from the museum, then bus twenty-eight. Got it, thanks!",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Excuse me, does this bus go to Chorsu Bazaar?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Driver",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Not directly. Get off at the second stop across from the history museum, walk past the corner cafe, and take bus number twenty-eight.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Second stop across from the museum, then bus twenty-eight. Got it, thanks!"
+        }
+      ],
+      "durationSeconds": 19.018
+    },
+    {
+      "id": "media_eng_a2_m2_shop_dialogue",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m2-shop-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-shop-dialogue.wav",
+      "posterImage": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+      "posterAltUz": "Do‘konda ikki xil kurtka, xarid sumkasi va kassa peshtaxtasi tasviri",
+      "posterAltRu": "Две разные куртки на вешалке, пакет и кассовый прилавок в магазине",
+      "titleUz": "Kiyim do‘konida narx va chegirma suhbati",
+      "titleRu": "Диалог в магазине одежды о цене и скидке",
+      "transcript": "Customer: Excuse me, how much is the green winter coat?\nCashier: The green coat is eighty dollars. The blue jacket is cheaper today — with our twenty percent student discount, it is only forty-eight dollars.\nCustomer: Forty-eight dollars? That is much better! I'll take the blue jacket, please. May I have a receipt?\nCashier: Of course! Here is your receipt and bag.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Customer",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Excuse me, how much is the green winter coat?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Cashier",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "The green coat is eighty dollars. The blue jacket is cheaper today, with our twenty percent student discount, it is only forty-eight dollars.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Customer",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Forty-eight dollars? That is much better! I'll take the blue jacket, please. May I have a receipt?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Cashier",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Of course! Here is your receipt and bag."
+        }
+      ],
+      "durationSeconds": 24.237
+    },
+    {
+      "id": "media_eng_a2_m2_discount",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m2-discount.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-discount.wav",
+      "titleUz": "Talaffuz: discount",
+      "titleRu": "Произношение: discount",
+      "transcript": "discount",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Cashier",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "discount"
+        }
+      ],
+      "durationSeconds": 0.983
+    },
+    {
+      "id": "media_eng_a2_m2_receipt",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m2-receipt.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-receipt.wav",
+      "titleUz": "Talaffuz: receipt",
+      "titleRu": "Произношение: receipt",
+      "transcript": "receipt",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Customer",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "receipt"
+        }
+      ],
+      "durationSeconds": 0.652
+    },
+    {
+      "id": "media_eng_a2_m2_cheaper",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m2-cheaper.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-cheaper.wav",
+      "titleUz": "Talaffuz: cheaper",
+      "titleRu": "Произношение: cheaper",
+      "transcript": "cheaper",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Cashier",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "cheaper"
+        }
+      ],
+      "durationSeconds": 0.678
+    },
+    {
+      "id": "media_eng_a2_m2_how_much",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m2-how-much.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-how-much.wav",
+      "titleUz": "Talaffuz: how much",
+      "titleRu": "Произношение: how much",
+      "transcript": "how much",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Customer",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "how much"
+        }
+      ],
+      "durationSeconds": 0.756
+    },
+    {
+      "id": "media_eng_a2_m3_plans_dialogue",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m3-plans-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-plans-dialogue.wav",
+      "posterImage": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+      "posterAltUz": "Chapda ustunli bino va fotoapparat, o‘ngda kalendar va chipta tasvirlangan",
+      "posterAltRu": "Слева здание с колоннами и камера, справа настенный календарь и билет",
+      "titleUz": "O‘tgan kun va dam olish rejasi suhbati",
+      "titleRu": "Диалог о прошедшем дне и планах на выходные",
+      "transcript": "Nilufar: Hi Jasur! What did you do yesterday?\nJasur: Yesterday I went to the history museum with my cousin and took some photos. What about this weekend?\nNilufar: I'm going to visit the science fair on Saturday at half past two in the afternoon. Would you like to come with me?\nJasur: I'd love to! Let's meet outside the entrance at two fifteen.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Hi Jasur! What did you do yesterday?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Yesterday I went to the history museum with my cousin and took some photos. What about this weekend?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "I'm going to visit the science fair on Saturday at half past two in the afternoon. Would you like to come with me?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "I'd love to! Let's meet outside the entrance at two fifteen."
+        }
+      ],
+      "durationSeconds": 20.962
+    },
+    {
+      "id": "media_eng_a2_m3_yesterday",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m3-yesterday.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-yesterday.wav",
+      "titleUz": "Talaffuz: yesterday",
+      "titleRu": "Произношение: yesterday",
+      "transcript": "yesterday",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "yesterday"
+        }
+      ],
+      "durationSeconds": 0.704
+    },
+    {
+      "id": "media_eng_a2_m3_be_going_to",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m3-be-going-to.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-be-going-to.wav",
+      "titleUz": "Talaffuz: be going to",
+      "titleRu": "Произношение: be going to",
+      "transcript": "be going to",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "be going to"
+        }
+      ],
+      "durationSeconds": 0.901
+    },
+    {
+      "id": "media_eng_a2_m3_would_you_like",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m3-would-you-like.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-would-you-like.wav",
+      "titleUz": "Talaffuz: would you like",
+      "titleRu": "Произношение: would you like",
+      "transcript": "would you like",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "would you like"
+        }
+      ],
+      "durationSeconds": 0.842
+    },
+    {
+      "id": "media_eng_a2_m3_weekend",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m3-weekend.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-weekend.wav",
+      "titleUz": "Talaffuz: weekend",
+      "titleRu": "Произношение: weekend",
+      "transcript": "weekend",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "weekend"
+        }
+      ],
+      "durationSeconds": 0.64
+    },
+    {
+      "id": "media_eng_a2_m4_delayed",
+      "lessonId": "lesson_eng_a2_m4_messages",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m4-delayed.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m4-delayed.wav",
+      "titleUz": "Talaffuz: delayed",
+      "titleRu": "Произношение: delayed",
+      "transcript": "delayed",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "delayed"
+        }
+      ],
+      "durationSeconds": 0.609
+    },
+    {
+      "id": "media_eng_a2_m4_platform",
+      "lessonId": "lesson_eng_a2_m4_messages",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m4-platform.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m4-platform.wav",
+      "titleUz": "Talaffuz: platform",
+      "titleRu": "Произношение: platform",
+      "transcript": "platform",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "platform"
+        }
+      ],
+      "durationSeconds": 0.848
+    },
+    {
+      "id": "media_eng_a2_m4_have_to",
+      "lessonId": "lesson_eng_a2_m4_messages",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m4-have-to.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m4-have-to.wav",
+      "titleUz": "Talaffuz: have to",
+      "titleRu": "Произношение: have to",
+      "transcript": "have to",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nilufar",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "have to"
+        }
+      ],
+      "durationSeconds": 0.678
+    },
+    {
+      "id": "media_eng_a2_m4_before",
+      "lessonId": "lesson_eng_a2_m4_messages",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-m4-before.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-m4-before.wav",
+      "titleUz": "Talaffuz: before",
+      "titleRu": "Произношение: before",
+      "transcript": "before",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Jasur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "before"
+        }
+      ],
+      "durationSeconds": 0.622
+    },
+    {
+      "id": "media_eng_a2_exit_station_dialogue",
+      "lessonId": "lesson_eng_a2_exit",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a2-exit-station-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a2/a2-exit-station-dialogue.wav",
+      "posterImage": "/lesson-media/english/a2/a2-m4-station-message.png",
+      "posterAltUz": "Poyezd perroni, osma devor soati va ekranda xabar pufakchalari ko‘rsatilgan telefon",
+      "posterAltRu": "Железнодорожный перрон, подвесные часы и смартфон с пузырями сообщений",
+      "titleUz": "A2 yakuniy tinglash: Vokzaldagi e’lon",
+      "titleRu": "Итоговое аудирование A2: Объявление на вокзале",
+      "transcript": "Announcer: Attention, passengers. The afternoon express train to Samarkand will not leave from Platform two at two o'clock. It is delayed by thirty minutes and will depart from Platform five at half past two in the afternoon.\nPassenger: Did you hear that? Platform five at two thirty, not two o'clock. Let's text Karim before we walk over.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Announcer",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Attention, passengers. The afternoon express train to Samarkand will not leave from Platform two at two o'clock. It is delayed by thirty minutes and will depart from Platform five at half past two in the afternoon.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Passenger",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Did you hear that? Platform five at two thirty, not two o'clock. Let's text Karim before we walk over."
+        }
+      ],
+      "durationSeconds": 22.019
+    }
+  ],
+  "images": [
+    {
+      "id": "media_eng_a2_m1_city_map_img",
+      "lessonId": "lesson_eng_a2_m1_directions",
+      "kind": "image",
+      "language": "en",
+      "filename": "a2-m1-city-map.png",
+      "svgFilename": "a2-m1-city-map.svg",
+      "canonicalSource": "/lesson-media/english/a2/a2-m1-city-map.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Ko‘chalar, kitob do‘koni, pochta, dorixona, bog‘ va metro archasi chizilgan shahar xaritasi",
+      "altRu": "Схематичная карта города с улицами, книжным магазином, почтой, аптекой, парком и входом в метро",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a2_m2_shop_comparison_img",
+      "lessonId": "lesson_eng_a2_m2_shopping",
+      "kind": "image",
+      "language": "en",
+      "filename": "a2-m2-shop-comparison.png",
+      "svgFilename": "a2-m2-shop-comparison.svg",
+      "canonicalSource": "/lesson-media/english/a2/a2-m2-shop-comparison.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Kiyim ilgichida uzun yashil palto va yulduzcha belgili ko‘k kurtka, peshtaxtada esa sumka, tangalar va chek qog‘ozi",
+      "altRu": "На вешалке длинное зелёное пальто и синяя куртка со значком звезды, на прилавке пакет, монеты и бумажная лента",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a2_m3_weekend_calendar_img",
+      "lessonId": "lesson_eng_a2_m3_plans",
+      "kind": "image",
+      "language": "en",
+      "filename": "a2-m3-weekend-calendar.png",
+      "svgFilename": "a2-m3-weekend-calendar.svg",
+      "canonicalSource": "/lesson-media/english/a2/a2-m3-weekend-calendar.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Ikki bo‘lakli rasm: chapda ustunli muzey va fotoapparat, o‘ngda ikki katagi ajratilgan taqvim, strelkali soat va chipta",
+      "altRu": "Иллюстрация из двух панелей: слева музей и фотоаппарат, справа настенный календарь с двумя выделенными клетками, часы и билет",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a2_m4_station_message_img",
+      "lessonId": "lesson_eng_a2_m4_messages",
+      "kind": "image",
+      "language": "en",
+      "filename": "a2-m4-station-message.png",
+      "svgFilename": "a2-m4-station-message.svg",
+      "canonicalSource": "/lesson-media/english/a2/a2-m4-station-message.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Vokzal soyaboni ostida turgan poyezd, osma strelkali soat va ekranda rangli yozishma pufakchalari ko‘ringan smartfon",
+      "altRu": "Поезд под навесом вокзала, подвесные стрелочные часы и смартфон с цветными окнами сообщений",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    }
+  ]
+}

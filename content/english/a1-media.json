@@ -1,0 +1,656 @@
+{
+  "schemaVersion": 1,
+  "courseId": "course_eng_01",
+  "cefrLevel": "A1",
+  "language": "en",
+  "reviewStatus": "approved",
+  "sampleRate": 22050,
+  "channels": 1,
+  "sampleWidthBytes": 2,
+  "svgSourceDir": "content/english/svg/a1",
+  "copySvgToWeb": false,
+  "webOutputDir": "public/lesson-media/english/a1",
+  "flutterOutputDir": "mobile/assets/lesson_media/english/a1",
+  "audio": [
+    {
+      "id": "media_eng_a1_m1_morning_gate_dialogue",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-morning-gate-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-morning-gate-dialogue.wav",
+      "posterImage": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
+      "posterAltUz": "Ertalabki maktab darvozasi oldida o‘quvchi qiz va o‘qituvchi salomlashmoqda",
+      "posterAltRu": "Утром у ворот школы ученица и учитель приветствуют друг друга",
+      "titleUz": "Ertalabki maktab darvozasidagi suhbat",
+      "titleRu": "Утренний диалог у школьных ворот",
+      "transcript": "Madina: Good morning, Mr. Karim. How are you?\nMr. Karim: Good morning, Madina! I'm fine, thanks. How are you?\nMadina: I'm great, thank you!",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Madina",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Good morning, Mr. Karim. How are you?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Mr. Karim",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Good morning, Madina! I'm fine, thanks. How are you?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Madina",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "I'm great, thank you!"
+        }
+      ],
+      "durationSeconds": 11.575
+    },
+    {
+      "id": "media_eng_a1_m1_good_morning",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-good-morning.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-good-morning.wav",
+      "titleUz": "Talaffuz: Good morning.",
+      "titleRu": "Произношение: Good morning.",
+      "transcript": "Good morning.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Madina",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "Good morning."
+        }
+      ],
+      "durationSeconds": 0.819
+    },
+    {
+      "id": "media_eng_a1_m1_good_evening",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-good-evening.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-good-evening.wav",
+      "titleUz": "Talaffuz: Good evening.",
+      "titleRu": "Произношение: Good evening.",
+      "transcript": "Good evening.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Mr. Karim",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "Good evening."
+        }
+      ],
+      "durationSeconds": 0.781
+    },
+    {
+      "id": "media_eng_a1_m1_how_are_you",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-how-are-you.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-how-are-you.wav",
+      "titleUz": "Talaffuz: How are you?",
+      "titleRu": "Произношение: How are you?",
+      "transcript": "How are you?",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Madina",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "How are you?"
+        }
+      ],
+      "durationSeconds": 0.809
+    },
+    {
+      "id": "media_eng_a1_m1_im_fine_thanks",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-im-fine-thanks.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-im-fine-thanks.wav",
+      "titleUz": "Talaffuz: I'm fine, thanks.",
+      "titleRu": "Произношение: I'm fine, thanks.",
+      "transcript": "I'm fine, thanks.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Mr. Karim",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "I'm fine, thanks."
+        }
+      ],
+      "durationSeconds": 1.851
+    },
+    {
+      "id": "media_eng_a1_m1_self_intro_model",
+      "lessonId": "lesson_eng_a1_m1_speaking",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m1-self-intro-model.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-self-intro-model.wav",
+      "posterImage": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
+      "posterAltUz": "Maktab hovlisida salomlashayotgan o‘quvchi va o‘qituvchi",
+      "posterAltRu": "Ученица и учитель приветствуют друг друга во дворе школы",
+      "titleUz": "O‘zini tanishtirish namunasi",
+      "titleRu": "Образец устного представления себя",
+      "transcript": "Dilnoza: Hello! My name is Dilnoza. I am from Tashkent. Nice to meet you.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Dilnoza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "Hello! My name is Dilnoza. I am from Tashkent. Nice to meet you."
+        }
+      ],
+      "durationSeconds": 6.952
+    },
+    {
+      "id": "media_eng_a1_grammar_daily_routine",
+      "lessonId": "lesson_eng_grammar_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-grammar-daily-routine-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-grammar-daily-routine-dialogue.wav",
+      "posterImage": "/lesson-media/english/a1/a1-m2-school-classroom.png",
+      "posterAltUz": "Sinf xonasida parta ustidagi daftar, qalam va yashil doska",
+      "posterAltRu": "Школьная парта с тетрадью, карандашом и зелёной доской в классе",
+      "titleUz": "Kundalik maktab odatlari haqida suhbat",
+      "titleRu": "Диалог о повседневных школьных привычках",
+      "transcript": "Aziza: Do you walk to school every day?\nBen: Yes, I walk at eight o'clock, and my sister takes the bus.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Do you walk to school every day?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Yes, I walk at eight o'clock, and my sister takes the bus."
+        }
+      ],
+      "durationSeconds": 6.11
+    },
+    {
+      "id": "media_eng_a1_m2_notebook",
+      "lessonId": "lesson_eng_a1_m2_sentence_builder",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m2-notebook.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m2-notebook.wav",
+      "titleUz": "Talaffuz: notebook",
+      "titleRu": "Произношение: notebook",
+      "transcript": "notebook",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "notebook"
+        }
+      ],
+      "durationSeconds": 0.843
+    },
+    {
+      "id": "media_eng_a1_m2_classroom",
+      "lessonId": "lesson_eng_a1_m2_sentence_builder",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m2-classroom.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m2-classroom.wav",
+      "titleUz": "Talaffuz: classroom",
+      "titleRu": "Произношение: classroom",
+      "transcript": "classroom",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "classroom"
+        }
+      ],
+      "durationSeconds": 0.8
+    },
+    {
+      "id": "media_eng_a1_m2_schedule",
+      "lessonId": "lesson_eng_a1_m2_sentence_builder",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m2-schedule.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m2-schedule.wav",
+      "titleUz": "Talaffuz: schedule",
+      "titleRu": "Произношение: schedule",
+      "transcript": "schedule",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "schedule"
+        }
+      ],
+      "durationSeconds": 0.914
+    },
+    {
+      "id": "media_eng_a1_m2_homework",
+      "lessonId": "lesson_eng_a1_m2_sentence_builder",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m2-homework.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m2-homework.wav",
+      "titleUz": "Talaffuz: homework",
+      "titleRu": "Произношение: homework",
+      "transcript": "homework",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "homework"
+        }
+      ],
+      "durationSeconds": 0.715
+    },
+    {
+      "id": "media_eng_a1_vocab_room_prepositions_dialogue",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-vocab-room-prepositions-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-vocab-room-prepositions-dialogue.wav",
+      "posterImage": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
+      "posterAltUz": "Xonada uchta alohida hududda stol, stul, kitob javoni, chiroq va kreslo joylashuvi ko‘rsatilgan",
+      "posterAltRu": "В комнате в трёх зонах показано расположение стола, стула, книжной полки, лампы и кресла",
+      "titleUz": "Xonadagi buyumlar joylashuvi suhbati",
+      "titleRu": "Диалог о расположении предметов в комнате",
+      "transcript": "Aziza: Where is my notebook?\nBen: It is beside the desk, and the lamp is between the chair and the shelf.\nAziza: What about my backpack?\nBen: Your backpack is behind the armchair.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Where is my notebook?",
+          "pauseAfterMs": 420
+        },
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "It is beside the desk, and the lamp is between the chair and the shelf.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "What about my backpack?",
+          "pauseAfterMs": 420
+        },
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Your backpack is behind the armchair."
+        }
+      ],
+      "durationSeconds": 9.832
+    },
+    {
+      "id": "media_eng_a1_m3_beside",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-beside.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-beside.wav",
+      "titleUz": "Talaffuz: beside",
+      "titleRu": "Произношение: beside",
+      "transcript": "beside",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "beside"
+        }
+      ],
+      "durationSeconds": 0.639
+    },
+    {
+      "id": "media_eng_a1_m3_between",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-between.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-between.wav",
+      "titleUz": "Talaffuz: between",
+      "titleRu": "Произношение: between",
+      "transcript": "between",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "between"
+        }
+      ],
+      "durationSeconds": 0.655
+    },
+    {
+      "id": "media_eng_a1_m3_behind",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-behind.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-behind.wav",
+      "titleUz": "Talaffuz: behind",
+      "titleRu": "Произношение: behind",
+      "transcript": "behind",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "behind"
+        }
+      ],
+      "durationSeconds": 0.744
+    },
+    {
+      "id": "media_eng_a1_m3_armchair",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-armchair.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-armchair.wav",
+      "titleUz": "Talaffuz: armchair",
+      "titleRu": "Произношение: armchair",
+      "transcript": "armchair",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "armchair"
+        }
+      ],
+      "durationSeconds": 0.792
+    },
+    {
+      "id": "media_eng_a1_m3_bus_time",
+      "lessonId": "lesson_eng_a1_m3_time_schedule",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-bus-time.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-bus-time.wav",
+      "posterImage": "/lesson-media/english/a1/a1-m3-clock-times.png",
+      "posterAltUz": "Ertalabki quyoshli deraza yonida strelkali devor soati",
+      "posterAltRu": "Настенные стрелочные часы рядом с окном на утреннем солнце",
+      "titleUz": "Ertalabki avtobus jadvali e’loni",
+      "titleRu": "Объявление расписания утреннего автобуса",
+      "transcript": "Passenger: Excuse me, when does the morning bus leave?\nDriver: The morning bus to the city library leaves at quarter to eight.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Passenger",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Excuse me, when does the morning bus leave?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Driver",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "The morning bus to the city library leaves at quarter to eight."
+        }
+      ],
+      "durationSeconds": 6.499
+    },
+    {
+      "id": "media_eng_a1_m3_quarter_to",
+      "lessonId": "lesson_eng_a1_m3_time_schedule",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-quarter-to.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-quarter-to.wav",
+      "titleUz": "Talaffuz: quarter to",
+      "titleRu": "Произношение: quarter to",
+      "transcript": "quarter to",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "quarter to"
+        }
+      ],
+      "durationSeconds": 0.892
+    },
+    {
+      "id": "media_eng_a1_m3_half_past",
+      "lessonId": "lesson_eng_a1_m3_time_schedule",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-half-past.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-half-past.wav",
+      "titleUz": "Talaffuz: half past",
+      "titleRu": "Произношение: half past",
+      "transcript": "half past",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "half past"
+        }
+      ],
+      "durationSeconds": 0.872
+    },
+    {
+      "id": "media_eng_a1_m3_oclock",
+      "lessonId": "lesson_eng_a1_m3_time_schedule",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-m3-oclock.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-oclock.wav",
+      "titleUz": "Talaffuz: o'clock",
+      "titleRu": "Произношение: o'clock",
+      "transcript": "o'clock",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "o'clock"
+        }
+      ],
+      "durationSeconds": 0.787
+    },
+    {
+      "id": "media_eng_a1_exit_cafe_order",
+      "lessonId": "lesson_eng_a1_exit",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-exit-cafe-order.wav",
+      "canonicalSource": "/lesson-media/english/a1/a1-exit-cafe-order.wav",
+      "posterImage": "/lesson-media/english/a1/a1-m4-home-study.png",
+      "posterAltUz": "Stol ustida choy finjoni, ochiq daftar va qalam tasvirlangan",
+      "posterAltRu": "На столе изображены чашка чая, открытая тетрадь и ручка",
+      "titleUz": "A1 yakuniy tinglash: Kafedagi buyurtma",
+      "titleRu": "Итоговое аудирование A1: Заказ в кафе",
+      "transcript": "Waiter: Good afternoon! What would you like?\nLaylo: Hello! A cup of green tea and one cheese sandwich, please. Is the cafe open until eight o'clock?\nWaiter: Yes, we close at half past eight in the evening.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Waiter",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Good afternoon! What would you like?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Laylo",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Hello! A cup of green tea and one cheese sandwich, please. Is the cafe open until eight o'clock?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Waiter",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Yes, we close at half past eight in the evening."
+        }
+      ],
+      "durationSeconds": 14.157
+    }
+  ],
+  "images": [
+    {
+      "id": "media_eng_a1_vocab_room_prepositions_img",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-vocab-room-prepositions.png",
+      "svgFilename": "a1-vocab-room-prepositions.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Xona uch qismga bo‘lingan: chapda stol yonida sariq daftar, o‘rtada stul va kitob javoni orasida chiroq, o‘ngda yashil kreslo orqasida ko‘k ryukzak ko‘rsatilgan",
+      "altRu": "Комната разделена на три зоны: слева тетрадь сбоку от стола, в центре лампа между стулом и книжной полкой, справа рюкзак за зелёным креслом",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a1_m1_morning_greeting_img",
+      "lessonId": "lesson_eng_a1_m1_greetings",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-m1-morning-greeting.png",
+      "svgFilename": "a1-m1-morning-greeting.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Quyosh chiqayotgan tongda maktab darvozasi oldida o‘quvchi va o‘qituvchi qo‘l silkib ko‘rishmoqda",
+      "altRu": "Утром на рассвете у ворот школы ученица и учитель приветствуют друг друга",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a1_m2_school_classroom_img",
+      "lessonId": "lesson_eng_a1_m2_sentence_builder",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-m2-school-classroom.png",
+      "svgFilename": "a1-m2-school-classroom.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-m2-school-classroom.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Sinf xonasida yashil doska, dars jadvali belgisi, parta ustida ochiq daftar, qalam va olma",
+      "altRu": "Школьный класс с зелёной доской, сеткой расписания, партой, открытой тетрадью, карандашом и яблоком",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a1_m3_clock_times_img",
+      "lessonId": "lesson_eng_a1_m3_time_schedule",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-m3-clock-times.png",
+      "svgFilename": "a1-m3-clock-times.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-m3-clock-times.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Tonggi quyoshli deraza yonida strelkali katta devor soati tasvirlangan",
+      "altRu": "Большие настенные стрелочные часы рядом с окном, через которое видно утреннее солнце",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a1_m4_home_study_img",
+      "lessonId": "lesson_eng_a1_m4_writing",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-m4-home-study.png",
+      "svgFilename": "a1-m4-home-study.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-m4-home-study.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Kechki deraza yonidagi yozuv stolida chiroq, ochiq kundalik daftar, ruchka va choy finjoni",
+      "altRu": "Вечерний письменный стол у окна с лампой, открытой тетрадью, ручкой и чашкой чая",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_a1_everyday_objects_img",
+      "lessonId": "lesson_eng_vocab_01",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-everyday-objects.png",
+      "svgFilename": "a1-everyday-objects.svg",
+      "canonicalSource": "/lesson-media/english/a1/a1-everyday-objects.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Oltita katakchada kundalik buyumlar to‘plami: kitob, kalit, chashka, olma, ryukzak va dumaloq soat",
+      "altRu": "Сетка из шести карточек с повседневными предметами: книга, ключ, чашка, яблоко, рюкзак и круглые часы",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    }
+  ]
+}

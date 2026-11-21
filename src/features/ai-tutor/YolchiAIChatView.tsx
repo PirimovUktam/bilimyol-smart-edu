@@ -32,6 +32,7 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
   const course = useCourseStore((state) => state.activeCourse);
   const path = useRoadmapStore((state) => state.roadmap);
   const lesson = useLessonStore((state) => state.currentLesson);
+  const lessonStepIndex = useLessonStore((state) => state.currentStepIndex);
   const learner = useLearnerStore((state) => state.profile);
   const courseId = course?.id;
   useEffect(() => {
@@ -41,10 +42,16 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
   }, [courseId]);
 
   const activeLesson = lesson?.courseId === courseId ? lesson : null;
+  const activeStepQuestion = activeLesson?.steps[lessonStepIndex]?.interactiveQuestion;
   const node = path?.courseId === courseId ? path?.nodes.find((item) => item.id === path.activeNodeId) : null;
   const skillId = activeLesson?.skillId ?? node?.skillId;
   const topic = activeLesson?.title ?? node?.title;
   const score = courseId && skillId ? learner?.scoresByCourse[courseId]?.[skillId]?.score : undefined;
+  const recentMistakes = courseId
+    ? Object.values(learner?.scoresByCourse[courseId] ?? {})
+        .filter((item) => item.score < 70 || item.isWeakestFocus)
+        .map((item) => `${item.skillId} (${item.score}%)`)
+    : [];
   const conversation = (profile?.id ?? 'guest') + '/' + (courseId ?? 'general');
   return (
     <div className="learning-page space-y-4 sm:space-y-8">
@@ -72,15 +79,44 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
         lessonId={activeLesson?.id ?? node?.targetLessonId}
         topic={topic}
         score={score}
+        questionId={activeStepQuestion?.id || undefined}
+        questionPrompt={activeStepQuestion?.text}
+        questionSkillId={activeStepQuestion?.skillId}
+        recentMistakes={recentMistakes}
         isDemoMode={isDemoMode}
       />
     </div>
   );
 }
 
-export function TutorConversation({ conversation, courseId, courseTitle, skillId, lessonId, topic, score, isDemoMode, compact = false }: {
-  conversation: string; courseId?: string; courseTitle?: string; skillId?: string; lessonId?: string; topic?: string;
-  score?: number; isDemoMode: boolean; compact?: boolean;
+export function TutorConversation({
+  conversation,
+  courseId,
+  courseTitle,
+  skillId,
+  lessonId,
+  topic,
+  score,
+  questionId,
+  questionPrompt,
+  questionSkillId,
+  recentMistakes,
+  isDemoMode,
+  compact = false,
+}: {
+  conversation: string;
+  courseId?: string;
+  courseTitle?: string;
+  skillId?: string;
+  lessonId?: string;
+  topic?: string;
+  score?: number;
+  questionId?: string;
+  questionPrompt?: string;
+  questionSkillId?: string;
+  recentMistakes?: string[];
+  isDemoMode: boolean;
+  compact?: boolean;
 }) {
   const { t, language } = useTranslation();
   const [messages, setMessages] = useState(() => readTutorHistory(conversation));
@@ -168,13 +204,23 @@ export function TutorConversation({ conversation, courseId, courseTitle, skillId
     }
 
     try {
+      const normalizedQuestionId = questionId?.trim() || undefined;
       const response = await tutor.askTutor({
         message: text,
         language,
         courseId,
         skillId,
         lessonId,
-        ...(isDemoMode ? { topic: topic ?? courseTitle, learnerScore: score } : {}),
+        ...(normalizedQuestionId ? { questionId: normalizedQuestionId } : {}),
+        ...(isDemoMode
+          ? {
+              topic: topic ?? courseTitle,
+              learnerScore: score,
+              ...(recentMistakes?.length ? { recentMistakes } : {}),
+              ...(questionPrompt ? { questionPrompt: questionPrompt.slice(0, 500) } : {}),
+              ...(questionSkillId ? { questionSkillId } : {}),
+            }
+          : {}),
         history: prior.slice(-6).map(({ sender, text: value }) => ({ sender, text: value.slice(0, 800) })),
       });
       if (mounted.current) {

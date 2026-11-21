@@ -6,6 +6,12 @@ import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
 import { SubmitPlacementTestUseCase } from '@/domain/usecases/SubmitPlacementTestUseCase';
 import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personalization/AdaptiveQuestionSelector';
+import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
+import {
+  computeEnglishPlacementCefr,
+  getEnglishPlacementEntryNodeId,
+} from '@/domain/personalization/EnglishCefrPlacement';
+import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
 
 /** Minimum interval between answer submissions (ms) to prevent rapid-fire abuse. */
 const MIN_SUBMIT_INTERVAL_MS = 800;
@@ -49,7 +55,39 @@ let placementRequestToken: object = {};
 async function sessionState(session: PlacementSession, isCurrent: () => boolean): Promise<Partial<PlacementState>> {
   const result = session.result;
   if (result && isCurrent()) await useLearnerStore.getState().loadProfile().catch(() => undefined);
-  const learner = useLearnerStore.getState().profile;
+  let learner = useLearnerStore.getState().profile;
+  if (result && result.courseId === 'course_eng_01' && isCurrent()) {
+    const engBank = PLACEMENT_QUESTIONS['course_eng_01'] ?? [];
+    const placementScores = SkillScoringEngine.computePlacementScores(result.courseId, engBank, result.submissions);
+    const overallScore = SkillScoringEngine.computeOverallScore(placementScores);
+    const placementCefr =
+      result.submissions.length > 0
+        ? computeEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? [])
+        : (learner?.placementCefrByCourse?.[result.courseId] ??
+           computeEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? []));
+    const recommendedNodeId = getEnglishPlacementEntryNodeId(placementCefr);
+    await supabaseLearnerRepository.updateProfile({
+      placementScoreByCourse: { ...(learner?.placementScoreByCourse ?? {}), [result.courseId]: overallScore },
+      placementCefrByCourse: { ...(learner?.placementCefrByCourse ?? {}), [result.courseId]: placementCefr },
+      placementSkillScoresByCourse: { ...(learner?.placementSkillScoresByCourse ?? {}), [result.courseId]: placementScores },
+    }).catch(() => undefined);
+    if (isCurrent()) await useLearnerStore.getState().loadProfile().catch(() => undefined);
+    learner = useLearnerStore.getState().profile;
+    return {
+      allQuestions: [], currentQuestion: session.question, questionNumber: session.number,
+      totalQuestionsToAsk: session.total, sessionId: session.id, canRetake: session.canRetake,
+      submissions: result.submissions, history: [], hasFinished: true,
+      assessmentResult: {
+        ...result,
+        computedScores: placementScores,
+        overallScore,
+        placementCefr,
+        recommendedNodeId,
+      },
+      isLoading: false, isSubmitting: false,
+      error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
+    };
+  }
   return {
     allQuestions: [], currentQuestion: session.question, questionNumber: session.number,
     totalQuestionsToAsk: session.total, sessionId: session.id, canRetake: session.canRetake,

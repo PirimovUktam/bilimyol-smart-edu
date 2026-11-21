@@ -8,6 +8,10 @@ export interface AIExplanationRequest {
   selectedOption: string;
   correctOption?: string;
   learnerName?: string;
+  language?: 'uz' | 'ru';
+  lessonId?: string;
+  learnerScore?: number;
+  recentMistakes?: string[];
 }
 
 export interface AIExplanationResponse {
@@ -73,6 +77,10 @@ export interface AskTutorRequest {
   topic?: string;
   learnerName?: string;
   learnerScore?: number;
+  recentMistakes?: string[];
+  questionId?: string;
+  questionPrompt?: string;
+  questionSkillId?: string;
 }
 
 export interface AskTutorResponse {

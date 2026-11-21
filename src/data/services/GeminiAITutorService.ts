@@ -45,8 +45,12 @@ export class GeminiAITutorService implements IAITutorService {
   private fallbackService = new DemoAITutorService();
 
   async explainMistake(request: AIExplanationRequest): Promise<AIExplanationResponse> {
+    const questionId = request.questionId?.trim() || undefined;
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      const fb = await this.fallbackService.explainMistake(request);
+      const fb = await this.fallbackService.explainMistake({
+        ...request,
+        questionId: questionId ?? '',
+      });
       return { ...fb, isFallback: true };
     }
 
@@ -56,6 +60,7 @@ export class GeminiAITutorService implements IAITutorService {
         body: {
           action: 'diagnose_mistake',
           ...request,
+          questionId,
         },
       });
 
@@ -207,17 +212,22 @@ export class GeminiAITutorService implements IAITutorService {
 
   async askTutor(request: AskTutorRequest): Promise<AskTutorResponse> {
     const message = request.message.trim();
+    const questionId = request.questionId?.trim() || undefined;
     if (!message) {
       return {
         tutorName: 'Yo‘lchi AI',
-        answer: 'Iltimos, savolingizni yozing.',
+        answer: request.language === 'ru' ? 'Пожалуйста, напишите ваш вопрос.' : 'Iltimos, savolingizni yozing.',
         isAiGenerated: false,
         isDeterministicFallback: true,
       };
     }
 
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new GeminiAIServiceError('tutor.networkError');
+    }
+
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackService.askTutor(request);
+      return this.fallbackService.askTutor({ ...request, questionId });
     }
 
     try {
@@ -225,6 +235,7 @@ export class GeminiAITutorService implements IAITutorService {
         body: {
           action: 'askTutor',
           ...request,
+          questionId,
           message,
         },
       });

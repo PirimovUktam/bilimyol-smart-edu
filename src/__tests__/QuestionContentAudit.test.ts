@@ -60,34 +60,78 @@ describe('Question Content & Assessment Audit Tests', () => {
   });
 
   describe('2. Lesson Interactive and Reinforcement Question Audit', () => {
-    it('verifies all interactive questions in seed lessons have clean options', () => {
+    it('verifies all interactive questions in seed lessons have clean options or valid free-text keys', () => {
+      const validateQuestion = (q: typeof SEED_LESSONS[string]['reinforcementExercise']) => {
+        const qType = q.questionType ?? 'multiple_choice';
+        if (qType === 'text_input' || qType === 'fill_blank') {
+          expect(Array.isArray(q.acceptedAnswers)).toBe(true);
+          expect(q.acceptedAnswers!.length).toBeGreaterThanOrEqual(1);
+          q.acceptedAnswers!.forEach((ans) => {
+            expect(typeof ans).toBe('string');
+            expect(ans.trim().length).toBeGreaterThan(0);
+            if (qType === 'text_input') {
+              expect(q.text.toLowerCase()).not.toContain(ans.toLowerCase());
+              expect((q.wrongFeedback || '').toLowerCase()).not.toContain(ans.toLowerCase());
+            } else if (q.blankTemplate) {
+              expect(q.blankTemplate).toContain('___');
+            }
+          });
+          expect((q.explanation || '').trim().length).toBeGreaterThan(4);
+          expect((q.wrongFeedback || '').trim().length).toBeGreaterThan(4);
+          return;
+        }
+
+        if (qType === 'word_match') {
+          expect(Array.isArray(q.matchPairs)).toBe(true);
+          expect(q.matchPairs!.length).toBeGreaterThanOrEqual(3);
+          q.matchPairs!.forEach((pair) => {
+            expect(pair.id.trim().length).toBeGreaterThan(0);
+            expect(pair.left.trim().length).toBeGreaterThan(0);
+            expect(pair.right.trim().length).toBeGreaterThan(0);
+          });
+          expect((q.explanation || '').trim().length).toBeGreaterThan(4);
+          return;
+        }
+
+        if (qType === 'sentence_order') {
+          expect(Array.isArray(q.orderedTokens)).toBe(true);
+          expect(q.orderedTokens!.length).toBeGreaterThanOrEqual(3);
+          expect((q.explanation || '').trim().length).toBeGreaterThan(4);
+          return;
+        }
+
+        if (qType === 'speaking_prompt' || qType === 'writing_prompt') {
+          expect(q.evaluationMode).toBe('self_assessed');
+          expect((q.sampleResponse || '').trim().length).toBeGreaterThan(5);
+          expect(Array.isArray(q.rubricCriteria)).toBe(true);
+          expect(q.rubricCriteria!.length).toBeGreaterThanOrEqual(3);
+          return;
+        }
+
+        expect(q.options.length).toBeGreaterThanOrEqual(3);
+        expect(q.correctIndex).toBeGreaterThanOrEqual(0);
+        expect(q.correctIndex).toBeLessThan(q.options.length);
+
+        q.options.forEach((opt) => {
+          for (const pattern of forbiddenPatterns) {
+            expect(opt).not.toMatch(pattern);
+          }
+        });
+      };
+
       Object.values(SEED_LESSONS).forEach((lesson) => {
         lesson.steps.forEach((step) => {
           if (step.interactiveQuestion) {
-            const q = step.interactiveQuestion;
-            expect(q.options.length).toBeGreaterThanOrEqual(3);
-            expect(q.correctIndex).toBeGreaterThanOrEqual(0);
-            expect(q.correctIndex).toBeLessThan(q.options.length);
-
-            q.options.forEach((opt) => {
-              for (const pattern of forbiddenPatterns) {
-                expect(opt).not.toMatch(pattern);
-              }
-            });
+            validateQuestion(step.interactiveQuestion);
           }
         });
 
         if (lesson.reinforcementExercise) {
-          const reinf = lesson.reinforcementExercise;
-          expect(reinf.options.length).toBeGreaterThanOrEqual(3);
-          expect(reinf.correctIndex).toBeGreaterThanOrEqual(0);
-          expect(reinf.correctIndex).toBeLessThan(reinf.options.length);
+          validateQuestion(lesson.reinforcementExercise);
+        }
 
-          reinf.options.forEach((opt) => {
-            for (const pattern of forbiddenPatterns) {
-              expect(opt).not.toMatch(pattern);
-            }
-          });
+        if (lesson.alternateExercise) {
+          validateQuestion(lesson.alternateExercise);
         }
       });
     });

@@ -45,4 +45,22 @@ describe('learner content boundary', () => {
   it('rejects missing assessments instead of inventing an unscorable success question', () => {
     expect(() => mapLearnerLesson({ ...row, questions: [] })).toThrow();
   });
+
+  it('strips mistakeFeedbackByOption from learner-facing questions to prevent distractor elimination', () => {
+    const lesson = mapLearnerLesson({
+      ...row,
+      steps: [
+        {
+          ...row.steps[0],
+          interactive_question: {
+            ...row.questions[0],
+            mistakeFeedbackByOption: {
+              a: { uz: 'Xato izoh', ru: 'Неверный вариант' },
+            },
+          },
+        },
+      ],
+    });
+    expect(lesson.steps[0].interactiveQuestion).not.toHaveProperty('mistakeFeedbackByOption');
+  });
 });

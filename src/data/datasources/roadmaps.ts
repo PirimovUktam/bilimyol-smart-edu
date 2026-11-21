@@ -1,4 +1,5 @@
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
+import { ENGLISH_ALL_ROADMAP_NODES } from './english';
 
 export const SEED_ROADMAP_NODES: Record<string, LearningPathNode[]> = {
   course_math_01: [
@@ -64,67 +65,7 @@ export const SEED_ROADMAP_NODES: Record<string, LearningPathNode[]> = {
     },
   ],
 
-  course_eng_01: [
-    {
-      id: 'node_eng_vocab',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_vocab',
-      title: 'Vocabulary',
-      description: 'Akademik so‘z boyligi va asosiy iboralar.',
-      prerequisites: [],
-      requiredScore: 50,
-      status: 'completed',
-      score: 84,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_vocab_01',
-      estimatedMinutes: 15,
-      order: 1,
-    },
-    {
-      id: 'node_eng_gram',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_grammar',
-      title: 'Grammar',
-      description: 'Shart ergash gaplar va murakkab tuzilmalar.',
-      prerequisites: ['node_eng_vocab'],
-      requiredScore: 50,
-      status: 'completed',
-      score: 72,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_grammar_01',
-      estimatedMinutes: 20,
-      order: 2,
-    },
-    {
-      id: 'node_eng_list',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_listening',
-      title: 'Listening',
-      description: 'Audio xabarlar va vaqt ko‘rsatkichlarini farqlash.',
-      prerequisites: ['node_eng_gram'],
-      requiredScore: 50,
-      status: 'reinforcement',
-      score: 43,
-      isReinforcement: false,
-      targetLessonId: 'lesson_eng_listening_01',
-      estimatedMinutes: 12,
-      order: 3,
-    },
-    {
-      id: 'node_eng_read',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_reading',
-      title: 'Reading',
-      description: 'Matnni tahlil qilish va xulosa chiqarish.',
-      prerequisites: ['node_eng_list'],
-      requiredScore: 70,
-      status: 'locked',
-      score: 79,
-      isReinforcement: false,
-      estimatedMinutes: 25,
-      order: 4,
-    },
-  ],
+  course_eng_01: ENGLISH_ALL_ROADMAP_NODES,
 
   // =========================================================================
   // IT & CODING — adaptive learning path

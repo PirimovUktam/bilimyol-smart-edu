@@ -13,26 +13,49 @@ const tutor = new GeminiAITutorService();
 interface YolchiAIPanelProps {
   question: Question;
   answer: LessonAnswerResult;
+  lessonId?: string;
+  learnerScore?: number;
+  recentMistakes?: string[];
   onProceedToReinforcement: () => void;
   onClose: () => void;
 }
 
-export function YolchiAIPanel({ question, answer, onProceedToReinforcement, onClose }: YolchiAIPanelProps) {
-  const { t } = useTranslation();
+export function YolchiAIPanel({
+  question,
+  answer,
+  lessonId,
+  learnerScore,
+  recentMistakes,
+  onProceedToReinforcement,
+  onClose,
+}: YolchiAIPanelProps) {
+  const { language, t } = useTranslation();
   const [retry, setRetry] = useState(0);
   const [explanation, setExplanation] = useState<AIExplanationResponse | null>(null);
   const [error, setError] = useState('');
   const request = useRef<Promise<AIExplanationResponse> | null>(null);
+  const lastRequestKey = useRef<string>('');
+  const requestKey = `${question.id}:${answer.selectedOption}:${language}:${lessonId ?? ''}:${retry}`;
 
   useEffect(() => {
     let active = true;
+    if (lastRequestKey.current !== requestKey) {
+      lastRequestKey.current = requestKey;
+      request.current = null;
+      setExplanation(null);
+      setError('');
+    }
     request.current ??= tutor.explainMistake({
       courseId: question.courseId,
       skillId: question.skillId,
       questionId: question.id,
-      questionText: question.text,
+      questionText: (language === 'ru' && question.textRu) ? question.textRu : question.text,
       selectedOption: answer.selectedOption,
       correctOption: answer.correctOption,
+      language,
+      lessonId,
+      learnerScore,
+      recentMistakes,
     });
     void request.current.then((value) => {
       if (active) setExplanation(value);
@@ -40,7 +63,7 @@ export function YolchiAIPanel({ question, answer, onProceedToReinforcement, onCl
       if (active) setError(failure instanceof Error ? failure.message : t('tutor.explanationFailed'));
     });
     return () => { active = false; };
-  }, [question, answer, retry, t]);
+  }, [question, answer, language, lessonId, learnerScore, recentMistakes, requestKey, retry, t]);
 
   return (
     <Modal isOpen title={t('tutor.mistakes')} maxWidth="md" onClose={onClose}>

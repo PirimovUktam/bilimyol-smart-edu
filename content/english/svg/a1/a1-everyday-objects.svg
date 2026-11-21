@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <filter id="tileShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="#F8FAFC"/>
+
+  <!-- 6 Clean Editorial Object Tiles (Zero Text) -->
+  <!-- Tile 1: Book -->
+  <g filter="url(#tileShadow)">
+    <rect x="56" y="56" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="116" y="106" width="92" height="122" rx="10" fill="#4F46E5"/>
+    <rect x="128" y="106" width="12" height="122" fill="#312E81"/>
+    <rect x="150" y="136" width="42" height="14" rx="4" fill="#EEF2FF"/>
+  </g>
+
+  <!-- Tile 2: Key -->
+  <g filter="url(#tileShadow)">
+    <rect x="294" y="56" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <circle cx="362" cy="168" r="34" stroke="#F59E0B" stroke-width="14"/>
+    <rect x="394" y="160" width="74" height="16" rx="6" fill="#F59E0B"/>
+    <rect x="438" y="176" width="10" height="18" rx="3" fill="#F59E0B"/>
+    <rect x="454" y="176" width="10" height="14" rx="3" fill="#F59E0B"/>
+  </g>
+
+  <!-- Tile 3: Cup -->
+  <g filter="url(#tileShadow)">
+    <rect x="532" y="56" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="594" y="128" width="76" height="86" rx="14" fill="#10B981"/>
+    <path d="M670 144 Q698 144 698 168 Q698 192 670 192" stroke="#10B981" stroke-width="12" fill="none"/>
+    <path d="M618 108 Q624 94 618 82" stroke="#94A3B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M642 108 Q648 94 642 82" stroke="#94A3B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Tile 4: Apple -->
+  <g filter="url(#tileShadow)">
+    <rect x="56" y="314" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <circle cx="162" cy="434" r="48" fill="#EF4444"/>
+    <path d="M162 386 Q172 358 190 368" stroke="#10B981" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <ellipse cx="144" cy="416" rx="10" ry="18" fill="#FCA5A5" opacity="0.45" transform="rotate(-20 144 416)"/>
+  </g>
+
+  <!-- Tile 5: Backpack -->
+  <g filter="url(#tileShadow)">
+    <rect x="294" y="314" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="352" y="366" width="96" height="122" rx="28" fill="#2563EB"/>
+    <path d="M380 366 Q400 342 420 366" stroke="#1E40AF" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <rect x="368" y="424" width="64" height="44" rx="12" fill="#60A5FA"/>
+  </g>
+
+  <!-- Tile 6: Watch / Clock -->
+  <g filter="url(#tileShadow)">
+    <rect x="532" y="314" width="212" height="224" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <circle cx="638" cy="426" r="54" fill="#4F46E5"/>
+    <circle cx="638" cy="426" r="44" fill="#FFFFFF"/>
+    <line x1="638" y1="426" x2="638" y2="394" stroke="#0F172A" stroke-width="6" stroke-linecap="round"/>
+    <line x1="638" y1="426" x2="664" y2="426" stroke="#10B981" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="638" cy="426" r="5" fill="#F59E0B"/>
+  </g>
+</svg>

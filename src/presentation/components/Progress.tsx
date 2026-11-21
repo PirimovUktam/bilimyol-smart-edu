@@ -44,7 +44,7 @@ export const Progress: React.FC<ProgressProps> = ({
         </div>
       )}
       <div
-        className={cn('w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/70 inset-shadow-2xs', heights[size])}
+        className={cn('w-full overflow-hidden rounded-full bg-sand ring-1 ring-hairline inset-shadow-2xs', heights[size])}
         role="progressbar"
         aria-label={ariaLabel}
         aria-valuemin={0}

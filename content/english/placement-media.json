@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "courseId": "course_eng_01",
+  "language": "en",
+  "reviewStatus": "approved",
+  "sampleRate": 22050,
+  "channels": 1,
+  "sampleWidthBytes": 2,
+  "webOutputDir": "public/lesson-media/english/placement",
+  "flutterOutputDir": "mobile/assets/lesson_media/english/placement",
+  "audio": [
+    {
+      "id": "media_eng_place_listening_a1",
+      "lessonId": "placement_eng",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "provenance": "local-system-speech",
+      "filename": "q_eng_place_listening_a1.wav",
+      "canonicalSource": "/lesson-media/english/placement/q_eng_place_listening_a1.wav",
+      "title": "Maktab musiqa to‘garagi vaqti",
+      "titleUz": "Maktab musiqa to‘garagi vaqti",
+      "titleRu": "Время школьного музыкального кружка",
+      "transcript": "Lola: Hi, Timur! When is our school music club?\nTimur: It starts at nine o'clock in the morning on Saturday.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Lola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Hi, Timur! When is our school music club?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "It starts at nine o'clock in the morning on Saturday."
+        }
+      ],
+      "durationSeconds": 6.919
+    },
+    {
+      "id": "media_eng_place_listening_a2",
+      "lessonId": "placement_eng",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "provenance": "local-system-speech",
+      "filename": "q_eng_place_listening_a2.wav",
+      "canonicalSource": "/lesson-media/english/placement/q_eng_place_listening_a2.wav",
+      "title": "Suzish mashg‘uloti jadvali o‘zgarishi",
+      "titleUz": "Suzish mashg‘uloti jadvali o‘zgarishi",
+      "titleRu": "Изменение расписания занятий по плаванию",
+      "transcript": "Receptionist: Hello, City Sports Center. How can I help you?\nCaller: Hi! Is the beginner swimming class still on Wednesday afternoon?\nReceptionist: No, we moved it this week. It is now on Thursday at four o'clock in the afternoon, not Wednesday.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Receptionist",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Hello, City Sports Center. How can I help you?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Caller",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Hi! Is the beginner swimming class still on Wednesday afternoon?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Receptionist",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "No, we moved it this week. It is now on Thursday at four o'clock in the afternoon, not Wednesday."
+        }
+      ],
+      "durationSeconds": 16.048
+    },
+    {
+      "id": "media_eng_place_listening_b1",
+      "lessonId": "placement_eng",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "provenance": "local-system-speech",
+      "filename": "q_eng_place_listening_b1.wav",
+      "canonicalSource": "/lesson-media/english/placement/q_eng_place_listening_b1.wav",
+      "title": "Seminar materiallari bo‘yicha qaror",
+      "titleUz": "Seminar materiallari bo‘yicha qaror",
+      "titleRu": "Решение по материалам семинара",
+      "transcript": "Malika: Bekzod, the print shop just called. The boxes of workshop booklets won't arrive until two o'clock in the afternoon, and our morning session starts at ten.\nBekzod: Thanks for telling me. Since the morning group needs the tasks right away, let's share the PDF link in the group chat first and hand out the printed booklets after lunch.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Malika",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Bekzod, the print shop just called. The boxes of workshop booklets won't arrive until two o'clock in the afternoon, and our morning session starts at ten.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Thanks for telling me. Since the morning group needs the tasks right away, let's share the PDF link in the group chat first and hand out the printed booklets after lunch."
+        }
+      ],
+      "durationSeconds": 20.064
+    }
+  ],
+  "images": []
+}

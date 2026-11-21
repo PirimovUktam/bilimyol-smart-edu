@@ -11,6 +11,8 @@ class AssessmentResult {
   final List<QuestionAnswerSubmission> submissions;
   final Map<String, SkillScore> computedScores;
   final String weakestSkillId;
+  final int overallScore;
+  final String? cefrLevel;
   final int timestamp;
   final List<PlacementReview> review;
 
@@ -20,6 +22,8 @@ class AssessmentResult {
     required this.submissions,
     required this.computedScores,
     required this.weakestSkillId,
+    this.overallScore = 0,
+    this.cefrLevel,
     required this.timestamp,
     this.review = const [],
   });
@@ -120,13 +124,29 @@ class SubmitPlacementTestUseCase {
     }
 
     final overallScore = SkillScoringEngine.computeOverallScore(computedScores);
+    List<String> completedNodeIds = const [];
+    if (courseId == 'course_eng_01') {
+      try {
+        completedNodeIds = (await learnerRepository.getProfile()).completedNodeIds;
+      } catch (_) {
+        completedNodeIds = const [];
+      }
+    }
+    final cefrLevel = courseId == 'course_eng_01'
+        ? SkillScoringEngine.computeEnglishPlacementCefr(
+            questions,
+            verifiedSubmissions,
+            completedNodeIds: completedNodeIds,
+          )
+        : null;
 
-    // Save placement attempt record to Supabase
+    // Save placement attempt record
     final attemptId = await learnerRepository.savePlacementAttempt(
       PlacementAttemptData(
         courseId: courseId,
         score: overallScore,
         weakestSkillId: weakestSkillId,
+        cefrLevel: cefrLevel,
         submissions: verifiedSubmissions
             .map(
               (s) => PlacementAttemptSubmission(
@@ -142,7 +162,9 @@ class SubmitPlacementTestUseCase {
     // The production placement RPC already awards XP and activity atomically.
     if (learnerRepository.supportsServerPlacementPersistence) {
       final persistedProfile = await learnerRepository.getProfile();
-      computedScores = persistedProfile.scoresByCourse[courseId] ?? {};
+      if (courseId != 'course_eng_01') {
+        computedScores = persistedProfile.scoresByCourse[courseId] ?? {};
+      }
       weakestSkillId = '';
       minScore = 101;
       for (final score in computedScores.values) {
@@ -156,7 +178,15 @@ class SubmitPlacementTestUseCase {
         }
       }
     } else {
-      await learnerRepository.saveSkillScores(courseId, computedScores);
+      if (courseId == 'course_eng_01') {
+        await learnerRepository.savePlacementSummary(
+          courseId: courseId,
+          score: overallScore,
+          cefrTier: cefrLevel!,
+        );
+      } else {
+        await learnerRepository.saveSkillScores(courseId, computedScores);
+      }
       await learnerRepository.addXp(20, 'placement_completed_$courseId');
       await learnerRepository.recordDailyActivity();
     }
@@ -167,6 +197,8 @@ class SubmitPlacementTestUseCase {
       submissions: verifiedSubmissions,
       computedScores: computedScores,
       weakestSkillId: weakestSkillId,
+      overallScore: overallScore,
+      cefrLevel: cefrLevel,
       timestamp: DateTime.now().millisecondsSinceEpoch,
       review: [
         for (final submission in verifiedSubmissions)
@@ -176,9 +208,11 @@ class SubmitPlacementTestUseCase {
             PlacementReview(
               submission: submission,
               question: question.text,
+              questionRu: question.textRu,
               selected: question.options[submission.selectedIndex],
               correct: question.options[question.correctIndex],
               explanation: question.explanation,
+              explanationRu: question.explanationRu,
             ),
       ],
     );

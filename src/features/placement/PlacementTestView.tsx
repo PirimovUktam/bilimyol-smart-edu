@@ -1,8 +1,11 @@
 import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, ClipboardCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, ClipboardCheck, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '@/core/context/AuthContext';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { usePlacementStore } from '@/app/store/usePlacementStore';
+import { readApprovedLessonMedia } from '@/domain/entities/LessonMedia';
+import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
 import { Formula } from '@/presentation/components/LearningText';
@@ -11,12 +14,14 @@ import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { SectionState } from '@/presentation/components/SectionState';
 import { AudioSimWave } from '@/features/lesson/AudioSimWave';
+import { LessonMediaPlayer } from '@/features/lesson/LessonMediaPlayer';
 import { usesMathMastery } from '@/domain/personalization/learningStart';
 
 export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning }: {
   onComplete: () => void; onChooseCourse: () => void; onStartLearning: () => void;
 }) {
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
+  const { profile: account } = useAuth();
   const course = useCourseStore((state) => state.activeCourse);
   const skills = useCourseStore((state) => state.activeCourseSkills);
   const question = usePlacementStore((state) => state.currentQuestion);
@@ -81,6 +86,23 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
           </div>
           <p className="text-sm font-semibold text-slatefine">
             {result.submissions.filter((answer) => answer.isCorrect).length} / {result.submissions.length}{t('assessment.correctCount')}</p>
+          {courseId === 'course_eng_01' && result.placementCefr && (
+            <div className="space-y-2 rounded-2xl border border-brand/25 bg-sand/70 p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="indigo" size="sm">
+                  {t('assessment.cefrResultBadge', { level: result.placementCefr })}
+                </Badge>
+                <Badge variant="amber" size="sm">
+                  {t('path.deferredStageBadge')}
+                </Badge>
+              </div>
+              <p className="text-xs font-semibold text-ink">{t('assessment.cefrB2DeferredNote')}</p>
+              <p className="flex items-start gap-1.5 text-xs text-slatefine">
+                <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand" />
+                <span>{t('assessment.cefrScopeNote')}</span>
+              </p>
+            </div>
+          )}
           <p className="rounded-xl border border-brand/25 bg-sand px-3.5 py-2 text-xs font-bold text-brand-dark">
             {t(mathPilot ? 'assessment.pilotHandoff' : 'adaptive.placementHandoff')}
           </p>
@@ -106,17 +128,23 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
             <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
               <summary className="cursor-pointer font-bold text-brand">{t('assessment.analysis')}</summary>
               <ol className="mt-3 space-y-3">
-                {result.review.map((answer, index) => (
+                {result.review.map((answer, index) => {
+                  const reviewPrompt =
+                    language === 'ru' && answer.questionTextRu ? answer.questionTextRu : answer.questionText;
+                  const reviewExplanation =
+                    language === 'ru' && answer.explanationRu ? answer.explanationRu : answer.explanation;
+                  return (
                   <li key={answer.questionId} className="space-y-1 rounded-2xl border border-hairline bg-paper p-3.5 text-sm leading-relaxed">
                     <p className={'font-bold ' + (answer.isCorrect ? 'text-mint' : 'text-coral')}>
-                      {answer.isCorrect ? t('assessment.correct') : 'Xato'}
+                      {answer.isCorrect ? t('assessment.correct') : t('assessment.wrongLabel')}
                     </p>
-                    <p className="break-words font-bold">{index + 1}. {answer.questionText}</p>
+                    <p className="break-words font-bold">{index + 1}. {reviewPrompt}</p>
                     <p className="break-words">{t('assessment.youSelected')}{' '}{answer.selectedOption}</p>
                     {!answer.isCorrect && <p className="break-words font-semibold text-mint">{t('assessment.rightAnswer')}{' '}{answer.correctOption}</p>}
-                    {answer.explanation && <p className="break-words text-slatefine">{answer.explanation}</p>}
+                    {reviewExplanation && <p className="break-words text-slatefine">{reviewExplanation}</p>}
                   </li>
-                ))}
+                  );
+                })}
               </ol>
             </details>
           )}
@@ -137,14 +165,38 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
           </div>
           <Progress value={(100 * number) / total} ariaLabel={t('assessment.process')} size="sm" />
           <Card className="fade-up space-y-5 p-5 sm:p-7">
-            <h2 className="heading break-words text-xl font-extrabold sm:text-2xl">{question.text}</h2>
-            {question.contextSnippet && (
-              <p className="rounded-2xl bg-canvas p-4 text-sm leading-relaxed text-slatefine">{question.contextSnippet}</p>
-            )}
-            {question.formulaLatex && <Formula source={question.formulaLatex} display />}
-            {question.audioSimText && (
-              <AudioSimWave transcript={question.audioSimText} speakerName={question.audioSimSpeaker ?? t('assessment.audio')} />
-            )}
+            {(() => {
+              const promptText = language === 'ru' && question.textRu ? question.textRu : question.text;
+              const approvedMedia = question.media ? readApprovedLessonMedia(question.media) : undefined;
+              const localizedMedia = approvedMedia
+                ? {
+                    ...approvedMedia,
+                    title:
+                      (language === 'ru' ? approvedMedia.titleRu : approvedMedia.titleUz) ||
+                      approvedMedia.title,
+                  }
+                : undefined;
+              return (
+                <>
+                  <h2 className="heading break-words text-xl font-extrabold sm:text-2xl">{promptText}</h2>
+                  {question.contextSnippet && (
+                    <p className="rounded-2xl bg-canvas p-4 text-sm leading-relaxed text-slatefine">{question.contextSnippet}</p>
+                  )}
+                  {question.formulaLatex && <Formula source={question.formulaLatex} display />}
+                  {localizedMedia && (
+                    <LessonMediaPlayer
+                      key={question.id}
+                      media={localizedMedia}
+                      accountId={account?.id}
+                      lessonId={`placement_${courseId}`}
+                    />
+                  )}
+                  {!localizedMedia && question.audioSimText && (
+                    <AudioSimWave transcript={question.audioSimText} speakerName={question.audioSimSpeaker ?? t('assessment.audio')} />
+                  )}
+                </>
+              );
+            })()}
             <fieldset className="space-y-2.5" disabled={submitting}>
               <legend className="sr-only">{t('assessment.options')}</legend>
               {question.options.map((option, index) => (

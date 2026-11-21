@@ -16,39 +16,49 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
   @override
   Widget build(BuildContext context) {
     final yValue = 2 * _currentX + 3;
+    final dark = AppColors.isDark(context);
 
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Interaktiv Grafik: f(x) = 2x + 3',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'f(${_currentX.toStringAsFixed(1)}) = ${yValue.toStringAsFixed(1)}',
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Text(
+                  'Interaktiv Grafik: f(x) = 2x + 3',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                    color: AppColors.textPrimaryColor(context),
                   ),
                 ),
-              ),
-            ],
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryTint(context),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'f(${_currentX.toStringAsFixed(1)}) = ${yValue.toStringAsFixed(1)}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryAccentOnSurface(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -59,7 +69,11 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: CustomPaint(
-                painter: _GraphPainter(currentX: _currentX, currentY: yValue),
+                painter: _GraphPainter(
+                  currentX: _currentX,
+                  currentY: yValue,
+                  isDark: dark,
+                ),
               ),
             ),
           ),
@@ -73,7 +87,7 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryColor(context),
                 ),
               ),
               Expanded(
@@ -82,7 +96,7 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
                   min: 0,
                   max: 4,
                   divisions: 8,
-                  activeColor: AppColors.primary,
+                  activeColor: AppColors.primaryAccentOnSurface(context),
                   onChanged: (val) {
                     setState(() => _currentX = val);
                   },
@@ -99,16 +113,22 @@ class _MathFunctionGraphWidgetState extends State<MathFunctionGraphWidget> {
 class _GraphPainter extends CustomPainter {
   final double currentX;
   final double currentY;
+  final bool isDark;
 
-  _GraphPainter({required this.currentX, required this.currentY});
+  _GraphPainter({
+    required this.currentX,
+    required this.currentY,
+    required this.isDark,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()..color = const Color(0xFFF8FAFC);
+    final bgPaint = Paint()
+      ..color = isDark ? AppColors.darkSubtleSurface : const Color(0xFFF8FAFC);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
     final gridPaint = Paint()
-      ..color = const Color(0xFFE2E8F0)
+      ..color = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)
       ..strokeWidth = 1.0;
 
     const double originX = 40;
@@ -128,7 +148,7 @@ class _GraphPainter extends CustomPainter {
 
     // Draw axes
     final axisPaint = Paint()
-      ..color = const Color(0xFF64748B)
+      ..color = isDark ? AppColors.darkTextMuted : const Color(0xFF64748B)
       ..strokeWidth = 1.5;
 
     // X Axis
@@ -138,7 +158,7 @@ class _GraphPainter extends CustomPainter {
 
     // Draw function line y = 2x + 3
     final linePaint = Paint()
-      ..color = AppColors.primary
+      ..color = isDark ? const Color(0xFF818CF8) : AppColors.primary
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke;
 
@@ -171,6 +191,8 @@ class _GraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GraphPainter oldDelegate) {
-    return oldDelegate.currentX != currentX || oldDelegate.currentY != currentY;
+    return oldDelegate.currentX != currentX ||
+        oldDelegate.currentY != currentY ||
+        oldDelegate.isDark != isDark;
   }
 }

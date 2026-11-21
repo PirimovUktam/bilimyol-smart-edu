@@ -9,7 +9,9 @@ import {
   SubmitAnswerAttemptResult,
   DailyActivitySummary,
 } from '../../domain/repositories/ILearnerRepository';
-import { LearnerProfile } from '../../domain/entities/LearnerProfile';
+import { FlashcardSrsEntry, LearnerProfile } from '../../domain/entities/LearnerProfile';
+import type { CefrLevelId } from '../../domain/entities/Question';
+import { computeNextFlashcardSrs } from '@/domain/personalization/FlashcardSrsEngine';
 import type { PlacementSession } from '@/domain/entities/Assessment';
 import { learningDate } from '@/core/utils/learningDate';
 import { SkillScore } from '../../domain/entities/SkillScore';
@@ -38,8 +40,59 @@ export async function resolveLessonCourseId(
   }
 }
 
+const LOCAL_SRS_STORAGE_PREFIX = 'bilimyol_srs:';
+const LOCAL_PLACEMENT_STORAGE_PREFIX = 'bilimyol_placement:';
+
+interface LocalPlacementMeta {
+  placementScoreByCourse?: Record<string, number>;
+  placementCefrByCourse?: Record<string, CefrLevelId>;
+  placementSkillScoresByCourse?: Record<string, Record<string, SkillScore>>;
+}
+
+function readLocalPlacementMeta(userId: string): LocalPlacementMeta {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(`${LOCAL_PLACEMENT_STORAGE_PREFIX}${userId}`);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as LocalPlacementMeta) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalPlacementMeta(userId: string, meta: LocalPlacementMeta): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${LOCAL_PLACEMENT_STORAGE_PREFIX}${userId}`, JSON.stringify(meta));
+  } catch { /* Device storage is optional. */ }
+}
+
+function readLocalFlashcardSrs(userId: string): Record<string, Record<string, FlashcardSrsEntry>> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(`${LOCAL_SRS_STORAGE_PREFIX}${userId}`);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, Record<string, FlashcardSrsEntry>>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalFlashcardSrs(
+  userId: string,
+  srs: Record<string, Record<string, FlashcardSrsEntry>>,
+): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`${LOCAL_SRS_STORAGE_PREFIX}${userId}`, JSON.stringify(srs));
+  } catch { /* Device storage is optional. */ }
+}
+
 export class SupabaseLearnerRepository implements ILearnerRepository {
   private demoReminders = true;
+  private srsQueue: Promise<unknown> = Promise.resolve();
 
   async getLearningReminders(): Promise<boolean> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) return this.demoReminders;
@@ -192,6 +245,8 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
       const lastName = userProfileData?.last_name || user.user_metadata?.last_name || '';
 
+      const localPlacement = readLocalPlacementMeta(user.id);
+
       return {
         id: user.id,
         name: firstName,
@@ -208,9 +263,13 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         streakDays: gamifyData?.streak_days ?? 0,
         lastActiveDate: gamifyData?.last_activity_date ?? '',
         scoresByCourse,
+        placementScoreByCourse: localPlacement.placementScoreByCourse ?? {},
+        placementCefrByCourse: localPlacement.placementCefrByCourse ?? {},
+        placementSkillScoresByCourse: localPlacement.placementSkillScoresByCourse ?? {},
         completedLessonIds,
         completedNodeIds,
         completedReinforcementIds: (reinfRows || []).map((r) => r.reinforcement_node_id),
+        flashcardSrsByCourse: readLocalFlashcardSrs(user.id),
         createdAt: new Date(learnerData?.created_at || Date.now()).getTime(),
       };
     } catch (err) {
@@ -259,6 +318,20 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
           updated_at: new Date().toISOString(),
         });
         if (learnerUpdateError) throw learnerUpdateError;
+      }
+
+      if (
+        updates.placementScoreByCourse !== undefined ||
+        updates.placementCefrByCourse !== undefined ||
+        updates.placementSkillScoresByCourse !== undefined
+      ) {
+        const existingLocal = readLocalPlacementMeta(user.id);
+        writeLocalPlacementMeta(user.id, {
+          placementScoreByCourse: updates.placementScoreByCourse ?? existingLocal.placementScoreByCourse,
+          placementCefrByCourse: updates.placementCefrByCourse ?? existingLocal.placementCefrByCourse,
+          placementSkillScoresByCourse:
+            updates.placementSkillScoresByCourse ?? existingLocal.placementSkillScoresByCourse,
+        });
       }
 
       // Report persisted values, never a locally merged success payload.
@@ -643,6 +716,30 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   async resetAll(): Promise<LearnerProfile> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) return (await this.demoRepository()).resetAll();
     throw new Error('Production learner reset is not supported by the server contract.');
+  }
+
+  async recordFlashcardSrs(
+    courseId: string,
+    cardId: string,
+    rating: 'need_practice' | 'remembered',
+    intervalsDays?: readonly number[],
+  ): Promise<LearnerProfile> {
+    const run = async (): Promise<LearnerProfile> => {
+      if (isDemoRuntimeActive() || !isSupabaseConfigured) {
+        return (await this.demoRepository()).recordFlashcardSrs(courseId, cardId, rating, intervalsDays);
+      }
+      const profile = await this.getProfile();
+      const byCourse = { ...(profile.flashcardSrsByCourse ?? {}) };
+      const courseDeck = { ...(byCourse[courseId] ?? {}) };
+      courseDeck[cardId] = computeNextFlashcardSrs(courseDeck[cardId], cardId, rating, new Date(), intervalsDays);
+      byCourse[courseId] = courseDeck;
+      writeLocalFlashcardSrs(profile.id, byCourse);
+      return { ...profile, flashcardSrsByCourse: byCourse };
+    };
+
+    const next = this.srsQueue.then(run, run);
+    this.srsQueue = next.catch(() => {});
+    return next;
   }
 }
 

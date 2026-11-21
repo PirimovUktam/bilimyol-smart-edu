@@ -80,15 +80,19 @@ void main() {
       );
       await tester.tap(find.byTooltip('Lug‘atni yopish'));
       await tester.pumpAndSettle();
-      for (var step = 0; step < 2; step++) {
-        await tester.tap(find.text('Keyingi qadam'));
+      for (var step = 0; step < 3; step++) {
+        final nextBtn = find.text('Keyingi qadam');
+        await tester.ensureVisible(nextBtn);
+        await tester.tap(nextBtn);
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('Goodbye'));
+      final input = find.byKey(const Key('free_text_answer_input'));
+      await tester.ensureVisible(input);
+      await tester.enterText(input, 'Goodbye');
       await tester.pumpAndSettle();
       await tester.tap(find.text('TEKSHIRISH'));
       await tester.pumpAndSettle();
-      expect(find.text('To‘g‘ri javob: Hello'), findsOneWidget);
+      expect(find.text('Sizning javobingiz: Goodbye'), findsOneWidget);
       expect(tutor.diagnosisCalls, 0);
       final diagnosis = find.text('Yo‘lchi AI tahlili');
       await tester.ensureVisible(diagnosis);
@@ -98,7 +102,7 @@ void main() {
       expect(find.text('Yo‘lchi izohini yuklab bo‘lmadi.'), findsOneWidget);
       await tester.tap(find.text('Darsga qaytish'));
       await tester.pumpAndSettle();
-      expect(find.text('To‘g‘ri javob: Hello'), findsOneWidget);
+      expect(find.text('Sizning javobingiz: Goodbye'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

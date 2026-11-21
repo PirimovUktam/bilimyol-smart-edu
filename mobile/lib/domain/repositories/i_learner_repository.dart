@@ -9,6 +9,9 @@ enum LearnerProfileField {
   dailyMinutes,
   initialLevel,
   courseLevels,
+  placementScoreByCourse,
+  placementCefrByCourse,
+  flashcardSrsByCourse,
 }
 
 class AnswerAttemptRecord {
@@ -61,12 +64,14 @@ class PlacementAttemptData {
   final String courseId;
   final int score;
   final String? weakestSkillId;
+  final String? cefrLevel;
   final List<PlacementAttemptSubmission> submissions;
 
   const PlacementAttemptData({
     required this.courseId,
     required this.score,
     this.weakestSkillId,
+    this.cefrLevel,
     required this.submissions,
   });
 }
@@ -106,6 +111,8 @@ class DailyActivitySummary {
 }
 
 abstract class ILearnerRepository {
+  Future<void> _srsWriteChain = Future<void>.value();
+
   /// Production persistence currently completes lessons/reinforcements through
   /// server RPCs. Demo repositories may still maintain roadmap state locally.
   bool get supportsNodeCompletion => true;
@@ -153,7 +160,104 @@ abstract class ILearnerRepository {
     );
   }
 
+  Future<void> savePlacementSummary({
+    required String courseId,
+    required int score,
+    required String cefrTier,
+  }) async {
+    final current = await getProfile();
+    final nextScores = Map<String, int>.from(current.placementScoreByCourse)
+      ..[courseId] = score;
+    final nextCefr = Map<String, String>.from(current.placementCefrByCourse)
+      ..[courseId] = cefrTier;
+    await updateProfile(
+      current.copyWith(
+        placementScoreByCourse: nextScores,
+        placementCefrByCourse: nextCefr,
+      ),
+      fields: {
+        LearnerProfileField.placementScoreByCourse,
+        LearnerProfileField.placementCefrByCourse,
+      },
+    );
+  }
+
   Future<void> saveSkillScores(String courseId, Map<String, SkillScore> scores);
+  Future<LearnerProfile> recordFlashcardReview({
+    required String courseId,
+    required String cardId,
+    required bool remembered,
+  }) {
+    final next = _srsWriteChain
+        .catchError((Object _) {})
+        .then(
+          (_) => _performRecordFlashcardReview(
+            courseId: courseId,
+            cardId: cardId,
+            remembered: remembered,
+          ),
+        );
+    _srsWriteChain = next.then<void>((_) {}, onError: (Object _) {});
+    return next;
+  }
+
+  Future<LearnerProfile> _performRecordFlashcardReview({
+    required String courseId,
+    required String cardId,
+    required bool remembered,
+  }) async {
+    final current = await getProfile();
+    final currentCourseMap = Map<String, FlashcardSrsRecord>.from(
+      current.flashcardSrsByCourse[courseId] ?? const {},
+    );
+    final prev = currentCourseMap[cardId] ?? const FlashcardSrsRecord();
+    final nowUtc = DateTime.now().toUtc();
+    final nowIso = nowUtc.toIso8601String();
+    final nextRecord = remembered
+        ? () {
+            final nextBucket = (prev.intervalBucket + 1).clamp(1, 3);
+            final nextReviewBucket = switch (nextBucket) {
+              1 => 'daily',
+              2 => '3_days',
+              _ => 'mastered',
+            };
+            final nextDueAt = nowUtc
+                .add(
+                  Duration(
+                    days: nextBucket == 1
+                        ? 1
+                        : nextBucket == 2
+                        ? 3
+                        : 7,
+                  ),
+                )
+                .toIso8601String();
+            return FlashcardSrsRecord(
+              status: 'remembered',
+              reviewCount: prev.reviewCount + 1,
+              intervalBucket: nextBucket,
+              lastReviewedAt: nowIso,
+              nextReviewBucket: nextReviewBucket,
+              nextReviewAt: nextDueAt,
+            );
+          }()
+        : FlashcardSrsRecord(
+            status: 'need_practice',
+            reviewCount: prev.reviewCount + 1,
+            intervalBucket: 0,
+            lastReviewedAt: nowIso,
+            nextReviewBucket: 'session_next',
+            nextReviewAt: nowIso,
+          );
+    currentCourseMap[cardId] = nextRecord;
+    final nextByCourse = Map<String, Map<String, FlashcardSrsRecord>>.from(
+      current.flashcardSrsByCourse,
+    )..[courseId] = currentCourseMap;
+    return updateProfile(
+      current.copyWith(flashcardSrsByCourse: nextByCourse),
+      fields: {LearnerProfileField.flashcardSrsByCourse},
+    );
+  }
   Future<String> savePlacementAttempt(PlacementAttemptData data);
   Future<PlacementAnswerEvaluation> evaluatePlacementAnswer({
     required String courseId,

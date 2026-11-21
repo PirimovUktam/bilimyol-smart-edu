@@ -53,6 +53,8 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppColors.isDark(context);
+
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -63,10 +65,18 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryLight,
+                  color: dark
+                      ? const Color(0xFF0C4A6E)
+                      : AppColors.secondaryLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.mic_rounded, color: AppColors.secondary, size: 20),
+                child: Icon(
+                  Icons.mic_rounded,
+                  color: dark
+                      ? const Color(0xFF38BDF8)
+                      : AppColors.secondaryHover,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -78,14 +88,14 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryColor(context),
                       ),
                     ),
                     Text(
                       'Audio simulyatsiya (Native player)',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedColor(context),
                       ),
                     ),
                   ],
@@ -93,7 +103,7 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
               ),
               IconButton.filled(
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
+                  backgroundColor: AppColors.secondaryHover,
                 ),
                 onPressed: _togglePlay,
                 icon: Icon(
@@ -119,7 +129,9 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
                 width: 6,
                 height: _isPlaying ? (h * (0.6 + 0.4 * (idx % 3))) : h * 0.7,
                 decoration: BoxDecoration(
-                  color: isPassed ? AppColors.secondary : const Color(0xFFE2E8F0),
+                  color: isPassed
+                      ? (dark ? AppColors.secondary : AppColors.secondaryHover)
+                      : (dark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -131,15 +143,15 @@ class _AudioSimWaveWidgetState extends State<AudioSimWaveWidget> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: AppColors.subtleSurface(context),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.cardBorder),
+              border: Border.all(color: AppColors.borderColor(context)),
             ),
             child: Text(
               widget.transcript,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12.5,
-                color: AppColors.textSecondary,
+                color: AppColors.textMutedColor(context),
                 height: 1.4,
                 fontStyle: FontStyle.italic,
               ),

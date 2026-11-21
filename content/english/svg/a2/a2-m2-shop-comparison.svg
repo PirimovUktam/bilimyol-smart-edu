@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="shopBg" x1="0" y1="0" x2="0" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.09"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#shopBg)"/>
+
+  <!-- Shop Floor & Back Wall Accent -->
+  <rect x="44" y="42" width="712" height="410" rx="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <rect x="0" y="452" width="800" height="148" fill="#CBD5E1"/>
+
+  <!-- Clothes Display Rack -->
+  <rect x="86" y="106" width="420" height="12" rx="6" fill="#475569"/>
+  <rect x="102" y="106" width="12" height="346" rx="5" fill="#64748B"/>
+  <rect x="478" y="106" width="12" height="346" rx="5" fill="#64748B"/>
+  <rect x="82" y="446" width="52" height="12" rx="6" fill="#334155"/>
+  <rect x="458" y="446" width="52" height="12" rx="6" fill="#334155"/>
+
+  <!-- Coat 1: Longer Emerald Green Parka (Left) -->
+  <g filter="url(#drop)">
+    <!-- Hanger -->
+    <path d="M210 118 Q210 94 222 94 Q230 94 228 104" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M168 152 L210 124 L252 152" stroke="#94A3B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Parka Body -->
+    <path d="M158 156 L186 144 L234 144 L262 156 L284 268 L258 278 L244 214 L244 374 Q210 384 176 374 L176 214 L162 278 L136 268 Z" fill="#10B981"/>
+    <!-- Hood & Collar -->
+    <path d="M184 144 Q210 172 236 144 Q226 126 210 126 Q194 126 184 144 Z" fill="#059669"/>
+    <!-- Center Zipper & Pockets -->
+    <line x1="210" y1="158" x2="210" y2="376" stroke="#065F46" stroke-width="3"/>
+    <rect x="182" y="274" width="20" height="28" rx="4" fill="#059669"/>
+    <rect x="218" y="274" width="20" height="28" rx="4" fill="#059669"/>
+    <!-- Blank Price Tag (Larger) -->
+    <g transform="translate(246, 200) rotate(12)">
+      <rect width="38" height="58" rx="6" fill="#FEF3C7" stroke="#D97706" stroke-width="2.5"/>
+      <circle cx="19" cy="12" r="4" fill="#FFFFFF" stroke="#D97706" stroke-width="2"/>
+      <line x1="9" y1="28" x2="29" y2="28" stroke="#D97706" stroke-width="3" stroke-linecap="round"/>
+      <line x1="9" y1="38" x2="25" y2="38" stroke="#D97706" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Coat 2: Cropped Indigo Jacket with Discount Ribbon (Right) -->
+  <g filter="url(#drop)">
+    <!-- Hanger -->
+    <path d="M380 118 Q380 94 392 94 Q400 94 398 104" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M342 152 L380 124 L418 152" stroke="#94A3B8" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Jacket Body -->
+    <path d="M332 158 L358 146 L402 146 L428 158 L448 254 L424 264 L412 206 L412 316 L348 316 L348 206 L336 264 L312 254 Z" fill="#4F46E5"/>
+    <!-- Collar -->
+    <polygon points="358,146 380,174 366,184" fill="#312E81"/>
+    <polygon points="402,146 380,174 394,184" fill="#312E81"/>
+    <!-- Buttons -->
+    <circle cx="380" cy="202" r="4" fill="#E0EAFF"/>
+    <circle cx="380" cy="236" r="4" fill="#E0EAFF"/>
+    <circle cx="380" cy="270" r="4" fill="#E0EAFF"/>
+    <!-- Discount Star Badge (No Text) -->
+    <polygon points="434,154 442,172 462,174 447,188 451,208 434,198 417,208 421,188 406,174 426,172" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
+    <!-- Compact Tag -->
+    <g transform="translate(324, 214) rotate(-10)">
+      <rect width="32" height="46" rx="5" fill="#ECFDF5" stroke="#10B981" stroke-width="2.5"/>
+      <circle cx="16" cy="10" r="3.5" fill="#FFFFFF" stroke="#10B981" stroke-width="2"/>
+      <line x1="8" y1="24" x2="24" y2="24" stroke="#10B981" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Checkout Counter (Right Side) -->
+  <g filter="url(#drop)">
+    <rect x="526" y="310" width="230" height="176" rx="16" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+    <rect x="518" y="298" width="246" height="22" rx="8" fill="#334155"/>
+
+    <!-- Shopping Bag -->
+    <path d="M558 228 Q558 202 580 202 Q602 202 602 228" stroke="#1E293B" stroke-width="4" fill="none"/>
+    <rect x="542" y="226" width="76" height="72" rx="8" fill="#10B981"/>
+    <rect x="542" y="244" width="76" height="12" fill="#059669"/>
+
+    <!-- Receipt Roll Icon -->
+    <path d="M642 204 L694 204 L694 298 L684 290 L674 298 L664 290 L654 298 L642 290 Z" fill="#FFFFFF" stroke="#64748B" stroke-width="2.5"/>
+    <line x1="652" y1="224" x2="684" y2="224" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="652" y1="240" x2="678" y2="240" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="652" y1="256" x2="684" y2="256" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Coin Stack -->
+    <ellipse cx="728" cy="288" rx="18" ry="6" fill="#D97706"/>
+    <ellipse cx="728" cy="280" rx="18" ry="6" fill="#F59E0B"/>
+    <ellipse cx="728" cy="272" rx="18" ry="6" fill="#FBBF24"/>
+    <ellipse cx="728" cy="264" rx="18" ry="6" fill="#FDE047"/>
+  </g>
+</svg>

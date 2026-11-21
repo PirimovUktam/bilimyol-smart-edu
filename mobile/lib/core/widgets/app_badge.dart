@@ -27,40 +27,41 @@ class AppBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppColors.isDark(context);
     Color bg;
     Color fg;
     Color border;
 
     switch (variant) {
       case AppBadgeVariant.blue:
-        bg = AppColors.primary.withValues(alpha: 0.1);
-        fg = AppColors.primary;
-        border = AppColors.primary.withValues(alpha: 0.22);
+        bg = AppColors.primary.withValues(alpha: dark ? 0.24 : 0.1);
+        fg = dark ? const Color(0xFFC7D2FE) : AppColors.primary;
+        border = AppColors.primary.withValues(alpha: dark ? 0.4 : 0.22);
         break;
       case AppBadgeVariant.teal:
-        bg = AppColors.secondaryLight;
-        fg = AppColors.secondaryHover;
-        border = AppColors.secondary.withValues(alpha: 0.25);
+        bg = dark ? const Color(0xFF0C4A6E) : AppColors.secondaryLight;
+        fg = dark ? const Color(0xFFBAE6FD) : const Color(0xFF0369A1);
+        border = AppColors.secondary.withValues(alpha: dark ? 0.45 : 0.25);
         break;
       case AppBadgeVariant.amber:
-        bg = AppColors.warningLight;
-        fg = const Color(0xFFB45309);
-        border = AppColors.warning.withValues(alpha: 0.28);
+        bg = dark ? const Color(0xFF78350F) : AppColors.warningLight;
+        fg = dark ? const Color(0xFFFDE68A) : const Color(0xFFB45309);
+        border = AppColors.warning.withValues(alpha: dark ? 0.5 : 0.28);
         break;
       case AppBadgeVariant.rose:
-        bg = AppColors.errorLight;
-        fg = AppColors.error;
-        border = AppColors.error.withValues(alpha: 0.25);
+        bg = dark ? const Color(0xFF881337) : AppColors.errorLight;
+        fg = dark ? const Color(0xFFFECDD3) : const Color(0xFFBE123C);
+        border = AppColors.error.withValues(alpha: dark ? 0.5 : 0.25);
         break;
       case AppBadgeVariant.emerald:
-        bg = AppColors.successLight;
-        fg = const Color(0xFF059669);
-        border = AppColors.success.withValues(alpha: 0.28);
+        bg = dark ? const Color(0xFF064E3B) : AppColors.successLight;
+        fg = dark ? const Color(0xFFA7F3D0) : const Color(0xFF047857);
+        border = AppColors.success.withValues(alpha: dark ? 0.5 : 0.28);
         break;
       case AppBadgeVariant.slate:
-        bg = const Color(0xFFF1F5F9);
-        fg = AppColors.textSecondary;
-        border = AppColors.cardBorder;
+        bg = AppColors.subtleSurface(context);
+        fg = dark ? AppColors.darkTextSecondary : const Color(0xFF475569);
+        border = AppColors.borderColor(context);
         break;
     }
 
@@ -78,12 +79,15 @@ class AppBadge extends StatelessWidget {
             icon!,
             const SizedBox(width: 4),
           ],
-          Text(
-            text,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              color: fg,
+          Flexible(
+            child: Text(
+              text,
+              softWrap: true,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w700,
+                color: fg,
+              ),
             ),
           ),
         ],

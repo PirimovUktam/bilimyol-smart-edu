@@ -26,7 +26,16 @@ class _DictionarySheetState extends State<DictionarySheet> {
     super.dispose();
   }
 
-  Future<void> _lookup() async {
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
+  Future<void> _lookup(bool isRu) async {
     if (_loading) return;
     final word = _word.text.trim().toLowerCase();
     setState(() {
@@ -36,7 +45,11 @@ class _DictionarySheetState extends State<DictionarySheet> {
     });
     if (word.length > 40 ||
         !RegExp(r"^[a-z]+(?:[-'][a-z]+)*$").hasMatch(word)) {
-      setState(() => _error = 'Bitta inglizcha so‘z kiriting. Masalan: hello.');
+      setState(
+        () => _error = isRu
+            ? 'Введите одно английское слово. Например: hello.'
+            : 'Bitta inglizcha so‘z kiriting. Masalan: hello.',
+      );
       return;
     }
     setState(() => _loading = true);
@@ -50,12 +63,18 @@ class _DictionarySheetState extends State<DictionarySheet> {
           .timeout(const Duration(seconds: 8));
       if (!mounted) return;
       if (response.statusCode == 404) {
-        setState(() => _error = 'Bu so‘z uchun ta’rif topilmadi.');
+        setState(
+          () => _error = isRu
+              ? 'Определение для этого слова не найдено.'
+              : 'Bu so‘z uchun ta’rif topilmadi.',
+        );
         return;
       }
       if (response.statusCode != 200) {
         setState(
-          () => _error = 'Lug‘at hozir javob bermayapti. Qayta urinib ko‘ring.',
+          () => _error = isRu
+              ? 'Словарь сейчас не отвечает. Попробуйте снова.'
+              : 'Lug‘at hozir javob bermayapti. Qayta urinib ko‘ring.',
         );
         return;
       }
@@ -92,7 +111,9 @@ class _DictionarySheetState extends State<DictionarySheet> {
       }
       setState(() {
         if (definitions.isEmpty) {
-          _error = 'Bu so‘z uchun ta’rif topilmadi.';
+          _error = isRu
+              ? 'Определение для этого слова не найдено.'
+              : 'Bu so‘z uchun ta’rif topilmadi.';
         } else {
           _resultWord = word;
           _phonetic = phonetic;
@@ -102,8 +123,9 @@ class _DictionarySheetState extends State<DictionarySheet> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _error =
-              'Lug‘atga ulanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
+          () => _error = isRu
+              ? 'Не удалось подключиться к словарю. Проверьте интернет и попробуйте снова.'
+              : 'Lug‘atga ulanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
         );
       }
     } finally {
@@ -114,6 +136,7 @@ class _DictionarySheetState extends State<DictionarySheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    final isRu = _resolveLang(context) == 'ru';
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
@@ -129,33 +152,44 @@ class _DictionarySheetState extends State<DictionarySheet> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Inglizcha so‘z lug‘ati', style: theme.titleLarge),
+                  child: Text(
+                    isRu ? 'Английский словарь' : 'Inglizcha so‘z lug‘ati',
+                    style: theme.titleLarge,
+                  ),
                 ),
                 IconButton(
-                  tooltip: 'Lug‘atni yopish',
+                  tooltip: isRu ? 'Закрыть словарь' : 'Lug‘atni yopish',
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            const Text('Inglizcha ta’rif, talaffuz va misolni toping.'),
+            Text(
+              isRu
+                  ? 'Найдите английское определение, произношение и пример.'
+                  : 'Inglizcha ta’rif, talaffuz va misolni toping.',
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _word,
               enabled: !_loading,
               maxLength: 40,
-              decoration: const InputDecoration(
-                labelText: 'Inglizcha so‘z',
+              decoration: InputDecoration(
+                labelText: isRu ? 'Английское слово' : 'Inglizcha so‘z',
                 hintText: 'hello',
               ),
               textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _lookup(),
+              onSubmitted: (_) => _lookup(isRu),
             ),
             FilledButton.icon(
-              onPressed: _loading ? null : _lookup,
+              onPressed: _loading ? null : () => _lookup(isRu),
               icon: const Icon(Icons.search_rounded),
-              label: Text(_loading ? 'Izlanmoqda…' : 'So‘zni izlash'),
+              label: Text(
+                _loading
+                    ? (isRu ? 'Поиск…' : 'Izlanmoqda…')
+                    : (isRu ? 'Найти слово' : 'So‘zni izlash'),
+              ),
             ),
             if (_error != null)
               Padding(
@@ -184,7 +218,12 @@ class _DictionarySheetState extends State<DictionarySheet> {
                 ),
             ],
             const SizedBox(height: 8),
-            Text('Manba: Free Dictionary API', style: theme.bodySmall),
+            Text(
+              isRu
+                  ? 'Источник: Free Dictionary API'
+                  : 'Manba: Free Dictionary API',
+              style: theme.bodySmall,
+            ),
           ],
         ),
       ),

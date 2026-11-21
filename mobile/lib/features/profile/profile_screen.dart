@@ -25,6 +25,15 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isLoggingOut = false;
 
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
     if (demoSessionActive.value) {
@@ -32,11 +41,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context.go('/login');
       return;
     }
+    final isRu = _resolveLang(context) == 'ru';
     final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _isLoggingOut = true);
     try {
       final auth = SupabaseConfig.client?.auth;
-      if (auth == null) throw StateError('Hisob xizmatiga ulanish yo‘q.');
+      if (auth == null) {
+        throw StateError(
+          isRu
+              ? 'Нет подключения к сервису аккаунта.'
+              : 'Hisob xizmatiga ulanish yo‘q.',
+        );
+      }
       await auth.signOut(scope: SignOutScope.local);
       container.invalidate(learnerStateNotifierProvider);
       container.invalidate(courseStateNotifierProvider);
@@ -46,11 +62,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) context.go('/login');
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hisobdan chiqib bo‘lmadi. Qayta urinib ko‘ring.'),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                isRu
+                    ? 'Не удалось выйти из аккаунта. Попробуйте снова.'
+                    : 'Hisobdan chiqib bo‘lmadi. Qayta urinib ko‘ring.',
+              ),
+            ),
+          );
       }
     } finally {
       if (mounted) setState(() => _isLoggingOut = false);
@@ -64,14 +86,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final activeCourse = courseState.activeCourse;
     final demo = demoSessionActive.value;
     final email = SupabaseConfig.client?.auth.currentUser?.email;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
+    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
-        title: const Text('Profilim'),
+        toolbarHeight: isLargeText ? 96 : null,
+        title: Text(
+          isRu ? 'Мой профиль' : 'Profilim',
+          softWrap: true,
+          maxLines: isLargeText ? null : 1,
+          overflow: isLargeText
+              ? TextOverflow.visible
+              : TextOverflow.ellipsis,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/dashboard'),
+          onPressed: () {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            context.go('/dashboard');
+          },
         ),
       ),
       bottomNavigationBar: const BilimYolBottomNav(currentIndex: 4),
@@ -79,11 +115,102 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: learnerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => FriendlyErrorState(
-            message: 'Profilni yuklab bo‘lmadi.',
+            message: isRu
+                ? 'Не удалось загрузить профиль.'
+                : 'Profilni yuklab bo‘lmadi.',
             onRetry: () =>
                 ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
           ),
           data: (profile) {
+            final xpCard = AppCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.bolt_rounded,
+                    color: Color(0xFFFBBF24),
+                    size: 18,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${profile.xp} XP',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimaryColor(context),
+                    ),
+                  ),
+                  Text(
+                    isRu ? 'Опыт' : 'Tajriba',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10.5,
+                      color: AppColors.textMutedColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            final streakCard = AppCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Color(0xFFEA580C),
+                    size: 18,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isRu ? '${profile.streakDays} дн.' : '${profile.streakDays} kun',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimaryColor(context),
+                    ),
+                  ),
+                  Text(
+                    isRu ? 'Серия' : 'Ketma-ket',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10.5,
+                      color: AppColors.textMutedColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            final courseCard = AppCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.school_rounded,
+                    color: AppColors.primaryAccentOnSurface(context),
+                    size: 18,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    activeCourse?.localizedTitle(lang) ??
+                        (isRu ? 'Предмет' : 'Fan'),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimaryColor(context),
+                    ),
+                  ),
+                  Text(
+                    isRu ? 'Текущий предмет' : 'Joriy fan',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10.5,
+                      color: AppColors.textMutedColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            );
+
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Column(
@@ -121,22 +248,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  Flexible(
-                                    child: Text(
-                                      profile.name,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.textPrimary,
-                                      ),
+                                  Text(
+                                    profile.name,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimaryColor(context),
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
                                   AppBadge(
-                                    text: demo ? 'Namuna' : 'O‘quvchi',
+                                    text: demo
+                                        ? (isRu ? 'Демо' : 'Namuna')
+                                        : (isRu ? 'Ученик' : 'O‘quvchi'),
                                     variant: AppBadgeVariant.emerald,
                                   ),
                                 ],
@@ -144,13 +272,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 demo
-                                    ? 'Namuna hisobi'
+                                    ? (isRu ? 'Демо-аккаунт' : 'Namuna hisobi')
                                     : (email ??
-                                          'Elektron pochta ko‘rsatilmagan'),
-                                overflow: TextOverflow.ellipsis,
+                                          (isRu
+                                              ? 'Эл. почта не указана'
+                                              : 'Elektron pochta ko‘rsatilmagan')),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
-                                  color: AppColors.textMuted,
+                                  color: AppColors.textMutedColor(context),
                                 ),
                               ),
                             ],
@@ -162,115 +291,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 16),
 
                   // Stats Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppCard(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.bolt_rounded,
-                                color: Color(0xFFFBBF24),
-                                size: 18,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${profile.xp} XP',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                'Tajriba',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.5,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: AppCard(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.local_fire_department_rounded,
-                                color: Color(0xFFEA580C),
-                                size: 18,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${profile.streakDays} kun',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                'Ketma-ket',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.5,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: AppCard(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.school_rounded,
-                                color: AppColors.primary,
-                                size: 18,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                activeCourse?.title ?? 'Fan',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                'Joriy fan',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 10.5,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  if (isLargeText)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        xpCard,
+                        const SizedBox(height: 10),
+                        streakCard,
+                        const SizedBox(height: 10),
+                        courseCard,
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(child: xpCard),
+                        const SizedBox(width: 8),
+                        Expanded(child: streakCard),
+                        const SizedBox(width: 8),
+                        Expanded(child: courseCard),
+                      ],
+                    ),
                   const SizedBox(height: 20),
 
                   // Settings Card
-                  const EdTechReveal(
+                  EdTechReveal(
                     index: 2,
                     child: EdTechSectionHeader(
-                      pillText: 'Moslashtirish',
-                      title: 'O‘quv sozlamalari',
-                      highlightWord: 'sozlamalari',
+                      pillText: isRu ? 'Настройка' : 'Moslashtirish',
+                      title: isRu ? 'Настройки обучения' : 'O‘quv sozlamalari',
+                      highlightWord: isRu ? 'обучения' : 'sozlamalari',
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -283,17 +333,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         children: [
                           ListTile(
                             leading: const Icon(Icons.menu_book_outlined),
-                            title: const Text('Fanni o‘zgartirish'),
+                            title: Text(
+                              isRu ? 'Сменить предмет' : 'Fanni o‘zgartirish',
+                            ),
                             trailing: const Icon(Icons.chevron_right_rounded),
-                            onTap: () => context.push('/courses'),
+                            onTap: () {
+                              ScaffoldMessenger.of(context).clearSnackBars();
+                              context.push('/courses');
+                            },
                           ),
                           if (activeCourse != null)
                             ListTile(
                               leading: const Icon(Icons.tune_rounded),
-                              title: const Text('Boshlash darajasini sozlash'),
-                              subtitle: Text(activeCourse.title),
+                              title: Text(
+                                isRu
+                                    ? 'Настроить стартовый уровень'
+                                    : 'Boshlash darajasini sozlash',
+                              ),
+                              subtitle: Text(activeCourse.localizedTitle(lang)),
                               trailing: const Icon(Icons.chevron_right_rounded),
-                              onTap: () => context.push('/onboarding'),
+                              onTap: () {
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                context.push('/onboarding');
+                              },
                             ),
                         ],
                       ),
@@ -304,24 +366,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // Actions
                   if (demo)
                     AppButton(
-                      text: 'Namuna natijalarini tiklash',
+                      text: isRu
+                          ? 'Сбросить результаты демо'
+                          : 'Namuna natijalarini tiklash',
                       isFullWidth: true,
                       variant: AppButtonVariant.outline,
-                      leftIcon: const Icon(
+                      leftIcon: Icon(
                         Icons.refresh_rounded,
                         size: 16,
-                        color: Color(0xFFF59E0B),
+                        color: AppColors.isDark(context)
+                            ? AppColors.warning
+                            : const Color(0xFFB45309),
                       ),
                       onPressed: () async {
                         await ref
                             .read(learnerStateNotifierProvider.notifier)
                             .resetAll();
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Demo muvaffaqiyatli tiklandi.'),
-                            ),
-                          );
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isRu
+                                      ? 'Демо-режим успешно сброшен.'
+                                      : 'Demo muvaffaqiyatli tiklandi.',
+                                ),
+                              ),
+                            );
                           context.go('/courses');
                         }
                       },
@@ -329,7 +401,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 10),
 
                   AppButton(
-                    text: 'Hisobdan chiqish',
+                    text: isRu ? 'Выйти из аккаунта' : 'Hisobdan chiqish',
                     isFullWidth: true,
                     variant: AppButtonVariant.danger,
                     leftIcon: const Icon(

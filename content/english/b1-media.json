@@ -1,0 +1,719 @@
+{
+  "schemaVersion": 1,
+  "courseId": "course_eng_01",
+  "cefrLevel": "B1",
+  "language": "en",
+  "reviewStatus": "approved",
+  "sampleRate": 22050,
+  "channels": 1,
+  "sampleWidthBytes": 2,
+  "svgSourceDir": "content/english/svg/b1",
+  "copySvgToWeb": false,
+  "webOutputDir": "public/lesson-media/english/b1",
+  "flutterOutputDir": "mobile/assets/lesson_media/english/b1",
+  "audio": [
+    {
+      "id": "media_eng_b1_m1_travel_dialogue",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m1-travel-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-travel-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+      "posterAltUz": "Aeroport uchish jadvali o‘zgarishi, QR kodli chipta va mehmonxona kaliti tasvirlangan ikki panel",
+      "posterAltRu": "Две панели: перенос времени вылета, посадочный бланк со штрих-кодом и ключ-карта отеля",
+      "titleUz": "Aeroportda reys va turar joyni tekshirish suhbati",
+      "titleRu": "Диалог в аэропорту о переносе рейса и бронировании",
+      "transcript": "Sardor: Excuse me, I have already checked in online for the Prague flight, but my app shows a new itinerary.\nAgent: Let me check your boarding pass. Yes, because of morning fog, the nine thirty flight from Gate seven was cancelled. We have rescheduled passengers to eleven fifteen from Gate nineteen.\nSardor: Okay, eleven fifteen at Gate nineteen. Also, I booked my student accommodation two days ago, and the confirmation email hasn't arrived yet.\nAgent: I see it in our partner system. I have just sent a fresh copy to your inbox, so you can show it at reception.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Sardor",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Excuse me, I have already checked in online for the Prague flight, but my app shows a new itinerary.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Agent",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Let me check your boarding pass. Yes, because of morning fog, the nine thirty flight from Gate seven was cancelled. We have rescheduled passengers to eleven fifteen from Gate nineteen.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Sardor",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Okay, eleven fifteen at Gate nineteen. Also, I booked my student accommodation two days ago, and the confirmation email hasn't arrived yet.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Agent",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "I see it in our partner system. I have just sent a fresh copy to your inbox, so you can show it at reception."
+        }
+      ],
+      "durationSeconds": 37.075
+    },
+    {
+      "id": "media_eng_b1_m1_boarding_pass",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m1-boarding-pass.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-boarding-pass.wav",
+      "titleUz": "Talaffuz: boarding pass",
+      "titleRu": "Произношение: boarding pass",
+      "transcript": "boarding pass",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Agent",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "boarding pass"
+        }
+      ],
+      "durationSeconds": 0.996
+    },
+    {
+      "id": "media_eng_b1_m1_itinerary",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m1-itinerary.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-itinerary.wav",
+      "titleUz": "Talaffuz: itinerary",
+      "titleRu": "Произношение: itinerary",
+      "transcript": "itinerary",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Sardor",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "itinerary"
+        }
+      ],
+      "durationSeconds": 0.974
+    },
+    {
+      "id": "media_eng_b1_m1_reschedule",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m1-reschedule.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-reschedule.wav",
+      "titleUz": "Talaffuz: reschedule",
+      "titleRu": "Произношение: reschedule",
+      "transcript": "reschedule",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Agent",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "reschedule"
+        }
+      ],
+      "durationSeconds": 0.887
+    },
+    {
+      "id": "media_eng_b1_m1_accommodation",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m1-accommodation.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-accommodation.wav",
+      "titleUz": "Talaffuz: accommodation",
+      "titleRu": "Произношение: accommodation",
+      "transcript": "accommodation",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Sardor",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "accommodation"
+        }
+      ],
+      "durationSeconds": 1.04
+    },
+    {
+      "id": "media_eng_b1_u1_cp_hotel_dialogue",
+      "lessonId": "lesson_eng_b1_u1_checkpoint",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-u1-cp-hotel-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-u1-cp-hotel-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+      "posterAltUz": "Mehmonxona binosi, kalit belgisi va yangilangan safar kartochkasi tasviri",
+      "posterAltRu": "Здание отеля, золотой значок ключа и обновлённая карта маршрута",
+      "titleUz": "1-bo‘lim sinovi: Mehmonxonada xonani almashtirish suhbati",
+      "titleRu": "Проверка раздела 1: Смена номера в отеле",
+      "transcript": "Guest: Good afternoon. I checked in yesterday for a three-night stay, and I've never stayed in Room two zero four before, but the street noise kept me awake.\nReceptionist: I'm really sorry about that. Since you still have two nights left, would you like to move to Room four twelve? It faces the quiet courtyard away from the elevator.\nGuest: Courtyard side away from the elevator sounds perfect. Should I return the old key card now?\nReceptionist: Yes, please. I have already updated your reservation, so here is your new card for Room four twelve.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Guest",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Good afternoon. I checked in yesterday for a three-night stay, and I've never stayed in Room two zero four before, but the street noise kept me awake.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Receptionist",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "I'm really sorry about that. Since you still have two nights left, would you like to move to Room four twelve? It faces the quiet courtyard away from the elevator.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Guest",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Courtyard side away from the elevator sounds perfect. Should I return the old key card now?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Receptionist",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Yes, please. I have already updated your reservation, so here is your new card for Room four twelve."
+        }
+      ],
+      "durationSeconds": 34.267
+    },
+    {
+      "id": "media_eng_b1_m2_work_dialogue",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m2-work-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-work-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m2-work-problem.png",
+      "posterAltUz": "To‘xtatib qo‘yilgan yuklash oynasi, server ogohlantirish belgisi va zaxira yuborish sxemasi",
+      "posterAltRu": "Приостановленная загрузка на ноутбуке, предупреждение о сервере и резервный канал отправки",
+      "titleUz": "O‘qish va ish: Server muammosi va zaxira reja suhbati",
+      "titleRu": "Работа и учёба: сбой сервера и запасной план",
+      "transcript": "Timur: Hi Kamola, the upload portal has stopped working because of unexpected server maintenance, so I can't submit our team report before the four o'clock deadline.\nKamola: Thanks for telling me early. Have you saved a local PDF copy on your laptop?\nTimur: Yes, I exported a backup ten minutes ago, so nothing is lost.\nKamola: Great. If the portal does not come back online by three o'clock, we will email the PDF directly to Dr. Karim and postpone the live demo until Thursday morning.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Hi Kamola, the upload portal has stopped working because of unexpected server maintenance, so I can't submit our team report before the four o'clock deadline.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Thanks for telling me early. Have you saved a local PDF copy on your laptop?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Yes, I exported a backup ten minutes ago, so nothing is lost.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Great. If the portal does not come back online by three o'clock, we will email the PDF directly to Dr. Karim and postpone the live demo until Thursday morning."
+        }
+      ],
+      "durationSeconds": 31.019
+    },
+    {
+      "id": "media_eng_b1_m2_deadline",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m2-deadline.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-deadline.wav",
+      "titleUz": "Talaffuz: deadline",
+      "titleRu": "Произношение: deadline",
+      "transcript": "deadline",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "deadline"
+        }
+      ],
+      "durationSeconds": 0.835
+    },
+    {
+      "id": "media_eng_b1_m2_backup_plan",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m2-backup-plan.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-backup-plan.wav",
+      "titleUz": "Talaffuz: backup plan",
+      "titleRu": "Произношение: backup plan",
+      "transcript": "backup plan",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "backup plan"
+        }
+      ],
+      "durationSeconds": 1.023
+    },
+    {
+      "id": "media_eng_b1_m2_postpone",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m2-postpone.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-postpone.wav",
+      "titleUz": "Talaffuz: postpone",
+      "titleRu": "Произношение: postpone",
+      "transcript": "postpone",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Kamola",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "postpone"
+        }
+      ],
+      "durationSeconds": 0.943
+    },
+    {
+      "id": "media_eng_b1_m2_resubmit",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m2-resubmit.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-resubmit.wav",
+      "titleUz": "Talaffuz: resubmit",
+      "titleRu": "Произношение: resubmit",
+      "transcript": "resubmit",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Timur",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "resubmit"
+        }
+      ],
+      "durationSeconds": 0.777
+    },
+    {
+      "id": "media_eng_b1_m3_story_dialogue",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m3-story-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-story-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+      "posterAltUz": "Uch bosqichli voqea chizig‘i: taqdimot tayyorgarligi, elektr uzilishi va yutuq pog‘onasi",
+      "posterAltRu": "Трёхэтапная линия событий: подготовка презентации, отключение света и призовой пьедестал",
+      "titleUz": "Ilmiy xakatondagi kutilmagan voqea hikoyasi",
+      "titleRu": "История о неожиданном случае на научном хакатоне",
+      "transcript": "Bekzod: You won't believe what happened at the science hackathon last Friday! While our team was testing the sensor prototype in the workshop where we built it, a sudden storm cut the electricity.\nNodira: Oh no! Did you lose all your test data?\nBekzod: Almost! Fortunately, a student who sat at the table beside us lent us a portable battery which kept the laptop running.\nNodira: That was lucky! So did you eventually present on stage?\nBekzod: Yes, we eventually reached the final milestone and finished in second place!",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "You won't believe what happened at the science hackathon last Friday! While our team was testing the sensor prototype in the workshop where we built it, a sudden storm cut the electricity.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Nodira",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Oh no! Did you lose all your test data?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Almost! Fortunately, a student who sat at the table beside us lent us a portable battery which kept the laptop running.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Nodira",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "That was lucky! So did you eventually present on stage?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Yes, we eventually reached the final milestone and finished in second place!"
+        }
+      ],
+      "durationSeconds": 32.13
+    },
+    {
+      "id": "media_eng_b1_m3_meanwhile",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m3-meanwhile.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-meanwhile.wav",
+      "titleUz": "Talaffuz: meanwhile",
+      "titleRu": "Произношение: meanwhile",
+      "transcript": "meanwhile",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nodira",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "meanwhile"
+        }
+      ],
+      "durationSeconds": 0.816
+    },
+    {
+      "id": "media_eng_b1_m3_eventually",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m3-eventually.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-eventually.wav",
+      "titleUz": "Talaffuz: eventually",
+      "titleRu": "Произношение: eventually",
+      "transcript": "eventually",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "eventually"
+        }
+      ],
+      "durationSeconds": 0.891
+    },
+    {
+      "id": "media_eng_b1_m3_colleague",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m3-colleague.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-colleague.wav",
+      "titleUz": "Talaffuz: colleague",
+      "titleRu": "Произношение: colleague",
+      "transcript": "colleague",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Nodira",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "colleague"
+        }
+      ],
+      "durationSeconds": 0.733
+    },
+    {
+      "id": "media_eng_b1_m3_milestone",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m3-milestone.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-milestone.wav",
+      "titleUz": "Talaffuz: milestone",
+      "titleRu": "Произношение: milestone",
+      "transcript": "milestone",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Bekzod",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "milestone"
+        }
+      ],
+      "durationSeconds": 0.951
+    },
+    {
+      "id": "media_eng_b1_m4_decisions_dialogue",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m4-decisions-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-decisions-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m4-decision-board.png",
+      "posterAltUz": "Muhokama pufakchalari, tarozi belgisi va ustuvor vazifalar doskasi tasvirlangan panel",
+      "posterAltRu": "Диалоговые окна обсуждения, весы выбора и доска приоритетных задач",
+      "titleUz": "Jamoaviy muhokama va keyingi harakatni tanlash suhbati",
+      "titleRu": "Командное обсуждение и выбор следующего шага",
+      "transcript": "Mentor: I reviewed your user feedback notes. Thirty percent of mobile testers could not finish the sign-in screen because the verification code expired too fast.\nAziz: Earlier, some teammates suggested adding dark mode first, since users asked for it.\nMentor: Dark mode is helpful, but sign-in access is our top priority. You must fix the timeout bug before Friday, and you ought to notify the testers once it is ready.\nAziz: Good point. I will tell the developers that we are postponing new design features until Monday, and we should run a second test on Saturday morning.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Mentor",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "I reviewed your user feedback notes. Thirty percent of mobile testers could not finish the sign-in screen because the verification code expired too fast.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Aziz",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Earlier, some teammates suggested adding dark mode first, since users asked for it.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Mentor",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Dark mode is helpful, but sign-in access is our top priority. You must fix the timeout bug before Friday, and you ought to notify the testers once it is ready.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Aziz",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Good point. I will tell the developers that we are postponing new design features until Monday, and we should run a second test on Saturday morning."
+        }
+      ],
+      "durationSeconds": 35.381
+    },
+    {
+      "id": "media_eng_b1_m4_compromise",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m4-compromise.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-compromise.wav",
+      "titleUz": "Talaffuz: compromise",
+      "titleRu": "Произношение: compromise",
+      "transcript": "compromise",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Mentor",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "compromise"
+        }
+      ],
+      "durationSeconds": 0.93
+    },
+    {
+      "id": "media_eng_b1_m4_priority",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m4-priority.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-priority.wav",
+      "titleUz": "Talaffuz: priority",
+      "titleRu": "Произношение: priority",
+      "transcript": "priority",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziz",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "priority"
+        }
+      ],
+      "durationSeconds": 0.813
+    },
+    {
+      "id": "media_eng_b1_m4_recommend",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m4-recommend.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-recommend.wav",
+      "titleUz": "Talaffuz: recommend",
+      "titleRu": "Произношение: recommend",
+      "transcript": "recommend",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Mentor",
+          "voice": "Microsoft Zira Desktop",
+          "rate": -1,
+          "text": "recommend"
+        }
+      ],
+      "durationSeconds": 0.799
+    },
+    {
+      "id": "media_eng_b1_m4_outcome",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-m4-outcome.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-outcome.wav",
+      "titleUz": "Talaffuz: outcome",
+      "titleRu": "Произношение: outcome",
+      "transcript": "outcome",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziz",
+          "voice": "Microsoft David Desktop",
+          "rate": -1,
+          "text": "outcome"
+        }
+      ],
+      "durationSeconds": 0.75
+    },
+    {
+      "id": "media_eng_b1_exit_dialogue",
+      "lessonId": "lesson_eng_b1_exit",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "b1-exit-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/b1/b1-exit-dialogue.wav",
+      "posterImage": "/lesson-media/english/b1/b1-m4-decision-board.png",
+      "posterAltUz": "Konferensiya muammosini muhokama qilayotgan ikki ishtirokchi va qarorlar doskasi",
+      "posterAltRu": "Участники обсуждают техническую неполадку и план действий на доске",
+      "titleUz": "B1 yakuniy tinglash: Konferensiyadagi texnik muammo va qaror",
+      "titleRu": "Итоговое аудирование B1: Техническая проблема на конференции и решение",
+      "transcript": "Malika: Hi Rustam! I have just arrived at the Samarkand youth center. My morning train arrived on time, unlike last month.\nRustam: Glad you made it! Actually, we have a small problem. While the opening speaker was connecting his laptop, the main projector cable broke.\nMalika: Has the technician checked the storage room yet?\nRustam: He is looking right now. The organizer said that if we don't find a spare cable by ten fifteen, we should share the slide link with attendees and start the Q and A session fifteen minutes early.",
+      "interTurnPauseMs": 450,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Malika",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Hi Rustam! I have just arrived at the Samarkand youth center. My morning train arrived on time, unlike last month.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Rustam",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "Glad you made it! Actually, we have a small problem. While the opening speaker was connecting his laptop, the main projector cable broke.",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Malika",
+          "voice": "Microsoft Zira Desktop",
+          "rate": 0,
+          "text": "Has the technician checked the storage room yet?",
+          "pauseAfterMs": 450
+        },
+        {
+          "speaker": "Rustam",
+          "voice": "Microsoft David Desktop",
+          "rate": 0,
+          "text": "He is looking right now. The organizer said that if we don't find a spare cable by ten fifteen, we should share the slide link with attendees and start the Q and A session fifteen minutes early."
+        }
+      ],
+      "durationSeconds": 33.248
+    }
+  ],
+  "images": [
+    {
+      "id": "media_eng_b1_m1_travel_boarding_img",
+      "lessonId": "lesson_eng_b1_m1_travel",
+      "kind": "image",
+      "language": "en",
+      "filename": "b1-m1-travel-boarding.png",
+      "svgFilename": "b1-m1-travel-boarding.svg",
+      "canonicalSource": "/lesson-media/english/b1/b1-m1-travel-boarding.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Ikki bo‘lakli rasm: chapda samolyot, eski va yangi soatlar hamda QR kodli qog‘oz varaq; o‘ngda xarita belgilari, chamadon va kalitli bino",
+      "altRu": "Две панели: слева самолёт, старые и новые часы, бланк со штрих-кодом; справа маршрут на карте, чемодан и здание с ключом",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_b1_m2_work_problem_img",
+      "lessonId": "lesson_eng_b1_m2_work_study",
+      "kind": "image",
+      "language": "en",
+      "filename": "b1-m2-work-problem.png",
+      "svgFilename": "b1-m2-work-problem.svg",
+      "canonicalSource": "/lesson-media/english/b1/b1-m2-work-problem.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Ish jarayoni sxemasi: chapda to‘xtagan noutbuk va qizil server, o‘ngda esa xat konverti orqali yuborish va yashil tasdiq belgisi",
+      "altRu": "Схема решения сбоя: слева ноутбук со значком паузы и красный сервер, справа отправка файла конвертом и зелёная галочка",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_b1_m3_story_timeline_img",
+      "lessonId": "lesson_eng_b1_m3_narrative",
+      "kind": "image",
+      "language": "en",
+      "filename": "b1-m3-story-timeline.png",
+      "svgFilename": "b1-m3-story-timeline.svg",
+      "canonicalSource": "/lesson-media/english/b1/b1-m3-story-timeline.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Uch kartochkali voqea chizig‘i: chapda ekran va to‘lqinlar, o‘rtada chaqmoq va batareya uzatish, o‘ngda bayroqli pog‘ona",
+      "altRu": "Три карточки событий: слева экран и волны, в центре молния и передача батареи, справа пьедестал с флагом",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    },
+    {
+      "id": "media_eng_b1_m4_decision_board_img",
+      "lessonId": "lesson_eng_b1_m4_decisions",
+      "kind": "image",
+      "language": "en",
+      "filename": "b1-m4-decision-board.png",
+      "svgFilename": "b1-m4-decision-board.svg",
+      "canonicalSource": "/lesson-media/english/b1/b1-m4-decision-board.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Chapda suhbat pufakchalari va tarozi, o‘ngda yulduzcha, pauza belgisi va nishonli uch qatorli reja doskasi",
+      "altRu": "Слева облака диалога и весы, справа трёхстрочная доска со звездой, паузой и стрелкой к мишени",
+      "reviewStatus": "approved",
+      "provenance": "local-svg-playwright-chromium"
+    }
+  ]
+}

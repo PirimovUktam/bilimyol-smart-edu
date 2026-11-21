@@ -7,12 +7,16 @@ import { SEED_ROADMAP_NODES } from '../datasources/roadmaps';
 export class InMemoryLessonRepository implements ILessonRepository {
   private runtimeLessons: Map<string, Lesson> = new Map();
 
-  async getLessonById(lessonId: string): Promise<Lesson | null> {
+  getLessonByIdSync(lessonId: string): Lesson | null {
     if (this.runtimeLessons.has(lessonId)) {
       return { ...this.runtimeLessons.get(lessonId)! };
     }
     const lesson = SEED_LESSONS[lessonId];
     return lesson ? { ...lesson } : null;
+  }
+
+  async getLessonById(lessonId: string): Promise<Lesson | null> {
+    return this.getLessonByIdSync(lessonId);
   }
 
   async getLessonByCourseAndSkill(courseId: string, skillId: string): Promise<Lesson | null> {

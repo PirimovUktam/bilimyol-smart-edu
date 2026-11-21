@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="homeWall" x1="0" y1="0" x2="0" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#FEF3C7" stop-opacity="0.35"/>
+    </linearGradient>
+    <radialGradient id="studyLamp" cx="220" cy="240" r="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#FEF3C7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="homeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="440" fill="url(#homeWall)"/>
+  <rect y="440" width="800" height="160" fill="#E2E8F0"/>
+
+  <!-- Evening Window (Stars + Crescent Moon) -->
+  <g filter="url(#homeShadow)">
+    <rect x="498" y="76" width="214" height="218" rx="16" fill="#FFFFFF" stroke="#94A3B8" stroke-width="5"/>
+    <rect x="514" y="92" width="182" height="186" rx="8" fill="#1E1B4B"/>
+    <circle cx="626" cy="146" r="24" fill="#FDE68A"/>
+    <circle cx="636" cy="140" r="21" fill="#1E1B4B"/>
+    <circle cx="556" cy="134" r="4" fill="#FFFFFF" opacity="0.85"/>
+    <circle cx="584" cy="186" r="3" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="660" cy="212" r="4" fill="#FFFFFF" opacity="0.8"/>
+    <line x1="605" y1="92" x2="605" y2="278" stroke="#FFFFFF" stroke-width="5"/>
+    <line x1="514" y1="185" x2="696" y2="185" stroke="#FFFFFF" stroke-width="5"/>
+  </g>
+
+  <!-- Study Table -->
+  <g filter="url(#homeShadow)">
+    <rect x="110" y="352" width="580" height="26" rx="10" fill="#4F46E5"/>
+    <rect x="144" y="378" width="22" height="156" rx="6" fill="#312E81"/>
+    <rect x="634" y="378" width="22" height="156" rx="6" fill="#312E81"/>
+
+    <!-- Desk Lamp with Warm Glow -->
+    <circle cx="220" cy="240" r="130" fill="url(#studyLamp)"/>
+    <rect x="158" y="340" width="54" height="12" rx="5" fill="#334155"/>
+    <path d="M185 342 L176 266 L218 232" stroke="#475569" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M204 220 L248 250 L214 270 Z" fill="#F59E0B"/>
+
+    <!-- Open Journal & Pen -->
+    <rect x="296" y="324" width="184" height="28" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <line x1="388" y1="326" x2="388" y2="350" stroke="#94A3B8" stroke-width="2"/>
+    <line x1="312" y1="334" x2="372" y2="334" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <line x1="312" y1="342" x2="360" y2="342" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <line x1="404" y1="334" x2="462" y2="334" stroke="#4F46E5" stroke-width="3" stroke-linecap="round"/>
+    <rect x="494" y="340" width="44" height="8" rx="4" fill="#10B981"/>
+
+    <!-- Teacup -->
+    <rect x="572" y="314" width="38" height="38" rx="8" fill="#10B981"/>
+    <path d="M610 324 Q624 324 624 334 Q624 344 610 344" stroke="#10B981" stroke-width="5" fill="none"/>
+    <path d="M584 298 Q588 288 584 278" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M598 298 Q602 288 598 278" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

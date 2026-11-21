@@ -14,6 +14,10 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -36,24 +40,30 @@ class WelcomeScreen extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.primaryTint(context),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.explore_rounded,
                               size: 14,
-                              color: AppColors.primary,
+                              color: AppColors.primaryAccentOnSurface(context),
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              'Shaxsiy ta’lim yo‘li',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                            Flexible(
+                              child: Text(
+                                isRu
+                                    ? 'Персональный путь обучения'
+                                    : 'Shaxsiy ta’lim yo‘li',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryAccentOnSurface(
+                                    context,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -61,15 +71,19 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'O‘zingizga mos yo‘ldan o‘rganing.',
+                        isRu
+                            ? 'Учитесь по удобному для вас пути.'
+                            : 'O‘zingizga mos yo‘ldan o‘rganing.',
                         style: theme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryColor(context),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Fan tanlang, darajangizga mos darsdan boshlang. Tushunmagan joyingizda Yo‘lchi yordam beradi.',
+                        isRu
+                            ? 'Выберите предмет и начните с урока вашего уровня. Если возникнут трудности, Yo‘lchi поможет.'
+                            : 'Fan tanlang, darajangizga mos darsdan boshlang. Tushunmagan joyingizda Yo‘lchi yordam beradi.',
                         style: theme.bodyLarge,
                       ),
                     ],
@@ -91,12 +105,14 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         onPressed: () => context.push('/register'),
                         icon: const Icon(Icons.arrow_forward_rounded),
-                        label: const Text('Ro‘yxatdan o‘tish'),
+                        label: Text(
+                          isRu ? 'Регистрация' : 'Ro‘yxatdan o‘tish',
+                        ),
                       ),
                       const SizedBox(height: 6),
                       TextButton(
                         onPressed: () => context.push('/login'),
-                        child: const Text('Kirish'),
+                        child: Text(isRu ? 'Войти' : 'Kirish'),
                       ),
                       if (!SupabaseConfig.hasRemoteConfiguration)
                         TextButton(
@@ -104,7 +120,11 @@ class WelcomeScreen extends StatelessWidget {
                             demoSessionActive.value = true;
                             context.go('/courses');
                           },
-                          child: const Text('Namuna hisobi bilan kirish'),
+                          child: Text(
+                            isRu
+                                ? 'Войти в деморежим'
+                                : 'Namuna hisobi bilan kirish',
+                          ),
                         ),
                     ],
                   ),
@@ -113,43 +133,65 @@ class WelcomeScreen extends StatelessWidget {
                 EdTechReveal(
                   index: 2,
                   child: AppCard(
-                    backgroundColor: AppColors.primaryLight.withValues(
-                      alpha: 0.7,
-                    ),
+                    backgroundColor: AppColors.primaryTint(context),
                     borderColor: AppColors.primary.withValues(alpha: 0.2),
                     padding: const EdgeInsets.all(18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Uch qadamda boshlang',
+                          isRu
+                              ? 'Начните за три шага'
+                              : 'Uch qadamda boshlang',
                           style: theme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const ListTile(
+                        ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(
                             Icons.explore_outlined,
-                            color: AppColors.primary,
+                            color: AppColors.primaryAccentOnSurface(context),
                           ),
-                          title: Text('Fanni tanlang'),
+                          title: Text(
+                            isRu ? 'Выберите предмет' : 'Fanni tanlang',
+                            style: TextStyle(
+                              color: AppColors.textPrimaryColor(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        const ListTile(
+                        ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(
                             Icons.menu_book_rounded,
-                            color: AppColors.primary,
+                            color: AppColors.primaryAccentOnSurface(context),
                           ),
-                          title: Text('Mos darsni o‘qing'),
+                          title: Text(
+                            isRu
+                                ? 'Пройдите подходящий урок'
+                                : 'Mos darsni o‘qing',
+                            style: TextStyle(
+                              color: AppColors.textPrimaryColor(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        const ListTile(
+                        ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Icon(
                             Icons.auto_awesome_rounded,
-                            color: AppColors.primary,
+                            color: AppColors.primaryAccentOnSurface(context),
                           ),
-                          title: Text('Keyingi qadamni toping'),
+                          title: Text(
+                            isRu
+                                ? 'Откройте следующий шаг'
+                                : 'Keyingi qadamni toping',
+                            style: TextStyle(
+                              color: AppColors.textPrimaryColor(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),

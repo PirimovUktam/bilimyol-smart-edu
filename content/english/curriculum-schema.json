@@ -1,0 +1,1001 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bilimyol.uz/schemas/english/curriculum-schema.json",
+  "title": "BilimYo'l Canonical English Curriculum Schema (course_eng_01)",
+  "description": "JSON Schema Draft 2020-12 contract governing CEFR skeletons, level curriculum manifests, 17-part lessons, SRS flashcards, 9 question modes, learning path nodes, and approved local media assets across Web and Flutter.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/CefrSkeletonDocument" },
+    { "$ref": "#/$defs/LevelCurriculumDocument" },
+    { "$ref": "#/$defs/PlacementDocument" }
+  ],
+  "$defs": {
+    "CefrLevelId": {
+      "type": "string",
+      "enum": ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"]
+    },
+    "SkillId": {
+      "type": "string",
+      "description": "Anchored to the four core persisted English skill IDs in Web, Flutter, and Supabase.",
+      "enum": [
+        "skill_eng_vocab",
+        "skill_eng_grammar",
+        "skill_eng_listening",
+        "skill_eng_reading"
+      ]
+    },
+    "SkillDomain": {
+      "type": "string",
+      "description": "Granular pedagogical skill pillar supporting speaking, writing, pronunciation, and integrated tasks.",
+      "enum": [
+        "vocabulary",
+        "grammar",
+        "listening",
+        "reading",
+        "speaking",
+        "writing",
+        "pronunciation",
+        "integrated"
+      ]
+    },
+    "CommunicativeFocus": {
+      "type": "string",
+      "enum": [
+        "vocabulary",
+        "grammar",
+        "listening",
+        "reading",
+        "speaking",
+        "writing",
+        "pronunciation",
+        "integrated",
+        "checkpoint",
+        "exit_assessment"
+      ]
+    },
+    "CanonicalMediaSource": {
+      "type": "string",
+      "pattern": "^/lesson-media/english/(?:[a-z0-9_-]+/)*[a-z0-9_-]+\\.(wav|png)$",
+      "description": "Canonical runtime media path (.wav audio or .png image for Web + Flutter compatibility)."
+    },
+    "CanonicalAudioSource": {
+      "type": "string",
+      "pattern": "^/lesson-media/english/(?:[a-z0-9_-]+/)*[a-z0-9_-]+\\.wav$"
+    },
+    "CanonicalImageSource": {
+      "type": "string",
+      "pattern": "^/lesson-media/english/(?:[a-z0-9_-]+/)*[a-z0-9_-]+\\.png$"
+    },
+    "LocalizedPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uz", "ru"],
+      "properties": {
+        "uz": { "type": "string", "minLength": 1 },
+        "ru": { "type": "string", "minLength": 1 },
+        "en": { "type": "string", "minLength": 1 }
+      }
+    },
+    "LessonMedia": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "language", "source", "title", "titleUz", "titleRu", "reviewStatus"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^media_eng_[a-z0-9_]+$" },
+        "kind": { "type": "string", "enum": ["audio", "video", "image"] },
+        "language": { "type": "string", "enum": ["en", "uz", "ru"] },
+        "source": { "$ref": "#/$defs/CanonicalMediaSource" },
+        "title": { "type": "string", "minLength": 1 },
+        "titleUz": { "type": "string", "minLength": 1 },
+        "titleRu": { "type": "string", "minLength": 1 },
+        "transcript": { "type": "string", "minLength": 1, "maxLength": 16000 },
+        "alt": { "type": "string", "minLength": 1 },
+        "altUz": { "type": "string", "minLength": 1 },
+        "altRu": { "type": "string", "minLength": 1 },
+        "posterImage": { "$ref": "#/$defs/CanonicalImageSource" },
+        "posterAlt": { "type": "string", "minLength": 1 },
+        "posterAltUz": { "type": "string", "minLength": 1 },
+        "posterAltRu": { "type": "string", "minLength": 1 },
+        "captions": { "type": "string", "minLength": 1 },
+        "durationSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "reviewStatus": { "type": "string", "const": "approved" },
+        "attribution": { "type": "string" },
+        "provenance": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "audio" } } },
+          "then": {
+            "required": ["transcript", "durationSeconds"],
+            "properties": {
+              "language": { "const": "en" },
+              "source": { "$ref": "#/$defs/CanonicalAudioSource" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "image" } } },
+          "then": {
+            "required": ["alt", "altUz", "altRu"],
+            "properties": {
+              "source": { "$ref": "#/$defs/CanonicalImageSource" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "video" } } },
+          "then": {
+            "required": ["transcript", "durationSeconds", "captions"]
+          }
+        }
+      ]
+    },
+    "LessonFlashcard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "front",
+        "backUz",
+        "backRu",
+        "partOfSpeech",
+        "ipa",
+        "cefrLevel",
+        "example",
+        "exampleUz",
+        "exampleRu",
+        "audioSrc",
+        "imageSrc",
+        "alt",
+        "altRu",
+        "srsDefaults"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^fc_eng_[a-z0-9_]+$" },
+        "front": { "type": "string", "minLength": 1 },
+        "backUz": { "type": "string", "minLength": 1 },
+        "backRu": { "type": "string", "minLength": 1 },
+        "partOfSpeech": {
+          "type": "string",
+          "enum": [
+            "noun",
+            "verb",
+            "adjective",
+            "adverb",
+            "preposition",
+            "pronoun",
+            "phrase",
+            "conjunction",
+            "interjection"
+          ]
+        },
+        "ipa": { "type": "string", "pattern": "^/.+/$" },
+        "ipaAmE": { "type": "string", "pattern": "^/.+/$" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "example": { "type": "string", "minLength": 1 },
+        "exampleUz": { "type": "string", "minLength": 1 },
+        "exampleRu": { "type": "string", "minLength": 1 },
+        "audioSrc": { "$ref": "#/$defs/CanonicalAudioSource" },
+        "imageSrc": { "$ref": "#/$defs/CanonicalImageSource" },
+        "alt": { "type": "string", "minLength": 8 },
+        "altRu": { "type": "string", "minLength": 8 },
+        "srsDefaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["initialBucket", "intervalsDays"],
+          "properties": {
+            "initialBucket": { "type": "integer", "const": 0 },
+            "intervalsDays": {
+              "type": "array",
+              "minItems": 4,
+              "items": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "WordMatchPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "left", "right"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "left": { "type": "string", "minLength": 1 },
+        "right": { "type": "string", "minLength": 1 }
+      }
+    },
+    "RubricCriterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "labelUz", "labelRu"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "labelUz": { "type": "string", "minLength": 1 },
+        "labelRu": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "courseId",
+        "skillId",
+        "skillDomain",
+        "cefrLevel",
+        "topic",
+        "difficulty",
+        "questionType",
+        "text",
+        "textRu",
+        "options",
+        "explanation",
+        "explanationRu",
+        "wrongFeedback",
+        "wrongFeedbackRu"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^q_(?:(?:lesson|live)_)?eng_[a-z0-9_]+$" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "skillId": { "$ref": "#/$defs/SkillId" },
+        "skillDomain": { "$ref": "#/$defs/SkillDomain" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "topic": { "type": "string", "minLength": 2 },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "questionType": {
+          "type": "string",
+          "enum": [
+            "multiple_choice",
+            "text_input",
+            "fill_blank",
+            "word_match",
+            "sentence_order",
+            "error_correction",
+            "conversation_completion",
+            "speaking_prompt",
+            "writing_prompt"
+          ]
+        },
+        "evaluationMode": { "type": "string", "enum": ["deterministic", "self_assessed"] },
+        "text": { "type": "string", "minLength": 5 },
+        "textRu": { "type": "string", "minLength": 5 },
+        "contextSnippet": { "type": "string", "minLength": 5 },
+        "blankTemplate": { "type": "string", "minLength": 3 },
+        "sentenceWithError": { "type": "string", "minLength": 3 },
+        "dialogueContext": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "correctIndex": { "type": "integer", "minimum": 0 },
+        "acceptedAnswers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "matchPairs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/WordMatchPair" }
+        },
+        "orderedTokens": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sampleResponse": { "type": "string", "minLength": 5 },
+        "rubricCriteria": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RubricCriterion" }
+        },
+        "selfAssessmentNoticeUz": { "type": "string", "minLength": 10 },
+        "selfAssessmentNoticeRu": { "type": "string", "minLength": 10 },
+        "mistakeFeedbackByOption": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": { "$ref": "#/$defs/LocalizedPair" }
+        },
+        "media": { "$ref": "#/$defs/LessonMedia" },
+        "explanation": { "type": "string", "minLength": 10 },
+        "explanationRu": { "type": "string", "minLength": 10 },
+        "wrongFeedback": { "type": "string", "minLength": 10 },
+        "wrongFeedbackRu": { "type": "string", "minLength": 10 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "questionType": {
+                "enum": ["multiple_choice", "error_correction", "conversation_completion"]
+              }
+            }
+          },
+          "then": {
+            "required": ["options", "correctIndex", "mistakeFeedbackByOption"],
+            "properties": {
+              "options": { "minItems": 3, "maxItems": 6 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "questionType": { "enum": ["text_input", "fill_blank"] } }
+          },
+          "then": {
+            "required": ["acceptedAnswers"],
+            "properties": {
+              "options": { "maxItems": 0 },
+              "acceptedAnswers": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "questionType": { "const": "word_match" } }
+          },
+          "then": {
+            "required": ["matchPairs"],
+            "properties": {
+              "options": { "maxItems": 0 },
+              "matchPairs": { "minItems": 3 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "questionType": { "const": "sentence_order" } }
+          },
+          "then": {
+            "required": ["orderedTokens"],
+            "properties": {
+              "options": { "maxItems": 0 },
+              "orderedTokens": { "minItems": 3 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "questionType": { "enum": ["speaking_prompt", "writing_prompt"] }
+            }
+          },
+          "then": {
+            "required": [
+              "evaluationMode",
+              "sampleResponse",
+              "rubricCriteria",
+              "selfAssessmentNoticeUz",
+              "selfAssessmentNoticeRu"
+            ],
+            "properties": {
+              "evaluationMode": { "const": "self_assessed" },
+              "options": { "maxItems": 0 },
+              "rubricCriteria": { "minItems": 3 }
+            }
+          }
+        }
+      ]
+    },
+    "LessonStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "stepNumber", "type", "title", "content"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "stepNumber": { "type": "integer", "minimum": 1 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "concept",
+            "formula",
+            "visual_example",
+            "audio_simulation",
+            "flashcard",
+            "interactive_question"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "titleRu": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string" },
+        "subtitleRu": { "type": "string" },
+        "content": { "type": "string", "minLength": 1 },
+        "contentRu": { "type": "string", "minLength": 1 },
+        "highlightNotes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "highlightNotesRu": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "visualModelData": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "type": "string", "minLength": 1 },
+            "audioTranscript": { "type": "string" },
+            "speakerName": { "type": "string" }
+          }
+        },
+        "media": { "$ref": "#/$defs/LessonMedia" },
+        "flashcards": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/LessonFlashcard" }
+        },
+        "interactiveQuestion": { "$ref": "#/$defs/Question" },
+        "masteryCheckpoint": {
+          "type": "string",
+          "enum": ["application", "retrieval"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "flashcard" } } },
+          "then": { "required": ["flashcards"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "interactive_question" } } },
+          "then": { "required": ["interactiveQuestion"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "audio_simulation" } } },
+          "then": { "required": ["media"] }
+        }
+      ]
+    },
+    "Grammar8Part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "simpleExplanationUz",
+        "simpleExplanationRu",
+        "structure",
+        "positiveExamples",
+        "negativeExamples",
+        "questions",
+        "commonMistakes"
+      ],
+      "properties": {
+        "rule": { "type": "string", "minLength": 3 },
+        "simpleExplanationUz": { "type": "string", "minLength": 10 },
+        "simpleExplanationRu": { "type": "string", "minLength": 10 },
+        "structure": { "type": "string", "minLength": 3 },
+        "positiveExamples": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "negativeExamples": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "questions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "commonMistakes": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "Pedagogy17": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intro",
+        "learningObjective",
+        "warmUp",
+        "vocabularyItems",
+        "grammarNote",
+        "pronunciationFocus",
+        "examples",
+        "guidedPractice",
+        "independentPractice",
+        "listeningRef",
+        "readingRef",
+        "speakingTask",
+        "writingTask",
+        "knowledgeCheck",
+        "finalQuiz",
+        "feedbackRules",
+        "summaryAndRevision"
+      ],
+      "properties": {
+        "intro": { "$ref": "#/$defs/LocalizedPair" },
+        "learningObjective": { "$ref": "#/$defs/LocalizedPair" },
+        "warmUp": { "$ref": "#/$defs/LocalizedPair" },
+        "vocabularyItems": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["word", "uz", "ru", "ipa"],
+            "properties": {
+              "word": { "type": "string", "minLength": 1 },
+              "uz": { "type": "string", "minLength": 1 },
+              "ru": { "type": "string", "minLength": 1 },
+              "ipa": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "grammarNote": { "$ref": "#/$defs/Grammar8Part" },
+        "pronunciationFocus": { "$ref": "#/$defs/LocalizedPair" },
+        "examples": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "guidedPractice": { "$ref": "#/$defs/LocalizedPair" },
+        "independentPractice": { "$ref": "#/$defs/LocalizedPair" },
+        "listeningRef": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^media_eng_[a-z0-9_]+$" }
+          ]
+        },
+        "readingRef": { "type": "string", "minLength": 1 },
+        "speakingTask": { "$ref": "#/$defs/LocalizedPair" },
+        "writingTask": { "$ref": "#/$defs/LocalizedPair" },
+        "knowledgeCheck": { "type": "string", "minLength": 1 },
+        "finalQuiz": { "type": "string", "minLength": 1 },
+        "feedbackRules": { "$ref": "#/$defs/LocalizedPair" },
+        "summaryAndRevision": { "$ref": "#/$defs/LocalizedPair" }
+      }
+    },
+    "Lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "courseId",
+        "skillId",
+        "skillDomain",
+        "communicativeFocus",
+        "cefrLevel",
+        "moduleId",
+        "unitId",
+        "canDoObjective",
+        "canDoObjectiveRu",
+        "prerequisites",
+        "title",
+        "titleRu",
+        "estimatedMinutes",
+        "summary",
+        "summaryRu",
+        "requiresMastery",
+        "pedagogy17",
+        "steps",
+        "reinforcementExercise"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "skillId": { "$ref": "#/$defs/SkillId" },
+        "skillDomain": { "$ref": "#/$defs/SkillDomain" },
+        "communicativeFocus": { "$ref": "#/$defs/CommunicativeFocus" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "moduleId": { "type": "string", "pattern": "^mod_eng_[a-z0-9_]+$" },
+        "unitId": { "type": "string", "pattern": "^unit_eng_[a-z0-9_]+$" },
+        "canDoObjective": { "type": "string", "minLength": 5 },
+        "canDoObjectiveRu": { "type": "string", "minLength": 5 },
+        "prerequisites": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "title": { "type": "string", "minLength": 3 },
+        "titleRu": { "type": "string", "minLength": 3 },
+        "estimatedMinutes": { "type": "integer", "minimum": 1, "maximum": 45 },
+        "summary": { "type": "string", "minLength": 10 },
+        "summaryRu": { "type": "string", "minLength": 10 },
+        "requiresMastery": { "type": "boolean" },
+        "officialCefrDisclaimerUz": { "type": "string", "minLength": 10 },
+        "officialCefrDisclaimerRu": { "type": "string", "minLength": 10 },
+        "pedagogy17": { "$ref": "#/$defs/Pedagogy17" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/LessonStep" }
+        },
+        "reinforcementExercise": { "$ref": "#/$defs/Question" },
+        "alternateExercise": { "$ref": "#/$defs/Question" }
+      }
+    },
+    "LearningPathNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "courseId",
+        "skillId",
+        "skillDomain",
+        "cefrLevel",
+        "moduleId",
+        "moduleTitle",
+        "moduleTitleRu",
+        "unitId",
+        "canDoObjective",
+        "canDoObjectiveRu",
+        "nodeKind",
+        "isCheckpoint",
+        "hasRichExercise",
+        "title",
+        "titleRu",
+        "description",
+        "descriptionRu",
+        "prerequisites",
+        "requiredScore",
+        "status",
+        "isReinforcement",
+        "targetLessonId",
+        "estimatedMinutes",
+        "order"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^node_eng_[a-z0-9_]+$" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "skillId": { "$ref": "#/$defs/SkillId" },
+        "skillDomain": { "$ref": "#/$defs/SkillDomain" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "moduleId": { "type": "string", "pattern": "^mod_eng_[a-z0-9_]+$" },
+        "moduleTitle": { "type": "string", "minLength": 3 },
+        "moduleTitleRu": { "type": "string", "minLength": 3 },
+        "unitId": { "type": "string", "pattern": "^unit_eng_[a-z0-9_]+$" },
+        "canDoObjective": { "type": "string", "minLength": 5 },
+        "canDoObjectiveRu": { "type": "string", "minLength": 5 },
+        "nodeKind": {
+          "type": "string",
+          "enum": ["lesson", "unit_checkpoint", "level_assessment"]
+        },
+        "isCheckpoint": { "type": "boolean" },
+        "hasRichExercise": { "type": "boolean" },
+        "taskKind": {
+          "type": "string",
+          "enum": ["standard", "speaking_prompt", "writing_prompt"]
+        },
+        "title": { "type": "string", "minLength": 2 },
+        "titleRu": { "type": "string", "minLength": 2 },
+        "description": { "type": "string", "minLength": 5 },
+        "descriptionRu": { "type": "string", "minLength": 5 },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredScore": { "type": "integer", "minimum": 50, "maximum": 100 },
+        "status": {
+          "type": "string",
+          "enum": ["locked", "available", "in_progress", "completed", "reinforcement"]
+        },
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "isReinforcement": { "type": "boolean" },
+        "targetLessonId": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" },
+        "estimatedMinutes": { "type": "integer", "minimum": 1, "maximum": 45 },
+        "order": { "type": "number", "minimum": 1 }
+      }
+    },
+    "SkeletonUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "moduleId",
+        "order",
+        "titleUz",
+        "titleRu",
+        "canDoObjectiveUz",
+        "canDoObjectiveRu",
+        "prerequisites",
+        "plannedLessonIds",
+        "checkpointNodeId"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^unit_eng_[a-z0-9_]+$" },
+        "moduleId": { "type": "string", "pattern": "^mod_eng_[a-z0-9_]+$" },
+        "order": { "type": "integer", "minimum": 1 },
+        "titleUz": { "type": "string", "minLength": 3 },
+        "titleRu": { "type": "string", "minLength": 3 },
+        "canDoObjectiveUz": { "type": "string", "minLength": 5 },
+        "canDoObjectiveRu": { "type": "string", "minLength": 5 },
+        "prerequisites": { "type": "array", "items": { "type": "string" } },
+        "plannedLessonIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" }
+        },
+        "checkpointNodeId": { "type": "string", "pattern": "^node_eng_[a-z0-9_]+$" }
+      }
+    },
+    "SkeletonModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "cefrLevel",
+        "order",
+        "titleUz",
+        "titleRu",
+        "canDoObjectiveUz",
+        "canDoObjectiveRu",
+        "prerequisites",
+        "units",
+        "grammarScope",
+        "vocabularyThemes",
+        "plannedLessonIds",
+        "checkpointNodeId"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^mod_eng_[a-z0-9_]+$" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "order": { "type": "integer", "minimum": 1 },
+        "titleUz": { "type": "string", "minLength": 3 },
+        "titleRu": { "type": "string", "minLength": 3 },
+        "canDoObjectiveUz": { "type": "string", "minLength": 5 },
+        "canDoObjectiveRu": { "type": "string", "minLength": 5 },
+        "prerequisites": { "type": "array", "items": { "type": "string" } },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/SkeletonUnit" }
+        },
+        "grammarScope": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "vocabularyThemes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "plannedLessonIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" }
+        },
+        "checkpointNodeId": { "type": "string", "pattern": "^node_eng_[a-z0-9_]+$" }
+      }
+    },
+    "SkeletonLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cefrLevel",
+        "order",
+        "titleUz",
+        "titleRu",
+        "canDoObjectivesUz",
+        "canDoObjectivesRu",
+        "prerequisites",
+        "modules",
+        "units",
+        "grammarScope",
+        "vocabularyThemes",
+        "plannedLessonIds",
+        "exitAssessmentNodeId"
+      ],
+      "properties": {
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "order": { "type": "integer", "minimum": 1 },
+        "titleUz": { "type": "string", "minLength": 3 },
+        "titleRu": { "type": "string", "minLength": 3 },
+        "canDoObjectivesUz": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 5 }
+        },
+        "canDoObjectivesRu": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 5 }
+        },
+        "prerequisites": { "type": "array", "items": { "type": "string" } },
+        "modules": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/SkeletonModule" }
+        },
+        "units": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "pattern": "^unit_eng_[a-z0-9_]+$" }
+        },
+        "grammarScope": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "vocabularyThemes": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "plannedLessonIds": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" }
+        },
+        "exitAssessmentNodeId": { "type": "string", "pattern": "^node_eng_[a-z0-9_]+$" }
+      }
+    },
+    "CefrSkeletonDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "documentType",
+        "courseId",
+        "preA1FoundationAlignment",
+        "officialCefrDisclaimerUz",
+        "officialCefrDisclaimerRu",
+        "levels"
+      ],
+      "properties": {
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "documentType": { "type": "string", "const": "cefr_skeleton" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "preA1FoundationAlignment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cefrLevel", "titleUz", "titleRu", "noteUz", "noteRu", "foundationLessonIds"],
+          "properties": {
+            "cefrLevel": { "type": "string", "const": "Pre-A1" },
+            "titleUz": { "type": "string", "minLength": 3 },
+            "titleRu": { "type": "string", "minLength": 3 },
+            "noteUz": { "type": "string", "minLength": 10 },
+            "noteRu": { "type": "string", "minLength": 10 },
+            "foundationLessonIds": {
+              "type": "array",
+              "minItems": 2,
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "officialCefrDisclaimerUz": { "type": "string", "minLength": 10 },
+        "officialCefrDisclaimerRu": { "type": "string", "minLength": 10 },
+        "levels": {
+          "type": "array",
+          "minItems": 6,
+          "items": { "$ref": "#/$defs/SkeletonLevel" }
+        }
+      }
+    },
+    "LevelCurriculumDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "documentType",
+        "courseId",
+        "cefrLevel",
+        "starterLessonId",
+        "foundationLessonIds",
+        "skills",
+        "lessonsOrder",
+        "officialCefrDisclaimerUz",
+        "officialCefrDisclaimerRu",
+        "modules",
+        "lessons",
+        "roadmapNodes"
+      ],
+      "properties": {
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "documentType": { "type": "string", "const": "level_curriculum" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "cefrLevel": { "$ref": "#/$defs/CefrLevelId" },
+        "starterLessonId": { "type": "string", "const": "lesson_eng_starter" },
+        "foundationLessonIds": {
+          "type": "array",
+          "const": ["lesson_eng_starter", "lesson_eng_foundation_02"]
+        },
+        "skills": {
+          "type": "array",
+          "const": [
+            "skill_eng_vocab",
+            "skill_eng_grammar",
+            "skill_eng_listening",
+            "skill_eng_reading"
+          ]
+        },
+        "lessonsOrder": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^lesson_eng_[a-z0-9_]+$" }
+        },
+        "officialCefrDisclaimerUz": { "type": "string", "minLength": 10 },
+        "officialCefrDisclaimerRu": { "type": "string", "minLength": 10 },
+        "legacyMigrationNotes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/SkeletonModule" }
+        },
+        "lessons": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/Lesson" }
+        },
+        "roadmapNodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/LearningPathNode" }
+        }
+      }
+    },
+    "PlacementQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "courseId",
+        "skillId",
+        "skillDomain",
+        "difficulty",
+        "cefrLevel",
+        "topic",
+        "questionType",
+        "isPlacement",
+        "text",
+        "textRu",
+        "options",
+        "correctIndex",
+        "explanation",
+        "explanationRu",
+        "wrongFeedback",
+        "wrongFeedbackRu",
+        "mistakeFeedbackByOption"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^q_eng_place_[a-z0-9_]+$" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "skillId": { "$ref": "#/$defs/SkillId" },
+        "skillDomain": { "type": "string", "enum": ["vocabulary", "grammar", "listening", "reading"] },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "cefrLevel": { "type": "string", "enum": ["A1", "A2", "B1"] },
+        "topic": { "type": "string", "minLength": 2 },
+        "questionType": { "type": "string", "const": "multiple_choice" },
+        "isPlacement": { "type": "boolean", "const": true },
+        "text": { "type": "string", "minLength": 5 },
+        "textRu": { "type": "string", "minLength": 5 },
+        "options": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "correctIndex": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "explanation": { "type": "string", "minLength": 10 },
+        "explanationRu": { "type": "string", "minLength": 10 },
+        "wrongFeedback": { "type": "string", "minLength": 10 },
+        "wrongFeedbackRu": { "type": "string", "minLength": 10 },
+        "mistakeFeedbackByOption": {
+          "type": "object",
+          "minProperties": 4,
+          "additionalProperties": { "$ref": "#/$defs/LocalizedPair" }
+        },
+        "media": { "$ref": "#/$defs/LessonMedia" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "skillId": { "const": "skill_eng_listening" } } },
+          "then": { "required": ["media"] }
+        }
+      ]
+    },
+    "PlacementDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "documentType",
+        "courseId",
+        "cefrRange",
+        "questions"
+      ],
+      "properties": {
+        "schemaVersion": { "type": "integer", "const": 1 },
+        "documentType": { "type": "string", "const": "placement_bank" },
+        "courseId": { "type": "string", "const": "course_eng_01" },
+        "cefrRange": {
+          "type": "array",
+          "const": ["A1", "A2", "B1"]
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/PlacementQuestion" }
+        }
+      }
+    }
+  }
+}

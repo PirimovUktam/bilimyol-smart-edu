@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="workBg" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <filter id="panelShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#workBg)"/>
+
+  <!-- Top-Left Card: Laptop with Paused Upload, Warning Triangle & Red Server Stack -->
+  <g filter="url(#panelShadow)">
+    <rect x="44" y="54" width="330" height="256" rx="22" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <!-- Laptop Screen -->
+    <rect x="74" y="88" width="166" height="112" rx="10" fill="#1E293B"/>
+    <rect x="84" y="98" width="146" height="92" rx="6" fill="#F8FAFC"/>
+    <!-- Laptop Base -->
+    <path d="M58 206 L256 206 L246 222 L68 222 Z" fill="#64748B"/>
+    <!-- Segmented Paused Progress Bar on Screen -->
+    <rect x="98" y="138" width="118" height="18" rx="9" fill="#E2E8F0"/>
+    <rect x="98" y="138" width="58" height="18" rx="9" fill="#F59E0B"/>
+    <!-- Pause Symbol -->
+    <rect x="150" y="110" width="6" height="18" rx="2" fill="#475569"/>
+    <rect x="160" y="110" width="6" height="18" rx="2" fill="#475569"/>
+
+    <!-- Amber Warning Triangle -->
+    <polygon points="312,86 350,152 274,152" fill="#FEF3C7" stroke="#F59E0B" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="309" y="108" width="6" height="22" rx="3" fill="#D97706"/>
+    <circle cx="312" cy="140" r="3.5" fill="#D97706"/>
+
+    <!-- Red Server Stack Icon -->
+    <rect x="274" y="172" width="76" height="28" rx="6" fill="#FEE2E2" stroke="#EF4444" stroke-width="2.5"/>
+    <circle cx="290" cy="186" r="4" fill="#EF4444"/>
+    <rect x="304" y="183" width="34" height="6" rx="3" fill="#FCA5A5"/>
+    <rect x="274" y="208" width="76" height="28" rx="6" fill="#FEE2E2" stroke="#EF4444" stroke-width="2.5"/>
+    <circle cx="290" cy="222" r="4" fill="#EF4444"/>
+    <rect x="304" y="219" width="34" height="6" rx="3" fill="#FCA5A5"/>
+
+    <!-- Status Strip Bottom of Card -->
+    <rect x="74" y="254" width="276" height="28" rx="14" fill="#FEF3C7"/>
+    <circle cx="94" cy="268" r="7" fill="#F59E0B"/>
+    <rect x="112" y="264" width="164" height="8" rx="4" fill="#D97706" opacity="0.5"/>
+  </g>
+
+  <!-- Branching Curved Arrows (Indigo Dashed Decision Paths) -->
+  <path d="M374 182 C432 182 430 132 476 132" stroke="#4F46E5" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round" fill="none"/>
+  <polygon points="488,132 470,121 470,143" fill="#4F46E5"/>
+
+  <path d="M374 196 C432 196 420 400 476 400" stroke="#10B981" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round" fill="none"/>
+  <polygon points="488,400 470,389 470,411" fill="#10B981"/>
+
+  <!-- Bottom-Left Card: Deadline Calendar & Clock Context -->
+  <g filter="url(#panelShadow)">
+    <rect x="44" y="346" width="330" height="200" rx="22" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <!-- Calendar Grid -->
+    <rect x="74" y="376" width="128" height="136" rx="14" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="74" y="376" width="128" height="32" rx="12" fill="#4F46E5"/>
+    <rect x="90" y="422" width="24" height="20" rx="4" fill="#E2E8F0"/>
+    <rect x="126" y="422" width="24" height="20" rx="4" fill="#E2E8F0"/>
+    <rect x="162" y="422" width="24" height="20" rx="4" fill="#F59E0B"/>
+    <rect x="90" y="454" width="24" height="20" rx="4" fill="#E2E8F0"/>
+    <rect x="126" y="454" width="24" height="20" rx="4" fill="#10B981"/>
+    <rect x="162" y="454" width="24" height="20" rx="4" fill="#E2E8F0"/>
+    <!-- Analog Clock -->
+    <circle cx="286" cy="444" r="56" fill="#EEF2FF" stroke="#4F46E5" stroke-width="4"/>
+    <line x1="286" y1="444" x2="286" y2="406" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="286" y1="444" x2="316" y2="458" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="286" cy="444" r="5" fill="#0F172A"/>
+  </g>
+
+  <!-- Top-Right Branch Card: Missed / Postponed Clock (Crossed Out) -->
+  <g filter="url(#panelShadow)">
+    <rect x="494" y="54" width="262" height="186" rx="22" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <circle cx="576" cy="147" r="46" fill="#FEF2F2" stroke="#EF4444" stroke-width="3.5"/>
+    <line x1="576" y1="147" x2="576" y2="118" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+    <line x1="576" y1="147" x2="600" y2="147" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="538" y1="185" x2="614" y2="109" stroke="#EF4444" stroke-width="5" stroke-linecap="round"/>
+    <!-- Postpone Forward Arrow -->
+    <rect x="646" y="122" width="76" height="50" rx="12" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2.5"/>
+    <path d="M666 147 L702 147 M692 137 L704 147 L692 157" stroke="#4F46E5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Bottom-Right Branch Card: Emerald Backup Plan (Cloud File + Email + Checkmark) -->
+  <g filter="url(#panelShadow)">
+    <rect x="494" y="274" width="262" height="272" rx="22" fill="#FFFFFF" stroke="#10B981" stroke-width="3"/>
+    <rect x="494" y="274" width="262" height="24" rx="12" fill="#10B981"/>
+
+    <!-- Cloud & Local PDF Document -->
+    <path d="M542 368 Q530 368 530 354 Q530 340 546 338 Q552 318 574 318 Q594 318 600 336 Q616 338 616 354 Q616 368 602 368 Z" fill="#E0F2FE" stroke="#0EA5E9" stroke-width="3"/>
+    <rect x="556" y="346" width="36" height="44" rx="6" fill="#FFFFFF" stroke="#0EA5E9" stroke-width="2.5"/>
+    <line x1="564" y1="360" x2="584" y2="360" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round"/>
+    <line x1="564" y1="372" x2="580" y2="372" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Arrow to Email Envelope -->
+    <path d="M626 356 L652 356 M644 348 L654 356 L644 364" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Envelope Icon -->
+    <rect x="660" y="328" width="68" height="50" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="3"/>
+    <path d="M663 332 L694 356 L725 332" stroke="#4F46E5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Green Checkmark Confirmation Badge -->
+    <circle cx="625" cy="462" r="42" fill="#ECFDF5" stroke="#10B981" stroke-width="4"/>
+    <path d="M605 462 L619 476 L647 446" stroke="#10B981" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

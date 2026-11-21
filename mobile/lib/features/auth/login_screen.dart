@@ -91,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Center(
                 child: Column(
                   children: [
-                    const BilimYolLogo(size: 40),
+                    const BilimYolLogo(size: 40, onDark: true),
                     const SizedBox(height: 6),
                     Text(
                       'AI yordamida shaxsiylashtirilgan ta’lim',
@@ -135,22 +135,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Kelajagingni',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  height: 1.1,
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Kelajagingni',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    height: 1.1,
+                                  ),
                                 ),
                               ),
-                              Text(
-                                'bilim bilan yarat!',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF67E8F9),
-                                  height: 1.1,
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'bilim bilan yarat!',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF67E8F9),
+                                    height: 1.1,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -221,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+                            const Icon(Icons.error_outline_rounded, color: Color(0xFFBE123C), size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -229,7 +237,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.error,
+                                  color: const Color(0xFFBE123C),
                                 ),
                               ),
                             ),
@@ -254,20 +262,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'nomingiz@misol.uz',
-                        hintStyle: GoogleFonts.plusJakartaSans(color: Colors.grey.shade400, fontSize: 13),
+                        hintStyle: GoogleFonts.plusJakartaSans(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
                         prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF6366F1)),
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: const BorderSide(color: AppColors.textMuted),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                          borderSide: const BorderSide(color: AppColors.textMuted),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -278,30 +293,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'PAROL',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => context.push('/forgot-password'),
-                          child: Text(
-                            'Parolni unutdingizmi?',
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Text(
+                            'PAROL',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF2563EB),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ),
-                      ],
+                          InkWell(
+                            onTap: () => context.push('/forgot-password'),
+                            child: Text(
+                              'Parolni unutdingizmi?',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF2563EB),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 6),
                     TextField(
@@ -310,13 +331,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.password],
                       onSubmitted: (_) { if (!_isLoading) _handleLogin(); },
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                       decoration: InputDecoration(
                         hintText: '••••••••',
-                        hintStyle: GoogleFonts.plusJakartaSans(color: Colors.grey.shade400, fontSize: 13),
+                        hintStyle: GoogleFonts.plusJakartaSans(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
                         prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF6366F1)),
                         suffixIcon: IconButton(
                           tooltip: _passwordVisible ? 'Parolni yashirish' : 'Parolni ko‘rsatish',
+                          color: AppColors.textSecondary,
                           onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                           icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                         ),
@@ -324,11 +353,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: const BorderSide(color: AppColors.textMuted),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                          borderSide: const BorderSide(color: AppColors.textMuted),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -340,8 +369,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 20),
 
                     // Primary Button: Kirish ->
-                    SizedBox(
-                      height: 48,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
@@ -360,12 +389,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    'Kirish',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.3,
+                                  Flexible(
+                                    child: Text(
+                                      'Kirish',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.3,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -388,7 +420,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Colors.grey.shade400,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -487,12 +519,14 @@ class _FeatureMiniPill extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: const Color(0xFF67E8F9)),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+          Flexible(
+            child: Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

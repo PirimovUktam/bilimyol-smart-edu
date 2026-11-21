@@ -35,10 +35,13 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(lesson?.title).not.toContain('Matematika');
     expect(lesson?.title).not.toContain('Kasrlar');
 
-    // Verify audio simulation step is present for English listening
-    const audioStep = lesson?.steps.find((s) => s.visualModelData?.type === 'audio_wave');
+    // Verify approved English audio media step is present for English listening
+    const audioStep = lesson?.steps.find((s) => s.media?.kind === 'audio');
     expect(audioStep).toBeDefined();
     expect(audioStep?.title).toContain('Audio');
+    expect(audioStep?.media?.language).toBe('en');
+    expect(audioStep?.media?.source).toBe('/lesson-media/english/a1-listening-lecture-time.wav');
+    expect(audioStep?.media?.transcript).toContain('in the afternoon');
   });
 
   // 2. Matematika tanlash -> matematika mazmuni

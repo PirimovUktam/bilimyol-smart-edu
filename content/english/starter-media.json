@@ -1,0 +1,158 @@
+{
+  "courseId": "course_eng_01",
+  "language": "en",
+  "reviewStatus": "approved",
+  "sampleRate": 22050,
+  "channels": 1,
+  "sampleWidthBytes": 2,
+  "webOutputDir": "public/lesson-media/english",
+  "flutterOutputDir": "mobile/assets/lesson_media/english",
+  "audio": [
+    {
+      "id": "media_eng_starter_dialogue",
+      "lessonId": "lesson_eng_starter",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-starter-dialogue.wav",
+      "canonicalSource": "/lesson-media/english/a1-starter-dialogue.wav",
+      "posterImage": "/lesson-media/english/a1-starter-greeting.png",
+      "posterAltUz": "Toshkentdagi maktab oldida Aziza va Ben salomlashmoqda",
+      "posterAltRu": "Азиза и Бен приветствуют друг друга перед школой в Ташкенте",
+      "titleUz": "Aziza va Ben tanishuv dialogi",
+      "titleRu": "Диалог знакомства Азизы и Бена",
+      "transcript": "Aziza: Hi, I'm Aziza. What's your name?\nBen: I'm Ben. Nice to meet you.",
+      "interTurnPauseMs": 400,
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "text": "Hi, I'm Aziza. What's your name?"
+        },
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "text": "I'm Ben. Nice to meet you."
+        }
+      ],
+      "durationSeconds": 5.907,
+      "usedBy": {
+        "lessons": [
+          "lesson_eng_starter"
+        ],
+        "flashcards": []
+      }
+    },
+    {
+      "id": "media_eng_starter_whats_your_name",
+      "lessonId": "lesson_eng_starter",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-starter-whats-your-name.wav",
+      "canonicalSource": "/lesson-media/english/a1-starter-whats-your-name.wav",
+      "titleUz": "Talaffuz: What's your name?",
+      "titleRu": "Произношение: What's your name?",
+      "transcript": "What's your name?",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Aziza",
+          "voice": "Microsoft Zira Desktop",
+          "text": "What's your name?"
+        }
+      ],
+      "durationSeconds": 0.921,
+      "usedBy": {
+        "lessons": [
+          "lesson_eng_starter"
+        ],
+        "flashcards": [
+          "fc_eng_starter_1"
+        ]
+      }
+    },
+    {
+      "id": "media_eng_starter_nice_to_meet_you",
+      "lessonId": "lesson_eng_starter",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-starter-nice-to-meet-you.wav",
+      "canonicalSource": "/lesson-media/english/a1-starter-nice-to-meet-you.wav",
+      "titleUz": "Talaffuz: Nice to meet you.",
+      "titleRu": "Произношение: Nice to meet you.",
+      "transcript": "Nice to meet you.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Ben",
+          "voice": "Microsoft David Desktop",
+          "text": "Nice to meet you."
+        }
+      ],
+      "durationSeconds": 1.003,
+      "usedBy": {
+        "lessons": [
+          "lesson_eng_starter"
+        ],
+        "flashcards": [
+          "fc_eng_starter_2"
+        ]
+      }
+    },
+    {
+      "id": "media_eng_listening_lecture_time",
+      "lessonId": "lesson_eng_listening_01",
+      "kind": "audio",
+      "language": "en",
+      "reviewStatus": "approved",
+      "filename": "a1-listening-lecture-time.wav",
+      "canonicalSource": "/lesson-media/english/a1-listening-lecture-time.wav",
+      "titleUz": "Universitet ma'ruzasi vaqti e'loni",
+      "titleRu": "Объявление о времени университетской лекции",
+      "transcript": "Excuse me, the university lecture starts at quarter past three in the afternoon in hall B.",
+      "edgePaddingMs": 40,
+      "segments": [
+        {
+          "speaker": "Announcer",
+          "voice": "Microsoft Zira Desktop",
+          "text": "Excuse me, the university lecture starts at quarter past three in the afternoon in hall B."
+        }
+      ],
+      "durationSeconds": 5.546,
+      "usedBy": {
+        "lessons": [
+          "lesson_eng_listening_01"
+        ],
+        "flashcards": []
+      }
+    }
+  ],
+  "images": [
+    {
+      "id": "media_eng_starter_greeting_img",
+      "lessonId": "lesson_eng_starter",
+      "kind": "image",
+      "language": "en",
+      "filename": "a1-starter-greeting.png",
+      "svgFilename": "a1-starter-greeting.svg",
+      "canonicalSource": "/lesson-media/english/a1-starter-greeting.png",
+      "width": 800,
+      "height": 600,
+      "altUz": "Toshkentdagi maktab oldida ikki o‘quvchi salomlashib suhbatlashmoqda",
+      "altRu": "Двое учеников приветствуют друг друга и общаются перед школой в Ташкенте",
+      "reviewStatus": "approved",
+      "usedBy": {
+        "lessons": [
+          "lesson_eng_starter"
+        ],
+        "flashcards": [
+          "fc_eng_starter_1",
+          "fc_eng_starter_2"
+        ]
+      }
+    }
+  ]
+}

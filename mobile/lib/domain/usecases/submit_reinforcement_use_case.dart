@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../repositories/i_learner_repository.dart';
 import '../repositories/i_lesson_repository.dart';
 import '../entities/question.dart';
@@ -38,6 +40,9 @@ class SubmitReinforcementUseCase {
     required String reinforcementNodeId,
     required Question reinforcementQuestion,
     required int selectedIndex,
+    String? selectedText,
+    Map<String, String>? matchedPairs,
+    List<String>? orderedTokens,
   }) async {
     if (courseId.isEmpty ||
         skillId.isEmpty ||
@@ -47,9 +52,35 @@ class SubmitReinforcementUseCase {
         reinforcementQuestion.skillId != skillId) {
       throw ArgumentError('Mustahkamlash savoli kontekstga mos emas.');
     }
-    if (selectedIndex < 0 ||
-        selectedIndex >= reinforcementQuestion.options.length) {
-      throw ArgumentError.value(selectedIndex, 'selectedIndex');
+    late final String serializedAnswer;
+    late final int effectiveIndex;
+    if (reinforcementQuestion.usesTextEvaluation ||
+        reinforcementQuestion.isSelfAssessed) {
+      final text = (selectedText ?? '').trim();
+      if (text.isEmpty) throw ArgumentError.value(selectedText, 'selectedText');
+      serializedAnswer = text;
+      effectiveIndex = 0;
+    } else if (reinforcementQuestion.mode == QuestionMode.sentenceOrder) {
+      final tokens = orderedTokens ?? const <String>[];
+      if (tokens.isEmpty) {
+        throw ArgumentError.value(orderedTokens, 'orderedTokens');
+      }
+      serializedAnswer = tokens.join(' ').trim();
+      effectiveIndex = 0;
+    } else if (reinforcementQuestion.mode == QuestionMode.wordMatch) {
+      final pairs = matchedPairs ?? const <String, String>{};
+      if (pairs.isEmpty) {
+        throw ArgumentError.value(matchedPairs, 'matchedPairs');
+      }
+      serializedAnswer = jsonEncode(pairs);
+      effectiveIndex = 0;
+    } else {
+      if (selectedIndex < 0 ||
+          selectedIndex >= reinforcementQuestion.options.length) {
+        throw ArgumentError.value(selectedIndex, 'selectedIndex');
+      }
+      serializedAnswer = reinforcementQuestion.options[selectedIndex];
+      effectiveIndex = selectedIndex;
     }
     final profile = await learnerRepository.getProfile();
     final courseScores = profile.scoresByCourse[courseId] ?? {};
@@ -62,8 +93,8 @@ class SubmitReinforcementUseCase {
       skillId: skillId,
       lessonId: reinforcementNodeId,
       questionId: reinforcementQuestion.id,
-      selectedIndex: selectedIndex,
-      selectedAnswer: reinforcementQuestion.options[selectedIndex],
+      selectedIndex: effectiveIndex,
+      selectedAnswer: serializedAnswer,
     );
     final isCorrect = answerAttempt.isCorrect;
 

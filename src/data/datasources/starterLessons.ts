@@ -1,4 +1,5 @@
 import type { Lesson } from '@/domain/entities/Lesson';
+import { ENGLISH_A1_LESSONS } from './english/a1';
 
 export const STARTER_LESSONS: Record<string, Lesson> = {
   lesson_math_starter: {
@@ -15,20 +16,7 @@ export const STARTER_LESSONS: Record<string, Lesson> = {
     ],
     reinforcementExercise: {"id":"q_lesson_math_starter_practice","courseId":"course_math_01","skillId":"skill_math_algebra","text":"6 ta daftardan 2 tasi olinsa, nechta qoladi?","options":["4","2","6","8"],"correctIndex":0,"difficulty":"easy","explanation":"6 − 2 = 4."},
   },
-  lesson_eng_starter: {
-    id: "lesson_eng_starter",
-    courseId: "course_eng_01",
-    skillId: "skill_eng_vocab",
-    title: "Birinchi inglizcha so‘zlar",
-    estimatedMinutes: 5,
-    summary: "Ingliz tilida «Hello» — salom, «Thank you» — rahmat, «Goodbye» — xayr. O‘zingizni tanishtirish uchun «I am» dan keyin ismingizni ayting.",
-    steps: [
-      { "id":"lesson_eng_starter_read","stepNumber":1,"type":"concept","title":"Asosiy tushuncha","content":"Ingliz tilida «Hello» — salom, «Thank you» — rahmat, «Goodbye» — xayr. O‘zingizni tanishtirish uchun «I am» dan keyin ismingizni ayting." },
-      { "id":"lesson_eng_starter_example","stepNumber":2,"type":"audio_simulation","title":"Birga misol ko‘ramiz","content":"Ikki kishining ilk suhbati.\n\nAziza — Hello! I am Aziza. (Salom! Men Azizaman.)\n\nSardor — Hello! I am Sardor. (Salom! Men Sardorman.)\n\nXayrlashayotganda «Goodbye!» deymiz.","visualModelData":{"type":"audio_wave","audioTranscript":"Hello! I am Aziza. Hello! I am Sardor. Goodbye!","speakerName":"Inglizcha salomlashish"} },
-      { "id":"lesson_eng_starter_try","stepNumber":3,"type":"interactive_question","title":"O‘rganganingizni sinab ko‘ring","content":"Misoldan foydalanib bitta javobni tanlang.","interactiveQuestion":{"id":"q_lesson_eng_starter_quiz","courseId":"course_eng_01","skillId":"skill_eng_vocab","text":"Ingliz tilida salomlashish uchun qaysi so‘zni aytamiz?","options":["Goodbye","Hello","Thank you"],"correctIndex":1,"difficulty":"easy","explanation":"Hello — salom. Uni suhbatni boshlaganda aytamiz."} },
-    ],
-    reinforcementExercise: {"id":"q_lesson_eng_starter_practice","courseId":"course_eng_01","skillId":"skill_eng_vocab","text":"«Thank you» o‘zbekchada nima degani?","options":["Salom","Xayr","Rahmat"],"correctIndex":2,"difficulty":"easy","explanation":"Thank you — rahmat."},
-  },
+  lesson_eng_starter: ENGLISH_A1_LESSONS['lesson_eng_starter'],
   lesson_it_starter: {
     id: "lesson_it_starter",
     courseId: "course_it",
@@ -118,65 +106,7 @@ export const STARTER_LESSONS: Record<string, Lesson> = {
   }
 },
 
-  lesson_eng_foundation_02: {
-  "id": "lesson_eng_foundation_02",
-  "courseId": "course_eng_01",
-  "skillId": "skill_eng_grammar",
-  "title": "Men, siz va oddiy gaplar",
-  "estimatedMinutes": 5,
-  "summary": "I — men, you — siz, he — u (erkak), she — u (ayol). I bilan am, you bilan are, he va she bilan is ishlatiladi. Student — o‘quvchi.",
-  "steps": [
-    {
-      "id": "lesson_eng_foundation_02_read",
-      "stepNumber": 1,
-      "type": "concept",
-      "title": "Asosiy tushuncha",
-      "content": "I — men, you — siz, he — u (erkak), she — u (ayol). I bilan am, you bilan are, he va she bilan is ishlatiladi. Student — o‘quvchi."
-    },
-    {
-      "id": "lesson_eng_foundation_02_example",
-      "stepNumber": 2,
-      "type": "visual_example",
-      "title": "Birga misol ko‘ramiz",
-      "content": "I am a student. — Men o‘quvchiman. You are a student. — Siz o‘quvchisiz. She is a student. — U o‘quvchi. A so‘zi bu yerda bitta o‘quvchi haqida gapirilayotganini bildiradi."
-    },
-    {
-      "id": "lesson_eng_foundation_02_try",
-      "stepNumber": 3,
-      "type": "interactive_question",
-      "title": "O‘rganganingizni sinab ko‘ring",
-      "content": "Misolga tayangan holda javobni tanlang.",
-      "interactiveQuestion": {
-        "id": "q_lesson_eng_foundation_02",
-        "courseId": "course_eng_01",
-        "skillId": "skill_eng_grammar",
-        "text": "«Men o‘quvchiman» gapini to‘ldiring. I ___ a student.",
-        "options": [
-          "is",
-          "am",
-          "are"
-        ],
-        "correctIndex": 1,
-        "difficulty": "easy",
-        "explanation": "I bilan am ishlatiladi. I am a student — Men o‘quvchiman."
-      }
-    }
-  ],
-  "reinforcementExercise": {
-    "id": "q_lesson_eng_foundation_02_practice",
-    "courseId": "course_eng_01",
-    "skillId": "skill_eng_grammar",
-    "text": "«Men o‘quvchiman» gapini to‘ldiring. I ___ a student.",
-    "options": [
-      "is",
-      "am",
-      "are"
-    ],
-    "correctIndex": 1,
-    "difficulty": "easy",
-    "explanation": "I bilan am ishlatiladi. I am a student — Men o‘quvchiman."
-  }
-},
+  lesson_eng_foundation_02: ENGLISH_A1_LESSONS['lesson_eng_foundation_02'],
 
   lesson_it_foundation_02: {
   "id": "lesson_it_foundation_02",

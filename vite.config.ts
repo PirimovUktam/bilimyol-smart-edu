@@ -31,6 +31,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     // Local snapshots and worktree copies are not part of this test suite.
-    exclude: ['**/node_modules/**', '**/dist/**', 'artifacts/**', '.claude/**', '**/.claude/**']
+    exclude: ['**/node_modules/**', '**/dist/**', 'artifacts/**', '.claude/**', '**/.claude/**', '.agents/**', '**/.agents/**']
   }
 })

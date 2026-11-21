@@ -1,4 +1,6 @@
 import { Course } from '@/domain/entities/Course';
+import { ENGLISH_A1_CURRICULUM_META } from './english/a1';
+import { ENGLISH_ALL_LESSONS_ORDER } from './english';
 
 export const SEED_COURSES: Course[] = [
   {
@@ -23,10 +25,10 @@ export const SEED_COURSES: Course[] = [
     iconName: 'Headphones',
     primaryColor: '#14B8A6',
     secondaryColor: '#0D9488',
-    skills: ['skill_eng_vocab', 'skill_eng_grammar', 'skill_eng_listening', 'skill_eng_reading'],
-    lessons: ['lesson_eng_listening_01', 'lesson_eng_vocab_01', 'lesson_eng_grammar_01', 'lesson_eng_starter', 'lesson_eng_foundation_02'],
-    starterLessonId: 'lesson_eng_starter',
-    foundationLessonIds: ['lesson_eng_starter', 'lesson_eng_foundation_02'],
+    skills: ENGLISH_A1_CURRICULUM_META.skills,
+    lessons: ENGLISH_ALL_LESSONS_ORDER,
+    starterLessonId: ENGLISH_A1_CURRICULUM_META.starterLessonId,
+    foundationLessonIds: ENGLISH_A1_CURRICULUM_META.foundationLessonIds,
     totalStudentsEstimate: 1890,
   },
   {

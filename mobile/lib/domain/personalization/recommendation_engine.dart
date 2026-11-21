@@ -2,6 +2,7 @@ import '../entities/recommendation.dart';
 import '../entities/skill_score.dart';
 import '../entities/learning_path_node.dart';
 import '../entities/skill.dart';
+import '../../core/constants/adaptive_thresholds.dart';
 
 class RecommendationEngine {
   /// Generates tailored next-step recommendation for the learner
@@ -29,25 +30,37 @@ class RecommendationEngine {
     );
 
     final isReinforcement = activeNode.isReinforcement || activeNode.status == NodeStatus.reinforcement;
-    final weakestScore = weakestSkill?.score ?? 100;
+    final weakestScore = weakestSkill?.score;
+    final isTargetedPractice =
+        weakestScore != null &&
+        weakestScore >= AdaptiveThresholds.targetedPracticeMin &&
+        weakestScore <= AdaptiveThresholds.targetedPracticeMax;
 
     return Recommendation(
       id: 'rec_${courseId}_${DateTime.now().millisecondsSinceEpoch}',
       courseId: courseId,
       title: isReinforcement
           ? 'Mustahkamlash: $targetSkillName'
+          : isTargetedPractice
+          ? 'Maqsadli mashq: $targetSkillName'
           : 'Bugungi Reja: ${activeNode.title}',
       subtitle: isReinforcement
           ? 'Aniqlangan bo‘shliqni to‘ldirish uchun maxsus 5 daqiqalik mashq'
+          : isTargetedPractice
+          ? '50–69% oraliqdagi ko‘nikmani 70%+ darajaga ko‘tarish uchun mashq'
           : 'Keyingi bosqichga o‘tish va o‘zlashtirish darajasini oshirish',
       targetSkillId: targetSkill?.id ?? '',
       targetSkillName: targetSkillName,
       targetNodeId: activeNode.id,
-      reason: weakestScore < 50
+      reason: weakestScore != null && weakestScore < AdaptiveThresholds.targetedPracticeMin
           ? 'Ushbu ko‘nikma hozirda $weakestScore% darajasida. Tavsiya etilgan mashq orqali uni 60%+ darajaga ko‘taring.'
+          : isTargetedPractice
+          ? 'Ushbu ko‘nikma hozirda $weakestScore% darajasida. Maqsadli mashq bilan 70%+ barqaror natijaga erishing.'
           : 'O‘zlashtirish sur’atini saqlab qolish uchun rejadagi darsni davom ettiring.',
       suggestedMinutes: isReinforcement ? 5 : activeNode.estimatedMinutes,
-      priority: weakestScore < 50 ? RecommendationPriority.high : RecommendationPriority.medium,
+      priority: weakestScore != null && weakestScore < AdaptiveThresholds.targetedPracticeMin
+          ? RecommendationPriority.high
+          : RecommendationPriority.medium,
     );
   }
 }

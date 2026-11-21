@@ -1,4 +1,4 @@
-import { Question, QuestionAnswerSubmission } from './Question';
+import { CefrLevelId, Question, QuestionAnswerSubmission } from './Question';
 import { SkillScore } from './SkillScore';
 
 export interface PlacementAssessment {
@@ -14,6 +14,9 @@ export interface AssessmentResult {
   courseId: string;
   submissions: QuestionAnswerSubmission[];
   computedScores: Record<string, SkillScore>;
+  overallScore?: number;
+  placementCefr?: CefrLevelId;
+  recommendedNodeId?: string;
   weakestSkillId: string;
   timestamp: number;
   review?: PlacementReviewAnswer[];
@@ -21,9 +24,11 @@ export interface AssessmentResult {
 
 export interface PlacementReviewAnswer extends QuestionAnswerSubmission {
   questionText: string;
+  questionTextRu?: string;
   selectedOption: string;
   correctOption: string;
   explanation: string;
+  explanationRu?: string;
 }
 
 export interface PlacementSession {

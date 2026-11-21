@@ -30,10 +30,10 @@ class AppCard extends StatelessWidget {
       curve: Curves.easeOutCubic,
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.surface,
+        color: backgroundColor ?? AppColors.surfaceColor(context),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? AppColors.cardBorder,
+          color: borderColor ?? AppColors.borderColor(context),
           width: borderWidth,
         ),
         boxShadow: boxShadow ?? AppColors.cardShadow,

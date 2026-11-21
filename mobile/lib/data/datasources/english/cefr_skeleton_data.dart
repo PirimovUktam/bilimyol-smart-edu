@@ -1,0 +1,483 @@
+// GENERATED FROM content/english/cefr-skeleton.json - 1:1 canonical fidelity
+
+class CefrModuleSkeleton {
+  final String id;
+  final String cefrLevel;
+  final int order;
+  final String titleUz;
+  final String titleRu;
+  final String canDoObjectiveUz;
+  final String canDoObjectiveRu;
+  final List<String> prerequisites;
+  final List<String> grammarScope;
+  final List<String> vocabularyThemes;
+  final List<String> plannedLessonIds;
+  final String checkpointNodeId;
+
+  const CefrModuleSkeleton({
+    required this.id,
+    required this.cefrLevel,
+    required this.order,
+    required this.titleUz,
+    required this.titleRu,
+    required this.canDoObjectiveUz,
+    required this.canDoObjectiveRu,
+    required this.prerequisites,
+    required this.grammarScope,
+    required this.vocabularyThemes,
+    required this.plannedLessonIds,
+    required this.checkpointNodeId,
+  });
+
+  String localizedTitle(String uiLocale) =>
+      uiLocale == 'ru' && titleRu.isNotEmpty ? titleRu : titleUz;
+
+  String localizedCanDo(String uiLocale) =>
+      uiLocale == 'ru' && canDoObjectiveRu.isNotEmpty ? canDoObjectiveRu : canDoObjectiveUz;
+}
+
+class CefrLevelSkeleton {
+  final String cefrLevel;
+  final int order;
+  final String titleUz;
+  final String titleRu;
+  final List<String> canDoObjectivesUz;
+  final List<String> canDoObjectivesRu;
+  final List<String> prerequisites;
+  final List<CefrModuleSkeleton> modules;
+  final List<String> grammarScope;
+  final List<String> vocabularyThemes;
+  final List<String> plannedLessonIds;
+  final String exitAssessmentNodeId;
+
+  const CefrLevelSkeleton({
+    required this.cefrLevel,
+    required this.order,
+    required this.titleUz,
+    required this.titleRu,
+    required this.canDoObjectivesUz,
+    required this.canDoObjectivesRu,
+    required this.prerequisites,
+    required this.modules,
+    required this.grammarScope,
+    required this.vocabularyThemes,
+    required this.plannedLessonIds,
+    required this.exitAssessmentNodeId,
+  });
+
+  String localizedTitle(String uiLocale) =>
+      uiLocale == 'ru' && titleRu.isNotEmpty ? titleRu : titleUz;
+
+  List<String> localizedCanDos(String uiLocale) =>
+      uiLocale == 'ru' && canDoObjectivesRu.isNotEmpty ? canDoObjectivesRu : canDoObjectivesUz;
+}
+
+const String cefrOfficialDisclaimerUz = 'Ichki modul sinovlari va daraja testlari o‘quv jarayonidagi tayyorgarlikni baholaydi; ular rasmiy xalqaro CEFR sertifikati bermaydi.';
+const String cefrOfficialDisclaimerRu = 'Внутренние модульные и итоговые тесты оценивают учебный прогресс и не заменяют официальный международный сертификат CEFR.';
+const String cefrPreA1TargetLevel = 'Pre-A1';
+const List<String> cefrPreA1LessonIds = ['lesson_eng_starter', 'lesson_eng_foundation_02'];
+const String cefrPreA1RationaleUz = 'Pre-A1 bosqichi noldan boshlovchi o‘quvchilarni A1 1-moduliga tayyorlaydi: salomlashish, ism so‘rash va «to be» (am/is/are) bilan ilk sodda gaplarni tuzish.';
+const String cefrPreA1RationaleRu = 'Ступень Pre-A1 готовит начинающих к модулю A1.1: приветствие, знакомство и первые простые предложения с глаголом «to be» (am/is/are).';
+const String cefrPreA1TitleUz = 'Pre-A1 — Boshlang‘ich poydevor';
+const String cefrPreA1TitleRu = 'Pre-A1 — Начальная база';
+
+const List<CefrLevelSkeleton> cefrSkeletonLevels = [
+  CefrLevelSkeleton(
+    cefrLevel: 'A1',
+    order: 1,
+    titleUz: 'A1 — Elementar daraja',
+    titleRu: 'A1 — Элементарный уровень',
+    canDoObjectivesUz: ['O‘zini va boshqalarni tanishtiradi, kun vaqtiga mos salomlashadi va sodda savol beradi.', '«To be» va Present Simple yordamida kundalik odatlar va maktab hayoti haqida gapiradi.', 'Xona buyumlarining joylashuvini (beside, between, behind) va aniq soat vaqtini aytadi hamda tinglab tushunadi.', 'Qisqa e’lonlardan asosiy g‘oya va aniq dalilni topadi, 3–4 gapli kundalik xabar yozadi.'],
+    canDoObjectivesRu: ['Представляет себя и других, приветствует по времени суток и задаёт простые вопросы.', 'Использует «to be» и Present Simple для описания повседневных привычек и школьной жизни.', 'Описывает расположение предметов в комнате (beside, between, behind) и называет точное время на слух.', 'Находит главную мысль и факты в коротких объявлениях, пишет сообщение из 3–4 предложений.'],
+    prerequisites: [],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_a1_m1',
+        cefrLevel: 'A1',
+        order: 1,
+        titleUz: 'Tanishuv, salomlashish va ilk muloqot',
+        titleRu: 'Знакомство, приветствия и базовое общение',
+        canDoObjectiveUz: 'O‘zini tanishtiradi, kun vaqtiga qarab salomlashadi va qisqa suhbat boshlaydi.',
+        canDoObjectiveRu: 'Представляется, приветствует в зависимости от времени суток и начинает короткий диалог.',
+        prerequisites: [],
+        grammarScope: ['I\'m / My name is...', 'What\'s your name? / How are you?', 'Polite greetings by time of day'],
+        vocabularyThemes: ['Greetings and farewells', 'Introducing yourself and origin', 'Polite responses'],
+        plannedLessonIds: ['lesson_eng_starter', 'lesson_eng_a1_m1_greetings', 'lesson_eng_a1_m1_speaking', 'lesson_eng_a1_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_a1_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a1_m2',
+        cefrLevel: 'A1',
+        order: 2,
+        titleUz: '«To be», Present Simple va maktab hayoti',
+        titleRu: 'Глагол «to be», Present Simple и школьная жизнь',
+        canDoObjectiveUz: '«To be» va Present Simple bilan tasdiq, inkor va so‘roq gaplar tuzadi.',
+        canDoObjectiveRu: 'Строит утвердительные, отрицательные и вопросительные предложения с «to be» и Present Simple.',
+        prerequisites: ['node_eng_a1_u1_checkpoint'],
+        grammarScope: ['Subject pronouns (I, you, he, she, we, they) + to be (am/is/are)', 'Present Simple positive (-s/-es) and negative (don\'t/doesn\'t)', 'SVO word order vs Uzbek SOV interference'],
+        vocabularyThemes: ['School objects (notebook, classroom, schedule, homework)', 'Daily routine verbs (study, read, go, do)'],
+        plannedLessonIds: ['lesson_eng_foundation_02', 'lesson_eng_a1_m2_sentence_builder', 'lesson_eng_grammar_01', 'lesson_eng_a1_m2_daily_life', 'lesson_eng_a1_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_a1_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a1_m3',
+        cefrLevel: 'A1',
+        order: 3,
+        titleUz: 'Uy buyumlari, joylashuv va vaqtni aytish',
+        titleRu: 'Предметы дома, предлоги места и время',
+        canDoObjectiveUz: 'Xona buyumlari o‘rnini (beside, between, behind) va soat vaqtini (quarter past/to, half past) aniq ajratadi.',
+        canDoObjectiveRu: 'Точно определяет положение предметов (beside, between, behind) и время (quarter past/to, half past).',
+        prerequisites: ['node_eng_a1_u2_checkpoint'],
+        grammarScope: ['Spatial prepositions: beside, between, behind', 'Time expressions: o\'clock, quarter past, half past, quarter to', 'AM/PM disambiguation (in the morning / in the afternoon)'],
+        vocabularyThemes: ['Room furniture and school bag items', 'Clock times and bus/lecture schedules'],
+        plannedLessonIds: ['lesson_eng_vocab_01', 'lesson_eng_listening_01', 'lesson_eng_a1_m3_time_schedule', 'lesson_eng_a1_u3_checkpoint'],
+        checkpointNodeId: 'node_eng_a1_u3_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a1_m4',
+        cefrLevel: 'A1',
+        order: 4,
+        titleUz: 'O‘qish, yozish va A1 yakuniy integratsiya',
+        titleRu: 'Чтение, письмо и итоговая интеграция A1',
+        canDoObjectiveUz: 'Qisqa matndan asosiy fikr va dalilni ajratadi, uy va o‘qish vaqti haqida 3–4 gapli xabar yozadi.',
+        canDoObjectiveRu: 'Выделяет главную мысль и факты из короткого текста и пишет сообщение о доме и учёбе.',
+        prerequisites: ['node_eng_a1_u3_checkpoint'],
+        grammarScope: ['Combining to be, Present Simple, prepositions, and time phrases', 'Short connected sentences with and'],
+        vocabularyThemes: ['Community clubs, weekend notices, café ordering', 'Home study routine'],
+        plannedLessonIds: ['lesson_eng_reading_01', 'lesson_eng_a1_m4_writing', 'lesson_eng_a1_u4_checkpoint', 'lesson_eng_a1_exit'],
+        checkpointNodeId: 'node_eng_a1_u4_checkpoint',
+      ),
+    ],
+    grammarScope: ['Personal pronouns and verb to be (am/is/are)', 'Present Simple (positive, negative, Do/Does questions)', 'Spatial prepositions (beside, between, behind)', 'Clock time and daily frequency phrases'],
+    vocabularyThemes: ['Greetings and personal introduction', 'School objects and daily routines', 'Room furniture and locations', 'Time expressions and everyday café/club notices'],
+    plannedLessonIds: ['lesson_eng_starter', 'lesson_eng_a1_m1_greetings', 'lesson_eng_a1_m1_speaking', 'lesson_eng_a1_u1_checkpoint', 'lesson_eng_foundation_02', 'lesson_eng_a1_m2_sentence_builder', 'lesson_eng_grammar_01', 'lesson_eng_a1_m2_daily_life', 'lesson_eng_a1_u2_checkpoint', 'lesson_eng_vocab_01', 'lesson_eng_listening_01', 'lesson_eng_a1_m3_time_schedule', 'lesson_eng_a1_u3_checkpoint', 'lesson_eng_reading_01', 'lesson_eng_a1_m4_writing', 'lesson_eng_a1_u4_checkpoint', 'lesson_eng_a1_exit'],
+    exitAssessmentNodeId: 'node_eng_a1_exit',
+  ),
+  CefrLevelSkeleton(
+    cefrLevel: 'A2',
+    order: 2,
+    titleUz: 'A2 — Boshlang‘ichdan yuqori daraja',
+    titleRu: 'A2 — Предпороговый уровень',
+    canDoObjectivesUz: ['Shahar transportida yo‘l so‘raydi va berilgan yo‘nalishni tushunadi.', 'Do‘kon va bozorda narx, chegirma va to‘lov haqidagi e’lonlarni anglaydi.', 'Do‘stlariga uchrashuv vaqti va rejalar haqida taklif va qisqa xabar yozadi.'],
+    canDoObjectivesRu: ['Спрашивает дорогу в городе и понимает простые указания маршрута.', 'Понимает цены, скидки и объявления при покупках.', 'Пишет приглашения и короткие сообщения о планах и встречах.'],
+    prerequisites: ['node_eng_a1_exit'],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_a2_m1',
+        cefrLevel: 'A2',
+        order: 1,
+        titleUz: 'Transport va yo‘l so‘rash',
+        titleRu: 'Транспорт и ориентирование в городе',
+        canDoObjectiveUz: 'Shahar xaritasida manzilni tushuntiradi va burilish yo‘nalishlarini ajratadi.',
+        canDoObjectiveRu: 'Объясняет маршрут по городу и понимает указания поворотов.',
+        prerequisites: ['node_eng_a1_exit'],
+        grammarScope: ['Imperatives for directions', 'Prepositions of movement (along, past, across)'],
+        vocabularyThemes: ['City landmarks', 'Public transport', 'Turn left/right'],
+        plannedLessonIds: ['lesson_eng_a2_m1_directions', 'lesson_eng_a2_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_a2_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a2_m2',
+        cefrLevel: 'A2',
+        order: 2,
+        titleUz: 'Xarid, narxlar va taqqoslash',
+        titleRu: 'Покупки, цены и сравнения',
+        canDoObjectiveUz: 'Narx va o‘lchamlarni so‘raydi, ikkita mahsulotni qiyoslaydi.',
+        canDoObjectiveRu: 'Спрашивает цену и размер, сравнивает два товара.',
+        prerequisites: ['node_eng_a2_u1_checkpoint'],
+        grammarScope: ['Countable/uncountable nouns (much/many)', 'Comparative adjectives (-er / more)'],
+        vocabularyThemes: ['Prices and currency', 'Clothing and groceries'],
+        plannedLessonIds: ['lesson_eng_a2_m2_shopping', 'lesson_eng_a2_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_a2_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a2_m3',
+        cefrLevel: 'A2',
+        order: 3,
+        titleUz: 'Takliflar, o‘tgan voqealar va rejalar',
+        titleRu: 'Приглашения, прошлые события и планы',
+        canDoObjectiveUz: '«Would you like...» bilan taklif bildiradi va dam olish rejasini tuzadi.',
+        canDoObjectiveRu: 'Делает вежливые приглашения и обсуждает планы на выходные.',
+        prerequisites: ['node_eng_a2_u2_checkpoint'],
+        grammarScope: ['Past Simple (regular and common irregular verbs)', 'Future plans with going to'],
+        vocabularyThemes: ['Weekend activities', 'Accepting and declining invitations'],
+        plannedLessonIds: ['lesson_eng_a2_m3_plans', 'lesson_eng_a2_u3_checkpoint'],
+        checkpointNodeId: 'node_eng_a2_u3_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_a2_m4',
+        cefrLevel: 'A2',
+        order: 4,
+        titleUz: 'Qisqa e’lonlar va uchrashuv xabarlari',
+        titleRu: 'Короткие объявления и сообщения о встрече',
+        canDoObjectiveUz: 'Vokzal/tadbir e’lonini tushunadi va uchrashuv vaqti haqida qisqa xat yozadi.',
+        canDoObjectiveRu: 'Понимает расписание объявлений и пишет сообщение о встрече.',
+        prerequisites: ['node_eng_a2_u3_checkpoint'],
+        grammarScope: ['Time connectors (before, after, then)', 'Modals can/have to for polite requests'],
+        vocabularyThemes: ['Messages and emails', 'Public notices and delays'],
+        plannedLessonIds: ['lesson_eng_a2_m4_messages', 'lesson_eng_a2_exit'],
+        checkpointNodeId: 'node_eng_a2_u4_checkpoint',
+      ),
+    ],
+    grammarScope: ['Past Simple and past time markers', 'Future plans with going to and Present Continuous', 'Comparatives, superlatives, and quantifiers'],
+    vocabularyThemes: ['Transport and directions', 'Shopping and money', 'Invitations and personal plans', 'Short notices and everyday messages'],
+    plannedLessonIds: ['lesson_eng_a2_m1_directions', 'lesson_eng_a2_u1_checkpoint', 'lesson_eng_a2_m2_shopping', 'lesson_eng_a2_u2_checkpoint', 'lesson_eng_a2_m3_plans', 'lesson_eng_a2_u3_checkpoint', 'lesson_eng_a2_m4_messages', 'lesson_eng_a2_exit'],
+    exitAssessmentNodeId: 'node_eng_a2_exit',
+  ),
+  CefrLevelSkeleton(
+    cefrLevel: 'B1',
+    order: 3,
+    titleUz: 'B1 — O‘rta daraja',
+    titleRu: 'B1 — Средний (пороговый) уровень',
+    canDoObjectivesUz: ['Sayohat, o‘qish va ish jarayonidagi voqealarni mantiqiy ketma-ketlikda hikoya qiladi.', 'Kutilmagan muammoga duch kelganda sabab keltiradi va mos yechim taklif qiladi.', 'Suhbat yoki maqoladan keyingi amaliy harakatni tanlaydi va fikrini asoslaydi.'],
+    canDoObjectivesRu: ['Последовательно описывает события из путешествий, учёбы и работы.', 'Объясняет причины неожиданной проблемы и предлагает решение.', 'Выбирает дальнейшее действие по итогам диалога и аргументирует мнение.'],
+    prerequisites: ['node_eng_a2_exit'],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_b1_m1',
+        cefrLevel: 'B1',
+        order: 1,
+        titleUz: 'Sayohat va kundalik tajribalar',
+        titleRu: 'Путешествия и личный опыт',
+        canDoObjectiveUz: 'Safar taassurotlari va tajribani Present Perfect yordamida bayon qiladi.',
+        canDoObjectiveRu: 'Описывает впечатления от поездок и опыт с помощью Present Perfect.',
+        prerequisites: ['node_eng_a2_exit'],
+        grammarScope: ['Present Perfect vs Past Simple', 'Experience markers (ever, never, already, yet)'],
+        vocabularyThemes: ['Travel logistics', 'Bookings and delays'],
+        plannedLessonIds: ['lesson_eng_b1_m1_travel', 'lesson_eng_b1_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_b1_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b1_m2',
+        cefrLevel: 'B1',
+        order: 2,
+        titleUz: 'O‘qish, ish va kutilmagan muammolar',
+        titleRu: 'Учёба, работа и решение проблем',
+        canDoObjectiveUz: 'Ish yoki o‘qishdagi kechikish sababini tushuntiradi va muqobil reja tuzadi.',
+        canDoObjectiveRu: 'Объясняет причину задержки на работе или учёбе и предлагает альтернативу.',
+        prerequisites: ['node_eng_b1_u1_checkpoint'],
+        grammarScope: ['First Conditional', 'Cause and reason clauses (because, since, so)'],
+        vocabularyThemes: ['Deadlines and teamwork', 'Troubleshooting'],
+        plannedLessonIds: ['lesson_eng_b1_m2_work_study', 'lesson_eng_b1_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_b1_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b1_m3',
+        cefrLevel: 'B1',
+        order: 3,
+        titleUz: 'Voqealarni izchil hikoya qilish',
+        titleRu: 'Связное повествование и рассказ',
+        canDoObjectiveUz: 'O‘tgan davomli va sodda zamonlarni uyg‘unlashtirib voqeani so‘zlab beradi.',
+        canDoObjectiveRu: 'Сочетает Past Continuous и Past Simple в связном рассказе.',
+        prerequisites: ['node_eng_b1_u2_checkpoint'],
+        grammarScope: ['Past Continuous vs Past Simple', 'Relative clauses (who, which, where)'],
+        vocabularyThemes: ['Storytelling connectors', 'Life milestones'],
+        plannedLessonIds: ['lesson_eng_b1_m3_narrative', 'lesson_eng_b1_u3_checkpoint'],
+        checkpointNodeId: 'node_eng_b1_u3_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b1_m4',
+        cefrLevel: 'B1',
+        order: 4,
+        titleUz: 'Muhokama, tavsiya va keyingi harakat',
+        titleRu: 'Обсуждение, советы и следующие шаги',
+        canDoObjectiveUz: 'Suhbatdan asosiy xulosa chiqaradi va maslahat hamda taklif bildiradi.',
+        canDoObjectiveRu: 'Делает вывод из беседы и формулирует рекомендации.',
+        prerequisites: ['node_eng_b1_u3_checkpoint'],
+        grammarScope: ['Modals of advice and obligation (should, ought to, must)', 'Reported statements (basic)'],
+        vocabularyThemes: ['Recommendations', 'Action plans'],
+        plannedLessonIds: ['lesson_eng_b1_m4_decisions', 'lesson_eng_b1_exit'],
+        checkpointNodeId: 'node_eng_b1_u4_checkpoint',
+      ),
+    ],
+    grammarScope: ['Present Perfect vs Past Simple', 'Past Continuous and relative clauses', 'First Conditional and modals of advice'],
+    vocabularyThemes: ['Travel and unexpected issues', 'Study and workplace communication', 'Narratives, reasons, and decisions'],
+    plannedLessonIds: ['lesson_eng_b1_m1_travel', 'lesson_eng_b1_u1_checkpoint', 'lesson_eng_b1_m2_work_study', 'lesson_eng_b1_u2_checkpoint', 'lesson_eng_b1_m3_narrative', 'lesson_eng_b1_u3_checkpoint', 'lesson_eng_b1_m4_decisions', 'lesson_eng_b1_exit'],
+    exitAssessmentNodeId: 'node_eng_b1_exit',
+  ),
+  CefrLevelSkeleton(
+    cefrLevel: 'B2',
+    order: 4,
+    titleUz: 'B2 — O‘rtadan yuqori daraja',
+    titleRu: 'B2 — Уровень выше среднего',
+    canDoObjectivesUz: ['Intervyu va munozaralarda asosiy dalil hamda qarshi dalilni aniq ajratadi.', 'Ikki xil manbadagi ma’lumotni solishtirib, o‘z pozitsiyasini himoya qiladi.', 'Rasmiy va norasmiy uslubni farqlab, strukturalangan xat va esse yozadi.'],
+    canDoObjectivesRu: ['Выделяет аргументы и контраргументы в интервью и дискуссиях.', 'Сопоставляет два источника и уверенно отстаивает свою позицию.', 'Различает формальный и неформальный регистры в письмах и эссе.'],
+    prerequisites: ['node_eng_b1_exit'],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_b2_m1',
+        cefrLevel: 'B2',
+        order: 1,
+        titleUz: 'Intervyu va kasbiy suhbatlar',
+        titleRu: 'Интервью и профессиональные беседы',
+        canDoObjectiveUz: 'Murakkab savollarga tuzilgan va ishonchli javob qaytaradi.',
+        canDoObjectiveRu: 'Структурированно и уверенно отвечает на развёрнутые вопросы интервью.',
+        prerequisites: ['node_eng_b1_exit'],
+        grammarScope: ['Second and Third Conditionals', 'Passive voice in professional reports'],
+        vocabularyThemes: ['Career competencies', 'Interview strategies'],
+        plannedLessonIds: ['lesson_eng_b2_m1_interview', 'lesson_eng_b2_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_b2_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b2_m2',
+        cefrLevel: 'B2',
+        order: 2,
+        titleUz: 'Munozara, dalil va qarshi dalil',
+        titleRu: 'Дискуссия, аргументы и контраргументы',
+        canDoObjectiveUz: 'Bahsda qarshi fikrga hurmat bilan munosabat bildirib, o‘z dalilini himoya qiladi.',
+        canDoObjectiveRu: 'Вежливо реагирует на возражения и защищает свою точку зрения.',
+        prerequisites: ['node_eng_b2_u1_checkpoint'],
+        grammarScope: ['Concession clauses (although, despite, in spite of)', 'Modals of deduction (must have, might have)'],
+        vocabularyThemes: ['Evidence and claims', 'Debate language'],
+        plannedLessonIds: ['lesson_eng_b2_m2_debate', 'lesson_eng_b2_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_b2_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b2_m3',
+        cefrLevel: 'B2',
+        order: 3,
+        titleUz: 'Ikki manbani solishtirish va tahlil',
+        titleRu: 'Сравнение двух источников и анализ',
+        canDoObjectiveUz: 'Ikki maqola yoki grafikdagi farqli ma’lumotlarni qiyoslab xulosa yozadi.',
+        canDoObjectiveRu: 'Сопоставляет данные двух статей и формулирует аналитический вывод.',
+        prerequisites: ['node_eng_b2_u2_checkpoint'],
+        grammarScope: ['Participle clauses', 'Reported speech with reporting verbs'],
+        vocabularyThemes: ['Academic synthesis', 'Data comparison'],
+        plannedLessonIds: ['lesson_eng_b2_m3_sources', 'lesson_eng_b2_u3_checkpoint'],
+        checkpointNodeId: 'node_eng_b2_u3_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_b2_m4',
+        cefrLevel: 'B2',
+        order: 4,
+        titleUz: 'Rasmiy va norasmiy yozuv uslubi',
+        titleRu: 'Формальный и неформальный стиль письма',
+        canDoObjectiveUz: 'Qabul qiluvchiga mos registrda rasmiy murojaat yoki norasmiy xat yozadi.',
+        canDoObjectiveRu: 'Пишет официальное обращение или неформальное письмо в подходящем регистре.',
+        prerequisites: ['node_eng_b2_u3_checkpoint'],
+        grammarScope: ['Cleft sentences for emphasis', 'Formal vs informal register transformations'],
+        vocabularyThemes: ['Formal correspondence', 'Polite hedging'],
+        plannedLessonIds: ['lesson_eng_b2_m4_register', 'lesson_eng_b2_exit'],
+        checkpointNodeId: 'node_eng_b2_u4_checkpoint',
+      ),
+    ],
+    grammarScope: ['Conditionals (2nd, 3rd, mixed)', 'Passive voice and participle clauses', 'Concession, deduction modals, and emphasis structures'],
+    vocabularyThemes: ['Interviews and workplace debates', 'Source comparison and evidence evaluation', 'Formal vs informal correspondence'],
+    plannedLessonIds: ['lesson_eng_b2_m1_interview', 'lesson_eng_b2_u1_checkpoint', 'lesson_eng_b2_m2_debate', 'lesson_eng_b2_u2_checkpoint', 'lesson_eng_b2_m3_sources', 'lesson_eng_b2_u3_checkpoint', 'lesson_eng_b2_m4_register', 'lesson_eng_b2_exit'],
+    exitAssessmentNodeId: 'node_eng_b2_exit',
+  ),
+  CefrLevelSkeleton(
+    cefrLevel: 'C1',
+    order: 5,
+    titleUz: 'C1 — Yuqori professional daraja',
+    titleRu: 'C1 — Уровень профессионального владения',
+    canDoObjectivesUz: ['Seminar va ma’ruzalardagi yashirin munosabat hamda ohangni aniqlaydi.', 'Bir nechta murakkab manbani birlashtirib loyiha taklifi tayyorlaydi.', 'Bayonni tinglovchi auditoriyasiga qarab usluban moslashtiradi.'],
+    canDoObjectivesRu: ['Распознаёт скрытую оценку и отношение спикера на семинарах.', 'Объединяет несколько сложных источников в проектное предложение.', 'Адаптирует изложение под целевую аудиторию и контекст.'],
+    prerequisites: ['node_eng_b2_exit'],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_c1_m1',
+        cefrLevel: 'C1',
+        order: 1,
+        titleUz: 'Akademik seminar va yashirin munosabat',
+        titleRu: 'Академический семинар и скрытый подтекст',
+        canDoObjectiveUz: 'Ma’ruzachining kinoya, shubha yoki yashirin qo‘llab-quvvatlashini ilg‘aydi.',
+        canDoObjectiveRu: 'Улавливает сомнение, иронию или скрытое одобрение докладчика.',
+        prerequisites: ['node_eng_b2_exit'],
+        grammarScope: ['Negative adverbial inversion (Rarely, Not only)', 'Subjunctive and hedging expressions'],
+        vocabularyThemes: ['Academic discourse markers', 'Attitude and evaluation'],
+        plannedLessonIds: ['lesson_eng_c1_m1_seminar', 'lesson_eng_c1_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_c1_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_c1_m2',
+        cefrLevel: 'C1',
+        order: 2,
+        titleUz: 'Loyiha taklifi va manbalar sintezi',
+        titleRu: 'Проектное предложение и синтез источников',
+        canDoObjectiveUz: 'Tadqiqot va statistik dalillarni birlashtirib asosli loyiha taklifi yozadi.',
+        canDoObjectiveRu: 'Синтезирует данные исследований в убедительное проектное предложение.',
+        prerequisites: ['node_eng_c1_u1_checkpoint'],
+        grammarScope: ['Nominalization', 'Complex passive reporting structures'],
+        vocabularyThemes: ['Project proposals', 'Risk mitigation and impact'],
+        plannedLessonIds: ['lesson_eng_c1_m2_proposal', 'lesson_eng_c1_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_c1_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_c1_m3',
+        cefrLevel: 'C1',
+        order: 3,
+        titleUz: 'Auditoriyaga mos murakkab bayon',
+        titleRu: 'Адаптация сложного изложения под аудиторию',
+        canDoObjectiveUz: 'Bir xil murakkab g‘oyani mutaxassislar va keng jamoatchilikka moslab bayon qiladi.',
+        canDoObjectiveRu: 'Излагает сложную идею как для экспертов, так и для широкой аудитории.',
+        prerequisites: ['node_eng_c1_u2_checkpoint'],
+        grammarScope: ['Ellipsis and substitution', 'Fronting and rhetorical emphasis'],
+        vocabularyThemes: ['Audience adaptation', 'Executive summaries'],
+        plannedLessonIds: ['lesson_eng_c1_m3_audience', 'lesson_eng_c1_exit'],
+        checkpointNodeId: 'node_eng_c1_u3_checkpoint',
+      ),
+    ],
+    grammarScope: ['Inversion and fronting', 'Nominalization and complex passives', 'Hedging, ellipsis, and discourse cohesion'],
+    vocabularyThemes: ['Academic seminars and implicit attitude', 'Project proposals and synthesis', 'Audience-calibrated communication'],
+    plannedLessonIds: ['lesson_eng_c1_m1_seminar', 'lesson_eng_c1_u1_checkpoint', 'lesson_eng_c1_m2_proposal', 'lesson_eng_c1_u2_checkpoint', 'lesson_eng_c1_m3_audience', 'lesson_eng_c1_exit'],
+    exitAssessmentNodeId: 'node_eng_c1_exit',
+  ),
+  CefrLevelSkeleton(
+    cefrLevel: 'C2',
+    order: 6,
+    titleUz: 'C2 — Mukammal egallash darajasi',
+    titleRu: 'C2 — Уровень совершенного владения',
+    canDoObjectivesUz: ['Muzokara va bahslarda nozik ma’no hamda uslubiy farqlarni dalillaydi.', 'Kinoya, piching va madaniy ishoralarni aniq tahlil qiladi.', 'Zid nuqtayi nazarlarni ma’no yo‘qotmasdan yuqori aniqlikda qayta ifodalaydi va tahrirlaydi.'],
+    canDoObjectivesRu: ['Обосновывает тонкие смысловые и стилистические различия в переговорах.', 'Точно анализирует иронию, подтекст и культурные аллюзии.', 'Безупречно перефразирует и редактирует противоположные позиции.'],
+    prerequisites: ['node_eng_c1_exit'],
+    modules: [
+      CefrModuleSkeleton(
+        id: 'mod_eng_c2_m1',
+        cefrLevel: 'C2',
+        order: 1,
+        titleUz: 'Muzokara va nozik ma’no farqlari',
+        titleRu: 'Переговоры и тонкие оттенки смысла',
+        canDoObjectiveUz: 'Kelishuv matnlaridagi nozik huquqiy va diplomatik ifodalarni farqlaydi.',
+        canDoObjectiveRu: 'Различает тонкие дипломатические и договорные формулировки.',
+        prerequisites: ['node_eng_c1_exit'],
+        grammarScope: ['Subtle modal nuances (should/were to/had it not been)', 'Diplomatic concessions'],
+        vocabularyThemes: ['Negotiation precision', 'Connotation and register shifts'],
+        plannedLessonIds: ['lesson_eng_c2_m1_negotiation', 'lesson_eng_c2_u1_checkpoint'],
+        checkpointNodeId: 'node_eng_c2_u1_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_c2_m2',
+        cefrLevel: 'C2',
+        order: 2,
+        titleUz: 'Kinoya, uslub va professional tahrir',
+        titleRu: 'Ирония, стиль и профессиональная редактура',
+        canDoObjectiveUz: 'Matndagi kinoya va uslubiy nomutanosiblikni aniqlab, yuqori saviyada tahrirlaydi.',
+        canDoObjectiveRu: 'Распознаёт иронию и стилистические сбои, выполняя глубокую редактуру.',
+        prerequisites: ['node_eng_c2_u1_checkpoint'],
+        grammarScope: ['Reduced non-finite clauses', 'Idiomatic and rhetorical devices'],
+        vocabularyThemes: ['Irony and understatement', 'Editorial conciseness'],
+        plannedLessonIds: ['lesson_eng_c2_m2_irony_editing', 'lesson_eng_c2_u2_checkpoint'],
+        checkpointNodeId: 'node_eng_c2_u2_checkpoint',
+      ),
+      CefrModuleSkeleton(
+        id: 'mod_eng_c2_m3',
+        cefrLevel: 'C2',
+        order: 3,
+        titleUz: 'Zid nuqtayi nazarlarni qayta ifodalash',
+        titleRu: 'Точное перефразирование противоположных позиций',
+        canDoObjectiveUz: 'Qarama-qarshi qarashlarni xolis, aniq va uslubiy jihatdan mukammal qayta bayon qiladi.',
+        canDoObjectiveRu: 'Объективно и стилистически точно перефразирует полярные аргументы.',
+        prerequisites: ['node_eng_c2_u2_checkpoint'],
+        grammarScope: ['Complex nominal structures', 'Nuanced attribution and framing'],
+        vocabularyThemes: ['Neutral framing', 'High-precision paraphrasing'],
+        plannedLessonIds: ['lesson_eng_c2_m3_rephrasing', 'lesson_eng_c2_exit'],
+        checkpointNodeId: 'node_eng_c2_u3_checkpoint',
+      ),
+    ],
+    grammarScope: ['Subjunctive inversions and hypothetical nuance', 'Non-finite condensation and rhetorical symmetry', 'Precision attribution and neutral framing'],
+    vocabularyThemes: ['High-stakes negotiation', 'Irony, nuance, and editorial craft', 'Opposing viewpoint synthesis'],
+    plannedLessonIds: ['lesson_eng_c2_m1_negotiation', 'lesson_eng_c2_u1_checkpoint', 'lesson_eng_c2_m2_irony_editing', 'lesson_eng_c2_u2_checkpoint', 'lesson_eng_c2_m3_rephrasing', 'lesson_eng_c2_exit'],
+    exitAssessmentNodeId: 'node_eng_c2_exit',
+  ),
+];

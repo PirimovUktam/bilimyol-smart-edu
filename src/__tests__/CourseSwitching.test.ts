@@ -86,10 +86,9 @@ describe('CourseSwitching', () => {
     for (const node of engNodes) {
       expect(node.courseId).toBe('course_eng_01');
       expect(node.skillId.startsWith('skill_eng_')).toBe(true);
-      if (node.targetLessonId) {
-        const lesson = await lessonRepo.getLessonById(node.targetLessonId);
-        expect(lesson?.courseId).toBe('course_eng_01');
-      }
+      expect(node.targetLessonId).toBeTruthy();
+      const lesson = await lessonRepo.getLessonById(node.targetLessonId!);
+      expect(lesson?.courseId).toBe('course_eng_01');
     }
   });
 });

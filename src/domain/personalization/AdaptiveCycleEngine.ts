@@ -213,10 +213,21 @@ export class AdaptiveCycleEngine {
       },
     ];
 
+    const hasTargetedPractice =
+      !needsReinforcement &&
+      Boolean(
+        weakestSkill &&
+          weakestScoreObj &&
+          weakestScoreObj.score >= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN &&
+          weakestScoreObj.score <= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MAX
+      );
+
     const loopUpdateSummary = !hasDiagnostics
       ? 'Diagnostika yoki ilk dars natijasi profilga yozilishi bilan keyingi shaxsiy qadam avtomatik yangilanadi.'
       : needsReinforcement && weakestSkill
       ? `"${weakestSkill.name}" mavzusida ${weakestScoreObj?.score ?? 0}% ko‘rsatkich qayd etildi — shu sababli keyingi qadam sifatida mustahkamlash mashqi tanlandi.`
+      : hasTargetedPractice && weakestSkill
+      ? `"${weakestSkill.name}" mavzusi ${weakestScoreObj?.score ?? 0}% (50–69%) darajada — 70%+ mustahkam natija uchun maqsadli mashq tavsiya qilindi.`
       : `So‘nggi natijalar asosida umumiy o‘zlashtirish ${overall}% ga yetdi va navbatdagi bosqich "${activeNode?.title ?? 'keyingi mavzu'}" ochildi.`;
 
     return {
@@ -253,6 +264,11 @@ export class AdaptiveCycleEngine {
         : 'Boshlang‘ich temp';
 
     const weakCount = scoreValues.filter((s) => s.score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN).length;
+    const targetedCount = scoreValues.filter(
+      (s) =>
+        s.score >= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN &&
+        s.score <= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MAX
+    ).length;
 
     return [
       {
@@ -291,12 +307,16 @@ export class AdaptiveCycleEngine {
         value:
           weakCount > 0
             ? `${weakCount} ta bo‘shliq (<50%)`
+            : targetedCount > 0
+            ? `${targetedCount} ta maqsadli mashq (50–69%)`
             : scoreValues.length > 0
             ? 'Kritik bo‘shliq yo‘q'
             : 'Xatolar hali qayd etilmagan',
         impact:
           weakCount > 0
             ? `"${activeNode?.title ?? weakestSkill?.name ?? 'Mavzu'}" bo‘yicha mustahkamlash mashqi yo‘l xaritasiga qo‘shildi.`
+            : targetedCount > 0
+            ? `"${weakestSkill?.name ?? activeNode?.title ?? 'Mavzu'}" bo‘yicha 70%+ ga chiqish uchun maqsadli mashq tavsiya etildi.`
             : 'Xato aniqlanishi bilan tizim avtomatik tarzda qayta mashq tavsiya qiladi.',
       },
       {
@@ -338,6 +358,19 @@ export class AdaptiveCycleEngine {
         type: 'reinforcement',
         targetNodeId: `reinf_${activeNode?.id ?? weakestSkill.id}`,
         reason: `${weakestScoreObj.score}% natijani 60%+ darajaga ko‘tarish uchun maqsadli mashq.`,
+      });
+    } else if (
+      weakestSkill &&
+      weakestScoreObj &&
+      weakestScoreObj.score <= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MAX
+    ) {
+      tasks.push({
+        id: 'micro_targeted',
+        title: `Maqsadli mashq: ${weakestSkill.name}`,
+        minutes: 5,
+        type: 'reinforcement',
+        targetNodeId: activeNode?.id,
+        reason: `${weakestScoreObj.score}% (50–69%) natijani 70%+ mustahkam darajaga olib chiqish uchun qo‘shimcha mashq.`,
       });
     }
 

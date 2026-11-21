@@ -13,6 +13,7 @@ import 'supabase_course_repository.dart';
 
 class SupabaseLearnerRepository extends ILearnerRepository {
   final InMemoryLearnerRepository _fallbackRepo = InMemoryLearnerRepository();
+  Future<void> _srsWriteChain = Future<void>.value();
   ({String scope, String key})? _pendingMasteryAnswer;
 
   @override
@@ -243,6 +244,25 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           user.userMetadata?['first_name'] as String? ??
           (user.email != null ? user.email!.split('@').first : 'Foydalanuvchi');
 
+      final placementScoreByCourse = <String, int>{
+        for (final entry
+            in (learnerData?['placement_score_by_course']
+                        as Map<String, dynamic>? ??
+                    {})
+                .entries)
+          if (entry.value is num) entry.key: (entry.value as num).toInt(),
+      };
+      final placementCefrByCourse = <String, String>{
+        for (final entry
+            in (learnerData?['placement_cefr_by_course']
+                        as Map<String, dynamic>? ??
+                    {})
+                .entries)
+          if (entry.value is String &&
+              (entry.value as String).trim().isNotEmpty)
+            entry.key: (entry.value as String).trim(),
+      };
+
       return LearnerProfile(
         id: user.id,
         name: firstName,
@@ -264,6 +284,8 @@ class SupabaseLearnerRepository extends ILearnerRepository {
             gamifyData?['last_activity_date'] ??
             DateTime.now().toIso8601String().split('T').first,
         scoresByCourse: scoresByCourse,
+        placementScoreByCourse: placementScoreByCourse,
+        placementCefrByCourse: placementCefrByCourse,
         completedLessonIds: completedLessonIds,
         completedNodeIds: completedNodeIds,
         completedReinforcementIds: completedReinfIds,
@@ -359,6 +381,38 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
     }
     return getProfile();
+  }
+
+  @override
+  Future<LearnerProfile> recordFlashcardReview({
+    required String courseId,
+    required String cardId,
+    required bool remembered,
+  }) {
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      return _fallbackRepo.recordFlashcardReview(
+        courseId: courseId,
+        cardId: cardId,
+        remembered: remembered,
+      );
+    }
+    final next = _srsWriteChain
+        .catchError((Object _) {})
+        .then((_) async {
+          // Cache SRS locally while keeping remote profile authoritative.
+          await _fallbackRepo.recordFlashcardReview(
+            courseId: courseId,
+            cardId: cardId,
+            remembered: remembered,
+          );
+          final localProfile = await _fallbackRepo.getProfile();
+          final remoteProfile = await getProfile();
+          return remoteProfile.copyWith(
+            flashcardSrsByCourse: localProfile.flashcardSrsByCourse,
+          );
+        });
+    _srsWriteChain = next.then<void>((_) {}, onError: (Object _) {});
+    return next;
   }
 
   @override
@@ -678,13 +732,20 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     }
     if (_pendingMasteryAnswer?.key == requestKey) _pendingMasteryAnswer = null;
     String? correctOption;
-    if (mastery && data['is_correct'] == false) {
+    String? feedbackExplanation;
+    if (data['is_correct'] == false) {
       try {
         final feedback = await client.rpc('get_mistake_feedback', params: {
           'p_course_id': courseId, 'p_skill_id': skillId, 'p_question_id': questionId,
         });
-        if (feedback is Map && feedback['correctOption'] is String) {
-          correctOption = feedback['correctOption'] as String;
+        if (feedback is Map) {
+          if (feedback['correctOption'] is String) {
+            correctOption = feedback['correctOption'] as String;
+          }
+          if (feedback['explanation'] is String &&
+              (feedback['explanation'] as String).trim().isNotEmpty) {
+            feedbackExplanation = feedback['explanation'] as String;
+          }
         }
       } catch (_) {
         // The graded answer is saved even when the additional feedback read fails.
@@ -702,7 +763,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       timestamp: DateTime.now().millisecondsSinceEpoch,
       // The scoring RPC intentionally never returns the answer key.
       correctOption: correctOption,
-      explanation: data['explanation'] as String?,
+      explanation: feedbackExplanation ?? data['explanation'] as String?,
       newSkillScore: (data['new_skill_score'] as num?)?.toInt(),
       xpAwarded: (data['xp_awarded'] as num?)?.toInt() ?? 0,
       alreadyProcessed: data['already_processed'] == true,

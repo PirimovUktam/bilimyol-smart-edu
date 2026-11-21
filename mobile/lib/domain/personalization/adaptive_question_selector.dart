@@ -24,11 +24,12 @@ class AdaptiveQuestionSelector {
   /// - If hard was missed: medium
   static QuestionDifficulty determineNextDifficulty(
     String skillId,
-    List<AnswerHistoryItem> history,
-  ) {
+    List<AnswerHistoryItem> history, {
+    QuestionDifficulty initialDifficulty = QuestionDifficulty.medium,
+  }) {
     final skillHistory = history.where((h) => h.skillId == skillId).toList();
     if (skillHistory.isEmpty) {
-      return QuestionDifficulty.medium;
+      return initialDifficulty;
     }
 
     final last = skillHistory.last;
@@ -82,13 +83,40 @@ class AdaptiveQuestionSelector {
       (a, b) => (skillCounts[a] ?? 0).compareTo(skillCounts[b] ?? 0),
     );
     final nextSkillId = pendingSkills.first;
+    final candidates = unasked.where((q) => q.skillId == nextSkillId).toList();
+    final isEnglish = candidates.any((q) => q.courseId == 'course_eng_01');
 
-    // 2. Determine target difficulty
-    final targetDiff = determineNextDifficulty(nextSkillId, history);
+    // 2. Determine target difficulty (English A1-B1 starts at easy/A1)
+    final targetDiff = determineNextDifficulty(
+      nextSkillId,
+      history,
+      initialDifficulty: isEnglish
+          ? QuestionDifficulty.easy
+          : QuestionDifficulty.medium,
+    );
 
-    // 3. Find candidate questions in bank matching skill & difficulty
-    final candidates = unasked.where((q) => q.skillId == nextSkillId);
-    return candidates.where((q) => q.difficulty == targetDiff).firstOrNull ??
-        candidates.first;
+    // 3. Find candidate questions matching skill & nearest difficulty
+    final fallbackOrder = switch (targetDiff) {
+      QuestionDifficulty.easy => const [
+        QuestionDifficulty.easy,
+        QuestionDifficulty.medium,
+        QuestionDifficulty.hard,
+      ],
+      QuestionDifficulty.medium => const [
+        QuestionDifficulty.medium,
+        QuestionDifficulty.easy,
+        QuestionDifficulty.hard,
+      ],
+      QuestionDifficulty.hard => const [
+        QuestionDifficulty.hard,
+        QuestionDifficulty.medium,
+        QuestionDifficulty.easy,
+      ],
+    };
+    for (final diff in fallbackOrder) {
+      final match = candidates.where((q) => q.difficulty == diff).firstOrNull;
+      if (match != null) return match;
+    }
+    return candidates.first;
   }
 }

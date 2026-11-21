@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <filter id="panelShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="#F8FAFC"/>
+
+  <!-- Left Panel: Past Weekend Memory (Museum + Camera) -->
+  <g filter="url(#panelShadow)">
+    <rect x="44" y="56" width="320" height="488" rx="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="64" y="76" width="280" height="240" rx="18" fill="#FEF3C7"/>
+
+    <!-- Classical Museum Facade -->
+    <polygon points="96,174 204,114 312,174" fill="#D97706"/>
+    <rect x="104" y="174" width="200" height="14" rx="3" fill="#B45309"/>
+    <rect x="120" y="188" width="20" height="90" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+    <rect x="164" y="188" width="20" height="90" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+    <rect x="224" y="188" width="20" height="90" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+    <rect x="268" y="188" width="20" height="90" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+    <rect x="190" y="216" width="28" height="62" rx="14" fill="#92400E"/>
+    <rect x="96" y="278" width="216" height="16" rx="4" fill="#B45309"/>
+
+    <!-- Camera Icon below Museum -->
+    <rect x="134" y="366" width="140" height="96" rx="18" fill="#334155"/>
+    <rect x="166" y="350" width="52" height="20" rx="6" fill="#475569"/>
+    <circle cx="204" cy="414" r="30" fill="#0F172A" stroke="#CBD5E1" stroke-width="5"/>
+    <circle cx="204" cy="414" r="14" fill="#38BDF8"/>
+    <circle cx="250" cy="386" r="6" fill="#FBBF24"/>
+  </g>
+
+  <!-- Center Transition Arrow -->
+  <circle cx="400" cy="300" r="28" fill="#4F46E5"/>
+  <path d="M388 300 L412 300 M404 290 L414 300 L404 310" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Right Panel: Upcoming Weekend Plan (Calendar + Clock + Cinema Ticket) -->
+  <g filter="url(#panelShadow)">
+    <rect x="436" y="56" width="320" height="488" rx="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+
+    <!-- Wall Calendar Grid -->
+    <rect x="466" y="84" width="260" height="214" rx="18" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="466" y="84" width="260" height="44" rx="14" fill="#4F46E5"/>
+    <!-- Spiral Rings -->
+    <rect x="508" y="72" width="12" height="24" rx="6" fill="#0F172A"/>
+    <rect x="590" y="72" width="12" height="24" rx="6" fill="#0F172A"/>
+    <rect x="672" y="72" width="12" height="24" rx="6" fill="#0F172A"/>
+
+    <!-- 5x3 Day Squares (last 2 columns highlighted as Weekend!) -->
+    <g>
+      <rect x="486" y="148" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="532" y="148" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="578" y="148" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="624" y="148" width="36" height="34" rx="6" fill="#10B981"/>
+      <rect x="670" y="148" width="36" height="34" rx="6" fill="#10B981"/>
+
+      <rect x="486" y="194" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="532" y="194" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="578" y="194" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="624" y="194" width="36" height="34" rx="6" fill="#A7F3D0" stroke="#10B981" stroke-width="2"/>
+      <rect x="670" y="194" width="36" height="34" rx="6" fill="#A7F3D0" stroke="#10B981" stroke-width="2"/>
+
+      <rect x="486" y="240" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="532" y="240" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="578" y="240" width="36" height="34" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="624" y="240" width="36" height="34" rx="6" fill="#A7F3D0" stroke="#10B981" stroke-width="2"/>
+      <rect x="670" y="240" width="36" height="34" rx="6" fill="#A7F3D0" stroke="#10B981" stroke-width="2"/>
+    </g>
+
+    <!-- Analog Clock (Bottom-Left of Right Panel: Half past two / 14:30) -->
+    <circle cx="526" cy="414" r="56" fill="#FFFFFF" stroke="#4F46E5" stroke-width="6"/>
+    <circle cx="526" cy="368" r="3" fill="#64748B"/>
+    <circle cx="572" cy="414" r="3" fill="#64748B"/>
+    <circle cx="526" cy="460" r="3" fill="#64748B"/>
+    <circle cx="480" cy="414" r="3" fill="#64748B"/>
+    <line x1="526" y1="414" x2="554" y2="404" stroke="#0F172A" stroke-width="5" stroke-linecap="round"/>
+    <line x1="526" y1="414" x2="526" y2="452" stroke="#4F46E5" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="526" cy="414" r="5" fill="#0F172A"/>
+
+    <!-- Event Ticket Icon (Bottom-Right of Right Panel) -->
+    <g transform="translate(606, 376) rotate(-8)">
+      <path d="M0 10 Q10 10 10 0 L108 0 Q108 10 118 10 L118 64 Q108 64 108 74 L10 74 Q10 64 0 64 Z" fill="#F59E0B"/>
+      <line x1="36" y1="8" x2="36" y2="66" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="6 6"/>
+      <polygon points="78,18 83,30 96,31 86,40 89,53 78,46 67,53 70,40 60,31 73,30" fill="#FFFFFF"/>
+    </g>
+  </g>
+</svg>

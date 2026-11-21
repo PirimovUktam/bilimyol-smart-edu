@@ -11,6 +11,8 @@ import { isProtectedAuthReady } from '@/core/utils/authGuards';
 import { hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { Button } from '@/presentation/components/Button';
+import { withMotionPreferences } from '@/presentation/components/withMotionPreferences';
+import { InteractiveLessonView } from '@/features/lesson/InteractiveLessonView';
 
 import { SectionState } from '@/presentation/components/SectionState';
 import { RouteErrorBoundary } from '@/presentation/components/RouteErrorBoundary';
@@ -71,9 +73,7 @@ const LazyKnowledgeMapView = lazy(() =>
 const LazyRoadmapView = lazyAnimated(() =>
   import('@/features/roadmap/RoadmapView').then((m) => m.RoadmapView)
 );
-const LazyInteractiveLessonView = lazyAnimated(() =>
-  import('@/features/lesson/InteractiveLessonView').then((m) => m.InteractiveLessonView)
-);
+const EagerInteractiveLessonView = withMotionPreferences(InteractiveLessonView);
 const LazyDashboardView = lazy(() =>
   import('@/features/dashboard/DashboardView').then((m) => ({ default: m.DashboardView }))
 );
@@ -209,7 +209,10 @@ export function AppRouter() {
     activeLearningTracker.setLesson(trackLesson);
   }, [tracking, courseId, trackLesson]);
 
-  const startLesson = (id: string) => navigate('lesson', id);
+  const startLesson = (id: string) => {
+    void useLessonStore.getState().loadLesson(id);
+    navigate('lesson', id);
+  };
   const continueLesson = (id?: string) => {
     const target = id ?? resolveNextLearningLesson(activeCourse, learnerProfile, useRoadmapStore.getState().roadmap);
     if (target) startLesson(target);
@@ -276,12 +279,14 @@ export function AppRouter() {
           onStartLearning={openRoadmap} />;
       case 'knowledge-map':
         return <LazyKnowledgeMapView onProceedToRoadmap={openRoadmap}
-          onStartPlacement={() => navigate('placement')} onChooseCourse={() => navigate('course-selection')} />;
+          onStartPlacement={() => navigate('placement')} onChooseCourse={() => navigate('course-selection')}
+          onStartLesson={continueLesson} />;
       case 'roadmap':
         return <LazyRoadmapView onStartLesson={startLesson} onOpenKnowledgeMap={openKnowledgeMap}
-          onChooseCourse={() => navigate('course-selection')} onConfigure={() => navigate('onboarding')} />;
+          onChooseCourse={() => navigate('course-selection')} onConfigure={() => navigate('onboarding')}
+          onStartPlacement={() => navigate('placement')} />;
       case 'lesson':
-        return lessonId ? <LazyInteractiveLessonView key={lessonId} lessonId={lessonId}
+        return lessonId ? <EagerInteractiveLessonView key={lessonId} lessonId={lessonId}
           onFinish={openRoadmap} onBackToRoadmap={openRoadmap} />
           : <div className="learning-page"><SectionState title={t('shell.lessonMissing')}
             description={t('shell.chooseLesson')} />

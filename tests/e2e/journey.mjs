@@ -115,6 +115,8 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await heading('Birga misol ko‘ramiz');
   await click('Keyingi qadam');
+  await heading('Iboralarni eslab qolamiz');
+  await click('Keyingi qadam');
   await heading('O‘rganganingizni sinab ko‘ring');
   await click('Ta’lim yo‘liga qaytish');
   await heading('Boshlang‘ich darslar');

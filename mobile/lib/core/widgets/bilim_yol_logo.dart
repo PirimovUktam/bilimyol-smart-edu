@@ -5,11 +5,37 @@ import '../constants/app_colors.dart';
 class BilimYolLogo extends StatelessWidget {
   final double size;
   final bool showSubtitle;
+  final bool onDark;
 
-  const BilimYolLogo({super.key, this.size = 36, this.showSubtitle = true});
+  const BilimYolLogo({
+    super.key,
+    this.size = 36,
+    this.showSubtitle = true,
+    this.onDark = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveDark = onDark || AppColors.isDark(context);
+    final bilimColor = effectiveDark
+        ? AppColors.darkTextPrimary
+        : AppColors.textPrimary;
+    final yolColor = effectiveDark
+        ? const Color(0xFFA5B4FC)
+        : AppColors.primary;
+    final badgeBg = effectiveDark
+        ? const Color(0xFF312E81)
+        : AppColors.primaryLight;
+    final badgeBorder = effectiveDark
+        ? AppColors.primary
+        : AppColors.primary.withValues(alpha: 0.3);
+    final badgeTextColor = effectiveDark
+        ? const Color(0xFFC7D2FE)
+        : AppColors.primary;
+    final subtitleColor = effectiveDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -55,18 +81,18 @@ class BilimYolLogo extends StatelessWidget {
                 runSpacing: 3,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  RichText(
-                    text: TextSpan(
+                  Text.rich(
+                    TextSpan(
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: size * 0.48,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: bilimColor,
                       ),
-                      children: const [
-                        TextSpan(text: 'Bilim'),
+                      children: [
+                        const TextSpan(text: 'Bilim'),
                         TextSpan(
                           text: 'Yo‘l',
-                          style: TextStyle(color: AppColors.primary),
+                          style: TextStyle(color: yolColor),
                         ),
                       ],
                     ),
@@ -77,18 +103,16 @@ class BilimYolLogo extends StatelessWidget {
                       vertical: 1.5,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
+                      color: badgeBg,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
+                      border: Border.all(color: badgeBorder),
                     ),
                     child: Text(
                       'SMART EDU',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: size * 0.22,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
+                        color: badgeTextColor,
                       ),
                     ),
                   ),
@@ -100,7 +124,7 @@ class BilimYolLogo extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: size * 0.26,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textMuted,
+                    color: subtitleColor,
                   ),
                 ),
             ],

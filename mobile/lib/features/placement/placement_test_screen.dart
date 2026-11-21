@@ -6,8 +6,10 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_badge.dart';
+import '../../data/datasources/english/cefr_skeleton_data.dart';
 import '../../domain/entities/question.dart';
 import '../../app/providers.dart';
+import '../lesson/lesson_media_widget.dart';
 
 class PlacementTestScreen extends ConsumerStatefulWidget {
   const PlacementTestScreen({super.key});
@@ -19,6 +21,7 @@ class PlacementTestScreen extends ConsumerStatefulWidget {
 
 class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
   int? _selectedOption;
+  bool _isConfirmingOrSubmitting = false;
 
   @override
   void initState() {
@@ -39,14 +42,23 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     );
   }
 
-  String _getDifficultyLabel(QuestionDifficulty diff) {
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
+  String _getDifficultyLabel(QuestionDifficulty diff, bool isRu) {
     switch (diff) {
       case QuestionDifficulty.easy:
-        return 'Oson';
+        return isRu ? 'Лёгкий' : 'Oson';
       case QuestionDifficulty.medium:
-        return 'O‘rta';
+        return isRu ? 'Средний' : 'O‘rta';
       case QuestionDifficulty.hard:
-        return 'Qiyin';
+        return isRu ? 'Сложный' : 'Qiyin';
     }
   }
 
@@ -62,51 +74,88 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
         .loadQuestions(courseId, restart: restart);
   }
 
-  Future<void> _submit(PlacementState placement) async {
+  Future<void> _submit(PlacementState placement, bool isRu) async {
     final selected = _selectedOption;
-    if (selected == null) return;
-    if (placement.questionNumber >= placement.totalQuestionsToAsk) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Javoblarni topshirasizmi?'),
-          content: const Text(
-            'Oxirgi javob yuborilgach, natijangiz saqlanadi.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Qaytish'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Topshirish'),
-            ),
-          ],
-        ),
-      );
-      if (!mounted || confirmed != true) return;
+    if (_isConfirmingOrSubmitting ||
+        placement.isSubmitting ||
+        selected == null) {
+      return;
     }
-    final notifier = ref.read(placementStateNotifierProvider.notifier);
+    setState(() => _isConfirmingOrSubmitting = true);
     try {
-      await notifier.submitAnswer(selected);
-      if (!mounted) return;
-      final next = ref.read(placementStateNotifierProvider);
-      if (next.currentQuestion?.id != placement.currentQuestion?.id ||
-          next.sessionId != placement.sessionId) {
-        setState(() => _selectedOption = null);
-      }
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Javob yuborilmadi. Qayta urinib ko‘ring.'),
-          action: SnackBarAction(
-            label: 'Sessiyani yuklash',
-            onPressed: () => _load(placement.courseId),
+      final isFinalQuestion =
+          placement.questionNumber >= placement.totalQuestionsToAsk;
+      if (isFinalQuestion) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(
+              isRu ? 'Отправить ответы?' : 'Javoblarni topshirasizmi?',
+            ),
+            content: Text(
+              isRu
+                  ? 'После отправки последнего ответа результат будет сохранён.'
+                  : 'Oxirgi javob yuborilgach, natijangiz saqlanadi.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(isRu ? 'Назад' : 'Qaytish'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(isRu ? 'Отправить' : 'Topshirish'),
+              ),
+            ],
           ),
-        ),
-      );
+        );
+        if (!mounted || confirmed != true) return;
+      }
+      final notifier = ref.read(placementStateNotifierProvider.notifier);
+      try {
+        await notifier.submitAnswer(
+          selected,
+          bypassRateLimit: isFinalQuestion,
+        );
+        if (!mounted) return;
+        final next = ref.read(placementStateNotifierProvider);
+        if (next.currentQuestion?.id != placement.currentQuestion?.id ||
+            next.sessionId != placement.sessionId ||
+            next.result != null) {
+          setState(() => _selectedOption = null);
+        } else if (next.result == null) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(
+                  isRu
+                      ? 'Подождите немного и попробуйте снова.'
+                      : 'Iltimos, biroz kuting va qayta urinib ko‘ring.',
+                ),
+              ),
+            );
+        }
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isRu
+                  ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
+                  : 'Javob yuborilmadi. Qayta urinib ko‘ring.',
+            ),
+            action: SnackBarAction(
+              label: isRu ? 'Обновить сессию' : 'Sessiyani yuklash',
+              onPressed: () => _load(placement.courseId),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isConfirmingOrSubmitting = false);
+      }
     }
   }
 
@@ -115,47 +164,184 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     final courseState = ref.watch(courseStateNotifierProvider);
     final placementState = ref.watch(placementStateNotifierProvider);
     final activeCourse = courseState.activeCourse;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
 
     final currentQ = placementState.currentQuestion;
     final qNumber = placementState.questionNumber;
     final totalQ = placementState.totalQuestionsToAsk;
     final result = placementState.result;
 
+    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
+
     if (result != null) {
       final correct = result.submissions
           .where((answer) => answer.isCorrect)
           .length;
+      final isEnglish = placementState.courseId == 'course_eng_01';
+      final cefrTier = result.cefrLevel ?? 'Pre-A1';
+      final skillNamesById = {
+        for (final s in courseState.activeSkills) s.id: s.name,
+      };
       return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Diagnostika natijasi')),
+        backgroundColor: AppColors.bg(context),
+        appBar: AppBar(
+          toolbarHeight: isLargeText ? 96 : null,
+          title: Text(
+            isRu ? 'Результат диагностики' : 'Diagnostika natijasi',
+            softWrap: true,
+            maxLines: isLargeText ? null : 1,
+            overflow: isLargeText
+                ? TextOverflow.visible
+                : TextOverflow.ellipsis,
+          ),
+        ),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const Icon(
+            Icon(
               Icons.fact_check_outlined,
               size: 36,
-              color: AppColors.primary,
+              color: AppColors.primaryAccentOnSurface(context),
             ),
             const SizedBox(height: 12),
             Text(
-              'Diagnostika yakunlandi',
+              isRu ? 'Диагностика завершена' : 'Diagnostika yakunlandi',
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(
-              '$correct / ${result.submissions.length} javob to‘g‘ri.',
+              isRu
+                  ? '$correct / ${result.submissions.length} ответов верно.'
+                  : '$correct / ${result.submissions.length} javob to‘g‘ri.',
               textAlign: TextAlign.center,
             ),
+            if (isEnglish) ...[
+              const SizedBox(height: 14),
+              AppCard(
+                padding: const EdgeInsets.all(16),
+                borderColor: AppColors.primary.withValues(alpha: 0.35),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        AppBadge(
+                          text: cefrTier,
+                          variant: AppBadgeVariant.blue,
+                        ),
+                        Text(
+                          isRu
+                              ? 'Стартовый уровень: $cefrTier (${result.overallScore}%)'
+                              : 'Tavsiya etilgan bosqich: $cefrTier (${result.overallScore}%)',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimaryColor(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isRu
+                          ? 'Уровни B2–C2 появятся на следующем этапе (DEFERRED). Сейчас доступен маршрут A1–B1.'
+                          : 'B2–C2 darajalari keyingi bosqichda (DEFERRED) qo‘shiladi. Hozircha A1–B1 yo‘nalishida boshlashingiz mumkin.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: AppColors.textSecondaryColor(context),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isRu
+                          ? 'Результат диагностики определяет стартовый маршрут и не заменяет освоение уроков. $cefrOfficialDisclaimerRu'
+                          : 'Diagnostika natijasi boshlang‘ich yo‘lni ko‘rsatadi va mustaqil dars o‘zlashtirishidan alohida saqlanadi. $cefrOfficialDisclaimerUz',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        color: AppColors.textMutedColor(context),
+                      ),
+                    ),
+                    if (result.computedScores.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      for (final entry in result.computedScores.entries)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      skillNamesById[entry.key] ?? entry.key,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimaryColor(
+                                          context,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${entry.value.score}%',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primaryAccentOnSurface(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: (entry.value.score / 100).clamp(
+                                    0.0,
+                                    1.0,
+                                  ),
+                                  minHeight: 5,
+                                  backgroundColor: AppColors.borderColor(
+                                    context,
+                                  ),
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(
+                                        AppColors.primaryAccentOnSurface(
+                                          context,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             AppButton(
-              text: 'Shaxsiy yo‘lni ko‘rish',
+              text: isRu
+                  ? 'Открыть личный маршрут'
+                  : 'Shaxsiy yo‘lni ko‘rish',
               onPressed: () => context.go('/roadmap'),
             ),
             if (placementState.canRetake) ...[
               const SizedBox(height: 8),
               AppButton(
-                text: 'Qayta topshirish',
+                text: isRu ? 'Пройти заново' : 'Qayta topshirish',
                 variant: AppButtonVariant.outline,
                 onPressed: () => _load(placementState.courseId, restart: true),
               ),
@@ -163,22 +349,33 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
             if (result.review.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
-                'Javoblar tahlili',
+                isRu ? 'Разбор ответов' : 'Javoblar tahlili',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               for (final answer in result.review)
                 ExpansionTile(
-                  title: Text(answer.question),
+                  title: Text(answer.localizedQuestion(lang)),
                   subtitle: Text(
-                    answer.submission.isCorrect ? 'To‘g‘ri' : 'Xato',
+                    answer.submission.isCorrect
+                        ? (isRu ? 'Верно' : 'To‘g‘ri')
+                        : (isRu ? 'Ошибка' : 'Xato'),
                   ),
                   childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   expandedCrossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Siz belgilagan javob — ${answer.selected}'),
+                    Text(
+                      isRu
+                          ? 'Ваш ответ — ${answer.selected}'
+                          : 'Siz belgilagan javob — ${answer.selected}',
+                    ),
                     if (!answer.submission.isCorrect)
-                      Text('To‘g‘ri javob — ${answer.correct}'),
-                    if (answer.explanation.isNotEmpty) Text(answer.explanation),
+                      Text(
+                        isRu
+                            ? 'Правильный ответ — ${answer.correct}'
+                            : 'To‘g‘ri javob — ${answer.correct}',
+                      ),
+                    if (answer.localizedExplanation(lang).isNotEmpty)
+                      Text(answer.localizedExplanation(lang)),
                   ],
                 ),
             ],
@@ -189,28 +386,35 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
 
     if (placementState.isSubmitting) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.bg(context),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(color: AppColors.primary),
+              CircularProgressIndicator(
+                color: AppColors.primaryAccentOnSurface(context),
+              ),
               const SizedBox(height: 16),
               Text(
-                'Natijalar hisoblanmoqda...',
+                isRu
+                    ? 'Подсчёт результатов...'
+                    : 'Natijalar hisoblanmoqda...',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryColor(context),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Haqiqiy javoblaringiz asosida bilim xaritasi tuzilmoqda',
+                isRu
+                    ? 'Строим карту знаний на основе ваших ответов'
+                    : 'Haqiqiy javoblaringiz asosida bilim xaritasi tuzilmoqda',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
-                  color: AppColors.textMuted,
+                  color: AppColors.textMutedColor(context),
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -221,7 +425,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
     if (currentQ == null) {
       final isLoadingQuestions = !placementState.hasLoaded;
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.bg(context),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -233,37 +437,47 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                       ? Icons.hourglass_top_rounded
                       : Icons.error_outline_rounded,
                   size: 44,
-                  color: AppColors.textMuted,
+                  color: AppColors.textMutedColor(context),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   isLoadingQuestions
-                      ? 'Savollar tayyorlanmoqda...'
-                      : 'Savollarni yuklab bo‘lmadi',
+                      ? (isRu
+                            ? 'Вопросы загружаются...'
+                            : 'Savollar tayyorlanmoqda...')
+                      : (isRu
+                            ? 'Не удалось загрузить вопросы'
+                            : 'Savollarni yuklab bo‘lmadi'),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryColor(context),
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   isLoadingQuestions
-                      ? 'Bilim darajasini aniqlash uchun savollar yuklanmoqda.'
-                      : 'Internet aloqasini tekshirib, qayta urinib ko‘ring.',
+                      ? (isRu
+                            ? 'Загружаем задания для определения уровня знаний.'
+                            : 'Bilim darajasini aniqlash uchun savollar yuklanmoqda.')
+                      : (isRu
+                            ? 'Проверьте подключение к интернету и попробуйте снова.'
+                            : 'Internet aloqasini tekshirib, qayta urinib ko‘ring.'),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedColor(context),
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 if (isLoadingQuestions)
-                  const CircularProgressIndicator(color: AppColors.primary)
+                  CircularProgressIndicator(
+                    color: AppColors.primaryAccentOnSurface(context),
+                  )
                 else ...[
                   AppButton(
-                    text: 'Qayta urinish',
+                    text: isRu ? 'Повторить' : 'Qayta urinish',
                     isFullWidth: true,
                     leftIcon: const Icon(
                       Icons.refresh_rounded,
@@ -279,7 +493,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                   ),
                   const SizedBox(height: 8),
                   AppButton(
-                    text: 'Orqaga',
+                    text: isRu ? 'Назад' : 'Orqaga',
                     isFullWidth: true,
                     variant: AppButtonVariant.outline,
                     onPressed: () => context.go('/courses'),
@@ -292,28 +506,46 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
       );
     }
 
-    final progress = qNumber / totalQ;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Diagnostika · ${activeCourse?.title ?? ""}'),
-        actions: [
-          if (!ref
-              .watch(learnerRepositoryProvider)
-              .supportsServerPlacementPersistence)
-            TextButton.icon(
-              onPressed: _runQuickDemo,
-              icon: const Icon(Icons.bolt_rounded, size: 16),
-              label: Text(
-                'Tezkor demo',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
+    final progress = totalQ > 0 ? qNumber / totalQ : 0.0;
+    final showQuickDemo = !ref
+        .watch(learnerRepositoryProvider)
+        .supportsServerPlacementPersistence;
+    final quickDemoButton = showQuickDemo
+        ? TextButton.icon(
+            onPressed: _runQuickDemo,
+            icon: const Icon(Icons.bolt_rounded, size: 16),
+            label: Text(
+              isRu ? 'Быстрое демо' : 'Tezkor demo',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          const SizedBox(width: 4),
+          )
+        : null;
+
+    return Scaffold(
+      backgroundColor: AppColors.bg(context),
+      appBar: AppBar(
+        toolbarHeight: isLargeText ? 144 : null,
+        title: Text(
+          '${isRu ? 'Диагностика' : 'Diagnostika'} · ${activeCourse?.localizedTitle(lang) ?? ""}',
+          softWrap: true,
+          maxLines: isLargeText ? null : 1,
+          overflow: isLargeText
+              ? TextOverflow.visible
+              : TextOverflow.ellipsis,
+          style: isLargeText
+              ? Theme.of(
+                  context,
+                ).appBarTheme.titleTextStyle?.copyWith(fontSize: 15)
+              : null,
+        ),
+        actions: [
+          if (!isLargeText && quickDemoButton != null) ...[
+            quickDemoButton,
+            const SizedBox(width: 4),
+          ],
         ],
       ),
       body: SafeArea(
@@ -322,27 +554,42 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isLargeText && quickDemoButton != null) ...[
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: quickDemoButton,
+                ),
+                const SizedBox(height: 4),
+              ],
               // Progress Bar & Counter
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Savol $qNumber / $totalQ',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      isRu
+                          ? 'Вопрос $qNumber / $totalQ'
+                          : 'Savol $qNumber / $totalQ',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondaryColor(context),
+                      ),
                     ),
-                  ),
-                  Text(
-                    '${(progress * 100).round()}%',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryAccentOnSurface(context),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               ClipRRect(
@@ -350,9 +597,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
-                  backgroundColor: AppColors.cardBorder,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
+                  backgroundColor: AppColors.borderColor(context),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.primaryAccentOnSurface(context),
                   ),
                 ),
               ),
@@ -371,12 +618,15 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryLight,
+                                color: AppColors.primaryTint(context),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -384,25 +634,47 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.primary,
+                                  color: AppColors.primaryAccentOnSurface(
+                                    context,
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
                             if (placementState.sessionId == null)
                               AppBadge(
-                                text: _getDifficultyLabel(currentQ.difficulty),
+                                text: _getDifficultyLabel(
+                                  currentQ.difficulty,
+                                  isRu,
+                                ),
                                 variant: AppBadgeVariant.slate,
+                              ),
+                            if (currentQ.cefrLevel != null &&
+                                currentQ.cefrLevel!.trim().isNotEmpty)
+                              AppBadge(
+                                text: currentQ.cefrLevel!,
+                                variant: AppBadgeVariant.teal,
                               ),
                           ],
                         ),
                         const SizedBox(height: 12),
+                        if (currentQ.media != null &&
+                            currentQ.media!.isApproved) ...[
+                          LessonMediaWidget(
+                            key: ValueKey(
+                              'placement_media_${currentQ.id}_${currentQ.media!.id}',
+                            ),
+                            media: currentQ.media!,
+                            uiLocale: lang,
+                            initiallyExpandTranscript: false,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         Text(
-                          currentQ.text,
+                          currentQ.localizedText(lang),
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textPrimaryColor(context),
                             height: 1.35,
                           ),
                         ),
@@ -414,7 +686,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withValues(
+                              color: AppColors.primaryTint(context).withValues(
                                 alpha: 0.5,
                               ),
                               borderRadius: BorderRadius.circular(10),
@@ -427,7 +699,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                               style: GoogleFonts.firaCode(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
+                                color: AppColors.primaryAccentOnSurface(
+                                  context,
+                                ),
                               ),
                             ),
                           ),
@@ -437,16 +711,18 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: AppColors.subtleSurface(context),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.cardBorder),
+                              border: Border.all(
+                                color: AppColors.borderColor(context),
+                              ),
                             ),
                             child: Text(
                               currentQ.contextSnippet!,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
+                                color: AppColors.textMutedColor(context),
                               ),
                             ),
                           ),
@@ -457,16 +733,18 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                         ...List.generate(currentQ.options.length, (idx) {
                           final optionText = currentQ.options[idx];
                           final isSelected = _selectedOption == idx;
-                          final letter = ['A', 'B', 'C', 'D'][idx];
+                          final letter = idx < 26
+                              ? String.fromCharCode(65 + idx)
+                              : '${idx + 1}';
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Material(
                               color: isSelected
-                                  ? AppColors.primaryLight.withValues(
+                                  ? AppColors.primaryTint(context).withValues(
                                       alpha: 0.7,
                                     )
-                                  : AppColors.surface,
+                                  : AppColors.surfaceColor(context),
                               borderRadius: BorderRadius.circular(14),
                               child: InkWell(
                                 onTap: () {
@@ -482,8 +760,10 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                     borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
                                       color: isSelected
-                                          ? AppColors.primary
-                                          : AppColors.cardBorder,
+                                          ? AppColors.primaryAccentOnSurface(
+                                              context,
+                                            )
+                                          : AppColors.borderColor(context),
                                       width: isSelected ? 2 : 1.2,
                                     ),
                                   ),
@@ -495,7 +775,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? AppColors.primary
-                                              : const Color(0xFFF1F5F9),
+                                              : AppColors.subtleSurface(
+                                                  context,
+                                                ),
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -508,7 +790,9 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                               fontWeight: FontWeight.w800,
                                               color: isSelected
                                                   ? Colors.white
-                                                  : AppColors.textSecondary,
+                                                  : AppColors.textMutedColor(
+                                                      context,
+                                                    ),
                                             ),
                                           ),
                                         ),
@@ -520,14 +804,19 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
+                                            color: AppColors.textPrimaryColor(
+                                              context,
+                                            ),
                                           ),
                                         ),
                                       ),
                                       if (isSelected)
-                                        const Icon(
+                                        Icon(
                                           Icons.check_circle_rounded,
-                                          color: AppColors.primary,
+                                          color:
+                                              AppColors.primaryAccentOnSurface(
+                                                context,
+                                              ),
                                           size: 20,
                                         ),
                                     ],
@@ -547,18 +836,21 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
               // Submit button
               AppButton(
                 text: qNumber >= totalQ
-                    ? 'Natijalarni Ko‘rish'
-                    : 'Keyingi Savol',
+                    ? (isRu ? 'Посмотреть результаты' : 'Natijalarni Ko‘rish')
+                    : (isRu ? 'Следующий вопрос' : 'Keyingi Savol'),
                 isFullWidth: true,
+                isLoading: placementState.isSubmitting,
                 size: AppButtonSize.large,
                 rightIcon: const Icon(
                   Icons.arrow_forward_rounded,
                   size: 18,
                   color: Colors.white,
                 ),
-                onPressed: _selectedOption == null
+                onPressed: (_selectedOption == null ||
+                        placementState.isSubmitting ||
+                        _isConfirmingOrSubmitting)
                     ? null
-                    : () => _submit(placementState),
+                    : () => _submit(placementState, isRu),
               ),
               const SizedBox(height: 8),
             ],

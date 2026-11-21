@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/audio/lesson_audio_controller.dart';
 import '../data/repositories/supabase_course_repository.dart';
 import '../data/repositories/supabase_lesson_repository.dart';
 import '../domain/repositories/i_course_repository.dart';
@@ -23,11 +26,13 @@ import '../domain/entities/learning_path_node.dart';
 import '../domain/entities/lesson.dart';
 import '../domain/personalization/adaptive_question_selector.dart';
 
+import '../data/datasources/english/placement_questions_data.dart';
 import '../data/services/i_ai_tutor_service.dart';
 import '../data/services/demo_ai_tutor_service.dart';
 import '../data/services/supabase_ai_tutor_service.dart';
 import '../core/config/supabase_config.dart';
 import '../data/repositories/supabase_learner_repository.dart';
+import '../features/lesson/reading_position.dart';
 
 // --- Singleton Service & Repository Providers ---
 final aiTutorServiceProvider = Provider<IAITutorService>(
@@ -44,6 +49,47 @@ final lessonRepositoryProvider = Provider<ILessonRepository>(
 final learnerRepositoryProvider = Provider<ILearnerRepository>(
   (ref) => SupabaseLearnerRepository(),
 );
+
+bool _isFlutterTestBinding() => WidgetsBinding.instance.runtimeType
+    .toString()
+    .contains('TestWidgetsFlutterBinding');
+
+bool _isRuPlatformLocale() {
+  try {
+    return WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
+        'ru';
+  } catch (_) {
+    return false;
+  }
+}
+
+bool _isIntegratedEnglishLesson(Lesson lesson) {
+  if (lesson.courseId != 'course_eng_01') return false;
+  if (lesson.skillDomain == 'integrated' ||
+      lesson.communicativeFocus == 'exit_assessment' ||
+      lesson.communicativeFocus == 'checkpoint' ||
+      lesson.id.contains('_checkpoint') ||
+      lesson.id.contains('_exit')) {
+    return true;
+  }
+  final lessonSkills = <String>{
+    lesson.skillId,
+    for (final step in lesson.steps)
+      if (step.interactiveQuestion != null) step.interactiveQuestion!.skillId,
+    lesson.reinforcementExercise.skillId,
+    if (lesson.alternateExercise != null) lesson.alternateExercise!.skillId,
+  };
+  return lessonSkills.length > 1 &&
+      lessonSkills.every((skill) => skill.startsWith('skill_eng_'));
+}
+
+final lessonAudioControllerFactoryProvider =
+    Provider<LessonAudioController Function()>((ref) {
+      if (_isFlutterTestBinding()) {
+        return () => FakeLessonAudioController();
+      }
+      return () => JustAudioLessonController();
+    });
 
 // --- UseCase Providers ---
 final selectCourseUseCaseProvider = Provider(
@@ -190,6 +236,21 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     await loadProfile();
     ref.invalidate(roadmapStateNotifierProvider);
   }
+
+  Future<void> recordFlashcardReview({
+    required String courseId,
+    required String cardId,
+    required bool remembered,
+  }) async {
+    final repo = ref.read(learnerRepositoryProvider);
+    final updated = await repo.recordFlashcardReview(
+      courseId: courseId,
+      cardId: cardId,
+      remembered: remembered,
+    );
+    if (!mounted) return;
+    state = AsyncValue.data(updated);
+  }
 }
 
 final learnerStateNotifierProvider =
@@ -279,7 +340,9 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
       if (!mounted || generation != _initGeneration) return;
       state = state.copyWith(
         isLoading: false,
-        error: 'Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+        error: _isRuPlatformLocale()
+            ? 'Не удалось загрузить предметы. Попробуйте снова.'
+            : 'Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
       );
     }
   }
@@ -308,7 +371,9 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
       if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
-        error: 'Kursni tanlab bo‘lmadi. Qayta urinib ko‘ring.',
+        error: _isRuPlatformLocale()
+            ? 'Не удалось выбрать предмет. Попробуйте снова.'
+            : 'Kursni tanlab bo‘lmadi. Qayta urinib ko‘ring.',
       );
     }
   }
@@ -363,6 +428,7 @@ class PlacementState {
     String? courseId,
     List<Question>? allQuestions,
     Question? currentQuestion,
+    bool clearCurrentQuestion = false,
     int? questionNumber,
     int? totalQuestionsToAsk,
     List<AnswerHistoryItem>? history,
@@ -377,7 +443,9 @@ class PlacementState {
     return PlacementState(
       courseId: courseId ?? this.courseId,
       allQuestions: allQuestions ?? this.allQuestions,
-      currentQuestion: currentQuestion ?? this.currentQuestion,
+      currentQuestion: clearCurrentQuestion
+          ? null
+          : (currentQuestion ?? this.currentQuestion),
       questionNumber: questionNumber ?? this.questionNumber,
       totalQuestionsToAsk: totalQuestionsToAsk ?? this.totalQuestionsToAsk,
       history: history ?? this.history,
@@ -485,18 +553,76 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
           .loadProfile(isCurrent: isCurrent);
       if (!isCurrent()) return;
       final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
+      final reviewSubmissions = completed.review
+          .map((answer) => answer.submission)
+          .toList(growable: false);
+      var placementQuestions = const <Question>[];
+      var computedScores = profile?.scoresByCourse[courseId] ?? {};
+      var overallScore = 0;
+      String? cefrLevel;
+      if (courseId == 'course_eng_01') {
+        try {
+          placementQuestions = await ref
+              .read(courseRepositoryProvider)
+              .getPlacementQuestions(courseId);
+        } catch (_) {
+          placementQuestions = englishPlacementQuestionsRaw;
+        }
+        if (!isCurrent()) return;
+        if (placementQuestions.isEmpty) {
+          placementQuestions = englishPlacementQuestionsRaw;
+        }
+        if (reviewSubmissions.isNotEmpty) {
+          computedScores = SkillScoringEngine.computePlacementScores(
+            courseId,
+            placementQuestions,
+            reviewSubmissions,
+          );
+          overallScore = SkillScoringEngine.computeOverallScore(computedScores);
+          cefrLevel = SkillScoringEngine.computeEnglishPlacementCefr(
+            placementQuestions,
+            reviewSubmissions,
+            completedNodeIds: profile?.completedNodeIds ?? const [],
+          );
+        } else {
+          overallScore = profile?.placementScoreByCourse[courseId] ?? 0;
+          final rawCefr =
+              profile?.placementCefrByCourse[courseId] ??
+              SkillScoringEngine.computeEnglishPlacementCefr(
+                placementQuestions,
+                reviewSubmissions,
+                completedNodeIds: profile?.completedNodeIds ?? const [],
+              );
+          cefrLevel = SkillScoringEngine.englishEntryTargetForCefr(
+            rawCefr,
+          ).cefrLevel;
+        }
+      } else {
+        final correctCount = reviewSubmissions
+            .where((s) => s.isCorrect)
+            .length;
+        overallScore = reviewSubmissions.isEmpty
+            ? 0
+            : SkillScoringEngine.computeSkillScore(
+                correctCount,
+                reviewSubmissions.length,
+              );
+      }
       result = AssessmentResult(
         assessmentId: completed.attemptId,
         courseId: courseId,
-        submissions: completed.review
-            .map((answer) => answer.submission)
-            .toList(growable: false),
-        computedScores: profile?.scoresByCourse[courseId] ?? {},
+        submissions: reviewSubmissions,
+        computedScores: computedScores,
         weakestSkillId: completed.weakestSkillId,
+        overallScore: overallScore,
+        cefrLevel: cefrLevel,
         timestamp: completed.completedAt.millisecondsSinceEpoch,
         review: completed.review,
       );
-      ref.invalidate(roadmapStateNotifierProvider);
+      await ref
+          .read(roadmapStateNotifierProvider.notifier)
+          .loadRoadmap(courseId);
+      if (!isCurrent()) return;
     }
     state = PlacementState(
       courseId: courseId,
@@ -511,18 +637,27 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       hasLoaded: true,
       canRetake: session.canRetake,
       notice: session.wasReset
-          ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.'
+          ? (_isRuPlatformLocale()
+                ? 'Вопросы обновлены или срок сессии истёк. Диагностика началась заново.'
+                : 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.')
           : null,
     );
   }
 
-  Future<bool> submitAnswer(int selectedIndex) async {
+  Future<bool> submitAnswer(
+    int selectedIndex, {
+    bool bypassRateLimit = false,
+  }) async {
     final currentQ = state.currentQuestion;
     if (currentQ == null || state.isSubmitting) return false;
 
-    // Rate limiting: prevent rapid-fire submission abuse
+    // Rate limiting: prevent rapid-fire submission abuse on intermediate steps,
+    // while never silently dropping a confirmed final submission.
     final now = DateTime.now();
-    if (state.sessionId == null &&
+    final isFinalStep = state.questionNumber >= state.totalQuestionsToAsk;
+    if (!bypassRateLimit &&
+        !isFinalStep &&
+        state.sessionId == null &&
         state.lastSubmittedAt != null &&
         now.difference(state.lastSubmittedAt!).inMilliseconds < 800) {
       return false;
@@ -615,7 +750,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       state = state.copyWith(
         history: updatedHistory,
         submissions: updatedSubmissions,
-        currentQuestion: null,
+        clearCurrentQuestion: true,
         isSubmitting: true,
         lastSubmittedAt: now,
       );
@@ -638,17 +773,19 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       }
       if (!isCurrent()) return false;
 
+      await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
+      if (!isCurrent()) return false;
+      await ref
+          .read(roadmapStateNotifierProvider.notifier)
+          .loadRoadmap(state.courseId);
+      if (!isCurrent()) return false;
+
       state = state.copyWith(
         isSubmitting: false,
         result: result,
         canRetake: true,
         lastSubmittedAt: DateTime.now(),
       );
-
-      await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
-      await ref
-          .read(roadmapStateNotifierProvider.notifier)
-          .loadRoadmap(state.courseId);
 
       return true;
     } else {
@@ -712,7 +849,14 @@ class LessonSessionState {
   final bool isCompleted;
   final int currentStepIndex;
   final int? selectedOptionIndex;
+  final String textAnswer;
+  final Map<String, String> selectedMatchPairs;
+  final String? activeMatchLeftId;
+  final List<String> selectedOrderTokens;
+  final Set<String> checkedRubricIds;
   final LessonAnswerResult? answerResult;
+  final Map<String, int> consecutiveMistakesBySkill;
+  final Map<String, int> consecutiveMistakesByQuestion;
   final bool isSubmittingAnswer;
   final bool showReinforcementSheet;
   final ReinforcementResult? reinforcementResult;
@@ -725,7 +869,14 @@ class LessonSessionState {
     this.isCompleted = false,
     this.currentStepIndex = 0,
     this.selectedOptionIndex,
+    this.textAnswer = '',
+    this.selectedMatchPairs = const {},
+    this.activeMatchLeftId,
+    this.selectedOrderTokens = const [],
+    this.checkedRubricIds = const {},
     this.answerResult,
+    this.consecutiveMistakesBySkill = const {},
+    this.consecutiveMistakesByQuestion = const {},
     this.isSubmittingAnswer = false,
     this.showReinforcementSheet = false,
     this.reinforcementResult,
@@ -739,7 +890,14 @@ class LessonSessionState {
     bool? isCompleted,
     int? currentStepIndex,
     int? selectedOptionIndex,
+    String? textAnswer,
+    Map<String, String>? selectedMatchPairs,
+    String? activeMatchLeftId,
+    List<String>? selectedOrderTokens,
+    Set<String>? checkedRubricIds,
     LessonAnswerResult? answerResult,
+    Map<String, int>? consecutiveMistakesBySkill,
+    Map<String, int>? consecutiveMistakesByQuestion,
     bool? isSubmittingAnswer,
     bool? showReinforcementSheet,
     ReinforcementResult? reinforcementResult,
@@ -748,6 +906,9 @@ class LessonSessionState {
     bool clearAnswerResult = false,
     bool clearAnswerError = false,
     bool clearSelectedOption = false,
+    bool clearTextAnswer = false,
+    bool clearRichExerciseState = false,
+    bool clearActiveMatchLeftId = false,
     bool clearReinforcementResult = false,
   }) {
     return LessonSessionState(
@@ -758,9 +919,26 @@ class LessonSessionState {
       selectedOptionIndex: clearSelectedOption
           ? null
           : (selectedOptionIndex ?? this.selectedOptionIndex),
+      textAnswer: clearTextAnswer ? '' : (textAnswer ?? this.textAnswer),
+      selectedMatchPairs: clearRichExerciseState
+          ? const {}
+          : (selectedMatchPairs ?? this.selectedMatchPairs),
+      activeMatchLeftId: (clearRichExerciseState || clearActiveMatchLeftId)
+          ? null
+          : (activeMatchLeftId ?? this.activeMatchLeftId),
+      selectedOrderTokens: clearRichExerciseState
+          ? const []
+          : (selectedOrderTokens ?? this.selectedOrderTokens),
+      checkedRubricIds: clearRichExerciseState
+          ? const {}
+          : (checkedRubricIds ?? this.checkedRubricIds),
       answerResult: clearAnswerResult
           ? null
           : (answerResult ?? this.answerResult),
+      consecutiveMistakesBySkill:
+          consecutiveMistakesBySkill ?? this.consecutiveMistakesBySkill,
+      consecutiveMistakesByQuestion:
+          consecutiveMistakesByQuestion ?? this.consecutiveMistakesByQuestion,
       isSubmittingAnswer: isSubmittingAnswer ?? this.isSubmittingAnswer,
       showReinforcementSheet:
           showReinforcementSheet ?? this.showReinforcementSheet,
@@ -787,21 +965,39 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
 
   LessonSessionNotifier(this.ref) : super(const LessonSessionState());
 
-  Future<void> startLesson(String lessonId) async {
+  String? get _accountId =>
+      ref.read(learnerStateNotifierProvider).valueOrNull?.id;
+
+  Future<void> startLesson(String lessonId, {String? uiLocale}) async {
     final generation = ++_lessonGeneration;
     _stepGeneration++;
     _answerGeneration++;
     _passedQuestionIds.clear();
     _completedReinforcement = null;
     _lastLessonId = lessonId;
+    final resolvedLocale =
+        uiLocale ?? (_isRuPlatformLocale() ? 'ru' : 'uz');
     state = const LessonSessionState(isLoading: true);
     final startUseCase = ref.read(startLessonUseCaseProvider);
     try {
       final lesson = await startUseCase.execute(lessonId);
       if (!mounted || generation != _lessonGeneration) return;
+      final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
+      final alreadyCompleted =
+          profile?.completedLessonIds.contains(lesson.id) ?? false;
+      final rawRestoredStep = (!lesson.requiresMastery && !alreadyCompleted)
+          ? await LessonReadingPositionStore.readStepIndex(
+              lesson,
+              accountId: profile?.id,
+            )
+          : 0;
+      final restoredStep = lesson.steps.isEmpty
+          ? 0
+          : rawRestoredStep.clamp(0, lesson.steps.length - 1);
+      if (!mounted || generation != _lessonGeneration) return;
       state = LessonSessionState(
         lesson: lesson,
-        currentStepIndex: 0,
+        currentStepIndex: restoredStep,
         selectedOptionIndex: null,
         answerResult: null,
         isSubmittingAnswer: false,
@@ -813,34 +1009,50 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     } catch (_) {
       if (!mounted || generation != _lessonGeneration) return;
       // Missing/invalid lesson: expose an empty session so the screen can show
-      // a recoverable Uzbek empty-state instead of crashing or showing
+      // a recoverable localized empty-state instead of crashing or showing
       // another course's content.
-      state = const LessonSessionState(
+      state = LessonSessionState(
         lesson: null,
-        lessonError: 'Dars ma’lumotlari yuklanmadi. Qayta urinib ko‘ring.',
+        lessonError: resolvedLocale == 'ru'
+            ? 'Не удалось загрузить данные урока. Попробуйте снова.'
+            : 'Dars ma’lumotlari yuklanmadi. Qayta urinib ko‘ring.',
       );
     }
   }
 
-  Future<void> retryStartLesson() async {
+  Future<void> retryStartLesson({String? uiLocale}) async {
     final lessonId = _lastLessonId;
-    if (lessonId != null) await startLesson(lessonId);
+    if (lessonId != null) await startLesson(lessonId, uiLocale: uiLocale);
   }
 
-  Future<void> nextStep() async {
+  Future<void> nextStep({String? uiLocale}) async {
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    final resolvedLocale =
+        uiLocale ?? (_isRuPlatformLocale() ? 'ru' : 'uz');
     if (state.currentStepIndex < lesson.steps.length - 1) {
+      final nextIndex = state.currentStepIndex + 1;
       _stepGeneration++;
       _answerGeneration++;
       state = state.copyWith(
-        currentStepIndex: state.currentStepIndex + 1,
+        currentStepIndex: nextIndex,
         clearSelectedOption: true,
+        clearTextAnswer: true,
+        clearRichExerciseState: true,
         clearAnswerResult: true,
         clearAnswerError: true,
         clearReinforcementResult: true,
         showReinforcementSheet: false,
       );
+      if (!lesson.requiresMastery) {
+        unawaited(
+          LessonReadingPositionStore.saveStepIndex(
+            lesson,
+            nextIndex,
+            accountId: _accountId,
+          ),
+        );
+      }
       return;
     }
 
@@ -849,31 +1061,52 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     final answer = ++_answerGeneration;
     state = state.copyWith(isSubmittingAnswer: true, clearAnswerError: true);
     try {
-      await _completeLesson(lesson, session, step, answer);
+      await _completeLesson(
+        lesson,
+        session,
+        step,
+        answer,
+        uiLocale: resolvedLocale,
+      );
       if (!_isCurrent(session, step, answer)) return;
       state = state.copyWith(isSubmittingAnswer: false);
     } catch (_) {
       if (!_isCurrent(session, step, answer)) return;
       state = state.copyWith(
         isSubmittingAnswer: false,
-        answerError: 'Darsni yakunlab bo‘lmadi. Qayta urinib ko‘ring.',
+        answerError: resolvedLocale == 'ru'
+            ? 'Не удалось завершить урок. Попробуйте снова.'
+            : 'Darsni yakunlab bo‘lmadi. Qayta urinib ko‘ring.',
       );
     }
   }
 
   void previousStep() {
-    if (state.isSubmittingAnswer || state.isCompleted) return;
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
     if (state.currentStepIndex > 0) {
+      final prevIndex = state.currentStepIndex - 1;
       _stepGeneration++;
       _answerGeneration++;
       state = state.copyWith(
-        currentStepIndex: state.currentStepIndex - 1,
+        currentStepIndex: prevIndex,
         clearSelectedOption: true,
+        clearTextAnswer: true,
+        clearRichExerciseState: true,
         clearAnswerResult: true,
         clearAnswerError: true,
         clearReinforcementResult: true,
         showReinforcementSheet: false,
       );
+      if (!lesson.requiresMastery) {
+        unawaited(
+          LessonReadingPositionStore.saveStepIndex(
+            lesson,
+            prevIndex,
+            accountId: _accountId,
+          ),
+        );
+      }
     }
   }
 
@@ -881,22 +1114,43 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
     final index = lesson.steps.indexWhere((step) => step.type == LessonStepType.visualExample);
+    final targetIndex = index < 0 ? 0 : index;
     _stepGeneration++;
     _answerGeneration++;
     state = state.copyWith(
-      currentStepIndex: index < 0 ? 0 : index,
+      currentStepIndex: targetIndex,
       clearSelectedOption: true,
+      clearTextAnswer: true,
+      clearRichExerciseState: true,
       clearAnswerResult: true,
       clearAnswerError: true,
       clearReinforcementResult: true,
       showReinforcementSheet: false,
     );
+    if (!lesson.requiresMastery) {
+      unawaited(
+        LessonReadingPositionStore.saveStepIndex(
+          lesson,
+          targetIndex,
+          accountId: _accountId,
+        ),
+      );
+    }
+  }
+
+  LessonStep? _activeStep(Lesson lesson) {
+    if (lesson.steps.isEmpty ||
+        state.currentStepIndex < 0 ||
+        state.currentStepIndex >= lesson.steps.length) {
+      return null;
+    }
+    return lesson.steps[state.currentStepIndex];
   }
 
   void selectOption(int index) {
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
-    final question = lesson.steps[state.currentStepIndex].interactiveQuestion;
+    final question = _activeStep(lesson)?.interactiveQuestion;
     if (question == null || index < 0 || index >= question.options.length) {
       return;
     }
@@ -907,19 +1161,138 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     );
   }
 
-  Future<void> submitInteractiveQuiz() async {
-    if (state.lesson == null ||
-        state.selectedOptionIndex == null ||
+  void setTextAnswer(String value) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    state = state.copyWith(
+      textAnswer: value,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void selectMatchLeft(String leftId) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    state = state.copyWith(
+      activeMatchLeftId: leftId,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void selectMatchRight(String rightText) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    final question = _activeStep(lesson)?.interactiveQuestion;
+    if (question == null || question.mode != QuestionMode.wordMatch) return;
+
+    var targetLeftId = state.activeMatchLeftId;
+    if (targetLeftId == null) {
+      for (final pair in question.matchPairs) {
+        if (!state.selectedMatchPairs.containsKey(pair.id)) {
+          targetLeftId = pair.id;
+          break;
+        }
+      }
+      targetLeftId ??=
+          question.matchPairs.isNotEmpty ? question.matchPairs.first.id : null;
+    }
+    if (targetLeftId == null) return;
+
+    final updated = Map<String, String>.from(state.selectedMatchPairs)
+      ..[targetLeftId] = rightText;
+    state = state.copyWith(
+      selectedMatchPairs: updated,
+      clearActiveMatchLeftId: true,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void clearMatchPairs() {
+    if (state.isSubmittingAnswer || state.isCompleted) return;
+    state = state.copyWith(
+      selectedMatchPairs: const {},
+      clearActiveMatchLeftId: true,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void addOrderToken(String token) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    final updated = List<String>.from(state.selectedOrderTokens)..add(token);
+    state = state.copyWith(
+      selectedOrderTokens: updated,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void removeOrderTokenAt(int index) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
+    if (index < 0 || index >= state.selectedOrderTokens.length) return;
+    final updated = List<String>.from(state.selectedOrderTokens)..removeAt(index);
+    state = state.copyWith(
+      selectedOrderTokens: updated,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void resetOrderTokens() {
+    if (state.isSubmittingAnswer || state.isCompleted) return;
+    state = state.copyWith(
+      selectedOrderTokens: const [],
+      clearAnswerResult: true,
+      clearAnswerError: true,
+    );
+  }
+
+  void toggleRubricCriterion(String criterionId) {
+    final lesson = state.lesson;
+    if (lesson == null || state.isSubmittingAnswer) return;
+    final updated = Set<String>.from(state.checkedRubricIds);
+    if (updated.contains(criterionId)) {
+      updated.remove(criterionId);
+    } else {
+      updated.add(criterionId);
+    }
+    state = state.copyWith(checkedRubricIds: updated);
+  }
+
+  Future<void> submitInteractiveQuiz({String uiLocale = 'uz'}) async {
+    final lesson = state.lesson;
+    if (lesson == null ||
         state.isSubmittingAnswer ||
         state.isCompleted) {
       return;
     }
 
-    final lesson = state.lesson!;
-    final currentStep = lesson.steps[state.currentStepIndex];
-    final question = currentStep.interactiveQuestion;
+    final currentStep = _activeStep(lesson);
+    final question = currentStep?.interactiveQuestion;
     if (question == null) return;
-    final selectedIndex = state.selectedOptionIndex!;
+
+    final isTextOrSelf =
+        question.usesTextEvaluation || question.isSelfAssessed;
+    final isWordMatch = question.mode == QuestionMode.wordMatch;
+    final isSentenceOrder = question.mode == QuestionMode.sentenceOrder;
+    final hasInput = isTextOrSelf
+        ? state.textAnswer.trim().isNotEmpty
+        : isWordMatch
+        ? state.selectedMatchPairs.values.any((v) => v.trim().isNotEmpty)
+        : isSentenceOrder
+        ? state.selectedOrderTokens.any((t) => t.trim().isNotEmpty)
+        : state.selectedOptionIndex != null;
+    if (!hasInput) return;
+
+    final selectedIndex = question.usesOptionSelection
+        ? state.selectedOptionIndex!
+        : 0;
+    final selectedText = isTextOrSelf ? state.textAnswer.trim() : null;
     final session = _lessonGeneration;
     final step = _stepGeneration;
 
@@ -937,36 +1310,73 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         question: question,
         lessonId: lesson.id,
         selectedIndex: selectedIndex,
+        selectedText: selectedText,
+        matchedPairs: isWordMatch ? state.selectedMatchPairs : null,
+        orderedTokens: isSentenceOrder ? state.selectedOrderTokens : null,
+        uiLocale: uiLocale,
       );
       if (!_isCurrent(session, step, generation)) return;
+      final updatedSkillStreaks = Map<String, int>.from(
+        state.consecutiveMistakesBySkill,
+      );
+      final updatedQuestionStreaks = Map<String, int>.from(
+        state.consecutiveMistakesByQuestion,
+      );
+      var roadmapRefreshed = false;
       if (result.isCorrect) {
+        updatedSkillStreaks[question.skillId] = 0;
+        updatedQuestionStreaks[question.id] = 0;
         _passedQuestionIds.add(question.id);
-        if (state.currentStepIndex == lesson.steps.length - 1) {
+        if (state.currentStepIndex == lesson.steps.length - 1 &&
+            !question.isSelfAssessed) {
           final completed = await _completeLesson(
             lesson,
             session,
             step,
             generation,
+            uiLocale: uiLocale,
           );
           if (!_isCurrent(session, step, generation)) return;
           if (!completed) {
-            state = state.copyWith(isSubmittingAnswer: false);
+            await ref
+                .read(roadmapStateNotifierProvider.notifier)
+                .loadRoadmap(lesson.courseId);
+            if (!_isCurrent(session, step, generation)) return;
+            state = state.copyWith(
+              isSubmittingAnswer: false,
+              consecutiveMistakesBySkill: updatedSkillStreaks,
+              consecutiveMistakesByQuestion: updatedQuestionStreaks,
+            );
             return;
           }
+          roadmapRefreshed = true;
         }
+      } else {
+        updatedSkillStreaks[question.skillId] =
+            (updatedSkillStreaks[question.skillId] ?? 0) + 1;
+        updatedQuestionStreaks[question.id] =
+            (updatedQuestionStreaks[question.id] ?? 0) + 1;
       }
-      if (!_isCurrent(session, step, generation)) return;
+      if (!roadmapRefreshed) {
+        await ref
+            .read(roadmapStateNotifierProvider.notifier)
+            .loadRoadmap(lesson.courseId);
+        if (!_isCurrent(session, step, generation)) return;
+      }
       state = state.copyWith(
         isSubmittingAnswer: false,
         answerResult: result,
+        consecutiveMistakesBySkill: updatedSkillStreaks,
+        consecutiveMistakesByQuestion: updatedQuestionStreaks,
         clearAnswerError: true,
       );
     } catch (_) {
       if (!_isCurrent(session, step, generation)) return;
       state = state.copyWith(
         isSubmittingAnswer: false,
-        answerError:
-            'Javobni tekshirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
+        answerError: uiLocale == 'ru'
+            ? 'Не удалось проверить ответ. Проверьте интернет и попробуйте снова.'
+            : 'Javobni tekshirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
       );
     }
   }
@@ -988,9 +1398,11 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     Lesson lesson,
     int session,
     int step,
-    int answer,
-  ) async {
+    int answer, {
+    String uiLocale = 'uz',
+  }) async {
     if (!_isCurrent(session, step, answer)) return false;
+    final allowMultiSkill = _isIntegratedEnglishLesson(lesson);
     final requiredIds = lesson.steps
         .map((step) => step.interactiveQuestion?.id)
         .whereType<String>()
@@ -1000,18 +1412,37 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       if (question == null) {
         return step.type == LessonStepType.interactiveQuestion;
       }
+      final skillMatches =
+          question.skillId == lesson.skillId ||
+          (allowMultiSkill &&
+              lesson.courseId == 'course_eng_01' &&
+              question.skillId.startsWith('skill_eng_'));
+      final invalidMcq = question.usesOptionSelection &&
+          (question.options.length < 2 ||
+              question.options.any((option) => option.trim().isEmpty));
+      final invalidText = question.usesTextEvaluation &&
+          !SupabaseConfig.hasRemoteConfiguration &&
+          !question.acceptedAnswers.any((answer) => answer.trim().isNotEmpty);
+      final invalidWordMatch = question.mode == QuestionMode.wordMatch &&
+          question.matchPairs.isEmpty;
+      final invalidOrder = question.mode == QuestionMode.sentenceOrder &&
+          question.orderedTokens.isEmpty;
       return question.id.trim().isEmpty ||
           question.courseId != lesson.courseId ||
-          question.skillId != lesson.skillId ||
+          question.skillId.trim().isEmpty ||
+          !skillMatches ||
           question.text.trim().isEmpty ||
-          question.options.length < 2 ||
-          question.options.any((option) => option.trim().isEmpty);
+          invalidMcq ||
+          invalidText ||
+          invalidWordMatch ||
+          invalidOrder;
     });
     if (requiredIds.isEmpty || hasInvalidAssessment ||
         (!lesson.requiresMastery && !_passedQuestionIds.containsAll(requiredIds))) {
       state = state.copyWith(
-        answerError:
-            'Avval darsdagi barcha interaktiv savollarga to‘g‘ri javob bering.',
+        answerError: uiLocale == 'ru'
+            ? 'Сначала правильно ответьте на все интерактивные вопросы урока.'
+            : 'Avval darsdagi barcha interaktiv savollarga to‘g‘ri javob bering.',
       );
       return false;
     }
@@ -1019,11 +1450,30 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         .read(learnerRepositoryProvider)
         .markLessonCompleted(lesson.id, courseId: lesson.courseId);
     if (!_isCurrent(session, step, answer)) return false;
+    await LessonReadingPositionStore.clearStepIndex(
+      lesson,
+      accountId: _accountId,
+    );
+    if (!_isCurrent(session, step, answer)) return false;
+    await ref
+        .read(learnerStateNotifierProvider.notifier)
+        .loadProfile(isCurrent: () => _isCurrent(session, step, answer));
+    if (!_isCurrent(session, step, answer)) return false;
+    await ref
+        .read(roadmapStateNotifierProvider.notifier)
+        .loadRoadmap(lesson.courseId);
+    if (!_isCurrent(session, step, answer)) return false;
     state = state.copyWith(isCompleted: true);
     return true;
   }
 
-  Future<ReinforcementResult?> submitReinforcement(int selectedIndex) async {
+  Future<ReinforcementResult?> submitReinforcement(
+    int selectedIndex, {
+    String? selectedText,
+    Map<String, String>? matchedPairs,
+    List<String>? orderedTokens,
+    bool useAlternate = false,
+  }) async {
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) {
       return null;
@@ -1035,7 +1485,14 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     state = state.copyWith(isSubmittingAnswer: true);
 
     final courseId = lesson.courseId;
-    final skillId = lesson.skillId;
+    final targetQuestion = (useAlternate && lesson.alternateExercise != null)
+        ? lesson.alternateExercise!
+        : lesson.reinforcementExercise;
+    final allowMultiSkill =
+        _isIntegratedEnglishLesson(lesson) &&
+        targetQuestion.courseId == courseId &&
+        targetQuestion.skillId.startsWith('skill_eng_');
+    final skillId = allowMultiSkill ? targetQuestion.skillId : lesson.skillId;
 
     // Derive a course-scoped reinforcement node id — never hardcode another
     // course's node (the old 'reinf_node_math_func' leaked across courses).
@@ -1059,8 +1516,11 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         courseId: courseId,
         skillId: skillId,
         reinforcementNodeId: reinforcementNodeId,
-        reinforcementQuestion: lesson.reinforcementExercise,
+        reinforcementQuestion: targetQuestion,
         selectedIndex: selectedIndex,
+        selectedText: selectedText,
+        matchedPairs: matchedPairs,
+        orderedTokens: orderedTokens,
       );
 
       if (!_isCurrent(session, step, generation)) return null;

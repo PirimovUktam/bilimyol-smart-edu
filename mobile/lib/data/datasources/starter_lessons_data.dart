@@ -1,7 +1,8 @@
+import 'english/a1_lessons_data.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/question.dart';
 
-const starterLessons = <String, Lesson>{
+final starterLessons = <String, Lesson>{
   'lesson_math_starter': Lesson(
     id: 'lesson_math_starter',
     courseId: 'course_math_01',
@@ -56,65 +57,7 @@ const starterLessons = <String, Lesson>{
       explanation: '6 − 2 = 4.',
     ),
   ),
-  'lesson_eng_starter': Lesson(
-    id: 'lesson_eng_starter',
-    courseId: 'course_eng_01',
-    skillId: 'skill_eng_vocab',
-    title: 'Birinchi inglizcha so‘zlar',
-    estimatedMinutes: 5,
-    summary:
-        'Ingliz tilida «Hello» — salom, «Thank you» — rahmat, «Goodbye» — xayr. O‘zingizni tanishtirish uchun «I am» dan keyin ismingizni ayting.',
-    steps: [
-      LessonStep(
-        id: 'lesson_eng_starter_read',
-        stepNumber: 1,
-        type: LessonStepType.concept,
-        title: 'Asosiy tushuncha',
-        content:
-            'Ingliz tilida «Hello» — salom, «Thank you» — rahmat, «Goodbye» — xayr. O‘zingizni tanishtirish uchun «I am» dan keyin ismingizni ayting.',
-      ),
-      LessonStep(
-        id: 'lesson_eng_starter_example',
-        stepNumber: 2,
-        type: LessonStepType.audioSimulation,
-        title: 'Birga misol ko‘ramiz',
-        content:
-            'Ikki kishining ilk suhbati.\n\nAziza — Hello! I am Aziza. (Salom! Men Azizaman.)\n\nSardor — Hello! I am Sardor. (Salom! Men Sardorman.)\n\nXayrlashayotganda «Goodbye!» deymiz.',
-        visualModelData: LessonVisualModelData(
-          type: 'audio_wave',
-          audioTranscript: 'Hello! I am Aziza. Hello! I am Sardor. Goodbye!',
-          speakerName: 'Inglizcha salomlashish',
-        ),
-      ),
-      LessonStep(
-        id: 'lesson_eng_starter_try',
-        stepNumber: 3,
-        type: LessonStepType.interactiveQuestion,
-        title: 'O‘rganganingizni sinab ko‘ring',
-        content: 'Misoldan foydalanib bitta javobni tanlang.',
-        interactiveQuestion: Question(
-          id: 'q_lesson_eng_starter_quiz',
-          courseId: 'course_eng_01',
-          skillId: 'skill_eng_vocab',
-          text: 'Ingliz tilida salomlashish uchun qaysi so‘zni aytamiz?',
-          options: ['Goodbye', 'Hello', 'Thank you'],
-          correctIndex: 1,
-          difficulty: QuestionDifficulty.easy,
-          explanation: 'Hello — salom. Uni suhbatni boshlaganda aytamiz.',
-        ),
-      ),
-    ],
-    reinforcementExercise: Question(
-      id: 'q_lesson_eng_starter_practice',
-      courseId: 'course_eng_01',
-      skillId: 'skill_eng_vocab',
-      text: '«Thank you» o‘zbekchada nima degani?',
-      options: ['Salom', 'Xayr', 'Rahmat'],
-      correctIndex: 2,
-      difficulty: QuestionDifficulty.easy,
-      explanation: 'Thank you — rahmat.',
-    ),
-  ),
+  'lesson_eng_starter': a1LessonsData['lesson_eng_starter']!,
   'lesson_it_starter': Lesson(
     id: 'lesson_it_starter',
     courseId: 'course_it',
@@ -284,61 +227,7 @@ const starterLessons = <String, Lesson>{
     ),
   ),
 
-  "lesson_eng_foundation_02": Lesson(
-    id: "lesson_eng_foundation_02",
-    courseId: "course_eng_01",
-    skillId: "skill_eng_grammar",
-    title: "Men, siz va oddiy gaplar",
-    estimatedMinutes: 5,
-    summary:
-        "I — men, you — siz, he — u (erkak), she — u (ayol). I bilan am, you bilan are, he va she bilan is ishlatiladi. Student — o‘quvchi.",
-    steps: [
-      LessonStep(
-        id: "lesson_eng_foundation_02_read",
-        stepNumber: 1,
-        type: LessonStepType.concept,
-        title: "Asosiy tushuncha",
-        content:
-            "I — men, you — siz, he — u (erkak), she — u (ayol). I bilan am, you bilan are, he va she bilan is ishlatiladi. Student — o‘quvchi.",
-      ),
-      LessonStep(
-        id: "lesson_eng_foundation_02_example",
-        stepNumber: 2,
-        type: LessonStepType.visualExample,
-        title: "Birga misol ko‘ramiz",
-        content:
-            "I am a student. — Men o‘quvchiman. You are a student. — Siz o‘quvchisiz. She is a student. — U o‘quvchi. A so‘zi bu yerda bitta o‘quvchi haqida gapirilayotganini bildiradi.",
-      ),
-      LessonStep(
-        id: "lesson_eng_foundation_02_try",
-        stepNumber: 3,
-        type: LessonStepType.interactiveQuestion,
-        title: "O‘rganganingizni sinab ko‘ring",
-        content: "Misolga tayangan holda javobni tanlang.",
-        interactiveQuestion: Question(
-          id: "q_lesson_eng_foundation_02",
-          courseId: "course_eng_01",
-          skillId: "skill_eng_grammar",
-          text: "«Men o‘quvchiman» gapini to‘ldiring. I ___ a student.",
-          options: ["is", "am", "are"],
-          correctIndex: 1,
-          difficulty: QuestionDifficulty.easy,
-          explanation:
-              "I bilan am ishlatiladi. I am a student — Men o‘quvchiman.",
-        ),
-      ),
-    ],
-    reinforcementExercise: Question(
-      id: "q_lesson_eng_foundation_02_practice",
-      courseId: "course_eng_01",
-      skillId: "skill_eng_grammar",
-      text: "«Men o‘quvchiman» gapini to‘ldiring. I ___ a student.",
-      options: ["is", "am", "are"],
-      correctIndex: 1,
-      difficulty: QuestionDifficulty.easy,
-      explanation: "I bilan am ishlatiladi. I am a student — Men o‘quvchiman.",
-    ),
-  ),
+  'lesson_eng_foundation_02': a1LessonsData['lesson_eng_foundation_02']!,
 
   "lesson_it_foundation_02": Lesson(
     id: "lesson_it_foundation_02",

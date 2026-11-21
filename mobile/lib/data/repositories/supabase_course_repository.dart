@@ -77,8 +77,10 @@ class SupabaseCourseRepository implements ICourseRepository {
     return Course(
       id: row['id'] as String,
       title: row['title'] as String? ?? '',
+      titleRu: row['title_ru'] as String?,
       subject: _subject(row['subject']),
       description: row['description'] as String? ?? '',
+      descriptionRu: row['description_ru'] as String?,
       iconName: row['icon_name'] as String? ?? 'book',
       primaryColorHex: row['primary_color_hex'] as String? ?? '#2563EB',
       secondaryColorHex: row['secondary_color_hex'] as String? ?? '#3B82F6',

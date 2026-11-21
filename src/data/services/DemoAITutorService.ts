@@ -8,7 +8,11 @@ import {
   AskTutorRequest,
   AskTutorResponse,
 } from './IAITutorService';
-import { DEMO_AI_RESPONSES } from '../datasources/demoAiResponses';
+import {
+  DEMO_AI_RESPONSES,
+  buildEnglishMistakeExplanation,
+  buildEnglishTutorReply,
+} from '../datasources/demoAiResponses';
 import { publishQuestionWithRegisteredKey } from '@/core/runtime/questionAnswerKeys';
 
 /** An authored AI question: the answer key is registered server-side, then stripped. */
@@ -28,6 +32,17 @@ export class DemoAITutorService implements IAITutorService {
     const matched = DEMO_AI_RESPONSES[request.questionId];
 
     if (matched) {
+      if (request.questionId === 'q_eng_lesson_interactive' && request.language === 'ru') {
+        return {
+          tutorName: 'Yo‘lchi AI',
+          title: 'Не учтено отрицание во времени',
+          explanation:
+            'Вы верно услышали слово «four», но не обратили внимания на оборот «quarter to four» (без 15 минут четыре) и отрицание «not at four o\'clock».',
+          remediationStep: 'Выражение «quarter to [hour]» всегда обозначает время на 15 минут раньше названного часа.',
+          suggestedAction: 'Давайте закрепим эту тему коротким упражнением.',
+          isDeterministicFallback: true,
+        };
+      }
       return {
         tutorName: 'Yo‘lchi AI',
         title: matched.misconceptionTitle,
@@ -38,7 +53,24 @@ export class DemoAITutorService implements IAITutorService {
       };
     }
 
+    if (request.courseId === 'course_eng_01') {
+      return buildEnglishMistakeExplanation(request);
+    }
+
     // Generic pedagogical fallback for any other question
+    if (request.language === 'ru') {
+      const correctLineRu = request.correctOption
+        ? `Правильный ответ: ${request.correctOption}.`
+        : '';
+      return {
+        tutorName: 'Yo‘lchi AI',
+        title: 'Разбор ошибки',
+        explanation: `Выбранный ответ (${request.selectedOption}) неверный. ${correctLineRu}`.trim(),
+        remediationStep: 'Проверьте решение шаг за шагом, чтобы закрепить тему.',
+        suggestedAction: 'Давайте закрепим этот навык коротким упражнением.',
+        isDeterministicFallback: true,
+      };
+    }
     const correctLine = request.correctOption
       ? `To‘g‘ri javob: ${request.correctOption}.`
       : '';
@@ -326,6 +358,9 @@ export class DemoAITutorService implements IAITutorService {
   }
 
   async askTutor(request: AskTutorRequest): Promise<AskTutorResponse> {
+    if (request.courseId === 'course_eng_01') {
+      return buildEnglishTutorReply(request);
+    }
     const topic = request.topic || 'bu mavzu';
     return {
       tutorName: 'Yo‘lchi AI',

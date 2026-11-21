@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="classWall" x1="0" y1="0" x2="0" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EFF6FF"/>
+    </linearGradient>
+    <filter id="deskShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="430" fill="url(#classWall)"/>
+  <rect y="430" width="800" height="170" fill="#E2E8F0"/>
+
+  <!-- Emerald Chalkboard (Zero text — geometric chalk diagrams only) -->
+  <g filter="url(#deskShadow)">
+    <rect x="130" y="64" width="420" height="218" rx="14" fill="#065F46" stroke="#94A3B8" stroke-width="10"/>
+    <rect x="150" y="84" width="380" height="178" rx="6" fill="#047857"/>
+    <!-- Geometric chalk line hints -->
+    <line x1="184" y1="126" x2="318" y2="126" stroke="#A7F3D0" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <line x1="184" y1="156" x2="278" y2="156" stroke="#A7F3D0" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+    <line x1="184" y1="186" x2="340" y2="186" stroke="#FDE68A" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+    <circle cx="448" cy="162" r="40" stroke="#FDE68A" stroke-width="5" opacity="0.65"/>
+    <polygon points="448,132 474,178 422,178" fill="#A7F3D0" opacity="0.5"/>
+  </g>
+
+  <!-- Visual Weekly Schedule Grid on Right Wall (Color blocks only, zero text) -->
+  <g filter="url(#deskShadow)">
+    <rect x="590" y="84" width="150" height="184" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="610" y="106" width="110" height="16" rx="6" fill="#4F46E5"/>
+    <rect x="610" y="138" width="48" height="22" rx="6" fill="#DBEAFE"/>
+    <rect x="670" y="138" width="48" height="22" rx="6" fill="#D1FAE5"/>
+    <rect x="610" y="172" width="48" height="22" rx="6" fill="#FEF3C7"/>
+    <rect x="670" y="172" width="48" height="22" rx="6" fill="#E0E7FF"/>
+    <rect x="610" y="206" width="48" height="22" rx="6" fill="#D1FAE5"/>
+    <rect x="670" y="206" width="48" height="22" rx="6" fill="#DBEAFE"/>
+  </g>
+
+  <!-- Classroom Student Desk & Study Tools -->
+  <g filter="url(#deskShadow)">
+    <ellipse cx="400" cy="526" rx="190" ry="16" fill="#0F172A" opacity="0.1"/>
+    <!-- Desk Top -->
+    <rect x="210" y="346" width="380" height="24" rx="10" fill="#4F46E5"/>
+    <rect x="234" y="370" width="20" height="148" rx="6" fill="#312E81"/>
+    <rect x="546" y="370" width="20" height="148" rx="6" fill="#312E81"/>
+    <rect x="254" y="390" width="292" height="14" rx="4" fill="#4338CA"/>
+
+    <!-- Open Notebook -->
+    <rect x="280" y="314" width="136" height="32" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <line x1="348" y1="316" x2="348" y2="344" stroke="#94A3B8" stroke-width="2"/>
+    <line x1="296" y1="326" x2="334" y2="326" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <line x1="296" y1="335" x2="328" y2="335" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+    <line x1="362" y1="326" x2="400" y2="326" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Pencil & Pen -->
+    <rect x="434" y="330" width="54" height="10" rx="4" fill="#F59E0B"/>
+    <polygon points="488,330 500,335 488,340" fill="#1E293B"/>
+
+    <!-- Red Apple on Desk -->
+    <circle cx="534" cy="326" r="18" fill="#EF4444"/>
+    <path d="M534 308 Q540 296 548 302" stroke="#10B981" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+    <!-- School Backpack Leaning Next to Desk -->
+    <rect x="132" y="400" width="66" height="114" rx="20" fill="#10B981" stroke="#059669" stroke-width="2"/>
+    <rect x="144" y="454" width="42" height="36" rx="10" fill="#34D399"/>
+  </g>
+</svg>

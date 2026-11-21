@@ -48,7 +48,7 @@ class AppButton extends StatelessWidget {
         shadows = AppColors.commonBtnShadow;
         break;
       case AppButtonVariant.secondary:
-        backgroundColor = AppColors.secondary;
+        backgroundColor = const Color(0xFF0369A1);
         foregroundColor = Colors.white;
         shadows = [
           BoxShadow(
@@ -60,13 +60,16 @@ class AppButton extends StatelessWidget {
         ];
         break;
       case AppButtonVariant.outline:
-        backgroundColor = Colors.white;
-        foregroundColor = AppColors.textPrimary;
-        borderSide = const BorderSide(color: AppColors.cardBorder, width: 1.2);
+        backgroundColor = AppColors.surfaceColor(context);
+        foregroundColor = AppColors.textPrimaryColor(context);
+        borderSide = BorderSide(
+          color: AppColors.borderColor(context),
+          width: 1.2,
+        );
         break;
       case AppButtonVariant.ghost:
         backgroundColor = Colors.transparent;
-        foregroundColor = AppColors.textSecondary;
+        foregroundColor = AppColors.textSecondaryColor(context);
         break;
       case AppButtonVariant.danger:
         backgroundColor = AppColors.error;

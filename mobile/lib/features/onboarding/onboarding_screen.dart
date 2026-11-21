@@ -14,19 +14,44 @@ import '../../domain/entities/learner_profile.dart';
 class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final courses = ref.watch(courseStateNotifierProvider);
     final learner = ref.watch(learnerStateNotifierProvider);
     final course = courses.activeCourse;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
+
+    final isLargeText = MediaQuery.textScalerOf(context).scale(1.0) > 1.35;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('O‘rganish rejasi')),
+      appBar: AppBar(
+        toolbarHeight: isLargeText ? 96 : null,
+        title: Text(
+          isRu ? 'План обучения' : 'O‘rganish rejasi',
+          softWrap: true,
+          maxLines: isLargeText ? null : 1,
+          overflow: isLargeText
+              ? TextOverflow.visible
+              : TextOverflow.ellipsis,
+        ),
+      ),
       body: SafeArea(
         child: learner.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => FriendlyErrorState(
-            message: 'Profilni yuklab bo‘lmadi.',
+            message: isRu
+                ? 'Не удалось загрузить профиль.'
+                : 'Profilni yuklab bo‘lmadi.',
             onRetry: () =>
                 ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
           ),
@@ -37,8 +62,11 @@ class OnboardingScreen extends ConsumerWidget {
             if (course == null) {
               return Center(
                 child: AppButton(
-                  text: 'Fan tanlash',
-                  onPressed: () => context.go('/courses'),
+                  text: isRu ? 'Выбрать предмет' : 'Fan tanlash',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    context.go('/courses');
+                  },
                 ),
               );
             }
@@ -54,28 +82,37 @@ class OnboardingScreen extends ConsumerWidget {
   }
 }
 
-const _levelChoices = [
+List<(InitialLevel, String, String)> _levelChoicesFor(bool isRu) => [
   (
     InitialLevel.beginner,
-    'Noldan boshlayman',
-    'O‘zbekcha izoh va ishlangan misoldan boshlang.',
+    isRu ? 'Начать с нуля' : 'Noldan boshlayman',
+    isRu
+        ? 'Начните с понятных объяснений и разобранных примеров.'
+        : 'O‘zbekcha izoh va ishlangan misoldan boshlang.',
   ),
   (
     InitialLevel.intermediate,
-    'Asoslarini bilaman',
-    'Mavzularni o‘rganing yoki darajangizni tekshiring.',
+    isRu ? 'Знаю основы' : 'Asoslarini bilaman',
+    isRu
+        ? 'Изучайте темы или проверьте текущий уровень.'
+        : 'Mavzularni o‘rganing yoki darajangizni tekshiring.',
   ),
   (
     InitialLevel.advanced,
-    'Mustahkam bilimim bor',
-    'Ta’lim rejasini oching yoki ixtiyoriy diagnostikani tanlang.',
+    isRu ? 'У меня крепкие знания' : 'Mustahkam bilimim bor',
+    isRu
+        ? 'Откройте учебный маршрут или пройдите необязательную диагностику.'
+        : 'Ta’lim rejasini oching yoki ixtiyoriy diagnostikani tanlang.',
   ),
 ];
 
-const _goals = {
-  OnboardingGoal.mastery: 'Asosiy mavzularni o‘rganish',
-  OnboardingGoal.examPrep: 'Imtihonga tayyorlanish',
-  OnboardingGoal.skillsBoost: 'Amaliy ko‘nikmalarni rivojlantirish',
+Map<OnboardingGoal, String> _goalsFor(bool isRu) => {
+  OnboardingGoal.mastery:
+      isRu ? 'Изучить основные темы' : 'Asosiy mavzularni o‘rganish',
+  OnboardingGoal.examPrep:
+      isRu ? 'Подготовиться к экзамену' : 'Imtihonga tayyorlanish',
+  OnboardingGoal.skillsBoost:
+      isRu ? 'Развить практические навыки' : 'Amaliy ko‘nikmalarni rivojlantirish',
 };
 
 class _LearningPlanForm extends ConsumerStatefulWidget {
@@ -101,10 +138,31 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
   bool _saving = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
+      }
+    });
+  }
+
+  String _resolveLang(BuildContext context) {
+    final locCode = Localizations.maybeLocaleOf(context)?.languageCode;
+    final platformCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return (locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru'))
+        ? 'ru'
+        : 'uz';
+  }
+
   Future<void> _start({bool diagnostic = false}) async {
     final level = _level;
     if (_saving || level == null) return;
     final course = widget.course;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
     setState(() {
       _saving = true;
       _error = null;
@@ -131,7 +189,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
       if (level == InitialLevel.beginner && starter != null) {
         await ref
             .read(lessonSessionNotifierProvider.notifier)
-            .startLesson(starter);
+            .startLesson(starter, uiLocale: lang);
         if (!mounted ||
             ref.read(courseStateNotifierProvider).activeCourse?.id !=
                 course.id) {
@@ -139,8 +197,9 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
         }
         if (ref.read(lessonSessionNotifierProvider).lesson?.id != starter) {
           setState(
-            () => _error =
-                'Birinchi darsni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+            () => _error = isRu
+                ? 'Не удалось загрузить первый урок. Попробуйте снова.'
+                : 'Birinchi darsni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
           );
           return;
         }
@@ -151,7 +210,9 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _error = 'Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.',
+          () => _error = isRu
+              ? 'Не удалось сохранить план. Попробуйте снова.'
+              : 'Rejani saqlab bo‘lmadi. Qayta urinib ko‘ring.',
         );
       }
     } finally {
@@ -162,6 +223,10 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    final lang = _resolveLang(context);
+    final isRu = lang == 'ru';
+    final levelChoices = _levelChoicesFor(isRu);
+    final goals = _goalsFor(isRu);
     final hasStarter = widget.course.starterLessonId != null;
     final beginner = _level == InitialLevel.beginner;
     return Center(
@@ -181,40 +246,47 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: AppColors.primaryTint(context),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      widget.course.title,
+                      widget.course.localizedTitle(lang),
                       style: theme.labelLarge?.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.primaryAccentOnSurface(context),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text('Qayerdan boshlamoqchisiz?', style: theme.headlineSmall),
+                  Text(
+                    isRu
+                        ? 'С чего вы хотите начать?'
+                        : 'Qayerdan boshlamoqchisiz?',
+                    style: theme.headlineSmall,
+                  ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Bu fan uchun darajangizni tanlang. Uni keyin ham o‘zgartirishingiz mumkin.',
+                  Text(
+                    isRu
+                        ? 'Выберите уровень для этого предмета. Его можно изменить позже.'
+                        : 'Bu fan uchun darajangizni tanlang. Uni keyin ham o‘zgartirishingiz mumkin.',
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             for (final (idx, (level, title, detail))
-                in _levelChoices.indexed) ...[
+                in levelChoices.indexed) ...[
               EdTechReveal(
                 index: idx + 1,
                 child: AppCard(
                   padding: EdgeInsets.zero,
                   borderColor: _level == level
-                      ? AppColors.primary
-                      : AppColors.cardBorder,
+                      ? AppColors.primaryAccentOnSurface(context)
+                      : AppColors.borderColor(context),
                   borderWidth: _level == level ? 1.6 : 1.0,
                   backgroundColor: _level == level
-                      ? AppColors.primaryLight.withValues(alpha: 0.5)
-                      : AppColors.surface,
+                      ? AppColors.primaryTint(context).withValues(alpha: 0.5)
+                      : AppColors.surfaceColor(context),
                   child: Material(
                     type: MaterialType.transparency,
                     child: ListTile(
@@ -228,8 +300,8 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                             ? Icons.radio_button_checked
                             : Icons.radio_button_unchecked,
                         color: _level == level
-                            ? AppColors.primary
-                            : AppColors.textMuted,
+                            ? AppColors.primaryAccentOnSurface(context)
+                            : AppColors.textMutedColor(context),
                       ),
                       selected: _level == level,
                       onTap: _saving
@@ -245,9 +317,11 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
             DropdownButtonFormField<OnboardingGoal>(
               initialValue: _goal,
               isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Maqsad'),
+              decoration: InputDecoration(
+                labelText: isRu ? 'Цель' : 'Maqsad',
+              ),
               items: [
-                for (final entry in _goals.entries)
+                for (final entry in goals.entries)
                   DropdownMenuItem(
                     value: entry.key,
                     child: Text(entry.value, overflow: TextOverflow.ellipsis),
@@ -260,10 +334,19 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               initialValue: _minutes,
-              decoration: const InputDecoration(labelText: 'Kunlik vaqt'),
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: isRu ? 'Ежедневное время' : 'Kunlik vaqt',
+              ),
               items: [
                 for (final time in [15, 30, 60])
-                  DropdownMenuItem(value: time, child: Text('$time daqiqa')),
+                  DropdownMenuItem(
+                    value: time,
+                    child: Text(
+                      isRu ? '$time минут' : '$time daqiqa',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
               onChanged: _saving
                   ? null
@@ -285,15 +368,21 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
               ),
             AppButton(
               text: beginner && hasStarter
-                  ? 'Birinchi darsni boshlash'
-                  : 'Ta’lim yo‘lini ochish',
+                  ? (isRu
+                        ? 'Начать первый урок'
+                        : 'Birinchi darsni boshlash')
+                  : (isRu
+                        ? 'Открыть маршрут обучения'
+                        : 'Ta’lim yo‘lini ochish'),
               isLoading: _saving,
               onPressed: _level == null ? null : _start,
             ),
             if (_level != null && !beginner) ...[
               const SizedBox(height: 8),
               AppButton(
-                text: 'Ixtiyoriy diagnostika',
+                text: isRu
+                    ? 'Дополнительная диагностика'
+                    : 'Ixtiyoriy diagnostika',
                 variant: AppButtonVariant.outline,
                 onPressed: _saving ? null : () => _start(diagnostic: true),
               ),

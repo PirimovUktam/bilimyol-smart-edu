@@ -3,8 +3,10 @@ enum SubjectType { mathematics, english, it, logic }
 class Course {
   final String id;
   final String title;
+  final String? titleRu;
   final SubjectType subject;
   final String description;
+  final String? descriptionRu;
   final String iconName;
   final String primaryColorHex;
   final String secondaryColorHex;
@@ -17,8 +19,10 @@ class Course {
   const Course({
     required this.id,
     required this.title,
+    this.titleRu,
     required this.subject,
     required this.description,
+    this.descriptionRu,
     required this.iconName,
     required this.primaryColorHex,
     required this.secondaryColorHex,
@@ -28,4 +32,20 @@ class Course {
     this.foundationLessonIds = const [],
     this.totalStudentsEstimate = 1000,
   });
+
+  String localizedTitle(String uiLocale) {
+    if (uiLocale == 'ru') {
+      final ru = titleRu?.trim();
+      if (ru != null && ru.isNotEmpty) return ru;
+    }
+    return title;
+  }
+
+  String localizedDescription(String uiLocale) {
+    if (uiLocale == 'ru') {
+      final ru = descriptionRu?.trim();
+      if (ru != null && ru.isNotEmpty) return ru;
+    }
+    return description;
+  }
 }

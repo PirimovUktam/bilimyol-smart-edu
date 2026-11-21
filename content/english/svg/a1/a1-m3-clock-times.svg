@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="timeWall" x1="0" y1="0" x2="0" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <filter id="clockShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="470" fill="url(#timeWall)"/>
+  <rect y="470" width="800" height="130" fill="#CBD5E1"/>
+
+  <!-- Morning Window on Left Showing Sunrise (Morning Cue, Zero Text) -->
+  <g filter="url(#clockShadow)">
+    <rect x="74" y="106" width="214" height="270" rx="16" fill="#FFFFFF" stroke="#94A3B8" stroke-width="6"/>
+    <rect x="92" y="124" width="178" height="234" rx="8" fill="#DBEAFE"/>
+    <!-- Morning Sun & Rays -->
+    <circle cx="144" cy="288" r="38" fill="#FBBF24"/>
+    <path d="M92 316 Q180 286 270 320 L270 358 L92 358 Z" fill="#10B981" opacity="0.85"/>
+    <line x1="181" y1="124" x2="181" y2="358" stroke="#FFFFFF" stroke-width="6"/>
+    <line x1="92" y1="240" x2="270" y2="240" stroke="#FFFFFF" stroke-width="6"/>
+  </g>
+
+  <!-- Large Crisp Analog Wall Clock Showing 07:45 (Quarter to Eight) — ZERO DIGITS OR TEXT -->
+  <g id="analog-clock" transform="translate(536, 250)" filter="url(#clockShadow)">
+    <circle cx="0" cy="0" r="158" fill="#4F46E5"/>
+    <circle cx="0" cy="0" r="142" fill="#FFFFFF"/>
+
+    <!-- 12 Hour Tick Marks (12, 3, 6, 9 emphasized) -->
+    <rect x="-4" y="-128" width="8" height="20" rx="4" fill="#0F172A"/>
+    <rect x="108" y="-4" width="20" height="8" rx="4" fill="#0F172A"/>
+    <rect x="-4" y="108" width="8" height="20" rx="4" fill="#0F172A"/>
+    <rect x="-128" y="-4" width="20" height="8" rx="4" fill="#0F172A"/>
+
+    <!-- Intermediate Ticks -->
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(30)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(60)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(120)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(150)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(210)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(240)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(300)"/>
+    <rect x="-3" y="-126" width="6" height="12" rx="3" fill="#94A3B8" transform="rotate(330)"/>
+
+    <!-- Quarter-to shaded arc (9 to 12) for visual clarity -->
+    <path d="M -100 0 A 100 100 0 0 1 0 -100" stroke="#F59E0B" stroke-width="8" stroke-linecap="round" opacity="0.35"/>
+
+    <!-- Hour Hand (pointing just before 8 -> 232.5 deg clockwise from 12, i.e., -127.5 deg in SVG transform) -->
+    <line x1="0" y1="0" x2="-57" y2="44" stroke="#0F172A" stroke-width="12" stroke-linecap="round"/>
+
+    <!-- Minute Hand (pointing directly at 9 -> 45 minutes) -->
+    <line x1="0" y1="0" x2="-102" y2="0" stroke="#10B981" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Center Cap -->
+    <circle cx="0" cy="0" r="11" fill="#F59E0B"/>
+  </g>
+
+  <!-- Subtle Bench / Bus Stop Cue Below -->
+  <rect x="88" y="446" width="624" height="24" rx="8" fill="#475569"/>
+</svg>
