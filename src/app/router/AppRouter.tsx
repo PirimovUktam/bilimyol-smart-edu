@@ -109,7 +109,7 @@ const views = [
 
 type AppView = typeof views[number];
 
-const readRoute = () => {
+const readRoute = (): { view: AppView; lessonId: string | null; planOrigin: 'roadmap' | 'profile' | null } => {
   const { pathname, search, hash } = window.location;
   const path = pathname.toLowerCase().slice(1);
   const params = new URLSearchParams(search);
@@ -117,7 +117,12 @@ const readRoute = () => {
   const view = candidates.find((candidate): candidate is AppView =>
     views.some((supported) => supported === candidate),
   ) ?? 'welcome';
-  return { view, lessonId: view === 'lesson' ? params.get('lessonId') : null };
+  const from = params.get('from');
+  return {
+    view,
+    lessonId: view === 'lesson' ? params.get('lessonId') : null,
+    planOrigin: view === 'onboarding' && (from === 'roadmap' || from === 'profile') ? from : null,
+  };
 };
 
 const standaloneViews = new Set<AppView>(['welcome', 'tour', 'login', 'register', 'forgot-password', 'reset-password', 'pitch', 'demo']);
@@ -127,17 +132,19 @@ export { type AppView };
 
 export function AppRouter() {
   const { t } = useTranslation();
-  const [{ view, lessonId }, setRoute] = useState(readRoute);
+  const [{ view, lessonId, planOrigin }, setRoute] = useState(readRoute);
   const main = useRef<HTMLElement>(null);
   const navigate = useCallback((next: AppView, id?: string, replace = false) => {
     const nextLesson = next === 'lesson' ? id ?? null : null;
+    const planOrigin = next === 'onboarding' && (id === 'roadmap' || id === 'profile') ? id : null;
     const query = new URLSearchParams({ view: next });
     if (nextLesson) query.set('lessonId', nextLesson);
+    if (planOrigin) query.set('from', planOrigin);
     const url = next === 'welcome' ? '/' : standaloneViews.has(next) ? '/' + next : '/?' + query;
     if (url !== window.location.pathname + window.location.search + window.location.hash) {
       window.history[replace ? 'replaceState' : 'pushState'](null, '', url);
     }
-    setRoute({ view: next, lessonId: nextLesson });
+    setRoute({ view: next, lessonId: nextLesson, planOrigin });
   }, []);
 
   useEffect(() => {
@@ -294,7 +301,7 @@ export function AppRouter() {
         return <LazyResetPasswordView onNavigateLogin={login} />;
       case 'profile':
         return <LazyProfileView onSignOut={login} onChooseSubject={() => navigate('course-selection')}
-          onOpenLearningPlan={() => navigate('onboarding')} onReplayTour={() => navigate('tour')} />;
+          onOpenLearningPlan={() => navigate('onboarding', 'profile')} onReplayTour={() => navigate('tour')} />;
       case 'course-selection':
         return <LazyCourseSelectionView onSelectCourse={(id) => {
           const chosen = useCourseStore.getState().activeCourse;
@@ -302,14 +309,14 @@ export function AppRouter() {
           navigate(hasStartedCourse(chosen, useLearnerStore.getState().profile) ? 'dashboard' : 'onboarding');
         }} />;
       case 'onboarding':
-        return <LazyOnboardingView key={courseId} onComplete={(id, level, diagnostic) => {
+        return <LazyOnboardingView key={courseId} editing={Boolean(planOrigin)} onComplete={(id, level, diagnostic) => {
           const chosen = useCourseStore.getState().activeCourse;
           if (chosen?.id !== id) return;
           const foundation = pendingFoundationLesson(chosen, useLearnerStore.getState().profile);
           if (diagnostic && level !== 'beginner') navigate('placement');
-          else if (foundation) startLesson(foundation);
+          else if (foundation && !planOrigin) startLesson(foundation);
           else openRoadmap();
-        }} onBack={() => navigate('course-selection')} />;
+        }} onBack={() => navigate(planOrigin ?? 'course-selection')} />;
       case 'placement':
         return <LazyPlacementTestView onComplete={openRoadmap} onChooseCourse={() => navigate('course-selection')}
           onStartLearning={openRoadmap} />;
@@ -320,6 +327,7 @@ export function AppRouter() {
       case 'roadmap':
         return <LazyRoadmapView onStartLesson={startLesson} onOpenKnowledgeMap={openKnowledgeMap}
           onChooseCourse={() => navigate('course-selection')} onConfigure={() => navigate('onboarding')}
+          onEditPlan={() => navigate('onboarding', 'roadmap')}
           onStartPlacement={() => navigate('placement')} />;
       case 'lesson':
         return lessonId ? <EagerInteractiveLessonView key={lessonId} lessonId={lessonId}

@@ -1,75 +1,71 @@
-import { translate as t } from '@/core/locales/useTranslation';
-import { useTranslation } from '@/core/locales/useTranslation';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, ClipboardCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, ClipboardCheck, Compass, Layers, Sprout } from 'lucide-react';
+import { useTranslation } from '@/core/locales/useTranslation';
 import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import type { DailyTimeCommitment, InitialLevel, OnboardingGoal } from '@/core/types/common';
-import { foundationLessons } from '@/domain/personalization/learningStart';
+import { foundationLessons, pendingFoundationLessons } from '@/domain/personalization/learningStart';
 import { Button } from '@/presentation/components/Button';
-import { Card } from '@/presentation/components/Card';
-import { PageHeader } from '@/presentation/components/PageHeader';
 import { SectionState } from '@/presentation/components/SectionState';
+import { StudyPlanPreview } from './StudyPlanPreview';
+import { useStudyPlan } from './useStudyPlan';
 
-const levels: { value: InitialLevel; label: string; description: string; badge: string }[] = [
-  {
-    value: 'beginner',
-    get label() { return t('courses.zero'); },
-    get description() { return t('courses.zeroDescription'); },
-    get badge() { return t('courses.beginner'); },
-  },
-  {
-    value: 'intermediate',
-    get label() { return t('courses.basics'); },
-    get description() { return t('courses.basicsDescription'); },
-    get badge() { return t('courses.intermediate'); },
-  },
-  {
-    value: 'advanced',
-    get label() { return t('courses.advanced'); },
-    get description() { return t('courses.advancedDescription'); },
-    get badge() { return t('courses.advancedBadge'); },
-  },
-];
+const levels = [
+  { value: 'beginner', label: 'courses.zero', description: 'courses.zeroDescription', Icon: Sprout },
+  { value: 'intermediate', label: 'courses.basics', description: 'courses.basicsDescription', Icon: Layers },
+  { value: 'advanced', label: 'courses.advanced', description: 'courses.advancedDescription', Icon: Compass },
+] as const;
+const goals = [
+  { value: 'mastery', label: 'courses.masteryGoal' },
+  { value: 'exam_prep', label: 'courses.exam' },
+  { value: 'skills_boost', label: 'courses.skillsGoal' },
+] as const;
+const times = [15, 30, 60] as const;
 
-const goals: { value: OnboardingGoal; label: string }[] = [
-  { value: 'mastery', get label() { return t('courses.masteryGoal'); } },
-  { value: 'exam_prep', get label() { return t('courses.exam'); } },
-  { value: 'skills_boost', get label() { return t('courses.skillsGoal'); } },
-];
-const times: DailyTimeCommitment[] = [15, 30, 60];
-
-export function OnboardingView({ onComplete, onBack }: {
+export function OnboardingView({ onComplete, onBack, editing = false }: {
   onComplete: (courseId: string, level: InitialLevel, diagnostic: boolean) => void;
   onBack: () => void;
+  editing?: boolean;
 }) {
   const { t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const profile = useLearnerStore((state) => state.profile);
-  const [level, setLevel] = useState<InitialLevel | null>(course ? profile?.courseLevels?.[course.id] ?? null : null);
-  const [goal, setGoal] = useState<OnboardingGoal>(profile?.goal ?? 'mastery');
-  const [minutes, setMinutes] = useState<DailyTimeCommitment>(profile?.dailyMinutes ?? 15);
+  const roadmap = useRoadmapStore((state) => state.roadmap);
+  const roadmapError = useRoadmapStore((state) => state.error);
+  const [levelChoice, setLevel] = useState<InitialLevel>();
+  const [goalChoice, setGoal] = useState<OnboardingGoal>();
+  const [minutesChoice, setMinutes] = useState<DailyTimeCommitment>();
   const [pending, setPending] = useState<'learn' | 'diagnostic' | null>(null);
   const [error, setError] = useState('');
   const mounted = useRef(false);
   const saving = useRef(false);
-  const foundation = course ? foundationLessons(course) : [];
-  const nextFoundation = foundation.find((id) => !profile?.completedLessonIds.includes(id));
+  const courseId = course?.id;
+  const level = levelChoice ?? (courseId ? profile?.courseLevels?.[courseId] : undefined) ?? null;
+  const goal = goalChoice ?? profile?.goal ?? 'mastery';
+  const minutes = minutesChoice ?? profile?.dailyMinutes ?? 15;
+  const path = roadmap?.courseId === courseId ? roadmap : null;
+  const plan = useStudyPlan(course, profile, path, level, goal, minutes);
+  const nextFoundation = pendingFoundationLessons(course, profile, level)[0];
 
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
+  useEffect(() => {
+    if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
+  }, [courseId]);
+
   const submit = async (action: 'learn' | 'diagnostic') => {
-    if (!course || !level || saving.current) return;
+    if (!courseId || !level || saving.current) return;
     saving.current = true;
     setPending(action);
     setError('');
-    const isCurrent = () => mounted.current && useCourseStore.getState().activeCourse?.id === course.id;
+    const isCurrent = () => mounted.current && useCourseStore.getState().activeCourse?.id === courseId;
     try {
-      await useLearnerStore.getState().saveCourseLearningPlan(course.id, goal, minutes, level, isCurrent);
-      if (isCurrent()) onComplete(course.id, level, action === 'diagnostic');
+      await useLearnerStore.getState().saveCourseLearningPlan(courseId, goal, minutes, level, isCurrent);
+      if (isCurrent()) onComplete(courseId, level, action === 'diagnostic');
     } catch {
       if (isCurrent()) setError(t('courses.saveFailed'));
     } finally {
@@ -78,144 +74,77 @@ export function OnboardingView({ onComplete, onBack }: {
     }
   };
 
+  const previewStatus = !level ? 'chooseLevel' : plan.unavailable || (!path && roadmapError) ? 'unavailable'
+    : plan.loading || !path ? 'loading' : 'empty';
+
   return (
-    <div className="learning-page max-w-200 space-y-6">
-      <PageHeader
-        eyebrow={course?.title ?? t('courses.start')}
-        title={t('courses.plan')}
-        highlightWord={t('courses.planHighlight')}
-        description={t('courses.planDescription')}
-      />
-      {!course ? (
-        <Card className="space-y-4">
-          <SectionState title={t('courses.chooseFirst')} />
-          <Button onClick={onBack}>{t('courses.subjects')}</Button>
-        </Card>
-      ) : (
-        <Card className="fade-up stagger-1 space-y-6" padding="md">
-          <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); void submit('learn'); }}>
-            <fieldset disabled={pending !== null} className="space-y-3">
-              <legend className="heading mb-3 text-lg font-extrabold">{t('courses.startWhere')}</legend>
-              {levels.map((option, index) => {
-                const selected = level === option.value;
-                return (
-                  <label
-                    key={option.value}
-                    style={{ animationDelay: `${index * 70}ms` }}
-                    className={
-                      'fade-up flex min-h-16 cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition-all ' +
-                      (selected
-                        ? 'border-brand bg-sand/70 ring-2 ring-brand/20 shadow-xs'
-                        : 'border-hairline bg-paper hover:border-brand/50 hover:-translate-y-0.5')
-                    }
-                  >
-                    <input
-                      type="radio"
-                      name="learning-level"
-                      className="mt-1 size-4 shrink-0 accent-brand"
-                      value={option.value}
-                      checked={selected}
-                      onChange={() => setLevel(option.value)}
-                    />
+    <div className="learning-page max-w-296 space-y-5 sm:space-y-7">
+      <header className="space-y-2">
+        <Button variant="ghost" size="sm" className="-ml-3 text-slatefine" disabled={pending !== null} onClick={onBack} leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}>{t(editing ? 'courses.back' : 'courses.backSubjects')}</Button>
+        {course && <p className="pt-1 text-sm font-bold text-brand-dark">{course.title}</p>}
+        <h1 className="heading max-w-3xl text-[clamp(1.85rem,5vw,3.55rem)] font-extrabold leading-[1.05] tracking-[-0.055em]">{t('courses.plan')}</h1>
+        <p className="max-w-2xl text-sm leading-relaxed text-slatefine sm:text-base">{t('courses.planDescription')}</p>
+      </header>
+
+      {!course ? <SectionState title={t('courses.chooseFirst')} /> : (
+        <form className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.03fr)_minmax(0,.97fr)] lg:grid-rows-[auto_1fr] lg:gap-x-6" onSubmit={(event) => { event.preventDefault(); void submit('learn'); }}>
+          <div className="min-w-0 space-y-5 rounded-3xl border border-hairline bg-paper p-4 shadow-[var(--surface-shadow)] sm:p-6">
+            <fieldset disabled={pending !== null} className="min-w-0 space-y-2.5">
+              <legend className="mb-3 text-lg font-extrabold tracking-tight text-ink">{t('courses.startWhere')}</legend>
+              {levels.map(({ value, label, description, Icon }) => (
+                <label key={value} className="relative block cursor-pointer">
+                  <input type="radio" name="learning-level" className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0" value={value} checked={level === value} onChange={() => setLevel(value)} />
+                  <span className="flex min-h-16 items-center gap-3 rounded-2xl border border-hairline bg-paper p-3 text-ink motion-safe:transition-colors hover:bg-sand peer-checked:border-brand peer-checked:bg-brand/8 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-sand text-brand-dark"><Icon aria-hidden="true" className="size-4.5" /></span>
                     <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="heading text-sm font-extrabold">{option.label}</span>
-                        <span className="highlight !py-0.5 !px-2.5 !text-[10px]">{option.badge}</span>
-                      </span>
-                      <span className="mt-1 block break-words text-sm leading-relaxed text-slatefine">
-                        {option.description}
-                      </span>
+                      <span className="block text-sm font-extrabold">{t(label)}</span>
+                      <span className="mt-0.5 block text-xs leading-relaxed text-slatefine">{t(description)}</span>
                     </span>
-                  </label>
-                );
-              })}
+                    <span aria-hidden="true" className={`grid size-5 shrink-0 place-items-center rounded-full border ${level === value ? 'border-brand bg-brand text-paper' : 'border-faint/55'}`}>{level === value && <Check className="size-3" strokeWidth={3} />}</span>
+                  </span>
+                </label>
+              ))}
             </fieldset>
 
-            <details className="rounded-2xl border border-hairline bg-canvas/60 p-4">
-              <summary className="cursor-pointer text-sm font-bold text-brand">{t('courses.goalTime')}</summary>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="start-goal" className="mb-1.5 block text-sm font-bold">{t('courses.goal')}</label>
-                  <select
-                    id="start-goal"
-                    className="form-input px-3"
-                    value={goal}
-                    disabled={pending !== null}
-                    onChange={(event) => setGoal(event.target.value as OnboardingGoal)}
-                  >
-                    {goals.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="start-minutes" className="mb-1.5 block text-sm font-bold">{t('courses.dailyTime')}</label>
-                  <select
-                    id="start-minutes"
-                    className="form-input px-3"
-                    value={minutes}
-                    disabled={pending !== null}
-                    onChange={(event) => setMinutes(Number(event.target.value) as DailyTimeCommitment)}
-                  >
-                    {times.map((time) => (
-                      <option key={time} value={time}>
-                        {time}{' '}{t('courses.minutes')}</option>
-                    ))}
-                  </select>
-                </div>
+            <fieldset disabled={pending !== null} className="min-w-0 space-y-4 border-t border-hairline pt-4">
+              <div>
+                <label htmlFor="start-goal" className="mb-1.5 block text-sm font-extrabold text-ink">{t('courses.goal')}</label>
+                <select id="start-goal" className="form-input min-h-11 px-3 text-sm" value={goal} onChange={(event) => setGoal(event.target.value as OnboardingGoal)}>
+                  {goals.map((option) => <option key={option.value} value={option.value}>{t(option.label)}</option>)}
+                </select>
+                <p className="mt-1.5 text-xs leading-relaxed text-slatefine">{t(`studyPlan.${goal}`)}</p>
               </div>
-            </details>
+              <fieldset className="min-w-0">
+                <legend className="mb-1.5 text-sm font-extrabold text-ink">{t('courses.dailyTime')}</legend>
+                <div className="grid grid-cols-3 gap-1 rounded-2xl bg-sand p-1">
+                  {times.map((time) => (
+                    <label key={time} className="relative block min-w-0 cursor-pointer">
+                      <input type="radio" name="daily-minutes" className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0" value={time} checked={time === minutes} onChange={() => setMinutes(time)} />
+                      <span className="flex min-h-11 flex-wrap items-center justify-center gap-x-1 rounded-xl px-1 text-center text-sm font-bold text-slatefine peer-checked:bg-paper peer-checked:text-brand-dark peer-checked:shadow-xs peer-focus-visible:outline-2 peer-focus-visible:outline-brand"><span className="font-mono">{time}</span><span className="text-xs">{t('courses.minutes')}</span></span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <p className="text-xs text-slatefine">{t('studyPlan.sharedPreferences')}</p>
+            </fieldset>
+          </div>
 
-            {level === 'beginner' && (
-              <p className="flex items-center gap-2 rounded-2xl bg-sand p-3.5 text-sm font-medium text-brand-dark">
-                <Sparkles aria-hidden="true" className="size-4 shrink-0 text-brand" />
-                {nextFoundation
-                  ? `${foundation.length} ta boşlanğiç dars sizni asosiy mavzularga tayyorlaydi.`
-                  : t('courses.availableTopics')}
-              </p>
-            )}
-            {error && (
-              <p role="alert" className="rounded-2xl bg-rose-50 p-3.5 text-sm text-coral">
-                {error}
-              </p>
-            )}
+          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <StudyPlanPreview sessions={plan.sessions} minutes={minutes} status={previewStatus} />
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              <Button
-                type="submit"
-                disabled={level === null || pending === 'diagnostic'}
-                isLoading={pending === 'learn'}
-                leftIcon={<BookOpen aria-hidden="true" className="size-4" />}
-                rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
-              >
-                {level === 'beginner' && nextFoundation
-                  ? nextFoundation === foundation[0]
-                    ? t('courses.firstLesson')
-                    : t('courses.continueFoundation')
-                  : t('courses.openPath')}
+          <div className="min-w-0 space-y-3 lg:col-start-1 lg:row-start-2">
+            {error && <p role="alert" className="rounded-xl border border-coral/45 bg-coral/10 px-4 py-3 text-sm text-ink">{error}</p>}
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+              <Button type="submit" disabled={!level || pending === 'diagnostic'} isLoading={pending === 'learn'} leftIcon={<BookOpen aria-hidden="true" className="size-4" />} rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}>
+                {t(editing ? 'studyPlan.save' : nextFoundation
+                  ? nextFoundation === foundationLessons(course)[0] ? 'courses.firstLesson' : 'courses.continueFoundation'
+                  : 'courses.openPath')}
               </Button>
-              {level !== null && level !== 'beginner' && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  isLoading={pending === 'diagnostic'}
-                  disabled={pending === 'learn'}
-                  leftIcon={<ClipboardCheck aria-hidden="true" className="size-4" />}
-                  onClick={() => void submit('diagnostic')}
-                >{t('courses.optionalDiagnostic')}</Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pending !== null}
-                onClick={onBack}
-                leftIcon={<ArrowLeft aria-hidden="true" className="size-4" />}
-              >{t('courses.backSubjects')}</Button>
+              {level && level !== 'beginner' && <Button type="button" variant="outline" isLoading={pending === 'diagnostic'} disabled={pending === 'learn'} leftIcon={<ClipboardCheck aria-hidden="true" className="size-4" />} onClick={() => void submit('diagnostic')}>{t('courses.optionalDiagnostic')}</Button>}
             </div>
-          </form>
-        </Card>
+          </div>
+        </form>
       )}
     </div>
   );
