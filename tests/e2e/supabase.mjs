@@ -107,7 +107,7 @@ try {
   console.log('PASS configured signup and authoritative profile');
 
   await switchSubject(/Ingliz tili fanini tanlaş/);
-  await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+  await main.getByRole('radio', { name: /Dars bilan boşlaş/ }).check();
   await click('Birinçi darsni boşlaş', main);
   await waitFor(heading('Birinçi inglizça sözlar'));
   await waitFor(heading('Asosiy tuşunça'));
@@ -128,7 +128,7 @@ try {
 
   await click('Yöl xaritasiga qaytiş', main);
   await switchSubject(/Matematika fanini tanlaş/);
-  await main.getByRole('radio', { name: /Asoslarini bilaman/ }).check();
+  await main.getByRole('radio', { name: /Mavzuni özim tanlayman/ }).check();
   await click('Ta’lim yölini oçiş', main);
   await waitFor(heading('Mening ta’lim yölim'));
   await click('Boş sahifa', nav);

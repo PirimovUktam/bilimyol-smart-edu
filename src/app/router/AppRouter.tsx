@@ -14,7 +14,7 @@ import { useLessonStore } from '@/app/store/useLessonStore';
 import { resolveNextLearningLesson } from '@/app/router/lessonResolution';
 import { useAuth } from '@/core/context/AuthContext';
 import { isProtectedAuthReady } from '@/core/utils/authGuards';
-import { hasStartedCourse, pendingFoundationLesson } from '@/domain/personalization/learningStart';
+import { hasStartedCourse } from '@/domain/personalization/learningStart';
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { Button } from '@/presentation/components/Button';
 import { withMotionPreferences } from '@/presentation/components/withMotionPreferences';
@@ -312,9 +312,10 @@ export function AppRouter() {
         return <LazyOnboardingView key={courseId} editing={Boolean(planOrigin)} onComplete={(id, level, diagnostic) => {
           const chosen = useCourseStore.getState().activeCourse;
           if (chosen?.id !== id) return;
-          const foundation = pendingFoundationLesson(chosen, useLearnerStore.getState().profile);
-          if (diagnostic && level !== 'beginner') navigate('placement');
-          else if (foundation && !planOrigin) startLesson(foundation);
+          const first = level === 'beginner' && !planOrigin
+            ? resolveNextLearningLesson(chosen, useLearnerStore.getState().profile, useRoadmapStore.getState().roadmap) : null;
+          if (diagnostic) navigate('placement');
+          else if (first) startLesson(first);
           else openRoadmap();
         }} onBack={() => navigate(planOrigin ?? 'course-selection')} />;
       case 'placement':

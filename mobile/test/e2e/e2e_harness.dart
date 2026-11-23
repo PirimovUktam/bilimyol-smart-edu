@@ -879,25 +879,9 @@ Future<void> selectCourse(WidgetTester tester, String courseTitle) async {
   await scrollAndTap(tester, courseFinder);
 }
 
-/// On /onboarding, selects a non-beginner level ('Asoslarini bilaman' or
-/// 'Çuqurroq maşq qilmoqçiman') and settles before tapping 'Ixtiyoriy diagnostika'.
 Future<void> openOptionalDiagnostic(WidgetTester tester) async {
-  final intermediate = find.textContaining(
-    'Asoslarini bilaman',
-    findRichText: true,
-  );
-  final advanced = find.textContaining(
-    'Çuqurroq maşq qilmoqçiman',
-    findRichText: true,
-  );
-  final levelFinder = intermediate.evaluate().isNotEmpty
-      ? intermediate
-      : advanced;
-  await scrollAndTap(tester, levelFinder);
-  await scrollAndTap(
-    tester,
-    find.textContaining('Ixtiyoriy diagnostika', findRichText: true),
-  );
+  await scrollAndTap(tester, find.text('Bilimimni tekşiraman'));
+  await scrollAndTap(tester, find.text('Tekşiruvni boşlaş'));
 }
 
 /// Verifies both ThemeData brightness AND the actual rendered Scaffold background

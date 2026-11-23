@@ -27,7 +27,7 @@ export async function openStarterLesson(page, baseUrl, helpers) {
   await openEnglishOnboarding(page, baseUrl, helpers);
   const main = page.getByRole('main');
   const beginnerRadio = main.getByRole('radio', {
-    name: /Noldan boşlayman|Начинаю с нуля/i,
+    name: /Dars bilan boşlaş|Начать с урока/i,
   });
   await beginnerRadio.check();
   await main
@@ -47,7 +47,7 @@ export async function openEnglishRoadmap(page, baseUrl, helpers) {
   await openEnglishOnboarding(page, baseUrl, helpers);
   const main = page.getByRole('main');
   await main
-    .getByRole('radio', { name: /Asoslarini bilaman|Знаю основы/i })
+    .getByRole('radio', { name: /Mavzuni özim tanlayman|Выбрать тему/i })
     .check();
   await main
     .getByRole('button', {
@@ -64,11 +64,11 @@ export async function startEnglishPlacement(page, baseUrl, helpers) {
   await openEnglishOnboarding(page, baseUrl, helpers);
   const main = page.getByRole('main');
   await main
-    .getByRole('radio', { name: /Asoslarini bilaman|Знаю основы/i })
+    .getByRole('radio', { name: /Bilimimni tekşiraman|Проверить знания/i })
     .check();
   await main
     .getByRole('button', {
-      name: /Ixtiyoriy diagnostika|Необязательная диагностика/i,
+      name: /Tekşiruvni boşlaş|Начать проверку/i,
     })
     .click();
   await main

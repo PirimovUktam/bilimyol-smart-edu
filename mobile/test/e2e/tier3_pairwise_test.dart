@@ -48,7 +48,7 @@ void main() {
         await selectCourse(tester, 'Ingliz tili');
         await scrollAndTap(
           tester,
-          find.textContaining('Noldan boşlayman', findRichText: true),
+          find.textContaining('Dars bilan boşlaş', findRichText: true),
         );
         await scrollAndTap(
           tester,
@@ -74,7 +74,7 @@ void main() {
         await selectCourse(tester, 'IT & Kodlaş');
         await scrollAndTap(
           tester,
-          find.textContaining('Noldan boşlayman', findRichText: true),
+          find.textContaining('Dars bilan boşlaş', findRichText: true),
         );
         await scrollAndTap(
           tester,
@@ -204,7 +204,7 @@ void main() {
 
         // Onboarding must NOT have been skipped when tour completed.
         expect(
-          find.textContaining('Qayerdan boşlamoqçisiz', findRichText: true),
+          find.textContaining('Birinçi qadamingizni tanlang', findRichText: true),
           findsOneWidget,
         );
         recorder.expectClean();
@@ -287,7 +287,7 @@ void main() {
         await selectCourse(tester, 'Matematika');
         await scrollAndTap(
           tester,
-          find.textContaining('Asoslarini bilaman', findRichText: true),
+          find.textContaining('Mavzuni özim tanlayman', findRichText: true),
         );
         await scrollAndTap(
           tester,
@@ -299,7 +299,7 @@ void main() {
         await selectCourse(tester, 'IT & Kodlaş');
         await scrollAndTap(
           tester,
-          find.textContaining('Asoslarini bilaman', findRichText: true),
+          find.textContaining('Mavzuni özim tanlayman', findRichText: true),
         );
         await scrollAndTap(
           tester,
@@ -360,7 +360,7 @@ void main() {
         await selectCourse(tester, 'Ingliz tili');
         // Switching to unstarted English must still ask onboarding, not inherit Logic placement!
         expect(
-          find.textContaining('Qayerdan boşlamoqçisiz', findRichText: true),
+          find.textContaining('Birinçi qadamingizni tanlang', findRichText: true),
           findsOneWidget,
         );
         recorder.expectClean();
@@ -496,7 +496,7 @@ void main() {
         await selectCourse(tester, 'Mantiq');
         await scrollAndTap(
           tester,
-          find.textContaining('Noldan boşlayman', findRichText: true),
+          find.textContaining('Dars bilan boşlaş', findRichText: true),
         );
         await scrollAndTap(
           tester,
@@ -555,7 +555,7 @@ void main() {
         await selectCourse(tester, 'Ingliz tili');
         await scrollAndTap(
           tester,
-          find.textContaining('Noldan boşlayman', findRichText: true),
+          find.textContaining('Dars bilan boşlaş', findRichText: true),
         );
         await scrollAndTap(
           tester,

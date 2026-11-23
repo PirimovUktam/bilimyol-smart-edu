@@ -1714,12 +1714,12 @@ void main() {
               .read(courseStateNotifierProvider.notifier)
               .selectCourse('course_eng_01');
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Noldan boşlayman'));
+          await tester.tap(find.text('Dars bilan boşlaş'));
           await tester.pumpAndSettle();
           final obCard = tester.widget<AppCard>(
             find
                 .ancestor(
-                  of: find.text('Noldan boşlayman'),
+                  of: find.text('Dars bilan boşlaş'),
                   matching: find.byType(AppCard),
                 )
                 .first,
@@ -3731,8 +3731,8 @@ void main() {
             await tester.tap(find.text('Ingliz tili').first);
             await tester.pumpAndSettle();
 
-            expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
-            await tester.tap(find.text('Noldan boşlayman'));
+            expect(find.text('Birinçi qadamingizni tanlang'), findsOneWidget);
+            await tester.tap(find.text('Dars bilan boşlaş'));
             await tester.pumpAndSettle();
 
             final startLesson = find.text('Birinçi darsni boşlaş');
@@ -3786,8 +3786,8 @@ void main() {
           await tester.tap(find.text('Matematika').first);
           await tester.pumpAndSettle();
 
-          expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
-          await tester.tap(find.text('Noldan boşlayman'));
+          expect(find.text('Birinçi qadamingizni tanlang'), findsOneWidget);
+          await tester.tap(find.text('Dars bilan boşlaş'));
           await tester.pumpAndSettle();
 
           final startLesson = find.text('Birinçi darsni boşlaş');

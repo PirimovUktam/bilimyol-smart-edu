@@ -58,10 +58,10 @@ void main() {
       expect(find.text('Matematika'), findsWidgets);
       await tester.tap(find.text('Ingliz tili').first);
       await tester.pumpAndSettle();
-      expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
-      await tester.tap(find.text('Noldan boşlayman'));
+      expect(find.text('Birinçi qadamingizni tanlang'), findsOneWidget);
+      await tester.tap(find.text('Dars bilan boşlaş'));
       await tester.pumpAndSettle();
-      expect(find.text('Ixtiyoriy diagnostika'), findsNothing);
+      expect(find.text('Tekşiruvni boşlaş'), findsNothing);
       final start = find.text('Birinçi darsni boşlaş');
       await tester.scrollUntilVisible(start, 180);
       await tester.tap(start);

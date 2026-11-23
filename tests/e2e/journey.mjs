@@ -96,8 +96,11 @@ try {
 
   await click(/Mantiq fanini tanlaş/);
   await main.getByRole('region', { name: 'Boşlanğiç reja namunasi' }).getByText('Rost va yolğon gaplar', { exact: false }).waitFor();
-  assert.equal(await main.locator('input[name="learning-level"]:checked').count(), 0);
-  await chooseLearningPlan('Noldan boşlayman');
+  assert.equal(await main.locator('input[name="entry-route"]:checked').count(), 0);
+  await chooseLearningPlan('Bilimimni tekşiraman');
+  await heading('Avval bilimni tekşiramiz');
+  await main.getByRole('button', { name: 'Tekşiruvni boşlaş' }).waitFor();
+  await chooseLearningPlan('Dars bilan boşlaş');
   const livePlan = main.getByRole('region', { name: 'Örganiş rejangiz' });
   await livePlan.getByText('Rost va yolğon gaplar', { exact: false }).waitFor();
   await livePlan.getByText('14 daqiqa', { exact: true }).first().waitFor();
@@ -109,21 +112,21 @@ try {
   await livePlan.scrollIntoViewIfNeeded();
   await screenshot('reja-390.png');
   await page.setViewportSize({ width: 1440, height: 960 });
-  await main.getByRole('radio', { name: /Asoslarini bilaman/ }).check();
-  await main.getByLabel('Maqsad', { exact: true }).selectOption('skills_boost');
+  await main.getByRole('radio', { name: /Mavzuni özim tanlayman/ }).check();
+  await main.getByRole('radio', { name: 'Qiyin joylarni maşq qiliş' }).check();
   await click('Ta’lim yölini oçiş');
   await heading('Mening ta’lim yölim');
   await livePlan.getByText('Kuniga 30 daqiqa', { exact: true }).waitFor();
   await livePlan.getByRole('button', { name: 'Davom etiş' }).waitFor();
   await click('Rejani sozlaş');
   assert.equal(await main.getByRole('radio', { name: '30 daqiqa' }).isChecked(), true);
-  assert.equal(await main.getByLabel('Maqsad', { exact: true }).inputValue(), 'skills_boost');
+  assert.equal(await main.getByRole('radio', { name: 'Qiyin joylarni maşq qiliş' }).isChecked(), true);
   await main.getByRole('radio', { name: '15 daqiqa' }).check();
   await click('Rejani saqlaş');
   await livePlan.getByText('Kuniga 15 daqiqa', { exact: true }).waitFor();
   await switchSubject(/Ingliz tili fanini tanlaş/);
-  await chooseLearningPlan('Noldan boşlayman');
-  assert.equal(await main.getByRole('button', { name: 'Ixtiyoriy diagnostika' }).count(), 0);
+  await chooseLearningPlan('Dars bilan boşlaş');
+  assert.equal(await main.getByRole('button', { name: 'Tekşiruvni boşlaş' }).count(), 0);
   await click('Birinçi darsni boşlaş');
   await heading('Birinçi inglizça sözlar');
   await heading('Asosiy tuşunça');
@@ -152,7 +155,7 @@ try {
   console.log('PASS welcome, one-tap subject choice, beginner instruction, contextual help and reading checkpoint');
 
   await switchSubject(/IT & Kodlaş fanini tanlaş/);
-  await chooseLearningPlan('Asoslarini bilaman');
+  await chooseLearningPlan('Mavzuni özim tanlayman');
   await click('Ta’lim yölini oçiş');
   await heading('Mening ta’lim yölim');
   await click('Boş sahifa', nav);
@@ -161,7 +164,7 @@ try {
   assert.equal(await main.getByRole('heading', { name: 'Kvadratni oçiş' }).count(), 0);
   await click('Ta’lim yöliga qaytiş');
   await switchSubject(/Matematika fanini tanlaş/);
-  await chooseLearningPlan('Asoslarini bilaman');
+  await chooseLearningPlan('Mavzuni özim tanlayman');
   await click('Ta’lim yölini oçiş');
   await heading('Mening ta’lim yölim');
   await click('Boş sahifa', nav);

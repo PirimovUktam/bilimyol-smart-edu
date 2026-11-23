@@ -47,7 +47,7 @@ export function registerTests() {
           `T1-F1-01: non-English course labels leaked into English onboarding: ${onboardingText}`,
         );
 
-        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('radio', { name: /Dars bilan boşlaş/i }).check();
         await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
         await main
           .getByRole('heading', { name: 'Birinçi inglizça sözlar' })
@@ -124,7 +124,7 @@ export function registerTests() {
         await completeStarterLesson(page, baseUrl, helpers, "I'm Sam");
         await helpers.selectCourse(page, 'course_math_01');
         const main = page.getByRole('main');
-        await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
+        await main.getByRole('radio', { name: /Mavzuni özim tanlayman/i }).check();
         await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
         await main
           .getByRole('heading', { name: /Mening ta’lim yölim/i })

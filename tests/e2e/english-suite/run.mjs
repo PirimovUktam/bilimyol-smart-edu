@@ -189,7 +189,7 @@ function buildSmokeTests() {
         await helpers.selectCourse(page, 'course_eng_01');
 
         const main = page.getByRole('main');
-        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('radio', { name: /Dars bilan boşlaş/i }).check();
         await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
 
         await main
