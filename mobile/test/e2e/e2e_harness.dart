@@ -593,11 +593,12 @@ const Map<String, QuestionAnswerPair> lessonAnswerOracle = {
   '2 savatda jami neçta olma': QuestionAnswerPair(correct: '6', wrong: '5'),
   'I ___ a student': QuestionAnswerPair(correct: 'am', wrong: 'is'),
   'print(3 + 4)': QuestionAnswerPair(correct: '7', wrong: '34'),
-  'Qaysi gap rost mulohaza': QuestionAnswerPair(
-    correct: '4 + 1 = 5',
-    wrong: '4 + 1 = 7',
-  ),
-  '«2 + 2 = 4» rost': QuestionAnswerPair(correct: 'Yolğon', wrong: 'Rost'),
+  'Qaysi gapni rost yoki yolğon deyiş mumkin?':
+      QuestionAnswerPair(correct: 'B', wrong: 'A'),
+  'Soat 9 da belgilangan avtobus 9:15 da ketdi':
+      QuestionAnswerPair(correct: 'C', wrong: 'A'),
+  '«Derazani oçing» qaysi turga kiradi?':
+      QuestionAnswerPair(correct: 'A', wrong: 'B'),
 
   // Curated roadmap lessons & reinforcements
   '(x + 2)² yoyilmasida': QuestionAnswerPair(correct: '4', wrong: '2'),

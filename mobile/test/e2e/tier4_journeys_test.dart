@@ -517,6 +517,7 @@ void main() {
           find.textContaining('Birinçi darsni boşlaş', findRichText: true),
         );
         await submitLessonQuiz(tester, correct: true);
+        await submitLessonQuiz(tester, correct: true);
 
         // Edit profile name
         await tapBottomNav(tester, L10nExpect.navProfile);
@@ -548,7 +549,7 @@ void main() {
         if (find.textContaining('Profilim', findRichText: true).evaluate().isEmpty) {
           await tapBottomNav(tester, L10nExpect.navProfile);
         }
-        expect(find.textContaining('22 XP', findRichText: true), findsWidgets);
+        expect(find.textContaining('24 XP', findRichText: true), findsWidgets);
 
         // Reset demo -> XP goes back to 0 -> return to Profile via UI -> Logout
         await scrollAndTap(

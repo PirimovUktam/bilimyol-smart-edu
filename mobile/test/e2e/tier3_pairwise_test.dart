@@ -503,6 +503,7 @@ void main() {
           find.textContaining('Birinçi darsni boşlaş', findRichText: true),
         );
         await submitLessonQuiz(tester, correct: true);
+        await submitLessonQuiz(tester, correct: true);
 
         await tapBottomNav(tester, L10nExpect.navProfile);
         await scrollAndTap(
@@ -513,7 +514,7 @@ void main() {
 
         appRouter.go('/progress');
         await tester.pumpAndSettle();
-        expect(find.textContaining('22 XP', findRichText: true), findsWidgets);
+        expect(find.textContaining('24 XP', findRichText: true), findsWidgets);
         recorder.expectClean();
       },
     );
