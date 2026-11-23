@@ -164,7 +164,7 @@ try {
   };
   await answer('7');
   await answer('5');
-  await answer('6 toshga 2 tosh qöşildi');
+  await answer('6 toşga 2 toş qöşildi');
   await waitFor(heading('Qoidani eslang'));
   await click('Keyingi qadam', main);
   await answer('11 − 3');
