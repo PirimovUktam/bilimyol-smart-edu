@@ -75,6 +75,7 @@ flutter:
     - assets/lesson_media/english/a2/
     - assets/lesson_media/english/b1/
     - assets/lesson_media/english/placement/
+    - assets/lesson_media/logic/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

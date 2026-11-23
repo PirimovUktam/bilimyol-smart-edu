@@ -1,3 +1,4 @@
+import 'logic_curriculum.dart';
 import 'english/a1_roadmap_data.dart';
 import 'english/a2_roadmap_data.dart';
 import 'english/b1_roadmap_data.dart';
@@ -104,34 +105,5 @@ const Map<String, List<LearningPathNode>> seedRoadmapNodes = {
     ),
   ],
 
-  'course_logic': [
-    LearningPathNode(
-      id: 'node_logic_puzzles',
-      courseId: 'course_logic',
-      skillId: 'skill_logic_puzzles',
-      title: 'Mantiqiy boşqotirmalar',
-      description: 'Deduktiv xulosalar va şartli mulohazalarni yeçiş.',
-      prerequisites: [],
-      requiredScore: 50,
-      status: NodeStatus.available,
-      isReinforcement: false,
-      targetLessonId: 'lesson_logic_puzzles_01',
-      estimatedMinutes: 15,
-      order: 1.0,
-    ),
-    LearningPathNode(
-      id: 'node_logic_patterns',
-      courseId: 'course_logic',
-      skillId: 'skill_logic_patterns',
-      title: 'Qonuniyatlar',
-      description: 'Sonli va şakl qonuniyatlarini topiş va davom ettiriş.',
-      prerequisites: ['node_logic_puzzles'],
-      requiredScore: 50,
-      status: NodeStatus.locked,
-      isReinforcement: false,
-      targetLessonId: 'lesson_logic_patterns_01',
-      estimatedMinutes: 18,
-      order: 2.0,
-    ),
-  ],
+  'course_logic': logicRoadmap,
 };

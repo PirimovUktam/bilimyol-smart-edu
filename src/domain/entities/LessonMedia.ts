@@ -22,7 +22,7 @@ interface TimedMediaDetails extends MediaBase {
 export type LessonMedia =
   | (TimedMediaDetails & { kind: 'audio'; captions?: string })
   | (TimedMediaDetails & { kind: 'video'; captions: string })
-  | (MediaBase & { kind: 'image'; alt: string; transcript?: string; durationSeconds?: number });
+  | (MediaBase & { kind: 'image'; alt: string; altRu?: string; transcript?: string; durationSeconds?: number });
 
 const lessonAsset = /^\/lesson-media\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.[a-z0-9]+$/;
 const audioExt = /\.(mp3|m4a|ogg|wav)$/;
@@ -92,6 +92,7 @@ export function readApprovedLessonMedia(raw: unknown): LessonMedia | undefined {
       ...base,
       kind: 'image',
       alt: media.alt.trim(),
+      ...(typeof media.altRu === 'string' && media.altRu.trim() ? { altRu: media.altRu.trim() } : {}),
       ...(transcript ? { transcript } : {}),
       ...(durationSeconds !== undefined ? { durationSeconds } : {}),
     };

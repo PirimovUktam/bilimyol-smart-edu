@@ -44,7 +44,7 @@ export function replayMediaElement(element: HTMLMediaElement | null): void {
 export function LessonMediaPlayer({ media, accountId, lessonId }: {
   media: LessonMedia; accountId?: string; lessonId: string;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const speedId = useId();
   const player = useRef<HTMLMediaElement | null>(null);
   const lastSavedBucket = useRef(-1);
@@ -53,7 +53,9 @@ export function LessonMediaPlayer({ media, accountId, lessonId }: {
 
   const posterSrc = media.kind === 'image' ? media.source : media.posterImage;
   const illustrationSrc = media.kind === 'image' ? media.source : media.posterImage;
-  const illustrationAlt = media.kind === 'image' ? media.alt : (media.posterAlt || media.title);
+  const illustrationAlt = media.kind === 'image'
+    ? (language === 'ru' ? media.altRu || media.alt : media.alt)
+    : (media.posterAlt || media.title);
 
   useEffect(() => {
     setFailed(false);
