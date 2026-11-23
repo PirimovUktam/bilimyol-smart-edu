@@ -439,7 +439,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                           }`}>
                             {letter}
                           </span>
-                          <span>{opt}</span>
+                          {opt !== letter && <span>{opt}</span>}
                         </div>
                         {isCorrectOption ? (
                           <CheckCircle2 className="w-4 h-4 text-mint" />

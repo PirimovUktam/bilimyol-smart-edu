@@ -928,7 +928,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                               >
                                 {letter}
                               </span>
-                              <span className="font-mono font-bold text-ink text-sm">{opt}</span>
+                              {opt !== letter && <span className="font-mono font-bold text-ink text-sm">{opt}</span>}
                             </div>
                             {isCorrectOption ? (
                               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-mint/15 text-[#6EE7B7] border border-mint/30 shrink-0 uppercase tracking-wider flex items-center gap-1">

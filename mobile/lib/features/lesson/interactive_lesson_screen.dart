@@ -1249,8 +1249,8 @@ class _InteractiveLessonScreenState
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
+                                  if (opt != _optionLabel(idx)) const SizedBox(width: 12),
+                                  if (opt != _optionLabel(idx)) Expanded(
                                     child: Text(
                                       opt,
                                       style: AppTypography.ui(

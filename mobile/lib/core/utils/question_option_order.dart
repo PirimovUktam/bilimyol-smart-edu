@@ -21,6 +21,11 @@ Question permuteQuestionOptions(Question question) {
   if (!question.usesOptionSelection) return question;
   final options = question.options;
   if (options.length < 2) return question;
+  if (options.asMap().entries.every(
+    (entry) => entry.value == String.fromCharCode(65 + entry.key),
+  )) {
+    return question;
+  }
 
   final current = question.correctIndex;
   if (current < 0 || current >= options.length) return question;

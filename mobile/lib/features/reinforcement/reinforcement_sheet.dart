@@ -659,8 +659,8 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
+                                    if (opt != _optionLabel(idx)) const SizedBox(width: 10),
+                                    if (opt != _optionLabel(idx)) Expanded(
                                       child: Text(
                                         opt,
                                         style: AppTypography.ui(

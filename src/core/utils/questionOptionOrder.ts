@@ -24,6 +24,7 @@ const stableHash = (value: string): number => {
 
 export function permuteQuestionOptions<T extends Question>(question: T): T {
   if (!question || !Array.isArray(question.options) || question.options.length < 2) return question;
+  if (question.options.every((option, index) => option === String.fromCharCode(65 + index))) return question;
 
   const total = question.options.length;
   const current = question.correctIndex;
