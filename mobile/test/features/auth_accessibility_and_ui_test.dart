@@ -102,7 +102,7 @@ class _FakeOnlineAITutorService implements IAITutorService {
       throw Exception('network timeout');
     }
     return const AskTutorResponse(
-      tutorName: 'Yo‘lchi AI',
+      tutorName: 'Yölçi AI',
       answer: 'Test AI javob matni.',
       isAiGenerated: true,
     );
@@ -329,7 +329,18 @@ void _assertNoButtonOverlaps(
           box.hasSize &&
           box.size.width > 0 &&
           box.size.height > 0) {
-        rects.add(box.localToGlobal(Offset.zero) & box.size);
+        var visible = box.localToGlobal(Offset.zero) & box.size;
+        RenderObject child = box;
+        for (var parent = child.parent; parent != null; parent = child.parent) {
+          final clip = parent.describeApproximatePaintClip(child);
+          if (clip != null) {
+            visible = visible.intersect(
+              MatrixUtils.transformRect(parent.getTransformTo(null), clip),
+            );
+          }
+          child = parent;
+        }
+        if (!visible.isEmpty) rects.add(visible);
       }
     }
   }
@@ -385,14 +396,14 @@ void main() {
               (w) =>
                   w is Text &&
                   w.textSpan != null &&
-                  w.textSpan!.toPlainText() == 'BilimYo‘l',
+                  w.textSpan!.toPlainText() == 'BilimYöl',
             ),
           );
           final rootSpan = logoText.textSpan! as TextSpan;
           final bilimColor = rootSpan.style!.color!;
           final yolColor = (rootSpan.children![1] as TextSpan).style!.color!;
           final subtitle = tester.widget<Text>(
-            find.text('Moslashuvchan ta’lim platformasi'),
+            find.text('Moslaşuvçan ta’lim platformasi'),
           );
           final subtitleColor = subtitle.style!.color!;
 
@@ -410,14 +421,14 @@ void main() {
           );
           await tester.pumpAndSettle();
 
-          final skipText = tester.widget<Text>(find.text('O‘tkazib yuborish'));
+          final skipText = tester.widget<Text>(find.text('Ötkazib yuboriş'));
           expect(
             _contrastRatio(skipText.style!.color!, bg),
             greaterThanOrEqualTo(4.5),
           );
 
           final slideTitle = tester.widget<Text>(
-            find.text('Nimadan boshlashni biling.'),
+            find.text('Nimadan boşlaşni biling.'),
           );
           expect(
             _contrastRatio(slideTitle.style!.color!, bg),
@@ -673,7 +684,7 @@ void main() {
             find
                 .descendant(
                   of: selectedCard,
-                  matching: find.textContaining('Lug‘at, grammatika'),
+                  matching: find.textContaining('Luğat, grammatika'),
                 )
                 .first,
           );
@@ -728,11 +739,11 @@ void main() {
           expect(find.byType(EdTechSectionHeader), findsOneWidget);
 
           final kmHeaderLabel = tester.widget<Text>(
-            find.text('Umumiy O‘zlashtirish'),
+            find.text('Umumiy Özlaştiriş'),
           );
           final kmHeaderSub = tester.widget<Text>(
             find.text(
-              'Haqiqiy javoblaringiz tahlili asosida bilim xaritangiz shakllantirildi.',
+              'Haqiqiy javoblaringiz tahlili asosida bilim xaritangiz şakllantirildi.',
             ),
           );
           expect(
@@ -751,7 +762,7 @@ void main() {
           );
 
           final weakAlertFinder = find.text(
-            'Yo‘l xaritasida ushbu mavzuga maxsus mustahkamlash qadami qo‘shildi.',
+            'Yöl xaritasida uşbu mavzuga maxsus mustahkamlaş qadami qöşildi.',
           );
           expect(weakAlertFinder, findsOneWidget);
           final weakAlertSub = tester.widget<Text>(weakAlertFinder);
@@ -764,7 +775,7 @@ void main() {
             reason: 'KnowledgeMap errorTint explanation contrast in $modeLabel',
           );
 
-          final skillDescFinder = find.textContaining('so‘z boyligi').first;
+          final skillDescFinder = find.textContaining('söz boyligi').first;
           final skillDesc = tester.widget<Text>(skillDescFinder);
           expect(
             _contrastRatio(skillDesc.style!.color!, surface),
@@ -785,8 +796,8 @@ void main() {
           );
           for (final label in [
             'Bajarilgan dars',
-            'O‘zlashtirish',
-            'O‘qish vaqti',
+            'Özlaştiriş',
+            'Öqiş vaqti',
           ]) {
             final t = tester.widget<Text>(find.text(label));
             expect(
@@ -795,9 +806,9 @@ void main() {
               reason: 'ProgressScreen "$label" contrast in $modeLabel',
             );
           }
-          final badgeTitle = tester.widget<Text>(find.text('Birinchi qadam'));
+          final badgeTitle = tester.widget<Text>(find.text('Birinçi qadam'));
           final badgeDesc = tester.widget<Text>(
-            find.text('Ilk darsni yakunlash'),
+            find.text('Ilk darsni yakunlaş'),
           );
           expect(
             _contrastRatio(badgeTitle.style!.color!, subtle),
@@ -1013,7 +1024,7 @@ void main() {
             reason: 'Matched wordMatch border vs successTint in $modeLabel',
           );
 
-          // 3. Multiple-choice inline 'to‘g‘ri javob' pill + isWrongPick border/icon + errorTint explanation
+          // 3. Multiple-choice inline 'töğri javob' pill + isWrongPick border/icon + errorTint explanation
           await lessonContainer
               .read(courseStateNotifierProvider.notifier)
               .selectCourse('course_math_01');
@@ -1029,7 +1040,7 @@ void main() {
           await tester.pumpAndSettle();
           await tester.tap(find.text('2').first);
           await tester.pumpAndSettle();
-          await tester.tap(find.text('TEKSHIRISH'));
+          await tester.tap(find.text('TEKŞIRIŞ'));
           await tester.pumpAndSettle();
 
           final cancelIconFinder = find.byIcon(Icons.cancel_rounded);
@@ -1059,7 +1070,7 @@ void main() {
             reason: 'isWrongPick border vs errorTint in $modeLabel',
           );
 
-          final pillFinder = find.text('to‘g‘ri javob');
+          final pillFinder = find.text('töğri javob');
           expect(pillFinder, findsOneWidget);
           final pillText = tester.widget<Text>(pillFinder);
           final pillContainer = tester.widget<Container>(
@@ -1074,11 +1085,11 @@ void main() {
           expect(
             _contrastRatio(pillText.style!.color!, pillBg),
             greaterThanOrEqualTo(4.5),
-            reason: 'Inline "to‘g‘ri javob" pill contrast in $modeLabel',
+            reason: 'Inline "töğri javob" pill contrast in $modeLabel',
           );
 
           final lessonErrFinder = find.text(
-            '4 ta va 2 ta qalamni birlashtiramiz. 4 + 2 = 6.',
+            '4 ta va 2 ta qalamni birlaştiramiz. 4 + 2 = 6.',
           );
           expect(lessonErrFinder, findsOneWidget);
           final lessonErrText = tester.widget<Text>(lessonErrFinder);
@@ -1110,7 +1121,7 @@ void main() {
             'Hello! My name is Dilnoza. I am from Tashkent. Nice to meet you.',
           );
           await tester.pumpAndSettle();
-          await tester.tap(find.text('TEKSHIRISH'));
+          await tester.tap(find.text('TEKŞIRIŞ'));
           await tester.pumpAndSettle();
           final bannerCheckFinder = find.byIcon(Icons.check_circle_rounded);
           expect(bannerCheckFinder, findsOneWidget);
@@ -1196,7 +1207,7 @@ void main() {
 
           await tester.tap(find.text('Goodbye.'));
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Javobni Tekshirish'));
+          await tester.tap(find.text('Javobni Tekşiriş'));
           await tester.pumpAndSettle();
 
           final reinfExpFinder = find.text(
@@ -1292,11 +1303,11 @@ void main() {
           await tester.ensureVisible(freeInput);
           await tester.enterText(freeInput, 'My name is Sam');
           await tester.pumpAndSettle();
-          await tester.tap(find.text('TEKSHIRISH'));
+          await tester.tap(find.text('TEKŞIRIŞ'));
           await tester.pumpAndSettle();
           final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
           final snackText = tester.widget<Text>(
-            find.text('To‘g‘ri javob! Dars muvaffaqiyatli yakunlandi.'),
+            find.text('Töğri javob! Dars muvaffaqiyatli yakunlandi.'),
           );
           final snackCtx = tester.element(find.byType(SnackBar));
           final snackBg =
@@ -1454,7 +1465,7 @@ void main() {
           await tester.pumpAndSettle();
           await tester.tap(find.byIcon(Icons.volume_up_rounded));
           await tester.pumpAndSettle();
-          final fcErrFinder = find.text('Audio faylni yuklab bo‘lmadi.');
+          final fcErrFinder = find.text('Audio faylni yuklab bölmadi.');
           expect(fcErrFinder, findsOneWidget);
           final fcErrText = tester.widget<Text>(fcErrFinder);
           expect(
@@ -1478,7 +1489,7 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Javobni ko‘rish'));
+          await tester.tap(find.text('Javobni köriş'));
           await tester.pumpAndSettle();
           await tester.tap(find.text('Eslab qoldim'));
           await tester.pumpAndSettle();
@@ -1558,7 +1569,7 @@ void main() {
             find.byIcon(Icons.volume_off_rounded),
           );
           final mediaErrText = tester.widget<Text>(
-            find.text('Audio faylni yuklab bo‘lmadi.'),
+            find.text('Audio faylni yuklab bölmadi.'),
           );
           expect(
             _contrastRatio(errVolIcon.color!, errTintBg),
@@ -1627,7 +1638,7 @@ void main() {
                 const LearningPath(
                   id: 'lp_math_contrast',
                   courseId: 'course_math_01',
-                  title: 'Matematika yo‘li',
+                  title: 'Matematika yöli',
                   activeNodeId: 'node_reinf',
                   updatedAt: 0,
                   nodes: [
@@ -1635,7 +1646,7 @@ void main() {
                       id: 'node_done',
                       courseId: 'course_math_01',
                       skillId: 'skill_math_algebra',
-                      title: 'Algebraga kirish',
+                      title: 'Algebraga kiriş',
                       description: 'Tugallangan mavzu',
                       prerequisites: [],
                       requiredScore: 60,
@@ -1649,7 +1660,7 @@ void main() {
                       courseId: 'course_math_01',
                       skillId: 'skill_math_functions',
                       title: 'Funksiyalar',
-                      description: 'Mustahkamlash mavzusi',
+                      description: 'Mustahkamlaş mavzusi',
                       prerequisites: [],
                       requiredScore: 60,
                       estimatedMinutes: 5,
@@ -1703,12 +1714,12 @@ void main() {
               .read(courseStateNotifierProvider.notifier)
               .selectCourse('course_eng_01');
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Noldan boshlayman'));
+          await tester.tap(find.text('Noldan boşlayman'));
           await tester.pumpAndSettle();
           final obCard = tester.widget<AppCard>(
             find
                 .ancestor(
-                  of: find.text('Noldan boshlayman'),
+                  of: find.text('Noldan boşlayman'),
                   matching: find.byType(AppCard),
                 )
                 .first,
@@ -1894,9 +1905,9 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Qoidani sodda tushuntir'));
+          await tester.tap(find.text('Qoidani sodda tuşuntir'));
           await tester.pumpAndSettle();
-          final onlineTextFinder = find.text('Pedagogik yordamchi');
+          final onlineTextFinder = find.text('Pedagogik yordamçi');
           expect(onlineTextFinder, findsOneWidget);
           final onlineText = tester.widget<Text>(onlineTextFinder);
           final aiAppBar = tester.widget<AppBar>(find.byType(AppBar));
@@ -1951,7 +1962,7 @@ void main() {
         (tester) async {
           final theme = buildTheme();
 
-          // 1. AppButtonVariant.secondary on RoadmapScreen ('SRS Takrorlash') & FlashcardDeckWidget ('Eslab qoldim') (>= 4.5:1)
+          // 1. AppButtonVariant.secondary on RoadmapScreen ('SRS Takrorlaş') & FlashcardDeckWidget ('Eslab qoldim') (>= 4.5:1)
           await tester.pumpWidget(
             _wrapScreen(
               const RoadmapScreen(),
@@ -1978,7 +1989,7 @@ void main() {
               .loadRoadmap('course_eng_01');
           await tester.pumpAndSettle();
 
-          final srsBtnTextFinder = find.text('SRS Takrorlash');
+          final srsBtnTextFinder = find.text('SRS Takrorlaş');
           await tester.ensureVisible(srsBtnTextFinder);
           await tester.pumpAndSettle();
           final srsBtnText = tester.widget<Text>(srsBtnTextFinder);
@@ -2000,7 +2011,7 @@ void main() {
 
           // RoadmapScreen diagnostic banner & localizedCanDo
           final diagTextFinder = find.textContaining(
-            'Diagnostika natijasi boshlang‘ich darsni tavsiya qildi.',
+            'Diagnostika natijasi boşlanğiç darsni tavsiya qildi.',
           );
           expect(diagTextFinder, findsOneWidget);
           final diagText = tester.widget<Text>(diagTextFinder);
@@ -2031,7 +2042,7 @@ void main() {
             reason: 'RoadmapScreen mod.localizedCanDo on subtleSurface in $modeLabel',
           );
 
-          // 2. ProgressScreen _SubjectBar ('Ingliz tili', 'IT & Algoritmlar', 'Mantiqiy fikrlash') & 'O‘qish vaqti' bar chart (>= 3.0:1)
+          // 2. ProgressScreen _SubjectBar ('Ingliz tili', 'IT & Algoritmlar', 'Mantiqiy fikrlaş') & 'Öqiş vaqti' bar chart (>= 3.0:1)
           await tester.pumpWidget(
             _wrapScreen(
               const ProgressScreen(),
@@ -2048,7 +2059,7 @@ void main() {
           final cardBg = surface;
           for (final subjectTitle in const [
             'Ingliz tili',
-            'IT & Kodlash',
+            'IT & Kodlaş',
             'Mantiq',
           ]) {
             final titleFinder = find.text(subjectTitle);
@@ -2083,7 +2094,7 @@ void main() {
             );
           }
 
-          final chartTitleFinder = find.text('O‘qish vaqti');
+          final chartTitleFinder = find.text('Öqiş vaqti');
           await tester.ensureVisible(chartTitleFinder);
           await tester.pumpAndSettle();
           final chartCardFinder = find
@@ -2114,7 +2125,7 @@ void main() {
                 _contrastRatio(stopColor, chartCardBg),
                 greaterThanOrEqualTo(3.0),
                 reason:
-                    'O‘qish vaqti activity bar gradient stop $stopColor vs cardBg in $modeLabel',
+                    'Öqiş vaqti activity bar gradient stop $stopColor vs cardBg in $modeLabel',
               );
             }
           }
@@ -2176,7 +2187,7 @@ void main() {
             example: 'My book is on the desk.',
             exampleUz: 'Kitobim stol ustida.',
             imageSrc: '/lesson-media/english/missing_iter5.png',
-            alt: 'Yog‘och o‘quv stoli tasviri',
+            alt: 'Yoğoç öquv stoli tasviri',
           );
           await tester.pumpWidget(
             _wrapScreen(
@@ -2191,7 +2202,7 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          final fcAltErrFinder = find.text('Yog‘och o‘quv stoli tasviri');
+          final fcAltErrFinder = find.text('Yoğoç öquv stoli tasviri');
           expect(fcAltErrFinder, findsOneWidget);
           expect(
             _contrastRatio(
@@ -2202,7 +2213,7 @@ void main() {
             reason: 'FlashcardDeckWidget image errorBuilder altText in $modeLabel',
           );
 
-          await tester.tap(find.text('Javobni ko‘rish'));
+          await tester.tap(find.text('Javobni köriş'));
           await tester.pumpAndSettle();
           final fcExampleTrFinder = find.text('Kitobim stol ustida.');
           expect(fcExampleTrFinder, findsOneWidget);
@@ -2236,11 +2247,11 @@ void main() {
           const fcImagePromptNoSrc = LessonFlashcard(
             id: 'fc_iter5_prompt_no_src',
             front: 'lamp',
-            backUz: 'chiroq',
+            backUz: 'çiroq',
             backRu: 'лампа',
             example: 'Turn on the lamp.',
-            exampleUz: 'Chiroqni yoqing.',
-            alt: 'Stol chirog‘i illyustratsiyasi',
+            exampleUz: 'Çiroqni yoqing.',
+            alt: 'Stol çiroği illyustratsiyasi',
           );
           await tester.pumpWidget(
             _wrapScreen(
@@ -2259,7 +2270,7 @@ void main() {
           await tester.pumpAndSettle();
           await tester.tap(find.text('Image → Word'));
           await tester.pumpAndSettle();
-          final fcAltPromptFinder = find.text('Stol chirog‘i illyustratsiyasi');
+          final fcAltPromptFinder = find.text('Stol çiroği illyustratsiyasi');
           expect(fcAltPromptFinder, findsOneWidget);
           expect(
             _contrastRatio(
@@ -2359,10 +2370,10 @@ void main() {
         await tester.pumpAndSettle();
 
         final errMsg = tester.widget<Text>(
-          find.text('Profil ma’lumotlarini yuklab bo‘lmadi.'),
+          find.text('Profil ma’lumotlarini yuklab bölmadi.'),
         );
         final errSub = tester.widget<Text>(
-          find.text('Internet aloqasini tekshirib, qayta urinib ko‘ring.'),
+          find.text('Internet aloqasini tekşirib, qayta urinib köring.'),
         );
         expect(
           _contrastRatio(errMsg.style!.color!, AppColors.background),
@@ -2432,7 +2443,7 @@ void main() {
       }
 
       testWidgets(
-        'DashboardScreen seeded beginner Hero CTA ("Birinchi darsni ochish") renders without truncation at 360x800 + 2.0x in $modeLabel',
+        'DashboardScreen seeded beginner Hero CTA ("Birinçi darsni oçiş") renders without truncation at 360x800 + 2.0x in $modeLabel',
         (tester) async {
           _configurePhoneViewport(tester);
           await _pumpWithAllErrorsChecked(tester, () async {
@@ -2459,7 +2470,7 @@ void main() {
                 );
             await tester.pumpAndSettle();
           });
-          expect(find.text('Birinchi darsni ochish'), findsOneWidget);
+          expect(find.text('Birinçi darsni oçiş'), findsOneWidget);
           _assertNoZeroWidthText(tester, screenName: 'DashboardScreen(seeded)');
           _assertNoUnexpectedTruncation(
             tester,
@@ -2637,9 +2648,9 @@ void main() {
             await tester.pumpAndSettle();
             await tester.tap(firstOptFinder);
             await tester.pumpAndSettle();
-            await tester.tap(find.text('Natijalarni Ko‘rish'));
+            await tester.tap(find.text('Natijalarni Köriş'));
             await tester.pumpAndSettle();
-            expect(find.text('Javoblarni topshirasizmi?'), findsOneWidget);
+            expect(find.text('Javoblarni topşirasizmi?'), findsOneWidget);
             _assertNoZeroWidthText(
               tester,
               screenName: 'PlacementTestScreen(SubmitDialog)',
@@ -2650,7 +2661,7 @@ void main() {
             );
             _assertNoButtonOverlaps(tester);
 
-            await tester.tap(find.text('Topshirish'));
+            await tester.tap(find.text('Topşiriş'));
             await tester.pumpAndSettle();
             expect(find.text('Diagnostika natijasi'), findsOneWidget);
             expect(find.text('Diagnostika yakunlandi'), findsOneWidget);
@@ -2792,7 +2803,7 @@ void main() {
             await tester.pumpAndSettle();
             await tester.tap(find.text('B').last);
             await tester.pumpAndSettle();
-            await tester.tap(find.text('Javobni Tekshirish'));
+            await tester.tap(find.text('Javobni Tekşiriş'));
             await tester.pumpAndSettle();
           });
           _assertNoZeroWidthText(
@@ -2830,10 +2841,10 @@ void main() {
           _assertNoButtonOverlaps(tester);
           for (final label in [
             'Bajarilgan dars',
-            'O‘zlashtirish',
+            'Özlaştiriş',
             'Kun ketma-ket',
             'Umumiy ballar',
-            'Birinchi qadam',
+            'Birinçi qadam',
           ]) {
             final p = tester.renderObject<RenderParagraph>(find.text(label));
             expect(
@@ -2878,7 +2889,7 @@ void main() {
           _assertNoZeroWidthText(tester, screenName: 'ProfileScreen');
           _assertNoUnexpectedTruncation(tester, screenName: 'ProfileScreen');
           _assertNoButtonOverlaps(tester);
-          for (final label in ['Foydalanuvchi', 'Ingliz tili']) {
+          for (final label in ['Foydalanuvçi', 'Ingliz tili']) {
             final matches = find.text(label);
             expect(matches, findsWidgets);
             for (final el in matches.evaluate()) {
@@ -3491,7 +3502,7 @@ void main() {
               ),
             );
             await tester.pumpAndSettle();
-            await tester.tap(find.text('Qoidani sodda tushuntir'));
+            await tester.tap(find.text('Qoidani sodda tuşuntir'));
             await tester.pumpAndSettle();
           });
           expect(find.text('Foydali javob'), findsOneWidget);
@@ -3574,7 +3585,7 @@ void main() {
               // Trigger quick prompt -> online or offline state
               final chipLabel = localeCode == 'ru'
                   ? 'Объясни проще'
-                  : 'Qoidani sodda tushuntir';
+                  : 'Qoidani sodda tuşuntir';
               await _pumpWithAllErrorsChecked(tester, () async {
                 await tester.tap(find.text(chipLabel));
                 await tester.pumpAndSettle();
@@ -3636,7 +3647,7 @@ void main() {
             await tester.ensureVisible(confirmLabel);
             await tester.pumpAndSettle();
 
-            final submitBtn = find.text('Hisob Yaratish');
+            final submitBtn = find.text('Hisob Yaratiş');
             await tester.ensureVisible(submitBtn);
             await tester.pumpAndSettle();
             expect(tester.getRect(submitBtn).bottom, lessThanOrEqualTo(500));
@@ -3645,7 +3656,7 @@ void main() {
             await tester.tap(submitBtn);
             await tester.pumpAndSettle();
             assertErrorVisibleAboveKeyboard(
-              find.text('Iltimos, barcha majburiy maydonlarni to‘ldiring.'),
+              find.text('Iltimos, barça majburiy maydonlarni töldiring.'),
             );
 
             // 2. Short password
@@ -3659,7 +3670,7 @@ void main() {
             await tester.tap(submitBtn);
             await tester.pumpAndSettle();
             assertErrorVisibleAboveKeyboard(
-              find.text('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.'),
+              find.text('Parol kamida 6 ta belgidan iborat bölişi kerak.'),
             );
 
             // 3. Mismatched password
@@ -3683,7 +3694,7 @@ void main() {
     for (final brightness in [Brightness.light, Brightness.dark]) {
       final modeLabel = brightness == Brightness.dark ? 'Dark' : 'Light';
       testWidgets(
-        'Namuna hisobi bilan kirish -> fan tanlash -> darsni ochish ($modeLabel)',
+        'Namuna hisobi bilan kiriş -> fan tanlaş -> darsni oçiş ($modeLabel)',
         (tester) async {
           _configurePhoneViewport(tester);
           demoSessionActive.value = false;
@@ -3705,13 +3716,13 @@ void main() {
             );
             await tester.pumpAndSettle();
 
-            final skipTour = find.text('O‘tkazib yuborish');
+            final skipTour = find.text('Ötkazib yuboriş');
             if (skipTour.evaluate().isNotEmpty) {
               await tester.tap(skipTour);
               await tester.pumpAndSettle();
             }
 
-            final demoBtn = find.text('Namuna hisobi bilan kirish');
+            final demoBtn = find.text('Namuna hisobi bilan kiriş');
             await tester.ensureVisible(demoBtn);
             await tester.tap(demoBtn);
             await tester.pumpAndSettle();
@@ -3720,25 +3731,25 @@ void main() {
             await tester.tap(find.text('Ingliz tili').first);
             await tester.pumpAndSettle();
 
-            expect(find.text('Qayerdan boshlamoqchisiz?'), findsOneWidget);
-            await tester.tap(find.text('Noldan boshlayman'));
+            expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
+            await tester.tap(find.text('Noldan boşlayman'));
             await tester.pumpAndSettle();
 
-            final startLesson = find.text('Birinchi darsni boshlash');
+            final startLesson = find.text('Birinçi darsni boşlaş');
             await tester.scrollUntilVisible(startLesson, 180);
             await tester.ensureVisible(startLesson);
             await tester.pumpAndSettle();
             await tester.tap(startLesson);
             await tester.pumpAndSettle();
 
-            expect(find.text('Birinchi inglizcha so‘zlar'), findsWidgets);
+            expect(find.text('Birinçi inglizça sözlar'), findsWidgets);
           });
         },
       );
     }
 
     testWidgets(
-      'Namuna hisobi bilan kirish -> Matematika (course_math_01) -> darsni ochish (Light)',
+      'Namuna hisobi bilan kiriş -> Matematika (course_math_01) -> darsni oçiş (Light)',
       (tester) async {
         _configurePhoneViewport(tester);
         demoSessionActive.value = false;
@@ -3760,13 +3771,13 @@ void main() {
           );
           await tester.pumpAndSettle();
 
-          final skipTour = find.text('O‘tkazib yuborish');
+          final skipTour = find.text('Ötkazib yuboriş');
           if (skipTour.evaluate().isNotEmpty) {
             await tester.tap(skipTour);
             await tester.pumpAndSettle();
           }
 
-          final demoBtn = find.text('Namuna hisobi bilan kirish');
+          final demoBtn = find.text('Namuna hisobi bilan kiriş');
           await tester.ensureVisible(demoBtn);
           await tester.tap(demoBtn);
           await tester.pumpAndSettle();
@@ -3775,11 +3786,11 @@ void main() {
           await tester.tap(find.text('Matematika').first);
           await tester.pumpAndSettle();
 
-          expect(find.text('Qayerdan boshlamoqchisiz?'), findsOneWidget);
-          await tester.tap(find.text('Noldan boshlayman'));
+          expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
+          await tester.tap(find.text('Noldan boşlayman'));
           await tester.pumpAndSettle();
 
-          final startLesson = find.text('Birinchi darsni boshlash');
+          final startLesson = find.text('Birinçi darsni boşlaş');
           await tester.scrollUntilVisible(startLesson, 180);
           await tester.ensureVisible(startLesson);
           await tester.pumpAndSettle();
@@ -3787,7 +3798,7 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(
-            find.text('Qo‘shish va ayirishdan boshlaymiz'),
+            find.text('Qöşiş va ayirişdan boşlaymiz'),
             findsWidgets,
           );
         });

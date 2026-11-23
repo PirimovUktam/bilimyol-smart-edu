@@ -1092,7 +1092,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                         <p className="font-medium text-graphite">
                           {lastAnswerResult.explanation ||
                             (lastAnswerResult.correctOption
-                              ? `Nima uchun xato? To‘g‘ri javob — "${lastAnswerResult.correctOption}". Yechimni qadam-baqadam tekshirib ko‘ring.`
+                              ? `Nima uçun xato? Töğri javob — "${lastAnswerResult.correctOption}". Yeçimni qadam-baqadam tekşirib köring.`
                               : t('lesson.incorrect'))}
                         </p>
 
@@ -1258,7 +1258,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
           isDemoMode={isDemoMode} /> : <DictionaryLookup />}
       </Modal>}
 
-      {/* Yo'lchi AI Feedback Panel */}
+      {/* Yölçi AI Feedback Panel */}
       {showAIPanel && lastAnswerResult && interactiveQ && <YolchiAIPanel
         question={interactiveQ}
         answer={lastAnswerResult}

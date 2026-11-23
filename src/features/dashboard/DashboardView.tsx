@@ -966,7 +966,7 @@ export function DashboardView({
             </div>
           </section>
 
-          {/* CARD 2: AI TUTOR (YO'LCHI AI) */}
+          {/* CARD 2: AI TUTOR (YÖLÇI AI) */}
           <section
             aria-labelledby="ai-tutor-card-heading"
             className="fade-up stagger-3 relative overflow-hidden rounded-3xl border border-cyan-400/35 bg-gradient-to-br from-[#232A72] via-[#34217D] to-[#4C1D8F] p-5 shadow-[0_18px_40px_-10px_rgba(139,92,246,0.45)]"
@@ -1073,7 +1073,7 @@ export function DashboardView({
       />}
 
       {/* =====================================================================
-          BOTTOM ROW: Davom eting | Umumiy rivojlanish | Haftalik natija
+          BOTTOM ROW: Davom eting | Umumiy rivojlaniş | Haftalik natija
          ===================================================================== */}
       <div className="grid items-stretch gap-5 lg:grid-cols-12">
         {/* BOTTOM 1: DAVOM ETING */}
@@ -1168,7 +1168,7 @@ export function DashboardView({
           </div>
         </section>
 
-        {/* BOTTOM 2: UMUMIY RIVOJLANISH */}
+        {/* BOTTOM 2: UMUMIY RIVOJLANIŞ */}
         <section
           aria-labelledby="overall-progress-heading"
           className="cosmos-card fade-up stagger-5 flex flex-col justify-between p-5 lg:col-span-4"

@@ -1,10 +1,10 @@
 {
-  "name": "Yo‘lchi AI Tutor",
-  "description": "Adaptive learning mentor inside BilimYo‘l Smart Edu. Diagnoses student mistakes, explains why a specific topic or reinforcement exercise was selected using 6 Explainable AI inputs, and adapts the next step after each answer.",
+  "name": "Yölçi AI Tutor",
+  "description": "Adaptive learning mentor inside BilimYöl Smart Edu. Diagnoses student mistakes, explains why a specific topic or reinforcement exercise was selected using 6 Explainable AI inputs, and adapts the next step after each answer.",
   "url": "https://bilimyol.uz/",
   "version": "1.0.0",
   "provider": {
-    "organization": "BilimYo‘l Smart Edu",
+    "organization": "BilimYöl Smart Edu",
     "url": "https://bilimyol.uz/"
   },
   "documentationUrl": "https://bilimyol.uz/llms.txt",

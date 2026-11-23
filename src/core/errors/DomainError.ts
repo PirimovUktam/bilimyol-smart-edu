@@ -6,7 +6,7 @@ export class DomainError extends Error {
 }
 
 export class DuplicateActionError extends DomainError {
-  constructor(message: string = 'Ushbu amal avval bajarilgan.') {
+  constructor(message: string = 'Uşbu amal avval bajarilgan.') {
     super(message, 'DUPLICATE_ACTION');
     this.name = 'DuplicateActionError';
   }

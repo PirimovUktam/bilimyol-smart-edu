@@ -192,7 +192,7 @@ void main() {
         expect(
           find.descendant(
             of: listeningColumnBefore,
-            matching: find.text('Boshlash'),
+            matching: find.text('Boşlaş'),
           ),
           findsNothing,
         );
@@ -205,7 +205,7 @@ void main() {
             .first;
         final grammarStart = find.descendant(
           of: grammarColumn,
-          matching: find.text('Boshlash'),
+          matching: find.text('Boşlaş'),
         );
         await tester.ensureVisible(grammarStart);
         await tester.tap(grammarStart);
@@ -220,7 +220,7 @@ void main() {
 
         await tester.tap(find.text('does'));
         await tester.pump();
-        await tester.tap(find.text('TEKSHIRISH'));
+        await tester.tap(find.text('TEKŞIRIŞ'));
         await tester.pumpAndSettle();
 
         expect(find.byType(RoadmapScreen), findsOneWidget);
@@ -232,7 +232,7 @@ void main() {
         expect(
           find.descendant(
             of: listeningColumnAfter,
-            matching: find.text('Boshlash'),
+            matching: find.text('Boşlaş'),
           ),
           findsOneWidget,
         );
@@ -259,7 +259,7 @@ void main() {
           uiLocale: 'uz',
         );
         expect(goodbyeUz.isCorrect, isFalse);
-        expect(goodbyeUz.optionFeedback, contains('«Goodbye» xayrlashuv so‘zi'));
+        expect(goodbyeUz.optionFeedback, contains('«Goodbye» xayrlaşuv sözi'));
 
         final byeRu = await useCase.execute(
           question: starterQuestion,
@@ -277,7 +277,7 @@ void main() {
           uiLocale: 'uz',
         );
         expect(helloUz.isCorrect, isFalse);
-        expect(helloUz.optionFeedback, contains('Salomlashish to‘g‘ri'));
+        expect(helloUz.optionFeedback, contains('Salomlaşiş töğri'));
 
         final helloRu = await useCase.execute(
           question: starterQuestion,
@@ -298,7 +298,7 @@ void main() {
         expect(samUz.optionFeedback, isNull);
         expect(
           starterQuestion.localizedWrongFeedback('uz'),
-          contains('Faqat ism yoki xayrlashuv so‘zini yozmang'),
+          contains('Faqat ism yoki xayrlaşuv sözini yozmang'),
         );
       },
     );
@@ -320,7 +320,7 @@ void main() {
             lessonId: 'lesson_eng_starter',
           ),
         );
-        expect(goodbyeUz.explanation, contains('«Goodbye» xayrlashuv so‘zi'));
+        expect(goodbyeUz.explanation, contains('«Goodbye» xayrlaşuv sözi'));
 
         final goodbyeRu = await tutor.explainMistake(
           const AIExplanationRequest(
@@ -348,7 +348,7 @@ void main() {
             lessonId: 'lesson_eng_starter',
           ),
         );
-        expect(helloUz.explanation, contains('Salomlashish to‘g‘ri'));
+        expect(helloUz.explanation, contains('Salomlaşiş töğri'));
 
         final samUz = await tutor.explainMistake(
           const AIExplanationRequest(
@@ -364,7 +364,7 @@ void main() {
         );
         expect(
           samUz.explanation,
-          contains('Faqat ism yoki xayrlashuv so‘zini yozmang'),
+          contains('Faqat ism yoki xayrlaşuv sözini yozmang'),
         );
       },
     );

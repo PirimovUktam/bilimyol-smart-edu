@@ -25,7 +25,7 @@ void main() {
     test('correctly categorizes mastery level thresholds (0-39, 40-59, 60-79, 80-100)', () {
       expect(SkillScoringEngine.getMasteryLevel(0), equals(MasteryLevel.needsRemediation));
       expect(SkillScoringEngine.getMasteryLevel(39), equals(MasteryLevel.needsRemediation));
-      expect(SkillScoringEngine.getMasteryLabelUz(35), equals('Boshlang‘ich'));
+      expect(SkillScoringEngine.getMasteryLabelUz(35), equals('Boşlanğiç'));
 
       expect(SkillScoringEngine.getMasteryLevel(40), equals(MasteryLevel.developing));
       expect(SkillScoringEngine.getMasteryLevel(59), equals(MasteryLevel.developing));
@@ -33,7 +33,7 @@ void main() {
 
       expect(SkillScoringEngine.getMasteryLevel(60), equals(MasteryLevel.proficient));
       expect(SkillScoringEngine.getMasteryLevel(79), equals(MasteryLevel.proficient));
-      expect(SkillScoringEngine.getMasteryLabelUz(70), equals('O‘rta'));
+      expect(SkillScoringEngine.getMasteryLabelUz(70), equals('Örta'));
 
       expect(SkillScoringEngine.getMasteryLevel(80), equals(MasteryLevel.mastered));
       expect(SkillScoringEngine.getMasteryLevel(100), equals(MasteryLevel.mastered));

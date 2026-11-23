@@ -35,26 +35,26 @@ interface DemoShowcaseViewProps {
 
 const DEMO_CHAPTERS = [
   {
-    title: '1. Kirish va Platforma Missiyasi',
+    title: '1. Kiriş va Platforma Missiyasi',
     timestamp: '00:00 - 00:11',
     secondsStart: 0,
-    description: 'BilimYo‘l Smart Edu — bir xil darslik emas, har bir o‘quvchiga mos shaxsiy ta’lim yo‘lidir.',
+    description: 'BilimYöl Smart Edu — bir xil darslik emas, har bir öquvçiga mos şaxsiy ta’lim yölidir.',
     screen: 'pitch',
     highlightBadge: 'Platforma Missiyasi',
   },
   {
-    title: '2. Fan Tanlash va Kurslar',
+    title: '2. Fan Tanlaş va Kurslar',
     timestamp: '00:11 - 00:21',
     secondsStart: 11,
-    description: 'Matematika va Ingliz tili fanlari to‘liq integratsiya qilingan, har biri mustaqil ta’lim traektoriyasiga ega.',
+    description: 'Matematika va Ingliz tili fanlari töliq integratsiya qilingan, har biri mustaqil ta’lim traektoriyasiga ega.',
     screen: 'course-selection',
-    highlightBadge: 'Fan Tanlash',
+    highlightBadge: 'Fan Tanlaş',
   },
   {
-    title: '3. Shaxsiy Maqsadni Belgilash',
+    title: '3. Şaxsiy Maqsadni Belgilaş',
     timestamp: '00:21 - 00:32',
     secondsStart: 21,
-    description: 'O‘quvchi o‘z sinfi va maqsadini tanlaydi: maktab dasturi, olimpiada yoki imtihonga tayyorgarlik.',
+    description: 'Öquvçi öz sinfi va maqsadini tanlaydi: maktab dasturi, olimpiada yoki imtihonga tayyorgarlik.',
     screen: 'onboarding',
     highlightBadge: 'Onboarding & Profil',
   },
@@ -62,31 +62,31 @@ const DEMO_CHAPTERS = [
     title: '4. Adaptiv Diagnostika Testi',
     timestamp: '00:32 - 00:43',
     secondsStart: 32,
-    description: '8 ta aqlli diagnostika savoli orqali bilimdagi bo‘shliqlar xolis skanerlanadi va boshlang‘ich daraja aniqlanadi.',
+    description: '8 ta aqlli diagnostika savoli orqali bilimdagi böşliqlar xolis skanerlanadi va boşlanğiç daraja aniqlanadi.',
     screen: 'placement',
     highlightBadge: 'Placement Test',
   },
   {
-    title: '5. Ko‘nikmalar Xaritasi (Knowledge Map)',
+    title: '5. Könikmalar Xaritasi (Knowledge Map)',
     timestamp: '00:43 - 00:56',
     secondsStart: 43,
-    description: 'O‘quvchining barcha mavzular bo‘yicha ko‘nikmalari 0% dan 100% gacha interaktiv grafik matritsada namoyon bo‘ladi.',
+    description: 'Öquvçining barça mavzular böyiça könikmalari 0% dan 100% gaça interaktiv grafik matritsada namoyon böladi.',
     screen: 'knowledge-map',
     highlightBadge: 'Bilim Xaritasi',
   },
   {
-    title: '6. Shaxsiy O‘quv Yo‘li (Roadmap)',
+    title: '6. Şaxsiy Öquv Yöli (Roadmap)',
     timestamp: '00:56 - 01:08',
     secondsStart: 56,
-    description: 'Standart kitob ketma-ketligi emas, aynan shu o‘quvchi o‘rganishi zarur bo‘lgan darslar qadamma-qadam ochiladi.',
+    description: 'Standart kitob ketma-ketligi emas, aynan şu öquvçi örganişi zarur bölgan darslar qadamma-qadam oçiladi.',
     screen: 'roadmap',
-    highlightBadge: 'Adaptiv Yo‘l',
+    highlightBadge: 'Adaptiv Yöl',
   },
   {
-    title: '7. Interaktiv Nazariya va Tushuncha',
+    title: '7. Interaktiv Nazariya va Tuşunça',
     timestamp: '01:08 - 01:18',
     secondsStart: 68,
-    description: 'Boy nazariya, LaTeX formulalar va vizual tushuntirishlar bilan qoidaning mohiyati anglatiladi.',
+    description: 'Boy nazariya, LaTeX formulalar va vizual tuşuntirişlar bilan qoidaning mohiyati anglatiladi.',
     screen: 'lesson',
     highlightBadge: 'Nazariya & Formula',
   },
@@ -94,31 +94,31 @@ const DEMO_CHAPTERS = [
     title: '8. Amaliyot va Server-Side Scoring',
     timestamp: '01:18 - 01:30',
     secondsStart: 78,
-    description: 'Javoblar PostgreSQL RPC orqali serverda xavfsiz tekshiriladi, anti-cheat ball soxtalashtirishni to‘sadi.',
+    description: 'Javoblar PostgreSQL RPC orqali serverda xavfsiz tekşiriladi, anti-cheat ball soxtalaştirişni tösadi.',
     screen: 'lesson',
     highlightBadge: 'Amaliyot & Scoring',
   },
   {
-    title: '9. Yo‘lchi AI Pedagogik Mentori',
+    title: '9. Yölçi AI Pedagogik Mentori',
     timestamp: '01:30 - 01:42',
     secondsStart: 90,
-    description: 'Xato bo‘lganda Yo‘lchi AI tayyor javobni bermasdan, tushunishga yordam beradi va mustahkamlovchi mashq beradi.',
+    description: 'Xato bölganda Yölçi AI tayyor javobni bermasdan, tuşunişga yordam beradi va mustahkamlovçi maşq beradi.',
     screen: 'ai-tutor',
-    highlightBadge: 'Yo‘lchi AI & Gemini',
+    highlightBadge: 'Yölçi AI & Gemini',
   },
   {
-    title: '10. O‘quvchi Dashboardi va Doimiy Rivojlanish',
+    title: '10. Öquvçi Daşboardi va Doimiy Rivojlaniş',
     timestamp: '01:42 - 01:53',
     secondsStart: 102,
-    description: 'Bosh sahifada kunlik darslar, to‘plangan XP, streak va o‘zlashtirish foizining yaxlit ko‘rinishi.',
+    description: 'Boş sahifada kunlik darslar, töplangan XP, streak va özlaştiriş foizining yaxlit körinişi.',
     screen: 'dashboard',
     highlightBadge: 'Dashboard',
   },
   {
-    title: '11. O‘zlashtirish dinamikasi',
+    title: '11. Özlaştiriş dinamikasi',
     timestamp: '01:53 - 02:03',
     secondsStart: 113,
-    description: 'O‘quvchi natijalari real vaqtda yangilanadi va shaxsiy rivojlanish dinamikasida aks etadi.',
+    description: 'Öquvçi natijalari real vaqtda yangilanadi va şaxsiy rivojlaniş dinamikasida aks etadi.',
     screen: 'dashboard',
     highlightBadge: 'Progress',
   },
@@ -126,7 +126,7 @@ const DEMO_CHAPTERS = [
     title: '12. Yakun (Pitch Day 3.0)',
     timestamp: '02:03 - 02:13',
     secondsStart: 123,
-    description: 'BilimYo‘l Smart Edu: Darslik emas — shaxsiy ta’lim yo‘li. Har bir o‘quvchiga o‘z imkoniyatlarini ochish uchun ishonchli zanjir.',
+    description: 'BilimYöl Smart Edu: Darslik emas — şaxsiy ta’lim yöli. Har bir öquvçiga öz imkoniyatlarini oçiş uçun işonçli zanjir.',
     screen: 'pitch',
     highlightBadge: 'Pitch Day 3.0',
   },
@@ -203,7 +203,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               setIsVideoPlaying(true);
               setVideoError(null);
             }).catch(() => {
-              setVideoError("Videoni ijro etishda xatolik yuz berdi. Iltimos quyidagi 'Alohida oynada ochish' havolasidan foydalaning.");
+              setVideoError("Videoni ijro etişda xatolik yuz berdi. Iltimos quyidagi 'Alohida oynada oçiş' havolasidan foydalaning.");
             });
           }
         });
@@ -252,7 +252,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={onNavigatePitch}
               className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
             >
-              ← Pitch Day 3.0 Taqdimotiga Qaytish
+              ← Pitch Day 3.0 Taqdimotiga Qaytiş
             </button>
             <Button
               variant="primary"
@@ -260,7 +260,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               onClick={onNavigateCourses}
               className="bg-path hover:bg-path text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
             >
-              Jonli Prototipni Ochish <ArrowRight className="w-3.5 h-3.5" />
+              Jonli Prototipni Oçiş <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
@@ -273,11 +273,11 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-            BilimYo‘l Smart Edu Demo Videosi
+            BilimYöl Smart Edu Demo Videosi
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Haqiqiy ishlayotgan ilovadan 9:16 telefon ekranida yozib olingan 2 daqiqa 13 soniyalik professional ovozli video: diagnostikadan tortib to Yo‘lchi AI orqali darsni mustahkamlashgacha.
+            Haqiqiy işlayotgan ilovadan 9:16 telefon ekranida yozib olingan 2 daqiqa 13 soniyalik professional ovozli video: diagnostikadan tortib to Yölçi AI orqali darsni mustahkamlaşgaça.
           </p>
 
           {/* Mode Switcher Tabs */}
@@ -318,7 +318,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 <span className="w-3 h-3 rounded-full bg-mint inline-block" />
               </div>
               <span className="text-xs font-bold text-slate-800">
-                BilimYo‘l Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (1080p Desktop • O‘zbekcha Ovoz)
+                BilimYöl Smart Edu — Haqiqiy Mahsulot Ekran Yozuvi (1080p Desktop • Özbekça Ovoz)
               </span>
             </div>
 
@@ -330,7 +330,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                 href="/videos/bilimyol-pitch-demo.mp4"
                 download="bilimyol-pitch-demo.mp4"
                 className="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold flex items-center gap-1 transition-colors shadow-sm"
-                title="Videoni yuklab olish"
+                title="Videoni yuklab oliş"
               >
                 <Download className="w-3 h-3" />
                 <span>MP4</span>
@@ -357,12 +357,12 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   }}
                   onPause={() => setIsVideoPlaying(false)}
                   onError={() => {
-                    setVideoError('Video formatini avtomatik yuklashda cheklov yuz berdi. Quyidagi havolalar orqali to‘g‘ridan-to‘g‘ri oching.');
+                    setVideoError('Video formatini avtomatik yuklaşda cheklov yuz berdi. Quyidagi havolalar orqali töğridan-töğri oçing.');
                   }}
                 >
                   <source src="/videos/bilimyol-pitch-demo.mp4" type="video/mp4" />
                   <source src="/videos/bilimyol-pitch-demo.webm" type="video/webm" />
-                  Sizning brauzeringiz HTML5 videoni qo‘llab-quvvatlamaydi.
+                  Sizning brauzeringiz HTML5 videoni qöllab-quvvatlamaydi.
                 </video>
 
                 {/* Big Center Play Overlay Button when paused */}
@@ -370,8 +370,8 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <button
                     onClick={handleToggleVideoPlay}
                     className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-path/95 hover:bg-path text-slate-950 flex items-center justify-center shadow-2xl shadow-path/50 transition-all hover:scale-110 cursor-pointer z-20 backdrop-blur-sm"
-                    title="Videoni qo‘yish"
-                    aria-label="Videoni ijro etish"
+                    title="Videoni qöyiş"
+                    aria-label="Videoni ijro etiş"
                   >
                     <Play className="w-9 h-9 fill-current ml-1" />
                   </button>
@@ -389,7 +389,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                         onClick={handleToggleVideoPlay}
                         className="bg-path text-slate-950 font-bold text-xs"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 mr-1" /> Qayta urinish
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" /> Qayta uriniş
                       </Button>
                       <a
                         href="/videos/bilimyol-pitch-demo.mp4"
@@ -397,7 +397,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                         rel="noreferrer"
                         className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white font-bold inline-flex items-center gap-1"
                       >
-                        Alohida ochish ↗
+                        Alohida oçiş ↗
                       </a>
                     </div>
                   </div>
@@ -414,12 +414,12 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     {isVideoPlaying ? (
                       <>
                         <Pause className="w-4 h-4 fill-current" />
-                        <span>To‘xtatish</span>
+                        <span>Töxtatiş</span>
                       </>
                     ) : (
                       <>
                         <Play className="w-4 h-4 fill-current" />
-                        <span>▶ Videoni Qo‘yish</span>
+                        <span>▶ Videoni Qöyiş</span>
                       </>
                     )}
                   </button>
@@ -432,10 +432,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       }
                     }}
                     className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                    title="Boshidan ijro etish"
+                    title="Boşidan ijro etiş"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Boshiga</span>
+                    <span>Boşiga</span>
                   </button>
                 </div>
 
@@ -451,7 +451,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     rel="noreferrer"
                     className="hover:text-white underline text-slate-300 font-semibold"
                   >
-                    Yangi tabda ochish ↗
+                    Yangi tabda oçiş ↗
                   </a>
                 </div>
               </div>
@@ -475,13 +475,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-path font-bold uppercase tracking-wider">
-                          1-Qadam: Fan Tanlash
+                          1-Qadam: Fan Tanlaş
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
                           Matematika & Ingliz Tili Kurslari
                         </h3>
                         <p className="text-xs text-slate-300">
-                          O‘quvchi platformaga kirgach, o‘rganmoqchi bo‘lgan fanini tanlaydi va o‘z maqsadini belgilaydi.
+                          Öquvçi platformaga kirgaç, örganmoqçi bölgan fanini tanlaydi va öz maqsadini belgilaydi.
                         </p>
                       </div>
                     </motion.div>
@@ -504,10 +504,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                           2-Qadam: Adaptiv Diagnostika
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          8 Savol orqali Bo‘shliqlarni Aniqlash
+                          8 Savol orqali Böşliqlarni Aniqlaş
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Standart test emas, har bir javobga qarab qiyinlik darajasi o‘zgaruvchi aqlli placement test.
+                          Standart test emas, har bir javobga qarab qiyinlik darajasi özgaruvçi aqlli placement test.
                         </p>
                       </div>
                     </motion.div>
@@ -527,13 +527,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-path font-bold uppercase tracking-wider">
-                          3-Qadam: Shaxsiy Ta’lim Yo‘li
+                          3-Qadam: Şaxsiy Ta’lim Yöli
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          0-100% Ko‘nikmalar Xaritasi (Knowledge Map)
+                          0-100% Könikmalar Xaritasi (Knowledge Map)
                         </h3>
                         <p className="text-xs text-slate-300">
-                          O‘quvchining zaif nuqtalari aniqlanib, bosqichma-bosqich o‘zlashtirish yo‘li tuziladi.
+                          Öquvçining zaif nuqtalari aniqlanib, bosqiçma-bosqiç özlaştiriş yöli tuziladi.
                         </p>
                       </div>
                     </motion.div>
@@ -554,10 +554,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                           4-Qadam: Interaktiv Dars
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          Nazariya, Misol va Amaliy Mashq
+                          Nazariya, Misol va Amaliy Maşq
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Tushuncha beriladi, misollar ko‘rsatiladi va o‘quvchi javob yuborib o‘zlashtirishni tekshiradi.
+                          Tuşunça beriladi, misollar körsatiladi va öquvçi javob yuborib özlaştirişni tekşiradi.
                         </p>
                       </div>
                     </motion.div>
@@ -580,10 +580,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                           5-Qadam: Server-Side Scoring & Anti-Cheat
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          Serverda Xolis Tekshiruv & +20 XP
+                          Serverda Xolis Tekşiruv & +20 XP
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Javoblar server RPC orqali xolis tekshiriladi, ballar va XP xavfsiz hisoblanadi.
+                          Javoblar server RPC orqali xolis tekşiriladi, ballar va XP xavfsiz hisoblanadi.
                         </p>
                       </div>
                     </motion.div>
@@ -603,13 +603,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-path font-bold uppercase tracking-wider">
-                          6-Qadam: Yo‘lchi AI Mentori
+                          6-Qadam: Yölçi AI Mentori
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          Xatolikni Pedagogik Tushuntirish
+                          Xatolikni Pedagogik Tuşuntiriş
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Gemini 2.5 Flash bilan integratsiyalashgan AI tayyor javobni emas, xatoning tub sababini tushuntiradi.
+                          Gemini 2.5 Flash bilan integratsiyalaşgan AI tayyor javobni emas, xatoning tub sababini tuşuntiradi.
                         </p>
                       </div>
                     </motion.div>
@@ -629,10 +629,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-amber-400 font-bold uppercase tracking-wider">
-                          2-Qadam: O‘quv Maqsadi
+                          2-Qadam: Öquv Maqsadi
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          Sinf va Shaxsiy Maqsadni Tanlash
+                          Sinf va Şaxsiy Maqsadni Tanlaş
                         </h3>
                         <p className="text-xs text-slate-300">
                           Maktab dasturi, olimpiada yoki imtihonga tayyorgarlik darajasi tanlanadi.
@@ -655,13 +655,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-path font-bold uppercase tracking-wider">
-                          4-Qadam: Ko‘nikmalar Xaritasi
+                          4-Qadam: Könikmalar Xaritasi
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
                           0-100% Bilim Matritsasi (Knowledge Map)
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Har bir mavzuning o‘zlashtirish foizi va zaif/kuchli nuqtalar aniq tahlil qilinadi.
+                          Har bir mavzuning özlaştiriş foizi va zaif/kuchli nuqtalar aniq tahlil qilinadi.
                         </p>
                       </div>
                     </motion.div>
@@ -681,13 +681,13 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                       </div>
                       <div className="space-y-2 max-w-lg">
                         <span className="text-xs text-mint font-bold uppercase tracking-wider">
-                          10-Qadam: O‘quvchi Dashboardi
+                          10-Qadam: Öquvçi Daşboardi
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          Bilim O‘sishi, Streak va Natijalar
+                          Bilim Ösişi, Streak va Natijalar
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Har bir darsdan so‘ng o‘quvchining bilim darajasi real vaqtda yangilanadi.
+                          Har bir darsdan söng öquvçining bilim darajasi real vaqtda yangilanadi.
                         </p>
                       </div>
                     </motion.div>
@@ -710,10 +710,10 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                           11-Qadam: Xulosa
                         </span>
                         <h3 className="text-2xl sm:text-3xl font-black text-white">
-                          BilimYo‘l — Darslik emas, shaxsiy ta’lim yo‘li
+                          BilimYöl — Darslik emas, şaxsiy ta’lim yöli
                         </h3>
                         <p className="text-xs text-slate-300">
-                          Pitch Day 3.0 uchun tayyorlangan milliy sun’iy intellekt ta’lim platformasi.
+                          Pitch Day 3.0 uçun tayyorlangan milliy sun’iy intellekt ta’lim platformasi.
                         </p>
                       </div>
                     </motion.div>
@@ -769,7 +769,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                         setIsPlaying(true);
                       }}
                       className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm transition-colors cursor-pointer"
-                      title="Qayta boshlash"
+                      title="Qayta boşlaş"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -788,7 +788,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                     onClick={onNavigateCourses}
                     className="bg-path hover:bg-path text-white font-extrabold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-sm"
                   >
-                    ⚡ Bu Qadamni Jonli Sinash
+                    ⚡ Bu Qadamni Jonli Sinaş
                   </Button>
                 </div>
               </div>
@@ -799,7 +799,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
         {/* CHAPTERS NAVIGATION CARDS */}
         <div className="space-y-3">
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Video Bo‘limlari va Vaqt Belgilari (Timeline)
+            Video Bölimlari va Vaqt Belgilari (Timeline)
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
             {DEMO_CHAPTERS.map((ch, idx) => (
@@ -817,7 +817,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <h4 className="text-xs font-bold text-slate-900 mt-1 leading-tight">{ch.title}</h4>
                 </div>
                 <span className="text-[10px] text-slate-500 mt-2 block font-medium">
-                  {activeChapterIndex === idx ? '▶ Faol' : 'Ko‘rish →'}
+                  {activeChapterIndex === idx ? '▶ Faol' : 'Köriş →'}
                 </span>
               </button>
             ))}
@@ -837,25 +837,25 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
 
           <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed">
             <p>
-              Ushbu demo-video <strong>BilimYo‘l Smart Edu</strong> platformasining haqiqiy arxitekturasi va o‘quvchi ta’lim traektoriyasini boshidan oxirigacha yaqqol namoyish etadi:
+              Uşbu demo-video <strong>BilimYöl Smart Edu</strong> platformasining haqiqiy arxitekturasi va öquvçi ta’lim traektoriyasini boşidan oxirigaça yaqqol namoyiş etadi:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <h3 className="font-bold text-path flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-path" /> 1. Adaptiv Bo‘shliqni Aniqlash (00:00 - 00:55)
+                  <Compass className="w-4 h-4 text-path" /> 1. Adaptiv Böşliqni Aniqlaş (00:00 - 00:55)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  O‘quvchi fanni tanlaydi (Matematika yoki Ingliz tili). 8 ta adaptiv savoldan iborat placement test o‘quvchining xatolarini o‘rganib, uning qaysi formulalarda oqsayotganini (masalan, Funksiyalar 38%) aniq bilim xaritasiga tushiradi.
+                  Öquvçi fanni tanlaydi (Matematika yoki Ingliz tili). 8 ta adaptiv savoldan iborat placement test öquvçining xatolarini örganib, uning qaysi formulalarda oqsayotganini (masalan, Funksiyalar 38%) aniq bilim xaritasiga tuşiradi.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <h3 className="font-bold text-brand-dark flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-brand" /> 2. Shaxsiy Ta’lim Yo‘li & Dars (00:55 - 01:55)
+                  <Zap className="w-4 h-4 text-brand" /> 2. Şaxsiy Ta’lim Yöli & Dars (00:55 - 01:55)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  O‘quvchiga standart kitobdagi barcha mavzular emas, aynan uning bo‘shlig‘iga mos qadamli yo‘l ochiladi. Dars nazariya, vizual modellar va amaliy mashqlar orqali bosqichma-bosqich o‘zlashtiriladi.
+                  Öquvçiga standart kitobdagi barça mavzular emas, aynan uning böşliğiga mos qadamli yöl oçiladi. Dars nazariya, vizual modellar va amaliy maşqlar orqali bosqiçma-bosqiç özlaştiriladi.
                 </p>
               </div>
 
@@ -864,35 +864,35 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
                   <ShieldCheck className="w-4 h-4 text-mint" /> 3. Server-Side Scoring & Anti-Cheat (01:55 - 02:25)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  O‘quvchi brauzer konsoli orqali javoblarni ko‘ra olmaydi yoki XP ni soxtalashtira olmaydi. PostgreSQL RPC funksiyasi serverda javobni xolis tekshirib, xavfsiz ball beradi.
+                  Öquvçi brauzer konsoli orqali javoblarni köra olmaydi yoki XP ni soxtalaştira olmaydi. PostgreSQL RPC funksiyasi serverda javobni xolis tekşirib, xavfsiz ball beradi.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <h3 className="font-bold text-brand-dark flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-brand" /> 4. Yo‘lchi AI & Natijalar (02:25 - 03:30)
+                  <Bot className="w-4 h-4 text-brand" /> 4. Yölçi AI & Natijalar (02:25 - 03:30)
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Supabase Edge Function orqali Google Gemini 2.5 Flash mentori xatolikning asl sababini pedagogik uslubda tushuntiradi. O‘quvchi paneli bilim darajasi o‘sganini real vaqtda aks ettiradi.
+                  Supabase Edge Function orqali Google Gemini 2.5 Flash mentori xatolikning asl sababini pedagogik uslubda tuşuntiradi. Öquvçi paneli bilim darajasi ösganini real vaqtda aks ettiradi.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 6.3. ISHLAYOTGAN PROTOTIP HAVOLALARI */}
+        {/* 6.3. IŞLAYOTGAN PROTOTIP HAVOLALARI */}
         <section className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-path via-brand to-brand text-white shadow-xl text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white text-xs font-black backdrop-blur-md">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            6.3-TALAB: ISHLAYOTGAN PROTOTIP HAVOLASI
+            6.3-TALAB: IŞLAYOTGAN PROTOTIP HAVOLASI
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-            Hozirning O‘zida Jonli Prototipni Sinab Ko‘ring
+            Hozirning Özida Jonli Prototipni Sinab Köring
           </h2>
 
           <p className="text-path text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Hakamlar va investorlar to‘g‘ridan-to‘g‘ri brauzerda yoki mobil ilova orqali real ta’lim jarayonini o‘z ko‘zlari bilan sinab ko‘rishlari mumkin:
+            Hakamlar va investorlar töğridan-töğri brauzerda yoki mobil ilova orqali real ta’lim jarayonini öz közlari bilan sinab körişlari mumkin:
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
@@ -903,7 +903,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               className="bg-white hover:bg-slate-100 text-slate-950 font-black px-8 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 cursor-pointer text-sm transition-all transform hover:-translate-y-0.5"
             >
               <Zap className="w-4 h-4 fill-current text-amber-500" />
-              1. Fanni Tanlash va Diagnostika (/courses)
+              1. Fanni Tanlaş va Diagnostika (/courses)
             </Button>
 
             <Button
@@ -913,7 +913,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
               <TrendingUp className="w-4 h-4 text-mint" />
-              2. O‘quvchi Dashboardini Ko‘rish (/dashboard)
+              2. Öquvçi Daşboardini Köriş (/dashboard)
             </Button>
 
             <Button
@@ -923,7 +923,7 @@ export const DemoShowcaseView: React.FC<DemoShowcaseViewProps> = ({
               className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-3.5 rounded-2xl flex items-center gap-3 cursor-pointer text-sm backdrop-blur-md"
             >
               <Bot className="w-4 h-4 text-path" />
-              3. Yo‘lchi AI Chatini Sinash (/ai-tutor)
+              3. Yölçi AI Çatini Sinaş (/ai-tutor)
             </Button>
 
             <a

@@ -1,12 +1,12 @@
-# BilimYo‘l Smart Edu
+# BilimYöl Smart Edu
 
-> **"Darslik emas — shaxsiy ta’lim yo‘li."**
+> **"Darslik emas — şaxsiy ta’lim yöli."**
 >
-> AI yordamida shaxsiylashtirilgan ta’lim platformasi: diagnostika → adaptiv yo‘l
-> → interaktiv dars → mustahkamlash → analitika. Yo‘lchi AI xatolarni pedagogik
-> tahlil qiladi va o‘quv yo‘lini qayta quradi.
+> AI yordamida şaxsiylaştirilgan ta’lim platformasi: diagnostika → adaptiv yöl
+> → interaktiv dars → mustahkamlaş → analitika. Yölçi AI xatolarni pedagogik
+> tahlil qiladi va öquv yölini qayta quradi.
 
-Ushbu repozitoriy ikkita ilovani o‘z ichiga oladi:
+Uşbu repozitoriy ikkita ilovani öz içiga oladi:
 
 | Papka | Texnologiya | Tavsif |
 |---|---|---|
@@ -17,14 +17,14 @@ Ushbu repozitoriy ikkita ilovani o‘z ichiga oladi:
 
 ## Asosiy imkoniyatlar
 
-- **Adaptiv diagnostika** — fan bo‘yicha boshlang‘ich test, ko‘nikma bo‘shliqlarini aniqlash.
-- **Shaxsiy yo‘l xaritasi** — `RouteEngine` natijalarga qarab bosqichlarni ochadi/bloklaydi.
+- **Adaptiv diagnostika** — fan böyiça boşlanğiç test, könikma böşliqlarini aniqlaş.
+- **Şaxsiy yöl xaritasi** — `RouteEngine` natijalarga qarab bosqiçlarni ochadi/bloklaydi.
 - **Interaktiv darslar** — nazariya, formula, grafik/audio simulyatsiya, test.
-- **To‘g‘ri javob va izoh** — xato javobda tanlangan variant, to‘g‘ri javob va sabab ko‘rsatiladi.
-- **Yo‘lchi AI** — xatoni pedagogik tahlil qiladi va remediativ qadam beradi.
-- **Mustahkamlash** — zaif mavzu uchun qisqa mashq, bal va XP yangilanadi.
+- **Töğri javob va izoh** — xato javobda tanlangan variant, töğri javob va sabab körsatiladi.
+- **Yölçi AI** — xatoni pedagogik tahlil qiladi va remediativ qadam beradi.
+- **Mustahkamlaş** — zaif mavzu uçun qisqa maşq, bal va XP yangilanadi.
 - **Gamifikatsiya** — XP, streak, kunlik maqsad, natijalar analitikasi.
-- **To‘rt fan** — Matematika, Ingliz tili, IT & Kodlash, Mantiq (web va mobil).
+- **Tört fan** — Matematika, Ingliz tili, IT & Kodlaş, Mantiq (web va mobil).
 
 ---
 
@@ -35,7 +35,7 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-Sifat tekshiruvlari:
+Sifat tekşiruvlari:
 
 ```bash
 npm run typecheck  # tsc --noEmit
@@ -44,8 +44,8 @@ npm test           # vitest (232 test)
 npm run build      # production build
 ```
 
-Oflayn demo rejimi: Supabase sozlanmagan bo‘lsa, ilova `Namuna hisobi bilan
-kirish` orqali to‘liq lokal ma’lumot bilan ishlaydi.
+Oflayn demo rejimi: Supabase sozlanmagan bölsa, ilova `Namuna hisobi bilan
+kiriş` orqali töliq lokal ma’lumot bilan işlaydi.
 
 ---
 
@@ -62,8 +62,8 @@ flutter build apk --release
 # build/app/outputs/flutter-apk/app-release.apk
 ```
 
-Mobil ilova Supabase kalitisiz ham **oflayn demo rejimida** ishlaydi. Hakamlar
-uchun dashboardda **Demo Reset**, diagnostikada **Tezkor demo** mavjud.
+Mobil ilova Supabase kalitisiz ham **oflayn demo rejimida** işlaydi. Hakamlar
+uçun daşboardda **Demo Reset**, diagnostikada **Tezkor demo** mavjud.
 
 ---
 
@@ -81,7 +81,7 @@ src/
   presentation/   # design system komponentlari (Button, Card, Badge, ...)
 ```
 
-- **Baholash:** server-avtoritativ (`submit_answer_attempt` RPC / in-memory scorer);
+- **Baholaş:** server-avtoritativ (`submit_answer_attempt` RPC / in-memory scorer);
   client savol payloadida javob kaliti saqlanmaydi.
 - **AI:** `yolchi-tutor` Edge Function (Gemini) → deterministik fallback.
 - **Demo rejimi:** `isDemoRuntimeActive() || !isSupabaseConfigured` →
@@ -92,4 +92,4 @@ src/
 ## Maxfiylik
 
 `.env`, `.env.local` va `mobile/supabase_env.json` gitignore qilingan. Maxfiy
-kalitlarni hech qachon commit qilmang; `*.example` fayllaridan nusxa oling.
+kalitlarni heç qaçon commit qilmang; `*.example` fayllaridan nusxa oling.

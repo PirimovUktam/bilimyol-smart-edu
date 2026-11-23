@@ -37,7 +37,7 @@ export function PreferencesBar() {
     <label className="sr-only" htmlFor="interface-language">{t('common.language')}</label>
     <select id="interface-language" className="preference-control" value={language} disabled={changingLanguage}
       onChange={(event) => void changeLanguage(event.target.value === 'ru' ? 'ru' : 'uz')}>
-      <option value="uz">UZ · O‘zbekcha</option>
+      <option value="uz">UZ · Özbekça</option>
       <option value="ru">RU · Русский</option>
     </select>
     {languageFailed && <span role="alert" title={t('admin.loadFailed')} className="max-w-36 text-xs text-coral">{t('admin.loadFailed')}</span>}

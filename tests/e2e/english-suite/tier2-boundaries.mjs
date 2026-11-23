@@ -34,14 +34,14 @@ export function registerTests() {
 
         const main = page.getByRole('main');
         await main
-          .getByRole('heading', { name: /Dars noto‘g‘ri fanda/i })
+          .getByRole('heading', { name: /Dars notöğri fanda/i })
           .first()
           .waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Yo‘l xaritasiga qaytish' }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: 'Yöl xaritasiga qaytiş' }).waitFor({ state: 'visible' });
 
         const mainText = await main.innerText();
         assert.equal(
-          /Kvadratni ochish|Qisqa ko‘paytirish/i.test(mainText),
+          /Kvadratni oçiş|Qisqa köpaytiriş/i.test(mainText),
           false,
           `T2-F1-01: Math algebra content leaked under English cross-course guard: ${mainText}`,
         );
@@ -58,20 +58,20 @@ export function registerTests() {
 
         await helpers.selectCourse(page, 'course_eng_01');
         await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
-        await main.getByRole('button', { name: 'Ta’lim yo‘lini ochish' }).click();
+        await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_it');
         await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
-        await main.getByRole('button', { name: 'Ta’lim yo‘lini ochish' }).click();
+        await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_math_01');
         await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
-        await main.getByRole('button', { name: 'Ta’lim yo‘lini ochish' }).click();
+        await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_eng_01');
-        await clickFirstVisibleButton(page, /^Ta’lim yo‘li$/i);
+        await clickFirstVisibleButton(page, /^Ta’lim yöli$/i);
         await main
-          .getByRole('heading', { name: /Mening ta’lim yo‘lim/i })
+          .getByRole('heading', { name: /Mening ta’lim yölim/i })
           .first()
           .waitFor({ state: 'visible' });
 
@@ -79,7 +79,7 @@ export function registerTests() {
         assert.match(roadmapText, /Vocabulary/i);
         assert.match(roadmapText, /Reading/i);
         assert.equal(
-          /\b(Python|Algebra|Tenglamalar|Funksiyalar|Grafiklar|Mantiqiy boshqotirmalar|Qonuniyatlar)\b/i.test(roadmapText),
+          /\b(Python|Algebra|Tenglamalar|Funksiyalar|Grafiklar|Mantiqiy boşqotirmalar|Qonuniyatlar)\b/i.test(roadmapText),
           false,
           `T2-F1-02: Stale non-English nodes appeared after rapid course switching: ${roadmapText}`,
         );
@@ -104,7 +104,7 @@ export function registerTests() {
         const headerText = await main.locator('header').first().innerText();
         assert.match(headerText, /Ingliz tili/i, `T2-F1-02: Expected English course header, got "${headerText}".`);
         assert.equal(
-          /\b(Matematika|IT & Kodlash|Mantiq)\b/i.test(headerText),
+          /\b(Matematika|IT & Kodlaş|Mantiq)\b/i.test(headerText),
           false,
           `T2-F1-02: Non-English course title leaked into header: "${headerText}"`,
         );
@@ -117,14 +117,14 @@ export function registerTests() {
       milestone: ['M1'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
-        await page.getByRole('main').getByRole('button', { name: 'Qayta tinglash' }).click();
+        await advanceLessonStep(page, /Birga misol köramiz/i);
+        await page.getByRole('main').getByRole('button', { name: 'Qayta tinglaş' }).click();
         await helpers.openAndCloseYolchiAi(page, {
-          askText: 'Hello so‘zi haqida qisqa izoh bering',
+          askText: 'Hello sözi haqida qisqa izoh bering',
           closeWith: 'button',
         });
 
-        await clickFirstVisibleButton(page, /Ta’lim yo‘liga qaytish/i);
+        await clickFirstVisibleButton(page, /Ta’lim yöliga qaytiş/i);
         await clickFirstVisibleButton(page, /^Natijalar$/i);
         await page.getByRole('main').waitFor({ state: 'visible' });
         await clickFirstVisibleButton(page, /^Profil$/i);
@@ -142,22 +142,22 @@ export function registerTests() {
         await helpers.selectCourse(page, 'course_math_01');
         const main = page.getByRole('main');
 
-        await main.getByRole('radio', { name: /Noldan boshlayman/i }).check();
-        await main.getByRole('button', { name: 'Birinchi darsni boshlash' }).click();
+        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
         await completeMcqLesson(page, /^([A-D]\s+)?6$/i);
 
-        await main.getByRole('button', { name: 'Boshlang‘ich darsni ochish' }).click();
+        await main.getByRole('button', { name: 'Boşlanğiç darsni oçiş' }).click();
         await completeMcqLesson(page, /^([A-D]\s+)?6$/i);
 
         await helpers.selectCourse(page, 'course_eng_01');
         await main
-          .getByRole('heading', { name: /O‘rganish rejangizni sozlang/i })
+          .getByRole('heading', { name: /Örganiş rejangizni sozlang/i })
           .first()
           .waitFor({ state: 'visible' });
-        await main.getByRole('radio', { name: /Noldan boshlayman/i }).check();
-        await main.getByRole('button', { name: 'Birinchi darsni boshlash' }).click();
+        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
         await main
-          .getByRole('heading', { name: 'Birinchi inglizcha so‘zlar' })
+          .getByRole('heading', { name: 'Birinçi inglizça sözlar' })
           .first()
           .waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F1-04');
@@ -189,7 +189,7 @@ export function registerTests() {
 
         try {
           await openStarterLesson(page, baseUrl, helpers);
-          await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+          await advanceLessonStep(page, /Birga misol köramiz/i);
 
           const main = page.getByRole('main');
           const mediaAudit = await main.evaluate(() => {
@@ -242,7 +242,7 @@ export function registerTests() {
         await startEnglishPlacement(page, baseUrl, helpers);
         const main = page.getByRole('main');
 
-        const nextBtn = main.getByRole('button', { name: /Keyingi savol|Natijani ko‘rish/i });
+        const nextBtn = main.getByRole('button', { name: /Keyingi savol|Natijani köriş/i });
         await nextBtn.waitFor({ state: 'visible' });
         assert.equal(
           await nextBtn.isDisabled(),
@@ -310,11 +310,11 @@ export function registerTests() {
             await main.getByRole('radio').nth(chosenIdx).check();
             await page.waitForTimeout(PLACEMENT_MIN_INTERVAL_MS);
 
-            const finishBtn = main.getByRole('button', { name: /Natijani ko‘rish/i });
+            const finishBtn = main.getByRole('button', { name: /Natijani köriş/i });
             if (await finishBtn.isVisible().catch(() => false)) {
               await finishBtn.click();
-              const modal = page.getByRole('dialog', { name: /Javoblarni topshirasizmi\?/i });
-              await modal.getByRole('button', { name: /^Topshirish$/i }).click();
+              const modal = page.getByRole('dialog', { name: /Javoblarni topşirasizmi\?/i });
+              await modal.getByRole('button', { name: /^Topşiriş$/i }).click();
               break;
             }
             await main.getByRole('button', { name: /Keyingi savol/i }).click();
@@ -322,7 +322,7 @@ export function registerTests() {
 
           await main.getByRole('heading', { name: /Diagnostika yakunlandi/i }).first().waitFor({ state: 'visible' });
           resultText = await main.innerText();
-          const scoreMatch = resultText.match(/(\d+)\s*\/\s*(\d+)\s*javob to‘g‘ri/i);
+          const scoreMatch = resultText.match(/(\d+)\s*\/\s*(\d+)\s*javob töğri/i);
           assert.ok(scoreMatch, `T2-F2-03: Could not parse placement score from: ${resultText}`);
           correctCount = Number(scoreMatch[1]);
           totalCount = Number(scoreMatch[2]);
@@ -336,11 +336,11 @@ export function registerTests() {
             const liText = await items.nth(i).innerText();
             const qMatch = liText.match(/^\s*\d+\.\s+(.+)$/m);
             const selMatch = liText.match(/Siz belgilagan javob —\s*(.+)$/m);
-            const rightMatch = liText.match(/To‘g‘ri javob —\s*(.+)$/m);
+            const rightMatch = liText.match(/Töğri javob —\s*(.+)$/m);
             const qStem = qMatch?.[1]?.trim();
             const selectedOpt = selMatch?.[1]?.trim();
             if (!qStem || !selectedOpt) continue;
-            if (/^\s*To‘g‘ri\s*$/m.test(liText)) {
+            if (/^\s*Töğri\s*$/m.test(liText)) {
               knownCorrectByStem.set(qStem, selectedOpt);
             } else {
               knownWrongByStem.set(qStem, selectedOpt);
@@ -350,7 +350,7 @@ export function registerTests() {
             }
           }
 
-          await main.getByRole('button', { name: /Qayta topshirish/i }).click();
+          await main.getByRole('button', { name: /Qayta topşiriş/i }).click();
           await main.getByText(/^1\s*\/\s*\d+\s+savol$/i).first().waitFor({ state: 'visible' });
         }
 
@@ -376,9 +376,9 @@ export function registerTests() {
           assert.ok(numericPlacement >= 0 && numericPlacement === 0, `T2-F2-03: Expected placementScore 0, got ${JSON.stringify(placementScore)}`);
         }
 
-        await main.getByRole('button', { name: /Shaxsiy yo‘lni ko‘rish/i }).click();
+        await main.getByRole('button', { name: /Şaxsiy yölni köriş/i }).click();
         await helpers.expectVisibleFast(
-          main.getByText(/\bA1\b|Birinchi inglizcha so‘zlar|1-boshlang‘ich dars/i),
+          main.getByText(/\bA1\b|Birinçi inglizça sözlar|1-boşlanğiç dars/i),
           'T2-F2-03 (M5): Expected 0% placement handoff to route learner to A1 / lesson_eng_starter.',
           FAST_TIMEOUT,
         );
@@ -396,11 +396,11 @@ export function registerTests() {
         for (let step = 1; step <= 12; step++) {
           await main.getByRole('radio').first().check();
           await page.waitForTimeout(PLACEMENT_MIN_INTERVAL_MS);
-          const finishBtn = main.getByRole('button', { name: /Natijani ko‘rish/i });
+          const finishBtn = main.getByRole('button', { name: /Natijani köriş/i });
           if (await finishBtn.isVisible().catch(() => false)) {
             await finishBtn.click();
-            const modal = page.getByRole('dialog', { name: /Javoblarni topshirasizmi\?/i });
-            await modal.getByRole('button', { name: /^Topshirish$/i }).click();
+            const modal = page.getByRole('dialog', { name: /Javoblarni topşirasizmi\?/i });
+            await modal.getByRole('button', { name: /^Topşiriş$/i }).click();
             break;
           }
           await main.getByRole('button', { name: /Keyingi savol/i }).click();
@@ -494,12 +494,12 @@ export function registerTests() {
         await advanceToExerciseStep(page);
 
         const main = page.getByRole('main');
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
         await main.getByRole('alert').waitFor({ state: 'visible' });
 
         await submitFreeTextAnswer(page, '   ');
         await main.getByRole('alert').waitFor({ state: 'visible' });
-        assert.equal(await main.getByText('To‘g‘ri javob!').count(), 0);
+        assert.equal(await main.getByText('Töğri javob!').count(), 0);
         await main.getByText('Qadam 4 / 4', { exact: true }).waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F3-01');
       },
@@ -512,7 +512,7 @@ export function registerTests() {
         await openStarterLesson(page, baseUrl, helpers);
         await advanceToExerciseStep(page);
         await submitFreeTextAnswer(page, '  i’m   sam! ');
-        await page.getByRole('main').getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await page.getByRole('main').getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await page.getByRole('dialog', { name: 'Dars yakunlandi' }).waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F3-02-a');
 
@@ -525,7 +525,7 @@ export function registerTests() {
             await submitFreeTextAnswer(sub.page, 'My name is Sam.');
             await sub.page
               .getByRole('main')
-              .getByText('To‘g‘ri javob!', { exact: true })
+              .getByText('Töğri javob!', { exact: true })
               .waitFor({ state: 'visible' });
             await sub.page.getByRole('dialog', { name: 'Dars yakunlandi' }).waitFor({ state: 'visible' });
             assertCleanSession(sub, 'T2-F3-02-b');
@@ -545,23 +545,23 @@ export function registerTests() {
 
         for (const wrong of ['Goodbye', '123', "I'm Aziza"]) {
           await submitFreeTextAnswer(page, wrong);
-          await main.getByText('Javobni ko‘rib chiqamiz', { exact: true }).waitFor({ state: 'visible' });
+          await main.getByText('Javobni körib çiqamiz', { exact: true }).waitFor({ state: 'visible' });
           assert.equal(
-            await main.getByText(/To‘g‘ri javob:/i).count(),
+            await main.getByText(/Töğri javob:/i).count(),
             0,
             `Free-text wrong feedback must NOT spoil answer key after "${wrong}".`,
           );
-          await main.getByRole('button', { name: 'Qayta urinish' }).click();
+          await main.getByRole('button', { name: 'Qayta uriniş' }).click();
         }
 
         await submitFreeTextAnswer(page, "I'm Sam");
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F3-03');
       },
     },
     {
       id: 'T2-F3-04',
-      name: 'Double-clicking TEKSHIRISH on lesson_eng_starter completion is idempotent for completion and XP',
+      name: 'Double-clicking TEKŞIRIŞ on lesson_eng_starter completion is idempotent for completion and XP',
       milestone: ['M1'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
@@ -570,7 +570,7 @@ export function registerTests() {
         const main = page.getByRole('main');
         const input = main.getByRole('textbox', { name: /Javobingizni ingliz tilida yozing/i });
         await input.fill("I'm Sam");
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).dblclick();
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).dblclick();
 
         await page.getByRole('dialog', { name: 'Dars yakunlandi' }).waitFor({ state: 'visible' });
         const snapshot = await helpers.readDemoProgressSnapshot(page);
@@ -599,11 +599,11 @@ export function registerTests() {
         });
         try {
           await openStarterLesson(page, baseUrl, helpers);
-          await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+          await advanceLessonStep(page, /Birga misol köramiz/i);
 
           const main = page.getByRole('main');
           await main.getByText(/Yozuv yuklanmadi/i).waitFor({ state: 'visible' });
-          await main.getByRole('button', { name: 'Qayta yuklash' }).waitFor({ state: 'visible' });
+          await main.getByRole('button', { name: 'Qayta yuklaş' }).waitFor({ state: 'visible' });
           await main.getByText(/Rasm yuklanmadi\. Tavsifi:/i).waitFor({ state: 'visible' });
 
           await main.locator('summary', { hasText: 'Matnli bayon' }).click();
@@ -634,13 +634,13 @@ export function registerTests() {
         await readCard.getByText('Qulflangan', { exact: true }).waitFor({ state: 'visible' });
         await readCard.getByText(/Avval yakunlang/i).waitFor({ state: 'visible' });
         assert.equal(
-          await readCard.getByRole('button', { name: /Darsni boshlash/i }).count(),
+          await readCard.getByRole('button', { name: /Darsni boşlaş/i }).count(),
           0,
-          'Locked Reading node must not expose Darsni boshlash button.',
+          'Locked Reading node must not expose Darsni boşlaş button.',
         );
 
         await readCard.click();
-        await main.getByRole('heading', { name: /Mening ta’lim yo‘lim/i }).first().waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: /Mening ta’lim yölim/i }).first().waitFor({ state: 'visible' });
         assert.equal(page.url().includes('lesson_eng_reading_01'), false);
         assertCleanSession(session, 'T2-F4-01');
       },
@@ -661,7 +661,7 @@ export function registerTests() {
         await helpers.writeReadingCheckpoint(page, 'lesson_eng_reading_01', 999);
         await page.reload({ waitUntil: 'domcontentloaded' });
         await main.getByText('Qadam 3 / 3', { exact: true }).waitFor({ state: 'visible' });
-        await main.getByRole('heading', { name: 'Bilimingizni tekshiring' }).first().waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: 'Bilimingizni tekşiring' }).first().waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F4-02');
       },
     },
@@ -683,8 +683,8 @@ export function registerTests() {
         );
 
         await distractor0315.first().click();
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('Javobni ko‘rib chiqamiz', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Javobni körib çiqamiz', { exact: true }).waitFor({ state: 'visible' });
         await helpers.expectVisibleFast(
           main.getByText(/in the afternoon/i),
           'T2-F4-03: Expected listening feedback explanation to reference "in the afternoon" evidence for 15:15.',
@@ -700,7 +700,7 @@ export function registerTests() {
       async run({ page, baseUrl, session, helpers }) {
         await openEnglishRoadmap(page, baseUrl, helpers);
         await openDirectEnglishLesson(page, baseUrl, 'lesson_eng_listening_01');
-        await advanceLessonStep(page, /2\. Audio Xabarni Tinglash/i);
+        await advanceLessonStep(page, /2\. Audio Xabarni Tinglaş/i);
 
         const main = page.getByRole('main');
         await main.locator('summary', { hasText: 'Matnli bayon' }).click();
@@ -723,13 +723,13 @@ export function registerTests() {
       async run({ page, baseUrl, session, helpers }) {
         await openEnglishRoadmap(page, baseUrl, helpers);
         await openDirectEnglishLesson(page, baseUrl, 'lesson_eng_reading_01');
-        await advanceLessonStep(page, /Ishlangan misol/i);
+        await advanceLessonStep(page, /Işlangan misol/i);
 
         const main = page.getByRole('main');
         await main.getByText('Qadam 2 / 3', { exact: true }).waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Ta’lim yo‘liga qaytish' }).click();
+        await main.getByRole('button', { name: 'Ta’lim yöliga qaytiş' }).click();
 
-        await main.getByRole('heading', { name: /Mening ta’lim yo‘lim/i }).first().waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: /Mening ta’lim yölim/i }).first().waitFor({ state: 'visible' });
         const snapshot = await helpers.readDemoProgressSnapshot(page);
         assert.equal(
           (snapshot.progress?.profile?.completedLessonIds ?? []).includes('lesson_eng_reading_01'),
@@ -739,7 +739,7 @@ export function registerTests() {
 
         await openDirectEnglishLesson(page, baseUrl, 'lesson_eng_reading_01');
         await main.getByText('Qadam 2 / 3', { exact: true }).waitFor({ state: 'visible' });
-        await main.getByRole('heading', { name: 'Ishlangan misol' }).first().waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: 'Işlangan misol' }).first().waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F4-05');
       },
     },
@@ -778,21 +778,21 @@ export function registerTests() {
             FAST_TIMEOUT,
           );
           assert.equal(
-            await exitNode.getByRole('button', { name: /Darsni boshlash|Sinovni boshlash/i }).count(),
+            await exitNode.getByRole('button', { name: /Darsni boşlaş|Sinovni boşlaş/i }).count(),
             0,
             `T2-F5-01: Locked ${nodeId} must not expose start/open lesson button.`,
           );
 
           const urlBefore = page.url();
-          await exitNode.getByRole('button', { name: /Qulf sharti/i }).click();
+          await exitNode.getByRole('button', { name: /Qulf şarti/i }).click();
           await helpers.expectVisibleFast(
-            exitNode.locator('[role="status"]').filter({ hasText: /Bu bosqich hali ochilmagan\. Avval yakunlang:/i }),
-            `T2-F5-01: Expected inline lock notice on ${nodeId} after clicking Qulf sharti.`,
+            exitNode.locator('[role="status"]').filter({ hasText: /Bu bosqiç hali oçilmagan\. Avval yakunlang:/i }),
+            `T2-F5-01: Expected inline lock notice on ${nodeId} after clicking Qulf şarti.`,
             FAST_TIMEOUT,
           );
           assert.equal(page.url(), urlBefore, `T2-F5-01: Locked ${nodeId} must not change URL.`);
           assert.equal(
-            await main.getByRole('button', { name: /^TEKSHIRISH$/i }).count(),
+            await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).count(),
             0,
             `T2-F5-01: Locked ${nodeId} must not render any exercise.`,
           );
@@ -802,8 +802,8 @@ export function registerTests() {
         for (const level of ['B2', 'C1', 'C2']) {
           const deferredSection = getCefrLevelSection(main, level);
           await helpers.expectVisibleFast(
-            deferredSection.getByText(/Keyingi bosqich \(DEFERRED\)/i),
-            `T2-F5-01: Expected Keyingi bosqich (DEFERRED) in ${level} section.`,
+            deferredSection.getByText(/Keyingi bosqiç \(DEFERRED\)/i),
+            `T2-F5-01: Expected Keyingi bosqiç (DEFERRED) in ${level} section.`,
             FAST_TIMEOUT,
           );
           await helpers.expectVisibleFast(
@@ -820,7 +820,7 @@ export function registerTests() {
           await deferredSection.click();
           assert.equal(page.url(), urlBeforeClick, `T2-F5-01: Clicking deferred ${level} section must not navigate.`);
           assert.equal(
-            await main.getByRole('button', { name: /^TEKSHIRISH$/i }).count(),
+            await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).count(),
             0,
             `T2-F5-01: Clicking deferred ${level} section must not open any exercise.`,
           );
@@ -835,7 +835,7 @@ export function registerTests() {
         ]) {
           await page.goto(`${baseUrl}${bypassPath}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
           assert.equal(
-            await main.getByRole('button', { name: /^TEKSHIRISH$/i }).count(),
+            await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).count(),
             0,
             `T2-F5-01: Bypass attempt "${bypassPath}" must not render any B2/C1/C2 exercise.`,
           );
@@ -860,7 +860,7 @@ export function registerTests() {
 
         const checkpointCard = main
           .locator('li, article, [data-node-id]')
-          .filter({ hasText: /Modul yakuni|Unit checkpoint|Bosqich sinovi|Checkpoint/i })
+          .filter({ hasText: /Modul yakuni|Unit checkpoint|Bosqiç sinovi|Checkpoint/i })
           .first();
 
         await helpers.expectVisibleFast(
@@ -870,7 +870,7 @@ export function registerTests() {
         );
 
         const startBtn = checkpointCard.getByRole('button', {
-          name: /Darsni boshlash|Sinovni boshlash|Boshlash/i,
+          name: /Darsni boşlaş|Sinovni boşlaş|Boşlaş/i,
         });
         await helpers.expectVisibleFast(
           startBtn,
@@ -880,7 +880,7 @@ export function registerTests() {
         await startBtn.click();
 
         for (let step = 0; step < 12; step++) {
-          const checkBtn = main.getByRole('button', { name: /^TEKSHIRISH$|^Topshirish$/i });
+          const checkBtn = main.getByRole('button', { name: /^TEKŞIRIŞ$|^Topşiriş$/i });
           if (await checkBtn.first().isVisible().catch(() => false)) {
             const textInput = main.getByRole('textbox');
             const options = main.locator('button[aria-pressed], fieldset label, [role="radio"]');
@@ -891,18 +891,18 @@ export function registerTests() {
             }
             await checkBtn.first().click();
 
-            const nextQ = main.getByRole('button', { name: /Keyingi savol|Keyingi qadam|Darsni yakunlash/i });
+            const nextQ = main.getByRole('button', { name: /Keyingi savol|Keyingi qadam|Darsni yakunlaş/i });
             if (await nextQ.first().isVisible().catch(() => false)) {
               await nextQ.first().click();
             }
           } else {
-            const nextStepBtn = main.getByRole('button', { name: /Keyingi qadam|Sinovni yakunlash/i });
+            const nextStepBtn = main.getByRole('button', { name: /Keyingi qadam|Sinovni yakunlaş/i });
             if (!(await nextStepBtn.first().isVisible().catch(() => false))) break;
             await nextStepBtn.first().click();
           }
 
           const weakOutcome = await main
-            .getByText(/qayta mashq|remedial|boshqa variant|qo‘shimcha mashq|yetarli emas|qayta topshirish/i)
+            .getByText(/qayta maşq|remedial|boşqa variant|qöşimça maşq|yetarli emas|qayta topşiriş/i)
             .first()
             .isVisible()
             .catch(() => false);
@@ -910,17 +910,17 @@ export function registerTests() {
         }
 
         await helpers.expectVisibleFast(
-          main.getByText(/qayta mashq|remedial|boshqa variant|qo‘shimcha mashq|yetarli emas|qayta topshirish/i),
+          main.getByText(/qayta maşq|remedial|boşqa variant|qöşimça maşq|yetarli emas|qayta topşiriş/i),
           'T2-F5-02 (M2-M5): Expected remedial practice / alternate variant notice after weak checkpoint score.',
           FAST_TIMEOUT,
         );
 
-        const backBtn = main.getByRole('button', { name: /Ta’lim yo‘liga qaytish/i });
+        const backBtn = main.getByRole('button', { name: /Ta’lim yöliga qaytiş/i });
         if (await backBtn.first().isVisible().catch(() => false)) {
           await backBtn.first().click();
           await main
             .getByRole('heading', {
-              name: /Mening ta’lim yo‘lim|Мой путь обучения|Ingliz tili|O‘quv yo‘li|Yo‘l xaritasi|Дорожная карта/i,
+              name: /Mening ta’lim yölim|Мой путь обучения|Ingliz tili|Öquv yöli|Yöl xaritasi|Дорожная карта/i,
             })
             .first()
             .waitFor({ state: 'visible', timeout: 5000 })
@@ -929,7 +929,7 @@ export function registerTests() {
         const a2Section = getCefrLevelSection(main, 'A2');
         if ((await a2Section.count()) > 0) {
           assert.equal(
-            await a2Section.getByRole('button', { name: /Darsni boshlash/i }).count(),
+            await a2Section.getByRole('button', { name: /Darsni boşlaş/i }).count(),
             0,
             'T2-F5-02 (M2-M5): Next CEFR level (A2) must remain locked after weak checkpoint score.',
           );
@@ -949,14 +949,14 @@ export function registerTests() {
         const main = page.getByRole('main');
         for (let attempt = 0; attempt < 2; attempt++) {
           await main.getByRole('button', { name: 'behind the sofa' }).click();
-          await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
+          await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
           if (attempt === 0) {
-            await main.getByRole('button', { name: 'Qayta urinish' }).click();
+            await main.getByRole('button', { name: 'Qayta uriniş' }).click();
           }
         }
 
         await helpers.expectVisibleFast(
-          main.getByText(/takroriy xato|remedial|qo‘shimcha mashq/i),
+          main.getByText(/takroriy xato|remedial|qöşimça maşq/i),
           'T2-F5-03 (M5): Expected repeated-error targeted remedial trigger after consecutive identical errors.',
           FAST_TIMEOUT,
         );
@@ -973,7 +973,7 @@ export function registerTests() {
 
         const taskNode = main
           .locator('li, article, [data-node-id]')
-          .filter({ hasText: /Speaking|Writing|Gapirish|Yozish|O‘zini baholash/i })
+          .filter({ hasText: /Speaking|Writing|Gapirish|Yoziş|Özini baholaş/i })
           .first();
 
         await helpers.expectVisibleFast(
@@ -982,11 +982,11 @@ export function registerTests() {
           FAST_TIMEOUT,
         );
         await helpers.expectVisibleFast(
-          taskNode.getByRole('button', { name: /Darsni boshlash|Boshlash/i }),
+          taskNode.getByRole('button', { name: /Darsni boşlaş|Boşlaş/i }),
           'T2-F5-04 (M2-M3): Expected openable speaking/writing lesson button.',
           FAST_TIMEOUT,
         );
-        await taskNode.getByRole('button', { name: /Darsni boshlash|Boshlash/i }).click();
+        await taskNode.getByRole('button', { name: /Darsni boşlaş|Boşlaş/i }).click();
 
         await advanceToExerciseStep(page);
 
@@ -998,7 +998,7 @@ export function registerTests() {
         );
 
         const submitBtn = main.getByRole('button', {
-          name: /^TEKSHIRISH$|Topshirish|Namunani ko‘rish|Baholash/i,
+          name: /^TEKŞIRIŞ$|Topşiriş|Namunani köriş|Baholaş/i,
         }).first();
 
         for (const blank of ['', '   ']) {
@@ -1029,12 +1029,12 @@ export function registerTests() {
           FAST_TIMEOUT,
         );
         await helpers.expectVisibleFast(
-          main.getByText(/Baholash mezoni|Rubric|Mezonlar/i),
+          main.getByText(/Baholaş mezoni|Rubric|Mezonlar/i),
           'T2-F5-04 (M2-M3): Expected self-assessment rubric criteria after valid submission.',
           FAST_TIMEOUT,
         );
         await helpers.expectVisibleFast(
-          main.getByText(/O‘zini baholash|Mustaqil mashq|Self-assessment/i),
+          main.getByText(/Özini baholaş|Mustaqil maşq|Self-assessment/i),
           'T2-F5-04 (M2-M3): Expected explicit self-assessment badge.',
           FAST_TIMEOUT,
         );
@@ -1058,7 +1058,7 @@ export function registerTests() {
 
         const structuredNode = main
           .locator('li, article, [data-node-id]')
-          .filter({ hasText: /Gap tuzish|So‘zlarni moslash|sentence_order|word_match|Tartib|Moslash/i })
+          .filter({ hasText: /Gap tuziş|Sözlarni moslaş|sentence_order|word_match|Tartib|Moslaş/i })
           .first();
 
         await helpers.expectVisibleFast(
@@ -1066,18 +1066,18 @@ export function registerTests() {
           'T2-F5-05 (M2): Expected sentence_order or word_match node on grouped A1 roadmap (without vacuous A1 match).',
           FAST_TIMEOUT,
         );
-        await structuredNode.getByRole('button', { name: /Darsni boshlash|Boshlash/i }).click();
+        await structuredNode.getByRole('button', { name: /Darsni boşlaş|Boşlaş/i }).click();
         await advanceToExerciseStep(page);
 
         const tokens = main.locator('[data-word-token], [data-match-item], [data-question-mode] button');
         const tokenCount = await tokens.count();
         assert.ok(tokenCount >= 2, 'T2-F5-05 (M2): Expected >= 2 interactive order/match tokens inside exercise.');
 
-        const checkBtn = main.getByRole('button', { name: /^TEKSHIRISH$/i });
+        const checkBtn = main.getByRole('button', { name: /^TEKŞIRIŞ$/i });
         assert.equal(
           await checkBtn.isDisabled(),
           true,
-          'T2-F5-05 (M2): TEKSHIRISH must remain disabled when 0 pairs/tokens are selected.',
+          'T2-F5-05 (M2): TEKŞIRIŞ must remain disabled when 0 pairs/tokens are selected.',
         );
 
         const leftColumn = main.locator('[data-match-side="left"] button[data-match-item]');
@@ -1102,18 +1102,18 @@ export function registerTests() {
         assert.equal(
           await checkBtn.isDisabled(),
           false,
-          'T2-F5-05 (M2): TEKSHIRISH must enable for >= 1 partial/misordered selection.',
+          'T2-F5-05 (M2): TEKŞIRIŞ must enable for >= 1 partial/misordered selection.',
         );
         await checkBtn.click();
 
         await helpers.expectVisibleFast(
-          main.getByText(/Javobni ko‘rib chiqamiz|tartib|mos|izoh/i),
+          main.getByText(/Javobni körib çiqamiz|tartib|mos|izoh/i),
           'T2-F5-05 (M2): Expected targeted error hint after partial/misordered sentence_order or word_match submission.',
           FAST_TIMEOUT,
         );
-        assert.equal(await main.getByText('To‘g‘ri javob!').count(), 0);
+        assert.equal(await main.getByText('Töğri javob!').count(), 0);
 
-        const retryBtn = main.getByRole('button', { name: /Qayta urinish|Tozalash/i }).first();
+        const retryBtn = main.getByRole('button', { name: /Qayta uriniş|Tozalaş/i }).first();
         await helpers.expectVisibleFast(
           retryBtn,
           'T2-F5-05 (M2): Expected retry/reset button without locking out learner.',
@@ -1138,14 +1138,14 @@ export function registerTests() {
       milestone: ['M1', 'M2'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
         await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
 
         const main = page.getByRole('main');
         for (let i = 0; i < 5; i++) {
-          await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+          await main.getByRole('button', { name: 'Javobni köriş' }).click();
           await main.getByRole('button', { name: 'Oldingi' }).click();
-          await main.getByRole('heading', { name: 'Birga misol ko‘ramiz' }).first().waitFor({ state: 'visible' });
+          await main.getByRole('heading', { name: 'Birga misol köramiz' }).first().waitFor({ state: 'visible' });
           await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
         }
 
@@ -1162,26 +1162,26 @@ export function registerTests() {
     },
     {
       id: 'T2-F6-02',
-      name: 'Repeatedly clicking Yana mashq qilaman keeps card in active queue without crash until resolved',
+      name: 'Repeatedly clicking Yana maşq qilaman keeps card in active queue without crash until resolved',
       milestone: ['M1', 'M2'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
         await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
 
         const main = page.getByRole('main');
         for (let cycle = 0; cycle < 4; cycle++) {
-          await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
-          await main.getByRole('button', { name: 'Yana mashq qilaman' }).click();
+          await main.getByRole('button', { name: 'Javobni köriş' }).click();
+          await main.getByRole('button', { name: 'Yana maşq qilaman' }).click();
           await main.getByText('0 / 2', { exact: true }).waitFor({ state: 'visible' });
         }
 
         for (let finish = 0; finish < 2; finish++) {
-          await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+          await main.getByRole('button', { name: 'Javobni köriş' }).click();
           await main.getByRole('button', { name: 'Eslab qoldim' }).click();
         }
         await main
-          .getByRole('heading', { name: 'Barcha kartochkalar ko‘rib chiqildi' })
+          .getByRole('heading', { name: 'Barça kartoçkalar körib çiqildi' })
           .waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F6-02');
       },
@@ -1197,12 +1197,12 @@ export function registerTests() {
         });
         try {
           await openStarterLesson(page, baseUrl, helpers);
-          await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+          await advanceLessonStep(page, /Birga misol köramiz/i);
           await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
 
           const main = page.getByRole('main');
           const imageModeBtn = main.getByRole('button', {
-            name: /Image\s*→\s*Word|Image->Word|Rasm\s*→\s*So‘z/i,
+            name: /Image\s*→\s*Word|Image->Word|Rasm\s*→\s*Söz/i,
           });
           await helpers.expectVisibleFast(
             imageModeBtn,
@@ -1214,7 +1214,7 @@ export function registerTests() {
           assert.equal(
             await main.getByRole('heading', { name: "What's your name?" }).count(),
             0,
-            'T2-F6-03 (M2): Image->Word mode must hide written English target before Javobni ko‘rish.',
+            'T2-F6-03 (M2): Image->Word mode must hide written English target before Javobni köriş.',
           );
           assert.equal(
             await main.locator('[data-testid^="flashcard-"]').getByText("What's your name?").count(),
@@ -1231,7 +1231,7 @@ export function registerTests() {
           const cardText = (await main.locator('[data-testid^="flashcard-"]').first().innerText()).trim();
           assert.ok(cardText.length > 0, 'T2-F6-03 (M2): Flashcard must render readable text/alt fallback.');
 
-          await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+          await main.getByRole('button', { name: 'Javobni köriş' }).click();
           await main.getByText("What's your name?", { exact: true }).waitFor({ state: 'visible' });
           await main.getByRole('button', { name: 'Eslab qoldim' }).waitFor({ state: 'visible' });
         } finally {
@@ -1246,17 +1246,17 @@ export function registerTests() {
       milestone: ['M1', 'M2'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
         await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
 
         const main = page.getByRole('main');
-        const audioBtn = main.getByRole('button', { name: /Talaffuzni tinglash/i });
+        const audioBtn = main.getByRole('button', { name: /Talaffuzni tinglaş/i });
         for (let i = 0; i < 5; i++) {
           await audioBtn.click();
         }
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
-        await main.getByRole('button', { name: 'Yana mashq qilaman' }).click();
-        await main.getByRole('button', { name: /Talaffuzni tinglash/i }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
+        await main.getByRole('button', { name: 'Yana maşq qilaman' }).click();
+        await main.getByRole('button', { name: /Talaffuzni tinglaş/i }).click();
         assertCleanSession(session, 'T2-F6-04');
       },
     },
@@ -1268,7 +1268,7 @@ export function registerTests() {
         await openEnglishRoadmap(page, baseUrl, helpers);
         const main = page.getByRole('main');
 
-        const srsBtn = main.getByRole('button', { name: /Flashcard|Kartochkalar|Takrorlash/i }).first();
+        const srsBtn = main.getByRole('button', { name: /Flashcard|Kartoçkalar|Takrorlaş/i }).first();
         await helpers.expectVisibleFast(
           srsBtn,
           'T2-F6-05 (M2): Expected SRS flashcard review hub button on English roadmap.',
@@ -1277,7 +1277,7 @@ export function registerTests() {
         await srsBtn.click();
 
         for (let i = 0; i < 30; i++) {
-          const revealBtn = main.getByRole('button', { name: /Javobni ko‘rish/i });
+          const revealBtn = main.getByRole('button', { name: /Javobni köriş/i });
           if (!(await revealBtn.isVisible().catch(() => false))) break;
           await revealBtn.click();
           await main.getByRole('button', { name: /Eslab qoldim/i }).click();
@@ -1286,13 +1286,13 @@ export function registerTests() {
         const hubText = (await main.innerText()).trim();
         assert.ok(hubText.length > 20, 'T2-F6-05 (M2): Empty/all-mastered SRS due queue rendered a blank screen.');
         await helpers.expectVisibleFast(
-          main.getByText(/Barcha kartochkalar|Bugungi takrorlash yakunlandi|Hozircha.*yo‘q|All caught up/i),
+          main.getByText(/Barça kartoçkalar|Bugungi takrorlaş yakunlandi|Hozirça.*yöq|All caught up/i),
           'T2-F6-05 (M2): Expected friendly completion state when SRS due queue is empty/all-mastered.',
           FAST_TIMEOUT,
         );
 
         const randomBtn = main.getByRole('button', {
-          name: /Tasodifiy mashq|Random|Kartochkalarni qayta ko‘rish|Barchasini takrorlash/i,
+          name: /Tasodifiy maşq|Random|Kartoçkalarni qayta köriş|Barçasini takrorlaş/i,
         }).first();
         await helpers.expectVisibleFast(
           randomBtn,
@@ -1300,7 +1300,7 @@ export function registerTests() {
           FAST_TIMEOUT,
         );
         await randomBtn.click();
-        await main.getByRole('button', { name: /Javobni ko‘rish/i }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /Javobni köriş/i }).waitFor({ state: 'visible' });
         assertCleanSession(session, 'T2-F6-05');
       },
     },
@@ -1310,20 +1310,20 @@ export function registerTests() {
     // =========================================================================
     {
       id: 'T2-F7-01',
-      name: 'Empty and whitespace-only prompts in Yo‘lchi AI keep send disabled and emit zero messages',
+      name: 'Empty and whitespace-only prompts in Yölçi AI keep send disabled and emit zero messages',
       milestone: ['M1'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
 
-        await page.getByRole('button', { name: 'Yo‘lchidan so‘rash' }).click();
-        const dialog = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+        await page.getByRole('button', { name: 'Yölçidan söraş' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
         await dialog.waitFor({ state: 'visible' });
 
-        const sendBtn = dialog.getByRole('button', { name: 'Savolni yuborish' });
+        const sendBtn = dialog.getByRole('button', { name: 'Savolni yuboriş' });
         assert.equal(await sendBtn.isDisabled(), true, 'Send button must be disabled when input is empty.');
 
-        const textbox = dialog.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' });
+        const textbox = dialog.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' });
         await textbox.fill('   ');
         assert.equal(await sendBtn.isDisabled(), true, 'Send button must remain disabled for whitespace.');
         await textbox.press('Enter');
@@ -1331,70 +1331,70 @@ export function registerTests() {
         assert.equal(
           await dialog.getByRole('button', { name: 'Foydali javob' }).count(),
           0,
-          'Whitespace Enter must not send a Yo‘lchi AI message.',
+          'Whitespace Enter must not send a Yölçi AI message.',
         );
         assertCleanSession(session, 'T2-F7-01');
       },
     },
     {
       id: 'T2-F7-02',
-      name: 'Pressing Escape closes Yo‘lchi AI dialog cleanly and returns to exact lesson step',
+      name: 'Pressing Escape closes Yölçi AI dialog cleanly and returns to exact lesson step',
       milestone: ['M1'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
 
         await helpers.openAndCloseYolchiAi(page, {
           closeWith: 'escape',
           preserveStepIndicator: /^Qadam 2 \/ 4$/,
-          preserveText: 'Birga misol ko‘ramiz',
+          preserveText: 'Birga misol köramiz',
         });
         assertCleanSession(session, 'T2-F7-02');
       },
     },
     {
       id: 'T2-F7-03',
-      name: 'Asking Yo‘lchi AI for direct answer mid-exercise scaffolds instead of leaking raw answer key',
+      name: 'Asking Yölçi AI for direct answer mid-exercise scaffolds instead of leaking raw answer key',
       milestone: ['M1', 'M5'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
         await advanceToExerciseStep(page);
 
-        await page.getByRole('button', { name: 'Yo‘lchidan so‘rash' }).click();
-        const dialog = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+        await page.getByRole('button', { name: 'Yölçidan söraş' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
         await dialog.waitFor({ state: 'visible' });
-        await dialog.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('To‘g‘ri javobni ayt');
-        await dialog.getByRole('button', { name: 'Savolni yuborish' }).click();
+        await dialog.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill('Töğri javobni ayt');
+        await dialog.getByRole('button', { name: 'Savolni yuboriş' }).click();
         await dialog.getByRole('button', { name: 'Foydali javob' }).first().waitFor({ state: 'visible' });
 
         const replyText = await dialog.innerText();
         assert.equal(
           /\b(I'm Sam|My name is Sam|My name's Sam)\b/i.test(replyText),
           false,
-          `T2-F7-03: Yo‘lchi AI leaked the target answer key: ${replyText}`,
+          `T2-F7-03: Yölçi AI leaked the target answer key: ${replyText}`,
         );
-        await dialog.getByRole('button', { name: 'Yopish' }).click();
+        await dialog.getByRole('button', { name: 'Yopiş' }).click();
         await dialog.waitFor({ state: 'hidden' });
         assertCleanSession(session, 'T2-F7-03');
       },
     },
     {
       id: 'T2-F7-04',
-      name: 'Very long prompt (>500 chars) in Yo‘lchi AI wraps cleanly on 390px mobile without horizontal overflow',
+      name: 'Very long prompt (>500 chars) in Yölçi AI wraps cleanly on 390px mobile without horizontal overflow',
       milestone: ['M1'],
       contextOptions: { viewport: 'mobile390' },
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
 
-        await page.getByRole('button', { name: 'Yo‘lchidan so‘rash' }).click();
-        const dialog = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+        await page.getByRole('button', { name: 'Yölçidan söraş' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
         await dialog.waitFor({ state: 'visible' });
 
         const longPrompt = 'Hello! '.repeat(90).trim();
         assert.ok(longPrompt.length > 500);
-        await dialog.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill(longPrompt);
-        await dialog.getByRole('button', { name: 'Savolni yuborish' }).click();
+        await dialog.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill(longPrompt);
+        await dialog.getByRole('button', { name: 'Savolni yuboriş' }).click();
         await dialog.getByRole('button', { name: 'Foydali javob' }).first().waitFor({ state: 'visible' });
 
         await helpers.assertNoHorizontalOverflow(page, 'T2-F7-04-mobile390-long-prompt');
@@ -1403,7 +1403,7 @@ export function registerTests() {
     },
     {
       id: 'T2-F7-05',
-      name: 'Yo‘lchi AI network failure/timeout renders localized error and retry without erasing lesson progress',
+      name: 'Yölçi AI network failure/timeout renders localized error and retry without erasing lesson progress',
       milestone: ['M5'],
       async run({ page, baseUrl, session, helpers }) {
         await openStarterLesson(page, baseUrl, helpers);
@@ -1421,28 +1421,28 @@ export function registerTests() {
         try {
           assert.equal(await page.evaluate(() => navigator.onLine), false, 'Expected navigator.onLine === false.');
 
-          await page.getByRole('button', { name: 'Yo‘lchidan so‘rash' }).click();
-          const dialog = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+          await page.getByRole('button', { name: 'Yölçidan söraş' }).click();
+          const dialog = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
           await dialog.waitFor({ state: 'visible' });
-          await dialog.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Salom?');
-          await dialog.getByRole('button', { name: 'Savolni yuborish' }).click();
+          await dialog.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill('Salom?');
+          await dialog.getByRole('button', { name: 'Savolni yuboriş' }).click();
 
           const alertBox = dialog.getByRole('alert');
           await helpers.expectVisibleFast(
             alertBox,
-            'T2-F7-05 (M5): Expected localized Yo‘lchi AI offline/network error alert when navigator.onLine is false / Edge aborted.',
+            'T2-F7-05 (M5): Expected localized Yölçi AI offline/network error alert when navigator.onLine is false / Edge aborted.',
             FAST_TIMEOUT,
           );
           const alertText = await alertBox.innerText();
           assert.match(
             alertText,
-            /ulanish uzildi|internet|xatolik|javob olinmadi|qayta urinib/i,
+            /ulaniş uzildi|internet|xatolik|javob olinmadi|qayta urinib/i,
             `T2-F7-05 (M5): Expected localized offline/network error message, got: "${alertText}"`,
           );
-          const retryBtn = dialog.getByRole('button', { name: /Qayta urinish/i });
+          const retryBtn = dialog.getByRole('button', { name: /Qayta uriniş/i });
           await helpers.expectVisibleFast(
             retryBtn,
-            'T2-F7-05 (M5): Expected retry button inside Yo‘lchi AI failure alert.',
+            'T2-F7-05 (M5): Expected retry button inside Yölçi AI failure alert.',
             FAST_TIMEOUT,
           );
 
@@ -1450,7 +1450,7 @@ export function registerTests() {
           await unthrottle();
           await retryBtn.click();
           await dialog.getByRole('button', { name: 'Foydali javob' }).first().waitFor({ state: 'visible' });
-          await dialog.getByRole('button', { name: 'Yopish' }).click();
+          await dialog.getByRole('button', { name: 'Yopiş' }).click();
           await dialog.waitFor({ state: 'hidden' });
         } finally {
           await page.context().setOffline(false);
@@ -1461,7 +1461,7 @@ export function registerTests() {
         assert.equal(
           await input.inputValue(),
           "I'm Sam",
-          'T2-F7-05 (M5): Yo‘lchi AI failure/retry must not erase active lesson exercise input.',
+          'T2-F7-05 (M5): Yölçi AI failure/retry must not erase active lesson exercise input.',
         );
         const snapshot = await helpers.readDemoProgressSnapshot(page);
         assert.ok(snapshot.sessionRaw, 'T2-F7-05 (M5): Demo progress session must remain intact after AI failure.');

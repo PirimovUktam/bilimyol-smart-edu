@@ -304,7 +304,7 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                         child: Text(
                           isRu
                               ? 'Выберите пару слева и справа:'
-                              : 'Chapdan so‘zni tanlang va o‘ngdagi mosini bosing:',
+                              : 'Çapdan sözni tanlang va öngdagi mosini bosing:',
                           style: AppTypography.ui(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -323,7 +323,7 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                                     _result = null;
                                     _error = null;
                                   }),
-                          child: Text(isRu ? 'Сбросить' : 'Tozalash'),
+                          child: Text(isRu ? 'Сбросить' : 'Tozalaş'),
                         ),
                       ],
                     ],
@@ -740,7 +740,7 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                           Text(
                             isRu
                                 ? 'Правильный порядок: ${q.orderedTokens.join(' ')}'
-                                : 'To‘g‘ri tartib: ${q.orderedTokens.join(' ')}',
+                                : 'Töğri tartib: ${q.orderedTokens.join(' ')}',
                             style: AppTypography.ui(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,

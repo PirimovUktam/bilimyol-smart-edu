@@ -373,11 +373,11 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Fast Q2'), findsOneWidget);
 
-        // Step 2 (< 800ms after Step 1!) -> tap Natijalarni Ko‘rish and verify button disables immediately so duplicate AlertDialogs cannot stack
+        // Step 2 (< 800ms after Step 1!) -> tap Natijalarni Köriş and verify button disables immediately so duplicate AlertDialogs cannot stack
         await tester.ensureVisible(find.text('Two'));
         await tester.tap(find.text('Two'));
         await tester.pump();
-        final finishBtn = find.text('Natijalarni Ko‘rish');
+        final finishBtn = find.text('Natijalarni Köriş');
         await tester.ensureVisible(finishBtn);
         await tester.tap(finishBtn);
         await tester.pumpAndSettle();
@@ -390,11 +390,11 @@ void main() {
         expect(finishAppButton.onPressed, isNull);
 
         // Confirm within 800ms of step 1 -> must complete cleanly without silent drop
-        await tester.tap(find.text('Topshirish'));
+        await tester.tap(find.text('Topşiriş'));
         await tester.pumpAndSettle();
 
         expect(find.text('Diagnostika yakunlandi'), findsOneWidget);
-        expect(find.text('2 / 2 javob to‘g‘ri.'), findsOneWidget);
+        expect(find.text('2 / 2 javob töğri.'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
@@ -443,7 +443,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Dars bosqichlari topilmadi.'), findsOneWidget);
+        expect(find.text('Dars bosqiçlari topilmadi.'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
         // 2) SubmitLessonAnswerUseCase rejects empty wordMatch/sentenceOrder/textInput
@@ -489,13 +489,13 @@ void main() {
         expect(partialOrder.correctOption, isEmpty);
         expect(
           partialOrder.optionFeedback,
-          contains('Gapdagi barcha so‘zlarni tartiblang (1/6)'),
+          contains('Gapdagi barça sözlarni tartiblang (1/6)'),
         );
       },
     );
 
     testWidgets(
-      'F5: Non-MCQ wrong answers hide To‘g‘ri javob & answer key in UI and DemoAITutorService blocks all UZ/RU/EN paraphrases without word-fragment [...] leaks',
+      'F5: Non-MCQ wrong answers hide Töğri javob & answer key in UI and DemoAITutorService blocks all UZ/RU/EN paraphrases without word-fragment [...] leaks',
       (tester) async {
         // 1) UI check on InteractiveLessonScreen for starter free-text
         final container = ProviderContainer(
@@ -534,12 +534,12 @@ void main() {
           '123',
         );
         await tester.pump();
-        await tester.tap(find.text('TEKSHIRISH'));
+        await tester.tap(find.text('TEKŞIRIŞ'));
         await tester.pumpAndSettle();
 
         expect(find.text('Sizning javobingiz: 123'), findsOneWidget);
-        expect(find.textContaining('to‘liq gap yozing'), findsOneWidget);
-        expect(find.textContaining('To‘g‘ri javob:'), findsNothing);
+        expect(find.textContaining('töliq gap yozing'), findsOneWidget);
+        expect(find.textContaining('Töğri javob:'), findsNothing);
         expect(find.textContaining("I'm Sam"), findsNothing);
         expect(find.textContaining('My name is Sam'), findsNothing);
 
@@ -549,8 +549,8 @@ void main() {
             .steps[3]
             .interactiveQuestion!;
         final paraphrases = <({String msg, String lang})>[
-          (msg: "qaysi biri to'g'ri", lang: 'uz'),
-          (msg: "to'g'risi nima", lang: 'uz'),
+          (msg: "qaysi biri töğri", lang: 'uz'),
+          (msg: "töğrisi nima", lang: 'uz'),
           (msg: 'qaysi variantni tanlay', lang: 'uz'),
           (msg: 'qaysi javobni bosay', lang: 'uz'),
           (msg: 'какой вариант верный', lang: 'ru'),
@@ -632,7 +632,7 @@ void main() {
                 AskTutorRequest(
                   message: lang == 'ru'
                       ? 'Какой правильный ответ?'
-                      : 'To‘g‘ri javobni ayt',
+                      : 'Töğri javobni ayt',
                   courseId: 'course_eng_01',
                   skillId: q.skillId,
                   lessonId: lesson.id,

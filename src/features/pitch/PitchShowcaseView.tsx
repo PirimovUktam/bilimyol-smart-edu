@@ -58,7 +58,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; time: string }>>([
     {
       role: 'assistant',
-      text: 'Assalomu alaykum! Men Yo‘lchi AI — sizning shaxsiy ta’lim yo‘lboshchingizman. Har qanday fan, formulalar yoki o‘quv qiyinchiliklari bo‘yicha savol bering!',
+      text: 'Assalomu alaykum! Men Yölçi AI — sizning şaxsiy ta’lim yölboşçingizman. Har qanday fan, formulalar yoki öquv qiyinçiliklari böyiça savol bering!',
       time: '18:20',
     },
   ]);
@@ -71,16 +71,16 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
   // Sample questions for the AI bot
   const samplePrompts = [
     {
-      q: 'Kasrlarni qo‘shishda umumiy maxrajni qanday oson topish mumkin?',
-      a: 'Kasrlarni qo‘shishda umumiy maxraj — bu ikkala maxrajning EKUKi (Eng Kichik Umumiy Karralisi)dir. Masalan, 1/4 va 1/6 da umumiy maxraj 12 bo‘ladi (4*3 va 6*2). Shunda: 3/12 + 2/12 = 5/12. Qaysi misolni yechishda qiynalyapsiz, birgalikda tahlil qilamizmi? 💡',
+      q: 'Kasrlarni qöşişda umumiy maxrajni qanday oson topiş mumkin?',
+      a: 'Kasrlarni qöşişda umumiy maxraj — bu ikkala maxrajning EKUKi (Eng Kiçik Umumiy Karralisi)dir. Masalan, 1/4 va 1/6 da umumiy maxraj 12 böladi (4*3 va 6*2). Şunda: 3/12 + 2/12 = 5/12. Qaysi misolni yeçişda qiynalyapsiz, birgalikda tahlil qilamizmi? 💡',
     },
     {
-      q: 'Present Perfect va Past Simple o‘rtasidagi farq nima?',
-      a: 'Asosiy farq — natijaning hozirgi vaqtga bog‘liqligi! "I lost my key" (Past Simple) — kalit o‘tmishda yo‘qolgan, hozir topilgan bo‘lishi mumkin. "I have lost my key" (Present Perfect) — kalit hozir ham yo‘q va uyga kira olmayapman! BilimYo‘l ingliz tili darslarida buni audio vaziyatlar orqali mustahkamlaymiz. 🇬🇧',
+      q: 'Present Perfect va Past Simple örtasidagi farq nima?',
+      a: 'Asosiy farq — natijaning hozirgi vaqtga boğliqligi! "I lost my key" (Past Simple) — kalit ötmişda yöqolgan, hozir topilgan bölişi mumkin. "I have lost my key" (Present Perfect) — kalit hozir ham yöq va uyga kira olmayapman! BilimYöl ingliz tili darslarida buni audio vaziyatlar orqali mustahkamlaymiz. 🇬🇧',
     },
     {
-      q: 'Nega mening funksiyalar bo‘yicha bilim darajam 38% bo‘lib qoldi?',
-      a: 'Diagnostikada "Argument qiymati bo‘yicha funksiyani topish" savolida xato qayd etildi. Hech xavotir olmang! Men siz uchun aynan shu bo‘shliqni to‘ldiruvchi 3 qadamli maxsus dars va grafikli model tayyorlab qo‘ydim. Darsni boshlaymizmi? 📐',
+      q: 'Nega mening funksiyalar böyiça bilim darajam 38% bölib qoldi?',
+      a: 'Diagnostikada "Argument qiymati böyiça funksiyani topiş" savolida xato qayd etildi. Heç xavotir olmang! Men siz uçun aynan şu böşliqni töldiruvçi 3 qadamli maxsus dars va grafikli model tayyorlab qöydim. Darsni boşlaymizmi? 📐',
     },
   ];
 
@@ -102,7 +102,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
       const matchedSample = samplePrompts.find((p) => p.q === q);
       const botResponse = matchedSample
         ? matchedSample.a
-        : `Ajoyib savol! BilimYo‘l Smart Edu ushbu mavzu bo‘yicha maxsus pedagogik traektoriya ishlab chiqqan. Gemini 2.5 Flash tahlili bo‘yicha, "${q}" masalasi 3 ta asosiy qadam orqali tushuntiriladi. Jonli darsni sinab ko‘rish uchun "/demo" sahifasiga o‘tishingiz mumkin! 🚀`;
+        : `Ajoyib savol! BilimYöl Smart Edu uşbu mavzu böyiça maxsus pedagogik traektoriya işlab çiqqan. Gemini 2.5 Flash tahlili böyiça, "${q}" masalasi 3 ta asosiy qadam orqali tuşuntiriladi. Jonli darsni sinab köriş uçun "/demo" sahifasiga ötişingiz mumkin! 🚀`;
 
       setChatMessages((prev) => [
         ...prev,
@@ -171,13 +171,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <Sparkles className="w-3 h-3 text-slate-950" /> PITCH DAY 3.0
               </span>
               <span className="text-slate-300 font-medium hidden sm:inline">
-                AIFU • IT Park • Alibaba • Inno Technopark Saralash Bosqichi
+                AIFU • IT Park • Alibaba • Inno Technopark Saralaş Bosqiçi
               </span>
             </div>
             <div className="flex items-center gap-2 mx-auto sm:mx-0">
               <span className="text-mint font-bold flex items-center gap-1.5 text-[11px]">
                 <span className="w-2 h-2 rounded-full bg-mint animate-ping inline-block" />
-                1-Bosqich: Onlayn Saralash
+                1-Bosqiç: Onlayn Saralaş
               </span>
               <button
                 onClick={() => {
@@ -207,7 +207,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 onClick={() => scrollToSection('problem-solution')}
                 className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <Flame className="w-3.5 h-3.5 text-coral" /> Muammo & Yechim
+                <Flame className="w-3.5 h-3.5 text-coral" /> Muammo & Yeçim
               </button>
               <button
                 onClick={() => scrollToSection('team-section')}
@@ -225,7 +225,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 onClick={() => scrollToSection('monetization-section')}
                 className="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-mint transition-all cursor-pointer flex items-center gap-1.5 text-mint"
               >
-                <DollarSign className="w-3.5 h-3.5" /> 59 900 so‘m
+                <DollarSign className="w-3.5 h-3.5" /> 59 900 söm
               </button>
               <button
                 onClick={() => scrollToSection('tech-architecture')}
@@ -265,18 +265,18 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-path/70 border border-path/40 text-path text-xs font-bold shadow-[0_0_20px_rgba(13,154,214,0.25)] backdrop-blur-md">
               <Sparkles className="w-3.5 h-3.5 text-path animate-spin" style={{ animationDuration: '6s' }} />
-              <span>O‘zbekiston EdTech Bozorida 1-Raqamli AI Ta’lim Ekotizimi</span>
+              <span>Özbekiston EdTech Bozorida 1-Raqamli AI Ta’lim Ekotizimi</span>
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
-              BilimYo‘l Smart Edu
+              BilimYöl Smart Edu
               <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-path via-path to-mint bg-clip-text text-transparent">
-                Darslik emas — Shaxsiy Ta’lim Yo‘li
+                Darslik emas — Şaxsiy Ta’lim Yöli
               </span>
             </h1>
 
             <p className="text-base sm:text-xl text-slate-300 font-normal max-w-3xl mx-auto leading-relaxed">
-              Har bir o‘quvchi uchun <strong className="text-path font-bold">individual sun’iy intellekt repetitori</strong>, bilim bo‘shliqlarini aniqlaydigan adaptiv diagnostika va avtomatik tuziluvchi darslar oqimi.
+              Har bir öquvçi uçun <strong className="text-path font-bold">individual sun’iy intellekt repetitori</strong>, bilim böşliqlarini aniqlaydigan adaptiv diagnostika va avtomatik tuziluvçi darslar oqimi.
             </p>
 
             {/* CTAs */}
@@ -289,7 +289,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-path via-brand to-brand hover:from-path hover:to-brand text-slate-950 font-black text-base shadow-[0_0_30px_rgba(13,154,214,0.4)] flex items-center gap-3 cursor-pointer transition-all transform hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 <Play className="w-5 h-5 fill-current text-slate-950" />
-                <span className="text-slate-950 font-black">Demo Sahifasini Ko‘rish (/demo)</span>
+                <span className="text-slate-950 font-black">Demo Sahifasini Köriş (/demo)</span>
               </button>
 
               <button
@@ -300,7 +300,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 className="px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-base border-2 border-white/20 hover:border-path shadow-xl backdrop-blur-md flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
               >
                 <Zap className="w-5 h-5 text-amber-400 fill-amber-400/30" />
-                <span className="text-white font-bold">Jonli Prototipni Ishga Tushirish</span>
+                <span className="text-white font-bold">Jonli Prototipni Işga Tuşiriş</span>
               </button>
             </div>
 
@@ -317,7 +317,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="text-2xl sm:text-3xl font-black text-white mt-1 group-hover:text-path transition-colors">
                   6 870 545
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">2025-yilda umumta’lim o‘quvchilari (+9,3%)</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">2025-yilda umumta’lim öquvçilari (+9,3%)</div>
               </motion.div>
 
               <motion.div
@@ -329,9 +329,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5 text-mint" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-white mt-1 group-hover:text-mint transition-colors">
-                  5 Bosqich
+                  5 Bosqiç
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">Diagnostika → Bo‘shliq → Yo‘l → Mashq → Progress</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">Diagnostika → Böşliq → Yöl → Maşq → Progress</div>
               </motion.div>
 
               <motion.div
@@ -359,13 +359,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="text-3xl sm:text-4xl font-black text-white mt-1 group-hover:text-path transition-colors">
                   MVP
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">React 19 & Flutter Mobile Ishlaydi</div>
+                <div className="text-xs text-slate-400 mt-1 font-medium">React 19 & Flutter Mobile Işlaydi</div>
               </motion.div>
             </div>
           </motion.div>
         </section>
 
-        {/* 4. SECTION 1: MUAMMO (SLIDE 01) → YANGILIK & YECHIM (SLIDE 02) */}
+        {/* 4. SECTION 1: MUAMMO (SLIDE 01) → YANGILIK & YEÇIM (SLIDE 02) */}
         <section id="problem-solution" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -381,7 +381,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               AI chatbot emas — Adaptiv ta’lim sikli
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3 max-w-2xl mx-auto">
-              Ta’lim bor, lekin har bir o‘quvchi uchun moslashtirilgan yo‘l yetishmaydi. Bir sinfda tayyorgarlik, tezlik va bilim bo‘shliqlari turlicha.
+              Ta’lim bor, lekin har bir öquvçi uçun moslaştirilgan yöl yetişmaydi. Bir sinfda tayyorgarlik, tezlik va bilim böşliqlari turliça.
             </p>
           </motion.div>
 
@@ -404,8 +404,8 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       01
                     </div>
                     <div>
-                      <h3 className="text-xl sm:text-2xl font-black text-white">Ta’limda ehtiyoj — har bir o‘quvchiga mos yo‘l</h3>
-                      <p className="text-xs text-coral mt-0.5">Bir sinfda tayyorgarlik, tezlik va bilim bo‘shliqlari turlicha</p>
+                      <h3 className="text-xl sm:text-2xl font-black text-white">Ta’limda ehtiyoj — har bir öquvçiga mos yöl</h3>
+                      <p className="text-xs text-coral mt-0.5">Bir sinfda tayyorgarlik, tezlik va bilim böşliqlari turliça</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-coral/15 text-coral border border-coral/30">
@@ -417,11 +417,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/10">
                   <div>
                     <div className="text-2xl sm:text-3xl font-black text-path">6 870 545</div>
-                    <div className="text-[11px] text-slate-300 mt-0.5">2025-yilda umumta’lim o‘quvchilari</div>
+                    <div className="text-[11px] text-slate-300 mt-0.5">2025-yilda umumta’lim öquvçilari</div>
                   </div>
                   <div className="border-l border-white/10 pl-4">
                     <div className="text-2xl sm:text-3xl font-black text-mint">+9,3%</div>
-                    <div className="text-[11px] text-slate-300 mt-0.5">2020–2025 o‘sish</div>
+                    <div className="text-[11px] text-slate-300 mt-0.5">2020–2025 ösiş</div>
                   </div>
                 </div>
 
@@ -437,7 +437,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <h4 className="font-bold text-sm text-white">Bir xil temp</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Kimdir tez o‘zlashtiradi, kimdir ko‘proq mustahkamlashga muhtoj. Umumiy dars rejasi bir o‘quvchi uchun juda oson, boshqasi uchun murakkab.
+                      Kimdir tez özlaştiradi, kimdir köproq mustahkamlaşga muhtoj. Umumiy dars rejasi bir öquvçi uçun juda oson, boşqasi uçun murakkab.
                     </p>
                   </motion.div>
 
@@ -449,10 +449,10 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
                         02
                       </span>
-                      <h4 className="font-bold text-sm text-white">Bo‘shliq kech aniqlanadi</h4>
+                      <h4 className="font-bold text-sm text-white">Böşliq keç aniqlanadi</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      Tayanch mavzu to‘liq tushunilmay, keyingi bosqichga o‘tilishi mumkin. Bilim bo‘shlig‘i o‘z vaqtida aniqlanmasa, keyingi mavzularni o‘zlashtirish qiyinlashadi.
+                      Tayanç mavzu töliq tuşunilmay, keyingi bosqiçga ötilişi mumkin. Bilim böşliği öz vaqtida aniqlanmasa, keyingi mavzularni özlaştiriş qiyinlaşadi.
                     </p>
                   </motion.div>
 
@@ -464,17 +464,17 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <span className="w-6 h-6 rounded-lg bg-coral/20 text-coral font-mono font-black text-xs flex items-center justify-center border border-coral/30">
                         03
                       </span>
-                      <h4 className="font-bold text-sm text-white">Individual reja uchun vaqt kam</h4>
+                      <h4 className="font-bold text-sm text-white">Individual reja uçun vaqt kam</h4>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed pl-8">
-                      O‘qituvchining har bir o‘quvchiga alohida tahlil va doimiy qayta tuziladigan reja berish vaqti cheklangan.
+                      Öqituvçining har bir öquvçiga alohida tahlil va doimiy qayta tuziladigan reja beriş vaqti çeklangan.
                     </p>
                   </motion.div>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-coral/20 flex items-center justify-between text-[11px] text-coral font-mono">
-                <span>Natija: Past o‘zlashtirish & Motivatsiya yo‘qolishi</span>
+                <span>Natija: Past özlaştiriş & Motivatsiya yöqolişi</span>
                 <span className="font-bold">An’anaviy Statik Model</span>
               </div>
             </motion.div>
@@ -498,7 +498,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </div>
                     <div>
                       <h3 className="text-xl sm:text-2xl font-black text-white">Yangilik — AI chatbot emas, adaptiv ta’lim sikli</h3>
-                      <p className="text-xs text-path mt-0.5">Diagnostik baholash + mastery learning + formative feedback</p>
+                      <p className="text-xs text-path mt-0.5">Diagnostik baholaş + mastery learning + formative feedback</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-path/15 text-path border border-path/30">
@@ -510,25 +510,25 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 <div className="p-4 rounded-2xl bg-white/[0.04] border border-path/25 space-y-1.5">
                   <div className="text-[11px] font-mono font-bold text-mint uppercase">Innovatsion qiymat</div>
                   <p className="text-xs sm:text-sm font-bold text-white">
-                    Lokal ta’lim kontenti + o‘quvchi profili + natijaga qarab qayta tavsiya.
+                    Lokal ta’lim kontenti + öquvçi profili + natijaga qarab qayta tavsiya.
                   </p>
                   <p className="text-[11px] text-slate-300">
-                    Bu jarayon bitta savolga javob berish bilan tugamaydi; o‘quvchi natijasi keyingi tavsiyaga bevosita ta’sir qiladi va sikl samaradorligi o‘lchanadi.
+                    Bu jarayon bitta savolga javob beriş bilan tugamaydi; öquvçi natijasi keyingi tavsiyaga bevosita ta’sir qiladi va sikl samaradorligi ölçanadi.
                   </p>
                 </div>
 
                 {/* 5 Connected Steps Visualization */}
                 <div className="space-y-2.5">
                   <div className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
-                    Bir-biriga ulangan 5 bosqich
+                    Bir-biriga ulangan 5 bosqiç
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                     {[
-                      { code: '01', name: 'Diagnostika', desc: 'Boshlang‘ich bilim holati', color: 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' },
-                      { code: '02', name: 'Bilim profili', desc: 'Kuchli va zaif mavzular', color: 'border-blue-400/50 bg-blue-500/15 text-blue-300' },
-                      { code: '03', name: 'Individual yo‘l', desc: 'Keyingi qadam tanlanadi', color: 'border-violet-400/50 bg-violet-500/15 text-violet-300' },
-                      { code: '04', name: 'Adaptiv mashq', desc: 'Darajaga mos topshiriq', color: 'border-amber-400/50 bg-amber-500/15 text-amber-300' },
-                      { code: '05', name: 'Progress', desc: 'Natija qayta o‘lchanadi', color: 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' },
+                      { code: '01', name: 'Diagnostika', desc: 'Boşlanğiç bilim holati', color: 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' },
+                      { code: '02', name: 'Bilim profili', desc: 'Kuçli va zaif mavzular', color: 'border-blue-400/50 bg-blue-500/15 text-blue-300' },
+                      { code: '03', name: 'Individual yöl', desc: 'Keyingi qadam tanlanadi', color: 'border-violet-400/50 bg-violet-500/15 text-violet-300' },
+                      { code: '04', name: 'Adaptiv maşq', desc: 'Darajaga mos topşiriq', color: 'border-amber-400/50 bg-amber-500/15 text-amber-300' },
+                      { code: '05', name: 'Progress', desc: 'Natija qayta ölçanadi', color: 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' },
                     ].map((st) => (
                       <div key={st.code} className={`p-3 rounded-xl border ${st.color} flex flex-col justify-between gap-1`}>
                         <span className="font-mono text-xs font-black">{st.code}</span>
@@ -543,7 +543,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </div>
 
               <div className="mt-6 pt-4 border-t border-path/25 flex items-center justify-between text-[11px] text-path font-mono">
-                <span className="font-bold">Sikl har bir yangi natijadan so‘ng yangilanadi</span>
+                <span className="font-bold">Sikl har bir yangi natijadan söng yangilanadi</span>
                 <span className="font-bold text-mint">Explainable AI</span>
               </div>
             </motion.div>
@@ -560,13 +560,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-path bg-ink/80 px-3.5 py-1 rounded-full border border-brand/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(53,80,214,0.2)]">
-              2. ASOSIY BOSQICH • AXION JAMOA
+              2. ASOSIY BOSQIÇ • AXION JAMOA
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
               Bizning Jamoa — 3 Ta Asosiy Ustun
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Texnologik arxitektura, biznes o‘sish strategiyasi va pedagogik metodologiyani yagona maqsad atrofida birlashtirgan asoschilar jamoasi.
+              Texnologik arxitektura, biznes ösiş strategiyasi va pedagogik metodologiyani yagona maqsad atrofida birlaştirgan asosçilar jamoasi.
             </p>
           </motion.div>
 
@@ -582,7 +582,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div className="relative">
                     <img
                       src="/images/team/oktam_pirimov.jpg"
-                      alt="Pirimov O‘ktam"
+                      alt="Pirimov Öktam"
                       className="w-20 h-20 rounded-2xl object-cover ring-2 ring-path shadow-lg"
                     />
                     <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-path text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -591,7 +591,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white group-hover:text-path transition-colors">
-                      Pirimov O‘ktam
+                      Pirimov Öktam
                     </h3>
                     <p className="text-xs text-path font-bold mt-0.5">Founder & Lead Developer</p>
                     <span className="inline-block mt-1 text-[11px] text-slate-400">Arxitektura & Muhandislik</span>
@@ -599,11 +599,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  BilimYo‘l ekotizimining asoschisi va bosh arxitektori. Web va Mobile ilovalar (React 19, Flutter), server-side anti-cheat scoring (PostgreSQL RPC) hamda Gemini AI (Yo‘lchi) Edge integratsiyasini to‘liq kod darajasida noldan yaratgan.
+                  BilimYöl ekotizimining asosçisi va boş arxitektori. Web va Mobile ilovalar (React 19, Flutter), server-side anti-cheat scoring (PostgreSQL RPC) hamda Gemini AI (Yölçi) Edge integratsiyasini töliq kod darajasida noldan yaratgan.
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Könikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
                     <span className="px-2.5 py-1 rounded-lg bg-path/80 text-path border border-path font-semibold">Tizim Arxitekturasi</span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">React 19 & TypeScript</span>
@@ -667,11 +667,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Biznes modelni shakllantirish, bozorga chiqish (Go-To-Market) strategiyasi, maktablar va o‘quv markazlari bilan B2B hamkorlik hamda foydalanuvchilar oqimini (traction) kengaytirish rahbari.
+                  Biznes modelni şakllantiriş, bozorga çiqiş (Go-To-Market) strategiyasi, maktablar va öquv markazlari bilan B2B hamkorlik hamda foydalanuvçilar oqimini (traction) kengaytiriş rahbari.
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Könikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
                     <span className="px-2.5 py-1 rounded-lg bg-ink/80 text-path border border-brand-dark font-semibold">EdTech GTM Strategiyasi</span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">B2B Maktablar Hamkorligi</span>
@@ -721,16 +721,16 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Pedagogik metodika va mahsulot arxitekturasi bo‘yicha yetakchi. Milliy ta’lim standartlari, Bloom taksonomiyasi va adaptiv diagnostika metodikasi bo‘yicha kurikulum rahbari.
+                  Pedagogik metodika va mahsulot arxitekturasi böyiça yetakçi. Milliy ta’lim standartlari, Bloom taksonomiyasi va adaptiv diagnostika metodikasi böyiça kurikulum rahbari.
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
-                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Ko‘nikmalar:</div>
+                  <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Asosiy Könikmalar:</div>
                   <div className="flex flex-wrap gap-1.5 text-[10px]">
                     <span className="px-2.5 py-1 rounded-lg bg-mint/80 text-mint border border-mint font-semibold">Adaptiv Kurikulum</span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Bloom Taksonomiyasi</span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Diagnostik Metodika</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">O‘quvchi UX & Psixologiyasi</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Öquvçi UX & Psixologiyasi</span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700">Math & English Standartlar</span>
                   </div>
                 </div>
@@ -783,13 +783,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             className="text-center max-w-3xl mx-auto mb-14"
           >
             <span className="text-path bg-path/80 px-3.5 py-1 rounded-full border border-path/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(13,154,214,0.2)]">
-              3. ASOSIY BOSQICH • BIZNING USTUNLIGIMIZ
+              3. ASOSIY BOSQIÇ • BIZNING USTUNLIGIMIZ
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Explainable AI & Raqobatbardosh Ustunlik
+              Explainable AI & Raqobatbardoş Ustunlik
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Yo‘lchi AI 6 ta shaxsiylashtirish mezoni asosida shaffof tavsiya beradi va har bir adaptiv siklning real samaradorligini o‘lchaydi.
+              Yölçi AI 6 ta şaxsiylaştiriş mezoni asosida şaffof tavsiya beradi va har bir adaptiv siklning real samaradorligini ölçaydi.
             </p>
           </motion.div>
 
@@ -797,7 +797,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
           <div className="mb-10 p-6 rounded-3xl bg-slate-900/75 border border-white/10 backdrop-blur-xl">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <span className="text-xs font-mono font-bold text-path uppercase tracking-wider">
-                Shaxsiy Ta’lim Oqimiga Kiruvchi 6 Ta Mezon (Inputs → Personalized Path)
+                Şaxsiy Ta’lim Oqimiga Kiruvçi 6 Ta Mezon (Inputs → Personalized Path)
               </span>
               <span className="text-[11px] font-bold text-mint bg-mint/15 px-2.5 py-1 rounded-full border border-mint/30">
                 Real vaqtda qayta hisoblanadi
@@ -805,11 +805,11 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { label: 'Goal (Maqsad)', desc: 'Maktab, imtihon yoki amaliy ko‘nikma' },
-                { label: 'Skill profiling', desc: 'Kuchli va zaif mavzular xaritasi' },
-                { label: 'Knowledge level', desc: 'Joriy o‘zlashtirish foizi (0–100%)' },
-                { label: 'Errors (Xatolar)', desc: 'Bo‘shliq aniqlansa mustahkamlash' },
-                { label: 'Learning speed', desc: 'Mavzuni o‘zlashtirish sur’ati' },
+                { label: 'Goal (Maqsad)', desc: 'Maktab, imtihon yoki amaliy könikma' },
+                { label: 'Skill profiling', desc: 'Kuçli va zaif mavzular xaritasi' },
+                { label: 'Knowledge level', desc: 'Joriy özlaştiriş foizi (0–100%)' },
+                { label: 'Errors (Xatolar)', desc: 'Böşliq aniqlansa mustahkamlaş' },
+                { label: 'Learning speed', desc: 'Mavzuni özlaştiriş sur’ati' },
                 { label: 'Daily time', desc: '15 / 30 / 60 daqiqalik kunlik byudjet' },
               ].map((item, idx) => (
                 <div key={item.label} className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1">
@@ -829,9 +829,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-path/20 text-path flex items-center justify-center mb-4 border border-path/40">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">AI asosida shaxsiy reja</h3>
+              <h3 className="text-lg font-bold text-white mb-2">AI asosida şaxsiy reja</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Bir xil darslik o‘rniga o‘quvchining maqsadi, boshlang‘ich darajasi va kunlik vaqtiga mos shaxsiy yo‘l xaritasi tuziladi.
+                Bir xil darslik örniga öquvçining maqsadi, boşlanğiç darajasi va kunlik vaqtiga mos şaxsiy yöl xaritasi tuziladi.
               </p>
             </motion.div>
 
@@ -844,7 +844,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Adaptiv va dinamik ta’lim</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Jarayon bitta savol bilan tugamaydi: har bir javob va xato keyingi dars hamda mustahkamlash tavsiyasini avtomatik yangilaydi.
+                Jarayon bitta savol bilan tugamaydi: har bir javob va xato keyingi dars hamda mustahkamlaş tavsiyasini avtomatik yangilaydi.
               </p>
             </motion.div>
 
@@ -857,7 +857,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Tavsiyalar sababi (Explainable AI)</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                O‘quvchi va o‘qituvchi nima uchun aynan shu mavzu tavsiya etilganini 6 ta mezon bo‘yicha shaffof tushuntirish bilan ko‘radi.
+                Öquvçi va öqituvçi nima uçun aynan şu mavzu tavsiya etilganini 6 ta mezon böyiça şaffof tuşuntiriş bilan köradi.
               </p>
             </motion.div>
 
@@ -868,9 +868,9 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-brand/20 text-path flex items-center justify-center mb-4 border border-brand/40">
                 <TrendingUp className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">O‘lchash va optimizatsiya</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Ölçaş va optimizatsiya</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Real-time analytics boshlang‘ich va joriy o‘zlashtirish (+Δ%), yopilgan bo‘shliqlar hamda server-side anti-cheat natijalarini o‘lchaydi.
+                Real-time analytics boşlanğiç va joriy özlaştiriş (+Δ%), yopilgan böşliqlar hamda server-side anti-cheat natijalarini ölçaydi.
               </p>
             </motion.div>
           </div>
@@ -886,13 +886,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-amber-400 bg-amber-950/80 px-3.5 py-1 rounded-full border border-amber-500/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(245,159,0,0.2)]">
-              4. ASOSIY BOSQICH • STRATEGIK XARITA
+              4. ASOSIY BOSQIÇ • STRATEGIK XARITA
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
               Milestones — Maqsadlar va KPI
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              <strong className="text-white">Hozir → 6 oy → 1 yil → 3 yil.</strong> Raqamlar konservativ prognoz asosida ishlab chiqilgan.
+              <strong className="text-white">Hozir → 6 oy → 1 yil → 3 yil.</strong> Raqamlar konservativ prognoz asosida işlab çiqilgan.
             </p>
           </motion.div>
 
@@ -901,7 +901,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             <div className="text-xs font-mono font-bold text-slate-400 mb-6 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-coral animate-pulse" />
-                Vaqt O‘qi: Hozir → 6 oy → 1 yil → 3 yil
+                Vaqt Öqi: Hozir → 6 oy → 1 yil → 3 yil
               </span>
               <span className="text-amber-400 text-[11px] font-mono">Konservativ Prognoz</span>
             </div>
@@ -922,24 +922,24 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-coral">1-BOSQICH</span>
+                    <span className="text-xs font-black uppercase text-coral">1-BOSQIÇ</span>
                     <span className="w-3.5 h-3.5 rounded-full bg-coral border-2 border-white shadow-sm" />
                   </div>
                   <h3 className="text-base font-black text-white">HOZIR</h3>
                   <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-coral">•</span> MVP + pilot bosqich
+                      <span className="text-coral">•</span> MVP + pilot bosqiç
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-coral">•</span> Asosiy o‘rganishning moslashuvchan oqimi
+                      <span className="text-coral">•</span> Asosiy örganişning moslaşuvçan oqimi
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-coral">•</span> Dastlabki foydalanuvchilar
+                      <span className="text-coral">•</span> Dastlabki foydalanuvçilar
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-coral font-bold flex items-center justify-between">
-                  <span>Jonli Ishlamoqda</span>
+                  <span>Jonli Işlamoqda</span>
                   <span>Okt 2026</span>
                 </div>
               </button>
@@ -955,22 +955,22 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-amber-400">2-BOSQICH</span>
+                    <span className="text-xs font-black uppercase text-amber-400">2-BOSQIÇ</span>
                     <span className="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white shadow-sm" />
                   </div>
                   <h3 className="text-base font-black text-white">6 OY</h3>
                   <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
                     <div className="flex items-start gap-1.5 font-bold text-amber-300">
-                      <span>•</span> 500–700 pullik foydalanuvchi
+                      <span>•</span> 500–700 pullik foydalanuvçi
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-amber-400">•</span> Mahsulotning bozorga mos kelishi (PMF)
+                      <span className="text-amber-400">•</span> Mahsulotning bozorga mos kelişi (PMF)
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-amber-400">•</span> Takroriy mijozlarni jalb qilish
+                      <span className="text-amber-400">•</span> Takroriy mijozlarni jalb qiliş
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-amber-400">•</span> Birinchi B2B pilot
+                      <span className="text-amber-400">•</span> Birinçi B2B pilot
                     </div>
                   </div>
                 </div>
@@ -991,16 +991,16 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-path">3-BOSQICH</span>
+                    <span className="text-xs font-black uppercase text-path">3-BOSQIÇ</span>
                     <span className="w-3.5 h-3.5 rounded-full bg-brand border-2 border-white shadow-sm" />
                   </div>
                   <h3 className="text-base font-black text-white">1 YIL</h3>
                   <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
                     <div className="flex items-start gap-1.5 font-bold text-path">
-                      <span>•</span> 2 500 pullik foydalanuvchi
+                      <span>•</span> 2 500 pullik foydalanuvçi
                     </div>
                     <div className="flex items-start gap-1.5 font-bold text-mint">
-                      <span>•</span> ≈ 638 mln so‘m gross revenue
+                      <span>•</span> ≈ 638 mln söm gross revenue
                     </div>
                     <div className="flex items-start gap-1.5 font-bold text-path">
                       <span>•</span> Zararsizlik nuqtasi ≈ 10-oy
@@ -1024,16 +1024,16 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-mint">4-BOSQICH</span>
+                    <span className="text-xs font-black uppercase text-mint">4-BOSQIÇ</span>
                     <span className="w-3.5 h-3.5 rounded-full bg-mint border-2 border-white shadow-sm" />
                   </div>
                   <h3 className="text-base font-black text-white">3 YIL</h3>
                   <div className="mt-3 space-y-1.5 text-[11px] text-slate-300 leading-snug">
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-mint">•</span> O‘zbekiston bo‘ylab masshtab
+                      <span className="text-mint">•</span> Özbekiston böylab masştab
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
-                      <span className="text-mint">•</span> B2B: maktab va o‘quv markazi
+                      <span className="text-mint">•</span> B2B: maktab va öquv markazi
                     </div>
                     <div className="flex items-start gap-1.5 font-medium">
                       <span className="text-mint">•</span> Yangi fanlar, regional expansion
@@ -1056,7 +1056,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
                 <div className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">
                   <span className="text-amber-300 font-bold">1-yil raqamlari</span> — konservativ forecast;{' '}
-                  <span className="text-path font-bold">3-yil ko‘rsatkichlari</span> — strategik target (fakt emas).
+                  <span className="text-path font-bold">3-yil körsatkiçlari</span> — strategik target (fakt emas).
                 </div>
               </div>
 
@@ -1067,7 +1067,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-path opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-path" />
                   </span>
-                  <span>Tugmalarni bosib, har bir bosqichning batafsil rejasini oching</span>
+                  <span>Tugmalarni bosib, har bir bosqiçning batafsil rejasini oçing</span>
                 </div>
                 <div className="w-8 h-8 rounded-xl bg-path/20 border border-path/50 flex items-center justify-center shrink-0 text-path shadow-sm shadow-path/20 animate-bounce">
                   <ArrowUp className="w-4 h-4 stroke-[2.5]" />
@@ -1085,7 +1085,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-coral" />
                       <h3 className="text-xl font-black text-white">
-                        1-Bosqich: HOZIR (MVP + Pilot Bosqich)
+                        1-Bosqiç: HOZIR (MVP + Pilot Bosqiç)
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-3">
@@ -1093,17 +1093,17 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                         <Calendar className="w-3.5 h-3.5" /> 12-Sentabr – 11-Oktyabr 2026 (Pitch Day 3.0)
                       </span>
                       <span className="flex items-center gap-1 font-bold text-mint bg-mint/80 px-2 py-0.5 rounded border border-mint">
-                        <DollarSign className="w-3.5 h-3.5" /> Asoschilar Mablag‘i
+                        <DollarSign className="w-3.5 h-3.5" /> Asosçilar Mablaği
                       </span>
                     </p>
                   </div>
                   <span className="px-3.5 py-1.5 rounded-full bg-coral/80 text-coral border border-coral text-xs font-black self-start sm:self-auto">
-                    100% Jonli Ishlamoqda
+                    100% Jonli Işlamoqda
                   </span>
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Platformaning dastlabki <strong>G‘oya (Idea)</strong> va <strong>Prototip (Prototype)</strong> bosqichlari to‘liq muvaffaqiyatli yakunlandi. Bugungi kunda BilimYo‘l Smart Edu to‘liq ishlayotgan <strong>MVP holatida</strong>: Web SPA (React 19) va Mobil (Flutter) ilovalari, adaptiv diagnostika, server-side anti-cheat scoring (PostgreSQL RPC) va Gemini 2.5 Flash bilan integratsiyalashgan Yo‘lchi AI mentori amalda sinovdan o‘tmoqda.
+                  Platformaning dastlabki <strong>Ğoya (Idea)</strong> va <strong>Prototip (Prototype)</strong> bosqiçlari töliq muvaffaqiyatli yakunlandi. Bugungi kunda BilimYöl Smart Edu töliq işlayotgan <strong>MVP holatida</strong>: Web SPA (React 19) va Mobil (Flutter) ilovalari, adaptiv diagnostika, server-side anti-cheat scoring (PostgreSQL RPC) va Gemini 2.5 Flash bilan integratsiyalaşgan Yölçi AI mentori amalda sinovdan ötmoqda.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -1112,25 +1112,25 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <CheckCircle2 className="w-4 h-4 text-coral" /> MVP + Pilot
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Matematika va Ingliz tili fanlari to‘liq integratsiyalangan, 152 ta avtotestlar bilan himoyalangan.
+                      Matematika va Ingliz tili fanlari töliq integratsiyalangan, 152 ta avtotestlar bilan himoyalangan.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-coral" /> Moslashuvchan Oqim
+                      <CheckCircle2 className="w-4 h-4 text-coral" /> Moslaşuvçan Oqim
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Asosiy o‘rganishning moslashuvchan oqimi: diagnostika → bilim matritsasi (0-100%) → individual dars.
+                      Asosiy örganişning moslaşuvçan oqimi: diagnostika → bilim matritsasi (0-100%) → individual dars.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-coral" /> Dastlabki Foydalanuvchilar
+                      <CheckCircle2 className="w-4 h-4 text-coral" /> Dastlabki Foydalanuvçilar
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Dastlabki o‘quvchilar va repetitorlar platformani test qilmoqda, haftalik fikr-mulohazalar yig‘ilmoqda.
+                      Dastlabki öquvçilar va repetitorlar platformani test qilmoqda, haftalik fikr-mulohazalar yiğilmoqda.
                     </p>
                   </div>
                 </div>
@@ -1144,7 +1144,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                       <h3 className="text-xl font-black text-white">
-                        2-Bosqich: 6 OY (Bozorga Moslik & Birinchi B2B Pilot)
+                        2-Bosqiç: 6 OY (Bozorga Moslik & Birinçi B2B Pilot)
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-3">
@@ -1152,7 +1152,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                         <Clock className="w-3.5 h-3.5" /> Muddat: 6 oy (Noyabr 2026 – Aprel 2027)
                       </span>
                       <span className="flex items-center gap-1 font-bold text-path bg-ink/80 px-2 py-0.5 rounded border border-brand-dark">
-                        Pre-Seed Bosqichi
+                        Pre-Seed Bosqiçi
                       </span>
                     </p>
                   </div>
@@ -1162,20 +1162,20 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Asosiy diqqat mahsulotning bozorga to‘liq mos kelishiga (<strong>Product-Market Fit</strong>) qaratiladi. B2C segmentida dastlabki <strong>500–700 nafar pullik faol obunachilar</strong> shakllantiriladi, o‘quvchilarning saqlanib qolish ko‘rsatkichi (Retention) oshiriladi va dastlabki B2B maktablar bilan pilot litsenziyalar yo‘lga qo‘yiladi.
+                  Asosiy diqqat mahsulotning bozorga töliq mos kelişiga (<strong>Product-Market Fit</strong>) qaratiladi. B2C segmentida dastlabki <strong>500–700 nafar pullik faol obunaçilar</strong> şakllantiriladi, öquvçilarning saqlanib qoliş körsatkiçi (Retention) oşiriladi va dastlabki B2B maktablar bilan pilot litsenziyalar yölga qöyiladi.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-center">
                     <div className="text-xl sm:text-2xl font-black text-amber-300">500–700</div>
-                    <div className="text-xs font-bold text-white mt-0.5">Pullik Foydalanuvchi</div>
-                    <div className="text-[10px] text-slate-400">Oyiga 59 900 so‘m</div>
+                    <div className="text-xs font-bold text-white mt-0.5">Pullik Foydalanuvçi</div>
+                    <div className="text-[10px] text-slate-400">Oyiga 59 900 söm</div>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-path">PMF</div>
-                    <div className="text-xs font-bold text-white mt-0.5">Bozorga Mos Kelish</div>
-                    <div className="text-[10px] text-slate-400">Haftalik o‘sish va tahlil</div>
+                    <div className="text-xs font-bold text-white mt-0.5">Bozorga Mos Keliş</div>
+                    <div className="text-[10px] text-slate-400">Haftalik ösiş va tahlil</div>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
@@ -1187,7 +1187,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
                     <div className="text-xl sm:text-2xl font-black text-path">1-B2B Pilot</div>
                     <div className="text-xs font-bold text-white mt-0.5">Maktablar Hamkorligi</div>
-                    <div className="text-[10px] text-slate-400">O‘quvchi progressi</div>
+                    <div className="text-[10px] text-slate-400">Öquvçi progressi</div>
                   </div>
                 </div>
               </motion.div>
@@ -1200,12 +1200,12 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-brand" />
                       <h3 className="text-xl font-black text-white">
-                        3-Bosqich: 1 YIL (Zararsizlik Nuqtasi & 638 Mln Gross Revenue)
+                        3-Bosqiç: 1 YIL (Zararsizlik Nuqtasi & 638 Mln Gross Revenue)
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-3">
                       <span className="flex items-center gap-1 font-semibold text-path">
-                        <Calendar className="w-3.5 h-3.5" /> Muddat: 12 oy (Oktabr 2027 gacha)
+                        <Calendar className="w-3.5 h-3.5" /> Muddat: 12 oy (Oktabr 2027 gaça)
                       </span>
                       <span className="flex items-center gap-1 font-bold text-mint bg-mint/80 px-2 py-0.5 rounded border border-mint">
                         Konservativ Iqtisodiy Prognoz
@@ -1218,26 +1218,26 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Konservativ moliyaviy model asosida 1-yil yakuniga borib platforma <strong>2 500 nafar faol pullik o‘quvchiga</strong> va yil bo‘yicha jami <strong>≈638 million so‘m gross revenue</strong>ga yetadi. Operatsion xarajatlar va daromadlar nisbati bo‘yicha <strong>zararsizlik nuqtasiga (Break-even) taxminan 10-oyda</strong> erishiladi.
+                  Konservativ moliyaviy model asosida 1-yil yakuniga borib platforma <strong>2 500 nafar faol pullik öquvçiga</strong> va yil böyiça jami <strong>≈638 million söm gross revenue</strong>ga yetadi. Operatsion xarajatlar va daromadlar nisbati böyiça <strong>zararsizlik nuqtasiga (Break-even) taxminan 10-oyda</strong> erişiladi.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-5 rounded-2xl bg-ink/40 border border-brand/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-path">2 500</div>
-                    <div className="text-xs font-bold text-white mt-1">Pullik Foydalanuvchi</div>
+                    <div className="text-xs font-bold text-white mt-1">Pullik Foydalanuvçi</div>
                     <div className="text-[11px] text-slate-400 mt-0.5">B2C oylik faol obuna</div>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-mint/40 border border-mint/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-mint">≈ 638 Mln</div>
-                    <div className="text-xs font-bold text-white mt-1">Gross Revenue (So‘m)</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">Yillik yalpi tushum</div>
+                    <div className="text-xs font-bold text-white mt-1">Gross Revenue (Söm)</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">Yillik yalpi tuşum</div>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-ink/40 border border-brand/40 text-center">
                     <div className="text-2xl sm:text-3xl font-black text-path">10-oy</div>
                     <div className="text-xs font-bold text-white mt-1">Zararsizlik Nuqtasi</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">O‘zini-o‘zi to‘liq qoplash</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">Özini-özi töliq qoplaş</div>
                   </div>
                 </div>
               </motion.div>
@@ -1250,7 +1250,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-mint" />
                       <h3 className="text-xl font-black text-white">
-                        4-Bosqich: 3 YIL (Respublika Masshtabi & Regional Ekspansiya)
+                        4-Bosqiç: 3 YIL (Respublika Masştabi & Regional Ekspansiya)
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-1 flex items-center gap-3">
@@ -1263,30 +1263,30 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     </p>
                   </div>
                   <span className="px-3.5 py-1.5 rounded-full bg-mint/80 text-mint border border-mint text-xs font-black self-start sm:self-auto">
-                    Kengayish Bosqichi
+                    Kengayiş Bosqiçi
                   </span>
                 </div>
 
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  BilimYo‘l Smart Edu butun O‘zbekiston bo‘ylab maktablar, o‘quv markazlari va o‘quvchilar uchun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
+                  BilimYöl Smart Edu butun Özbekiston böylab maktablar, öquv markazlari va öquvçilar uçun yagona milliy adaptiv ta’lim standartiga aylanadi. B2B korporativ paketlar, yangi maktab fanlari va Markaziy Osiyo mintaqasiga lokalizatsiya orqali ekspansiya qilinadi.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
-                      <Globe className="w-4 h-4 text-mint" /> O‘zbekiston Bo‘ylab Masshtab
+                      <Globe className="w-4 h-4 text-mint" /> Özbekiston Böylab Masştab
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Barcha viloyatlar va tuman maktablari o‘quvchilariga yetib borish, keng qamrovli B2C auditoriya.
+                      Barça viloyatlar va tuman maktablari öquvçilariga yetib boriş, keng qamrovli B2C auditoriya.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
                     <div className="text-xs font-black text-white flex items-center gap-1.5">
-                      <Briefcase className="w-4 h-4 text-mint" /> B2B: Maktab & O‘quv Markazi
+                      <Briefcase className="w-4 h-4 text-mint" /> B2B: Maktab & Öquv Markazi
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Maktab va xususiy o‘quv markazlari uchun o‘quvchilar bilimini avtomatik diagnostika qiluvchi SaaS obunasi.
+                      Maktab va xususiy öquv markazlari uçun öquvçilar bilimini avtomatik diagnostika qiluvçi SaaS obunasi.
                     </p>
                   </div>
 
@@ -1295,7 +1295,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                       <Layers className="w-4 h-4 text-mint" /> Yangi Fanlar & Regional
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Fizika, Kimyo, Biologiya, IT fanlari qo‘shilishi hamda Markaziy Osiyo bozorlariga regional chiqish.
+                      Fizika, Kimyo, Biologiya, IT fanlari qöşilişi hamda Markaziy Osiyo bozorlariga regional çiqiş.
                     </p>
                   </div>
                 </div>
@@ -1320,7 +1320,7 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               Monetizatsiya va Unit Economics
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Freemium → Premium obuna. To‘lovchi: o‘quvchi va oilalar (B2C) hamda maktablar (B2B SaaS).
+              Freemium → Premium obuna. Tölovçi: öquvçi va oilalar (B2C) hamda maktablar (B2B SaaS).
             </p>
           </motion.div>
 
@@ -1357,14 +1357,14 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                   59 900
                 </div>
                 <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                  so‘m / oy
+                  söm / oy
                 </div>
                 <div className="pt-4 border-t border-white/10 text-xs text-slate-300 leading-relaxed">
-                  Oddiy repetitorning bitta darsi narxiga butun 1 oylik cheksiz shaxsiy repetitor va Yo‘lchi AI mentori.
+                  Oddiy repetitorning bitta darsi narxiga butun 1 oylik çeksiz şaxsiy repetitor va Yölçi AI mentori.
                 </div>
                 <div className="pt-2">
                   <span className="inline-block px-3 py-1 rounded-full bg-mint/80 border border-mint/50 text-[10px] text-mint font-bold">
-                    Foydalanuvchilar uchun 10x arzonroq
+                    Foydalanuvçilar uçun 10x arzonroq
                   </span>
                 </div>
               </motion.div>
@@ -1373,25 +1373,25 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               <div className="lg:col-span-7 space-y-4">
                 <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border-l-4 border-mint border-r border-t border-b border-white/10 space-y-1">
                   <div className="text-xs font-mono font-bold text-mint uppercase">
-                    Kim to‘laydi?
+                    Kim tölaydi?
                   </div>
                   <div className="text-sm sm:text-base font-semibold text-white">
-                    O‘quvchi va oilalar (B2C)
+                    Öquvçi va oilalar (B2C)
                   </div>
                   <p className="text-xs text-slate-400">
-                    O‘quvchi bilim darajasini real vaqtda ko‘rib, samarasiz repetitor xarajatlarini tejaydi.
+                    Öquvçi bilim darajasini real vaqtda körib, samarasiz repetitor xarajatlarini tejaydi.
                   </p>
                 </div>
 
                 <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border-l-4 border-mint border-r border-t border-b border-white/10 space-y-1">
                   <div className="text-xs font-mono font-bold text-mint uppercase">
-                    Nima uchun to‘laydi?
+                    Nima uçun tölaydi?
                   </div>
                   <div className="text-sm sm:text-base font-semibold text-white">
-                    Individual learning path + AI tavsiyalar + chuqur analitika
+                    Individual learning path + AI tavsiyalar + çuqur analitika
                   </div>
                   <p className="text-xs text-slate-400">
-                    Xatolarni tushuntiruvchi Yo‘lchi AI mentori, zaif nuqtalarni mustahkamlash va shaxsiy o‘quv rejasi uchun.
+                    Xatolarni tuşuntiruvçi Yölçi AI mentori, zaif nuqtalarni mustahkamlaş va şaxsiy öquv rejasi uçun.
                   </p>
                 </div>
 
@@ -1400,10 +1400,10 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
                     Free (Bepul) Rejada nima bor?
                   </div>
                   <div className="text-sm sm:text-base font-semibold text-white">
-                    Asosiy darslar va cheklangan mashqlar — konversiya kanali
+                    Asosiy darslar va çeklangan maşqlar — konversiya kanali
                   </div>
                   <p className="text-xs text-slate-400">
-                    Har bir yangi foydalanuvchi bepul diagnostika va dastlabki darslarni sinab ko‘rib, Premium obunaga oson konvertatsiya bo‘ladi.
+                    Har bir yangi foydalanuvçi bepul diagnostika va dastlabki darslarni sinab körib, Premium obunaga oson konvertatsiya böladi.
                   </p>
                 </div>
               </div>
@@ -1421,13 +1421,13 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-path bg-path/80 px-3.5 py-1 rounded-full border border-path/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(13,154,214,0.2)]">
-              6. ASOSIY BOSQICH • TEXNOLOGIK CHUQURLIK
+              6. ASOSIY BOSQIÇ • TEXNOLOGIK ÇUQURLIK
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
               Arxitektura va Jonli API Konsoli
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Hakamlar va texnik ekspertlar uchun tizimning server arxitekturasi va real Edge kod namunalari.
+              Hakamlar va texnik ekspertlar uçun tizimning server arxitekturasi va real Edge kod namunalari.
             </p>
           </motion.div>
 
@@ -1481,10 +1481,10 @@ export const PitchShowcaseView: React.FC<PitchShowcaseViewProps> = ({
               {activeApiTab === 'diagnostics' && (
                 <>
                   <div className="text-slate-400 text-[11px]">
-                    # Adaptiv Savol Tanlash Algoritmi (AdaptiveQuestionSelector.ts)
+                    # Adaptiv Savol Tanlaş Algoritmi (AdaptiveQuestionSelector.ts)
                   </div>
                   <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-path overflow-x-auto">
-                    <pre>{`// O‘quvchi javobiga qarab qiyinlik darajasi real vaqtda moslashadi
+                    <pre>{`// Öquvçi javobiga qarab qiyinlik darajasi real vaqtda moslaşadi
 const nextQuestion = AdaptiveEngine.selectNextQuestion({
   currentSkillMastery: 42, // Foizda (0-100%)
   recentAttempts: ['correct', 'wrong', 'correct'],
@@ -1500,7 +1500,7 @@ console.log('Keyingi optimal savol:', nextQuestion.id);`}</pre>
   "status": "ready",
   "skill_id": "skill_math_functions",
   "recommended_difficulty": "medium",
-  "reason": "O‘quvchi 'Tenglamalar' mavzusini 80% o‘zlashtirgan, endi 'Funksiyalar' ga o‘tildi.",
+  "reason": "Öquvçi 'Tenglamalar' mavzusini 80% özlaştirgan, endi 'Funksiyalar' ga ötildi.",
   "latency_ms": 48
 }`}</pre>
                   </div>
@@ -1513,7 +1513,7 @@ console.log('Keyingi optimal savol:', nextQuestion.id);`}</pre>
                     # Gemini 2.5 Flash bilan Dars Generatsiyasi (generate-lesson Edge Function)
                   </div>
                   <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-path overflow-x-auto">
-                    <pre>{`// Deno Edge Function: Google Gemini 2.5 Flash chaqiruvi
+                    <pre>{`// Deno Edge Function: Google Gemini 2.5 Flash çaqiruvi
 const response = await aiClient.models.generateContent({
   model: 'gemini-2.5-flash',
   contents: [
@@ -1530,11 +1530,11 @@ const response = await aiClient.models.generateContent({
                   <div className="p-4 rounded-xl bg-black/60 border border-brand/40 text-path overflow-x-auto">
                     <pre>{`{
   "lesson_id": "gen_lesson_9210",
-  "title": "Chiziqli Funksiyaning Grafik Modeli",
+  "title": "Çiziqli Funksiyaning Grafik Modeli",
   "steps": [
-    { "type": "concept", "summary": "y = kx + b formulasi burchak koeffitsienti bilan ishlaydi" },
+    { "type": "concept", "summary": "y = kx + b formulasi burçak koeffitsienti bilan işlaydi" },
     { "type": "visual", "interactive_model": "linear_graph_builder" },
-    { "type": "reinforcement", "check_question": "k musbat bo‘lsa grafik qaysi choraklardan o‘tadi?" }
+    { "type": "reinforcement", "check_question": "k musbat bölsa grafik qaysi çoraklardan ötadi?" }
   ]
 }`}</pre>
                   </div>
@@ -1547,7 +1547,7 @@ const response = await aiClient.models.generateContent({
                     # PostgreSQL RPC: submit_answer_attempt() — Server-side xolis scoring va Anti-Cheat
                   </div>
                   <div className="p-4 rounded-xl bg-black/60 border border-white/5 text-amber-300 overflow-x-auto">
-                    <pre>{`-- SQL RPC chaqiruvi (Frontend to‘g‘ri javob indeksini bila olmaydi)
+                    <pre>{`-- SQL RPC çaqiruvi (Frontend töğri javob indeksini bila olmaydi)
 SELECT public.submit_answer_attempt(
   p_user_id := auth.uid(),
   p_course_id := 'course_math_01',
@@ -1565,7 +1565,7 @@ SELECT public.submit_answer_attempt(
   "xp_awarded": 20,
   "streak_extended": true,
   "new_skill_mastery": 65,
-  "message": "Tabriklaymiz! Savol to‘g‘ri yechildi va +20 XP hisobingizga qo‘shildi."
+  "message": "Tabriklaymiz! Savol töğri yeçildi va +20 XP hisobingizga qöşildi."
 }`}</pre>
                   </div>
                 </>
@@ -1584,13 +1584,13 @@ SELECT public.submit_answer_attempt(
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-mint bg-mint/80 px-3.5 py-1 rounded-full border border-mint/30 text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(6,150,105,0.2)]">
-              QO‘SHIMCHA BONUS VAZIFA • LIVE DEMO
+              QÖŞIMÇA BONUS VAZIFA • LIVE DEMO
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-white mt-3 tracking-tight">
-              Yo‘lchi AI Bilan Jonli Muloqot
+              Yölçi AI Bilan Jonli Muloqot
             </h2>
             <p className="text-slate-300 text-sm sm:text-base mt-3">
-              Yo‘lchi AI bilan hoziroq real vaqtda sinab ko‘ring yoki quyidagi namunaviy savollarni bosing.
+              Yölçi AI bilan hoziroq real vaqtda sinab köring yoki quyidagi namunaviy savollarni bosing.
             </p>
           </motion.div>
 
@@ -1601,17 +1601,17 @@ SELECT public.submit_answer_attempt(
                 <YolchiAIMascot size="sm" mood="happy" />
                 <div>
                   <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    Yo‘lchi AI Mentori
+                    Yölçi AI Mentori
                     <span className="w-2 h-2 rounded-full bg-mint animate-pulse" />
                   </h4>
-                  <p className="text-[10px] text-slate-400">Google Gemini 2.5 Flash bilan integratsiyalashgan</p>
+                  <p className="text-[10px] text-slate-400">Google Gemini 2.5 Flash bilan integratsiyalaşgan</p>
                 </div>
               </div>
               <button
                 onClick={onNavigateAiTutor}
                 className="text-xs text-path hover:text-path underline font-bold flex items-center gap-1 cursor-pointer"
               >
-                To‘liq ekranda ochish →
+                Töliq ekranda oçiş →
               </button>
             </div>
 
@@ -1644,7 +1644,7 @@ SELECT public.submit_answer_attempt(
               {isBotThinking && (
                 <div className="flex justify-start">
                   <div className="p-3 rounded-2xl bg-slate-800 border border-white/10 text-xs text-path flex items-center gap-2 animate-pulse shadow-md">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Yo‘lchi AI tahlil qilmoqda...
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Yölçi AI tahlil qilmoqda...
                   </div>
                 </div>
               )}
@@ -1673,7 +1673,7 @@ SELECT public.submit_answer_attempt(
                 value={inputQuestion}
                 onChange={(e) => setInputQuestion(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendQuestion()}
-                placeholder="Yo‘lchi AI ga ixtiyoriy savol bering..."
+                placeholder="Yölçi AI ga ixtiyoriy savol bering..."
                 className="flex-1 bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-path focus:bg-black/70"
               />
               <button
@@ -1704,7 +1704,7 @@ SELECT public.submit_answer_attempt(
             </h2>
 
             <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Hakamlar va investorlar uchun platformaning to‘liq 1–5 daqiqalik dars jarayoni, diagnostikasi va ishlash mexanizmi aks etgan maxsus <strong>/demo</strong> sahifasi tayyorlandi.
+              Hakamlar va investorlar uçun platformaning töliq 1–5 daqiqalik dars jarayoni, diagnostikasi va işlaş mexanizmi aks etgan maxsus <strong>/demo</strong> sahifasi tayyorlandi.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -1715,7 +1715,7 @@ SELECT public.submit_answer_attempt(
                 }}
                 className="px-8 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-base shadow-2xl flex items-center gap-2.5 cursor-pointer transition-all transform hover:-translate-y-0.5 active:scale-[0.98]"
               >
-                <span className="text-slate-950 font-black">/demo Sahifasiga O‘tish</span>
+                <span className="text-slate-950 font-black">/demo Sahifasiga Ötiş</span>
                 <ArrowRight className="w-4 h-4 text-slate-950" />
               </button>
 
@@ -1739,7 +1739,7 @@ SELECT public.submit_answer_attempt(
             <BilimYolLogo size="md" variant="dark" />
           </div>
           <p className="text-xs text-slate-400 max-w-xl mx-auto">
-            BilimYo‘l Smart Edu — Pitch Day 3.0 (AIFU) ishtirokchisi. Barcha huquqlar himoyalangan © 2026.
+            BilimYöl Smart Edu — Pitch Day 3.0 (AIFU) iştirokçisi. Barça huquqlar himoyalangan © 2026.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-path">
             <button onClick={onNavigateDemo} className="hover:underline cursor-pointer">

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bilimyol.uz/schemas/english/curriculum-schema.json",
-  "title": "BilimYo'l Canonical English Curriculum Schema (course_eng_01)",
+  "title": "BilimYöl Canonical English Curriculum Schema (course_eng_01)",
   "description": "JSON Schema Draft 2020-12 contract governing CEFR skeletons, level curriculum manifests, 17-part lessons, SRS flashcards, 9 question modes, learning path nodes, and approved local media assets across Web and Flutter.",
   "type": "object",
   "oneOf": [

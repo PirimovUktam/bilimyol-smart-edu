@@ -78,7 +78,7 @@ class LessonMedia {
       case LessonMediaLanguage.en:
         return 'English';
       case LessonMediaLanguage.uz:
-        return 'O‘zbekcha';
+        return 'Özbekça';
       case LessonMediaLanguage.ru:
         return 'Русский';
     }

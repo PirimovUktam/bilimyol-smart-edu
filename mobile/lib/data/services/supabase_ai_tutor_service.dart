@@ -47,24 +47,24 @@ class SupabaseAITutorService implements IAITutorService {
       final data = res.data;
       if (data != null && data is Map<String, dynamic>) {
         return AIExplanationResponse(
-          tutorName: data['tutorName'] ?? 'Yo‘lchi AI',
-          title: data['title'] ?? 'Xatoni tahlil qilish',
+          tutorName: data['tutorName'] ?? 'Yölçi AI',
+          title: data['title'] ?? 'Xatoni tahlil qiliş',
           explanation:
               data['explanation'] ??
-              'Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas.',
+              'Siz tanlagan javob (${request.selectedOption}) töğri emas.',
           remediationStep:
               data['remediationStep'] ??
-              'Mavzuni qadamma-qadam takrorlash tavsiya etiladi.',
+              'Mavzuni qadamma-qadam takrorlaş tavsiya etiladi.',
           suggestedAction:
               data['suggestedAction'] ??
-              'Keling, ushbu mavzuni qisqa mashq bilan mustahkamlaymiz.',
+              'Keling, uşbu mavzuni qisqa maşq bilan mustahkamlaymiz.',
           isDeterministicFallback: data['isDeterministicFallback'] == true,
         );
       }
 
       if (SupabaseConfig.hasRemoteConfiguration) {
         throw const AITutorUnavailableException(
-          'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
+          'Yölçi AI hozirça javob bera olmadi. Iltimos, qayta urinib köring.',
         );
       }
       debugPrint(
@@ -75,7 +75,7 @@ class SupabaseAITutorService implements IAITutorService {
       if (SupabaseConfig.hasRemoteConfiguration) {
         if (err is AITutorUnavailableException) rethrow;
         throw const AITutorUnavailableException(
-          'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
+          'Yölçi AI xizmatiga ulanib bölmadi. Internetni tekşirib qayta urinib köring.',
         );
       }
       debugPrint(
@@ -133,7 +133,7 @@ class SupabaseAITutorService implements IAITutorService {
 
       if (SupabaseConfig.hasRemoteConfiguration) {
         throw const AITutorUnavailableException(
-          'Dars kontenti hozircha yuklanmadi. Internetni tekshirib qayta urinib ko‘ring.',
+          'Dars kontenti hozirça yuklanmadi. Internetni tekşirib qayta urinib köring.',
         );
       }
       debugPrint(
@@ -144,7 +144,7 @@ class SupabaseAITutorService implements IAITutorService {
       if (SupabaseConfig.hasRemoteConfiguration) {
         if (err is AITutorUnavailableException) rethrow;
         throw const AITutorUnavailableException(
-          'Dars kontenti xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
+          'Dars kontenti xizmatiga ulanib bölmadi. Internetni tekşirib qayta urinib köring.',
         );
       }
       debugPrint(
@@ -202,7 +202,7 @@ class SupabaseAITutorService implements IAITutorService {
           data['answer'] is String &&
           (data['answer'] as String).trim().isNotEmpty) {
         return AskTutorResponse(
-          tutorName: data['tutorName'] ?? 'Yo‘lchi AI',
+          tutorName: data['tutorName'] ?? 'Yölçi AI',
           answer: data['answer'] as String,
           isAiGenerated: data['isAiGenerated'] == true,
           isDeterministicFallback: data['isDeterministicFallback'] == true,
@@ -211,8 +211,8 @@ class SupabaseAITutorService implements IAITutorService {
 
       throw AITutorUnavailableException(
         isRu
-            ? 'Yo‘lchi AI пока не смог ответить. Пожалуйста, попробуйте ещё раз.'
-            : 'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
+            ? 'Yölçi AI пока не смог ответить. Пожалуйста, попробуйте ещё раз.'
+            : 'Yölçi AI hozirça javob bera olmadi. Iltimos, qayta urinib köring.',
       );
     } on AITutorUnavailableException {
       rethrow;
@@ -220,8 +220,8 @@ class SupabaseAITutorService implements IAITutorService {
       debugPrint('[AITutor] askTutor failed: $err');
       throw AITutorUnavailableException(
         isRu
-            ? 'Не удалось подключиться к Yo‘lchi AI. Проверьте интернет и попробуйте снова.'
-            : 'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internet aloqasini tekshirib qayta urinib ko‘ring.',
+            ? 'Не удалось подключиться к Yölçi AI. Проверьте интернет и попробуйте снова.'
+            : 'Yölçi AI xizmatiga ulanib bölmadi. Internet aloqasini tekşirib qayta urinib köring.',
       );
     }
   }

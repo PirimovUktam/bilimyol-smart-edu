@@ -85,7 +85,7 @@ async function sessionState(session: PlacementSession, isCurrent: () => boolean)
         recommendedNodeId,
       },
       isLoading: false, isSubmitting: false,
-      error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
+      error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boşidan boşlandi.' : null,
     };
   }
   return {
@@ -94,7 +94,7 @@ async function sessionState(session: PlacementSession, isCurrent: () => boolean)
     submissions: result?.submissions ?? [], history: [], hasFinished: result !== null,
     assessmentResult: result ? { ...result, computedScores: learner?.scoresByCourse[result.courseId] ?? {} } : null,
     isLoading: false, isSubmitting: false,
-    error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
+    error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boşidan boşlandi.' : null,
   };
 }
 
@@ -168,7 +168,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         assessmentResult: null,
         isSubmitting: false,
         isLoading: false,
-        error: firstQ ? null : 'Ushbu fan uchun diagnostika savollari topilmadi.',
+        error: firstQ ? null : 'Uşbu fan uçun diagnostika savollari topilmadi.',
         hasFinished: false,
         _questionStartedAt: firstQ ? Date.now() : 0,
         _lastSubmittedAt: 0,
@@ -183,7 +183,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         isLoading: false,
         isSubmitting: false,
         hasFinished: false,
-        error: err instanceof Error ? err.message : 'Diagnostika savollarini yuklashda xatolik yuz berdi.',
+        error: err instanceof Error ? err.message : 'Diagnostika savollarini yuklaşda xatolik yuz berdi.',
       });
     }
   },
@@ -235,7 +235,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         return session.result !== null;
       } catch (error) {
         if (isCurrent()) set({ isSubmitting: false,
-          error: error instanceof Error ? error.message : 'Javobni yuborib bo‘lmadi. Qayta urinib ko‘ring.' });
+          error: error instanceof Error ? error.message : 'Javobni yuborib bölmadi. Qayta urinib köring.' });
         return false;
       }
     }
@@ -255,7 +255,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
         isSubmitting: false,
         error: err instanceof Error
           ? err.message
-          : 'Javobni serverda tekshirib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
+          : 'Javobni serverda tekşirib bölmadi. Internetni tekşirib qayta urinib köring.',
       });
       return false;
     }
@@ -322,7 +322,7 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
           isSubmitting: false,
           error: err instanceof Error
             ? err.message
-            : 'Diagnostika natijasini serverga saqlab bo‘lmadi. Qayta urinib ko‘ring.',
+            : 'Diagnostika natijasini serverga saqlab bölmadi. Qayta urinib köring.',
         });
         return false;
       }

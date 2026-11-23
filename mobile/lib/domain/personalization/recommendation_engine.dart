@@ -40,23 +40,23 @@ class RecommendationEngine {
       id: 'rec_${courseId}_${DateTime.now().millisecondsSinceEpoch}',
       courseId: courseId,
       title: isReinforcement
-          ? 'Mustahkamlash: $targetSkillName'
+          ? 'Mustahkamlaş: $targetSkillName'
           : isTargetedPractice
-          ? 'Maqsadli mashq: $targetSkillName'
+          ? 'Maqsadli maşq: $targetSkillName'
           : 'Bugungi Reja: ${activeNode.title}',
       subtitle: isReinforcement
-          ? 'Aniqlangan bo‘shliqni to‘ldirish uchun maxsus 5 daqiqalik mashq'
+          ? 'Aniqlangan böşliqni töldiriş uçun maxsus 5 daqiqalik maşq'
           : isTargetedPractice
-          ? '50–69% oraliqdagi ko‘nikmani 70%+ darajaga ko‘tarish uchun mashq'
-          : 'Keyingi bosqichga o‘tish va o‘zlashtirish darajasini oshirish',
+          ? '50–69% oraliqdagi könikmani 70%+ darajaga kötariş uçun maşq'
+          : 'Keyingi bosqiçga ötiş va özlaştiriş darajasini oşiriş',
       targetSkillId: targetSkill?.id ?? '',
       targetSkillName: targetSkillName,
       targetNodeId: activeNode.id,
       reason: weakestScore != null && weakestScore < AdaptiveThresholds.targetedPracticeMin
-          ? 'Ushbu ko‘nikma hozirda $weakestScore% darajasida. Tavsiya etilgan mashq orqali uni 60%+ darajaga ko‘taring.'
+          ? 'Uşbu könikma hozirda $weakestScore% darajasida. Tavsiya etilgan maşq orqali uni 60%+ darajaga kötaring.'
           : isTargetedPractice
-          ? 'Ushbu ko‘nikma hozirda $weakestScore% darajasida. Maqsadli mashq bilan 70%+ barqaror natijaga erishing.'
-          : 'O‘zlashtirish sur’atini saqlab qolish uchun rejadagi darsni davom ettiring.',
+          ? 'Uşbu könikma hozirda $weakestScore% darajasida. Maqsadli maşq bilan 70%+ barqaror natijaga erişing.'
+          : 'Özlaştiriş sur’atini saqlab qoliş uçun rejadagi darsni davom ettiring.',
       suggestedMinutes: isReinforcement ? 5 : activeNode.estimatedMinutes,
       priority: weakestScore != null && weakestScore < AdaptiveThresholds.targetedPracticeMin
           ? RecommendationPriority.high

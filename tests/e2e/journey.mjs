@@ -28,13 +28,13 @@ const screenshot = async (filename) => {
 let assertions = 0;
 
 async function chooseLearningPlan(level) {
-  await heading('O‘rganish rejangizni sozlang');
+  await heading('Örganiş rejangizni sozlang');
   await main.getByRole('radio', { name: new RegExp(level) }).check();
 }
 
 async function switchSubject(subject) {
-  await click('Fanni almashtirish', page);
-  await heading('O‘zingizga mos fanni tanlang');
+  await click('Fanni almaştiriş', page);
+  await heading('Özingizga mos fanni tanlang');
   await click(subject);
 }
 
@@ -65,133 +65,133 @@ try {
   releaseFonts();
   await page.waitForFunction(() => document.querySelector('#bilimyol-fonts')?.media === 'all');
   console.log('PASS delayed external fonts do not block the first-visit product tour');
-  await click('O‘tkazib yuborish');
-  await heading('O‘zingizga mos yo‘ldan o‘rganing.');
+  await click('Ötkazib yuboriş');
+  await heading('Özingizga mos yöldan örganing.');
   await screenshot('after-welcome-1440.png');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkWidth('welcome', 390);
   await screenshot('after-welcome-390.png');
   await page.setViewportSize({ width: 1440, height: 960 });
-  await click('Kirish');
-  await heading('Xush kelibsiz!');
-  await click('Parolni ko‘rsatish');
+  await click('Kiriş');
+  await heading('Xuş kelibsiz!');
+  await click('Parolni körsatiş');
   assert.equal(await page.getByLabel('Parol', { exact: true }).getAttribute('type'), 'text');
-  await click('Parolni yashirish');
+  await click('Parolni yaşiriş');
   assert.equal(await page.getByLabel('Parol', { exact: true }).getAttribute('type'), 'password');
   await page.getByLabel('Email manzilingiz').fill('offline@example.test');
   await page.getByLabel('Parol', { exact: true }).fill('test-password');
-  await click('Kirish');
-  await main.getByRole('alert').getByText(/Hisob xizmatiga ulanib bo‘lmadi/).waitFor();
-  await heading('Xush kelibsiz!');
-  await screenshot('kirish-1440.png');
-  await click('Namuna hisobi bilan kirish');
-  await heading('O‘zingizga mos fanni tanlang');
-  for (const course of [/Matematika/, /Ingliz tili/, /IT & Kodlash/, /Mantiq/]) {
-    assert.equal(await main.getByRole('button', { name: new RegExp(course.source + ' fanini tanlash') }).count(), 1);
+  await click('Kiriş');
+  await main.getByRole('alert').getByText(/Hisob xizmatiga ulanib bölmadi/).waitFor();
+  await heading('Xuş kelibsiz!');
+  await screenshot('kiriş-1440.png');
+  await click('Namuna hisobi bilan kiriş');
+  await heading('Özingizga mos fanni tanlang');
+  for (const course of [/Matematika/, /Ingliz tili/, /IT & Kodlaş/, /Mantiq/]) {
+    assert.equal(await main.getByRole('button', { name: new RegExp(course.source + ' fanini tanlaş') }).count(), 1);
   }
   const fresh = await browser.newPage({ storageState: await context.storageState() });
   await fresh.goto(base, { waitUntil: 'domcontentloaded' });
-  await fresh.getByRole('heading', { name: 'O‘zingizga mos yo‘ldan o‘rganing.' }).waitFor();
+  await fresh.getByRole('heading', { name: 'Özingizga mos yöldan örganing.' }).waitFor();
   await fresh.close();
 
-  await click(/Ingliz tili fanini tanlash/);
-  await chooseLearningPlan('Noldan boshlayman');
+  await click(/Ingliz tili fanini tanlaş/);
+  await chooseLearningPlan('Noldan boşlayman');
   assert.equal(await main.getByRole('button', { name: 'Ixtiyoriy diagnostika' }).count(), 0);
-  await click('Birinchi darsni boshlash');
-  await heading('Birinchi inglizcha so‘zlar');
-  await heading('Asosiy tushuncha');
+  await click('Birinçi darsni boşlaş');
+  await heading('Birinçi inglizça sözlar');
+  await heading('Asosiy tuşunça');
   await main.getByText(/«Hello» — salom/).first().waitFor();
   assert.equal(await main.getByRole('button', { name: 'Test', exact: true }).count(), 0);
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot('ilk-ingliz-darsi-390.png');
   await page.setViewportSize({ width: 1440, height: 960 });
   await click('Keyingi qadam');
-  await heading('Birga misol ko‘ramiz');
-  await click('Yo‘lchidan so‘rash');
-  const help = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
-  await help.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Hello qachon ishlatiladi?');
-  await click('Savolni yuborish', help);
+  await heading('Birga misol köramiz');
+  await click('Yölçidan söraş');
+  const help = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
+  await help.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill('Hello qaçon işlatiladi?');
+  await click('Savolni yuboriş', help);
   await help.getByRole('button', { name: 'Foydali javob' }).waitFor();
-  await click('Yopish', help);
-  await heading('Birga misol ko‘ramiz');
+  await click('Yopiş', help);
+  await heading('Birga misol köramiz');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await heading('Birga misol ko‘ramiz');
+  await heading('Birga misol köramiz');
   await click('Keyingi qadam');
   await heading('Iboralarni eslab qolamiz');
   await click('Keyingi qadam');
-  await heading('O‘rganganingizni sinab ko‘ring');
-  await click('Ta’lim yo‘liga qaytish');
-  await heading('Boshlang‘ich darslar');
+  await heading('Örganganingizni sinab köring');
+  await click('Ta’lim yöliga qaytiş');
+  await heading('Boşlanğiç darslar');
   console.log('PASS welcome, one-tap subject choice, beginner instruction, contextual help and reading checkpoint');
 
-  await switchSubject(/IT & Kodlash fanini tanlash/);
+  await switchSubject(/IT & Kodlaş fanini tanlaş/);
   await chooseLearningPlan('Asoslarini bilaman');
-  await click('Ta’lim yo‘lini ochish');
-  await heading('Mening ta’lim yo‘lim');
-  await click('Bosh sahifa', nav);
-  await click('Davom etish');
+  await click('Ta’lim yölini oçiş');
+  await heading('Mening ta’lim yölim');
+  await click('Boş sahifa', nav);
+  await click('Davom etiş');
   await heading(/Python/);
-  assert.equal(await main.getByRole('heading', { name: 'Kvadratni ochish' }).count(), 0);
-  await click('Ta’lim yo‘liga qaytish');
-  await switchSubject(/Matematika fanini tanlash/);
+  assert.equal(await main.getByRole('heading', { name: 'Kvadratni oçiş' }).count(), 0);
+  await click('Ta’lim yöliga qaytiş');
+  await switchSubject(/Matematika fanini tanlaş/);
   await chooseLearningPlan('Asoslarini bilaman');
-  await click('Ta’lim yo‘lini ochish');
-  await heading('Mening ta’lim yo‘lim');
-  await click('Bosh sahifa', nav);
-  await click('Davom etish');
-  await heading('Kvadratni ochish');
+  await click('Ta’lim yölini oçiş');
+  await heading('Mening ta’lim yölim');
+  await click('Boş sahifa', nav);
+  await click('Davom etiş');
+  await heading('Kvadratni oçiş');
   await click('Test');
   await heading(/yoyilmasida x oldidagi/);
-  assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
+  assert.equal(await main.getByText(/Töğri javob:/).count(), 0);
   await main.getByText('4', { exact: true }).click();
-  await click(/Tekshirish/i);
-  await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor();
+  await click(/Tekşiriş/i);
+  await main.getByText('Töğri javob!', { exact: true }).waitFor();
   const dialog = page.getByRole('dialog', { name: 'Dars yakunlandi' });
   await dialog.waitFor();
   await page.keyboard.press('Tab');
   assert(await dialog.evaluate((node) => node.contains(document.activeElement)));
-  await click('Ta’lim yo‘liga o‘tish', dialog);
+  await click('Ta’lim yöliga ötiş', dialog);
   await click('Natijalar', nav);
   await main.getByText('22', { exact: true }).first().waitFor();
-  await switchSubject(/Ingliz tili fanini tanlash/);
-  await click('Davom etish');
-  await heading('Birinchi inglizcha so‘zlar');
+  await switchSubject(/Ingliz tili fanini tanlaş/);
+  await click('Davom etiş');
+  await heading('Birinçi inglizça sözlar');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await heading('Birinchi inglizcha so‘zlar');
-  await click('Ta’lim yo‘liga qaytish');
-  await switchSubject(/Matematika fanini tanlash/);
+  await heading('Birinçi inglizça sözlar');
+  await click('Ta’lim yöliga qaytiş');
+  await switchSubject(/Matematika fanini tanlaş/);
   await heading(/Assalomu alaykum/);
   await screenshot('after-learn-1440.png');
   await page.setViewportSize({ width: 360, height: 844 });
-  await click('Bildirishnomalar');
+  await click('Bildirişnomalar');
   await checkWidth('open reminders', 360);
-  await main.getByRole('button', { name: 'Yopish', exact: true }).click();
+  await main.getByRole('button', { name: 'Yopiş', exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 960 });
   await click('Profil');
   await main.getByRole('checkbox', { name: /eslatma/i }).uncheck();
-  await click('Bosh sahifa', nav);
+  await click('Boş sahifa', nav);
   await heading(/Assalomu alaykum/);
-  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor({ state: 'hidden' });
+  await main.getByRole('button', { name: 'Bildirişnomalar' }).waitFor({ state: 'hidden' });
   await click('Profil');
   await main.getByRole('checkbox', { name: /eslatma/i }).check();
-  await click('Bosh sahifa', nav);
-  await main.getByRole('button', { name: 'Bildirishnomalar' }).waitFor();
+  await click('Boş sahifa', nav);
+  await main.getByRole('button', { name: 'Bildirişnomalar' }).waitFor();
   console.log('PASS reminder preference and 360px notification menu');
   await click('Natijalar', nav);
   await main.getByText('22', { exact: true }).first().waitFor();
   console.log('PASS demo login, course isolation, authoritative demo scorer and completion');
 
-  await click('Yo‘lchi AI', nav);
-  await heading('Yo‘lchi AI');
-  await page.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Kvadratni qanday ochaman?');
-  await click('Savolni yuborish');
+  await click('Yölçi AI', nav);
+  await heading('Yölçi AI');
+  await page.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill('Kvadratni qanday oçaman?');
+  await click('Savolni yuboriş');
   await main.getByRole('button', { name: 'Foydali javob' }).waitFor();
   await click('Foydali javob');
   assert.equal(await main.getByRole('button', { name: 'Foydali javob' }).getAttribute('aria-pressed'), 'true');
   await click('Natijalar', nav);
-  await heading('Ta’lim ko‘rsatkichlari');
-  await click('Yo‘lchi AI', nav);
-  await main.getByText('Kvadratni qanday ochaman?', { exact: true }).waitFor();
+  await heading('Ta’lim körsatkiçlari');
+  await click('Yölçi AI', nav);
+  await main.getByText('Kvadratni qanday oçaman?', { exact: true }).waitFor();
   await screenshot('yolchi-1440.png');
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot('yolchi-390.png');
@@ -200,15 +200,15 @@ try {
 
   const views = [
     ['dashboard', /Assalomu alaykum/],
-    ['course-selection', /O‘zingizga mos fanni tanlang/],
-    ['onboarding', /Maqsad|Boshlaymiz|O‘rganish/i],
-    ['placement', 'Boshlang‘ich diagnostika'],
+    ['course-selection', /Özingizga mos fanni tanlang/],
+    ['onboarding', /Maqsad|Boşlaymiz|Örganiş/i],
+    ['placement', 'Boşlanğiç diagnostika'],
     ['knowledge-map', 'Bilim xaritasi'],
-    ['roadmap', 'Mening ta’lim yo‘lim'],
-    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni ochish'],
-    ['lesson&lessonId=lesson_math_starter', 'Qo‘shish va ayirishdan boshlaymiz'],
-    ['ai-tutor', 'Yo‘lchi AI'],
-    ['progress', 'Ta’lim ko‘rsatkichlari'],
+    ['roadmap', 'Mening ta’lim yölim'],
+    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni oçiş'],
+    ['lesson&lessonId=lesson_math_starter', 'Qöşiş va ayirişdan boşlaymiz'],
+    ['ai-tutor', 'Yölçi AI'],
+    ['progress', 'Ta’lim körsatkiçlari'],
     ['profile', 'Profil'],
   ];
   for (const width of [360, 390, 768, 1024, 1440, 1920]) {
@@ -225,7 +225,7 @@ try {
       ? page.getByRole('navigation', { name: 'Mobil navigatsiya' })
       : nav;
     await click('Natijalar', targetNav);
-    await heading('Ta’lim ko‘rsatkichlari');
+    await heading('Ta’lim körsatkiçlari');
     await page.goBack();
     await heading('Profil');
     console.log('PASS ' + width + 'px, ' + views.length + ' screens, navigation and browser Back');
@@ -236,7 +236,7 @@ try {
   assert.equal(await language.inputValue(), 'uz');
   assert.equal(await root.getAttribute('data-theme'), 'light');
   const lightBackground = await page.locator('body').evaluate((node) => getComputedStyle(node).backgroundColor);
-  await click('Qorong‘i rejimni yoqish', page);
+  await click('Qoronği rejimni yoqiş', page);
   await language.selectOption('ru');
   await click('Включить светлую тему', page);
   assert.equal(await root.getAttribute('data-theme'), 'light');
@@ -255,8 +255,8 @@ try {
     ['placement', 'Входная диагностика'],
     ['knowledge-map', 'Карта знаний'],
     ['roadmap', 'Мой путь обучения'],
-    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni ochish'],
-    ['ai-tutor', 'Yo‘lchi AI'],
+    ['lesson&lessonId=lesson_math_algebra_01', 'Kvadratni oçiş'],
+    ['ai-tutor', 'Yölçi AI'],
     ['progress', 'Результаты обучения'],
     ['profile', 'Профиль'],
   ];
@@ -271,11 +271,11 @@ try {
     }
   }
   await page.goto(base + '/?view=ai-tutor');
-  await page.getByRole('textbox', { name: 'Напишите вопрос Yo‘lchi AI' }).fill('Как раскрыть квадрат?');
+  await page.getByRole('textbox', { name: 'Напишите вопрос Yölçi AI' }).fill('Как раскрыть квадрат?');
   await click('Отправить вопрос');
   await main.getByText(/Давайте разберём вопрос по шагам/).waitFor();
   await language.selectOption('uz');
-  await main.getByRole('button', { name: 'Savolni yuborish' }).waitFor();
+  await main.getByRole('button', { name: 'Savolni yuboriş' }).waitFor();
   console.log('PASS theme and language switching, reload, Russian tutor demo and 20 Russian dark layouts');
   assert.deepEqual(remoteRequests, []);
   assert.deepEqual(errors, []);

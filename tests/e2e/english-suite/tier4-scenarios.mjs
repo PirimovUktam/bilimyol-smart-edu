@@ -34,10 +34,10 @@ export function registerTests() {
         const main = page.getByRole('main');
 
         await assertCourseIdentity(page, helpers, 'course_eng_01', 'T4-01 starter');
-        await main.getByRole('heading', { name: 'Asosiy tushuncha' }).first().waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: 'Asosiy tuşunça' }).first().waitFor({ state: 'visible' });
 
         // Step 2: Tashkent illustration + two-voice WAV + transcript
-        await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+        await advanceLessonStep(page, /Birga misol köramiz/i);
         const img = main.locator('img[src="/lesson-media/english/a1-starter-greeting.png"]');
         await img.waitFor({ state: 'visible' });
         await page
@@ -56,7 +56,7 @@ export function registerTests() {
           'Expected Tashkent greeting illustration loaded.',
         );
         await main.locator('audio[src="/lesson-media/english/a1-starter-dialogue.wav"]').waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Qayta tinglash' }).click();
+        await main.getByRole('button', { name: 'Qayta tinglaş' }).click();
         await main.locator('summary', { hasText: 'Matnli bayon' }).click();
         await main.locator('[lang="en"]').getByText('Aziza:').waitFor({ state: 'visible' });
         await main.locator('[lang="en"]').getByText('Ben:').waitFor({ state: 'visible' });
@@ -64,33 +64,33 @@ export function registerTests() {
         // Step 3: Flashcards (re-queue card 1, complete card 2, re-review card 1)
         await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
         await main.getByRole('heading', { name: "What's your name?" }).waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
-        await main.getByRole('button', { name: 'Yana mashq qilaman' }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
+        await main.getByRole('button', { name: 'Yana maşq qilaman' }).click();
 
         await main.getByRole('heading', { name: 'Nice to meet you.' }).waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
         await main.getByRole('button', { name: 'Eslab qoldim' }).click();
 
         await main.getByRole('heading', { name: "What's your name?" }).waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
         await main.getByRole('button', { name: 'Eslab qoldim' }).click();
-        await main.getByRole('heading', { name: 'Barcha kartochkalar ko‘rib chiqildi' }).waitFor({ state: 'visible' });
+        await main.getByRole('heading', { name: 'Barça kartoçkalar körib çiqildi' }).waitFor({ state: 'visible' });
 
-        // Step 4: Free-text with Yo‘lchi AI non-remount preservation
-        await advanceLessonStep(page, /O‘rganganingizni sinab ko‘ring/i);
+        // Step 4: Free-text with Yölçi AI non-remount preservation
+        await advanceLessonStep(page, /Örganganingizni sinab köring/i);
         const input = main.getByRole('textbox', { name: /Javobingizni ingliz tilida yozing/i });
         await input.fill("I'm Sam");
 
         await helpers.openAndCloseYolchiAi(page, {
-          askText: "What's your name qachon aytiladi?",
+          askText: "What's your name qaçon aytiladi?",
           closeWith: 'button',
           preserveStepIndicator: /^Qadam 4 \/ 4$/,
-          preserveText: 'O‘rganganingizni sinab ko‘ring',
+          preserveText: 'Örganganingizni sinab köring',
         });
         assert.equal(await input.inputValue(), "I'm Sam");
 
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await finishCompletionDialog(page);
 
         // Reload persistence & lesson_eng_foundation_02 unlock
@@ -99,7 +99,7 @@ export function registerTests() {
           assert.equal(completed.includes('lesson_eng_starter'), true);
           assert.ok((after.progress?.profile?.xp ?? 0) >= 22);
         });
-        await main.getByRole('button', { name: 'Boshlang‘ich darsni ochish' }).click();
+        await main.getByRole('button', { name: 'Boşlanğiç darsni oçiş' }).click();
         await main.getByRole('heading', { name: 'Men, siz va oddiy gaplar' }).first().waitFor({ state: 'visible' });
         assertCleanSession(session, 'T4-01');
       },
@@ -125,11 +125,11 @@ export function registerTests() {
           }
           await main.getByRole('radio').first().check();
           await page.waitForTimeout(PLACEMENT_MIN_INTERVAL_MS);
-          const finishBtn = main.getByRole('button', { name: /Natijani ko‘rish/i });
+          const finishBtn = main.getByRole('button', { name: /Natijani köriş/i });
           if (await finishBtn.isVisible().catch(() => false)) {
             await finishBtn.click();
-            const modal = page.getByRole('dialog', { name: /Javoblarni topshirasizmi\?/i });
-            await modal.getByRole('button', { name: /^Topshirish$/i }).click();
+            const modal = page.getByRole('dialog', { name: /Javoblarni topşirasizmi\?/i });
+            await modal.getByRole('button', { name: /^Topşiriş$/i }).click();
             break;
           }
           await main.getByRole('button', { name: /Keyingi savol/i }).click();
@@ -159,16 +159,16 @@ export function registerTests() {
           'T4-02 (M5): Placement alone must not mark English lessons completed.',
         );
 
-        await main.getByRole('button', { name: /Shaxsiy yo‘lni ko‘rish/i }).click();
+        await main.getByRole('button', { name: /Şaxsiy yölni köriş/i }).click();
         await main
-          .getByRole('heading', { name: /Mening ta’lim yo‘lim|Boshlang‘ich darslar/i })
+          .getByRole('heading', { name: /Mening ta’lim yölim|Boşlanğiç darslar/i })
           .first()
           .waitFor({ state: 'visible' });
 
         const activeNode = main.locator('li[aria-current="step"]').first();
         const openRecommendedBtn = (await activeNode.count()) > 0
-          ? activeNode.getByRole('button', { name: /Darsni boshlash|Boshlang‘ich darsni ochish|Birinchi mashqni boshlash/i }).first()
-          : main.getByRole('button', { name: /Darsni boshlash|Boshlang‘ich darsni ochish|Birinchi mashqni boshlash/i }).first();
+          ? activeNode.getByRole('button', { name: /Darsni boşlaş|Boşlanğiç darsni oçiş|Birinçi maşqni boşlaş/i }).first()
+          : main.getByRole('button', { name: /Darsni boşlaş|Boşlanğiç darsni oçiş|Birinçi maşqni boşlaş/i }).first();
         await openRecommendedBtn.click();
 
         await main.getByText(/^Qadam\s+\d+\s*\/\s*\d+$/i).first().waitFor({ state: 'visible' });
@@ -197,7 +197,7 @@ export function registerTests() {
         const nextStepBtn = main
           .locator('li[aria-current="step"], li')
           .filter({ hasNotText: firstLessonHeading || '__no_match__' })
-          .getByRole('button', { name: /Darsni boshlash|Boshlang‘ich darsni ochish/i })
+          .getByRole('button', { name: /Darsni boşlaş|Boşlanğiç darsni oçiş/i })
           .first();
         await helpers.expectVisibleFast(
           nextStepBtn,
@@ -220,7 +220,7 @@ export function registerTests() {
         // Complete Listening node
         const main = page.getByRole('main');
         await openRoadmapNodeLesson(page, /^Listening$/i);
-        await advanceLessonStep(page, /2\. Audio Xabarni Tinglash/i);
+        await advanceLessonStep(page, /2\. Audio Xabarni Tinglaş/i);
         await main.locator('audio[src="/lesson-media/english/a1-listening-lecture-time.wav"]').waitFor({ state: 'visible' });
         await main.locator('summary', { hasText: 'Matnli bayon' }).click();
         await main.locator('[lang="en"]').getByText(/in the afternoon/i).waitFor({ state: 'visible' });
@@ -230,15 +230,15 @@ export function registerTests() {
         const readCard = main.locator('li').filter({
           has: page.getByRole('heading', { name: /^Reading$/i }),
         });
-        await readCard.getByText(/Ochiq|Keyingi qadam/i).first().waitFor({ state: 'visible' });
-        await readCard.getByRole('button', { name: 'Darsni boshlash' }).click();
-        await main.getByRole('heading', { name: 'Asosiy g‘oya va dalil' }).first().waitFor({ state: 'visible' });
+        await readCard.getByText(/Oçiq|Keyingi qadam/i).first().waitFor({ state: 'visible' });
+        await readCard.getByRole('button', { name: 'Darsni boşlaş' }).click();
+        await main.getByRole('heading', { name: 'Asosiy ğoya va dalil' }).first().waitFor({ state: 'visible' });
 
         // Leave mid-reading -> reload -> confirm incomplete & checkpoint restored
-        await advanceLessonStep(page, /Ishlangan misol/i);
+        await advanceLessonStep(page, /Işlangan misol/i);
         await main.getByText('Qadam 2 / 3', { exact: true }).waitFor({ state: 'visible' });
-        await main.getByRole('button', { name: 'Ta’lim yo‘liga qaytish' }).click();
-        await main.getByRole('heading', { name: /Mening ta’lim yo‘lim/i }).first().waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: 'Ta’lim yöliga qaytiş' }).click();
+        await main.getByRole('heading', { name: /Mening ta’lim yölim/i }).first().waitFor({ state: 'visible' });
 
         await helpers.reloadAndVerifyPersistence(page, async ({ after }) => {
           const completed = after.progress?.profile?.completedLessonIds ?? [];
@@ -251,7 +251,7 @@ export function registerTests() {
 
         await openRoadmapNodeLesson(page, /^Reading$/i);
         await main.getByText('Qadam 2 / 3', { exact: true }).waitFor({ state: 'visible' });
-        await completeMcqLesson(page, 'To‘garak buyumlarni ta’mirlab, chiqindini kamaytiradi');
+        await completeMcqLesson(page, 'Tögarak buyumlarni ta’mirlab, çiqindini kamaytiradi');
 
         await main.getByText('4 / 31 mavzu yakunlangan').waitFor({ state: 'visible' });
         await getCefrLevelSection(main, 'A1').getByText('4 / 15 mavzu yakunlangan').waitFor({ state: 'visible' });
@@ -271,57 +271,57 @@ export function registerTests() {
         // 1. Fail exercise twice and inspect targeted feedback + remedial trigger
         for (let attempt = 0; attempt < 2; attempt++) {
           await main.getByRole('button', { name: 'behind the sofa' }).click();
-          await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-          await main.getByText('Javobni ko‘rib chiqamiz', { exact: true }).waitFor({ state: 'visible' });
+          await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+          await main.getByText('Javobni körib çiqamiz', { exact: true }).waitFor({ state: 'visible' });
           if (attempt === 0) {
-            await main.getByRole('button', { name: 'Qayta urinish' }).click();
+            await main.getByRole('button', { name: 'Qayta uriniş' }).click();
           }
         }
 
         await helpers.expectVisibleFast(
-          main.getByText(/takroriy xato|remedial|qo‘shimcha mashq/i),
+          main.getByText(/takroriy xato|remedial|qöşimça maşq/i),
           'T4-04 (M5): Expected repeated-error targeted remedial prompt after 2 identical mistakes.',
           FAST_TIMEOUT,
         );
 
-        // 2. Open Yo‘lchi AI explanation and close without losing lesson state
-        const aiBtn = main.getByRole('button', { name: /Yo‘lchi AI tahlili|Yo‘lchidan so‘rash/i }).first();
+        // 2. Open Yölçi AI explanation and close without losing lesson state
+        const aiBtn = main.getByRole('button', { name: /Yölçi AI tahlili|Yölçidan söraş/i }).first();
         await helpers.expectVisibleFast(
           aiBtn,
-          'T4-04 (M5): Expected Yo‘lchi AI mistake explanation trigger after repeated error.',
+          'T4-04 (M5): Expected Yölçi AI mistake explanation trigger after repeated error.',
           FAST_TIMEOUT,
         );
         await aiBtn.click();
-        const aiDialog = page.getByRole('dialog', { name: /Yo‘lchi bilan xato tahlili|Yo‘lchi bilan shu dars haqida/i });
+        const aiDialog = page.getByRole('dialog', { name: /Yölçi bilan xato tahlili|Yölçi bilan şu dars haqida/i });
         await aiDialog.waitFor({ state: 'visible' });
         const aiText = (await aiDialog.innerText()).trim();
-        assert.ok(aiText.length >= 20, `T4-04 (M5): Expected non-empty Yo‘lchi AI explanation, got "${aiText}".`);
+        assert.ok(aiText.length >= 20, `T4-04 (M5): Expected non-empty Yölçi AI explanation, got "${aiText}".`);
 
         // 3. Complete remedial practice step
         const remedialTrigger = aiDialog
-          .getByRole('button', { name: /Qo‘shimcha mashq|Mustahkamlash mashqi|Mavzuni mustahkamlash mashqi|REMEDIATSIYA/i })
-          .or(main.getByRole('button', { name: /Qo‘shimcha mashq|Mustahkamlash mashqi|Mavzuni mustahkamlash mashqi|REMEDIATSIYA/i }))
+          .getByRole('button', { name: /Qöşimça maşq|Mustahkamlaş maşqi|Mavzuni mustahkamlaş maşqi|REMEDIATSIYA/i })
+          .or(main.getByRole('button', { name: /Qöşimça maşq|Mustahkamlaş maşqi|Mavzuni mustahkamlaş maşqi|REMEDIATSIYA/i }))
           .first();
-        if (await aiDialog.getByRole('button', { name: /Mavzuni mustahkamlash mashqi|Qo‘shimcha mashq/i }).first().isVisible().catch(() => false)) {
+        if (await aiDialog.getByRole('button', { name: /Mavzuni mustahkamlaş maşqi|Qöşimça maşq/i }).first().isVisible().catch(() => false)) {
           await remedialTrigger.click();
         } else {
-          await aiDialog.getByRole('button', { name: 'Yopish' }).click();
+          await aiDialog.getByRole('button', { name: 'Yopiş' }).click();
           await aiDialog.waitFor({ state: 'hidden' });
-          await main.getByRole('button', { name: /Qo‘shimcha mashq|Mustahkamlash mashqi|REMEDIATSIYA/i }).first().click();
+          await main.getByRole('button', { name: /Qöşimça maşq|Mustahkamlaş maşqi|REMEDIATSIYA/i }).first().click();
         }
 
-        const reinfDialog = page.getByRole('dialog', { name: /Mustahkamlash mashqi|Qo‘shimcha mashq/i });
+        const reinfDialog = page.getByRole('dialog', { name: /Mustahkamlaş maşqi|Qöşimça maşq/i });
         if (await reinfDialog.isVisible().catch(() => false)) {
           const opt = reinfDialog.getByRole('button', { name: /^([A-D]\s+)?behind$/i }).first();
           await opt.click();
-          await reinfDialog.getByRole('button', { name: /Javobni Tekshirish|TEKSHIRISH/i }).click();
-          await reinfDialog.getByText(/Mavzu Muvaffaqiyatli Mustahkamlandi!|To‘g‘ri javob!/i).first().waitFor({ state: 'visible' });
-          await reinfDialog.getByRole('button', { name: /Davom etish/i }).click();
+          await reinfDialog.getByRole('button', { name: /Javobni Tekşiriş|TEKŞIRIŞ/i }).click();
+          await reinfDialog.getByText(/Mavzu Muvaffaqiyatli Mustahkamlandi!|Töğri javob!/i).first().waitFor({ state: 'visible' });
+          await reinfDialog.getByRole('button', { name: /Davom etiş/i }).click();
         }
         await navigateToRoadmapFromWorkspace(page);
 
         // 4. Review due vocabulary flashcards in Uz->En and Audio->Word modes and reload
-        const srsBtn = main.getByRole('button', { name: /Flashcard|Kartochkalar|Takrorlash/i }).first();
+        const srsBtn = main.getByRole('button', { name: /Flashcard|Kartoçkalar|Takrorlaş/i }).first();
         await helpers.expectVisibleFast(srsBtn, 'T4-04 (M5): Expected SRS flashcard hub on roadmap.', FAST_TIMEOUT);
         await srsBtn.click();
 
@@ -340,7 +340,7 @@ export function registerTests() {
         assert.equal(
           await main.getByRole('heading', { name: "What's your name?" }).count(),
           0,
-          'T4-04 (M5): Uz->En front must hide English phrase "What\'s your name?" before Javobni ko‘rish.',
+          'T4-04 (M5): Uz->En front must hide English phrase "What\'s your name?" before Javobni köriş.',
         );
         const frontHeadingUz = (
           (await cardHeadingLocator.innerText().catch(() => '')) ?? ''
@@ -354,12 +354,12 @@ export function registerTests() {
           );
         }
 
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
         const revealedTarget = defaultFrontHeading.length > 0 ? defaultFrontHeading : "What's your name?";
         const revealedEnglishEl = main.getByText(revealedTarget, { exact: true }).first();
         await helpers.expectVisibleFast(
           revealedEnglishEl,
-          `T4-04 (M5): Expected revealed English phrase "${revealedTarget}" after Javobni ko‘rish in Uz->En mode.`,
+          `T4-04 (M5): Expected revealed English phrase "${revealedTarget}" after Javobni köriş in Uz->En mode.`,
           FAST_TIMEOUT,
         );
         const revealedEnglishText = ((await revealedEnglishEl.innerText().catch(() => '')) ?? '').trim();
@@ -368,17 +368,17 @@ export function registerTests() {
           revealedEnglishText.toLowerCase(),
           `T4-04 (M5): Uz->En front heading ("${frontHeadingUz}") must differ from revealed English phrase ("${revealedEnglishText}").`,
         );
-        await main.getByRole('button', { name: 'Yana mashq qilaman' }).click();
+        await main.getByRole('button', { name: 'Yana maşq qilaman' }).click();
 
-        const audioWordBtn = main.getByRole('button', { name: /Audio\s*(?:→|->)\s*(?:Word|So‘z)/i });
+        const audioWordBtn = main.getByRole('button', { name: /Audio\s*(?:→|->)\s*(?:Word|Söz)/i });
         await helpers.expectVisibleFast(audioWordBtn, 'T4-04 (M5): Expected Audio->Word SRS flashcard mode.', FAST_TIMEOUT);
         await audioWordBtn.click();
-        await main.getByRole('button', { name: /Talaffuzni tinglash/i }).click();
-        await main.getByRole('button', { name: 'Javobni ko‘rish' }).click();
+        await main.getByRole('button', { name: /Talaffuzni tinglaş/i }).click();
+        await main.getByRole('button', { name: 'Javobni köriş' }).click();
         await main.getByRole('button', { name: 'Eslab qoldim' }).click();
 
         for (let i = 0; i < 20; i++) {
-          const reveal = main.getByRole('button', { name: 'Javobni ko‘rish' });
+          const reveal = main.getByRole('button', { name: 'Javobni köriş' });
           if (!(await reveal.isVisible().catch(() => false))) break;
           await reveal.click();
           await main.getByRole('button', { name: 'Eslab qoldim' }).click();
@@ -396,17 +396,17 @@ export function registerTests() {
         const lockedBefore = await main.locator('[data-node-id], li, article').filter({ hasText: /Qulflangan/i }).count();
         const checkpointCard = main
           .locator('li, article, [data-node-kind="unit_checkpoint"]')
-          .filter({ hasText: /Modul yakuni|Unit checkpoint|Bosqich sinovi|Checkpoint/i })
+          .filter({ hasText: /Modul yakuni|Unit checkpoint|Bosqiç sinovi|Checkpoint/i })
           .first();
         await helpers.expectVisibleFast(
           checkpointCard,
           'T4-04 (M5): Expected unit checkpoint node on roadmap.',
           FAST_TIMEOUT,
         );
-        await checkpointCard.getByRole('button', { name: /Sinovni boshlash|Darsni boshlash|Boshlash/i }).click();
+        await checkpointCard.getByRole('button', { name: /Sinovni boşlaş|Darsni boşlaş|Boşlaş/i }).click();
 
         const initialStem = ((await main.locator('h3').first().innerText().catch(() => '')) ?? '').trim();
-        const altTrigger = main.getByRole('button', { name: /Qayta tekshiruv|Boshqa variant|Alternativ/i });
+        const altTrigger = main.getByRole('button', { name: /Qayta tekşiruv|Boşqa variant|Alternativ/i });
         if (await altTrigger.first().isVisible().catch(() => false)) {
           await altTrigger.first().click();
           const altStem = ((await main.locator('h3').first().innerText().catch(() => '')) ?? '').trim();
@@ -434,9 +434,9 @@ export function registerTests() {
         assert.ok(total > 0 && correct === total, `T4-05: Expected full B1 placement score, got ${correct}/${total}.`);
         assert.match(await main.innerText(), /(?:CEFR daraja|Уровень CEFR):\s*B1\b/i);
 
-        await main.getByRole('button', { name: /Shaxsiy yo‘lni ko‘rish|Посмотреть свой план/i }).click();
+        await main.getByRole('button', { name: /Şaxsiy yölni köriş|Посмотреть свой план/i }).click();
         await main
-          .getByRole('heading', { name: /Mening ta’lim yo‘lim|Мой путь обучения/i })
+          .getByRole('heading', { name: /Mening ta’lim yölim|Мой путь обучения/i })
           .first()
           .waitFor({ state: 'visible' });
 
@@ -446,7 +446,7 @@ export function registerTests() {
         await assertSingleCefrLevelScope(b1Section, 'B1', 'T4-05');
 
         const travelNode = b1Section.locator('[data-node-id="node_eng_b1_m1_travel"]');
-        await travelNode.getByRole('button', { name: /Darsni boshlash/i }).click();
+        await travelNode.getByRole('button', { name: /Darsni boşlaş/i }).click();
         await main.getByText(/^Qadam 1 \/ 6$/i).first().waitFor({ state: 'visible' });
 
         // Step 1 -> Step 2: real WAV audio + speaker transcript
@@ -467,19 +467,19 @@ export function registerTests() {
         await main
           .getByRole('button', { name: /11:15 da 19-darvozadan; turar joy tasdiq xati hali kelmagan edi/i })
           .click();
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await main.getByRole('button', { name: /Keyingi savol/i }).click();
 
         // Step 5: fill_blank ('left')
         await main.getByRole('textbox').first().fill('left');
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await main.getByRole('button', { name: /Keyingi savol/i }).click();
 
         // Step 6: speaking_prompt (self_assessed) — empty guard, model response, 3 rubric checkboxes, no fake cert
         await helpers.expectVisibleFast(
-          main.getByText(/O‘zini baholash · Mustaqil mashq/i),
+          main.getByText(/Özini baholaş · Mustaqil maşq/i),
           'T4-05: Expected self-assessment badge on B1 speaking prompt.',
           FAST_TIMEOUT,
         );
@@ -493,7 +493,7 @@ export function registerTests() {
 
         const responseBox = main.getByRole('textbox').first();
         await responseBox.fill('');
-        const checkBtn = main.getByRole('button', { name: /^TEKSHIRISH$/i }).first();
+        const checkBtn = main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).first();
         await checkBtn.click();
         await main.getByRole('alert').waitFor({ state: 'visible' });
         assert.equal(await main.getByText(/Namuna javob/i).count(), 0);
@@ -504,7 +504,7 @@ export function registerTests() {
         await checkBtn.click();
 
         await helpers.expectVisibleFast(main.getByText(/Namuna javob/i), 'T4-05: Expected model response.', FAST_TIMEOUT);
-        await helpers.expectVisibleFast(main.getByText(/Baholash mezoni/i), 'T4-05: Expected rubric criteria.', FAST_TIMEOUT);
+        await helpers.expectVisibleFast(main.getByText(/Baholaş mezoni/i), 'T4-05: Expected rubric criteria.', FAST_TIMEOUT);
         const rubricCount = await main.getByRole('checkbox').count();
         assert.equal(rubricCount, 3, `T4-05: Expected 3 rubric checkboxes, got ${rubricCount}.`);
         await main.getByRole('checkbox').first().check();
@@ -516,12 +516,12 @@ export function registerTests() {
           'T4-05: B1 productive task MUST NOT claim Official CEFR Certificate after submit.',
         );
 
-        await main.getByRole('button', { name: /Darsni yakunlash/i }).click();
+        await main.getByRole('button', { name: /Darsni yakunlaş/i }).click();
         await finishCompletionDialog(page);
 
         // 3. Verify node_eng_b1_u1_checkpoint unlocked on roadmap and complete it
         const u1Checkpoint = b1Section.locator('[data-node-id="node_eng_b1_u1_checkpoint"]');
-        const u1Btn = u1Checkpoint.getByRole('button', { name: /Sinovni boshlash|Darsni boshlash/i });
+        const u1Btn = u1Checkpoint.getByRole('button', { name: /Sinovni boşlaş|Darsni boşlaş/i });
         await helpers.expectVisibleFast(
           u1Btn,
           'T4-05: Expected node_eng_b1_u1_checkpoint unlocked after B1 Module 1 completion.',
@@ -536,7 +536,7 @@ export function registerTests() {
         await main
           .getByRole('button', { name: /I have updated your booking to Room 412 on the quiet courtyard side\./i })
           .click();
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
         await finishCompletionDialog(page);
 
         // 4. Complete integrated B1 exit assessment (listening + reading + text_input + sentence_order)
@@ -549,27 +549,27 @@ export function registerTests() {
         // Step 2: B1 exit listening MCQ
         await main
           .getByRole('button', {
-            name: /Proyektor kabeli uzildi; slayd havolasini ulashib, savol-javobni 15 daqiqa ertaroq boshlashadi/i,
+            name: /Proyektor kabeli uzildi; slayd havolasini ulaşib, savol-javobni 15 daqiqa ertaroq boşlaşadi/i,
           })
           .click();
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await main.getByRole('button', { name: /Keyingi savol/i }).click();
 
         // Step 3: B1 exit reading MCQ
         await main
           .getByRole('button', {
-            name: /Inshoni qayta yuklamaydi, lekin dushanba tongidan oldin qabul bo‘limi bilan bog‘lanishi kerak/i,
+            name: /Inşoni qayta yuklamaydi, lekin duşanba tongidan oldin qabul bölimi bilan boğlanişi kerak/i,
           })
           .click();
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await main.getByRole('button', { name: /Keyingi savol/i }).click();
 
         // Step 4: B1 exit text_input
         await main.getByRole('textbox').first().fill('I have already downloaded my e-ticket');
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
-        await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
+        await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
         await main.getByRole('button', { name: /Keyingi savol/i }).click();
 
         // Step 5: B1 exit sentence_order (final step -> completion dialog)
@@ -577,7 +577,7 @@ export function registerTests() {
         for (const token of ['The mentor', 'said that', 'we ought', 'to test', 'our backup', 'plan today.']) {
           await orderGroup.locator(`[data-word-token="${token}"]`).click();
         }
-        await main.getByRole('button', { name: /^TEKSHIRISH$/i }).click();
+        await main.getByRole('button', { name: /^TEKŞIRIŞ$/i }).click();
         const completionDialog = page.getByRole('dialog', { name: /Dars yakunlandi/i });
         await completionDialog.waitFor({ state: 'visible' });
         assert.equal(
@@ -594,7 +594,7 @@ export function registerTests() {
         for (const deferredLevel of ['B2', 'C1', 'C2']) {
           const defSection = getCefrLevelSection(main, deferredLevel);
           await helpers.expectVisibleFast(
-            defSection.getByText(/Keyingi bosqich \(DEFERRED\)/i),
+            defSection.getByText(/Keyingi bosqiç \(DEFERRED\)/i),
             `T4-05: Expected ${deferredLevel} to remain DEFERRED even after B1 exit completion.`,
             FAST_TIMEOUT,
           );
@@ -637,7 +637,7 @@ export function registerTests() {
         assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
         await helpers.assertNoHorizontalOverflow(page, 'T4-06-eng-390-dark-ru');
 
-        await advanceLessonStep(page, /Birga misol ko‘ramiz|Разберём пример|Посмотрим пример|Пример/i);
+        await advanceLessonStep(page, /Birga misol köramiz|Разберём пример|Посмотрим пример|Пример/i);
         const main = page.getByRole('main');
         await main.locator('audio[src="/lesson-media/english/a1-starter-dialogue.wav"]').waitFor({ state: 'visible' });
         await advanceLessonStep(page, /Iboralarni eslab qolamiz|Запоминаем фразы|Карточки/i);

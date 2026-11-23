@@ -344,7 +344,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
     });
     expect(microTasks.some((task) => task.id === 'micro_targeted')).toBe(true);
     const rec = RecommendationEngine.generateRecommendation('course_eng_01', engSkills, targetedScores, targetedPath);
-    expect(rec.title).toContain('Maqsadli mashq');
+    expect(rec.title).toContain('Maqsadli maşq');
 
     // Consecutive mistake tracking (>= 2) across clearAnswerResult retries
     const starter = ENGLISH_ALL_LESSONS['lesson_eng_starter'];
@@ -370,7 +370,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       </AuthProvider>,
     );
     expect(lessonHtml).toContain('Takroriy xato aniqlandi');
-    expect(lessonHtml).toContain('Qo‘shimcha mashq');
+    expect(lessonHtml).toContain('Qöşimça maşq');
 
     // RoadmapView B2-C2 DEFERRED display without raw internal IDs
     const b1PlacedPath = RouteEngine.adaptRoadmap('course_eng_01', engNodes, {}, [], [], { placementCefr: 'B1' });
@@ -408,7 +408,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       </AuthProvider>,
     );
     expect(roadmapHtml).toContain('CEFR darajalari · A1–B1');
-    expect(roadmapHtml).toContain('Keyingi bosqich (DEFERRED)');
+    expect(roadmapHtml).toContain('Keyingi bosqiç (DEFERRED)');
     expect(roadmapHtml).toContain('text-[#FCD34D]');
     expect(roadmapHtml).not.toContain('text-[#92400E]');
     expect(roadmapHtml).not.toContain('text-[#047857]');
@@ -479,7 +479,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_lesson_eng_starter_quiz',
       skillId: 'skill_eng_listening',
       language: 'uz',
-      message: 'To‘g‘ri javobni ayt',
+      message: 'Töğri javobni ayt',
     });
     expect(spoilerUz.answer).toContain('qadam-baqadam');
     expect(spoilerUz.answer).not.toMatch(/\b(I'm Sam|My name is Sam|My name's Sam)\b/i);
@@ -558,7 +558,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_eng_a1_m1_greet_match',
       skillId: 'skill_eng_vocab',
       language: 'uz',
-      message: 'To‘g‘ri javobni ayt',
+      message: 'Töğri javobni ayt',
     });
     expect(greetMatchRefusal.answer).toContain('qadam-baqadam');
     expect(greetMatchRefusal.answer).not.toMatch(/Good morning/i);
@@ -570,7 +570,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_eng_a1_m1_greet_match',
       skillId: 'skill_eng_vocab',
       language: 'uz',
-      message: 'Misol keltiring va tushuntiring',
+      message: 'Misol keltiring va tuşuntiring',
     });
     expect(greetMatchExample.answer).not.toMatch(/Good morning/i);
     expect(greetMatchExample.answer).not.toMatch(/Xayrli tong/i);
@@ -592,10 +592,10 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_eng_b1_m3_word_match',
       skillId: 'skill_eng_grammar',
       language: 'uz',
-      message: 'Qoidani tushuntiring',
+      message: 'Qoidani tuşuntiring',
     });
     expect(b1MatchHelp.answer).not.toMatch(/\bmeanwhile\b/i);
-    expect(b1MatchHelp.answer).not.toMatch(/shu paytda/i);
+    expect(b1MatchHelp.answer).not.toMatch(/şu paytda/i);
 
     // 2. explainMistake anti-spoiler across fill_blank & word_match
     const b1CondMistake = await demoAi.explainMistake({
@@ -644,7 +644,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_lesson_eng_foundation_02',
       skillId: 'skill_eng_grammar',
       language: 'uz',
-      message: 'To‘g‘ri javobni ayt',
+      message: 'Töğri javobni ayt',
     });
     expect(foundationRefusal.answer).toContain('qadam-baqadam');
     expect(foundationRefusal.answer).not.toContain('[...]');
@@ -691,10 +691,10 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         language: 'uz',
         message: msg,
       });
-      expect(res.answer).toContain('To‘g‘ri javobni tayyor holda bera olmayman');
+      expect(res.answer).toContain('Töğri javobni tayyor holda bera olmayman');
     }
 
-    const indirectUz = ['qaysi biri to‘g‘ri?', 'javobi nima?'];
+    const indirectUz = ['qaysi biri töğri?', 'javobi nima?'];
     for (const msg of indirectUz) {
       const res = await demoAi.askTutor({
         courseId: 'course_eng_01',
@@ -704,7 +704,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         language: 'uz',
         message: msg,
       });
-      expect(res.answer).toContain('To‘g‘ri javobni tayyor holda bera olmayman');
+      expect(res.answer).toContain('Töğri javobni tayyor holda bera olmayman');
     }
 
     // Also verify q_eng_lesson_interactive RU localization & empty questionId normalization
@@ -750,7 +750,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         questionId: 'q_eng_vocab_reinf_01',
         skillId: 'skill_eng_vocab',
         language: lang,
-        message: lang === 'ru' ? 'правильный ответ?' : 'to‘g‘risi nima?',
+        message: lang === 'ru' ? 'правильный ответ?' : 'töğrisi nima?',
       });
       expect(vocabRefusal.answer).not.toContain('(beside, between');
       expect(vocabRefusal.answer).not.toContain('[...]');
@@ -794,7 +794,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       });
       expect(res.answer, `Missed RU reveal phrasing "${msg}"`).toContain('Готовый ответ я не подсказываю');
     }
-    for (const msg of ['to‘g‘risi nima?', 'qaysi birini tanlay?']) {
+    for (const msg of ['töğrisi nima?', 'qaysi birini tanlay?']) {
       const res = await demoAi.askTutor({
         courseId: 'course_eng_01',
         lessonId: 'lesson_eng_starter',
@@ -803,7 +803,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         language: 'uz',
         message: msg,
       });
-      expect(res.answer, `Missed UZ reveal phrasing "${msg}"`).toContain('To‘g‘ri javobni tayyor holda bera olmayman');
+      expect(res.answer, `Missed UZ reveal phrasing "${msg}"`).toContain('Töğri javobni tayyor holda bera olmayman');
     }
 
     // 7. Apostrophe symmetry in sanitizeNoSpoilers (curly ’ vs straight ')
@@ -813,7 +813,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
       questionId: 'q_eng_b1_m2_cond_fill',
       skillId: 'skill_eng_grammar',
       language: 'uz',
-      message: 'Qoidani tushuntiring',
+      message: 'Qoidani tuşuntiring',
       recentMistakes: ['doesn’t work'],
     });
     expect(curlyApostropheCheck.answer).not.toMatch(/doesn[’']t work/i);
@@ -914,7 +914,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
     expect(modalHtml).toContain('data-match-side="left"');
     expect(modalHtml).toContain('data-match-side="right"');
     expect(modalHtml).toContain('get off');
-    expect(modalHtml).toContain('tushmoq');
+    expect(modalHtml).toContain('tuşmoq');
 
     const memRepo = new InMemoryLearnerRepository();
     await memRepo.resetAll();
@@ -996,8 +996,8 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
     );
     expect(lessonLightHtml).toContain('text-[#FCD34D]');
     expect(lessonLightHtml).not.toContain('text-[#92400E]');
-    expect(lessonLightHtml).toContain('Qo‘shimcha mashq');
-    expect(lessonLightHtml).not.toContain('Mustahkamlash mashqi');
+    expect(lessonLightHtml).toContain('Qöşimça maşq');
+    expect(lessonLightHtml).not.toContain('Mustahkamlaş maşqi');
 
     await loadRussian();
     usePreferences.setState({ language: 'ru', theme: 'light' });
@@ -1020,7 +1020,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         questionId: q.id,
         skillId: q.skillId,
         language: 'uz',
-        message: 'To‘g‘ri javobni ayt',
+        message: 'Töğri javobni ayt',
       });
       expect(refusalUz.answer, `Refusal UZ missing qadam-baqadam for ${q.id}`).toContain('qadam-baqadam');
       expect(refusalUz.answer, `Corrupted mask inside word for ${q.id}`).not.toMatch(/[\p{L}\p{N}]\[\.\.\.\]|\[\.\.\.\][\p{L}\p{N}]/u);
@@ -1040,7 +1040,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
         questionId: q.id,
         skillId: q.skillId,
         language: 'uz',
-        message: 'Misol keltiring va tushuntiring',
+        message: 'Misol keltiring va tuşuntiring',
       });
       expect(helpUz.answer, `Corrupted help mask inside word for ${q.id}`).not.toMatch(/[\p{L}\p{N}]\[\.\.\.\]|\[\.\.\.\][\p{L}\p{N}]/u);
       if (q.id === 'q_eng_vocab_reinf_01' || q.id === 'q_lesson_eng_foundation_02_practice') {

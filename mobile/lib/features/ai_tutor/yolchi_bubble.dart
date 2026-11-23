@@ -335,7 +335,7 @@ class _YolchiTypingIndicatorState extends State<YolchiTypingIndicator>
     final isRu = locCode == 'ru' || (locCode != 'uz' && platformCode == 'ru');
     return Semantics(
       container: true,
-      label: isRu ? 'Yo‘lchi AI печатает...' : 'Yo‘lchi AI yozmoqda...',
+      label: isRu ? 'Yölçi AI печатает...' : 'Yölçi AI yozmoqda...',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Row(

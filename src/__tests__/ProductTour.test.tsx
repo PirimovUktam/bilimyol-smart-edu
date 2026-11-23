@@ -96,9 +96,9 @@ describe('ProductTourView rendering', () => {
 
     expect(html).toContain('Qaysi dars');
     expect(html).toContain('aynan sizga mos?');
-    expect(html).toContain('BilimYo‘l qisqa diagnostika orqali nimani bilishingizni aniqlaydi');
-    expect(html).toContain('Sinab ko‘rish');
-    expect(html).toContain('O‘tkazib yuborish');
+    expect(html).toContain('BilimYöl qisqa diagnostika orqali nimani bilişingizni aniqlaydi');
+    expect(html).toContain('Sinab köriş');
+    expect(html).toContain('Ötkazib yuboriş');
     expect(html).toContain('To be: am / is / are');
   });
 

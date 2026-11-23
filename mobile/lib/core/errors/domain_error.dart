@@ -9,7 +9,7 @@ class DomainError implements Exception {
 }
 
 class DuplicateActionError extends DomainError {
-  const DuplicateActionError([super.message = 'Ushbu amal avval bajarilgan.'])
+  const DuplicateActionError([super.message = 'Uşbu amal avval bajarilgan.'])
       : super(code: 'DUPLICATE_ACTION');
 }
 

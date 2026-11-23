@@ -237,7 +237,7 @@ describe('M2.2 SRS Flashcards, Polarity & Course Isolation', () => {
     const audioToWordHtml = renderToStaticMarkup(
       <FlashcardDeck cards={sampleCards} initialMode="audio_to_word" />,
     );
-    expect(audioToWordHtml).toContain('Talaffuzni tinglash');
+    expect(audioToWordHtml).toContain('Talaffuzni tinglaş');
     expect(audioToWordHtml).not.toContain("What&#x27;s your name?");
     expect(audioToWordHtml).not.toContain('Ismingiz nima?');
 
@@ -251,8 +251,8 @@ describe('M2.2 SRS Flashcards, Polarity & Course Isolation', () => {
     const emptyHtml = renderToStaticMarkup(
       <FlashcardDeck cards={sampleCards} startEmptyWhenAllDone />,
     );
-    expect(emptyHtml).toContain('Bugungi takrorlash yakunlandi');
-    expect(emptyHtml).toContain('Tasodifiy mashq');
+    expect(emptyHtml).toContain('Bugungi takrorlaş yakunlandi');
+    expect(emptyHtml).toContain('Tasodifiy maşq');
   });
 
   it('keeps course_eng_01 isolated from usesMathMastery and preserves CEFR metadata on RouteEngine reinforcement nodes', () => {
@@ -373,7 +373,7 @@ describe('M2.2 SRS Flashcards, Polarity & Course Isolation', () => {
     });
     expect(fillHi.isCorrect).toBe(false);
     expect(fillHi.explanation).toBe(fillQ.wrongFeedback);
-    expect(fillHi.explanation).not.toContain('Salomlashish yaxshi');
+    expect(fillHi.explanation).not.toContain('Salomlaşiş yaxşi');
 
     const starterLesson = SEED_LESSONS['lesson_eng_starter'];
     const starterQ = starterLesson.steps.find((s) => Boolean(s.interactiveQuestion))!.interactiveQuestion!;

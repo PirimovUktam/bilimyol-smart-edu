@@ -12,7 +12,7 @@ void main() {
         courseId: 'course_math_01',
         skillId: 'skill_math_functions',
         questionId: 'q_math_func_01_step',
-        questionText: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) ni toping:',
+        questionText: 'f(x) = 2x + 3 funksiyasida x = 4 bölsa, f(4) ni toping:',
         selectedOption: '8',
         correctOption: '11',
         learnerName: 'Ali',
@@ -20,7 +20,7 @@ void main() {
 
       final response = await aiService.explainMistake(request);
 
-      expect(response.tutorName, equals('Yo‘lchi AI'));
+      expect(response.tutorName, equals('Yölçi AI'));
       expect(response.title, equals('Ozod son (+3) hisobga olinmagan'));
       expect(response.explanation.isNotEmpty, isTrue);
       expect(response.remediationStep.isNotEmpty, isTrue);
@@ -41,9 +41,9 @@ void main() {
 
       final response = await aiService.explainMistake(request);
 
-      expect(response.tutorName, equals('Yo‘lchi AI'));
-      expect(response.title, equals('Xatoni tahlil qilish'));
-      expect(response.explanation, contains('to‘g‘ri emas'));
+      expect(response.tutorName, equals('Yölçi AI'));
+      expect(response.title, equals('Xatoni tahlil qiliş'));
+      expect(response.explanation, contains('töğri emas'));
       expect(response.isDeterministicFallback, isTrue);
     });
 
@@ -53,7 +53,7 @@ void main() {
       const request = GenerateLessonRequest(
         courseId: 'course_math_01',
         skillId: 'skill_math_functions',
-        topic: 'Chiziqli funksiyalar',
+        topic: 'Çiziqli funksiyalar',
         level: 'intermediate',
         difficulty: 'medium',
       );
@@ -61,7 +61,7 @@ void main() {
       final response = await aiService.generateLesson(request);
 
       expect(response.lessonId, isNotEmpty);
-      expect(response.title, contains('Chiziqli funksiyalar'));
+      expect(response.title, contains('Çiziqli funksiyalar'));
       expect(response.model, equals('gemini-3.6-flash'));
       expect(response.estimatedMinutes, equals(15));
     });
@@ -127,23 +127,23 @@ void main() {
 
       final normalUz = await aiService.askTutor(
         const AskTutorRequest(
-          message: 'Hello qachon ishlatiladi?',
+          message: 'Hello qaçon işlatiladi?',
           courseId: 'course_eng_01',
           skillId: 'skill_eng_vocab',
           lessonId: 'lesson_eng_starter',
-          topic: 'Birinchi inglizcha so‘zlar',
+          topic: 'Birinçi inglizça sözlar',
           language: 'uz',
           learnerScore: 55,
           recentMistakes: ['Vocabulary'],
         ),
       );
-      expect(normalUz.answer, contains('Birinchi inglizcha so‘zlar'));
+      expect(normalUz.answer, contains('Birinçi inglizça sözlar'));
       expect(normalUz.answer, contains('qadam-baqadam'));
       expect(normalUz.answer, contains('55%'));
       expect(normalUz.answer, contains('Vocabulary'));
 
       for (final spoilerPrompt in [
-        'To‘g‘ri javobni ayt',
+        'Töğri javobni ayt',
         'javobni ber',
         'Скажи правильный ответ',
         'Tell me the answer',

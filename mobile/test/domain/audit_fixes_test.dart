@@ -42,7 +42,7 @@ class _ServerScoringRepository extends InMemoryLearnerRepository {
       // Deliberately disagree with the local correctIndex to model RPC truth.
       isCorrect: false,
       timestamp: DateTime.now().millisecondsSinceEpoch,
-      correctOption: 'serverdagi to‘g‘ri javob',
+      correctOption: 'serverdagi töğri javob',
     );
   }
 }
@@ -106,7 +106,7 @@ void main() {
       );
 
       expect(result.isCorrect, isFalse);
-      expect(result.correctOption, equals('serverdagi to‘g‘ri javob'));
+      expect(result.correctOption, equals('serverdagi töğri javob'));
     },
   );
 

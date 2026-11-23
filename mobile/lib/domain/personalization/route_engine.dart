@@ -41,7 +41,7 @@ class RouteEngine {
       return LearningPath(
         id: 'roadmap_$courseId',
         courseId: courseId,
-        title: 'Moslashuvchan Yo‘l Xaritasi',
+        title: 'Moslaşuvçan Yöl Xaritasi',
         nodes: baseNodes,
         activeNodeId: next?.id ?? '',
         updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -120,14 +120,14 @@ class RouteEngine {
           moduleTitle: baseNode.moduleTitle,
           moduleTitleRu: baseNode.moduleTitleRu,
           unitId: baseNode.unitId,
-          title: 'Mustahkamlash: ${baseNode.title}',
+          title: 'Mustahkamlaş: ${baseNode.title}',
           titleRu: baseNode.titleRu != null
               ? 'Закрепление: ${baseNode.titleRu}'
               : null,
           description:
-              'Yo‘lchi AI tavsiyasi: ${baseNode.title} bo‘yicha tushunchalarni mustahkamlash mashqi',
+              'Yölçi AI tavsiyasi: ${baseNode.title} böyiça tuşunçalarni mustahkamlaş maşqi',
           descriptionRu: baseNode.titleRu != null
-              ? 'Рекомендация Yo‘lchi AI: закрепление темы «${baseNode.titleRu}»'
+              ? 'Рекомендация Yölçi AI: закрепление темы «${baseNode.titleRu}»'
               : null,
           prerequisites: baseNode.prerequisites,
           requiredScore: AdaptiveThresholds.targetedPracticeMin,
@@ -182,7 +182,7 @@ class RouteEngine {
     return LearningPath(
       id: 'roadmap_$courseId',
       courseId: courseId,
-      title: 'Moslashuvchan Yo‘l Xaritasi',
+      title: 'Moslaşuvçan Yöl Xaritasi',
       nodes: adaptedNodes,
       activeNodeId: activeNode.id,
       updatedAt: DateTime.now().millisecondsSinceEpoch,

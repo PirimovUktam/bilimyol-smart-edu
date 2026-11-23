@@ -27,17 +27,17 @@ export async function openStarterLesson(page, baseUrl, helpers) {
   await openEnglishOnboarding(page, baseUrl, helpers);
   const main = page.getByRole('main');
   const beginnerRadio = main.getByRole('radio', {
-    name: /Noldan boshlayman|Начинаю с нуля/i,
+    name: /Noldan boşlayman|Начинаю с нуля/i,
   });
   await beginnerRadio.check();
   await main
     .getByRole('button', {
-      name: /Birinchi darsni boshlash|Boshlang‘ich darsni davom ettirish|Начать первый урок|Продолжить вводный урок/i,
+      name: /Birinçi darsni boşlaş|Boşlanğiç darsni davom ettiriş|Начать первый урок|Продолжить вводный урок/i,
     })
     .click();
   await main
     .getByRole('heading', {
-      name: /Birinchi inglizcha so‘zlar|Первые английские слова/i,
+      name: /Birinçi inglizça sözlar|Первые английские слова/i,
     })
     .first()
     .waitFor({ state: 'visible' });
@@ -51,11 +51,11 @@ export async function openEnglishRoadmap(page, baseUrl, helpers) {
     .check();
   await main
     .getByRole('button', {
-      name: /Ta’lim yo‘lini ochish|Открыть путь обучения/i,
+      name: /Ta’lim yölini oçiş|Открыть путь обучения/i,
     })
     .click();
   await main
-    .getByRole('heading', { name: /Mening ta’lim yo‘lim|Мой путь обучения/i })
+    .getByRole('heading', { name: /Mening ta’lim yölim|Мой путь обучения/i })
     .first()
     .waitFor({ state: 'visible' });
 }
@@ -73,7 +73,7 @@ export async function startEnglishPlacement(page, baseUrl, helpers) {
     .click();
   await main
     .getByRole('heading', {
-      name: /Boshlang‘ich diagnostika|Входная диагностика/i,
+      name: /Boşlanğiç diagnostika|Входная диагностика/i,
     })
     .first()
     .waitFor({ state: 'visible' });
@@ -82,22 +82,22 @@ export async function startEnglishPlacement(page, baseUrl, helpers) {
 export async function navigateToRoadmapFromWorkspace(page) {
   const main = page.getByRole('main');
   const roadmapHeading = main.getByRole('heading', {
-    name: /Mening ta’lim yo‘lim|Мой путь обучения/i,
+    name: /Mening ta’lim yölim|Мой путь обучения/i,
   });
   if (await roadmapHeading.first().isVisible().catch(() => false)) {
     return;
   }
   const backBtn = main.getByRole('button', {
-    name: /Ta’lim yo‘liga qaytish|Вернуться к пути обучения/i,
+    name: /Ta’lim yöliga qaytiş|Вернуться к пути обучения/i,
   });
   if (await backBtn.first().isVisible().catch(() => false)) {
     await backBtn.first().click();
   } else {
-    await clickFirstVisibleButton(page, /^Ta’lim yo‘li$|^Путь обучения$/i);
+    await clickFirstVisibleButton(page, /^Ta’lim yöli$|^Путь обучения$/i);
   }
   await main
     .getByRole('heading', {
-      name: /Mening ta’lim yo‘lim|Мой путь обучения|Boshlang‘ich darslar|Начальные уроки/i,
+      name: /Mening ta’lim yölim|Мой путь обучения|Boşlanğiç darslar|Начальные уроки/i,
     })
     .first()
     .waitFor({ state: 'visible' });
@@ -143,13 +143,13 @@ export async function advanceToExerciseStep(page, maxSteps = 8) {
   const main = page.getByRole('main');
   for (let i = 0; i < maxSteps; i++) {
     const checkBtn = main.getByRole('button', {
-      name: /^TEKSHIRISH$|^ПРОВЕРИТЬ$/i,
+      name: /^TEKŞIRIŞ$|^ПРОВЕРИТЬ$/i,
     });
     if ((await checkBtn.count()) > 0 && (await checkBtn.first().isVisible().catch(() => false))) {
       return;
     }
     const revealBtn = main.getByRole('button', {
-      name: /Javobni ko‘rish|Показать ответ/i,
+      name: /Javobni köriş|Показать ответ/i,
     });
     if ((await revealBtn.count()) > 0 && (await revealBtn.first().isVisible().catch(() => false))) {
       await completeVisibleFlashcardDeck(page);
@@ -163,13 +163,13 @@ export async function completeVisibleFlashcardDeck(page, maxCards = 12) {
   const main = page.getByRole('main');
   for (let i = 0; i < maxCards; i++) {
     const doneHeading = main.getByRole('heading', {
-      name: /Barcha kartochkalar ko‘rib chiqildi|Все карточки просмотрены/i,
+      name: /Barça kartoçkalar körib çiqildi|Все карточки просмотрены/i,
     });
     if (await doneHeading.isVisible().catch(() => false)) {
       return;
     }
     const revealBtn = main.getByRole('button', {
-      name: /Javobni ko‘rish|Показать ответ/i,
+      name: /Javobni köriş|Показать ответ/i,
     });
     if (!(await revealBtn.isVisible().catch(() => false))) {
       return;
@@ -193,7 +193,7 @@ export async function submitFreeTextAnswer(page, text, { viaEnter = false } = {}
     await input.press('Enter');
   } else {
     await main
-      .getByRole('button', { name: /^TEKSHIRISH$|^ПРОВЕРИТЬ$/i })
+      .getByRole('button', { name: /^TEKŞIRIŞ$|^ПРОВЕРИТЬ$/i })
       .click();
   }
 }
@@ -205,7 +205,7 @@ export async function finishCompletionDialog(page) {
   await dialog.waitFor({ state: 'visible' });
   await dialog
     .getByRole('button', {
-      name: /Ta’lim yo‘liga o‘tish|Перейти к пути обучения/i,
+      name: /Ta’lim yöliga ötiş|Перейти к пути обучения/i,
     })
     .click();
   await dialog.waitFor({ state: 'hidden' });
@@ -218,20 +218,20 @@ export async function completeStarterLesson(
   answerText = "I'm Sam",
 ) {
   await openStarterLesson(page, baseUrl, helpers);
-  await advanceLessonStep(page, /Birga misol ko‘ramiz/i);
+  await advanceLessonStep(page, /Birga misol köramiz/i);
   await advanceLessonStep(page, /Iboralarni eslab qolamiz/i);
   await completeVisibleFlashcardDeck(page);
-  await advanceLessonStep(page, /O‘rganganingizni sinab ko‘ring/i);
+  await advanceLessonStep(page, /Örganganingizni sinab köring/i);
   await submitFreeTextAnswer(page, answerText);
   await page
     .getByRole('main')
-    .getByText(/To‘g‘ri javob!|Верно!/i)
+    .getByText(/Töğri javob!|Верно!/i)
     .first()
     .waitFor({ state: 'visible' });
   await finishCompletionDialog(page);
   await page
     .getByRole('main')
-    .getByRole('heading', { name: /Boshlang‘ich darslar|Начальные уроки/i })
+    .getByRole('heading', { name: /Boşlanğiç darslar|Начальные уроки/i })
     .first()
     .waitFor({ state: 'visible' });
 }
@@ -241,10 +241,10 @@ export async function completeMcqLesson(page, optionPattern) {
   await advanceToExerciseStep(page);
   await main.getByRole('button', { name: optionPattern }).first().click();
   await main
-    .getByRole('button', { name: /^TEKSHIRISH$|^ПРОВЕРИТЬ$/i })
+    .getByRole('button', { name: /^TEKŞIRIŞ$|^ПРОВЕРИТЬ$/i })
     .click();
   await main
-    .getByText(/To‘g‘ri javob!|Верно!/i)
+    .getByText(/Töğri javob!|Верно!/i)
     .first()
     .waitFor({ state: 'visible' });
   await finishCompletionDialog(page);
@@ -259,7 +259,7 @@ export async function openRoadmapNodeLesson(page, nodeTitlePattern) {
   await nodeCard
     .first()
     .getByRole('button', {
-      name: /Darsni boshlash|Qayta ko‘rish|Начать урок|Повторить/i,
+      name: /Darsni boşlaş|Qayta köriş|Начать урок|Повторить/i,
     })
     .click();
 }
@@ -267,7 +267,7 @@ export async function openRoadmapNodeLesson(page, nodeTitlePattern) {
 export async function unlockEnglishRoadmapUpTo(page, targetNodeKey) {
   const main = page.getByRole('main');
   const roadmapHeading = main.getByRole('heading', {
-    name: /Mening ta’lim yo‘lim|Мой путь обучения/i,
+    name: /Mening ta’lim yölim|Мой путь обучения/i,
   });
 
   const sequence = [
@@ -337,7 +337,7 @@ const PLACEMENT_SEMANTIC_RULES = [
     answer: /^bought$/i,
   },
   {
-    stem: /Dilshod has lived in Samarkand ____ 2019/i,
+    stem: /Dilşod has lived in Samarkand ____ 2019/i,
     answer: /^since$/i,
   },
   {
@@ -419,12 +419,12 @@ export async function solveEnglishPlacement(page, { accuracy = 'high', maxSteps 
     await main.getByRole('radio').nth(targetIndex).check();
     await page.waitForTimeout(PLACEMENT_MIN_INTERVAL_MS);
 
-    const finishBtn = main.getByRole('button', { name: /Natijani ko‘rish|Посмотреть результат/i });
+    const finishBtn = main.getByRole('button', { name: /Natijani köriş|Посмотреть результат/i });
     if (await finishBtn.isVisible().catch(() => false)) {
       await finishBtn.click();
-      const modal = page.getByRole('dialog', { name: /Javoblarni topshirasizmi\?|Отправить ответы\?/i });
+      const modal = page.getByRole('dialog', { name: /Javoblarni topşirasizmi\?|Отправить ответы\?/i });
       await modal.waitFor({ state: 'visible' });
-      await modal.getByRole('button', { name: /^Topshirish$|^Отправить$/i }).click();
+      await modal.getByRole('button', { name: /^Topşiriş$|^Отправить$/i }).click();
       break;
     }
     await main.getByRole('button', { name: /Keyingi savol|Следующий вопрос/i }).click();
@@ -545,12 +545,12 @@ export async function completeRichExerciseStep(page) {
   const richRegion = main.locator(
     '[data-question-mode="fill_blank"], [data-question-mode="word_match"], [data-question-mode="sentence_order"], [data-exercise-type="fill_blank"], [data-exercise-type="word_match"], [data-exercise-type="sentence_order"]',
   );
-  const checkBtn = main.getByRole('button', { name: /^TEKSHIRISH$|^ПРОВЕРИТЬ$/i });
+  const checkBtn = main.getByRole('button', { name: /^TEKŞIRIŞ$|^ПРОВЕРИТЬ$/i });
 
   const fillInput = main.getByRole('textbox', {
-    name: /Bo‘sh joyni to‘ldiring|Fill in the blank|Javobingizni/i,
+    name: /Böş joyni töldiring|Fill in the blank|Javobingizni/i,
   });
-  const wordMatchGroup = main.getByRole('group', { name: /So‘zlarni moslang|Word match/i });
+  const wordMatchGroup = main.getByRole('group', { name: /Sözlarni moslang|Word match/i });
   const sentenceOrderGroup = main.getByRole('group', { name: /Gap tuzing|Sentence order/i });
 
   const hasRichRegion = (await richRegion.count()) > 0;
@@ -614,11 +614,11 @@ export async function completeRichExerciseStep(page) {
     await checkBtn.click();
   }
 
-  await main.getByText(/Javobni ko‘rib chiqamiz|Qayta tekshiramiz|Noto‘g‘ri/i).first().waitFor({ state: 'visible' });
+  await main.getByText(/Javobni körib çiqamiz|Qayta tekşiramiz|Notöğri/i).first().waitFor({ state: 'visible' });
   const feedbackText = await main.locator('[role="status"]').first().innerText().catch(() => '');
   assert.ok(feedbackText.trim().length >= 12, `Expected non-empty explanatory feedback, got "${feedbackText}".`);
 
-  await main.getByRole('button', { name: /Qayta urinish|Попробовать снова/i }).click();
+  await main.getByRole('button', { name: /Qayta uriniş|Попробовать снова/i }).click();
 
   // 2) Submit valid answer guided by prompt/options
   if (hasFill) {
@@ -710,7 +710,7 @@ export async function completeRichExerciseStep(page) {
     await checkBtn.click();
   }
 
-  await main.getByText(/To‘g‘ri javob!|Верно!/i).first().waitFor({ state: 'visible' });
+  await main.getByText(/Töğri javob!|Верно!/i).first().waitFor({ state: 'visible' });
 }
 
 export async function completeInteractiveStepAndFinishLesson(
@@ -726,19 +726,19 @@ export async function completeInteractiveStepAndFinishLesson(
       break;
     }
 
-    const revealBtn = main.getByRole('button', { name: /Javobni ko‘rish|Показать ответ/i });
+    const revealBtn = main.getByRole('button', { name: /Javobni köriş|Показать ответ/i });
     if ((await revealBtn.count()) > 0 && (await revealBtn.first().isVisible().catch(() => false))) {
       await completeVisibleFlashcardDeck(page);
     }
 
     const submitBtn = main.getByRole('button', {
-      name: /^TEKSHIRISH$|^ПРОВЕРИТЬ$|Namunani ko‘rish|Saqlash|Baholash/i,
+      name: /^TEKŞIRIŞ$|^ПРОВЕРИТЬ$|Namunani köriş|Saqlaş|Baholaş/i,
     });
     if ((await submitBtn.count()) > 0 && (await submitBtn.first().isVisible().catch(() => false))) {
       const richFill = main.getByRole('textbox', {
-        name: /Bo‘sh joyni to‘ldiring|Fill in the blank/i,
+        name: /Böş joyni töldiring|Fill in the blank/i,
       });
-      const wordMatchGroup = main.getByRole('group', { name: /So‘zlarni moslang|Word match/i });
+      const wordMatchGroup = main.getByRole('group', { name: /Sözlarni moslang|Word match/i });
       const sentenceOrderGroup = main.getByRole('group', { name: /Gap tuzing|Sentence order/i });
 
       if (
@@ -752,7 +752,7 @@ export async function completeInteractiveStepAndFinishLesson(
         if ((await textbox.count()) > 0 && (await textbox.first().isVisible().catch(() => false))) {
           const promptText = await main.locator('h3').first().innerText().catch(() => '');
           const isSelfAssessed = await main
-            .getByText(/O‘zini baholash|Mustaqil mashq|Self-assess/i)
+            .getByText(/Özini baholaş|Mustaqil maşq|Self-assess/i)
             .first()
             .isVisible()
             .catch(() => false);
@@ -778,8 +778,8 @@ export async function completeInteractiveStepAndFinishLesson(
             await candidates.nth(idx).click();
             await submitBtn.first().click();
             if (await completionDialog.isVisible().catch(() => false)) break;
-            if (await main.getByText(/To‘g‘ri javob!|Верно!/i).first().isVisible().catch(() => false)) break;
-            const retryBtn = main.getByRole('button', { name: /Qayta urinish|Попробовать снова/i });
+            if (await main.getByText(/Töğri javob!|Верно!/i).first().isVisible().catch(() => false)) break;
+            const retryBtn = main.getByRole('button', { name: /Qayta uriniş|Попробовать снова/i });
             if (await retryBtn.first().isVisible().catch(() => false)) {
               await retryBtn.first().click();
             }
@@ -798,7 +798,7 @@ export async function completeInteractiveStepAndFinishLesson(
       continue;
     }
 
-    const finishBtn = main.getByRole('button', { name: /Darsni yakunlash|Sinovni yakunlash|Завершить урок/i });
+    const finishBtn = main.getByRole('button', { name: /Darsni yakunlaş|Sinovni yakunlaş|Завершить урок/i });
     if (await finishBtn.first().isVisible().catch(() => false)) {
       await finishBtn.first().click();
       break;

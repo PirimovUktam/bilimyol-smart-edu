@@ -63,9 +63,9 @@ const mathSkills: Skill[] = [
   {
     id: 'skill_math_addition',
     courseId: 'course_math_01',
-    name: 'Qo‘shish va ayirish',
+    name: 'Qöşiş va ayiriş',
     code: 'MATH_ADD',
-    description: 'Miqdorlarni birlashtirish va farqni topish.',
+    description: 'Miqdorlarni birlaştiriş va farqni topiş.',
     order: -2,
     iconName: 'Calculator',
   },
@@ -74,7 +74,7 @@ const mathSkills: Skill[] = [
     courseId: 'course_math_01',
     name: 'Teng guruhlar',
     code: 'MATH_MUL',
-    description: 'Teng miqdorlarni takror qo‘shish va ko‘paytirish.',
+    description: 'Teng miqdorlarni takror qöşiş va köpaytiriş.',
     order: -1,
     iconName: 'Calculator',
   },
@@ -94,7 +94,7 @@ function makePilotRoadmap(overrides?: {
   return {
     id: 'roadmap_course_math_01',
     courseId: 'course_math_01',
-    title: 'Moslashuvchan Yo‘l Xaritasi',
+    title: 'Moslaşuvçan Yöl Xaritasi',
     activeNodeId: overrides?.activeNodeId ?? (additionStatus === 'locked' ? '' : 'node_math_addition'),
     updatedAt: 1700000000000,
     nodes: [
@@ -102,8 +102,8 @@ function makePilotRoadmap(overrides?: {
         id: 'node_math_addition',
         courseId: 'course_math_01',
         skillId: 'skill_math_addition',
-        title: 'Qo‘shish va ayirish',
-        description: 'Birlashtirish va ayrim qismini olib tashlashni sonlar bilan ifodalang.',
+        title: 'Qöşiş va ayiriş',
+        description: 'Birlaştiriş va ayrim qismini olib taşlaşni sonlar bilan ifodalang.',
         prerequisites: [],
         requiredScore: 80,
         status: additionStatus,
@@ -125,8 +125,8 @@ function makePilotRoadmap(overrides?: {
         id: 'node_math_multiplication',
         courseId: 'course_math_01',
         skillId: 'skill_math_multiplication',
-        title: 'Teng guruhlar va ko‘paytirish',
-        description: 'Teng guruhlarni takroriy qo‘shish va ko‘paytirish bilan ifodalang.',
+        title: 'Teng guruhlar va köpaytiriş',
+        description: 'Teng guruhlarni takroriy qöşiş va köpaytiriş bilan ifodalang.',
         prerequisites: ['node_math_addition'],
         requiredScore: 80,
         status: multiplicationStatus,
@@ -215,7 +215,7 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
     useRoadmapStore.getState().clearSession();
   });
 
-  it('State A: shows Diagnostikani boshlash when diagnostics have not been started', () => {
+  it('State A: shows Diagnostikani boşlaş when diagnostics have not been started', () => {
     seedStores({}, makePilotRoadmap());
     const html = renderToStaticMarkup(
       <KnowledgeMapView
@@ -225,8 +225,8 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
       />
     );
 
-    expect(html).toContain('Diagnostikani boshlash');
-    expect(html).not.toContain('Birinchi mashqni boshlash');
+    expect(html).toContain('Diagnostikani boşlaş');
+    expect(html).not.toContain('Birinçi maşqni boşlaş');
   });
 
   it('State B (4/4 diagnostics, answered = 0): shows diagnostic result, confirmation next step, 0% mastery, locked next topic, single start button, and no mistake text from isWeakestFocus', () => {
@@ -259,13 +259,13 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
       />
     );
 
-    expect(html).not.toContain('Diagnostikani boshlash');
-    expect(countOccurrences(html, 'Birinchi mashqni boshlash')).toBe(1);
+    expect(html).not.toContain('Diagnostikani boşlaş');
+    expect(countOccurrences(html, 'Birinçi maşqni boşlaş')).toBe(1);
     expect(html).toContain('aria-valuenow="0"');
     expect(html).toContain('0/5');
     expect(html).toContain('Qulflangan');
-    expect(html).not.toMatch(/xato qildingiz|Bilim bo‘shlig‘i aniqlandi/i);
-    expect(html).toMatch(/tayanch mashq.*tasdiqlash|tasdiqlash/i);
+    expect(html).not.toMatch(/xato qildingiz|Bilim böşliği aniqlandi/i);
+    expect(html).toMatch(/tasdiqlaş uçun tayanç maşq/i);
     expect(resolveNextLearningLesson(mathCourse, useLearnerStore.getState().profile, roadmap)).toBe(
       roadmap.nodes[0].targetLessonId
     );
@@ -300,8 +300,8 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
       />
     );
 
-    expect(html).not.toContain('Diagnostikani boshlash');
-    expect(countOccurrences(html, 'Birinchi mashqni boshlash')).toBe(1);
+    expect(html).not.toContain('Diagnostikani boşlaş');
+    expect(countOccurrences(html, 'Birinçi maşqni boşlaş')).toBe(1);
     expect(html).toContain('Teng guruhlar');
     expect(html).toContain('50%');
   });
@@ -337,9 +337,9 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
         onStartLesson={vi.fn()}
       />
     );
-    expect(uzHtml).toContain('Qo‘shish va ayirish');
+    expect(uzHtml).toContain('Qöşiş va ayiriş');
     expect(uzHtml).toContain('50%');
-    expect(countOccurrences(uzHtml, 'Birinchi mashqni boshlash')).toBe(1);
+    expect(countOccurrences(uzHtml, 'Birinçi maşqni boşlaş')).toBe(1);
 
     usePreferences.setState({ language: 'ru', theme: 'light' });
     const ruHtml = renderToStaticMarkup(
@@ -356,7 +356,7 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
     expect(ruHtml).not.toContain('Начать диагностику');
   });
 
-  it('State B with no open lesson: resolves next learning lesson to null for Ta’lim yo‘li fallback', () => {
+  it('State B with no open lesson: resolves next learning lesson to null for Ta’lim yöli fallback', () => {
     const perfectScores: Record<string, SkillScore> = {
       skill_math_addition: {
         skillId: 'skill_math_addition',
@@ -379,7 +379,7 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
       />
     );
 
-    expect(countOccurrences(html, 'Birinchi mashqni boshlash')).toBe(1);
+    expect(countOccurrences(html, 'Birinçi maşqni boşlaş')).toBe(1);
     expect(resolveNextLearningLesson(mathCourse, useLearnerStore.getState().profile, lockedRoadmap)).toBeNull();
   });
 
@@ -404,11 +404,11 @@ describe('math pilot KnowledgeMapView states (FIX B-01-WEB)', () => {
       />
     );
 
-    expect(html).not.toContain('Diagnostikani boshlash');
-    expect(html).not.toContain('Birinchi mashqni boshlash');
+    expect(html).not.toContain('Diagnostikani boşlaş');
+    expect(html).not.toContain('Birinçi maşqni boşlaş');
     expect(html).toContain('1 · Baholangan mavzular');
     expect(html).toContain('2/5');
-    expect(html).toContain('Mashqlardagi aniqlik');
+    expect(html).toContain('Maşqlardagi aniqlik');
     expect(html).toContain('100%');
   });
 });

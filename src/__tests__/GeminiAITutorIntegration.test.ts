@@ -9,13 +9,13 @@ describe('Gemini AI Tutor Integration Tests', () => {
       courseId: 'course_math_01',
       skillId: 'skill_math_functions',
       questionId: 'q_math_func_01',
-      questionText: 'f(x) = 2x + 3 funksiyasida x = 4 bo‘lsa, f(4) ni toping:',
+      questionText: 'f(x) = 2x + 3 funksiyasida x = 4 bölsa, f(4) ni toping:',
       selectedOption: '8',
       correctOption: '11',
       learnerName: 'Ali',
     });
 
-    expect(diagnosis.tutorName).toBe('Yo‘lchi AI');
+    expect(diagnosis.tutorName).toBe('Yölçi AI');
     expect(diagnosis.title.length).toBeGreaterThan(0);
     expect(diagnosis.explanation.length).toBeGreaterThan(10);
     expect(diagnosis.remediationStep.length).toBeGreaterThan(5);
@@ -72,8 +72,8 @@ describe('Gemini AI Tutor Integration Tests', () => {
       correctOption: 'Correct Option',
     });
 
-    expect(result.tutorName).toBe('Yo‘lchi AI');
-    expect(result.explanation).toContain('to‘g‘ri emas');
+    expect(result.tutorName).toBe('Yölçi AI');
+    expect(result.explanation).toContain('töğri emas');
     expect(result.isDeterministicFallback).toBe(true);
   });
 });

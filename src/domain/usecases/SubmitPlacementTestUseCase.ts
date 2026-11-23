@@ -18,7 +18,7 @@ export class SubmitPlacementTestUseCase {
     const assertCurrent = () => {
       if (!isCurrent()) throw new Error('Diagnostika sessiyasi yopilgan.');
     };
-    if (submissions.length === 0) throw new Error('Placement javoblari bo‘sh bo‘lishi mumkin emas.');
+    if (submissions.length === 0) throw new Error('Placement javoblari böş bölişi mumkin emas.');
     const questions = await this.courseRepo.getPlacementQuestions(courseId);
     assertCurrent();
     const questionsById = new Map(questions.map((question) => [question.id, question]));
@@ -34,7 +34,7 @@ export class SubmitPlacementTestUseCase {
         throw new Error(`Placement savoli takrorlangan: ${submission.questionId}`);
       }
       if (!Number.isInteger(submission.selectedIndex) || submission.selectedIndex < 0 || submission.selectedIndex >= question.options.length) {
-        throw new Error(`Tanlangan javob indeksi noto‘g‘ri: ${submission.questionId}`);
+        throw new Error(`Tanlangan javob indeksi notöğri: ${submission.questionId}`);
       }
       submittedIds.add(submission.questionId);
     }

@@ -535,7 +535,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                 Text(
                   isRu
                       ? 'Диагностика помогает настроить ваш учебный план.'
-                      : 'Diagnostika o‘quv rejangizni moslashtirishga yordam beradi.',
+                      : 'Diagnostika öquv rejangizni moslaştirişga yordam beradi.',
                   style: AppTypography.ui(
                     fontSize: 13,
                     color: c.graphite,
@@ -544,7 +544,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                 ),
                 const SizedBox(height: 14),
                 AppButton(
-                  text: isRu ? 'Начать диагностику' : 'Diagnostikani boshlash',
+                  text: isRu ? 'Начать диагностику' : 'Diagnostikani boşlaş',
                   variant: AppButtonVariant.outline,
                   size: AppButtonSize.small,
                   onPressed: () => context.push('/placement'),
@@ -591,7 +591,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                 Text(
                   isRu
                       ? 'Диагностика: $diagnosticAvg% (${diagnosticScores.length} навыков). Освоение уроков: $overallMastery%.'
-                      : 'Diagnostika: $diagnosticAvg% (${diagnosticScores.length} ta ko‘nikma). Darslardagi o‘zlashtirish: $overallMastery%.',
+                      : 'Diagnostika: $diagnosticAvg% (${diagnosticScores.length} ta könikma). Darslardagi özlaştiriş: $overallMastery%.',
                   style: AppTypography.ui(
                     fontSize: 13,
                     color: c.graphite,
@@ -627,7 +627,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                   Text(
                     isRu
                         ? 'По результатам диагностики требуется дополнительная практика по следующим навыкам:'
-                        : 'Diagnostikada quyidagi ko‘nikmalar bo‘yicha qo‘shimcha mashq kerak:',
+                        : 'Diagnostikada quyidagi könikmalar böyiça qöşimça maşq kerak:',
                     style: AppTypography.ui(
                       fontSize: 13,
                       color: c.graphite,
@@ -663,7 +663,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                   Text(
                     isRu
                         ? 'Следующий шаг: выполните первое упражнение базового урока, чтобы укрепить знания.'
-                        : 'Keyingi qadam: tayanch darsdagi birinchi mashqni bajarib, bilimingizni mustahkamlang.',
+                        : 'Keyingi qadam: tayanç darsdagi birinçi maşqni bajarib, bilimingizni mustahkamlang.',
                     style: AppTypography.ui(
                       fontSize: 13,
                       color: c.graphite,
@@ -674,7 +674,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                   Text(
                     isRu
                         ? 'Вы ответили верно на все вопросы диагностики. Подтвердите знания в базовом упражнении, чтобы открыть следующую тему.'
-                        : 'Diagnostikadagi barcha savollarga to‘g‘ri javob berdingiz. Bilimingizni amalda tasdiqlash uchun tayanch mashq beriladi, shundan so‘ng keyingi mavzu ochiladi.',
+                        : 'Diagnostikadagi barça savollarga töğri javob berdingiz. Bilimingizni amalda tasdiqlaş uçun tayanç maşq beriladi, şundan söng keyingi mavzu oçiladi.',
                     style: AppTypography.ui(
                       fontSize: 13,
                       color: c.graphite,
@@ -685,7 +685,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                 AppButton(
                   text: isRu
                       ? 'Начать первое упражнение'
-                      : 'Birinchi mashqni boshlash',
+                      : 'Birinçi maşqni boşlaş',
                   isFullWidth: true,
                   isLoading: _isStartingLesson,
                   rightIcon: const Icon(
@@ -714,7 +714,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                     AppBadge(
                       text: isRu
                           ? 'Общее освоение'
-                          : 'Umumiy o‘zlashtirish',
+                          : 'Umumiy özlaştiriş',
                       variant: AppBadgeVariant.emerald,
                     ),
                     Text(
@@ -755,11 +755,11 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
         EdTechReveal(
           index: 0,
           child: EdTechSectionHeader(
-            pillText: isRu ? 'Учебные цели' : 'O‘quv maqsadlari',
+            pillText: isRu ? 'Учебные цели' : 'Öquv maqsadlari',
             title: isRu
                 ? 'Темы и освоение'
-                : 'Mavzular va o‘zlashtirish',
-            highlightWord: isRu ? 'освоение' : 'o‘zlashtirish',
+                : 'Mavzular va özlaştiriş',
+            highlightWord: isRu ? 'освоение' : 'özlaştiriş',
           ),
         ),
         const SizedBox(height: 12),
@@ -808,7 +808,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
             NodeStatus.locked =>
               isRu
                   ? 'Требуется базовая тема'
-                  : 'Tayanch mavzu talab qilinadi',
+                  : 'Tayanç mavzu talab qilinadi',
             NodeStatus.completed => s.statusMastered,
             NodeStatus.reinforcement => s.statusReinforcement,
             NodeStatus.inProgress => s.statusInProgress,
@@ -962,10 +962,10 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                   node.prerequisites.isEmpty
                       ? (isRu
                             ? 'Независимый стартовый модуль'
-                            : 'Mustaqil boshlang‘ich modul')
+                            : 'Mustaqil boşlanğiç modul')
                       : (isRu
                             ? 'Базовый этап: ${node.prerequisites.length}'
-                            : 'Tayanch bosqich: ${node.prerequisites.length} ta'),
+                            : 'Tayanç bosqiç: ${node.prerequisites.length} ta'),
                   style: AppTypography.ui(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -1051,7 +1051,7 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                   ),
                   subtitleText: s.isRu
                       ? s.weakSkillRoadmapNote
-                      : 'Yo‘l xaritasida ushbu mavzuga maxsus mustahkamlash qadami qo‘shildi.',
+                      : 'Yöl xaritasida uşbu mavzuga maxsus mustahkamlaş qadami qöşildi.',
                 ),
               ],
               const SizedBox(height: 20),
@@ -1337,7 +1337,7 @@ class _KnowledgeOverviewHero extends StatelessWidget {
           Text(
             s.isRu
                 ? s.knowledgeMapBannerDesc
-                : 'Haqiqiy javoblaringiz tahlili asosida bilim xaritangiz shakllantirildi.',
+                : 'Haqiqiy javoblaringiz tahlili asosida bilim xaritangiz şakllantirildi.',
             style: AppTypography.ui(
               fontSize: 12.5,
               color: const Color(0xFFE2E8F0),

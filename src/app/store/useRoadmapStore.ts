@@ -28,7 +28,7 @@ interface RoadmapState {
 }
 
 const reinforcementCancelled = (): Error => {
-  const error = new Error('Mustahkamlash amali bekor qilindi. Joriy ta’lim yo‘lida qayta urinib ko‘ring.');
+  const error = new Error('Mustahkamlaş amali bekor qilindi. Joriy ta’lim yölida qayta urinib köring.');
   error.name = 'AbortError';
   return error;
 };
@@ -77,7 +77,7 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
           roadmap: null,
           selectedNode: null,
           isLoading: false,
-          error: err instanceof Error ? err.message : 'Ta’lim yo‘li yuklanmadi.',
+          error: err instanceof Error ? err.message : 'Ta’lim yöli yuklanmadi.',
         });
       }
     },
@@ -134,7 +134,7 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
         if (currentOperation !== operation) throw reinforcementCancelled();
         set({
           isUpdating: false,
-          error: err instanceof Error ? err.message : 'Mustahkamlash javobi serverda saqlanmadi.',
+          error: err instanceof Error ? err.message : 'Mustahkamlaş javobi serverda saqlanmadi.',
         });
         throw err;
       } finally {

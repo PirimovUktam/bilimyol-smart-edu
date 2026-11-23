@@ -172,7 +172,7 @@ export function OnboardingView({ onComplete, onBack }: {
               <p className="flex items-center gap-2 rounded-2xl bg-sand p-3.5 text-sm font-medium text-brand-dark">
                 <Sparkles aria-hidden="true" className="size-4 shrink-0 text-brand" />
                 {nextFoundation
-                  ? `${foundation.length} ta boshlang‘ich dars sizni asosiy mavzularga tayyorlaydi.`
+                  ? `${foundation.length} ta boşlanğiç dars sizni asosiy mavzularga tayyorlaydi.`
                   : t('courses.availableTopics')}
               </p>
             )}

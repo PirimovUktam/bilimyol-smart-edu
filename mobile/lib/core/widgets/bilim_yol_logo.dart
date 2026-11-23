@@ -91,7 +91,7 @@ class BilimYolLogo extends StatelessWidget {
                       children: [
                         const TextSpan(text: 'Bilim'),
                         TextSpan(
-                          text: 'Yo‘l',
+                          text: 'Yöl',
                           style: TextStyle(color: accentColor),
                         ),
                       ],

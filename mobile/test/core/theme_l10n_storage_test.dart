@@ -110,11 +110,11 @@ void main() {
     test('AppStrings returns distinct uz and ru translations', () {
       final uz = AppStrings.forCode('uz');
       final ru = AppStrings.forCode('ru');
-      expect(uz.navHome, 'Bosh sahifa');
+      expect(uz.navHome, 'Boş sahifa');
       expect(ru.navHome, 'Главная');
-      expect(uz.navRoadmap, 'Ta’lim yo‘li');
+      expect(uz.navRoadmap, 'Ta’lim yöli');
       expect(ru.navRoadmap, 'Путь обучения');
-      expect(uz.demoReset, 'Qayta boshlash');
+      expect(uz.demoReset, 'Qayta boşlaş');
       expect(ru.demoReset, 'Сбросить');
     });
 
@@ -240,7 +240,7 @@ void main() {
       for (final code in ['uz', 'ru']) {
         final badgeText = code == 'ru'
             ? 'Адаптивная образовательная платформа'
-            : 'Moslashuvchan ta’lim platformasi';
+            : 'Moslaşuvçan ta’lim platformasi';
         await tester.pumpWidget(
           ProviderScope(
             child: MaterialApp(

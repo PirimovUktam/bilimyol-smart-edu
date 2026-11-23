@@ -88,7 +88,7 @@ void main() {
         'id': 'media_eng_starter_dialogue',
         'kind': 'audio',
         'language': 'en',
-        'titleUz': 'Aziza va Ben tanishuv dialogi',
+        'titleUz': 'Aziza va Ben tanişuv dialogi',
         'titleRu': 'Диалог знакомства Азизы и Бена',
         'source': '/lesson-media/english/a1-starter-dialogue.wav',
         'posterImage': '/lesson-media/english/a1-starter-greeting.png',
@@ -143,7 +143,7 @@ void main() {
         'id': 'lesson_eng_starter',
         'course_id': 'course_eng_01',
         'skill_id': 'skill_eng_vocab',
-        'title': 'Birinchi inglizcha so‘zlar',
+        'title': 'Birinçi inglizça sözlar',
         'steps': [
           {
             'id': 's1',
@@ -279,12 +279,12 @@ void main() {
       );
       await controller.loadAsset('assets/lesson_media/english/a1-starter-dialogue.wav');
       expect(controller.state.hasError, isTrue);
-      expect(controller.state.errorMessage, 'Audio faylni yuklab bo‘lmadi.');
+      expect(controller.state.errorMessage, 'Audio faylni yuklab bölmadi.');
 
       await controller.replay();
       expect(controller.state.hasError, isTrue);
       expect(controller.state.status, LessonAudioStatus.error);
-      expect(controller.state.errorMessage, 'Audio faylni yuklab bo‘lmadi.');
+      expect(controller.state.errorMessage, 'Audio faylni yuklab bölmadi.');
 
       controller.failOnLoad = false;
       await controller.loadAsset('assets/lesson_media/english/a1-starter-dialogue.wav');
@@ -451,13 +451,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Error & retry banner shown when failOnLoad is true
-      final retryFinder = find.text('Qayta urinish');
+      final retryFinder = find.text('Qayta uriniş');
       expect(retryFinder, findsOneWidget);
       fakeController.failOnLoad = false;
       await tester.ensureVisible(retryFinder);
       await tester.tap(retryFinder);
       await tester.pumpAndSettle();
-      expect(find.text('Qayta urinish'), findsNothing);
+      expect(find.text('Qayta uriniş'), findsNothing);
       expect(find.text('English'), findsOneWidget);
 
       // Play -> Pause -> Replay -> Position emit
@@ -559,8 +559,8 @@ void main() {
         contains('assets/lesson_media/english/a1-starter-whats-your-name.wav'),
       );
 
-      // Reveal first card -> re-queue with "Yana mashq qilaman"
-      await tester.tap(find.text('Javobni ko‘rish'));
+      // Reveal first card -> re-queue with "Yana maşq qilaman"
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       expect(find.text('/wɒts jɔːr neɪm/'), findsOneWidget);
       expect(
@@ -568,23 +568,23 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Yana mashq qilaman'));
+      await tester.tap(find.text('Yana maşq qilaman'));
       await tester.pumpAndSettle();
       expect(find.text('Nice to meet you.'), findsOneWidget);
 
       // Remember second card -> first card returns in queue!
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
       expect(find.text("What's your name?"), findsOneWidget);
 
       // Remember re-queued first card -> summary shown
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
-      expect(find.text('Barcha kartochkalar ko‘rib chiqildi!'), findsOneWidget);
+      expect(find.text('Barça kartoçkalar körib çiqildi!'), findsOneWidget);
     });
 
     testWidgets('LessonMediaWidget disposes audio controller when updated to non-audio media', (tester) async {
@@ -668,7 +668,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Audio qayta ijro etilmadi.'), findsOneWidget);
 
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
@@ -711,15 +711,15 @@ void main() {
       expect(fakeController.state.hasError, isTrue);
       expect(fakeController.state.status, LessonAudioStatus.error);
       expect(fakeController.replayCalls, 0);
-      expect(find.text('Audio faylni yuklab bo‘lmadi.'), findsOneWidget);
+      expect(find.text('Audio faylni yuklab bölmadi.'), findsOneWidget);
 
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
 
       expect(find.text('Nice to meet you.'), findsOneWidget);
-      expect(find.text('Audio faylni yuklab bo‘lmadi.'), findsNothing);
+      expect(find.text('Audio faylni yuklab bölmadi.'), findsNothing);
     });
 
     testWidgets('FlashcardDeckWidget re-subscribes cleanly when audioController prop is swapped', (tester) async {
@@ -770,7 +770,7 @@ void main() {
       expect(controllerB.loadCalls, 1);
       expect(controllerB.disposeCalls, 0);
       expect(controllerB.state.hasError, isTrue);
-      expect(find.text('Audio faylni yuklab bo‘lmadi.'), findsOneWidget);
+      expect(find.text('Audio faylni yuklab bölmadi.'), findsOneWidget);
     });
 
     testWidgets('FlashcardDeckWidget skips replay when card advances or controller swaps mid-load', (tester) async {
@@ -800,7 +800,7 @@ void main() {
       expect(controllerA.loadStarted, isTrue);
 
       // Advance card while controllerA.loadAsset is still awaiting loadGate
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
@@ -861,34 +861,34 @@ void main() {
       appRouter.go('/onboarding');
       await tester.pumpAndSettle();
 
-      final skipTour = find.text('O‘tkazib yuborish');
+      final skipTour = find.text('Ötkazib yuboriş');
       if (skipTour.evaluate().isNotEmpty) {
         await tester.tap(skipTour);
         await tester.pumpAndSettle();
       }
 
-      final demo = find.text('Namuna hisobi bilan kirish');
+      final demo = find.text('Namuna hisobi bilan kiriş');
       await tester.ensureVisible(demo);
       await tester.tap(demo);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Ingliz tili').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Noldan boshlayman'));
+      await tester.tap(find.text('Noldan boşlayman'));
       await tester.pumpAndSettle();
-      final startBtn = find.text('Birinchi darsni boshlash');
+      final startBtn = find.text('Birinçi darsni boşlaş');
       await tester.scrollUntilVisible(startBtn, 180);
       await tester.tap(startBtn);
       await tester.pumpAndSettle();
 
       // Step 1: concept
-      expect(find.text('Birinchi inglizcha so‘zlar'), findsWidgets);
+      expect(find.text('Birinçi inglizça sözlar'), findsWidgets);
       expect(find.textContaining('«Hello» — salom'), findsWidgets);
       await tester.tap(find.text('Keyingi qadam'));
       await tester.pumpAndSettle();
 
       // Step 2: real media widget with illustration & audio
-      expect(find.text('Aziza va Ben tanishuv dialogi'), findsOneWidget);
+      expect(find.text('Aziza va Ben tanişuv dialogi'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
       expect(audioControllers.first.loadedAssets, contains('assets/lesson_media/english/a1-starter-dialogue.wav'));
       final playIcon = find.byIcon(Icons.play_arrow_rounded);
@@ -918,7 +918,7 @@ void main() {
 
       // Step 3: flashcard deck (flipping does NOT complete lesson)
       expect(find.text("What's your name?"), findsOneWidget);
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       expect(find.text('/wɒts jɔːr neɪm/'), findsOneWidget);
 
@@ -940,17 +940,17 @@ void main() {
 
       await tester.enterText(input, 'Sam');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       expect(find.text('Sizning javobingiz: Sam'), findsOneWidget);
       expect(
-        find.textContaining('Faqat ism yoki xayrlashuv so‘zini yozmang'),
+        find.textContaining('Faqat ism yoki xayrlaşuv sözini yozmang'),
         findsOneWidget,
       );
 
       await tester.enterText(input, "I'm Sam");
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       // Completed & navigated to roadmap
@@ -1036,7 +1036,7 @@ void main() {
         'My name is Sam',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
@@ -1107,7 +1107,7 @@ void main() {
       expect(readNode.targetLessonId, 'lesson_eng_reading_01');
       final readLesson = seedLessons['lesson_eng_reading_01'];
       expect(readLesson, isNotNull);
-      expect(readLesson!.title, 'Asosiy g‘oya va dalil');
+      expect(readLesson!.title, 'Asosiy ğoya va dalil');
 
       final found02 = seedLessons['lesson_eng_foundation_02']!;
       final found02Quiz = found02.steps[2].interactiveQuestion!;
@@ -1209,13 +1209,13 @@ void main() {
           .first;
       final startBtn = find.descendant(
         of: readingColumn,
-        matching: find.text('Boshlash'),
+        matching: find.text('Boşlaş'),
       );
       await tester.ensureVisible(startBtn);
       await tester.tap(startBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Asosiy g‘oya va dalil'), findsWidgets);
+      expect(find.text('Asosiy ğoya va dalil'), findsWidgets);
       expect(find.text('Qoida'), findsWidgets);
       expect(tester.takeException(), isNull);
     });

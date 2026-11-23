@@ -11,9 +11,9 @@ class SkillScoringEngine {
   }
 
   /// Central level classification:
-  /// 0–39: needsRemediation (Boshlang‘ich)
+  /// 0–39: needsRemediation (Boşlanğiç)
   /// 40–59: developing (Rivojlanmoqda)
-  /// 60–79: proficient (O‘rta)
+  /// 60–79: proficient (Örta)
   /// 80–100: mastered (Yuqori)
   static MasteryLevel getMasteryLevel(int score) {
     final clamped = clampScore(score);
@@ -28,11 +28,11 @@ class SkillScoringEngine {
     final level = getMasteryLevel(score);
     switch (level) {
       case MasteryLevel.needsRemediation:
-        return 'Boshlang‘ich';
+        return 'Boşlanğiç';
       case MasteryLevel.developing:
         return 'Rivojlanmoqda';
       case MasteryLevel.proficient:
-        return 'O‘rta';
+        return 'Örta';
       case MasteryLevel.mastered:
         return 'Yuqori';
     }

@@ -18,12 +18,12 @@ String? buildStarterFreeTextFeedback({
       normalized == 'good bye') {
     return isRu
         ? '«Goodbye» означает прощание. На вопрос «What\'s your name?» отвечают представлением: «I\'m ...» или «My name is ...».'
-        : '«Goodbye» xayrlashuv so‘zi. «What\'s your name?» savoliga «I\'m ...» yoki «My name is ...» deb javob beriladi.';
+        : '«Goodbye» xayrlaşuv sözi. «What\'s your name?» savoliga «I\'m ...» yoki «My name is ...» deb javob beriladi.';
   }
   if (normalized == 'hello' || normalized == 'hi') {
     return isRu
         ? 'Приветствие верное, но собеседник спросил имя. Добавьте «I\'m ...» или «My name is ...».'
-        : 'Salomlashish to‘g‘ri, lekin ismingizni ham aytishingiz kerak: «I\'m ...» yoki «My name is ...» shaklida davom ettiring.';
+        : 'Salomlaşiş töğri, lekin ismingizni ham aytişingiz kerak: «I\'m ...» yoki «My name is ...» şaklida davom ettiring.';
   }
   return null;
 }

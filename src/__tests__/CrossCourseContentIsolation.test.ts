@@ -490,7 +490,7 @@ describe('Cross-course content isolation regression', () => {
       const eng = await svc.generateReinforcement({
         courseId: 'course_eng_01',
         skillId: 'skill_eng_listening',
-        misconceptionTitle: 'kalit so‘zni o‘tkazib yubordi',
+        misconceptionTitle: 'kalit sözni ötkazib yubordi',
       });
       expect(eng.courseId).toBe('course_eng_01');
       expect(eng.text).not.toContain('f(x)');

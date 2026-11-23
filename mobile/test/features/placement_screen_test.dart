@@ -108,14 +108,14 @@ void main() {
         await tester.pumpAndSettle();
 
         final nextBtn = find.text(
-          step == 8 ? 'Natijalarni Ko‘rish' : 'Keyingi Savol',
+          step == 8 ? 'Natijalarni Köriş' : 'Keyingi Savol',
         );
         await tester.ensureVisible(nextBtn);
         await tester.tap(nextBtn);
         await tester.pumpAndSettle();
 
         if (step == 8) {
-          await tester.tap(find.text('Topshirish'));
+          await tester.tap(find.text('Topşiriş'));
           await tester.pumpAndSettle();
         } else {
           // Wait past 800ms wall-clock placement rate-limiter
@@ -128,7 +128,7 @@ void main() {
 
       expect(sawListeningMedia, isTrue);
       expect(find.text('Diagnostika yakunlandi'), findsOneWidget);
-      expect(find.text('0 / 8 javob to‘g‘ri.'), findsOneWidget);
+      expect(find.text('0 / 8 javob töğri.'), findsOneWidget);
       expect(find.text('Pre-A1'), findsWidgets);
       expect(find.textContaining('B2–C2'), findsWidgets);
 
@@ -138,10 +138,10 @@ void main() {
       expect(profile.scoresByCourse['course_eng_01'], isNull);
       expect(profile.completedLessonIds, isEmpty);
 
-      await tester.tap(find.text('Shaxsiy yo‘lni ko‘rish'));
+      await tester.tap(find.text('Şaxsiy yölni köriş'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Birinchi inglizcha so‘zlar'), findsWidgets);
+      expect(find.text('Birinçi inglizça sözlar'), findsWidgets);
       expect(tester.takeException(), isNull);
     },
   );

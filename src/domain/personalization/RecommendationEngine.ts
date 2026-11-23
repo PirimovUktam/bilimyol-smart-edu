@@ -60,23 +60,23 @@ export class RecommendationEngine {
       id: `rec_${courseId}_${Date.now()}`,
       courseId,
       title: isReinforcement
-        ? `Mustahkamlash: ${targetSkillName}`
+        ? `Mustahkamlaş: ${targetSkillName}`
         : isTargetedPractice
-        ? `Maqsadli mashq: ${targetSkillName}`
+        ? `Maqsadli maşq: ${targetSkillName}`
         : `Bugungi Reja: ${activeNode ? activeNode.title : targetSkillName}`,
       subtitle: isReinforcement
-        ? `Aniqlangan bo‘shliqni to‘ldirish uchun maxsus 5 daqiqalik mashq`
+        ? `Aniqlangan böşliqni töldiriş uçun maxsus 5 daqiqalik maşq`
         : isTargetedPractice
-        ? `50–69% oraliqdagi natijani 70%+ darajaga ko‘tarish mashqi`
-        : `Keyingi bosqichga o‘tish va o‘zlashtirish darajasini oshirish`,
+        ? `50–69% oraliqdagi natijani 70%+ darajaga kötariş maşqi`
+        : `Keyingi bosqiçga ötiş va özlaştiriş darajasini oşiriş`,
       targetSkillId: targetSkill ? targetSkill.id : '',
       targetSkillName,
       targetNodeId: activeNode ? activeNode.id : '',
       reason: weakestScoreValue < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN
-        ? `Ushbu ko‘nikma hozirda ${weakestScoreValue}% darajasida. Tavsiya etilgan mashq orqali uni 60%+ darajaga ko‘taring.`
+        ? `Uşbu könikma hozirda ${weakestScoreValue}% darajasida. Tavsiya etilgan maşq orqali uni 60%+ darajaga kötaring.`
         : isTargetedPractice
-        ? `Ushbu ko‘nikma hozirda ${weakestScoreValue}% (50–69%) darajasida. 70%+ mustahkam bosqichga chiqish uchun maqsadli mashqni bajaring.`
-        : `O‘zlashtirish sur’atini saqlab qolish uchun rejadagi darsni davom ettiring.`,
+        ? `Uşbu könikma hozirda ${weakestScoreValue}% (50–69%) darajasida. 70%+ mustahkam bosqiçga çiqiş uçun maqsadli maşqni bajaring.`
+        : `Özlaştiriş sur’atini saqlab qoliş uçun rejadagi darsni davom ettiring.`,
       suggestedMinutes: isReinforcement ? 5 : activeNode ? activeNode.estimatedMinutes : 15,
       priority: weakestScoreValue < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN ? 'high' : 'medium',
       explainableFactors,

@@ -202,7 +202,7 @@ class _InteractiveLessonScreenState
                 Text(
                   isRu
                       ? 'Шаги урока не найдены.'
-                      : 'Dars bosqichlari topilmadi.',
+                      : 'Dars bosqiçlari topilmadi.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -397,7 +397,7 @@ class _InteractiveLessonScreenState
                               minWidth: 28,
                               minHeight: 28,
                             ),
-                            tooltip: isRu ? 'Закрыть' : 'Yopish',
+                            tooltip: isRu ? 'Закрыть' : 'Yopiş',
                           ),
                         ],
                       ),
@@ -822,7 +822,7 @@ class _InteractiveLessonScreenState
                 ),
               if (question.isSelfAssessed)
                 AppBadge(
-                  text: isRu ? 'Самооценка' : 'O‘z-o‘zini baholash',
+                  text: isRu ? 'Самооценка' : 'Öz-özini baholaş',
                   variant: AppBadgeVariant.amber,
                 ),
             ],
@@ -955,7 +955,7 @@ class _InteractiveLessonScreenState
                 hintText: question.mode == QuestionMode.fillBlank
                     ? (isRu
                           ? 'Введите пропущенное слово...'
-                          : 'Bo‘sh joyga mos so‘zni yozing...')
+                          : 'Böş joyga mos sözni yozing...')
                     : (isRu
                           ? 'Напишите ответ на английском...'
                           : 'Javobingizni ingliz tilida yozing...'),
@@ -1002,7 +1002,7 @@ class _InteractiveLessonScreenState
                 hintText: question.mode == QuestionMode.speakingPrompt
                     ? (isRu
                           ? 'Запишите краткие тезисы устного ответа на английском...'
-                          : 'Og‘zaki javobingiz matnini ingliz tilida yozing...')
+                          : 'Oğzaki javobingiz matnini ingliz tilida yozing...')
                     : (isRu
                           ? 'Напишите ваш короткий текст на английском...'
                           : 'Qisqa matningizni ingliz tilida yozing...'),
@@ -1090,7 +1090,7 @@ class _InteractiveLessonScreenState
               ],
               if (question.rubricCriteria.isNotEmpty) ...[
                 Text(
-                  isRu ? 'Чек-лист самопроверки:' : 'O‘zini tekshirish mezoni:',
+                  isRu ? 'Чек-лист самопроверки:' : 'Özini tekşiriş mezoni:',
                   style: AppTypography.ui(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
@@ -1300,19 +1300,19 @@ class _InteractiveLessonScreenState
   String? _richModeLabel(QuestionMode mode, bool isRu) {
     switch (mode) {
       case QuestionMode.fillBlank:
-        return isRu ? 'Заполните пропуск' : 'Bo‘sh joyni to‘ldiring';
+        return isRu ? 'Заполните пропуск' : 'Böş joyni töldiring';
       case QuestionMode.wordMatch:
-        return isRu ? 'Сопоставьте слова' : 'So‘zlarni moslang';
+        return isRu ? 'Сопоставьте слова' : 'Sözlarni moslang';
       case QuestionMode.sentenceOrder:
-        return isRu ? 'Составьте предложение' : 'So‘zlarni tartiblang';
+        return isRu ? 'Составьте предложение' : 'Sözlarni tartiblang';
       case QuestionMode.errorCorrection:
         return isRu ? 'Исправьте ошибку' : 'Xatoni tuzating';
       case QuestionMode.conversationCompletion:
-        return isRu ? 'Дополните диалог' : 'Suhbatni to‘ldiring';
+        return isRu ? 'Дополните диалог' : 'Suhbatni töldiring';
       case QuestionMode.speakingPrompt:
-        return isRu ? 'Устная речь' : 'Og‘zaki nutq';
+        return isRu ? 'Устная речь' : 'Oğzaki nutq';
       case QuestionMode.writingPrompt:
-        return isRu ? 'Письмо' : 'Yozma ish';
+        return isRu ? 'Письмо' : 'Yozma iş';
       case QuestionMode.multipleChoice:
       case QuestionMode.textInput:
         return null;
@@ -1339,7 +1339,7 @@ class _InteractiveLessonScreenState
               child: Text(
                 isRu
                     ? 'Выберите пару слева и справа:'
-                    : 'Chapdan so‘zni tanlang va o‘ngdagi mosini bosing:',
+                    : 'Çapdan sözni tanlang va öngdagi mosini bosing:',
                 style: AppTypography.ui(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1353,7 +1353,7 @@ class _InteractiveLessonScreenState
                 onPressed: lessonState.isSubmittingAnswer
                     ? null
                     : notifier.clearMatchPairs,
-                child: Text(isRu ? 'Сбросить' : 'Tozalash'),
+                child: Text(isRu ? 'Сбросить' : 'Tozalaş'),
               ),
             ],
           ],
@@ -1525,7 +1525,7 @@ class _InteractiveLessonScreenState
                 onPressed: lessonState.isSubmittingAnswer
                     ? null
                     : notifier.resetOrderTokens,
-                child: Text(isRu ? 'Сбросить' : 'Tozalash'),
+                child: Text(isRu ? 'Сбросить' : 'Tozalaş'),
               ),
             ],
           ],
@@ -1544,7 +1544,7 @@ class _InteractiveLessonScreenState
               ? Text(
                   isRu
                       ? 'Нажимайте на слова ниже по порядку'
-                      : 'Quyidagi so‘zlarni ketma-ket bosing',
+                      : 'Quyidagi sözlarni ketma-ket bosing',
                   style: AppTypography.ui(
                     fontSize: 12.5,
                     color: c.slatefine,
@@ -1769,7 +1769,7 @@ class _InteractiveLessonScreenState
                     Text(
                       isRu
                           ? 'Несколько ошибок подряд. Выполните дополнительное упражнение для закрепления.'
-                          : 'Ketma-ket xato qilindi. Mavzuni mustahkamlash uchun qo‘shimcha mashqni bajaring.',
+                          : 'Ketma-ket xato qilindi. Mavzuni mustahkamlaş uçun qöşimça maşqni bajaring.',
                       style: AppTypography.ui(
                         fontSize: 12,
                         height: 1.35,
@@ -1784,7 +1784,7 @@ class _InteractiveLessonScreenState
                         AppButton(
                           text: isRu
                               ? 'Дополнительное упражнение'
-                              : 'Qo‘shimcha mashq',
+                              : 'Qöşimça maşq',
                           size: AppButtonSize.small,
                           variant: AppButtonVariant.primary,
                           onPressed: () => _openReinforcementModal(
@@ -1795,7 +1795,7 @@ class _InteractiveLessonScreenState
                         AppButton(
                           text: isRu
                               ? 'Посмотреть пример'
-                              : 'Namuna misolni ko‘rish',
+                              : 'Namuna misolni köriş',
                           size: AppButtonSize.small,
                           variant: AppButtonVariant.outline,
                           onPressed: () => ref
@@ -1867,7 +1867,7 @@ class _InteractiveLessonScreenState
                     style: TextButton.styleFrom(
                       minimumSize: const Size(44, 44),
                     ),
-                    child: Text(isRu ? 'Повторить упражнение' : 'Qayta mashq'),
+                    child: Text(isRu ? 'Повторить упражнение' : 'Qayta maşq'),
                   ),
               ],
             ),
@@ -1965,7 +1965,7 @@ class _InteractiveLessonScreenState
         _showInlineSuccess(
           lang == 'ru'
               ? 'Сравните ответ с образцом и отметьте критерии.'
-              : 'Javobingizni namuna bilan solishtirib, mezonlarni belgilang.',
+              : 'Javobingizni namuna bilan soliştirib, mezonlarni belgilang.',
         );
       } else {
         _showInlineSuccess(s.correctAnswerToast);

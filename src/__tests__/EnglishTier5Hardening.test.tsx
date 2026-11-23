@@ -224,7 +224,7 @@ describe('Tier 5 Adversarial Web Hardening', () => {
     await useCourseStore.getState().loadCourses();
     await useCourseStore.getState().selectCourseById('course_eng_01');
 
-    // 1. word_match empty guard in store and rendered disabled TEKSHIRISH
+    // 1. word_match empty guard in store and rendered disabled TEKŞIRIŞ
     await useLessonStore.getState().loadLesson('lesson_eng_a1_m1_greetings');
     const greetLesson = useLessonStore.getState().currentLesson!;
     const matchStepIdx = greetLesson.steps.findIndex((s) => s.interactiveQuestion?.questionType === 'word_match');
@@ -245,7 +245,7 @@ describe('Tier 5 Adversarial Web Hardening', () => {
         />
       </AuthProvider>,
     );
-    expect(matchHtml).toMatch(/<button[^>]*disabled=""[^>]*>.*?TEKSHIRISH/is);
+    expect(matchHtml).toMatch(/<button[^>]*disabled=""[^>]*>.*?TEKŞIRIŞ/is);
 
     // Partial (>=1 matched pair) stays permitted for T2-F5-05
     const firstPair = greetLesson.steps[matchStepIdx].interactiveQuestion!.matchPairs![0];
@@ -254,7 +254,7 @@ describe('Tier 5 Adversarial Web Hardening', () => {
     });
     expect(partialMatchRes?.isCorrect).toBe(false);
 
-    // 2. sentence_order empty guard in store and rendered disabled TEKSHIRISH
+    // 2. sentence_order empty guard in store and rendered disabled TEKŞIRIŞ
     useLessonStore.getState().clearSession();
     attemptSpy.mockClear();
     await useLessonStore.getState().loadLesson('lesson_eng_a1_m2_sentence_builder');
@@ -276,7 +276,7 @@ describe('Tier 5 Adversarial Web Hardening', () => {
         />
       </AuthProvider>,
     );
-    expect(orderHtml).toMatch(/<button[^>]*disabled=""[^>]*>.*?TEKSHIRISH/is);
+    expect(orderHtml).toMatch(/<button[^>]*disabled=""[^>]*>.*?TEKŞIRIŞ/is);
 
     // Partial (>=1 ordered token) stays permitted for T2-F5-05
     const firstToken = orderLesson.steps[orderStepIdx].interactiveQuestion!.orderedTokens![0];
@@ -366,8 +366,8 @@ describe('Tier 5 Adversarial Web Hardening', () => {
       uz: [
         'qaysi javobni bosay',
         'qaysi variantni bosay?',
-        "to'g'risini ayt",
-        'yechimini ber',
+        "töğrisini ayt",
+        'yeçimini ber',
         'qaysinisini tanlay?',
       ],
       ru: [
@@ -398,16 +398,16 @@ describe('Tier 5 Adversarial Web Hardening', () => {
     }
 
     for (const safePrompt of [
-      'Hello qachon ishlatiladi?',
+      'Hello qaçon işlatiladi?',
       'Когда используется Hello?',
       'How do I form Past Simple?',
-      'Misol keltiring va tushuntiring',
+      'Misol keltiring va tuşuntiring',
     ]) {
       expect(isAnswerRevealRequest(safePrompt), `Unexpected refusal on safe prompt "${safePrompt}"`).toBe(false);
     }
   });
 
-  it('renders RoadmapView locked Qulf sharti button without aria-disabled="true" so it stays clickable', async () => {
+  it('renders RoadmapView locked Qulf şarti button without aria-disabled="true" so it stays clickable', async () => {
     await useCourseStore.getState().loadCourses();
     await useCourseStore.getState().selectCourseById('course_eng_01');
     const engCourse = SEED_COURSES.find((c) => c.id === 'course_eng_01')!;
@@ -448,7 +448,7 @@ describe('Tier 5 Adversarial Web Hardening', () => {
         />
       </AuthProvider>,
     );
-    expect(roadmapHtml).toContain('Qulf sharti');
+    expect(roadmapHtml).toContain('Qulf şarti');
     expect(roadmapHtml).not.toContain('aria-disabled="true"');
     expect(roadmapHtml).toContain('aria-expanded="false"');
   });

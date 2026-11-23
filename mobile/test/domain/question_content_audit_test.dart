@@ -14,7 +14,7 @@ void main() {
     RegExp(r"deb\s+hisoblangan", caseSensitive: false),
     RegExp(r"correct\s*answer", caseSensitive: false),
     RegExp(r"incorrect", caseSensitive: false),
-    RegExp(r"\(to‘g‘ri\)", caseSensitive: false),
+    RegExp(r"\(töğri\)", caseSensitive: false),
     RegExp(r"\(xato\)", caseSensitive: false),
   ];
 

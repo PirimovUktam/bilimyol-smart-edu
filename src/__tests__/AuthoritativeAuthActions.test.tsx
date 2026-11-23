@@ -145,7 +145,7 @@ describe('authoritative configured authentication actions', () => {
     const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
 
     expect(result.error).toBeInstanceOf(Error);
-    expect(result.error?.message).toContain('Profilni yaratib bo‘lmadi');
+    expect(result.error?.message).toContain('Profilni yaratib bölmadi');
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 
@@ -157,7 +157,7 @@ describe('authoritative configured authentication actions', () => {
     const result = await actions().signUp(user.email, 'not-a-real-password', 'Ali', 'Vali');
 
     expect(result.error).toBeInstanceOf(Error);
-    expect(result.error?.message).toContain('Yaratilgan profilni serverdan o‘qib bo‘lmadi');
+    expect(result.error?.message).toContain('Yaratilgan profilni serverdan öqib bölmadi');
     expect(localStorage.getItem('bilimyol_auth_session')).toBeNull();
   });
 

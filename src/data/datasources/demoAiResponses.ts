@@ -1,3 +1,4 @@
+import { legacyUzbekSpelling } from '@/core/locales/uzbekAlphabet';
 import type {
   AIExplanationRequest,
   AIExplanationResponse,
@@ -32,38 +33,38 @@ export const DEMO_AI_RESPONSES: Record<string, AIDemoFeedback> = {
     questionId: 'q_math_lesson_interactive',
     misconceptionTitle: 'Ozod son (+3) unutilgan',
     explanation:
-      'Siz bu misolda 2 × 4 ni to‘g‘ri hisoblagansiz, lekin formuladagi +3 ozod hadini hisobga olmadingiz. To‘g‘ri natija 11 bo‘ladi.',
-    remediationStep: 'Chiziqli funksiyada f(x) = ax + b tartibida har doim avval ko‘paytirish, so‘ng qo‘shish bajariladi.',
-    suggestedAction: 'Keling, shu qadamni bitta qisqa mustahkamlash mashqi bilan mustahkamlaymiz.',
+      'Siz bu misolda 2 × 4 ni töğri hisoblagansiz, lekin formuladagi +3 ozod hadini hisobga olmadingiz. Töğri natija 11 böladi.',
+    remediationStep: 'Çiziqli funksiyada f(x) = ax + b tartibida har doim avval köpaytiriş, söng qöşiş bajariladi.',
+    suggestedAction: 'Keling, şu qadamni bitta qisqa mustahkamlaş maşqi bilan mustahkamlaymiz.',
   },
 
   // English Lesson Mistake: Chosen '04:00' instead of '03:45'
   q_eng_lesson_interactive: {
     courseId: 'course_eng_01',
     questionId: 'q_eng_lesson_interactive',
-    misconceptionTitle: 'Vaqt inkor iborasi e’tibordan chetda qolgan',
+    misconceptionTitle: 'Vaqt inkor iborasi e’tibordan çetda qolgan',
     explanation:
-      'Siz asosiy "four" so‘zini to‘g‘ri eshitdingiz, ammo "quarter to four" (to‘rtga 15 daqiqa qoldi) va "not at four o\'clock" degan inkor iborasini noto‘g‘ri talqin qildingiz.',
+      'Siz asosiy "four" sözini töğri eşitdingiz, ammo "quarter to four" (törtga 15 daqiqa qoldi) va "not at four o\'clock" degan inkor iborasini notöğri talqin qildingiz.',
     remediationStep: '"quarter to [hour]" har doim aytilgan soatdan 15 daqiqa oldingi vaqtni bildiradi.',
-    suggestedAction: 'Keling, yana bitta qisqa mustahkamlash mashqini bajaramiz.',
+    suggestedAction: 'Keling, yana bitta qisqa mustahkamlaş maşqini bajaramiz.',
   },
 };
 
 const SKILL_COACHING_NOTES: Record<string, { uz: string; ru: string }> = {
   skill_eng_vocab: {
-    uz: 'Yangi so‘zlarni kontekstli gap va talaffuz (IPA) bilan bog‘lab eslab qoling.',
+    uz: 'Yangi sözlarni kontekstli gap va talaffuz (IPA) bilan boğlab eslab qoling.',
     ru: 'Запоминайте новые слова в контексте предложения и вместе с произношением (IPA).',
   },
   skill_eng_grammar: {
-    uz: 'Gapdagi ega-kesim mosligi, zamon ko‘rsatkichi (time marker) va so‘z tartibini tekshiring.',
+    uz: 'Gapdagi ega-kesim mosligi, zamon körsatkiçi (time marker) va söz tartibini tekşiring.',
     ru: 'Проверяйте согласование подлежащего и сказуемого, маркеры времени и порядок слов.',
   },
   skill_eng_listening: {
-    uz: 'Audioni tinglayotganda raqam, vaqt iborasi (in the morning/afternoon) va inkor so‘zlarga e’tibor bering.',
+    uz: 'Audioni tinglayotganda raqam, vaqt iborasi (in the morning/afternoon) va inkor sözlarga e’tibor bering.',
     ru: 'При аудировании обращайте внимание на числа, уточнения времени (in the morning/afternoon) и отрицания.',
   },
   skill_eng_reading: {
-    uz: 'Matndagi kalit dalilni topib, javob variantini aynan o‘sha jumla bilan solishtiring.',
+    uz: 'Matndagi kalit dalilni topib, javob variantini aynan öşa jumla bilan soliştiring.',
     ru: 'Найдите ключевое подтверждение в тексте и сверьте вариант ответа именно с ним.',
   },
 };
@@ -247,15 +248,15 @@ function selectSafeHelloMessage(question: Question | undefined, lang: 'uz' | 'ru
           'Привет! Разберём задание шаг за шагом — обратите внимание на контекст вопроса.',
         ]
       : [
-          '«Hello» — istalgan vaqtda ishlatiladigan neytral salomlashuv. Salomlashgach, o‘zingizni «I\'m ...» yoki «My name is ...» deb tanishtirasiz.',
-          'Salom! Suhbat boshida «Hi!» yoki «Hello!» kabi neytral salomlashuvdan foydalanishingiz mumkin.',
+          '«Hello» — istalgan vaqtda işlatiladigan neytral salomlaşuv. Salomlaşgaç, özingizni «I\'m ...» yoki «My name is ...» deb taniştirasiz.',
+          'Salom! Suhbat boşida «Hi!» yoki «Hello!» kabi neytral salomlaşuvdan foydalanişingiz mumkin.',
           'Salom! Qadam-baqadam davom etamiz — savoldagi kontekstga e’tibor bering.',
         ];
   return candidates.find((text) => !containsSecretToken(text, question)) ?? candidates[candidates.length - 1];
 }
 
 export function isAnswerRevealRequest(message: string): boolean {
-  const normalized = message
+  const normalized = legacyUzbekSpelling(message)
     .toLowerCase()
     .replace(/[’‘`´\u02BB\u02BC]/g, "'")
     .replace(/\s+/g, ' ')
@@ -310,17 +311,17 @@ export function buildEnglishMistakeExplanation(request: AIExplanationRequest): A
       explanationText =
         lang === 'ru'
           ? 'Одного имени недостаточно. Чтобы представиться по-английски, используйте полную конструкцию «I\'m [имя]» или «My name is [имя]».'
-          : 'Faqat ismning o‘zi yetarli emas. Ingliz tilida o‘zingizni tanishtirish uchun «I\'m [ism]» yoki «My name is [ism]» shaklida to‘liq gap tuzing.';
+          : 'Faqat ismning özi yetarli emas. Ingliz tilida özingizni taniştiriş uçun «I\'m [ism]» yoki «My name is [ism]» şaklida töliq gap tuzing.';
     } else if (normalizedSelection === 'goodbye' || normalizedSelection === 'bye') {
       explanationText =
         lang === 'ru'
           ? '«Goodbye» означает прощание. На вопрос «What\'s your name?» отвечают представлением: «I\'m ...» или «My name is ...».'
-          : '«Goodbye» xayrlashuv so‘zi. «What\'s your name?» savoliga «I\'m ...» yoki «My name is ...» deb javob beriladi.';
+          : '«Goodbye» xayrlaşuv sözi. «What\'s your name?» savoliga «I\'m ...» yoki «My name is ...» deb javob beriladi.';
     } else if (normalizedSelection === 'hello' || normalizedSelection === 'hi') {
       explanationText =
         lang === 'ru'
           ? 'Приветствие верное, но собеседник спросил имя. Добавьте «I\'m ...» или «My name is ...».'
-          : 'Salomlashish to‘g‘ri, lekin ismingizni ham aytishingiz kerak: «I\'m ...» yoki «My name is ...» shaklida davom ettiring.';
+          : 'Salomlaşiş töğri, lekin ismingizni ham aytişingiz kerak: «I\'m ...» yoki «My name is ...» şaklida davom ettiring.';
     }
   }
 
@@ -348,7 +349,7 @@ export function buildEnglishMistakeExplanation(request: AIExplanationRequest): A
     explanationText =
       lang === 'ru'
         ? `Выбранный вариант (${request.selectedOption}) не подходит по смыслу или грамматике. Проверьте подсказку правила.`
-        : `Tanlangan javob (${request.selectedOption}) ushbu kontekst yoki qoida bilan mos kelmadi. Qoidani qadam-baqadam tekshiring.`;
+        : `Tanlangan javob (${request.selectedOption}) uşbu kontekst yoki qoida bilan mos kelmadi. Qoidani qadam-baqadam tekşiring.`;
   }
 
   const cefrPrefix = lesson?.cefrLevel ? `[${lesson.cefrLevel}] ` : '';
@@ -361,30 +362,30 @@ export function buildEnglishMistakeExplanation(request: AIExplanationRequest): A
     [canDo, ruleCue].filter(Boolean).join(' — ') ||
     (lang === 'ru'
       ? 'Повторите правило урока и сравните вариант с примером.'
-      : 'Dars qoidasini va misolni qayta ko‘rib, variantni solishtiring.');
+      : 'Dars qoidasini va misolni qayta körib, variantni soliştiring.');
   const remediationStep = sanitizeNoSpoilers(rawRemediationStep, question);
 
   const scoreHint =
     typeof request.learnerScore === 'number' && request.learnerScore < 70
       ? lang === 'ru'
         ? ` Текущий уровень по навыку: ${request.learnerScore}% — закрепите тему дополнительным упражнением.`
-        : ` Joriy ko‘nikma natijasi: ${request.learnerScore}% — qo‘shimcha mashq bilan 70%+ ga chiqaring.`
+        : ` Joriy könikma natijasi: ${request.learnerScore}% — qöşimça maşq bilan 70%+ ga çiqaring.`
       : '';
   const mistakeHint =
     request.recentMistakes?.length
       ? lang === 'ru'
         ? ` Учтены недавние ошибки (${request.recentMistakes[0]}).`
-        : ` So‘nggi xatolar (${request.recentMistakes[0]}) ham inobatga olindi.`
+        : ` Sönggi xatolar (${request.recentMistakes[0]}) ham inobatga olindi.`
       : '';
 
   const rawSuggestedAction =
     (lang === 'ru'
       ? `Откройте закрепляющее упражнение${lessonTitle ? ` по теме «${lessonTitle}»` : ''}.${scoreHint}${mistakeHint}`
-      : `${lessonTitle ? `«${lessonTitle}» mavzusi bo‘yicha ` : ''}mustahkamlash mashqini bajarib ko‘ring.${scoreHint}${mistakeHint}`).trim();
+      : `${lessonTitle ? `«${lessonTitle}» mavzusi böyiça ` : ''}mustahkamlaş maşqini bajarib köring.${scoreHint}${mistakeHint}`).trim();
   const suggestedAction = sanitizeNoSpoilers(rawSuggestedAction, question);
 
   return {
-    tutorName: 'Yo‘lchi AI',
+    tutorName: 'Yölçi AI',
     title,
     explanation: sanitizeNoSpoilers(explanationText, question),
     remediationStep,
@@ -422,31 +423,31 @@ export function buildEnglishTutorReply(request: AskTutorRequest): AskTutorRespon
       strategyHint =
         lang === 'ru'
           ? 'Проверьте структуру фразы (подлежащее + глагол + недостающее слово) и обратите внимание на подсказку в вопросе.'
-          : 'Gap tuzilishini tekshiring (ega + fe’l + kerakli so‘z) va savoldagi shaklga qarab o‘zingiz yozib ko‘ring.';
+          : 'Gap tuzilişini tekşiring (ega + fe’l + kerakli söz) va savoldagi şaklga qarab özingiz yozib köring.';
     } else if (qType === 'word_match') {
       strategyHint =
         lang === 'ru'
           ? 'Сначала соедините самые очевидные пары слов, затем проверьте оставшиеся по части речи.'
-          : 'Avval aniq biladigan so‘z juftliklarini moslang, so‘ng qolganlarini so‘z turkumi bo‘yicha tekshiring.';
+          : 'Avval aniq biladigan söz juftliklarini moslang, söng qolganlarini söz turkumi böyiça tekşiring.';
     } else if (qType === 'sentence_order') {
       strategyHint =
         lang === 'ru'
           ? 'Соберите сначала основу предложения (подлежащее + глагол), а затем добавьте дополнение и время.'
-          : 'Avval gap asosini (ega + kesim) qo‘ying, keyin to‘ldiruvchi va vaqt ko‘rsatkichini joylashtiring.';
+          : 'Avval gap asosini (ega + kesim) qöying, keyin töldiruvçi va vaqt körsatkiçini joylaştiring.';
     } else {
       strategyHint =
         lang === 'ru'
           ? 'Исключите варианты, которые не совпадают по времени, числу или контексту, и выберите оставшийся.'
-          : 'Zamon, birlik/ko‘plik yoki suhbat kontekstiga zid variantlarni chiqarib tashlang va mosini tekshiring.';
+          : 'Zamon, birlik/köplik yoki suhbat kontekstiga zid variantlarni çiqarib taşlang va mosini tekşiring.';
     }
 
     const scaffold =
       lang === 'ru'
         ? `Готовый ответ я не подсказываю. Давайте разберём вопрос по шагам (${cefrTag} · ${lessonTitle}): 1) ${ruleCue || 'Вспомните главное правило урока.'} 2) ${strategyHint}${canDo ? ` Цель: ${canDo}` : ''}`
-        : `To‘g‘ri javobni tayyor holda bera olmayman — keling, uni qadam-baqadam birga topamiz (${cefrTag} · ${lessonTitle}): 1) ${ruleCue || 'Darsdagi asosiy qoidani eslang.'} 2) ${strategyHint}${canDo ? ` Maqsad: ${canDo}` : ''}`;
+        : `Töğri javobni tayyor holda bera olmayman — keling, uni qadam-baqadam birga topamiz (${cefrTag} · ${lessonTitle}): 1) ${ruleCue || 'Darsdagi asosiy qoidani eslang.'} 2) ${strategyHint}${canDo ? ` Maqsad: ${canDo}` : ''}`;
 
     return {
-      tutorName: 'Yo‘lchi AI',
+      tutorName: 'Yölçi AI',
       answer: sanitizeNoSpoilers(scaffold, question),
       isAiGenerated: false,
       isDeterministicFallback: true,
@@ -476,7 +477,7 @@ export function buildEnglishTutorReply(request: AskTutorRequest): AskTutorRespon
       parts.push(`Обратите внимание на прошлую сложность: ${request.recentMistakes[0]}.`);
     }
   } else {
-    parts.push(`Keling, «${lessonTitle}» (${cefrTag}${skill ? ` · ${skill.name}` : ''}) mavzusini qadam-baqadam ko‘rib chiqamiz.`);
+    parts.push(`Keling, «${lessonTitle}» (${cefrTag}${skill ? ` · ${skill.name}` : ''}) mavzusini qadam-baqadam körib çiqamiz.`);
     if (canDo) parts.push(`Dars maqsadi: ${canDo}`);
     if (ruleCue) parts.push(`Asosiy qoida: ${ruleCue}`);
     if (asksHello) {
@@ -484,18 +485,18 @@ export function buildEnglishTutorReply(request: AskTutorRequest): AskTutorRespon
     } else if (asksExample && safeCard) {
       parts.push(`Namuna: «${safeCard.front}» (${safeCard.backUz}) — «${safeCard.example}».`);
     } else if (safeCard) {
-      parts.push(`Kalit so‘z: «${safeCard.front}»${safeCard.ipa ? ` [${safeCard.ipa}]` : ''} — ${safeCard.backUz}.`);
+      parts.push(`Kalit söz: «${safeCard.front}»${safeCard.ipa ? ` [${safeCard.ipa}]` : ''} — ${safeCard.backUz}.`);
     }
     if (typeof request.learnerScore === 'number' && request.learnerScore < 70) {
-      parts.push(`Joriy ko‘nikma natijangiz ${request.learnerScore}% — 70%+ ga chiqish uchun qoidani misolda qo‘llab ko‘ring.`);
+      parts.push(`Joriy könikma natijangiz ${request.learnerScore}% — 70%+ ga çiqiş uçun qoidani misolda qöllab köring.`);
     }
     if (request.recentMistakes?.length) {
-      parts.push(`So‘nggi xato eslatmasi: ${request.recentMistakes[0]}.`);
+      parts.push(`Sönggi xato eslatmasi: ${request.recentMistakes[0]}.`);
     }
   }
 
   return {
-    tutorName: 'Yo‘lchi AI',
+    tutorName: 'Yölçi AI',
     answer: sanitizeNoSpoilers(parts.join(' '), question),
     isAiGenerated: false,
     isDeterministicFallback: true,

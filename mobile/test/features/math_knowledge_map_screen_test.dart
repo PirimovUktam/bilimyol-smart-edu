@@ -26,7 +26,7 @@ const _mathCourse = Course(
   id: 'course_math_01',
   title: 'Matematika',
   subject: SubjectType.mathematics,
-  description: 'Tayanch arifmetikadan chiziqli tenglamalargacha.',
+  description: 'Tayanç arifmetikadan çiziqli tenglamalargacha.',
   iconName: 'calculator',
   primaryColorHex: '#4F46E5',
   secondaryColorHex: '#0EA5E9',
@@ -39,9 +39,9 @@ const _pilotSkills = [
   Skill(
     id: 'skill_math_addition',
     courseId: 'course_math_01',
-    name: 'Qo‘shish va ayirish',
+    name: 'Qöşiş va ayiriş',
     code: 'MATH_ADD',
-    description: 'Miqdorlarni birlashtirish va farqni topish.',
+    description: 'Miqdorlarni birlaştiriş va farqni topiş.',
     order: -2,
     iconName: 'calculator',
   ),
@@ -50,7 +50,7 @@ const _pilotSkills = [
     courseId: 'course_math_01',
     name: 'Teng guruhlar',
     code: 'MATH_MUL',
-    description: 'Teng miqdorlarni takror qo‘shish va ko‘paytirish.',
+    description: 'Teng miqdorlarni takror qöşiş va köpaytiriş.',
     order: -1,
     iconName: 'calculator',
   ),
@@ -66,9 +66,9 @@ List<LearningPathNode> _buildNodes({
     id: 'node_math_addition',
     courseId: 'course_math_01',
     skillId: 'skill_math_addition',
-    title: 'Qo‘shish va ayirish',
+    title: 'Qöşiş va ayiriş',
     description:
-        'Birlashtirish va ayrim qismini olib tashlashni sonlar bilan ifodalang.',
+        'Birlaştiriş va ayrim qismini olib taşlaşni sonlar bilan ifodalang.',
     prerequisites: const [],
     requiredScore: 80,
     status: firstStatus,
@@ -91,9 +91,9 @@ List<LearningPathNode> _buildNodes({
     id: 'node_math_multiplication',
     courseId: 'course_math_01',
     skillId: 'skill_math_multiplication',
-    title: 'Teng guruhlar va ko‘paytirish',
+    title: 'Teng guruhlar va köpaytiriş',
     description:
-        'Teng guruhlarni takroriy qo‘shish va ko‘paytirish bilan ifodalang.',
+        'Teng guruhlarni takroriy qöşiş va köpaytiriş bilan ifodalang.',
     prerequisites: ['node_math_addition'],
     requiredScore: 80,
     status: NodeStatus.locked,
@@ -157,8 +157,8 @@ class _FakeLessonRepository extends InMemoryLessonRepository {
       id: _openLessonId,
       courseId: 'course_math_01',
       skillId: 'skill_math_addition',
-      title: 'Qo‘shish va ayirishdan boshlaymiz',
-      summary: 'Tayanch dars',
+      title: 'Qöşiş va ayirişdan boşlaymiz',
+      summary: 'Tayanç dars',
       estimatedMinutes: 8,
       requiresMastery: true,
       steps: [
@@ -166,13 +166,13 @@ class _FakeLessonRepository extends InMemoryLessonRepository {
           id: 'step_1',
           stepNumber: 1,
           type: LessonStepType.interactiveQuestion,
-          title: '1-mashq',
-          content: '4 + 3 nechaga teng?',
+          title: '1-maşq',
+          content: '4 + 3 neçaga teng?',
           interactiveQuestion: Question(
             id: 'q_pilot_lesson_math_starter_1',
             courseId: 'course_math_01',
             skillId: 'skill_math_addition',
-            text: '4 + 3 nechaga teng?',
+            text: '4 + 3 neçaga teng?',
             options: ['7', '6', '8'],
             correctIndex: 0,
             difficulty: QuestionDifficulty.easy,
@@ -191,7 +191,7 @@ class _FakeLessonRepository extends InMemoryLessonRepository {
         id: 'q_pilot_lesson_math_starter_1',
         courseId: 'course_math_01',
         skillId: 'skill_math_addition',
-        text: '4 + 3 nechaga teng?',
+        text: '4 + 3 neçaga teng?',
         options: ['7', '6', '8'],
         correctIndex: 0,
         difficulty: QuestionDifficulty.easy,
@@ -355,7 +355,7 @@ void main() {
         'id': 'node_math_addition',
         'course_id': 'course_math_01',
         'skill_id': 'skill_math_addition',
-        'title': 'Qo‘shish va ayirish',
+        'title': 'Qöşiş va ayiriş',
         'description': 'Tavsif',
         'prerequisites': const <String>[],
         'required_score': 80,
@@ -402,7 +402,7 @@ void main() {
             LearningPath(
               id: 'roadmap_course_math_01',
               courseId: 'course_math_01',
-              title: 'Moslashuvchan Yo‘l Xaritasi',
+              title: 'Moslaşuvçan Yöl Xaritasi',
               nodes: _buildNodes(),
               activeNodeId: 'node_math_addition',
               updatedAt: 1,
@@ -412,10 +412,10 @@ void main() {
       await tester.pump();
       expect(ctx.lessonRepo.loadCalls, 1);
 
-      expect(find.text('Diagnostikani boshlash'), findsOneWidget);
-      expect(find.text('Birinchi mashqni boshlash'), findsNothing);
+      expect(find.text('Diagnostikani boşlaş'), findsOneWidget);
+      expect(find.text('Birinçi maşqni boşlaş'), findsNothing);
 
-      await tester.tap(find.text('Diagnostikani boshlash'));
+      await tester.tap(find.text('Diagnostikani boşlaş'));
       await tester.pumpAndSettle();
       expect(find.text('OPENED:/placement'), findsOneWidget);
     },
@@ -430,21 +430,21 @@ void main() {
         failInitialLoad: true,
       );
 
-      expect(find.text('Ta’lim yo‘lini yuklab bo‘lmadi.'), findsOneWidget);
-      expect(find.text('Qayta urinish'), findsOneWidget);
+      expect(find.text('Ta’lim yölini yuklab bölmadi.'), findsOneWidget);
+      expect(find.text('Qayta uriniş'), findsOneWidget);
 
       ctx.lessonRepo.failLoad = false;
-      await tester.tap(find.text('Qayta urinish'));
+      await tester.tap(find.text('Qayta uriniş'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Diagnostikani boshlash'), findsOneWidget);
+      expect(find.text('Diagnostikani boşlaş'), findsOneWidget);
       expect(ctx.lessonRepo.loadCalls, 2);
     },
   );
 
   testWidgets(
-    'State B (diagnostic score < 100, answered = 0) names checked skill and shows single Birinchi mashqni boshlash',
+    'State B (diagnostic score < 100, answered = 0) names checked skill and shows single Birinçi maşqni boşlaş',
     (tester) async {
       await _mountKnowledgeMap(
         tester,
@@ -468,9 +468,9 @@ void main() {
         },
       );
 
-      expect(find.text('Diagnostikani boshlash'), findsNothing);
-      expect(find.text('Qo‘shish va ayirish · 50%'), findsOneWidget);
-      expect(find.text('Birinchi mashqni boshlash'), findsOneWidget);
+      expect(find.text('Diagnostikani boşlaş'), findsNothing);
+      expect(find.text('Qöşiş va ayiriş · 50%'), findsOneWidget);
+      expect(find.text('Birinçi maşqni boşlaş'), findsOneWidget);
     },
   );
 
@@ -499,49 +499,49 @@ void main() {
         },
       );
 
-      expect(find.text('Diagnostikani boshlash'), findsNothing);
+      expect(find.text('Diagnostikani boşlaş'), findsNothing);
       expect(find.text('0%'), findsOneWidget);
       expect(find.textContaining('xato qildingiz'), findsNothing);
-      expect(find.textContaining('tasdiqlash'), findsOneWidget);
-      expect(find.text('Birinchi mashqni boshlash'), findsOneWidget);
+      expect(find.textContaining('tasdiqlaş'), findsOneWidget);
+      expect(find.text('Birinçi maşqni boşlaş'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('0/5'), 200);
       expect(find.text('0/5'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('Tayanch mavzu talab qilinadi'),
+        find.text('Tayanç mavzu talab qilinadi'),
         200,
       );
-      expect(find.text('Tayanch mavzu talab qilinadi'), findsOneWidget);
+      expect(find.text('Tayanç mavzu talab qilinadi'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('Birinchi mashqni boshlash'),
+        find.text('Birinçi maşqni boşlaş'),
         -200,
       );
-      await tester.tap(find.text('Birinchi mashqni boshlash'));
+      await tester.tap(find.text('Birinçi maşqni boşlaş'));
       await tester.pumpAndSettle();
 
       expect(
         ctx.container.read(lessonSessionNotifierProvider).lesson?.id,
         _openLessonId,
       );
-      expect(find.text('Qo‘shish va ayirishdan boshlaymiz'), findsOneWidget);
+      expect(find.text('Qöşiş va ayirişdan boşlaymiz'), findsOneWidget);
 
       // Answer question 1 in InteractiveLessonScreen
       await tester.tap(find.text('7'));
       await tester.pump();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       // Return from /lesson back to /knowledge-map
       ctx.router.pop();
       await tester.pumpAndSettle();
 
-      // State C: updated progress 1/5 and Mashq qilinyapti visible immediately
-      expect(find.text('Birinchi mashqni boshlash'), findsNothing);
-      expect(find.text('Diagnostikani boshlash'), findsNothing);
+      // State C: updated progress 1/5 and Maşq qilinyapti visible immediately
+      expect(find.text('Birinçi maşqni boşlaş'), findsNothing);
+      expect(find.text('Diagnostikani boşlaş'), findsNothing);
       expect(find.text('1/5'), findsOneWidget);
       expect(find.text('100%'), findsOneWidget);
-      expect(find.text('Mashq qilinyapti'), findsOneWidget);
+      expect(find.text('Maşq qilinyapti'), findsOneWidget);
     },
   );
 
@@ -566,8 +566,8 @@ void main() {
         ),
       );
 
-      expect(find.text('Birinchi mashqni boshlash'), findsOneWidget);
-      await tester.tap(find.text('Birinchi mashqni boshlash'));
+      expect(find.text('Birinçi maşqni boşlaş'), findsOneWidget);
+      await tester.tap(find.text('Birinçi maşqni boşlaş'));
       await tester.pumpAndSettle();
       expect(find.text('OPENED:/roadmap'), findsOneWidget);
     },
@@ -616,17 +616,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.'),
+        find.text('Kurslarni yuklab bölmadi. Qayta urinib köring.'),
         findsOneWidget,
       );
-      expect(find.text('Qayta urinish'), findsOneWidget);
+      expect(find.text('Qayta uriniş'), findsOneWidget);
 
       courseRepo.failCourses = false;
-      await tester.tap(find.text('Qayta urinish'));
+      await tester.tap(find.text('Qayta uriniş'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Diagnostikani boshlash'), findsOneWidget);
-      expect(find.text('Mavzular va o‘zlashtirish'), findsOneWidget);
+      expect(find.text('Diagnostikani boşlaş'), findsOneWidget);
+      expect(find.text('Mavzular va özlaştiriş'), findsOneWidget);
     },
   );
 
@@ -676,8 +676,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Bilim Xaritasi'), findsOneWidget);
-      expect(find.text('Fan tanlash'), findsOneWidget);
-      await tester.tap(find.text('Fan tanlash'));
+      expect(find.text('Fan tanlaş'), findsOneWidget);
+      await tester.tap(find.text('Fan tanlaş'));
       await tester.pumpAndSettle();
       expect(find.text('OPENED:/courses'), findsOneWidget);
     },

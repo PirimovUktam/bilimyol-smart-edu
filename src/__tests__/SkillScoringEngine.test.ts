@@ -18,10 +18,10 @@ describe('Real Adaptive Learning - SkillScoringEngine', () => {
     expect(SkillScoringEngine.computeSkillScore(0, 0)).toBe(0);
   });
 
-  it('should classify central mastery level thresholds correctly (0-39 Boshlang‘ich, 40-59 Rivojlanmoqda, 60-79 O‘rta, 80-100 Yuqori)', () => {
+  it('should classify central mastery level thresholds correctly (0-39 Boşlanğiç, 40-59 Rivojlanmoqda, 60-79 Örta, 80-100 Yuqori)', () => {
     expect(SkillScoringEngine.getMasteryLevel(0)).toBe('needs_remediation');
     expect(SkillScoringEngine.getMasteryLevel(39)).toBe('needs_remediation');
-    expect(SkillScoringEngine.getMasteryLabelUz(35)).toBe('Boshlang‘ich');
+    expect(SkillScoringEngine.getMasteryLabelUz(35)).toBe('Boşlanğiç');
 
     expect(SkillScoringEngine.getMasteryLevel(40)).toBe('developing');
     expect(SkillScoringEngine.getMasteryLevel(59)).toBe('developing');
@@ -29,7 +29,7 @@ describe('Real Adaptive Learning - SkillScoringEngine', () => {
 
     expect(SkillScoringEngine.getMasteryLevel(60)).toBe('proficient');
     expect(SkillScoringEngine.getMasteryLevel(79)).toBe('proficient');
-    expect(SkillScoringEngine.getMasteryLabelUz(70)).toBe('O‘rta');
+    expect(SkillScoringEngine.getMasteryLabelUz(70)).toBe('Örta');
 
     expect(SkillScoringEngine.getMasteryLevel(80)).toBe('mastered');
     expect(SkillScoringEngine.getMasteryLevel(100)).toBe('mastered');

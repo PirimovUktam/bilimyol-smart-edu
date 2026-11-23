@@ -5,7 +5,7 @@ import { DemoAITutorService } from '../data/services/DemoAITutorService';
 import { Question } from '../domain/entities/Question';
 import { PLACEMENT_QUESTIONS } from '../data/datasources/questions';
 
-describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
+describe('Server-Side Scoring & Anti-Cheat Protection (Bosqiç 2)', () => {
   let learnerRepo: InMemoryLearnerRepository;
   let aiService: DemoAITutorService;
   let useCase: SubmitLessonAnswerUseCase;
@@ -33,16 +33,16 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     useCase = new SubmitLessonAnswerUseCase(learnerRepo);
   });
 
-  it('1. Anti-Cheat: Savol obyektida correctIndex bo‘lmaganda ham server to‘g‘ri baholaydi', async () => {
+  it('1. Anti-Cheat: Savol obyektida correctIndex bölmaganda ham server töğri baholaydi', async () => {
     // Sanitized question without correctIndex
     const sanitizedQuestion: Question = {
       id: 'q_math_alg_01',
       courseId: 'course_math_01',
       skillId: 'skill_math_algebra',
-      text: 'Hisoblang: (a + 3)² ifodani ochganda qaysi natija hosil bo‘ladi?',
+      text: 'Hisoblang: (a + 3)² ifodani oçganda qaysi natija hosil böladi?',
       options: ['a² + 6a + 9', 'a² + 9', 'a² + 3a + 9', '2a + 6'],
       difficulty: 'easy',
-      explanation: 'Formula yechimi.',
+      explanation: 'Formula yeçimi.',
     };
 
     // Client has no idea what correctIndex is
@@ -60,15 +60,15 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     expect(profile.xp).toBe(2);
   });
 
-  it('2. Anti-Cheat: Noto‘g‘ri variant tanlanganda server xatoni qaytaradi va Yo‘lchi AI tushuntiradi', async () => {
+  it('2. Anti-Cheat: Notöğri variant tanlanganda server xatoni qaytaradi va Yölçi AI tuşuntiradi', async () => {
     const sanitizedQuestion: Question = {
       id: 'q_math_alg_01',
       courseId: 'course_math_01',
       skillId: 'skill_math_algebra',
-      text: 'Hisoblang: (a + 3)² ifodani ochganda qaysi natija hosil bo‘ladi?',
+      text: 'Hisoblang: (a + 3)² ifodani oçganda qaysi natija hosil böladi?',
       options: ['a² + 6a + 9', 'a² + 9', 'a² + 3a + 9', '2a + 6'],
       difficulty: 'easy',
-      explanation: 'Formula yechimi.',
+      explanation: 'Formula yeçimi.',
     };
 
     // Student selects a wrong option
@@ -85,15 +85,15 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
       correctOption: result.correctOption,
     });
     expect(diagnosis.explanation).toBeDefined();
-    expect(diagnosis.tutorName).toBe('Yo‘lchi AI');
+    expect(diagnosis.tutorName).toBe('Yölçi AI');
   });
 
-  it('3. Anti-Cheat: Notanish savol ID bo‘lsa, index 0 avtomatik to‘g‘ri deb qabul qilinmaydi', async () => {
+  it('3. Anti-Cheat: Notanish savol ID bölsa, index 0 avtomatik töğri deb qabul qilinmaydi', async () => {
     const fakeQuestion: Question = {
       id: 'q_fake_hacked_999',
       courseId: 'course_math_01',
       skillId: 'skill_math_algebra',
-      text: 'Soxtalashtirilgan savol?',
+      text: 'Soxtalaştirilgan savol?',
       options: ['Hacked 1', 'Hacked 2', 'Hacked 3', 'Hacked 4'],
       difficulty: 'hard',
       explanation: '',
@@ -110,7 +110,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
       id: 'q_math_alg_02',
       courseId: 'course_math_01',
       skillId: 'skill_math_algebra',
-      text: 'Ko‘paytuvchilarga ajrating: x² - 25',
+      text: 'Köpaytuvçilarga ajrating: x² - 25',
       options: ['(x - 5)(x + 5)', '(x - 5)²', '(x + 5)²', 'x(x - 25)'],
       difficulty: 'easy',
       explanation: '',
@@ -133,7 +133,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     expect(profile2.xp).toBe(2); // XP remains exactly 2
   });
 
-  it('5. Server Skill Score: To‘g‘ri javoblar o‘zlashtirish foizini serverda hisoblaydi', async () => {
+  it('5. Server Skill Score: Töğri javoblar özlaştiriş foizini serverda hisoblaydi', async () => {
     const q1: Question = {
       id: 'q_math_alg_01',
       courseId: 'course_math_01',

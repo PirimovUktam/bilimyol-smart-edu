@@ -3,12 +3,12 @@ import { adminContentService } from '../data/services/AdminContentService';
 import { supabaseCourseRepository } from '../data/repositories/SupabaseCourseRepository';
 import { supabaseLessonRepository } from '../data/repositories/SupabaseLessonRepository';
 
-describe('Admin CMS Content Management (Bosqich 3)', () => {
+describe('Admin CMS Content Management (Bosqiç 3)', () => {
   beforeEach(() => {
     // Reset/setup clean state
   });
 
-  it('1. Fanlar CMS: Yangi fan yaratish, o‘qitish va faollik statusini boshqarish', async () => {
+  it('1. Fanlar CMS: Yangi fan yaratiş, öqitiş va faollik statusini boşqariş', async () => {
     const courseId = `course_test_${Date.now()}`;
     const created = await adminContentService.saveCourse({
       id: courseId,
@@ -39,14 +39,14 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(afterDelete.some((c) => c.id === courseId)).toBe(false);
   });
 
-  it('2. Ko‘nikmalar CMS: Fanga yangi ko‘nikma qo‘shish va filtrlash', async () => {
+  it('2. Könikmalar CMS: Fanga yangi könikma qöşiş va filtrlaş', async () => {
     const skillId = `skill_test_${Date.now()}`;
     const created = await adminContentService.saveSkill({
       id: skillId,
       courseId: 'course_math_01',
       name: 'Matritsalar va Determinantlar',
       code: 'SKILL_MATRICE',
-      description: 'Chiziqli algebra asoslari',
+      description: 'Çiziqli algebra asoslari',
       orderIndex: 99,
     });
 
@@ -62,14 +62,14 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(afterDelete.rows.some((s) => s.id === skillId)).toBe(false);
   });
 
-  it('3. Darslar CMS: Darslik yaratish, nashr qilish (publish) va arxivlash (archive)', async () => {
+  it('3. Darslar CMS: Darslik yaratiş, naşr qiliş (publish) va arxivlash (archive)', async () => {
     const lessonId = `lesson_test_${Date.now()}`;
     const created = await adminContentService.saveLesson({
       id: lessonId,
       courseId: 'course_math_01',
       skillId: 'skill_math_functions',
       title: 'Tenglamalar Sistemasi Haqida',
-      summary: 'Qo‘shish va o‘rniga qo‘yish usullari',
+      summary: 'Qöşiş va örniga qöyiş usullari',
       estimatedMinutes: 20,
       isPublished: true,
       isArchived: false,
@@ -94,13 +94,13 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(lessons.rows.some((l) => l.id === lessonId)).toBe(false);
   });
 
-  it('4. Test Banki CMS: Yangi savol va 4 ta variant kiritish, to‘g‘ri javobni belgilash', async () => {
+  it('4. Test Banki CMS: Yangi savol va 4 ta variant kiritiş, töğri javobni belgilaş', async () => {
     const qId = `q_test_${Date.now()}`;
     const created = await adminContentService.saveQuestion({
       id: qId,
       courseId: 'course_math_01',
       skillId: 'skill_math_algebra',
-      text: '3(x - 2) = 15 tenglamani yeching.',
+      text: '3(x - 2) = 15 tenglamani yeçing.',
       options: ['x = 3', 'x = 5', 'x = 7', 'x = 9'],
       correctIndex: 2, // 'x = 7'
       difficulty: 'medium',
@@ -121,7 +121,7 @@ describe('Admin CMS Content Management (Bosqich 3)', () => {
     expect(afterDelete.rows.some((q) => q.id === qId)).toBe(false);
   });
 
-  it('5. Repozitoriy integratsiyasi: O‘quvchi repozitoriylari fallback va sozlanish holatida ishlaydi', async () => {
+  it('5. Repozitoriy integratsiyasi: Öquvçi repozitoriylari fallback va sozlanish holatida işlaydi', async () => {
     const courses = await supabaseCourseRepository.getAllCourses();
     expect(courses.length).toBeGreaterThan(0);
 

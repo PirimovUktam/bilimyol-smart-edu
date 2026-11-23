@@ -1,3 +1,4 @@
+import '../../core/l10n/uzbek_alphabet.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/personalization/starter_question_feedback.dart';
@@ -7,19 +8,19 @@ import 'i_ai_tutor_service.dart';
 class DemoAITutorService implements IAITutorService {
   static const Map<String, ({String uz, String ru})> _skillCoachingNotes = {
     'skill_eng_vocab': (
-      uz: 'Yangi so‘zlarni kontekstli gap va talaffuz (IPA) bilan bog‘lab eslab qoling.',
+      uz: 'Yangi sözlarni kontekstli gap va talaffuz (IPA) bilan boğlab eslab qoling.',
       ru: 'Запоминайте новые слова в контексте предложения и вместе с произношением (IPA).',
     ),
     'skill_eng_grammar': (
-      uz: 'Gapdagi ega-kesim mosligi, zamon ko‘rsatkichi (time marker) va so‘z tartibini tekshiring.',
+      uz: 'Gapdagi ega-kesim mosligi, zamon körsatkiçi (time marker) va söz tartibini tekşiring.',
       ru: 'Проверяйте согласование подлежащего и сказуемого, маркеры времени и порядок слов.',
     ),
     'skill_eng_listening': (
-      uz: 'Audioni tinglayotganda raqam, vaqt iborasi (in the morning/afternoon) va inkor so‘zlarga e’tibor bering.',
+      uz: 'Audioni tinglayotganda raqam, vaqt iborasi (in the morning/afternoon) va inkor sözlarga e’tibor bering.',
       ru: 'При аудировании обращайте внимание на числа, уточнения времени (in the morning/afternoon) и отрицания.',
     ),
     'skill_eng_reading': (
-      uz: 'Matndagi kalit dalilni topib, javob variantini aynan o‘sha jumla bilan solishtiring.',
+      uz: 'Matndagi kalit dalilni topib, javob variantini aynan öşa jumla bilan soliştiring.',
       ru: 'Найдите ключевое подтверждение в тексте и сверьте вариант ответа именно с ним.',
     ),
   };
@@ -27,7 +28,7 @@ class DemoAITutorService implements IAITutorService {
   static const String _apostrophePattern = "['’‘`´\\u02BB\\u02BC]";
 
   static String _normalizeForMatch(String input) {
-    return input
+    return legacyUzbekSpelling(input)
         .replaceAll('\u2019', "'")
         .replaceAll('\u2018', "'")
         .replaceAll('\u02bc', "'")
@@ -201,7 +202,7 @@ class DemoAITutorService implements IAITutorService {
           (matched.misconceptionTitleRu ?? '').trim().isNotEmpty &&
           (matched.explanationRu ?? '').trim().isNotEmpty) {
         return AIExplanationResponse(
-          tutorName: 'Yo‘lchi AI',
+          tutorName: 'Yölçi AI',
           title: matched.misconceptionTitleRu!,
           explanation: matched.explanationRu!,
           remediationStep: matched.remediationStepRu ?? matched.remediationStep,
@@ -211,7 +212,7 @@ class DemoAITutorService implements IAITutorService {
       }
       if (!isRu) {
         return AIExplanationResponse(
-          tutorName: 'Yo‘lchi AI',
+          tutorName: 'Yölçi AI',
           title: matched.misconceptionTitle,
           explanation: matched.explanation,
           remediationStep: matched.remediationStep,
@@ -288,7 +289,7 @@ class DemoAITutorService implements IAITutorService {
             ? qExplanation.trim()
             : (isRu
                   ? 'Ответ (${request.selectedOption}) не соответствует правилу.'
-                  : 'Javob (${request.selectedOption}) ushbu qoida bilan mos kelmadi.');
+                  : 'Javob (${request.selectedOption}) uşbu qoida bilan mos kelmadi.');
         diagnosisParts = [_sanitizeNoSpoilers(rawFeedback, forbidden)];
       } else {
         diagnosisParts = <String>[
@@ -306,7 +307,7 @@ class DemoAITutorService implements IAITutorService {
               !(qExplanation ?? '').contains(request.correctOption.trim()))
             (isRu
                 ? 'Правильный ответ: ${request.correctOption}.'
-                : 'To‘g‘ri javob: ${request.correctOption}.'),
+                : 'Töğri javob: ${request.correctOption}.'),
         ];
       }
 
@@ -316,13 +317,13 @@ class DemoAITutorService implements IAITutorService {
           safeCanDo ??
           (isRu
               ? 'Повторите правило уровня $cefr и попробуйте ещё раз.'
-              : '$cefr darajasidagi qoidani takrorlab, yana urinib ko‘ring.');
+              : '$cefr darajasidagi qoidani takrorlab, yana urinib köring.');
       final remediation = isNonMcq
           ? _sanitizeNoSpoilers(rawRemediation, forbidden)
           : rawRemediation;
 
       return AIExplanationResponse(
-        tutorName: 'Yo‘lchi AI',
+        tutorName: 'Yölçi AI',
         title: isRu
             ? 'Разбор ошибки ($cefr · $topicLabel)'
             : 'Xato tahlili ($cefr · $topicLabel)',
@@ -330,14 +331,14 @@ class DemoAITutorService implements IAITutorService {
         remediationStep: remediation,
         suggestedAction: isRu
             ? 'Закрепите тему на дополнительном упражнении уровня $cefr.'
-            : '$cefr darajasidagi qo‘shimcha mashq orqali mavzuni mustahkamlang.',
+            : '$cefr darajasidagi qöşimça maşq orqali mavzuni mustahkamlang.',
         isDeterministicFallback: true,
       );
     }
 
     if (isRu) {
       return AIExplanationResponse(
-        tutorName: 'Yo‘lchi AI',
+        tutorName: 'Yölçi AI',
         title: 'Разбор ошибки',
         explanation:
             'Выбранный ответ (${request.selectedOption}) неверен. Правильный ответ: ${request.correctOption}.',
@@ -350,14 +351,14 @@ class DemoAITutorService implements IAITutorService {
     }
 
     return AIExplanationResponse(
-      tutorName: 'Yo‘lchi AI',
-      title: 'Xatoni tahlil qilish',
+      tutorName: 'Yölçi AI',
+      title: 'Xatoni tahlil qiliş',
       explanation:
-          'Siz tanlagan javob (${request.selectedOption}) to‘g‘ri emas. To‘g‘ri javob: ${request.correctOption}.',
+          'Siz tanlagan javob (${request.selectedOption}) töğri emas. Töğri javob: ${request.correctOption}.',
       remediationStep:
-          'Mavzuni to‘liq o‘zlashtirish uchun formulani qadamma-qadam tekshirib chiqing.',
+          'Mavzuni töliq özlaştiriş uçun formulani qadamma-qadam tekşirib çiqing.',
       suggestedAction:
-          'Keling, ushbu ko‘nikmani mustahkamlash mashqi bilan tekshiramiz.',
+          'Keling, uşbu könikmani mustahkamlaş maşqi bilan tekşiramiz.',
       isDeterministicFallback: true,
     );
   }
@@ -375,10 +376,10 @@ class DemoAITutorService implements IAITutorService {
         topic: topic,
         level: request.level ?? 'A1',
         difficulty: request.difficulty ?? 'easy',
-        title: '$topic bo‘yicha ingliz tili darsi',
+        title: '$topic böyiça ingliz tili darsi',
         summary:
-            'Ingliz tili ($topic) bo‘yicha qisqa tushuntirish, audio namuna va amaliy mashq.',
-        objective: 'Mavzuga oid asosiy ibora va qoidani amalda qo‘llash.',
+            'Ingliz tili ($topic) böyiça qisqa tuşuntiriş, audio namuna va amaliy maşq.',
+        objective: 'Mavzuga oid asosiy ibora va qoidani amalda qöllaş.',
         estimatedMinutes: 12,
         steps: const [
           {
@@ -403,7 +404,7 @@ class DemoAITutorService implements IAITutorService {
             'id': 'eng_gen_step_3',
             'stepNumber': 3,
             'type': 'interactive_question',
-            'title': 'Amaliy mashq',
+            'title': 'Amaliy maşq',
           },
         ],
         questions: const [
@@ -426,9 +427,9 @@ class DemoAITutorService implements IAITutorService {
       topic: topic,
       level: request.level ?? 'intermediate',
       difficulty: request.difficulty ?? 'medium',
-      title: '$topic bo‘yicha interaktiv dars',
+      title: '$topic böyiça interaktiv dars',
       summary: 'Asosiy nazariy qoidalar va amaliy misollar jamlanmasi.',
-      objective: 'Mavzuni to‘liq o‘zlashtirish va mustahkamlash.',
+      objective: 'Mavzuni töliq özlaştiriş va mustahkamlaş.',
       estimatedMinutes: 15,
       steps: const [],
       questions: const [],
@@ -505,7 +506,7 @@ class DemoAITutorService implements IAITutorService {
         masteryParts.add(
           isRu
               ? 'Текущий уровень по навыку (${request.learnerScore}%) — отличная возможность укрепить базу.'
-              : 'Joriy ko‘nikma ko‘rsatkichi (${request.learnerScore}%) — asosni mustahkamlash uchun qulay payt.',
+              : 'Joriy könikma körsatkiçi (${request.learnerScore}%) — asosni mustahkamlaş uçun qulay payt.',
         );
       }
       if (request.recentMistakes.isNotEmpty) {
@@ -514,7 +515,7 @@ class DemoAITutorService implements IAITutorService {
           masteryParts.add(
             isRu
                 ? 'Стоит обратить внимание на недавние ошибки: $mistakesText.'
-                : 'So‘nggi xatolarga e’tibor bering: $mistakesText.',
+                : 'Sönggi xatolarga e’tibor bering: $mistakesText.',
           );
         }
       }
@@ -534,21 +535,21 @@ class DemoAITutorService implements IAITutorService {
       if (spoilerRequested) {
         assembled = isRu
             ? 'Я не могу сразу назвать готовый ответ. Давайте разберём вопрос по шагам (шаг за шагом) по теме «$topicTitle» ($cefr): ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'обратите внимание на грамматическую структуру и контекст предложения.'}'
-            : 'To‘g‘ri javobni to‘g‘ridan-to‘g‘ri ayta olmayman, lekin «$topicTitle» ($cefr) bo‘yicha qadam-baqadam yo‘l ko‘rsataman: ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'gapning tuzilishi va kontekstiga e’tibor bering.'}';
+            : 'Töğri javobni töğridan-töğri ayta olmayman, lekin «$topicTitle» ($cefr) böyiça qadam-baqadam yöl körsataman: ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'gapning tuzilishi va kontekstiga e’tibor bering.'}';
       } else {
         assembled = isRu
             ? 'По теме «$topicTitle» ($cefr): Давайте разберём вопрос по шагам (шаг за шагом). ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'Вспомните основное правило и проверьте его на одном примере.'}'
-            : '«$topicTitle» ($cefr) mavzusi bo‘yicha buni qadam-baqadam ko‘rib chiqamiz: ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'asosiy qoidani eslab, uni sodda misolda tekshirib ko‘ring.'}';
+            : '«$topicTitle» ($cefr) mavzusi böyiça buni qadam-baqadam körib çiqamiz: ${scaffoldHints.isNotEmpty ? scaffoldHints.join(' ') : 'asosiy qoidani eslab, uni sodda misolda tekshirib ko‘ring.'}';
       }
 
       if (_containsForbiddenAnswer(assembled, forbidden)) {
         assembled = isRu
             ? 'Я не могу назвать готовый ответ. Давайте разберём вопрос по шагам (шаг за шагом) по теме «$topicTitle» ($cefr): проверьте структуру предложения и ключевые слова.'
-            : 'To‘g‘ri javobni oshkor qila olmayman. «$topicTitle» ($cefr) bo‘yicha qadam-baqadam tekshiring: gap tuzilishi va kalit iboralarga qarang.';
+            : 'Töğri javobni oşkor qila olmayman. «$topicTitle» ($cefr) böyiça qadam-baqadam tekşiring: gap tuzilişi va kalit iboralarga qarang.';
       }
 
       return AskTutorResponse(
-        tutorName: 'Yo‘lchi AI',
+        tutorName: 'Yölçi AI',
         answer: assembled,
         isAiGenerated: false,
         isDeterministicFallback: true,
@@ -559,12 +560,12 @@ class DemoAITutorService implements IAITutorService {
     final answer = spoilerRequested
         ? (isRu
               ? 'Я не могу сразу назвать готовый ответ. Давайте разберём вопрос по шагам (шаг за шагом) по теме «$topic»: сначала вспомните основное правило.'
-              : 'To‘g‘ri javobni to‘g‘ridan-to‘g‘ri ayta olmayman, lekin $topic bo‘yicha qadam-baqadam tekshirib chiqamiz: avval asosiy qoidani eslang.')
+              : 'Töğri javobni töğridan-töğri ayta olmayman, lekin $topic böyiça qadam-baqadam tekşirib çiqamiz: avval asosiy qoidani eslang.')
         : (isRu
               ? 'Отличный вопрос по теме «$topic»! Давайте разберём вопрос по шагам (шаг за шагом): сначала вспомним основное правило, а затем применим его на простом примере.'
-              : '$topic bo‘yicha savolingiz juda yaxshi! Keling, birgalikda qadam-baqadam ko‘rib chiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qo‘llab ko‘ramiz.');
+              : '$topic böyiça savolingiz juda yaxşi! Keling, birgalikda qadam-baqadam körib çiqamiz: avval asosiy qoidani eslaysizmi? Uni birgalikda misolda qöllab köramiz.');
     return AskTutorResponse(
-      tutorName: 'Yo‘lchi AI',
+      tutorName: 'Yölçi AI',
       answer: answer,
       isAiGenerated: false,
       isDeterministicFallback: true,

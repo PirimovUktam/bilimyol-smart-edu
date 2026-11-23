@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/l10n/uzbek_alphabet.dart';
 import '../../domain/entities/learning_path_node.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/lesson_media.dart';
@@ -16,14 +17,14 @@ class SupabaseLessonRepository implements ILessonRepository {
   SupabaseClient _requireClient() {
     final client = SupabaseConfig.client;
     if (client == null) {
-      throw StateError('Supabase ishga tushmadi. Qayta urinib ko‘ring.');
+      throw StateError('Supabase işga tuşmadi. Qayta urinib köring.');
     }
     return client;
   }
 
   Future<void> _requireAuthenticated(SupabaseClient client) async {
     if (client.auth.currentUser == null) {
-      throw StateError('Autentifikatsiyadan o‘tilmagan.');
+      throw StateError('Autentifikatsiyadan ötilmagan.');
     }
   }
 
@@ -142,12 +143,12 @@ class SupabaseLessonRepository implements ILessonRepository {
                   mode == QuestionMode.writingPrompt)
               ? 'self_assessed'
               : 'deterministic'),
-      text: _string(raw['text']),
+      text: updatedCourseText(_string(raw['text']), courseId),
       textRu: raw['textRu'] as String? ?? raw['text_ru'] as String?,
       contextSnippet: raw['context_snippet'] as String? ??
           raw['contextSnippet'] as String?,
       mode: mode,
-      options: _strings(raw['options']),
+      options: _strings(raw['options']).map((text) => updatedCourseText(text, courseId)).toList(growable: false),
       // Safe views intentionally omit all answer-key fields.
       correctIndex: -1,
       acceptedAnswers: _strings(
@@ -180,7 +181,7 @@ class SupabaseLessonRepository implements ILessonRepository {
       ),
       media: LessonMedia.tryParse(raw['media']),
       difficulty: _difficulty(raw['difficulty']),
-      explanation: _string(raw['explanation']),
+      explanation: updatedCourseText(_string(raw['explanation']), courseId),
       explanationRu:
           raw['explanation_ru'] as String? ?? raw['explanationRu'] as String?,
       wrongFeedback:
@@ -267,7 +268,7 @@ class SupabaseLessonRepository implements ILessonRepository {
           return LessonFlashcard(
             id: _string(raw['id']),
             front: _string(raw['front']),
-            backUz: _string(raw['backUz'] ?? raw['back_uz']),
+            backUz: updatedUzbekSpelling(_string(raw['backUz'] ?? raw['back_uz'])),
             backRu: _string(raw['backRu'] ?? raw['back_ru']),
             partOfSpeech:
                 raw['partOfSpeech'] as String? ?? raw['part_of_speech'] as String?,
@@ -277,7 +278,7 @@ class SupabaseLessonRepository implements ILessonRepository {
             cefrLevel:
                 raw['cefrLevel'] as String? ?? raw['cefr_level'] as String?,
             example: _string(raw['example']),
-            exampleUz: _string(raw['exampleUz'] ?? raw['example_uz']),
+            exampleUz: updatedUzbekSpelling(_string(raw['exampleUz'] ?? raw['example_uz'])),
             exampleRu: _string(raw['exampleRu'] ?? raw['example_ru']),
             audioSrc:
                 raw['audioSrc'] as String? ?? raw['audio_src'] as String?,
@@ -301,20 +302,23 @@ class SupabaseLessonRepository implements ILessonRepository {
   }) {
     final rawQuestion = raw['interactiveQuestion'] ??
         raw['interactive_question'];
+    final subtitle = raw['subtitle'] as String?;
     return LessonStep(
       id: _string(raw['id'], 'step_$fallbackNumber'),
       stepNumber: (raw['stepNumber'] as num?)?.toInt() ??
           (raw['step_number'] as num?)?.toInt() ??
           fallbackNumber,
       type: _stepType(raw['type']),
-      title: _string(raw['title']),
+      title: updatedUzbekSpelling(_string(raw['title'])),
       titleRu: raw['titleRu'] as String? ?? raw['title_ru'] as String?,
-      subtitle: raw['subtitle'] as String?,
+      subtitle: subtitle == null ? null : updatedCourseText(subtitle, courseId),
       subtitleRu:
           raw['subtitleRu'] as String? ?? raw['subtitle_ru'] as String?,
-      content: _string(raw['content']),
+      content: updatedCourseText(_string(raw['content']), courseId),
       contentRu: raw['contentRu'] as String? ?? raw['content_ru'] as String?,
-      highlightNotes: _strings(raw['highlightNotes'] ?? raw['highlight_notes']),
+      highlightNotes: _strings(raw['highlightNotes'] ?? raw['highlight_notes'])
+          .map((text) => updatedCourseText(text, courseId))
+          .toList(growable: false),
       highlightNotesRu: _strings(
         raw['highlightNotesRu'] ?? raw['highlight_notes_ru'],
       ),
@@ -365,7 +369,7 @@ class SupabaseLessonRepository implements ILessonRepository {
 
   static Lesson parseLearnerLesson(Map<String, dynamic> raw) {
     if (raw['is_locked'] == true) {
-      throw const FormatException('Dars hali ochilmagan. Avval tayanch mavzularni o‘zlashtiring.');
+      throw const FormatException('Dars hali oçilmagan. Avval tayanç mavzularni özlaştiring.');
     }
     final courseId = _string(raw['course_id']);
     final skillId = _string(raw['skill_id']);
@@ -418,10 +422,10 @@ class SupabaseLessonRepository implements ILessonRepository {
           raw['canDoObjectiveRu'] as String? ??
           raw['can_do_objective_ru'] as String?,
       prerequisites: _strings(raw['prerequisites']),
-      title: _string(raw['title']),
+      title: updatedUzbekSpelling(_string(raw['title'])),
       titleRu: raw['titleRu'] as String? ?? raw['title_ru'] as String?,
       estimatedMinutes: (raw['estimated_minutes'] as num?)?.toInt() ?? 15,
-      summary: _string(raw['summary']),
+      summary: updatedCourseText(_string(raw['summary']), courseId),
       summaryRu: raw['summaryRu'] as String? ?? raw['summary_ru'] as String?,
       officialCefrDisclaimerUz:
           raw['officialCefrDisclaimerUz'] as String? ??
@@ -594,9 +598,9 @@ class SupabaseLessonRepository implements ILessonRepository {
       hasRichExercise:
           node['hasRichExercise'] == true || node['has_rich_exercise'] == true,
       taskKind: node['taskKind'] as String? ?? node['task_kind'] as String?,
-      title: _string(node['title']),
+      title: updatedUzbekSpelling(_string(node['title'])),
       titleRu: node['titleRu'] as String? ?? node['title_ru'] as String?,
-      description: _string(node['description']),
+      description: updatedUzbekSpelling(_string(node['description'])),
       descriptionRu:
           node['descriptionRu'] as String? ?? node['description_ru'] as String?,
       prerequisites: _strings(node['prerequisites']),
@@ -634,7 +638,7 @@ class SupabaseLessonRepository implements ILessonRepository {
         .eq('is_active', true)
         .order('order_index');
     if (rows is! List || (courseId == mathMasteryCourse && rows.isEmpty)) {
-      throw const FormatException('Ta’lim yo‘li ma’lumotlari kelmadi.');
+      throw const FormatException('Ta’lim yöli ma’lumotlari kelmadi.');
     }
 
     return rows

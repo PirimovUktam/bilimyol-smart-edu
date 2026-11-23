@@ -15,7 +15,7 @@ void main() {
   group('RoadmapScreen P0 Deadlock & Diagnostic Progression', () {
     for (final course in seedCourses) {
       testWidgets(
-        'low diagnostic scores (<50%) render actionable Mashq qilish button for ${course.id}',
+        'low diagnostic scores (<50%) render actionable Maşq qiliş button for ${course.id}',
         (tester) async {
           final repo = InMemoryLearnerRepository();
           await repo.saveSkillScores(course.id, {
@@ -57,14 +57,14 @@ void main() {
           );
           await tester.pumpAndSettle();
 
-          expect(find.text('Mashq qilish'), findsWidgets);
-          expect(find.text('Ta’lim yo‘li'), findsAtLeastNWidgets(1));
+          expect(find.text('Maşq qiliş'), findsWidgets);
+          expect(find.text('Ta’lim yöli'), findsAtLeastNWidgets(1));
           expect(find.text('Roadmap'), findsNothing);
         },
       );
     }
 
-    testWidgets('Tezkor demo [82, 84, 41, 68] renders Takrorlash on steps 1-2 and unlocks Mashq qilish on step 3', (tester) async {
+    testWidgets('Tezkor demo [82, 84, 41, 68] renders Takrorlaş on steps 1-2 and unlocks Maşq qiliş on step 3', (tester) async {
       final repo = InMemoryLearnerRepository();
       final container = ProviderContainer(
         overrides: [
@@ -93,8 +93,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Takrorlash'), findsNWidgets(2));
-      expect(find.text('Mashq qilish'), findsNWidgets(2));
+      expect(find.text('Takrorlaş'), findsNWidgets(2));
+      expect(find.text('Maşq qiliş'), findsNWidgets(2));
     });
   });
 }

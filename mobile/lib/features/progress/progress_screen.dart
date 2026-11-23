@@ -653,7 +653,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Yo'lchi Encouragement Banner
+                      // Yölçi Encouragement Banner
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(

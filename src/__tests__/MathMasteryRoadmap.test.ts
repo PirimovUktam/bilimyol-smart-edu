@@ -6,7 +6,7 @@ import type { LearningPathNode } from '@/domain/entities/LearningPathNode';
 
 const course = { id: 'course_math_01', lessons: ['advanced'] } as Course;
 const foundation: LearningPathNode = {
-  id: 'addition', courseId: course.id, skillId: 'addition', title: 'Qo‘shish',
+  id: 'addition', courseId: course.id, skillId: 'addition', title: 'Qöşiş',
   prerequisites: [], requiredScore: 80, isReinforcement: false, targetLessonId: 'foundation',
   estimatedMinutes: 8, order: 10, status: 'reinforcement',
   mastery: { state: 'needs_review', answered: 2, correct: 0, requiredItems: 5,
