@@ -45,7 +45,7 @@ export function OnboardingView({ onComplete, onBack, editing = false }: {
   const goal = goalChoice ?? profile?.goal ?? 'mastery';
   const minutes = minutesChoice ?? profile?.dailyMinutes ?? 15;
   const path = roadmap?.courseId === courseId ? roadmap : null;
-  const plan = useStudyPlan(course, profile, path, level, goal, minutes);
+  const plan = useStudyPlan(course, profile, path, level ?? 'beginner', goal, minutes);
   const nextFoundation = pendingFoundationLessons(course, profile, level)[0];
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export function OnboardingView({ onComplete, onBack, editing = false }: {
     }
   };
 
-  const previewStatus = !level ? 'chooseLevel' : plan.unavailable || (!path && roadmapError) ? 'unavailable'
+  const previewStatus = plan.unavailable || (!path && roadmapError) ? 'unavailable'
     : plan.loading || !path ? 'loading' : 'empty';
 
   return (
@@ -88,6 +88,10 @@ export function OnboardingView({ onComplete, onBack, editing = false }: {
 
       {!course ? <SectionState title={t('courses.chooseFirst')} /> : (
         <form className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.03fr)_minmax(0,.97fr)] lg:grid-rows-[auto_1fr] lg:gap-x-6" onSubmit={(event) => { event.preventDefault(); void submit('learn'); }}>
+          <div className="min-w-0 lg:sticky lg:top-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <StudyPlanPreview sessions={plan.sessions} minutes={minutes} status={previewStatus} sample={!level} />
+          </div>
+
           <div className="min-w-0 space-y-5 rounded-3xl border border-hairline bg-paper p-4 shadow-[var(--surface-shadow)] sm:p-6">
             <fieldset disabled={pending !== null} className="min-w-0 space-y-2.5">
               <legend className="mb-3 text-lg font-extrabold tracking-tight text-ink">{t('courses.startWhere')}</legend>
@@ -127,10 +131,6 @@ export function OnboardingView({ onComplete, onBack, editing = false }: {
               </fieldset>
               <p className="text-xs text-slatefine">{t('studyPlan.sharedPreferences')}</p>
             </fieldset>
-          </div>
-
-          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <StudyPlanPreview sessions={plan.sessions} minutes={minutes} status={previewStatus} />
           </div>
 
           <div className="min-w-0 space-y-3 lg:col-start-1 lg:row-start-2">

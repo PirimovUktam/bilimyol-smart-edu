@@ -45,6 +45,47 @@ String? pendingFoundationLesson(Course? course, LearnerProfile? profile) {
   ).where((id) => !profile.completedLessonIds.contains(id)).firstOrNull;
 }
 
+List<LearningPathNode> availablePlanNodes(
+  String courseId,
+  LearnerProfile profile,
+  LearningPath? path,
+) {
+  if (path == null || path.courseId != courseId) return [];
+  final nodes = path.nodes.where((n) {
+    final id = n.targetLessonId;
+    return n.courseId == courseId &&
+        id != null &&
+        id.isNotEmpty &&
+        !n.isReinforcement &&
+        n.status != NodeStatus.locked &&
+        (n.reviewDue ||
+            (!n.isOptional &&
+                n.status != NodeStatus.completed &&
+                !profile.completedLessonIds.contains(id)));
+  }).toList();
+  final mastery = nodes.any((n) => n.serverMastery);
+  int priority(LearningPathNode n) {
+    if (n.reviewDue) return 0;
+    if (!mastery &&
+        profile.goal == OnboardingGoal.examPrep &&
+        (n.isCheckpoint || n.nodeKind != LearningNodeKind.lesson)) {
+      return 1;
+    }
+    if (!mastery &&
+        profile.goal == OnboardingGoal.skillsBoost &&
+        (n.needsTargetedPractice || n.status == NodeStatus.reinforcement)) {
+      return 1;
+    }
+    return n.id == path.activeNodeId ? 2 : 3;
+  }
+
+  nodes.sort((a, b) {
+    final rank = priority(a).compareTo(priority(b));
+    return rank == 0 ? a.order.compareTo(b.order) : rank;
+  });
+  return nodes;
+}
+
 String? resolveNextLearningLesson(
   Course? course,
   LearnerProfile? profile,
@@ -52,47 +93,15 @@ String? resolveNextLearningLesson(
 ) {
   if (course == null) return null;
   final validPath = path != null && path.courseId == course.id ? path : null;
-  if (validPath != null && validPath.nodes.any((node) => node.serverMastery)) {
-    final objectives = validPath.nodes
-        .where((node) => !node.isReinforcement && !node.isOptional)
-        .toList();
-    final active = objectives
-        .where(
-          (node) =>
-              node.id == validPath.activeNodeId &&
-              node.status != NodeStatus.locked &&
-              node.status != NodeStatus.completed,
-        )
-        .firstOrNull;
-    final next =
-        active ??
-        objectives
-            .where(
-              (node) =>
-                  node.status == NodeStatus.available ||
-                  node.status == NodeStatus.inProgress ||
-                  node.status == NodeStatus.reinforcement,
-            )
-            .firstOrNull;
-    final lessonId = next?.targetLessonId;
-    return (lessonId == null || lessonId.trim().isEmpty) ? null : lessonId;
+  if (profile == null) return null;
+  if (!(validPath?.nodes.any((n) => n.serverMastery) ?? false)) {
+    if (!hasStartedCourse(course, profile)) return null;
+    final foundation = pendingFoundationLesson(course, profile);
+    if (foundation != null) return foundation;
   }
-  if (!hasStartedCourse(course, profile)) return null;
-  final foundation = pendingFoundationLesson(course, profile);
-  if (foundation != null && foundation.trim().isNotEmpty) return foundation;
-  if (validPath != null) {
-    final next = validPath.nodes
-        .where(
-          (node) =>
-              !node.isReinforcement &&
-              !node.isOptional &&
-              (node.status == NodeStatus.available ||
-                  node.status == NodeStatus.inProgress ||
-                  node.status == NodeStatus.reinforcement),
-        )
-        .firstOrNull;
-    final lessonId = next?.targetLessonId;
-    if (lessonId != null && lessonId.trim().isNotEmpty) return lessonId;
-  }
-  return null;
+  return availablePlanNodes(
+    course.id,
+    profile,
+    validPath,
+  ).firstOrNull?.targetLessonId;
 }

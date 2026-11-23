@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { buildStudyPlan } from '@/domain/personalization/studyPlan';
+import { resolveNextLearningLesson } from '@/app/router/lessonResolution';
+import { InMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { SEED_COURSES } from '@/data/datasources/courses';
 
 const courseId = 'course_logic';
 const node = (id: string, order: number, overrides: Partial<LearningPathNode> = {}): LearningPathNode => ({
@@ -13,6 +16,16 @@ const path = (nodes: LearningPathNode[], activeNodeId = 'one'): LearningPath => 
 });
 
 describe('study plan', () => {
+  it('opens the lesson shown for the saved goal and rejects stale course links', async () => {
+    const course = SEED_COURSES.find((item) => item.id === courseId)!;
+    const profile = await new InMemoryLearnerRepository().getProfile();
+    profile.courseLevels = { [courseId]: 'intermediate' };
+    profile.goal = 'exam_prep';
+    const topics = path([node('one', 1), node('exam', 2, { isCheckpoint: true })]);
+    expect(resolveNextLearningLesson(course, profile, topics)).toBe('exam');
+    expect(resolveNextLearningLesson(course, profile, { ...topics, courseId: 'other' })).toBeNull();
+    expect(resolveNextLearningLesson(course, profile, path([node('one', 1, { courseId: 'other' })]))).toBeNull();
+  });
   it('groups projected lessons by real duration without granting prerequisite access', () => {
     const topics = path([
       node('one', 1),

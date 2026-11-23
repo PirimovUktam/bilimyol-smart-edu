@@ -31,6 +31,6 @@ export function pendingFoundationLesson(course: Course | null, profile: LearnerP
 export function pendingFoundationLessons(course: Course | null, profile: LearnerProfile | null, level?: InitialLevel | null): string[] {
   if (!course || usesMathMastery(course.id) || level !== 'beginner') return [];
   const placedCefr = profile?.placementCefrByCourse?.[course.id];
-  if (placedCefr === 'A1' || placedCefr === 'A2' || placedCefr === 'B1') return [];
+  if (placedCefr && placedCefr !== 'Pre-A1') return [];
   return foundationLessons(course).filter((id) => !profile?.completedLessonIds.includes(id));
 }

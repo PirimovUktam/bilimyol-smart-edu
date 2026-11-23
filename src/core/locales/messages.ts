@@ -656,6 +656,7 @@ export const uz = {
     source: "Manba:",
   },
   studyPlan: {
+    sample: "Boşlanğiç reja namunasi",
     title: "Örganiş rejangiz",
     preview: "Jonli köriniş",
     nextSessions: "Keyingi maşğulotlar",
