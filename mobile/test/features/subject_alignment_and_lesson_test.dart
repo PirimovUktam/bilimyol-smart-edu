@@ -62,8 +62,9 @@ void main() {
       final logicCourse = await courseRepo.getCourseById('course_logic');
       expect(logicCourse, isNotNull);
       expect(logicCourse!.subject, equals(SubjectType.logic));
-      expect(logicCourse.lessons, isNotEmpty);
-      expect(logicCourse.lessons.first, equals('lesson_logic_puzzles_01'));
+      expect(logicCourse.lessons, hasLength(12));
+      expect(logicCourse.lessons.first, equals('lesson_logic_starter'));
+      expect(logicCourse.lessons, containsAll(['lesson_logic_puzzles_01', 'lesson_logic_patterns_01']));
 
       final logicLesson = await lessonRepo.getLessonById(
         logicCourse.lessons.first,
