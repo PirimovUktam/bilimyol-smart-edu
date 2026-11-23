@@ -6,12 +6,13 @@ import { Button } from '@/presentation/components/Button';
 
 const icons = { lesson: BookOpen, review: Repeat2, checkpoint: ClipboardCheck, practice: Target };
 
-export function StudyPlanPreview({ sessions, minutes, status, action, wide = false }: {
+export function StudyPlanPreview({ sessions, minutes, status, action, wide = false, sample = false }: {
   sessions: StudySession[];
   minutes: number;
   status?: 'chooseLevel' | 'loading' | 'unavailable' | 'empty';
   action?: { label: string; run: () => void };
   wide?: boolean;
+  sample?: boolean;
 }) {
   const { language, t } = useTranslation();
   const titleId = useId();
@@ -50,7 +51,7 @@ export function StudyPlanPreview({ sessions, minutes, status, action, wide = fal
       <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide text-indigo-200"><CalendarDays aria-hidden="true" className="size-4 text-teal-200" />{t(wide ? 'studyPlan.nextSessions' : 'studyPlan.preview')}</div>
-          <h2 id={titleId} className="text-2xl font-extrabold tracking-tight sm:text-[1.7rem]">{t('studyPlan.title')}</h2>
+          <h2 id={titleId} className="text-2xl font-extrabold tracking-tight sm:text-[1.7rem]">{t(sample ? 'studyPlan.sample' : 'studyPlan.title')}</h2>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-indigo-50"><Clock aria-hidden="true" className="size-3.5 text-teal-200" />{t('studyPlan.dailyBudget', { minutes })}</span>
       </header>

@@ -1,6 +1,6 @@
 import { translate as t } from '@/core/locales/useTranslation';
 import { useTranslation } from '@/core/locales/useTranslation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Award,
@@ -66,6 +66,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const [practice, setPractice] = useState<Question | null>(null);
   const [practiceLoading, setPracticeLoading] = useState<string | null>(null);
   const [practiceError, setPracticeError] = useState('');
+  const practiceRequest = useRef(0);
   const [lockedNoticeNodeId, setLockedNoticeNodeId] = useState<string | null>(null);
   const [showSrsHub, setShowSrsHub] = useState(false);
   const [srsHubSession, setSrsHubSession] = useState<{
@@ -79,6 +80,10 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
     setLockedNoticeNodeId(null);
     setShowSrsHub(false);
+    setPractice(null);
+    setPracticeLoading(null);
+    setPracticeError('');
+    return () => { practiceRequest.current++; };
   }, [courseId]);
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
@@ -160,6 +165,8 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   };
 
   const loadPractice = async (node: LearningPathNode) => {
+    const request = ++practiceRequest.current;
+    const current = () => request === practiceRequest.current && useCourseStore.getState().activeCourse?.id === node.courseId;
     setPracticeLoading(node.id);
     setPracticeError('');
     try {
@@ -167,14 +174,15 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
       const linked = baseNode?.targetLessonId
         ? await supabaseLessonRepository.getLessonById(baseNode.targetLessonId)
         : await supabaseLessonRepository.getLessonByCourseAndSkill(node.courseId, node.skillId);
-      if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId) {
+      if (!current()) return;
+      if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId || linked.reinforcementExercise.courseId !== node.courseId) {
         throw new Error(t('path.noExercise'));
       }
       setPractice(linked.reinforcementExercise);
     } catch {
-      setPracticeError(t('path.exerciseFailed'));
+      if (current()) setPracticeError(t('path.exerciseFailed'));
     } finally {
-      setPracticeLoading(null);
+      if (current()) setPracticeLoading(null);
     }
   };
 
@@ -828,7 +836,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
           )}
         </>
       )}
-      {practice && (
+      {practice && practice.courseId === courseId && (
         <ReinforcementModal
           isOpen
           question={practice}

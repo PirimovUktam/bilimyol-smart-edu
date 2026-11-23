@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import 'session_preview.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_semantic_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -174,7 +175,8 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                 course.id) {
           return;
         }
-        if (ref.read(lessonSessionNotifierProvider).lesson?.id != starter) {
+        final loaded = ref.read(lessonSessionNotifierProvider).lesson;
+        if (loaded?.id != starter || loaded?.courseId != course.id) {
           setState(() => _error = s.starterLessonLoadFailed);
           return;
         }
@@ -197,16 +199,16 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     final s = _resolveStrings(context);
     final vis = subjectVisual(widget.course.subject, c);
     final beginner = _level == InitialLevel.beginner;
-    final hasPendingStarter = pendingFoundationLesson(
-          widget.course,
-          widget.profile.copyWith(
-            courseLevels: {
-              ...widget.profile.courseLevels,
-              widget.course.id: ?_level,
-            },
-          ),
-        ) !=
-        null;
+    final draft = widget.profile.copyWith(
+      goal: _goal,
+      dailyMinutes: _minutes,
+      courseLevels: {
+        ...widget.profile.courseLevels,
+        widget.course.id: _level ?? InitialLevel.beginner,
+      },
+    );
+    final hasPendingStarter =
+        pendingFoundationLesson(widget.course, draft) != null;
 
     final levelChoices = [
       (
@@ -242,8 +244,16 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     };
 
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
+      child: _PlanPanel(
+        action: AppButton(
+          text: beginner && hasPendingStarter
+              ? s.startFirstLesson
+              : s.openRoadmap,
+          isFullWidth: true,
+          size: AppButtonSize.large,
+          isLoading: _saving,
+          onPressed: _level == null ? null : _start,
+        ),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
@@ -313,8 +323,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   label: '${choice.title}, ${choice.pill}',
                   child: AppCard(
                     padding: const EdgeInsets.all(14),
-                    borderColor:
-                        _level == choice.level ? c.brand : c.hairline,
+                    borderColor: _level == choice.level ? c.brand : c.hairline,
                     borderWidth: _level == choice.level ? 1.8 : 1.0,
                     backgroundColor: _level == choice.level
                         ? Color.alphaBlend(c.brandSoft, c.paper)
@@ -365,9 +374,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                                         AppBadgeVariant.emerald =>
                                           c.successText,
                                         AppBadgeVariant.teal => c.path,
-                                        _ => c.isDark
-                                            ? c.brandStrong
-                                            : c.brand,
+                                        _ => c.isDark ? c.brandStrong : c.brand,
                                       },
                                     ),
                                   ),
@@ -491,44 +498,14 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   ),
               ],
             ),
-            if (_level != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: c.subtle,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: c.hairline),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      beginner && hasPendingStarter
-                          ? Icons.auto_awesome_rounded
-                          : Icons.alt_route_rounded,
-                      size: 18,
-                      color: c.brand,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        beginner && hasPendingStarter
-                            ? s.beginnerTrackNote
-                            : s.adaptiveTrackNote,
-                        style: AppTypography.ui(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: c.graphite,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 18),
+            SessionPreview(
+              course: widget.course,
+              profile: draft,
+              sample: _level == null,
+              strings: s,
+            ),
+            const SizedBox(height: 16),
             if (_error case final message?)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -552,15 +529,6 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   ),
                 ),
               ),
-            AppButton(
-              text: beginner && hasPendingStarter
-                  ? s.startFirstLesson
-                  : s.openRoadmap,
-              isFullWidth: true,
-              size: AppButtonSize.large,
-              isLoading: _saving,
-              onPressed: _level == null ? null : _start,
-            ),
             if (_level != null && !beginner) ...[
               const SizedBox(height: 10),
               AppButton(
@@ -575,4 +543,24 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
       ),
     );
   }
+}
+
+class _PlanPanel extends StatelessWidget {
+  const _PlanPanel({required this.child, required this.action});
+  final Widget child;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 620),
+    child: Column(
+      children: [
+        Expanded(child: child),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: action,
+        ),
+      ],
+    ),
+  );
 }

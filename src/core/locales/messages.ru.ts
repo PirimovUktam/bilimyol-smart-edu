@@ -658,6 +658,7 @@ export const ru: Translated<typeof uz> = {
     source: "Источник:",
   },
   studyPlan: {
+    sample: "Пример плана для начинающих",
     title: "Ваш план обучения",
     preview: "Предпросмотр",
     nextSessions: "Ближайшие занятия",

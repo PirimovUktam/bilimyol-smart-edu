@@ -60,15 +60,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               .where((node) => !node.isReinforcement && !node.isOptional)
               .toList()
         : <LearningPathNode>[];
-    final next = nodes
-        .where(
-          (node) =>
-              node.status == NodeStatus.available ||
-              node.status == NodeStatus.inProgress ||
-              node.status == NodeStatus.reinforcement,
-        )
-        .firstOrNull;
-    final continuationId = next?.targetLessonId;
     final completed = nodes
         .where((node) => node.status == NodeStatus.completed)
         .length;
@@ -140,7 +131,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final needsPlan = !hasStartedCourse(activeCourse, profile);
             final mathPilot = usesMathMastery(activeCourse.id);
             final starter = pendingFoundationLesson(activeCourse, profile);
-            final lessonId = starter ?? continuationId;
+            final lessonId = resolveNextLearningLesson(activeCourse, profile, currentPath);
+            final next = nodes.where((node) => node.targetLessonId == lessonId).firstOrNull;
             final greetingName = profile.name.isEmpty
                 ? s.defaultLearnerName
                 : profile.name;
@@ -236,12 +228,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final localizedNextDesc = next?.localizedDescription(lang);
             final heroCurrentFocus = needsPlan
                 ? s.heroFocusNeedsPlan
-                : (localizedNextTitle != null && localizedNextTitle.isNotEmpty)
-                ? localizedNextTitle
-                : (next?.title ??
-                      (starter != null
-                          ? s.openFirstLesson
-                          : s.localizedCourseTitle(activeCourse)));
+                : localizedNextTitle ?? s.localizedCourseTitle(activeCourse);
 
             final heroSubtitle = needsPlan
                 ? s.heroSubtitleNeedsPlan

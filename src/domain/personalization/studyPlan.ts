@@ -15,6 +15,7 @@ export function buildStudyPlan(
   const planned = new Set<string>();
   const usedLessons = new Set<string>();
   const placementEntry = nodes.find((node) => node.isPlacementRecommended);
+  const masteryPath = nodes.some((node) => node.mastery);
   const sessions: StudySession[] = [];
   const append = (item: PlanItem) => {
     let session = sessions.at(-1);
@@ -44,6 +45,7 @@ export function buildStudyPlan(
   const priority = (node: LearningPathNode) => {
     if (!ready(node)) return 4;
     if (kind(node) === 'review') return 0;
+    if (masteryPath) return node.id === path?.activeNodeId ? 1 : 3;
     if (goal === 'exam_prep' && kind(node) === 'checkpoint') return 1;
     if (goal === 'skills_boost' && kind(node) === 'practice') return 1;
     return node.id === path?.activeNodeId ? 2 : 3;

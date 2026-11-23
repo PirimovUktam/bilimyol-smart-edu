@@ -2,13 +2,15 @@ import { Course } from '@/domain/entities/Course';
 import { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
 import { hasStartedCourse, pendingFoundationLesson, usesMathMastery } from '@/domain/personalization/learningStart';
+import { buildStudyPlan } from '@/domain/personalization/studyPlan';
 
 export function resolveNextLearningLesson(course: Course | null, profile: LearnerProfile | null, roadmap: LearningPath | null): string | null {
-  if (!course || !hasStartedCourse(course, profile)) return null;
-  if (roadmap?.courseId === course.id && roadmap.nodes.some((node) => node.mastery)) {
-    return resolveContinuationLessonId(course, roadmap);
-  }
-  return pendingFoundationLesson(course, profile) ?? (roadmap?.courseId === course.id ? resolveContinuationLessonId(course, roadmap) : null);
+  if (!course || !profile || !hasStartedCourse(course, profile)) return null;
+  const path = roadmap?.courseId === course.id ? roadmap : null;
+  const foundation = path?.nodes.some((node) => node.mastery) ? null : pendingFoundationLesson(course, profile);
+  if (foundation || !path) return foundation;
+  const first = buildStudyPlan(course.id, path, [], profile.completedLessonIds, profile.goal, profile.dailyMinutes)[0]?.items[0];
+  return first?.ready ? first.id : resolveContinuationLessonId(course, path);
 }
 
 /**
@@ -24,11 +26,13 @@ export function resolveContinuationLessonId(
   if (!activeCourse) return null;
 
   if (roadmap && roadmap.courseId === activeCourse.id) {
-    if (roadmap.nodes.some((node) => node.mastery)) {
-      const next = roadmap.nodes.find((node) => node.id === roadmap.activeNodeId);
+    const nodes = roadmap.nodes.filter((node) => node.courseId === activeCourse.id);
+    if (!nodes.length && roadmap.nodes.length) return null;
+    if (nodes.some((node) => node.mastery)) {
+      const next = nodes.find((node) => node.id === roadmap.activeNodeId);
       return next ? resolveRoadmapNodeLessonId(next) : null;
     }
-    const activeTopic = roadmap.nodes.find(
+    const activeTopic = nodes.find(
       (node) =>
         node.id === roadmap.activeNodeId &&
         !node.isReinforcement &&
@@ -36,7 +40,7 @@ export function resolveContinuationLessonId(
         node.status !== 'completed'
     );
     if (activeTopic?.targetLessonId) return activeTopic.targetLessonId;
-    const topics = roadmap.nodes.filter((node) => !node.isReinforcement);
+    const topics = nodes.filter((node) => !node.isReinforcement);
     const preferred = topics.find((node) => node.status === 'available' || node.status === 'reinforcement' || node.status === 'in_progress');
     if (preferred) return preferred.targetLessonId ?? null;
     if (topics.length > 0) return topics.every((node) => node.status === 'completed')

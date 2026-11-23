@@ -95,6 +95,8 @@ try {
   await fresh.close();
 
   await click(/Mantiq fanini tanlaş/);
+  await main.getByRole('region', { name: 'Boşlanğiç reja namunasi' }).getByText('Rost va yolğon gaplar', { exact: false }).waitFor();
+  assert.equal(await main.locator('input[name="learning-level"]:checked').count(), 0);
   await chooseLearningPlan('Noldan boşlayman');
   const livePlan = main.getByRole('region', { name: 'Örganiş rejangiz' });
   await livePlan.getByText('Rost va yolğon gaplar', { exact: false }).waitFor();
