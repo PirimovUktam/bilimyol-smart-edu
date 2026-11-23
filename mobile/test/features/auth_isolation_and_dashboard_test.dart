@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bilimyol_mobile/app/providers.dart';
 import 'package:bilimyol_mobile/core/auth/demo_session.dart';
 import 'package:bilimyol_mobile/core/config/supabase_config.dart';
@@ -60,6 +61,7 @@ void main() {
     });
 
     test('LearnerStateNotifier.resetAll invalidates placement & lesson session providers', () async {
+      SharedPreferences.setMockInitialValues({});
       final repo = InMemoryLearnerRepository();
       final container = ProviderContainer(
         overrides: [
