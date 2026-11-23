@@ -42,50 +42,50 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Nimadan boshlashni biling.'), findsOneWidget);
-      await tester.tap(find.text('O‘tkazib yuborish'));
+      expect(find.text('Nimadan boşlaşni biling.'), findsOneWidget);
+      await tester.tap(find.text('Ötkazib yuboriş'));
       await tester.pumpAndSettle();
-      expect(find.text('Xush kelibsiz!'), findsOneWidget);
+      expect(find.text('Xuş kelibsiz!'), findsOneWidget);
 
       appRouter.go('/onboarding');
       await tester.pumpAndSettle();
-      expect(find.text('Xush kelibsiz!'), findsOneWidget);
+      expect(find.text('Xuş kelibsiz!'), findsOneWidget);
 
-      final demo = find.text('Namuna hisobi bilan kirish');
+      final demo = find.text('Namuna hisobi bilan kiriş');
       await tester.ensureVisible(demo);
       await tester.tap(demo);
       await tester.pumpAndSettle();
       expect(find.text('Matematika'), findsWidgets);
       await tester.tap(find.text('Ingliz tili').first);
       await tester.pumpAndSettle();
-      expect(find.text('Qayerdan boshlamoqchisiz?'), findsOneWidget);
-      await tester.tap(find.text('Noldan boshlayman'));
+      expect(find.text('Qayerdan boşlamoqçisiz?'), findsOneWidget);
+      await tester.tap(find.text('Noldan boşlayman'));
       await tester.pumpAndSettle();
       expect(find.text('Ixtiyoriy diagnostika'), findsNothing);
-      final start = find.text('Birinchi darsni boshlash');
+      final start = find.text('Birinçi darsni boşlaş');
       await tester.scrollUntilVisible(start, 180);
       await tester.tap(start);
       await tester.pumpAndSettle();
-      expect(find.text('Birinchi inglizcha so‘zlar'), findsWidgets);
+      expect(find.text('Birinçi inglizça sözlar'), findsWidgets);
       expect(find.textContaining('«Hello» — salom'), findsWidgets);
       expect(find.text('Diagnostika natijasi'), findsNothing);
-      await tester.tap(find.byTooltip('Yo‘lchidan so‘rash'));
+      await tester.tap(find.byTooltip('Yölçidan söraş'));
       await tester.pumpAndSettle();
-      expect(find.text('Yo‘lchi AI'), findsWidgets);
+      expect(find.text('Yölçi AI'), findsWidgets);
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.textContaining('«Hello» — salom'), findsWidgets);
-      await tester.tap(find.byTooltip('So‘z lug‘ati'));
+      await tester.tap(find.byTooltip('Söz luğati'));
       await tester.pumpAndSettle();
-      expect(find.text('Inglizcha so‘z lug‘ati'), findsOneWidget);
+      expect(find.text('Inglizça söz luğati'), findsOneWidget);
       await tester.enterText(find.byType(TextField).last, 'hello world');
-      await tester.tap(find.text('So‘zni izlash'));
+      await tester.tap(find.text('Sözni izlaş'));
       await tester.pumpAndSettle();
       expect(
-        find.text('Bitta inglizcha so‘z kiriting. Masalan: hello.'),
+        find.text('Bitta inglizça söz kiriting. Masalan: hello.'),
         findsOneWidget,
       );
-      await tester.tap(find.byTooltip('Lug‘atni yopish'));
+      await tester.tap(find.byTooltip('Luğatni yopiş'));
       await tester.pumpAndSettle();
       for (var step = 0; step < 3; step++) {
         final nextBtn = find.text('Keyingi qadam');
@@ -97,17 +97,17 @@ void main() {
       await tester.ensureVisible(input);
       await tester.enterText(input, 'Goodbye');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       expect(find.text('Sizning javobingiz: Goodbye'), findsOneWidget);
       expect(tutor.diagnosisCalls, 0);
-      final diagnosis = find.text('Yo‘lchi AI tahlili');
+      final diagnosis = find.text('Yölçi AI tahlili');
       await tester.ensureVisible(diagnosis);
       await tester.tap(diagnosis);
       await tester.pumpAndSettle();
       expect(tutor.diagnosisCalls, 1);
-      expect(find.text('Yo‘lchi izohini yuklab bo‘lmadi.'), findsOneWidget);
-      await tester.tap(find.text('Darsga qaytish'));
+      expect(find.text('Yölçi izohini yuklab bölmadi.'), findsOneWidget);
+      await tester.tap(find.text('Darsga qaytiş'));
       await tester.pumpAndSettle();
       expect(find.text('Sizning javobingiz: Goodbye'), findsOneWidget);
       expect(tester.takeException(), isNull);

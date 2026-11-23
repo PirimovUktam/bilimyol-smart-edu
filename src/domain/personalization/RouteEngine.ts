@@ -21,7 +21,7 @@ export class RouteEngine {
     if (baseNodes.some((node) => node.mastery)) {
       const next = baseNodes.find((node) => !node.isOptional && node.status !== 'locked' && node.status !== 'completed');
       return {
-        id: `roadmap_${courseId}`, courseId, title: 'Moslashuvchan Yo‘l Xaritasi',
+        id: `roadmap_${courseId}`, courseId, title: 'Moslaşuvçan Yöl Xaritasi',
         nodes: baseNodes, activeNodeId: next?.id ?? '', updatedAt: Date.now(),
       };
     }
@@ -102,11 +102,11 @@ export class RouteEngine {
           moduleTitle: baseNode.moduleTitle,
           moduleTitleRu: baseNode.moduleTitleRu,
           unitId: baseNode.unitId,
-          title: `Mustahkamlash: ${baseNode.title}`,
+          title: `Mustahkamlaş: ${baseNode.title}`,
           titleRu: baseNode.titleRu ? `Закрепление: ${baseNode.titleRu}` : undefined,
-          description: `Yo‘lchi AI tavsiyasi: ${baseNode.title} bo‘yicha tushunchalarni mustahkamlash mashqi`,
+          description: `Yölçi AI tavsiyasi: ${baseNode.title} böyiça tuşunçalarni mustahkamlaş maşqi`,
           descriptionRu: baseNode.titleRu
-            ? `Рекомендация Yo‘lchi AI: закрепление темы «${baseNode.titleRu}»`
+            ? `Рекомендация Yölçi AI: закрепление темы «${baseNode.titleRu}»`
             : undefined,
           prerequisites: [baseNode.id], // Follows after interactive lesson attempt
           requiredScore: ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN,
@@ -136,7 +136,7 @@ export class RouteEngine {
     return {
       id: `roadmap_${courseId}`,
       courseId,
-      title: `Moslashuvchan Yo‘l Xaritasi`,
+      title: `Moslaşuvçan Yöl Xaritasi`,
       nodes: adaptedNodes,
       activeNodeId: activeNode ? activeNode.id : '',
       updatedAt: Date.now(),

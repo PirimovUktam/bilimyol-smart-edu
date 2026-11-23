@@ -95,7 +95,7 @@ export const useCourseStore = create<CourseState>((set, get) => {
         set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false, error: null });
       } catch (err) {
         if (currentOperation !== operation) return;
-        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kurslarni yuklashda xatolik yuz berdi.' });
+        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kurslarni yuklaşda xatolik yuz berdi.' });
         throw err;
       }
     },
@@ -132,7 +132,7 @@ export const useCourseStore = create<CourseState>((set, get) => {
         set({ courses, activeCourse, activeCourseSkills: skills, isLoading: false, error: null });
       } catch (err) {
         if (currentOperation !== operation) return;
-        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kursni tanlashda xatolik yuz berdi.' });
+        set({ isLoading: false, error: err instanceof Error ? err.message : 'Kursni tanlaşda xatolik yuz berdi.' });
         throw err;
       }
     },

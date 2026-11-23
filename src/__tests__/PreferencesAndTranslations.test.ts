@@ -57,7 +57,7 @@ describe('typed interface dictionaries', () => {
   });
   it('uses selected language without translating learner content', async () => {
     await loadRussian();
-    expect(message('uz', 'auth.login')).toBe('Kirish');
+    expect(message('uz', 'auth.login')).toBe('Kiriş');
     expect(message('ru', 'auth.login')).toBe('Войти');
   });
 });

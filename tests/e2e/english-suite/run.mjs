@@ -189,38 +189,38 @@ function buildSmokeTests() {
         await helpers.selectCourse(page, 'course_eng_01');
 
         const main = page.getByRole('main');
-        await main.getByRole('radio', { name: /Noldan boshlayman/i }).check();
-        await main.getByRole('button', { name: 'Birinchi darsni boshlash' }).click();
+        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
 
         await main
-          .getByRole('heading', { name: 'Birinchi inglizcha so‘zlar' })
+          .getByRole('heading', { name: 'Birinçi inglizça sözlar' })
           .first()
           .waitFor({ state: 'visible' });
         await main
-          .getByRole('heading', { name: 'Asosiy tushuncha' })
+          .getByRole('heading', { name: 'Asosiy tuşunça' })
           .first()
           .waitFor({ state: 'visible' });
 
         await main.getByRole('button', { name: 'Keyingi qadam' }).click();
         await main
-          .getByRole('heading', { name: 'Birga misol ko‘ramiz' })
+          .getByRole('heading', { name: 'Birga misol köramiz' })
           .first()
           .waitFor({ state: 'visible' });
 
         await helpers.openAndCloseYolchiAi(page, {
-          askText: 'Hello qachon ishlatiladi?',
+          askText: 'Hello qaçon işlatiladi?',
           closeWith: 'button',
           preserveStepIndicator: /^Qadam 2 \/ \d+$/,
-          preserveText: 'Birga misol ko‘ramiz',
+          preserveText: 'Birga misol köramiz',
         });
         await helpers.openAndCloseYolchiAi(page, {
-          askText: 'Good morning qachon ishlatiladi?',
+          askText: 'Good morning qaçon işlatiladi?',
           closeWith: 'escape',
           preserveStepIndicator: /^Qadam 2 \/ \d+$/,
-          preserveText: 'Birga misol ko‘ramiz',
+          preserveText: 'Birga misol köramiz',
         });
         await main
-          .getByRole('heading', { name: 'Birga misol ko‘ramiz' })
+          .getByRole('heading', { name: 'Birga misol köramiz' })
           .first()
           .waitFor({ state: 'visible' });
 
@@ -228,7 +228,7 @@ function buildSmokeTests() {
           assert.ok(before.sessionRaw, 'Expected demo session before reload.');
           assert.ok(after.sessionRaw, 'Expected demo session after reload.');
           await main
-            .getByRole('heading', { name: 'Birga misol ko‘ramiz' })
+            .getByRole('heading', { name: 'Birga misol köramiz' })
             .first()
             .waitFor({ state: 'visible' });
         });
@@ -354,7 +354,7 @@ async function runSuiteSelfCheck(options) {
   const loaded = await loadRegisteredTierTests(tierKeys, options.milestone);
   const plan = validateLoadedSuite(options, loaded);
 
-  console.log('=== BilimYo‘l English E2E Suite Self-Check ===');
+  console.log('=== BilimYöl English E2E Suite Self-Check ===');
   console.log(`Helpers verified: OK`);
   console.log(
     `Filter: --tier=${options.tier} --milestone=${options.milestone}${options.allowPartial ? ' --allow-partial' : ''}`,
@@ -507,7 +507,7 @@ async function runPlaywrightSuite(options) {
     await rm(outDir, { recursive: true, force: true }).catch(() => {});
   }
 
-  console.log('\n=== BilimYo‘l English E2E Summary ===');
+  console.log('\n=== BilimYöl English E2E Summary ===');
   for (const row of summary) {
     if (row.skipped) {
       console.log(`${row.label}: 0/0 (not registered)`);

@@ -1,27 +1,27 @@
 # Matematika piloti
 
-Matematika diagnostikasi avval o‘rta darajadagi qavs kvadratidan boshlangan. Bitta to‘g‘ri javob shu ko‘nikma uchun keyingi savol qiyinligini oshirgan. Yo‘l xaritasi esa dars tugallanganini tayanch ko‘nikma egallanganiga tenglashtirgan. Avvalgi server qoidasida bitta savolli dars uchun bitta to‘g‘ri javob yetarli edi.
+Matematika diagnostikasi avval örta darajadagi qavs kvadratidan boşlangan. Bitta töğri javob şu könikma uçun keyingi savol qiyinligini oşirgan. Yöl xaritasi esa dars tugallanganini tayanç könikma egallanganiga tenglaştirgan. Avvalgi server qoidasida bitta savolli dars uçun bitta töğri javob yetarli edi.
 
-## O‘quv yo‘li
+## Öquv yöli
 
-Qo‘shish va ayirish → teng guruhlar → harfli ifodalar → chiziqli tenglamalar → funksiyalar → grafiklar. Qavs kvadrati harfli ifodalardan keyin ochiladigan ixtiyoriy mashq.
+Qöşiş va ayiriş → teng guruhlar → harfli ifodalar → çiziqli tenglamalar → funksiyalar → grafiklar. Qavs kvadrati harfli ifodalardan keyin oçiladigan ixtiyoriy maşq.
 
-- To‘rtta boshlang‘ich diagnostika savoli qo‘shish va ko‘paytirish dalilini alohida saqlaydi. Darsning ochilishi dars ichidagi javoblarga bog‘liq.
-- Har bir maqsadda amalda qo‘llash va xotiradan qayta qo‘llash bosqichlari bor. Boshlang‘ich siyosat ikkala bosqichda to‘g‘ri dalil, kamida 5 ta alohida savol va kamida 80% aniqlik talab qiladi. Qoidani migratsiyadagi `bilimyol_private.math_pilot_policy` belgilaydi.
-- Ikki yoki undan ko‘p savolda zaif natija chiqsa, yo‘l xaritasi mashqni tavsiya qiladi. Ishlangan misol va tayanch darslarda yo‘naltirilgan mashq bor. 7 kundan keyin xotiradan qayta qo‘llash tavsiya qilinadi. Vaqtning o‘zi egallangan mavzuni yopmaydi. Yangi javoblar aniqlikni chegaradan tushirsa, mavzu qayta mashqqa o‘tadi.
-- Avval saqlangan dars yakunlari va XP tarixda hisobga olinadi. Eski yakunlar hozirgi tekshiruv dalillari yetarli bo‘lmaganda qayta mashq sifatida ko‘rinadi.
-- Yo‘lchi AI ochiq darsdagi maqsadga mos tushuntiradi. Pilot mashqlari tahrirlangan bankdan olinadi. Yo‘lchi AI javobining ta’lim yo‘lini o‘zgartiradigan yozish huquqi yo‘q.
+- Törtta boşlanğiç diagnostika savoli qöşiş va köpaytiriş dalilini alohida saqlaydi. Darsning oçilişi dars içidagi javoblarga boğliq.
+- Har bir maqsadda amalda qöllaş va xotiradan qayta qöllaş bosqiçlari bor. Boşlanğiç siyosat ikkala bosqiçda töğri dalil, kamida 5 ta alohida savol va kamida 80% aniqlik talab qiladi. Qoidani migratsiyadagi `bilimyol_private.math_pilot_policy` belgilaydi.
+- Ikki yoki undan köp savolda zaif natija çiqsa, yöl xaritasi maşqni tavsiya qiladi. Işlangan misol va tayanç darslarda yönaltirilgan maşq bor. 7 kundan keyin xotiradan qayta qöllaş tavsiya qilinadi. Vaqtning özi egallangan mavzuni yopmaydi. Yangi javoblar aniqlikni çegaradan tuşirsa, mavzu qayta maşqqa ötadi.
+- Avval saqlangan dars yakunlari va XP tarixda hisobga olinadi. Eski yakunlar hozirgi tekşiruv dalillari yetarli bölmaganda qayta maşq sifatida körinadi.
+- Yölçi AI oçiq darsdagi maqsadga mos tuşuntiradi. Pilot maşqlari tahrirlangan bankdan olinadi. Yölçi AI javobining ta’lim yölini özgartiradigan yoziş huquqi yöq.
 
 ## Tahrir va media
 
-Matematika darslari uchun savollar, misollar va media ssenariysi shu pilot uchun yozildi. [Manbalar katalogi](sources.json), [IES amaliy qo‘llanmasi](https://ies.ed.gov/ncee/wwc/PracticeGuide/1)
+Matematika darslari uçun savollar, misollar va media ssenariysi şu pilot uçun yozildi. [Manbalar katalogi](sources.json), [IES amaliy qöllanmasi](https://ies.ed.gov/ncee/wwc/PracticeGuide/1)
 
-[Qo‘shish va ayirish ssenariysi](addition-media.json) 40 soniyalik ovoz matni va to‘rtta sahna tavsifini o‘z ichiga oladi. `node scripts/prepare-lesson-media.mjs` matn va WebVTT subtitrlarini `artifacts/math-pilot/media/` ichiga tayyorlaydi.
+[Qöşiş va ayiriş ssenariysi](addition-media.json) 40 soniyalik ovoz matni va törtta sahna tavsifini öz içiga oladi. `node scripts/prepare-lesson-media.mjs` matn va WebVTT subtitrlarini `artifacts/math-pilot/media/` içiga tayyorlaydi.
 
-Yozuv tayyor bo‘lgach, ovozning talaffuzi, tasvir, transkript va subtitr vaqtlarini tekshiring. Tayyor faylni `public/lesson-media/` ichiga, tasdiqlangan media obyektini esa tegishli darsning `steps` qatoriga joylashtiring. Web pleyer `approved` holati, mavjud fayl yo‘li, til, davomiylik va transkriptni talab qiladi. Video uchun WebVTT ham kerak. Darsga qaytilganda brauzer media ijrosi to‘xtagan joyni tiklaydi. O‘zlashtirish dalili baholangan mashqlardan olinadi.
+Yozuv tayyor bölgaç, ovozning talaffuzi, tasvir, transkript va subtitr vaqtlarini tekşiring. Tayyor faylni `public/lesson-media/` içiga, tasdiqlangan media obyektini esa tegişli darsning `steps` qatoriga joylaştiring. Web pleyer `approved` holati, mavjud fayl yöli, til, davomiylik va transkriptni talab qiladi. Video uçun WebVTT ham kerak. Darsga qaytilganda brauzer media ijrosi töxtagan joyni tiklaydi. Özlaştiriş dalili baholangan maşqlardan olinadi.
 
-## Sinov va chiqarish
+## Sinov va çiqariş
 
-Mahalliy PostgreSQL regressiyasi tayanch diagnostikadan baholash, saqlash, yo‘l ochilishi va takrorlashgacha bo‘lgan A–G holatlarni tekshiradi. Supabase brauzer va Flutter integratsiya sinovlarini ishlatish shartlari [sinov qo‘llanmasida](../../supabase/tests/README.md).
+Mahalliy PostgreSQL regressiyasi tayanç diagnostikadan baholaş, saqlaş, yöl oçilişi va takrorlaşgaça bölgan A–G holatlarni tekşiradi. Supabase brauzer va Flutter integratsiya sinovlarini işlatiş şartlari [sinov qöllanmasida](../../supabase/tests/README.md).
 
-Masofadagi sinov relizi uchun migratsiya, `yolchi-tutor` va yangilangan web hamda Flutter mijozlari bir to‘plam sifatida tekshiriladi. Server eski mijozlardan kelgan yopiq dars so‘rovlarini ham rad etadi. Qayta baholash hozir bir xil ko‘rib chiqilgan savollar bankidan foydalanadi. Parallel savol variantlari, usullarni taqqoslash tahlili va Flutter ilovasida media ijrosi keyingi bosqichda.
+Masofadagi sinov relizi uçun migratsiya, `yolchi-tutor` va yangilangan web hamda Flutter mijozlari bir töplam sifatida tekşiriladi. Server eski mijozlardan kelgan yopiq dars sörovlarini ham rad etadi. Qayta baholaş hozir bir xil körib çiqilgan savollar bankidan foydalanadi. Parallel savol variantlari, usullarni taqqoslaş tahlili va Flutter ilovasida media ijrosi keyingi bosqiçda.

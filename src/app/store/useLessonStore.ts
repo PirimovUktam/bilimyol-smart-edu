@@ -224,7 +224,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     });
 
     try {
-      if (!hasText(lessonId)) throw new Error('Dars identifikatori noto‘g‘ri.');
+      if (!hasText(lessonId)) throw new Error('Dars identifikatori notöğri.');
       if (!isCurrent()) return;
       const lesson = await supabaseLessonRepository.getLessonById(lessonId);
       if (!isCurrent()) return;
@@ -233,18 +233,18 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           currentLesson: null,
           lessonSessionId: 0,
           isLoading: false,
-          error: `Dars topilmadi ("${lessonId}"). Iltimos, boshqa darsni tanlang yoki yangi dars yarating.`,
+          error: `Dars topilmadi ("${lessonId}"). Iltimos, boşqa darsni tanlang yoki yangi dars yarating.`,
         });
         return;
       }
-      if (lesson.id !== lessonId) throw new Error('So‘ralgan dars o‘rniga boshqa dars qaytdi.');
+      if (lesson.id !== lessonId) throw new Error('Söralgan dars örniga boşqa dars qaytdi.');
       set({ currentLesson: lesson, lessonSessionId: ++nextLessonSessionId, isLoading: false, error: null });
     } catch (err: any) {
       if (!isCurrent()) return;
       set({
         currentLesson: null,
         isLoading: false,
-        error: `Darsni yuklashda xatolik yuz berdi: ${err?.message || 'Server javob bermadi'}. Qayta urinib ko‘ring.`,
+        error: `Darsni yuklaşda xatolik yuz berdi: ${err?.message || 'Server javob bermadi'}. Qayta urinib köring.`,
       });
     }
   },
@@ -279,7 +279,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
     try {
       if (!hasText(courseId) || !hasText(skillId)) {
-        throw new Error('Dars uchun fan va ko‘nikma tanlanishi kerak.');
+        throw new Error('Dars uçun fan va könikma tanlanişi kerak.');
       }
       if (!isCurrent()) return null;
       const response = await aiService.generateLesson({ courseId, skillId, topic, difficulty });
@@ -290,7 +290,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         throw new Error('AI xizmatidan yaroqli dars ma’lumotlari kelmadi.');
       }
       if (response.courseId !== courseId || response.skillId !== skillId) {
-        throw new Error('Yaratilgan dars tanlangan fan yoki ko‘nikmaga mos kelmadi.');
+        throw new Error('Yaratilgan dars tanlangan fan yoki könikmaga mos kelmadi.');
       }
       // Only assessment ids returned by the service can be submitted for scoring.
       if (!Array.isArray(response.questions) || response.questions.length === 0 ||
@@ -318,7 +318,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
             (inlineQuestion.courseId !== undefined && inlineQuestion.courseId !== courseId) ||
             (inlineQuestion.skillId !== undefined && inlineQuestion.skillId !== skillId)
           ))) {
-            throw new Error('Dars savoli tanlangan fan yoki server baholashiga mos kelmadi.');
+            throw new Error('Dars savoli tanlangan fan yoki server baholaşiga mos kelmadi.');
           }
           return { ...s, interactiveQuestion: question };
         }
@@ -348,10 +348,10 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     } catch (err: any) {
       if (!isCurrent()) return null;
       console.warn('[useLessonStore] generateAILesson error:', err);
-      const errorMessage = err?.message || 'Server javob bermadi yoki cheklovdan oshildi';
+      const errorMessage = err?.message || 'Server javob bermadi yoki cheklovdan oşildi';
       set({
         isLoading: false,
-        error: `AI dars yaratishda xatolik yuz berdi: ${errorMessage}. Iltimos, qayta urinib ko‘ring.`,
+        error: `AI dars yaratişda xatolik yuz berdi: ${errorMessage}. Iltimos, qayta urinib köring.`,
       });
       return null;
     }
@@ -375,7 +375,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     }
     if (get().isEvaluatingAnswer) return;
     if (!currentLesson.requiresMastery && !hasPassedRequiredQuestions(currentLesson, get().answeredQuestionIds)) {
-      set({ error: 'Darsni yakunlash uchun barcha yaroqli sinov savollariga to‘g‘ri javob bering. Savol yetishmasa, darsni qayta oching.' });
+      set({ error: 'Darsni yakunlaş uçun barça yaroqli sinov savollariga töğri javob bering. Savol yetişmasa, darsni qayta oçing.' });
       return;
     }
     const activeQuestion = currentLesson.steps[currentStepIndex].interactiveQuestion;
@@ -401,7 +401,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       const profile = await supabaseLearnerRepository.getProfile();
       if (!isCurrent()) return;
       if ((learnerId && profile.id !== learnerId) || !profile.completedLessonIds.includes(currentLesson.id)) {
-        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib köring.');
       }
       useLearnerStore.setState({ profile, isLoading: false });
       if (!isCurrent()) return;
@@ -411,7 +411,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       set({
         isCompletingLesson: false,
         isCompleted: false,
-        error: `Dars yakunini tasdiqlab bo‘lmadi: ${err?.message || 'Server javob bermadi'}. Qayta urinib ko‘ring.`,
+        error: `Dars yakunini tasdiqlab bölmadi: ${err?.message || 'Server javob bermadi'}. Qayta urinib köring.`,
       });
     }
   },
@@ -474,7 +474,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!isCurrent()) return;
       if ((learnerId && profile.id !== learnerId) ||
           (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
-        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib köring.');
       }
       useLearnerStore.setState({ profile, isLoading: false });
     };
@@ -548,11 +548,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return isCurrent() ? result : null;
     } catch (err: any) {
       if (!isCurrent()) return null;
-      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bölmadi.';
       set({
         isEvaluatingAnswer: false,
         isCompleted: false,
-        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib köring.`,
       });
       return null;
     }
@@ -564,7 +564,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
     const question = currentLesson.steps[currentStepIndex]?.interactiveQuestion;
     const trimmed = typeof answerText === 'string' ? answerText.trim() : '';
-    const normalized = normalizeFreeTextAnswer(trimmed);
+    const answerLanguage = currentLesson.courseId === 'course_eng_01' ? undefined : 'uz';
+    const normalized = normalizeFreeTextAnswer(trimmed, answerLanguage);
     const isTextMode = question?.questionType === 'text_input' || question?.questionType === 'fill_blank';
     if (!isValidAssessment(question, currentLesson.courseId, currentLesson.skillId, isIntegratedEnglishLesson(currentLesson)) ||
         !isTextMode || !normalized) {
@@ -582,7 +583,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!isCurrent()) return;
       if ((learnerId && profile.id !== learnerId) ||
           (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
-        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib köring.');
       }
       useLearnerStore.setState({ profile, isLoading: false });
     };
@@ -653,11 +654,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return isCurrent() ? result : null;
     } catch (err: any) {
       if (!isCurrent()) return null;
-      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bölmadi.';
       set({
         isEvaluatingAnswer: false,
         isCompleted: false,
-        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib köring.`,
       });
       return null;
     }
@@ -714,7 +715,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!isCurrent()) return;
       if ((learnerId && profile.id !== learnerId) ||
           (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
-        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib köring.');
       }
       useLearnerStore.setState({ profile, isLoading: false });
     };
@@ -787,11 +788,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return isCurrent() ? result : null;
     } catch (err: any) {
       if (!isCurrent()) return null;
-      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bölmadi.';
       set({
         isEvaluatingAnswer: false,
         isCompleted: false,
-        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib köring.`,
       });
       return null;
     }
@@ -820,7 +821,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       if (!isCurrent()) return;
       if ((learnerId && profile.id !== learnerId) ||
           (expectCompletion && !profile.completedLessonIds.includes(currentLesson.id))) {
-        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib ko‘ring.');
+        throw new Error('Dars yakuni profilda tasdiqlanmadi. Qayta urinib köring.');
       }
       useLearnerStore.setState({ profile, isLoading: false });
     };
@@ -852,7 +853,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           ? get().answeredQuestionIds
           : [...get().answeredQuestionIds, question.id];
         // Do NOT complete immediately: allow reviewing model answer & rubric checkboxes,
-        // then complete via nextStep() when the learner clicks "Darsni yakunlash".
+        // then complete via nextStep() when the learner clicks "Darsni yakunlaş".
         await refreshProfile(false);
         if (!isCurrent()) return null;
         set({
@@ -876,11 +877,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return isCurrent() ? result : null;
     } catch (err: any) {
       if (!isCurrent()) return null;
-      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bo‘lmadi.';
+      const message = err?.message || 'Javob yoki dars progressini serverda saqlab bölmadi.';
       set({
         isEvaluatingAnswer: false,
         isCompleted: false,
-        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib ko‘ring.`,
+        error: `Dars progressi saqlanmadi: ${message}. Qayta urinib köring.`,
       });
       return null;
     }

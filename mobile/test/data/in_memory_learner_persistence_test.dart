@@ -92,7 +92,7 @@ void main() {
         storage: await LocalStorageService.load(),
       );
       final afterReset = await repo3.getProfile();
-      expect(afterReset.name, equals('Foydalanuvchi'));
+      expect(afterReset.name, equals('Foydalanuvçi'));
       expect(afterReset.xp, equals(0));
       expect(afterReset.completedLessonIds, isEmpty);
     });
@@ -105,7 +105,7 @@ void main() {
       final repo = InMemoryLearnerRepository(storage: storage);
 
       final profile = await repo.getProfile();
-      expect(profile.name, equals('Foydalanuvchi'));
+      expect(profile.name, equals('Foydalanuvçi'));
       expect(profile.xp, equals(0));
       expect(profile.scoresByCourse, isEmpty);
     });
@@ -205,7 +205,7 @@ void main() {
       final repo = InMemoryLearnerRepository(storage: storage);
 
       final profile = await repo.getProfile();
-      expect(profile.name, equals('Foydalanuvchi'));
+      expect(profile.name, equals('Foydalanuvçi'));
       expect(profile.xp, equals(0));
     });
 
@@ -271,7 +271,7 @@ void main() {
       final repo = InMemoryLearnerRepository(storage: storage);
 
       final profile = await repo.getProfile();
-      expect(profile.name, equals('Foydalanuvchi'));
+      expect(profile.name, equals('Foydalanuvçi'));
       expect(profile.xp, equals(0));
       expect(profile.scoresByCourse, isEmpty);
       expect(profile.completedLessonIds, isEmpty);
@@ -295,13 +295,13 @@ void main() {
       gate.complete();
 
       final results = await Future.wait([getProfileFuture, resetFuture]);
-      expect(results[0].name, equals('Foydalanuvchi'));
+      expect(results[0].name, equals('Foydalanuvçi'));
       expect(results[0].xp, equals(0));
-      expect(results[1].name, equals('Foydalanuvchi'));
+      expect(results[1].name, equals('Foydalanuvçi'));
       expect(results[1].xp, equals(0));
 
       final after = await repo.getProfile();
-      expect(after.name, equals('Foydalanuvchi'));
+      expect(after.name, equals('Foydalanuvçi'));
       expect(after.xp, equals(0));
     });
 
@@ -326,7 +326,7 @@ void main() {
       await attemptFuture;
 
       final after = await repo.getProfile();
-      expect(after.name, equals('Foydalanuvchi'));
+      expect(after.name, equals('Foydalanuvçi'));
       expect(after.xp, equals(0));
       expect(after.scoresByCourse, isEmpty);
       expect(after.completedLessonIds, isEmpty);
@@ -351,7 +351,7 @@ void main() {
       await completeFuture;
 
       final after = await repo.getProfile();
-      expect(after.name, equals('Foydalanuvchi'));
+      expect(after.name, equals('Foydalanuvçi'));
       expect(after.xp, equals(0));
       expect(after.scoresByCourse, isEmpty);
       expect(after.completedLessonIds, isEmpty);
@@ -734,7 +734,7 @@ void main() {
           'version': 1,
           'profile': {
             'id': 'learner_mobile_01',
-            'name': 'Foydalanuvchi',
+            'name': 'Foydalanuvçi',
             'selectedCourseId': 'course_math_01',
             'goal': 'mastery',
             'dailyMinutes': 15,

@@ -194,7 +194,7 @@ describe('hosted demo data plane', () => {
     setDemoRuntimeActive(false);
     backend.invoke.mockResolvedValue({
       data: {
-        tutorName: 'Yo‘lchi AI',
+        tutorName: 'Yölçi AI',
         answer: 'Server javobi',
         isAiGenerated: true,
         isDeterministicFallback: false,

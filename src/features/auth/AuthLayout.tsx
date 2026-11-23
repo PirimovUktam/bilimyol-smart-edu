@@ -49,7 +49,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           <header className="mb-6">
             <span className="highlight mb-2.5">
               <Sparkles aria-hidden="true" className="size-3.5" />
-              BilimYo‘l Smart Edu
+              BilimYöl Smart Edu
             </span>
             <h1 className="heading text-3xl font-extrabold tracking-tight text-ink">{title}</h1>
             {subtitle && <p className="mt-2 text-sm leading-relaxed text-slatefine">{subtitle}</p>}

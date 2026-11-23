@@ -423,7 +423,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
   String _modeLabel(FlashcardStudyMode mode, bool isRu) {
     switch (mode) {
       case FlashcardStudyMode.srsDue:
-        return isRu ? 'Следующее повторение (SRS)' : 'Keyingi takrorlash (SRS)';
+        return isRu ? 'Следующее повторение (SRS)' : 'Keyingi takrorlaş (SRS)';
       case FlashcardStudyMode.enToNative:
         return isRu ? 'En → Ru' : 'En → Uz';
       case FlashcardStudyMode.nativeToEn:
@@ -440,13 +440,13 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
   String _bucketLabel(String bucket, bool isRu) {
     switch (bucket) {
       case 'session_next':
-        return isRu ? 'Сейчас ещё раз' : 'Shu darsda';
+        return isRu ? 'Сейчас ещё раз' : 'Şu darsda';
       case 'daily':
         return isRu ? '1 день' : '1 kun';
       case '3_days':
         return isRu ? '3 дня' : '3 kun';
       case 'mastered':
-        return isRu ? 'Освоено' : 'O‘zlashtirildi';
+        return isRu ? 'Освоено' : 'Özlaştirildi';
       default:
         return bucket;
     }
@@ -528,7 +528,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
               Text(
                 isRu
                     ? 'Все карточки повторены!'
-                    : 'Barcha kartochkalar ko‘rib chiqildi!',
+                    : 'Barça kartoçkalar körib çiqildi!',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -539,7 +539,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
               Text(
                 isRu
                     ? 'Все карточки для текущего интервала SRS повторены. Вы можете запустить случайную тренировку или перейти к уроку.'
-                    : 'Joriy SRS navbatidagi barcha kartochkalar bajarildi. Tasodifiy mashqni boshlashingiz yoki keyingi qadamga o‘tishingiz mumkin.',
+                    : 'Joriy SRS navbatidagi barça kartoçkalar bajarildi. Tasodifiy maşqni boşlaşingiz yoki keyingi qadamga ötişingiz mumkin.',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   height: 1.4,
@@ -554,14 +554,14 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                   AppButton(
                     text: isRu
                         ? 'Случайная тренировка'
-                        : 'Tasodifiy mashq',
+                        : 'Tasodifiy maşq',
                     variant: AppButtonVariant.primary,
                     onPressed: () =>
                         _selectStudyMode(FlashcardStudyMode.randomPractice),
                   ),
                   if (!widget.standaloneSrsMode)
                     AppButton(
-                      text: isRu ? 'Повторить снова' : 'Qayta takrorlash',
+                      text: isRu ? 'Повторить снова' : 'Qayta takrorlaş',
                       variant: AppButtonVariant.outline,
                       onPressed: _resetDeck,
                     ),
@@ -593,10 +593,10 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
         ? (isAudioPrompt
               ? (isRu
                     ? 'Прослушайте и вспомните слово'
-                    : 'Audioni tinglab so‘zni toping')
+                    : 'Audioni tinglab sözni toping')
               : (isRu
                     ? 'Посмотрите на картинку и вспомните слово'
-                    : 'Rasmga qarab so‘zni toping'))
+                    : 'Rasmga qarab sözni toping'))
         : card.front;
     final answerHeading = isNativePrompt
         ? card.front
@@ -632,7 +632,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                   AppBadge(
                     text: isRu
                         ? 'Повт.: ${srsRecord.reviewCount} • ${_bucketLabel(srsRecord.nextReviewBucket, true)}'
-                        : 'Takrorlash: ${srsRecord.reviewCount} • ${_bucketLabel(srsRecord.nextReviewBucket, false)}',
+                        : 'Takrorlaş: ${srsRecord.reviewCount} • ${_bucketLabel(srsRecord.nextReviewBucket, false)}',
                     variant: srsRecord.status == 'remembered'
                         ? AppBadgeVariant.emerald
                         : AppBadgeVariant.amber,
@@ -742,7 +742,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                     button: true,
                     label: isRu
                         ? 'Прослушать произношение'
-                        : 'Talaffuzni tinglash',
+                        : 'Talaffuzni tinglaş',
                     child: IconButton.filledTonal(
                       style: IconButton.styleFrom(
                         minimumSize: const Size(48, 48),
@@ -750,7 +750,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                       ),
                       tooltip: isRu
                           ? 'Прослушать произношение'
-                          : 'Talaffuzni tinglash',
+                          : 'Talaffuzni tinglaş',
                       onPressed: () => _playCardAudio(card),
                       icon: Icon(
                         Icons.volume_up_rounded,
@@ -768,7 +768,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                 _audioState.localizedErrorMessage(locale) ??
                     (isRu
                         ? 'Аудио недоступно.'
-                        : 'Talaffuz audiosini ijro etib bo‘lmadi.'),
+                        : 'Talaffuz audiosini ijro etib bölmadi.'),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.error,
@@ -781,7 +781,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
 
             if (!_isRevealed)
               AppButton(
-                text: isRu ? 'Показать ответ' : 'Javobni ko‘rish',
+                text: isRu ? 'Показать ответ' : 'Javobni köriş',
                 isFullWidth: true,
                 leftIcon: const Icon(
                   Icons.visibility_rounded,
@@ -861,7 +861,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     AppButton(
-                      text: isRu ? 'Повторить ещё' : 'Yana mashq qilaman',
+                      text: isRu ? 'Повторить ещё' : 'Yana maşq qilaman',
                       variant: AppButtonVariant.outline,
                       isFullWidth: true,
                       onPressed: _markNeedPractice,
@@ -880,7 +880,7 @@ class _FlashcardDeckWidgetState extends ConsumerState<FlashcardDeckWidget> {
                   children: [
                     Expanded(
                       child: AppButton(
-                        text: isRu ? 'Повторить ещё' : 'Yana mashq qilaman',
+                        text: isRu ? 'Повторить ещё' : 'Yana maşq qilaman',
                         variant: AppButtonVariant.outline,
                         onPressed: _markNeedPractice,
                       ),

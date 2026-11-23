@@ -29,7 +29,7 @@ describe('Lighthouse Accessibility, Agentic Browsing, and Security Compliance', 
 
   it('provides compliant /llms.txt starting with an H1 heading and links', () => {
     const llms = readFileSync(resolve(root, 'public/llms.txt'), 'utf8');
-    expect(llms.trimStart().startsWith('# BilimYo‘l Smart Edu')).toBe(true);
+    expect(llms.trimStart().startsWith('# BilimYöl Smart Edu')).toBe(true);
     expect(llms).toMatch(/\[[^\]]+\]\(https:\/\/bilimyol\.uz\/[^)]*\)/);
   });
 

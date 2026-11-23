@@ -58,7 +58,7 @@ describe('InteractiveLessonView ru step category tab localization', () => {
     expect(greetingsHtml).toContain('Аудирование');
     expect(greetingsHtml).toContain('Карточки');
     expect(greetingsHtml).toContain('Тест');
-    expect(greetingsHtml).not.toMatch(/\b(Nazariya|Misol|Tinglash|Test)\b/);
+    expect(greetingsHtml).not.toMatch(/\b(Nazariya|Misol|Tinglaş|Test)\b/);
 
     useLessonStore.getState().clearSession();
     await useLessonStore.getState().loadLesson('lesson_eng_listening_01');
@@ -72,6 +72,6 @@ describe('InteractiveLessonView ru step category tab localization', () => {
         />
       </AuthProvider>,
     );
-    expect(listeningHtml).toContain('Audio Xabarni Tinglash');
+    expect(listeningHtml).toContain('Audio Xabarni Tinglaş');
   });
 });

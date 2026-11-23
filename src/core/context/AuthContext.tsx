@@ -40,7 +40,7 @@ interface AuthContextType {
 
 const defaultDemoProfile: UserProfile = {
   id: 'guest_user_01',
-  firstName: 'Foydalanuvchi',
+  firstName: 'Foydalanuvçi',
   lastName: '',
   email: 'guest@bilimyol.uz',
   avatarUrl: '',
@@ -183,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!data && options.provisionIfMissing) {
         const firstName = options.provisionIfMissing.firstName.trim()
-          || (email ? email.split('@')[0] : 'Foydalanuvchi');
+          || (email ? email.split('@')[0] : 'Foydalanuvçi');
         const lastName = options.provisionIfMissing.lastName.trim();
         const displayName = lastName ? `${firstName} ${lastName}` : firstName;
 
@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data && data.id === userId && ['student', 'admin'].includes(data.role)) {
         // Authoritative role from public.profiles
         const userRole = data.role as NonNullable<UserProfile['role']>;
-        const resolvedFirst = data.first_name || (email ? email.split('@')[0] : 'Foydalanuvchi');
+        const resolvedFirst = data.first_name || (email ? email.split('@')[0] : 'Foydalanuvçi');
         const userProfile: UserProfile = {
           id: data.id,
           firstName: resolvedFirst,
@@ -235,8 +235,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Missing/unavailable DB role is not permission to trust signup metadata.
       throw new Error(options.provisionIfMissing
-        ? 'Profil serverda yaratildi, ammo authoritative roli o‘qilmadi. Qayta urinib ko‘ring.'
-        : 'Profil serverda topilmadi. Qayta urinib ko‘ring.');
+        ? 'Profil serverda yaratildi, ammo authoritative roli öqilmadi. Qayta urinib köring.'
+        : 'Profil serverda topilmadi. Qayta urinib köring.');
     } catch (err) {
       if (!isCurrent()) return null;
       console.warn('Error resolving authenticated profile from Supabase:', err);

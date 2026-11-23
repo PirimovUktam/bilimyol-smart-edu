@@ -1,5 +1,5 @@
 /**
- * BilimYo‘l Adaptive Thresholds Configuration
+ * BilimYöl Adaptive Thresholds Configuration
  * 
  * Rules:
  * score < 50     -> reinforcement (requires remediation node)

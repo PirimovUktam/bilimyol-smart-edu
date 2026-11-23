@@ -158,13 +158,13 @@ describe('FlashcardDeck state & SSR rendering', () => {
     {
       id: 'fc_2',
       front: 'Nice to meet you.',
-      backUz: 'Tanishganimdan xursandman.',
+      backUz: 'Tanişganimdan xursandman.',
       backRu: 'Приятно познакомиться.',
       ipa: '/naɪs tə miːt juː/',
       partOfSpeech: 'phrase',
       cefrLevel: 'A1',
       example: "I'm Ben. Nice to meet you.",
-      exampleUz: 'Men Benman. Tanishganimdan xursandman.',
+      exampleUz: 'Men Benman. Tanişganimdan xursandman.',
       exampleRu: 'Я Бен. Приятно познакомиться.',
       audioSrc: '/lesson-media/english/a1-starter-nice-to-meet-you.wav',
     },
@@ -182,8 +182,8 @@ describe('FlashcardDeck state & SSR rendering', () => {
   it('renders front recall prompt without leaking the answer before reveal', () => {
     const html = renderToStaticMarkup(<FlashcardDeck cards={sampleCards} />);
     expect(html).toContain("What&#x27;s your name?");
-    expect(html).toContain('Javobni ko‘rish');
-    expect(html).toContain('Talaffuzni tinglash');
+    expect(html).toContain('Javobni köriş');
+    expect(html).toContain('Talaffuzni tinglaş');
     expect(html).not.toContain('Ismingiz nima?');
     expect(html).not.toContain('Eslab qoldim');
   });

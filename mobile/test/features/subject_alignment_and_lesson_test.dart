@@ -116,13 +116,13 @@ void main() {
       const mathRequest = GenerateLessonRequest(
         courseId: 'course_math_01',
         skillId: 'skill_math_functions',
-        topic: 'Chiziqli funksiyalar',
+        topic: 'Çiziqli funksiyalar',
         level: 'intermediate',
         difficulty: 'medium',
       );
       final mathResponse = await aiService.generateLesson(mathRequest);
       expect(mathResponse.courseId, equals('course_math_01'));
-      expect(mathResponse.title, contains('Chiziqli funksiyalar'));
+      expect(mathResponse.title, contains('Çiziqli funksiyalar'));
     });
   });
 }

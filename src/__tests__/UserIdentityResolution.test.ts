@@ -9,9 +9,9 @@ describe('UserIdentityResolution & Profile Persistence Suite', () => {
     await learnerRepo.resetAll();
   });
 
-  it('A. registration creates and initializes profile with neutral default name Foydalanuvchi', async () => {
+  it('A. registration creates and initializes profile with neutral default name Foydalanuvçi', async () => {
     const profile = await learnerRepo.getProfile();
-    expect(profile.name).toBe('Foydalanuvchi');
+    expect(profile.name).toBe('Foydalanuvçi');
     expect(profile.name).not.toBe('Azizbek');
   });
 
@@ -87,7 +87,7 @@ describe('UserIdentityResolution & Profile Persistence Suite', () => {
 
     // User B session
     const freshForUserB = await learnerRepo.getProfile();
-    expect(freshForUserB.name).toBe('Foydalanuvchi');
+    expect(freshForUserB.name).toBe('Foydalanuvçi');
     expect(freshForUserB.xp).toBe(0);
     expect(Object.keys(freshForUserB.scoresByCourse).length).toBe(0);
 
@@ -102,9 +102,9 @@ describe('UserIdentityResolution & Profile Persistence Suite', () => {
     expect(userB.xp).toBe(50);
   });
 
-  it('G. existing auth user without custom name defaults safely to Foydalanuvchi', async () => {
+  it('G. existing auth user without custom name defaults safely to Foydalanuvçi', async () => {
     const uncustomized = await learnerRepo.getProfile();
-    expect(uncustomized.name).toBe('Foydalanuvchi');
+    expect(uncustomized.name).toBe('Foydalanuvçi');
   });
 
   it('H. verified zero presence of legacy hardcoded name Azizbek in repository defaults', async () => {

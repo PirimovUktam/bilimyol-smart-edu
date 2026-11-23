@@ -1,4 +1,5 @@
 import { DifficultyLevel } from '@/core/types/common';
+import { legacyUzbekSpelling } from '@/core/locales/uzbekAlphabet';
 import type { LessonMedia } from './LessonMedia';
 
 export type CefrLevelId = 'Pre-A1' | 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
@@ -78,8 +79,8 @@ export interface QuestionAnswerSubmission {
   timeSpentSeconds: number;
 }
 
-export function normalizeFreeTextAnswer(input: string): string {
-  return input
+export function normalizeFreeTextAnswer(input: string, language?: 'uz' | 'ru'): string {
+  return (language === 'uz' ? legacyUzbekSpelling(input) : input)
     .trim()
     .replace(/,/g, ' ')
     .replace(/[’‘`´\u02BB\u02BC]/g, "'")
@@ -89,11 +90,15 @@ export function normalizeFreeTextAnswer(input: string): string {
     .trim();
 }
 
-export function matchesAcceptedAnswer(input: string, acceptedAnswers: string[] = []): boolean {
-  const normalized = normalizeFreeTextAnswer(input);
+export function matchesAcceptedAnswer(
+  input: string,
+  acceptedAnswers: string[] = [],
+  language?: 'uz' | 'ru',
+): boolean {
+  const normalized = normalizeFreeTextAnswer(input, language);
   if (!normalized) return false;
   return acceptedAnswers.some((candidate) => {
-    const normalizedCandidate = normalizeFreeTextAnswer(candidate);
+    const normalizedCandidate = normalizeFreeTextAnswer(candidate, language);
     return normalizedCandidate.length > 0 && normalizedCandidate === normalized;
   });
 }

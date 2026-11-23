@@ -17,12 +17,12 @@ describe('Real Gemini-3.6-Flash Lesson Generation & Security', () => {
     const res = await demoService.generateLesson({
       courseId: 'course_math_01',
       skillId: 'skill_math_functions',
-      topic: 'Chiziqli funksiyalar va ularning grafigi',
+      topic: 'Çiziqli funksiyalar va ularning grafigi',
       difficulty: 'medium',
     });
 
     expect(res.lessonId).toBeDefined();
-    expect(res.title).toContain('Chiziqli funksiyalar');
+    expect(res.title).toContain('Çiziqli funksiyalar');
     expect(res.steps.length).toBeGreaterThanOrEqual(3);
     expect(res.steps[0].type).toBe('concept');
     expect(res.steps[1].type).toBe('formula');
@@ -54,7 +54,7 @@ describe('Real Gemini-3.6-Flash Lesson Generation & Security', () => {
     res.questions.forEach((q) => {
       q.options.forEach((opt) => {
         expect(opt).not.toMatch(/^[A-D]\)/i); // No "A)" or "B)" prefix
-        expect(opt).not.toMatch(/\(to['‘`]?g['‘`]?ri\)/i); // No spoiler "(to'g'ri)"
+        expect(opt).not.toMatch(/\(to['‘`]?g['‘`]?ri\)/i); // No spoiler "(töğri)"
       });
     });
   });

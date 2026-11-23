@@ -81,7 +81,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      while (find.text('TEKSHIRISH').evaluate().isEmpty) {
+      while (find.text('TEKŞIRIŞ').evaluate().isEmpty) {
         await tester.tap(find.text('Keyingi qadam'));
         await tester.pumpAndSettle();
       }
@@ -100,7 +100,7 @@ void main() {
       await tester.ensureVisible(wrongOption1);
       await tester.tap(wrongOption1);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       expect(find.text('Takroriy xato aniqlandi'), findsNothing);
 
@@ -108,14 +108,14 @@ void main() {
       await tester.ensureVisible(wrongOption2);
       await tester.tap(wrongOption2);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(find.text('Takroriy xato aniqlandi'), findsOneWidget);
-      expect(find.text('Qo‘shimcha mashq'), findsOneWidget);
+      expect(find.text('Qöşimça maşq'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Qo‘shimcha mashq'));
-      await tester.tap(find.text('Qo‘shimcha mashq'));
+      await tester.ensureVisible(find.text('Qöşimça maşq'));
+      await tester.tap(find.text('Qöşimça maşq'));
       await tester.pumpAndSettle();
       expect(find.byType(ReinforcementSheet), findsOneWidget);
     },
@@ -226,12 +226,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('CEFR A1–B1 marshruti'), findsOneWidget);
-      expect(find.text('CEFR A1–C2 marshruti'), findsNothing);
-      expect(find.text('Maqsadli mashq'), findsWidgets);
+      expect(find.text('CEFR A1–B1 marşruti'), findsOneWidget);
+      expect(find.text('CEFR A1–C2 marşruti'), findsNothing);
+      expect(find.text('Maqsadli maşq'), findsWidgets);
 
       // Open SRS modal while A2/B1 are locked -> A2/B1 flashcards must be excluded
-      await tester.tap(find.text('SRS Takrorlash'));
+      await tester.tap(find.text('SRS Takrorlaş'));
       await tester.pumpAndSettle();
       final deckFinder = find.byType(FlashcardDeckWidget);
       expect(deckFinder, findsOneWidget);
@@ -251,13 +251,13 @@ void main() {
       // Scroll to B2-C2 DEFERRED tiles and tap B2 -> no raw 'node_eng_b1_exit' leaked
       final scrollable = find.byType(Scrollable).first;
       await tester.scrollUntilVisible(
-        find.text('B2 — O‘rtadan yuqori daraja'),
+        find.text('B2 — Örtadan yuqori daraja'),
         300,
         scrollable: scrollable,
         maxScrolls: 80,
       );
-      expect(find.text('Keyingi bosqich (DEFERRED)'), findsWidgets);
-      await tester.tap(find.text('B2 — O‘rtadan yuqori daraja'));
+      expect(find.text('Keyingi bosqiç (DEFERRED)'), findsWidgets);
+      await tester.tap(find.text('B2 — Örtadan yuqori daraja'));
       await tester.pumpAndSettle();
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.textContaining('node_eng_b1_exit'), findsNothing);
@@ -266,7 +266,7 @@ void main() {
   );
 
   testWidgets(
-    'Immediate TEKSHIRISH tap after correct Step 2 in lesson_eng_a1_exit is not blocked by SnackBar',
+    'Immediate TEKŞIRIŞ tap after correct Step 2 in lesson_eng_a1_exit is not blocked by SnackBar',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer(
@@ -304,20 +304,20 @@ void main() {
       await tester.ensureVisible(find.text('20:30'));
       await tester.tap(find.text('20:30'));
       await tester.pump();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // Immediately on Step 3 (NO 5s delay): feedback is visible and does not obscure TEKSHIRISH
+      // Immediately on Step 3 (NO 5s delay): feedback is visible and does not obscure TEKŞIRIŞ
       expect(find.text('Qadam 3 / 5'), findsOneWidget);
-      expect(find.text('To‘g‘ri javob!'), findsOneWidget);
+      expect(find.text('Töğri javob!'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const Key('free_text_answer_input')),
         'open',
       );
       await tester.pump();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 

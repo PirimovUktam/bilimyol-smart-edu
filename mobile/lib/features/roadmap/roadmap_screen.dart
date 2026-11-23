@@ -134,7 +134,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        isRu ? 'Повторение SRS' : 'SRS Takrorlash',
+                        isRu ? 'Повторение SRS' : 'SRS Takrorlaş',
                         style: AppTypography.ui(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -177,10 +177,10 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     final msg = prereqLabels.isEmpty
         ? (isRu
               ? 'Этот этап пока заблокирован.'
-              : 'Bu bosqich hozircha bloklangan.')
+              : 'Bu bosqiç hozirça bloklangan.')
         : (isRu
               ? 'Сначала завершите: ${prereqLabels.join(', ')}'
-              : 'Avval oldingi bosqichni yakunlang: ${prereqLabels.join(', ')}');
+              : 'Avval oldingi bosqiçni yakunlang: ${prereqLabels.join(', ')}');
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(msg)));
@@ -198,7 +198,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     if (isUpcoming) {
       msg = isRu
           ? 'Уровень ${level.cefrLevel} появится на следующем этапе (DEFERRED). Пока завершите модули A1–B1.'
-          : '${level.cefrLevel} bosqichi keyingi bosqichda (DEFERRED) qo‘shiladi. Hozircha A1–B1 darslarini yakunlang.';
+          : '${level.cefrLevel} bosqiçi keyingi bosqiçda (DEFERRED) qöşiladi. Hozirça A1–B1 darslarini yakunlang.';
     } else {
       final prereqTitles = level.prerequisites
           .map((id) => nodeById[id]?.localizedTitle(lang))
@@ -206,11 +206,11 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
           .where((t) => t.trim().isNotEmpty)
           .toList();
       final prereqText = prereqTitles.isEmpty
-          ? (isRu ? 'предыдущий уровень' : 'oldingi bosqichni')
+          ? (isRu ? 'предыдущий уровень' : 'oldingi bosqiçni')
           : prereqTitles.join(', ');
       msg = isRu
           ? 'Уровень ${level.cefrLevel} заблокирован. Сначала завершите: $prereqText'
-          : '${level.cefrLevel} darajasi bloklangan. Avval oldingi bosqichni yakunlang: $prereqText';
+          : '${level.cefrLevel} darajasi bloklangan. Avval oldingi bosqiçni yakunlang: $prereqText';
     }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -257,7 +257,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             constraints: const BoxConstraints(maxWidth: 680),
             child: Column(
               children: [
-                // Top Toggle Switch: [Bilim xaritasi | Ta’lim yo‘li]
+                // Top Toggle Switch: [Bilim xaritasi | Ta’lim yöli]
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -586,14 +586,14 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
       if (cefr == 'A2') {
         return isRu
             ? 'Транспорт и ориентирование'
-            : 'Transport va yo‘l so‘rash';
+            : 'Transport va yöl söraş';
       }
       if (cefr == 'B1') {
         return isRu
             ? 'Поездки и опыт: Present Perfect и Past Simple'
             : 'Sayohat logistikasi: Present Perfect vs Past Simple';
       }
-      return isRu ? 'Первые английские слова' : 'Birinchi inglizcha so‘zlar';
+      return isRu ? 'Первые английские слова' : 'Birinçi inglizça sözlar';
     }
 
     return SingleChildScrollView(
@@ -606,10 +606,10 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             child: EdTechSectionHeader(
               pillText: isRu
                   ? 'Маршрут CEFR $wiredRangeLabel'
-                  : 'CEFR $wiredRangeLabel marshruti',
+                  : 'CEFR $wiredRangeLabel marşruti',
               title: isRu
                   ? 'Пошаговый курс английского'
-                  : 'Ingliz tili CEFR yo‘li',
+                  : 'Ingliz tili CEFR yöli',
               highlightWord: isRu ? 'английского' : 'CEFR',
               subtitle: isRu
                   ? cefrOfficialDisclaimerRu
@@ -634,7 +634,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                       AppBadge(
                         text: isRu
                             ? 'Рекомендуемый старт • ${placementTarget.cefrLevel}'
-                            : 'Tavsiya etilgan boshlanish • ${placementTarget.cefrLevel}',
+                            : 'Tavsiya etilgan boşlaniş • ${placementTarget.cefrLevel}',
                         variant: AppBadgeVariant.blue,
                       ),
                       if (placementScore != null)
@@ -657,7 +657,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                   Text(
                     isRu
                         ? 'Результат диагностики открыл стартовый урок. Уровни B2–C2 ожидаются на следующем этапе (DEFERRED).'
-                        : 'Diagnostika natijasi boshlang‘ich darsni tavsiya qildi. B2–C2 bosqichlari keyingi bosqichda (DEFERRED) qo‘shiladi.',
+                        : 'Diagnostika natijasi boşlanğiç darsni tavsiya qildi. B2–C2 bosqiçlari keyingi bosqiçda (DEFERRED) qöşiladi.',
                     style: AppTypography.ui(
                       fontSize: 11.5,
                       color: c.graphite,
@@ -665,7 +665,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                   ),
                   const SizedBox(height: 10),
                   AppButton(
-                    text: isRu ? 'Начать урок' : 'Darsni boshlash',
+                    text: isRu ? 'Начать урок' : 'Darsni boşlaş',
                     size: AppButtonSize.small,
                     variant: AppButtonVariant.primary,
                     onPressed: () async {
@@ -696,7 +696,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     Text(
                       isRu
                           ? 'Карточки интервального повторения'
-                          : 'Intervalli takrorlash (SRS)',
+                          : 'Intervalli takrorlaş (SRS)',
                       style: AppTypography.ui(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
@@ -707,7 +707,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                     Text(
                       isRu
                           ? 'Закрепляйте ${_englishAllFlashcards.length} карточек $wiredRangeLabel по режиму SRS • ${unlockedFlashcards.length} открыто'
-                          : '$wiredRangeLabel bosqichlaridagi ${_englishAllFlashcards.length} ta so‘z va iborani SRS asosida takrorlang • ${unlockedFlashcards.length} ta ochiq',
+                          : '$wiredRangeLabel bosqiçlaridagi ${_englishAllFlashcards.length} ta söz va iborani SRS asosida takrorlang • ${unlockedFlashcards.length} ta oçiq',
                       style: AppTypography.ui(
                         fontSize: 11.5,
                         color: c.graphite,
@@ -716,7 +716,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                   ],
                 );
                 final srsButton = AppButton(
-                  text: isRu ? 'Повторение SRS' : 'SRS Takrorlash',
+                  text: isRu ? 'Повторение SRS' : 'SRS Takrorlaş',
                   size: AppButtonSize.small,
                   variant: AppButtonVariant.secondary,
                   onPressed: () => _openSrsFlashcardsModal(
@@ -1075,7 +1075,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           AppBadge(
                             text: isRu
                                 ? 'Скоро (DEFERRED)'
-                                : 'Keyingi bosqich (DEFERRED)',
+                                : 'Keyingi bosqiç (DEFERRED)',
                             variant: AppBadgeVariant.slate,
                           ),
                         ],
@@ -1083,7 +1083,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                       subtitle: Text(
                         isRu
                             ? '${lvl.modules.length} модуля • Скоро в следующих этапах'
-                            : '${lvl.modules.length} modul • Keyingi bosqichda ochiladi',
+                            : '${lvl.modules.length} modul • Keyingi bosqiçda oçiladi',
                         style: AppTypography.ui(
                           fontSize: 11.5,
                           color: c.slatefine,
@@ -1299,7 +1299,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                             AppBadge(
                               text: isRu
                                   ? 'Целевая практика'
-                                  : 'Maqsadli mashq',
+                                  : 'Maqsadli maşq',
                               variant: AppBadgeVariant.amber,
                             ),
                         ],

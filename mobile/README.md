@@ -1,15 +1,15 @@
-# BilimYo‘l Smart Edu — Flutter Mobile
+# BilimYöl Smart Edu — Flutter Mobile
 
-> Umummilliy AI Xakaton 2026 uchun native Flutter mobil ilovasi.
-> "Darslik emas — shaxsiy ta’lim yo‘li."
+> Umummilliy AI Xakaton 2026 uçun native Flutter mobil ilovasi.
+> "Darslik emas — şaxsiy ta’lim yöli."
 
-BilimYo‘l Smart Edu — o‘quvchining bilim bo‘shliqlarini aniqlab, adaptiv o‘quv
-yo‘lini quradigan, xatolarni Yo‘lchi AI orqali pedagogik tahlil qiladigan mobil
+BilimYöl Smart Edu — öquvçining bilim böşliqlarini aniqlab, adaptiv öquv
+yölini quradigan, xatolarni Yölçi AI orqali pedagogik tahlil qiladigan mobil
 platforma.
 
 ---
 
-## Ishga tushirish
+## Işga tuşiriş
 
 Talablar: Flutter `>=3.44.0` (loyiha `3.45.0-0.1.pre` beta bilan qurilgan) va
 Android SDK.
@@ -24,9 +24,9 @@ flutter run          # qurilma/emulyatorda
 
 ### Offline demo rejimi
 
-Supabase kaliti berilmasa ilova **avtomatik oflayn demo rejimida** ishlaydi —
-barcha ma’lumotlar qurilma ichida, tarmoq talab qilinmaydi. Bu hackaton
-namoyishi uchun tavsiya etiladi.
+Supabase kaliti berilmasa ilova **avtomatik oflayn demo rejimida** işlaydi —
+barça ma’lumotlar qurilma içida, tarmoq talab qilinmaydi. Bu hackaton
+namoyişi uçun tavsiya etiladi.
 
 ### Release APK
 
@@ -35,15 +35,15 @@ flutter build apk --release
 # Natija: build/app/outputs/flutter-apk/app-release.apk
 ```
 
-Hakamlarga tarqatish uchun tayyor APK shu yo‘lda bo‘ladi. O‘rnatish:
+Hakamlarga tarqatiş uçun tayyor APK şu yölda böladi. Örnatiş:
 `adb install -r build/app/outputs/flutter-apk/app-release.apk` yoki faylni
-telefonga ko‘chirib o‘rnatish.
+telefonga köçirib örnatiş.
 
-### Supabase bilan ulash (ixtiyoriy)
+### Supabase bilan ulaş (ixtiyoriy)
 
 ```powershell
 Copy-Item supabase_env.example.json supabase_env.json
-# supabase_env.json ichidagi qiymatlarni to‘ldiring
+# supabase_env.json içidagi qiymatlarni töldiring
 flutter run --dart-define-from-file=supabase_env.json
 ```
 
@@ -51,35 +51,35 @@ flutter run --dart-define-from-file=supabase_env.json
 
 ---
 
-## Fanlar (to‘rtala fan to‘liq ishlaydi)
+## Fanlar (törtala fan töliq işlaydi)
 
-| Fan | Ko‘nikmalar | Darslar |
+| Fan | Könikmalar | Darslar |
 |---|---|---|
 | Matematika | Algebra, Tenglamalar, Funksiyalar, Grafiklar | 3 |
 | Ingliz tili | Vocabulary, Grammar, Listening, Reading | 3 |
-| IT & Kodlash | Python, Veb dasturlash | 2 |
-| Mantiq | Boshqotirmalar, Qonuniyatlar | 2 |
+| IT & Kodlaş | Python, Veb dasturlaş | 2 |
+| Mantiq | Boşqotirmalar, Qonuniyatlar | 2 |
 
-Har bir fan uchun diagnostika savollari, yo‘l xaritasi va mustahkamlash
-mashqlari mavjud.
+Har bir fan uçun diagnostika savollari, yöl xaritasi va mustahkamlaş
+maşqlari mavjud.
 
 ---
 
-## Hakamlar uchun demo oqimi
+## Hakamlar uçun demo oqimi
 
-1. **Fan tanlash** — Matematika (yoki istalgan fan).
+1. **Fan tanlaş** — Matematika (yoki istalgan fan).
 2. **Onboarding** — maqsad, kunlik vaqt, daraja.
 3. **Diagnostika** — savollarga javob bering **yoki** yuqoridagi
    **"Tezkor demo"** tugmasini bosing (adaptiv profil tayyorlanadi).
-4. **Bilim xaritasi** — zaif ko‘nikma ogohlantirish bilan ko‘rsatiladi.
-5. **Yo‘l xaritasi** — adaptiv bosqichlar; zaif mavzu mustahkamlashga tushadi.
+4. **Bilim xaritasi** — zaif könikma ogohlantiriş bilan körsatiladi.
+5. **Yöl xaritasi** — adaptiv bosqiçlar; zaif mavzu mustahkamlaşga tuşadi.
 6. **Dars** — nazariya, formula, interaktiv savol. Ataylab **xato javob**
-   tanlang: Yo‘lchi AI oynasi tanlangan javob, **to‘g‘ri javob**, sabab va
-   remediativ qadamni ko‘rsatadi.
-7. **Mustahkamlash** — to‘g‘ri javob bering; bal va XP yangilanadi.
+   tanlang: Yölçi AI oynasi tanlangan javob, **töğri javob**, sabab va
+   remediativ qadamni körsatadi.
+7. **Mustahkamlaş** — töğri javob bering; bal va XP yangilanadi.
 8. **Dashboard** — kunlik maqsad, streak, XP va keyingi qadam.
 9. **Demo Reset** — dashboard yuqorisidagi qora panel orqali holatni istalgan
-   vaqtda qayta boshlang.
+   vaqtda qayta boşlang.
 
 ---
 
@@ -99,14 +99,14 @@ lib/
 - **Routing:** GoRouter (`/courses`, `/onboarding`, `/placement`, `/knowledge-map`,
   `/roadmap`, `/lesson`, `/dashboard`, `/progress`, `/ai-tutor`, `/profile`).
 - **Scoring:** `SkillScoringEngine`, `RouteEngine`, `ProgressEngine` — deterministik.
-- **Xavfsizlik:** server-avtoritativ baholash kontrakti; client savol payloadida
-  javob kaliti saqlanmaydi (AI xizmatlari kalitni server tomonida ro‘yxatdan
-  o‘tkazadi).
+- **Xavfsizlik:** server-avtoritativ baholaş kontrakti; client savol payloadida
+  javob kaliti saqlanmaydi (AI xizmatlari kalitni server tomonida röyxatdan
+  ötkazadi).
 
 ---
 
 ## Sifat holati
 
-- `flutter analyze` — 0 xato, 0 ogohlantirish.
-- `flutter test` — 69/69 test o‘tadi.
+- `flutter analyze` — 0 xato, 0 ogohlantiriş.
+- `flutter test` — 69/69 test ötadi.
 - `flutter build apk --release` — muvaffaqiyatli.

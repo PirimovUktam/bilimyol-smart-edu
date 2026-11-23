@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bilimyol_mobile/app/providers.dart';
 import 'package:bilimyol_mobile/core/auth/demo_session.dart';
 import 'package:bilimyol_mobile/core/config/supabase_config.dart';
@@ -47,7 +48,7 @@ void main() {
       await tester.enterText(fields.at(3), 'secret123');
       await tester.pump();
 
-      final submitBtn = find.text('Hisob Yaratish');
+      final submitBtn = find.text('Hisob Yaratiş');
       await tester.ensureVisible(submitBtn);
       await tester.tap(submitBtn);
       await tester.pumpAndSettle();
@@ -60,6 +61,7 @@ void main() {
     });
 
     test('LearnerStateNotifier.resetAll invalidates placement & lesson session providers', () async {
+      SharedPreferences.setMockInitialValues({});
       final repo = InMemoryLearnerRepository();
       final container = ProviderContainer(
         overrides: [
@@ -84,7 +86,7 @@ void main() {
       expect(container.read(lessonSessionNotifierProvider).lesson, isNull);
     });
 
-    testWidgets('DashboardScreen filters Aktiv, Tavsiya, Barchasi tabs and shows Mantiq', (tester) async {
+    testWidgets('DashboardScreen filters Aktiv, Tavsiya, Barçasi tabs and shows Mantiq', (tester) async {
       tester.view.physicalSize = const Size(390, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -120,7 +122,7 @@ void main() {
       // Default tab 0 (Aktiv): Hero pill + Matematika course card, Mantiq not shown
       await tester.drag(find.byType(ListView), const Offset(0, -350));
       await tester.pumpAndSettle();
-      final barchasiTab = find.text('Barchasi');
+      final barchasiTab = find.text('Barçasi');
       expect(find.text('Matematika'), findsNWidgets(2));
       expect(find.text('Mantiq'), findsNothing);
 
@@ -128,16 +130,16 @@ void main() {
       await tester.tap(find.text('Tavsiya'));
       await tester.pumpAndSettle();
       expect(find.text('Ingliz tili'), findsOneWidget);
-      expect(find.text('IT & Kodlash'), findsOneWidget);
+      expect(find.text('IT & Kodlaş'), findsOneWidget);
       expect(find.text('Mantiq'), findsOneWidget);
       expect(find.text('Matematika'), findsOneWidget);
 
-      // Tap tab 2 (Barchasi): all 4 courses including Mantiq appear without .take(3) truncation
+      // Tap tab 2 (Barçasi): all 4 courses including Mantiq appear without .take(3) truncation
       await tester.tap(barchasiTab);
       await tester.pumpAndSettle();
       expect(find.text('Matematika'), findsNWidgets(2));
       expect(find.text('Ingliz tili'), findsOneWidget);
-      expect(find.text('IT & Kodlash'), findsOneWidget);
+      expect(find.text('IT & Kodlaş'), findsOneWidget);
       expect(find.text('Mantiq'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -589,7 +591,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final profileResetBtn = find.text('Namuna natijalarini tiklash');
+      final profileResetBtn = find.text('Namuna natijalarini tiklaş');
       await tester.ensureVisible(profileResetBtn);
       await tester.tap(profileResetBtn);
       await tester.pumpAndSettle();

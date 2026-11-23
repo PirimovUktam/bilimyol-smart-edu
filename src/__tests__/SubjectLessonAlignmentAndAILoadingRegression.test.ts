@@ -19,7 +19,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     vi.clearAllMocks();
   });
 
-  // 1. Ingliz tili tanlash -> ingliz tili mazmuni va to'g'ri course ID
+  // 1. Ingliz tili tanlaş -> ingliz tili mazmuni va töğri course ID
   it('1. Selecting English course provides English lessons and never returns math content', async () => {
     const englishCourse = await courseRepo.getCourseById('course_eng_01');
     expect(englishCourse).toBeDefined();
@@ -44,7 +44,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(audioStep?.media?.transcript).toContain('in the afternoon');
   });
 
-  // 2. Matematika tanlash -> matematika mazmuni
+  // 2. Matematika tanlaş -> matematika mazmuni
   it('2. Selecting Mathematics course provides Math lessons with formulas and theorems', async () => {
     const mathCourse = await courseRepo.getCourseById('course_math_01');
     expect(mathCourse).toBeDefined();
@@ -75,7 +75,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(nonExistentLesson).toBeNull();
   });
 
-  // 4. AI dars yaratishi muvaffaqiyatli -> haqiqiy lessonId bilan dars ochiladi
+  // 4. AI dars yaratişi muvaffaqiyatli -> haqiqiy lessonId bilan dars oçiladi
   it('4. AI lesson generation creates subject-accurate lessons with real lessonId and saves to repository', async () => {
     // English generation
     const engResponse = await demoAIService.generateLesson({
@@ -103,7 +103,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(itResponse.steps.some((s) => s.content.includes('Algoritm') || s.content.includes('Dastur'))).toBe(true);
   });
 
-  // 5. AI xatolik qaytarganda (401/403/429/500) -> loading tugaydi, foydali xabar ko'rinadi
+  // 5. AI xatolik qaytarganda (401/403/429/500) -> loading tugaydi, foydali xabar körinadi
   it('5. When AI service encounters an error, loading terminates and user-friendly error message is displayed', async () => {
     const store = useLessonStore.getState();
 
@@ -121,7 +121,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(stateAfterMissingLoad.error).toContain('invalid_missing_lesson_id_999');
   });
 
-  // 6. Noto'g'ri JSON yoki bo'sh response -> cheksiz loading bo'lmaydi
+  // 6. Notöğri JSON yoki böş response -> çeksiz loading bölmaydi
   it('6. Malformed or empty response terminates loading immediately without freezing at 85%', async () => {
     const store = useLessonStore.getState();
 
@@ -134,7 +134,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(state.error).not.toBeNull();
   });
 
-  // 7. Timeout va qayta urinish -> state buzilmaydi
+  // 7. Timeout va qayta uriniş -> state buzilmaydi
   it('7. Error state can be cleared, and retry succeeds without corrupting store state', async () => {
     const store = useLessonStore.getState();
 
@@ -157,7 +157,7 @@ describe('Subject-Lesson Alignment & AI Loading Regression Suite', () => {
     expect(state.currentLesson?.title).not.toContain('Matematika');
   });
 
-  // 8. Yangi yaratilgan dars InteractiveLessonView ichida boshqa dars bilan almashtirilmaydi
+  // 8. Yangi yaratilgan dars InteractiveLessonView içida boşqa dars bilan almaştirilmaydi
   it('8. Loaded generated lesson is preserved and not overwritten when re-invoking loadLesson with same ID', async () => {
     const store = useLessonStore.getState();
 

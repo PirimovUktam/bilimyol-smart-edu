@@ -104,7 +104,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
       setState(() {
         _audioState = const LessonAudioState(
           status: LessonAudioStatus.error,
-          errorMessage: 'Media manzili noto‘g‘ri.',
+          errorMessage: 'Media manzili notöğri.',
           errorCode: LessonAudioErrorCode.invalidSource,
         );
       });
@@ -322,7 +322,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                       button: true,
                       label: _audioState.isPlaying
                           ? (isRu ? 'Пауза' : 'Pauza')
-                          : (isRu ? 'Слушать' : 'Tinglash'),
+                          : (isRu ? 'Слушать' : 'Tinglaş'),
                       child: IconButton.filled(
                         style: IconButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -331,7 +331,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                         ),
                         tooltip: _audioState.isPlaying
                             ? (isRu ? 'Пауза' : 'Pauza')
-                            : (isRu ? 'Слушать' : 'Tinglash'),
+                            : (isRu ? 'Слушать' : 'Tinglaş'),
                         onPressed: _audioState.isLoading
                             ? null
                             : _togglePlayPause,
@@ -354,7 +354,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                     );
                     final replayButton = Semantics(
                       button: true,
-                      label: isRu ? 'Повторить' : 'Qayta tinglash',
+                      label: isRu ? 'Повторить' : 'Qayta tinglaş',
                       child: IconButton.outlined(
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
@@ -362,7 +362,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                             color: AppColors.borderColor(context),
                           ),
                         ),
-                        tooltip: isRu ? 'Повторить' : 'Qayta tinglash',
+                        tooltip: isRu ? 'Повторить' : 'Qayta tinglaş',
                         onPressed: _audioState.isLoading ? null : _replay,
                         icon: Icon(
                           Icons.replay_rounded,
@@ -447,7 +447,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                       _audioState.localizedErrorMessage(locale) ??
                           (isRu
                               ? 'Не удалось воспроизвести аудио. Откройте текст ниже.'
-                              : 'Audioni ijro etib bo‘lmadi. Pastdagi matnli bayondan foydalaning.'),
+                              : 'Audioni ijro etib bölmadi. Pastdagi matnli bayondan foydalaning.'),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -460,7 +460,7 @@ class _LessonMediaWidgetState extends ConsumerState<LessonMediaWidget> {
                       ),
                       onPressed: _loadCurrentMedia,
                       child: Text(
-                        isRu ? 'Повторить' : 'Qayta urinish',
+                        isRu ? 'Повторить' : 'Qayta uriniş',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,

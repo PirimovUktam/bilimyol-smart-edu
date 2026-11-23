@@ -61,7 +61,7 @@ class SubmitLessonAnswerUseCase {
           question.localizedWrongFeedback(uiLocale) ??
           (uiLocale == 'ru'
               ? 'Проверьте правило и попробуйте ещё раз.'
-              : 'Qoidani tekshirib, qayta urinib ko‘ring.');
+              : 'Qoidani tekşirib, qayta urinib köring.');
 
       return LessonAnswerResult(
         isCorrect: isCorrect,
@@ -103,14 +103,14 @@ class SubmitLessonAnswerUseCase {
       final partialHint = isPartial
           ? (uiLocale == 'ru'
               ? 'Сопоставьте все пары (${pairs.length}/${question.matchPairs.length}). '
-              : 'Barcha juftliklarni moslang (${pairs.length}/${question.matchPairs.length}). ')
+              : 'Barça juftliklarni moslang (${pairs.length}/${question.matchPairs.length}). ')
           : '';
       final feedbackText = '$partialHint${question.localizedWrongFeedback(uiLocale) ?? ''}'.trim();
       final wrongExplanation = feedbackText.isNotEmpty
           ? feedbackText
           : (uiLocale == 'ru'
                 ? 'Проверьте пары слов и попробуйте ещё раз.'
-                : 'Juftliklarni tekshirib, qayta urinib ko‘ring.');
+                : 'Juftliklarni tekşirib, qayta urinib köring.');
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: summary.isEmpty ? '—' : summary,
@@ -144,14 +144,14 @@ class SubmitLessonAnswerUseCase {
       final partialHint = isPartial
           ? (uiLocale == 'ru'
               ? 'Расставьте все слова предложения (${tokens.length}/${question.orderedTokens.length}). '
-              : 'Gapdagi barcha so‘zlarni tartiblang (${tokens.length}/${question.orderedTokens.length}). ')
+              : 'Gapdagi barça sözlarni tartiblang (${tokens.length}/${question.orderedTokens.length}). ')
           : '';
       final feedbackText = '$partialHint${question.localizedWrongFeedback(uiLocale) ?? ''}'.trim();
       final wrongExplanation = feedbackText.isNotEmpty
           ? feedbackText
           : (uiLocale == 'ru'
                 ? 'Проверьте порядок слов и попробуйте ещё раз.'
-                : 'So‘z tartibini tekshirib, qayta urinib ko‘ring.');
+                : 'Söz tartibini tekşirib, qayta urinib köring.');
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: joined.isEmpty ? '—' : joined,
@@ -200,7 +200,7 @@ class SubmitLessonAnswerUseCase {
     final isCorrect = attempt.isCorrect;
     // Server-authoritative repositories may return the correct option directly;
     // otherwise fall back to the question's own answer key. This guarantees a
-    // wrong answer can always reveal "To‘g‘ri javob: …" to the learner.
+    // wrong answer can always reveal "Töğri javob: …" to the learner.
     final serverCorrectOption = attempt.correctOption;
     final correctIndex = question.correctIndex;
     final localCorrectOption =

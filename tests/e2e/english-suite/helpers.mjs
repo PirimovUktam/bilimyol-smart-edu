@@ -10,7 +10,7 @@ export const BASE_VIEWPORTS = {
 const COURSE_TITLE_PATTERNS = {
   course_eng_01: /Ingliz tili|Английский/i,
   course_math_01: /Matematika|Математика/i,
-  course_it: /IT & Kodlash|IT/i,
+  course_it: /IT & Kodlaş|IT/i,
   course_logic: /Mantiq|Логика/i,
 };
 
@@ -80,7 +80,7 @@ export async function createEnglishE2EContext(browser, options = {}) {
   page.on('request', (request) => {
     try {
       const url = new URL(request.url());
-      const isHostedSupabase = url.hostname.endsWith('.supabase.co');
+      const işostedSupabase = url.hostname.endsWith('.supabase.co');
       let pageOrigin = null;
       try {
         const currentPageUrl = page.url();
@@ -95,7 +95,7 @@ export async function createEnglishE2EContext(browser, options = {}) {
       );
       const isNonPreviewOrigin = pageOrigin === null || url.origin !== pageOrigin;
 
-      if (isHostedSupabase || (isSupabaseApiPath && isNonPreviewOrigin)) {
+      if (işostedSupabase || (isSupabaseApiPath && isNonPreviewOrigin)) {
         remoteRequests.push(`${request.method()} ${url.origin}${url.pathname}`);
       }
     } catch {
@@ -131,18 +131,18 @@ export async function launchDemoSession(page, baseUrl) {
   const main = page.getByRole('main');
 
   const skipTourBtn = main.getByRole('button', {
-    name: /O‘tkazib yuborish|Пропустить/i,
+    name: /Ötkazib yuboriş|Пропустить/i,
   });
   if (await skipTourBtn.first().isVisible().catch(() => false)) {
     await skipTourBtn.first().click();
   }
 
   const demoBtn = page.getByRole('button', {
-    name: /Namuna hisobi bilan kirish|Войти в деморежим/i,
+    name: /Namuna hisobi bilan kiriş|Войти в деморежим/i,
   });
 
   const postAuthHeading = main.getByRole('heading', {
-    name: /O‘zingizga mos fanni tanlang|Выберите подходящий предмет|Assalomu alaykum|Здравствуйте/i,
+    name: /Özingizga mos fanni tanlang|Выберите подходящий предмет|Assalomu alaykum|Здравствуйте/i,
   });
 
   const demoVisible = await demoBtn.first().isVisible().catch(() => false);
@@ -179,20 +179,20 @@ export async function selectCourse(page, courseId) {
 
   const main = page.getByRole('main');
   const courseHeading = main.getByRole('heading', {
-    name: /O‘zingizga mos fanni tanlang|Выберите подходящий предмет/i,
+    name: /Özingizga mos fanni tanlang|Выберите подходящий предмет/i,
   });
 
   if (!(await courseHeading.isVisible().catch(() => false))) {
     const switchBtn = page.getByRole('button', {
-      name: /Fanni almashtirish|Сменить предмет/i,
+      name: /Fanni almaştiriş|Сменить предмет/i,
     });
     if (!(await clickFirstVisible(switchBtn))) {
       const backBtn = main.getByRole('button', {
-        name: /Ta’lim yo‘liga qaytish|Вернуться к пути обучения/i,
+        name: /Ta’lim yöliga qaytiş|Вернуться к пути обучения/i,
       });
       await clickFirstVisible(backBtn);
       const postSwitchBtn = page.getByRole('button', {
-        name: /Fanni almashtirish|Сменить предмет/i,
+        name: /Fanni almaştiriş|Сменить предмет/i,
       });
       if (!(await clickFirstVisible(postSwitchBtn))) {
         const coursesNav = page.getByRole('button', { name: /^Kurslar$|^Курсы$/i });
@@ -206,7 +206,7 @@ export async function selectCourse(page, courseId) {
   await courseHeading.waitFor({ state: 'visible' });
 
   const specificCourseBtn = main.getByRole('button', {
-    name: new RegExp(`(${titlePattern.source}).*(fanini tanlash|Выбрать предмет)|Выбрать предмет.*(${titlePattern.source})`, 'i'),
+    name: new RegExp(`(${titlePattern.source}).*(fanini tanlaş|Выбрать предмет)|Выбрать предмет.*(${titlePattern.source})`, 'i'),
   });
 
   if ((await specificCourseBtn.count()) > 0) {
@@ -217,7 +217,7 @@ export async function selectCourse(page, courseId) {
 
   await main
     .getByRole('heading', {
-      name: /O‘rganish rejangizni sozlang|Настройте свой план обучения|Boshlang‘ich darslar|Начальные уроки|Assalomu alaykum|Здравствуйте|Mening ta’lim yo‘lim|Мой путь обучения|Bilim xaritasi|Карта знаний/i,
+      name: /Örganiş rejangizni sozlang|Настройте свой план обучения|Boşlanğiç darslar|Начальные уроки|Assalomu alaykum|Здравствуйте|Mening ta’lim yölim|Мой путь обучения|Bilim xaritasi|Карта знаний/i,
     })
     .first()
     .waitFor({ state: 'visible' });
@@ -246,8 +246,8 @@ export async function setTheme(page, theme) {
   if (currentTheme !== theme) {
     const togglePattern =
       theme === 'dark'
-        ? /Qorong‘i rejimni yoqish|Включить тёмную тему/i
-        : /Yorug‘ rejimni yoqish|Включить светлую тему/i;
+        ? /Qoronği rejimni yoqiş|Включить тёмную тему/i
+        : /Yoruğ rejimni yoqiş|Включить светлую тему/i;
     await page.getByRole('button', { name: togglePattern }).first().click();
   }
 
@@ -316,7 +316,7 @@ export async function openAndCloseYolchiAi(page, options = {}) {
   } = options;
 
   const askBtn = page.getByRole('button', {
-    name: /Yo‘lchidan so‘rash|Спросить Yo‘lchi/i,
+    name: /Yölçidan söraş|Спросить Yölçi/i,
   });
   await askBtn.first().waitFor({ state: 'visible' });
 
@@ -339,7 +339,7 @@ export async function openAndCloseYolchiAi(page, options = {}) {
   await askBtn.first().click();
 
   const dialog = page.getByRole('dialog', {
-    name: /Yo‘lchi bilan shu dars haqida|Обсудить урок с Yo‘lchi/i,
+    name: /Yölçi bilan şu dars haqida|Обсудить урок с Yölçi/i,
   });
   await dialog.waitFor({ state: 'visible' });
 
@@ -349,11 +349,11 @@ export async function openAndCloseYolchiAi(page, options = {}) {
     });
     const beforeCount = await feedbackBtns.count();
     const input = dialog.getByRole('textbox', {
-      name: /Yo‘lchi AI ga savol yozing|Напишите вопрос Yo‘lchi AI/i,
+      name: /Yölçi AI ga savol yozing|Напишите вопрос Yölçi AI/i,
     });
     await input.fill(askText);
     await dialog
-      .getByRole('button', { name: /Savolni yuborish|Отправить вопрос/i })
+      .getByRole('button', { name: /Savolni yuboriş|Отправить вопрос/i })
       .click();
     await feedbackBtns.nth(beforeCount).waitFor({ state: 'visible' });
   }
@@ -361,7 +361,7 @@ export async function openAndCloseYolchiAi(page, options = {}) {
   if (closeWith === 'escape') {
     await page.keyboard.press('Escape');
   } else {
-    await dialog.getByRole('button', { name: /Yopish|Закрыть/i }).click();
+    await dialog.getByRole('button', { name: /Yopiş|Закрыть/i }).click();
   }
 
   await dialog.waitFor({ state: 'hidden' });

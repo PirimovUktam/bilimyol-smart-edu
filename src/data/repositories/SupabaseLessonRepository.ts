@@ -9,6 +9,7 @@ import { Question, QuestionType } from '@/domain/entities/Question';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
+import { updatedUzbekSpelling, updatedCourseText } from '@/core/locales/uzbekAlphabet';
 import { LocalizedError } from '@/core/locales/LocalizedError';
 import { MATH_MASTERY_COURSE } from '@/domain/personalization/learningStart';
 import { inMemoryLessonRepository } from './InMemoryLessonRepository';
@@ -91,7 +92,7 @@ const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question
       ? { cefrLevel: raw.cefrLevel || raw.cefr_level }
       : {}),
     ...(typeof raw.topic === 'string' ? { topic: raw.topic } : {}),
-    text: raw.text,
+    text: updatedCourseText(raw.text, courseId),
     ...(typeof (raw.textRu || raw.text_ru) === 'string' ? { textRu: raw.textRu || raw.text_ru } : {}),
     contextSnippet: raw.contextSnippet || raw.context_snippet || undefined,
     questionType,
@@ -99,7 +100,7 @@ const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question
     formulaLatex: raw.formulaLatex || raw.formula_latex || undefined,
     audioSimText: raw.audioSimText || raw.audio_sim_text || undefined,
     audioSimSpeaker: raw.audioSimSpeaker || raw.audio_sim_speaker || undefined,
-    options: Array.isArray(raw.options) ? raw.options : [],
+    options: Array.isArray(raw.options) ? raw.options.map((text: string) => updatedCourseText(text, courseId)) : [],
     ...(typeof (raw.blankTemplate || raw.blank_template) === 'string'
       ? { blankTemplate: raw.blankTemplate || raw.blank_template }
       : {}),
@@ -122,7 +123,7 @@ const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question
     difficulty: raw.difficulty || 'medium',
     explanation: '',
     wrongFeedback: typeof (raw.wrongFeedback || raw.wrong_feedback) === 'string'
-      ? (raw.wrongFeedback || raw.wrong_feedback)
+      ? updatedCourseText(raw.wrongFeedback || raw.wrong_feedback, courseId)
       : undefined,
     wrongFeedbackRu: typeof (raw.wrongFeedbackRu || raw.wrong_feedback_ru) === 'string'
       ? (raw.wrongFeedbackRu || raw.wrong_feedback_ru)
@@ -166,14 +167,14 @@ const sanitizeFlashcards = (raw: unknown): LessonFlashcard[] | undefined => {
     valid.push({
       id: card.id,
       front: card.front,
-      backUz: card.backUz,
+      backUz: updatedUzbekSpelling(card.backUz),
       backRu: card.backRu,
       ...(typeof card.ipa === 'string' ? { ipa: card.ipa } : {}),
       ...(typeof card.ipaAmE === 'string' ? { ipaAmE: card.ipaAmE } : {}),
       ...(typeof card.partOfSpeech === 'string' ? { partOfSpeech: card.partOfSpeech } : {}),
       ...(typeof card.cefrLevel === 'string' ? { cefrLevel: card.cefrLevel } : {}),
       example: card.example,
-      exampleUz: card.exampleUz,
+      exampleUz: updatedUzbekSpelling(card.exampleUz),
       exampleRu: card.exampleRu,
       ...(audioSrc ? { audioSrc } : {}),
       ...(imageSrc ? { imageSrc } : {}),
@@ -197,13 +198,13 @@ const sanitizeSteps = (steps: unknown, courseId: string, skillId: string, fallba
       id: step.id,
       stepNumber: step.stepNumber ?? step.step_number ?? index + 1,
       type: step.type,
-      title: step.title,
+      title: updatedCourseText(step.title, courseId),
       ...(typeof (step.titleRu || step.title_ru) === 'string' ? { titleRu: step.titleRu || step.title_ru } : {}),
-      subtitle: step.subtitle,
+      subtitle: step.subtitle && updatedCourseText(step.subtitle, courseId),
       ...(typeof (step.subtitleRu || step.subtitle_ru) === 'string' ? { subtitleRu: step.subtitleRu || step.subtitle_ru } : {}),
-      content: step.content,
+      content: step.content && updatedCourseText(step.content, courseId),
       ...(typeof (step.contentRu || step.content_ru) === 'string' ? { contentRu: step.contentRu || step.content_ru } : {}),
-      highlightNotes: step.highlightNotes || step.highlight_notes,
+      highlightNotes: (step.highlightNotes || step.highlight_notes)?.map((text: string) => updatedCourseText(text, courseId)),
       ...(Array.isArray(step.highlightNotesRu || step.highlight_notes_ru)
         ? { highlightNotesRu: step.highlightNotesRu || step.highlight_notes_ru }
         : {}),
@@ -253,10 +254,10 @@ export function mapLearnerLesson(row: any): Lesson {
       ? { canDoObjectiveRu: row.can_do_objective_ru || row.canDoObjectiveRu }
       : {}),
     ...(Array.isArray(row.prerequisites) ? { prerequisites: row.prerequisites } : {}),
-    title: row.title,
+    title: updatedUzbekSpelling(row.title),
     ...(typeof (row.title_ru || row.titleRu) === 'string' ? { titleRu: row.title_ru || row.titleRu } : {}),
     estimatedMinutes: row.estimated_minutes || 15,
-    summary: row.summary || '',
+    summary: updatedCourseText(row.summary || '', row.course_id),
     ...(typeof (row.summary_ru || row.summaryRu) === 'string' ? { summaryRu: row.summary_ru || row.summaryRu } : {}),
     steps,
     requiresMastery: steps.some((step) => step.masteryCheckpoint),
@@ -275,7 +276,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
   private async requireAuthenticatedUser(): Promise<void> {
     const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
-    if (!data.user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    if (!data.user) throw new Error('Autentifikatsiyadan ötilmagan.');
   }
 
   getCachedDemoLessonSync(lessonId: string): Lesson | null {
@@ -364,8 +365,8 @@ export class SupabaseLessonRepository implements ILessonRepository {
         if (error) throw error;
         if (!Array.isArray(data) || !data.length) throw new LocalizedError('path.failed');
         return (data as MathProgressionRow[]).map((n) => ({
-          id: n.id, courseId: n.course_id, skillId: n.skill_id, title: n.title,
-          description: n.description, prerequisites: n.prerequisites, requiredScore: n.required_score,
+          id: n.id, courseId: n.course_id, skillId: n.skill_id, title: updatedUzbekSpelling(n.title),
+          description: updatedUzbekSpelling(n.description), prerequisites: n.prerequisites, requiredScore: n.required_score,
           targetLessonId: n.target_lesson_id, estimatedMinutes: n.estimated_minutes, order: Number(n.order_index),
           status: n.status, isReinforcement: false, isOptional: n.is_optional,
           mastery: {
@@ -400,9 +401,9 @@ export class SupabaseLessonRepository implements ILessonRepository {
         ...(typeof (n.is_checkpoint ?? n.isCheckpoint) === 'boolean' ? { isCheckpoint: n.is_checkpoint ?? n.isCheckpoint } : {}),
         ...(typeof (n.has_rich_exercise ?? n.hasRichExercise) === 'boolean' ? { hasRichExercise: n.has_rich_exercise ?? n.hasRichExercise } : {}),
         ...(typeof (n.task_kind || n.taskKind) === 'string' ? { taskKind: n.task_kind || n.taskKind } : {}),
-        title: n.title,
+        title: updatedUzbekSpelling(n.title),
         ...(typeof (n.title_ru || n.titleRu) === 'string' ? { titleRu: n.title_ru || n.titleRu } : {}),
-        description: n.description || '',
+        description: updatedUzbekSpelling(n.description || ''),
         ...(typeof (n.description_ru || n.descriptionRu) === 'string' ? { descriptionRu: n.description_ru || n.descriptionRu } : {}),
         prerequisites: Array.isArray(n.prerequisites) ? n.prerequisites : [],
         requiredScore: n.required_score ?? 50,

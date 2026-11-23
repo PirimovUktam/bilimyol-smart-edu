@@ -31,7 +31,7 @@ class AIDemoFeedbackModel {
   });
 }
 
-/// Deterministic, offline Yo‘lchi AI mistake explanations keyed by the real
+/// Deterministic, offline Yölçi AI mistake explanations keyed by the real
 /// assessment ids used in the bundled lesson banks. When a question id is not
 /// listed here the AI service looks up A1–B1 English curriculum metadata or
 /// produces a generic, still-correct explanation.
@@ -43,15 +43,15 @@ const Map<String, AIDemoFeedbackModel> demoAiResponsesData = {
     misconceptionTitle: 'Ozod son (+3) hisobga olinmagan',
     misconceptionTitleRu: 'Не учтён свободный член (+3)',
     explanation:
-        'Siz 2 × 4 ni to‘g‘ri hisoblagansiz, lekin formuladagi +3 ozod hadini qo‘shishni unutdingiz. To‘g‘ri natija 11 bo‘ladi.',
+        'Siz 2 × 4 ni töğri hisoblagansiz, lekin formuladagi +3 ozod hadini qöşişni unutdingiz. Töğri natija 11 böladi.',
     explanationRu:
         'Вы правильно вычислили 2 × 4, но забыли прибавить свободный член +3 из формулы. Верный ответ — 11.',
     remediationStep:
-        'f(x) = ax + b ko‘rinishida avval ko‘paytirish, so‘ng qo‘shish bajariladi: f(4) = 2·4 + 3 = 11.',
+        'f(x) = ax + b körinişida avval köpaytiriş, söng qöşiş bajariladi: f(4) = 2·4 + 3 = 11.',
     remediationStepRu:
         'В функции вида f(x) = ax + b сначала выполняется умножение, затем сложение: f(4) = 2·4 + 3 = 11.',
     suggestedAction:
-        'Keling, shu qadamni qisqa mustahkamlash mashqi bilan mustahkamlaymiz.',
+        'Keling, şu qadamni qisqa mustahkamlaş maşqi bilan mustahkamlaymiz.',
     suggestedActionRu:
         'Давайте закрепим этот шаг на коротком дополнительном упражнении.',
   ),
@@ -60,10 +60,10 @@ const Map<String, AIDemoFeedbackModel> demoAiResponsesData = {
   'q_eng_listening_01_step': AIDemoFeedbackModel(
     courseId: 'course_eng_01',
     questionId: 'q_eng_listening_01_step',
-    misconceptionTitle: 'Vaqt iborasi noto‘g‘ri talqin qilindi',
+    misconceptionTitle: 'Vaqt iborasi notöğri talqin qilindi',
     misconceptionTitleRu: 'Выражение времени понято неверно',
     explanation:
-        '"Quarter past three" — soat uchdan 15 daqiqa o‘tganini bildiradi, ya’ni 15:15. "In the afternoon" esa kunduzgi vaqtni anglatadi.',
+        '"Quarter past three" — soat uçdan 15 daqiqa ötganini bildiradi, ya’ni 15:15. "In the afternoon" esa kunduzgi vaqtni anglatadi.',
     explanationRu:
         '«Quarter past three» означает 15 минут после трёх, то есть 15:15. Фраза «in the afternoon» уточняет дневное время.',
     remediationStep:
@@ -71,17 +71,17 @@ const Map<String, AIDemoFeedbackModel> demoAiResponsesData = {
     remediationStepRu:
         '«quarter past [час]» = +15 минут к часу; «quarter to [час]» = без 15 минут следующий час.',
     suggestedAction:
-        'Keling, vaqt iboralarini bitta qisqa mashqda mustahkamlaymiz.',
+        'Keling, vaqt iboralarini bitta qisqa maşqda mustahkamlaymiz.',
     suggestedActionRu:
         'Давайте закрепим выражения времени в одном коротком упражнении.',
   ),
   'q_eng_listening_01': AIDemoFeedbackModel(
     courseId: 'course_eng_01',
     questionId: 'q_eng_listening_01',
-    misconceptionTitle: 'Vaqt iborasi noto‘g‘ri talqin qilindi',
+    misconceptionTitle: 'Vaqt iborasi notöğri talqin qilindi',
     misconceptionTitleRu: 'Выражение времени понято неверно',
     explanation:
-        '"Quarter past three" — soat uchdan 15 daqiqa o‘tganini bildiradi, ya’ni 15:15. "In the afternoon" dalili tufayli bu tonggi 03:15 emas, kunduzgi 15:15.',
+        '"Quarter past three" — soat uçdan 15 daqiqa ötganini bildiradi, ya’ni 15:15. "In the afternoon" dalili tufayli bu tonggi 03:15 emas, kunduzgi 15:15.',
     explanationRu:
         '«Quarter past three» означает 15 минут после трёх (15:15). Благодаря уточнению «in the afternoon» это 15:15 дня, а не 03:15 ночи.',
     remediationStep:
@@ -89,7 +89,7 @@ const Map<String, AIDemoFeedbackModel> demoAiResponsesData = {
     remediationStepRu:
         '«quarter past [час]» = +15 минут к часу; «in the afternoon» = днём (PM).',
     suggestedAction:
-        'Keling, vaqt iboralarini bitta qisqa mashqda mustahkamlaymiz.',
+        'Keling, vaqt iboralarini bitta qisqa maşqda mustahkamlaymiz.',
     suggestedActionRu:
         'Давайте закрепим выражения времени в одном коротком упражнении.',
   ),

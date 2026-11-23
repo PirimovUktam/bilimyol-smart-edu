@@ -1,6 +1,6 @@
 {
-    "name": "bilimyol_mobile",
-    "short_name": "bilimyol_mobile",
+    "name": "BilimYöl Smart Edu",
+    "short_name": "BilimYöl",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

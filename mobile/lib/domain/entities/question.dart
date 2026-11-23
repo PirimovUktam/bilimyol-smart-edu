@@ -1,3 +1,4 @@
+import '../../core/l10n/uzbek_alphabet.dart';
 import 'lesson_media.dart';
 
 enum QuestionDifficulty {
@@ -105,8 +106,8 @@ class LocalizedFeedback {
       );
 }
 
-String normalizeTextAnswer(String input) {
-  var value = input.trim();
+String normalizeTextAnswer(String input, {bool uzbek = false}) {
+  var value = (uzbek ? legacyUzbekSpelling(input) : input).trim();
   if (value.isEmpty) return '';
   value = value
       .replaceAll('\u2019', "'")
@@ -210,10 +211,11 @@ class Question {
       mode == QuestionMode.textInput || mode == QuestionMode.fillBlank;
 
   bool isTextAnswerCorrect(String input) {
-    final normalized = normalizeTextAnswer(input);
+    final uzbek = courseId != 'course_eng_01';
+    final normalized = normalizeTextAnswer(input, uzbek: uzbek);
     if (normalized.isEmpty) return false;
     return acceptedAnswers.any(
-      (candidate) => normalizeTextAnswer(candidate) == normalized,
+      (candidate) => normalizeTextAnswer(candidate, uzbek: uzbek) == normalized,
     );
   }
 

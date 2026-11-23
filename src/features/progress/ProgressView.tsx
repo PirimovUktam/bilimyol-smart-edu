@@ -366,13 +366,13 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
                   <Trophy aria-hidden="true" className="size-5" />
                 </span>
                 <Badge variant={earned ? 'emerald' : 'slate'} size="sm">
-                  {earned ? 'Erishildi' : t('progress.locked')}
+                  {earned ? 'Erişildi' : t('progress.locked')}
                 </Badge>
               </div>
               <div>
                 <h3 className="heading font-extrabold">{title}</h3>
                 <p className="mt-1 text-xs text-slatefine">
-                  {description} · {earned ? 'Erishildi' : t('progress.locked')}
+                  {description} · {earned ? 'Erişildi' : t('progress.locked')}
                 </p>
               </div>
             </Card>

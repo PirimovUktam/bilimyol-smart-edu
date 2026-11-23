@@ -11,10 +11,10 @@ import {
 
 const video = {
   kind: 'video',
-  title: 'Qo‘shish',
+  title: 'Qöşiş',
   language: 'uz',
   reviewStatus: 'approved',
-  transcript: 'Ikki va uchni qo‘shamiz.',
+  transcript: 'Ikki va uçni qöşamiz.',
   durationSeconds: 40,
   source: '/lesson-media/test/addition.webm',
   captions: '/lesson-media/test/addition.vtt',
@@ -23,24 +23,24 @@ const video = {
 const englishAudio = {
   id: 'media_eng_starter_dialogue',
   kind: 'audio',
-  title: 'Aziza va Ben tanishuv dialogi',
+  title: 'Aziza va Ben tanişuv dialogi',
   language: 'en',
   reviewStatus: 'approved',
   transcript: "Aziza: Hi, I'm Aziza. What's your name?\nBen: I'm Ben. Nice to meet you.",
   durationSeconds: 5.907,
   source: '/lesson-media/english/a1-starter-dialogue.wav',
   posterImage: '/lesson-media/english/a1-starter-greeting.png',
-  posterAlt: 'Toshkentdagi maktab oldida Aziza va Ben salomlashmoqda',
+  posterAlt: 'Toşkentdagi maktab oldida Aziza va Ben salomlaşmoqda',
 };
 
 const englishImage = {
   id: 'media_eng_starter_greeting_img',
   kind: 'image',
-  title: 'Aziza va Ben uchrashuvi',
+  title: 'Aziza va Ben uçraşuvi',
   language: 'en',
   reviewStatus: 'approved',
   source: '/lesson-media/english/a1-starter-greeting.png',
-  alt: 'Toshkentdagi maktab oldida Aziza va Ben salomlashmoqda',
+  alt: 'Toşkentdagi maktab oldida Aziza va Ben salomlaşmoqda',
 };
 
 describe('reviewed lesson media', () => {
@@ -159,9 +159,9 @@ describe('reviewed lesson media', () => {
     const html = renderToStaticMarkup(<LessonMediaPlayer media={media} lessonId="addition" />);
     expect(html).toContain('<video');
     expect(html).toContain('<track');
-    expect(html).toContain('label="O‘zbekcha"');
+    expect(html).toContain('label="Özbekça"');
     expect(html).toContain('<select');
-    expect(html).toContain('Qayta tinglash');
+    expect(html).toContain('Qayta tinglaş');
     expect(html).toContain('Matnli bayon');
     expect(html).toContain(video.transcript);
   });
@@ -182,7 +182,7 @@ describe('reviewed lesson media', () => {
     expect(audioHtml).toContain('<audio');
     expect(audioHtml).toContain(`src="${englishAudio.posterImage}"`);
     expect(audioHtml).toContain(`alt="${englishAudio.posterAlt}"`);
-    expect(audioHtml).toContain('Qayta tinglash');
+    expect(audioHtml).toContain('Qayta tinglaş');
     expect(audioHtml).toContain('Aziza:');
     expect(audioHtml).toContain('Ben:');
 
@@ -194,12 +194,12 @@ describe('reviewed lesson media', () => {
     expect(imageHtml).not.toContain('<audio');
     expect(imageHtml).not.toContain('<video');
     expect(imageHtml).not.toContain('<select');
-    expect(imageHtml).not.toContain('Qayta tinglash');
+    expect(imageHtml).not.toContain('Qayta tinglaş');
   });
 
   it('provides pure helpers for caption labels, transcript turns, and media replay', () => {
     expect(getCaptionLabel('en')).toBe('English');
-    expect(getCaptionLabel('uz')).toBe('O‘zbekcha');
+    expect(getCaptionLabel('uz')).toBe('Özbekça');
     expect(getCaptionLabel('ru')).toBe('Русский');
 
     expect(parseTranscriptTurns("Aziza: Hi!\nBen: Hello!\nPlain note.")).toEqual([
@@ -244,7 +244,7 @@ describe('reviewed lesson media', () => {
             {
               id: 'fc_unsafe',
               front: 'Nice to meet you.',
-              backUz: 'Tanishganimdan xursandman.',
+              backUz: 'Tanişganimdan xursandman.',
               backRu: 'Приятно познакомиться.',
               example: "I'm Ben. Nice to meet you.",
               exampleUz: 'Men Benman.',

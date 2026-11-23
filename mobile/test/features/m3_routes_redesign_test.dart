@@ -557,11 +557,11 @@ void main() {
         courseId: 'course_eng_01',
         skillId: 'eng_listening',
         text: 'Audio matndan asosiy fikrni tanlang.',
-        options: ['Birinchi javob', 'Ikkinchi javob'],
+        options: ['Birinçi javob', 'Ikkinçi javob'],
         correctIndex: 0,
         explanation: 'Audio izohi',
         difficulty: QuestionDifficulty.easy,
-        audioSimText: 'Hello, welcome to BilimYo‘l!',
+        audioSimText: 'Hello, welcome to BilimYöl!',
         audioSimSpeaker: 'Teacher',
       );
       placementNotifier.state = placementNotifier.state.copyWith(
@@ -670,7 +670,7 @@ void main() {
       await tester.tap(find.text(AppStrings.uz.retry));
       await tester.pumpAndSettle();
       expect(tutorService.calls, 2);
-      expect(find.textContaining('savolingiz juda yaxshi'), findsOneWidget);
+      expect(find.textContaining('savolingiz juda yaxşi'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       // Verify typing indicator Semantics label while request pending
@@ -678,7 +678,7 @@ void main() {
       await tester.enterText(find.byType(TextField), '2x + 4 = 10?');
       await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
       await tester.pump();
-      expect(find.bySemanticsLabel('Yo‘lchi AI yozmoqda...'), findsOneWidget);
+      expect(find.bySemanticsLabel('Yölçi AI yozmoqda...'), findsOneWidget);
       tutorService.gate!.complete();
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -1070,7 +1070,7 @@ void main() {
       slowCourseRepo.completer.complete(const []);
       await tester.pumpAndSettle();
 
-      // 3. Seeded Algebra asoslari card avoids duplicate emerald badges (Yuqori + O‘zlashtirilgan)
+      // 3. Seeded Algebra asoslari card avoids duplicate emerald badges (Yuqori + Özlaştirilgan)
       final seededContainer = ProviderContainer(
         overrides: [
           learnerRepositoryProvider.overrideWithValue(InMemoryLearnerRepository()),
@@ -1102,7 +1102,7 @@ void main() {
       expect(find.text(AppStrings.uz.statusMastered), findsNothing);
     });
 
-    testWidgets('Regression: PlacementTestScreen submit-through-dialog does not spin under dialog and routes via Shaxsiy yo‘lni ko‘rish', (tester) async {
+    testWidgets('Regression: PlacementTestScreen submit-through-dialog does not spin under dialog and routes via Şaxsiy yölni köriş', (tester) async {
       tester.view.physicalSize = const Size(720, 1600);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1173,7 +1173,7 @@ void main() {
 
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text('Topshirish'), findsOneWidget);
+      expect(find.text('Topşiriş'), findsOneWidget);
 
       // Cancel dialog returns cleanly
       await tester.tap(find.text(AppStrings.uz.back));
@@ -1181,17 +1181,17 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.text(AppStrings.uz.viewResults), findsOneWidget);
 
-      // Confirm dialog -> submits and shows 'Shaxsiy yo‘lni ko‘rish' -> navigates to /roadmap
+      // Confirm dialog -> submits and shows 'Şaxsiy yölni köriş' -> navigates to /roadmap
       await tester.tap(find.text(AppStrings.uz.viewResults));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Topshirish'));
+      await tester.tap(find.text('Topşiriş'));
       await tester.pumpAndSettle();
 
       expect(find.text(AppStrings.uz.placementDoneTitle), findsOneWidget);
-      expect(find.text('Shaxsiy yo‘lni ko‘rish'), findsOneWidget);
+      expect(find.text('Şaxsiy yölni köriş'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Shaxsiy yo‘lni ko‘rish'));
-      await tester.tap(find.text('Shaxsiy yo‘lni ko‘rish'));
+      await tester.ensureVisible(find.text('Şaxsiy yölni köriş'));
+      await tester.tap(find.text('Şaxsiy yölni köriş'));
       await tester.pumpAndSettle();
       expect(find.byType(RoadmapScreen), findsOneWidget);
       expect(tester.takeException(), isNull);

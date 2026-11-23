@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/l10n/uzbek_alphabet.dart';
 import '../../domain/entities/course.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill.dart';
@@ -18,7 +19,7 @@ class SupabaseCourseRepository implements ICourseRepository {
   SupabaseClient _requireClient() {
     final client = SupabaseConfig.client;
     if (client == null) {
-      throw StateError('Supabase ishga tushmadi. Qayta urinib ko‘ring.');
+      throw StateError('Supabase işga tuşmadi. Qayta urinib köring.');
     }
     return client;
   }
@@ -26,7 +27,7 @@ class SupabaseCourseRepository implements ICourseRepository {
   Future<void> _requireAuthenticated(SupabaseClient client) async {
     final user = client.auth.currentUser;
     if (user == null) {
-      throw StateError('Autentifikatsiyadan o‘tilmagan.');
+      throw StateError('Autentifikatsiyadan ötilmagan.');
     }
   }
 
@@ -65,6 +66,7 @@ class SupabaseCourseRepository implements ICourseRepository {
       case 'qiyin':
         return QuestionDifficulty.hard;
       case 'medium':
+      case 'örta':
       case 'o‘rta':
       case "o'rta":
       default:
@@ -76,10 +78,10 @@ class SupabaseCourseRepository implements ICourseRepository {
     final starter = row['starter_lesson_id'] as String?;
     return Course(
       id: row['id'] as String,
-      title: row['title'] as String? ?? '',
+      title: updatedUzbekSpelling(row['title'] as String? ?? ''),
       titleRu: row['title_ru'] as String?,
       subject: _subject(row['subject']),
-      description: row['description'] as String? ?? '',
+      description: updatedUzbekSpelling(row['description'] as String? ?? ''),
       descriptionRu: row['description_ru'] as String?,
       iconName: row['icon_name'] as String? ?? 'book',
       primaryColorHex: row['primary_color_hex'] as String? ?? '#2563EB',
@@ -101,22 +103,23 @@ class SupabaseCourseRepository implements ICourseRepository {
     return Skill(
       id: row['id'] as String,
       courseId: row['course_id'] as String,
-      name: row['name'] as String? ?? '',
+      name: updatedUzbekSpelling(row['name'] as String? ?? ''),
       code: row['code'] as String? ?? '',
-      description: row['description'] as String? ?? '',
+      description: updatedUzbekSpelling(row['description'] as String? ?? ''),
       order: (row['order_index'] as num?)?.toInt() ?? 0,
       iconName: row['icon_name'] as String? ?? 'target',
     );
   }
 
   static Question questionFromRow(Map<String, dynamic> row) {
+    final courseId = row['course_id'] as String;
     return Question(
       id: row['id'] as String,
-      courseId: row['course_id'] as String,
+      courseId: courseId,
       skillId: row['skill_id'] as String,
-      text: row['text'] as String? ?? '',
+      text: updatedCourseText(row['text'] as String? ?? '', courseId),
       contextSnippet: row['context_snippet'] as String?,
-      options: _strings(row['options']),
+      options: _strings(row['options']).map((text) => updatedCourseText(text, courseId)).toList(growable: false),
       // learner_questions deliberately has no answer-key column. A negative
       // sentinel prevents accidental local scoring; the server RPC owns it.
       correctIndex: -1,

@@ -57,7 +57,7 @@ export function YolchiAIChatView({ onStartLesson }: { onStartLesson: () => void 
     <div className="learning-page space-y-4 sm:space-y-8">
       <PageHeader
         eyebrow={t('tutor.mentor')}
-        title="Yo‘lchi AI"
+        title="Yölçi AI"
         highlightWord="AI"
         description={t('tutor.description')}
         action={

@@ -50,7 +50,7 @@ class SubmitReinforcementUseCase {
         reinforcementQuestion.id.isEmpty ||
         reinforcementQuestion.courseId != courseId ||
         reinforcementQuestion.skillId != skillId) {
-      throw ArgumentError('Mustahkamlash savoli kontekstga mos emas.');
+      throw ArgumentError('Mustahkamlaş savoli kontekstga mos emas.');
     }
     late final String serializedAnswer;
     late final int effectiveIndex;

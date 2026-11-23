@@ -13,7 +13,7 @@ describe('Question Content & Assessment Audit Tests', () => {
     /deb\s+hisoblangan/i,
     /correct\s*answer/i,
     /incorrect/i,
-    /\(to‘g‘ri\)/i,
+    /\(töğri\)/i,
     /\(xato\)/i,
   ];
 

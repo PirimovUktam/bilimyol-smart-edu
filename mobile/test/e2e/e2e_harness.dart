@@ -27,14 +27,14 @@ class E2EConfig {
   static const List<String> allSubjectsUz = [
     'Matematika',
     'Ingliz tili',
-    'IT & Kodlash',
+    'IT & Kodlaş',
     'Mantiq',
   ];
 
   static const List<String> bottomNavLabelsUz = [
-    'Bosh sahifa',
-    'Ta’lim yo‘li',
-    'Yo‘lchi AI',
+    'Boş sahifa',
+    'Ta’lim yöli',
+    'Yölçi AI',
     'Natijalar',
     'Profil',
   ];
@@ -43,43 +43,43 @@ class E2EConfig {
 /// Locale-resilient text lookup helpers (supports Uzbek & Russian).
 class L10nExpect {
   static const List<String> tourPage1Titles = [
-    'Nimadan boshlashni biling',
+    'Nimadan boşlaşni biling',
     'Знайте, с чего начать',
   ];
   static const List<String> tourPage2Titles = [
-    'Sizga mos darsni sinab ko‘ring',
+    'Sizga mos darsni sinab köring',
     'Попробуйте подходящий урок',
     'Попробуйте урок',
   ];
   static const List<String> tourPage3Titles = [
-    'O‘sishingizni ko‘rib boring',
+    'Ösişingizni körib boring',
     'Отслеживайте свой рост',
     'Следите за прогрессом',
   ];
 
   static const List<String> tourNext = ['Keyingi', 'Далее'];
-  static const List<String> tourSkip = ['O‘tkazib yuborish', 'Пропустить'];
-  static const List<String> tourFinish = ['Boshlash', 'Начать'];
+  static const List<String> tourSkip = ['Ötkazib yuboriş', 'Пропустить'];
+  static const List<String> tourFinish = ['Boşlaş', 'Начать'];
 
   static const List<String> demoEntry = [
-    'Namuna hisobi bilan kirish',
+    'Namuna hisobi bilan kiriş',
     'Демо',
     'демо',
   ];
-  static const List<String> loginButton = ['Kirish', 'Войти'];
+  static const List<String> loginButton = ['Kiriş', 'Войти'];
   static const List<String> registerLink = [
-    'Ro‘yxatdan o‘tish',
+    'Röyxatdan ötiş',
     'Регистрация',
     'Создать аккаунт',
   ];
 
-  static const List<String> navHome = ['Bosh sahifa', 'Главная'];
+  static const List<String> navHome = ['Boş sahifa', 'Главная'];
   static const List<String> navRoadmap = [
-    'Ta’lim yo‘li',
+    'Ta’lim yöli',
     'Путь обучения',
     'Маршрут',
   ];
-  static const List<String> navAi = ['Yo‘lchi AI', 'Йолчи AI'];
+  static const List<String> navAi = ['Yölçi AI', 'Йолчи AI'];
   static const List<String> navProgress = [
     'Natijalar',
     'Результаты',
@@ -89,41 +89,41 @@ class L10nExpect {
 
   // Theme, Demo & Profile Action Candidates (uz + ru + fallbacks)
   static const List<String> themeDarkCandidates = [
-    'Qorong‘i',
+    'Qoronği',
     'Тёмная',
-    'Qorong‘u',
+    'Qoronğu',
     'Tungi',
     'Dark',
   ];
   static const List<String> themeLightCandidates = [
-    'Yorug‘',
+    'Yoruğ',
     'Светлая',
     'Light',
   ];
   static const List<String> demoResetCandidates = [
-    'Qayta boshlash',
+    'Qayta boşlaş',
     'Сбросить',
-    'Namuna natijalarini tiklash',
+    'Namuna natijalarini tiklaş',
   ];
   static const List<String> tourReplayCandidates = [
-    'Tanishtiruv',
-    'Yo‘riqnoma',
-    'Qayta ko‘rish',
+    'Taniştiruv',
+    'Yöriqnoma',
+    'Qayta köriş',
     'Повторить обзор',
     'Обзор',
     'Тур',
     'Tour',
   ];
   static const List<String> editNameCandidates = [
-    'Ismni tahrirlash',
-    'Tahrirlash',
+    'Ismni tahrirlaş',
+    'Tahrirlaş',
     'Редактировать',
     'Изменить имя',
   ];
   static const List<String> saveCandidates = [
-    'Saqlash',
+    'Saqlaş',
     'Сохранить',
-    'Tasdiqlash',
+    'Tasdiqlaş',
   ];
 
   // Concrete Russian copy lists (must NOT rely solely on hasCyrillicOnScreen)
@@ -176,7 +176,7 @@ class L10nExpect {
   ];
   static const List<String> aiTutorCopyRu = [
     'Ваш персональный AI-наставник',
-    'Привет, я Yo‘lchi AI',
+    'Привет, я Yölçi AI',
     'Объясни проще',
   ];
   static const List<String> progressCopyRu = [
@@ -323,7 +323,7 @@ class FakeControllableAITutorService implements IAITutorService {
   int askCalls = 0;
   int explainCalls = 0;
   String askAnswer =
-      'Bu mavzu bo‘yicha qadam-baqadam yechim: avval shartni yozing, so‘ng formulani qo‘llang.';
+      'Bu mavzu böyiça qadam-baqadam yeçim: avval şartni yozing, söng formulani qöllang.';
 
   @override
   Future<AskTutorResponse> askTutor(AskTutorRequest request) async {
@@ -335,7 +335,7 @@ class FakeControllableAITutorService implements IAITutorService {
       throw StateError('AI tutor service unavailable');
     }
     return AskTutorResponse(
-      tutorName: 'Yo‘lchi AI',
+      tutorName: 'Yölçi AI',
       answer: askAnswer,
       isAiGenerated: false,
       isDeterministicFallback: true,
@@ -354,12 +354,12 @@ class FakeControllableAITutorService implements IAITutorService {
       throw StateError('Mistake explanation unavailable');
     }
     return AIExplanationResponse(
-      tutorName: 'Yo‘lchi AI',
-      title: 'Xatoni tahlil qilish',
+      tutorName: 'Yölçi AI',
+      title: 'Xatoni tahlil qiliş',
       explanation:
-          'Siz tanlagan "${request.selectedOption}" o‘rniga "${request.correctOption}" to‘g‘ri.',
-      remediationStep: 'Asosiy formulani yana bir bor tekshirib chiqing.',
-      suggestedAction: 'Mustahkamlash mashqini bajarib ko‘ring.',
+          'Siz tanlagan "${request.selectedOption}" örniga "${request.correctOption}" töğri.',
+      remediationStep: 'Asosiy formulani yana bir bor tekşirib çiqing.',
+      suggestedAction: 'Mustahkamlaş maşqini bajarib köring.',
       isDeterministicFallback: true,
     );
   }
@@ -376,9 +376,9 @@ class FakeControllableAITutorService implements IAITutorService {
       topic: topic,
       level: request.level ?? 'intermediate',
       difficulty: request.difficulty ?? 'medium',
-      title: '$topic bo‘yicha dars',
-      summary: 'Qisqacha nazariya va amaliyot.',
-      objective: 'Mavzuni mustahkamlash.',
+      title: '$topic böyiça dars',
+      summary: 'Qisqaça nazariya va amaliyot.',
+      objective: 'Mavzuni mustahkamlaş.',
       estimatedMinutes: 10,
       steps: const [],
       questions: const [],
@@ -415,13 +415,13 @@ const Map<String, QuestionAnswerPair> placementAnswerOracle = {
     wrong: 'x = 6, y = 4',
   ),
   '2x² - 4x + 5 = 0': QuestionAnswerPair(
-    correct: 'Haqiqiy ildizi yo‘q (D < 0)',
+    correct: 'Haqiqiy ildizi yöq (D < 0)',
     wrong: '2 ta turli ildiz',
   ),
   'f(x) = 2x + 3 berilgan': QuestionAnswerPair(correct: '11', wrong: '8'),
   'f(x) = 6 / (x - 4)': QuestionAnswerPair(correct: 'x ≠ 4', wrong: 'x > 4'),
-  'f(x) = 3x - 5 bo‘lsa': QuestionAnswerPair(correct: 'x = 7', wrong: 'x = 5'),
-  'f(x) = x² - 4x + 1 bo‘lsa': QuestionAnswerPair(correct: '-2', wrong: '4'),
+  'f(x) = 3x - 5 bölsa': QuestionAnswerPair(correct: 'x = 7', wrong: 'x = 5'),
+  'f(x) = x² - 4x + 1 bölsa': QuestionAnswerPair(correct: '-2', wrong: '4'),
   'f(g(3))': QuestionAnswerPair(correct: '19', wrong: '49'),
   'f(x) = 4x - 7': QuestionAnswerPair(
     correct: '(x + 7) / 4',
@@ -430,8 +430,8 @@ const Map<String, QuestionAnswerPair> placementAnswerOracle = {
   'y = 2x - 4': QuestionAnswerPair(correct: '(0, -4)', wrong: '(2, 0)'),
   'y = -3x + 6': QuestionAnswerPair(correct: '(2, 0)', wrong: '(0, 6)'),
   'k > 0 va b < 0': QuestionAnswerPair(
-    correct: 'I, III, IV choraklar',
-    wrong: 'I, II, III choraklar',
+    correct: 'I, III, IV çoraklar',
+    wrong: 'I, II, III çoraklar',
   ),
   'x² - 6x + 8': QuestionAnswerPair(correct: '(3, -1)', wrong: '(3, 1)'),
   'y = 2x + 1 va y = -x + 4': QuestionAnswerPair(
@@ -530,7 +530,7 @@ const Map<String, QuestionAnswerPair> placementAnswerOracle = {
   ),
 
   // IT & Coding
-  'o‘zgaruvchi e’lon qilishning': QuestionAnswerPair(
+  'özgaruvçi e’lon qilişning': QuestionAnswerPair(
     correct: 'x = 10',
     wrong: 'int x = 10',
   ),
@@ -538,25 +538,25 @@ const Map<String, QuestionAnswerPair> placementAnswerOracle = {
   'range(5)': QuestionAnswerPair(correct: '0,1,2,3,4', wrong: '1,2,3,4,5'),
   'range(3)': QuestionAnswerPair(correct: '3 marta', wrong: '2 marta'),
   'eng katta sarlavha': QuestionAnswerPair(correct: '<h1>', wrong: '<h6>'),
-  'matn rangini o‘zgartiruvchi': QuestionAnswerPair(
+  'matn rangini özgartiruvçi': QuestionAnswerPair(
     correct: 'color',
     wrong: 'font-color',
   ),
   'Giperhavola (link)': QuestionAnswerPair(correct: '<a>', wrong: '<link>'),
-  '20px tashqi masofa': QuestionAnswerPair(
+  '20px taşqi masofa': QuestionAnswerPair(
     correct: 'margin-right: 20px',
     wrong: 'padding-right: 20px',
   ),
 
   // Logic
-  'Barcha qushlar uchadi': QuestionAnswerPair(
-    correct: 'Chumchu uchadi',
-    wrong: 'Chumchu ucha olmaydi',
+  'Barça quşlar uçadi': QuestionAnswerPair(
+    correct: 'Çumçu uçadi',
+    wrong: 'Çumçu uça olmaydi',
   ),
   'Ali Vali’dan katta': QuestionAnswerPair(correct: 'Olim', wrong: 'Vali'),
-  'yomg‘ir yog‘sa': QuestionAnswerPair(
-    correct: 'Yomg‘ir yog‘madi',
-    wrong: 'Yomg‘ir yog‘di',
+  'yomğir yoğsa': QuestionAnswerPair(
+    correct: 'Yomğir yoğmadi',
+    wrong: 'Yomğir yoğdi',
   ),
   'Ali eng oldinda emas': QuestionAnswerPair(
     correct: 'Vali – Ali – Olim',
@@ -573,56 +573,56 @@ const Map<String, QuestionAnswerPair> lessonAnswerOracle = {
   // Starter lessons
   '4 ta qalamga yana 2 ta qalam': QuestionAnswerPair(correct: '6', wrong: '2'),
   '6 ta daftardan 2 tasi olinsa': QuestionAnswerPair(correct: '4', wrong: '2'),
-  'salomlashish uchun qaysi so‘zni': QuestionAnswerPair(
+  'salomlaşiş uçun qaysi sözni': QuestionAnswerPair(
     correct: 'Hello',
     wrong: 'Goodbye',
   ),
-  '«Thank you» o‘zbekchada': QuestionAnswerPair(
+  '«Thank you» özbekçada': QuestionAnswerPair(
     correct: 'Rahmat',
     wrong: 'Salom',
   ),
-  'Yangi tanishgan do‘stingiz': QuestionAnswerPair(
+  'Yangi tanişgan döstingiz': QuestionAnswerPair(
     correct: 'Nice to meet you.',
     wrong: 'Goodbye.',
   ),
-  'Kechki soat 19:30': QuestionAnswerPair(
+  'Keçki soat 19:30': QuestionAnswerPair(
     correct: 'Good evening, Mrs. Azizova.',
     wrong: 'Good night, Mrs. Azizova.',
   ),
   'print("Kitob")': QuestionAnswerPair(correct: 'Kitob', wrong: 'print'),
-  '2 savatda jami nechta olma': QuestionAnswerPair(correct: '6', wrong: '5'),
+  '2 savatda jami neçta olma': QuestionAnswerPair(correct: '6', wrong: '5'),
   'I ___ a student': QuestionAnswerPair(correct: 'am', wrong: 'is'),
   'print(3 + 4)': QuestionAnswerPair(correct: '7', wrong: '34'),
   'Qaysi gap rost mulohaza': QuestionAnswerPair(
     correct: '4 + 1 = 5',
     wrong: '4 + 1 = 7',
   ),
-  '«2 + 2 = 4» rost': QuestionAnswerPair(correct: 'Yolg‘on', wrong: 'Rost'),
+  '«2 + 2 = 4» rost': QuestionAnswerPair(correct: 'Yolğon', wrong: 'Rost'),
 
   // Curated roadmap lessons & reinforcements
   '(x + 2)² yoyilmasida': QuestionAnswerPair(correct: '4', wrong: '2'),
-  '(x − 5)² ni oching': QuestionAnswerPair(
+  '(x − 5)² ni oçing': QuestionAnswerPair(
     correct: 'x² − 10x + 25',
     wrong: 'x² − 25',
   ),
   '5x − 4 = 16': QuestionAnswerPair(correct: '4', wrong: '3'),
   '3x + 8 = −4': QuestionAnswerPair(correct: '−4', wrong: '4'),
-  'f(4) qiymati qancha': QuestionAnswerPair(correct: '11', wrong: '8'),
-  'Agar x = 2 bo‘lsa, f(x) nechaga teng': QuestionAnswerPair(
+  'f(4) qiymati qança': QuestionAnswerPair(correct: '11', wrong: '8'),
+  'Agar x = 2 bölsa, f(x) neçaga teng': QuestionAnswerPair(
     correct: '8',
     wrong: '6',
   ),
   'f(3) qiymatini hisoblang': QuestionAnswerPair(correct: '-2', wrong: '4'),
-  'f(4) ning qiymati qancha': QuestionAnswerPair(correct: '11', wrong: '19'),
-  'y = -3x + 6 chizig‘i Ox o‘qini': QuestionAnswerPair(
+  'f(4) ning qiymati qança': QuestionAnswerPair(correct: '11', wrong: '19'),
+  'y = -3x + 6 çiziği Ox öqini': QuestionAnswerPair(
     correct: '(2, 0)',
     wrong: '(0, 6)',
   ),
-  'y = 4x - 8 chizig‘i Ox o‘qini': QuestionAnswerPair(
+  'y = 4x - 8 çiziği Ox öqini': QuestionAnswerPair(
     correct: '(2, 0)',
     wrong: '(0, -8)',
   ),
-  'ma’ruza soat nechada boshlanadi': QuestionAnswerPair(
+  'ma’ruza soat neçada boşlanadi': QuestionAnswerPair(
     correct: '15:15 (quarter past three)',
     wrong: '15:30 (half past three)',
   ),
@@ -637,17 +637,17 @@ const Map<String, QuestionAnswerPair> lessonAnswerOracle = {
   ),
   'n = 7 * 3': QuestionAnswerPair(correct: '21', wrong: '73'),
   'print(10 // 3)': QuestionAnswerPair(correct: '3', wrong: '3.333'),
-  'Giperhavola (link) uchun qaysi HTML': QuestionAnswerPair(
+  'Giperhavola (link) uçun qaysi HTML': QuestionAnswerPair(
     correct: '<a>',
     wrong: '<link>',
   ),
-  'matn rangini o‘zgartiruvchi CSS': QuestionAnswerPair(
+  'matn rangini özgartiruvçi CSS': QuestionAnswerPair(
     correct: 'color',
     wrong: 'font-color',
   ),
-  'Barcha qushlar uchadi. Chumchu qush.': QuestionAnswerPair(
-    correct: 'Chumchu uchadi',
-    wrong: 'Chumchu ucha olmaydi',
+  'Barça quşlar uçadi. Çumçu quş.': QuestionAnswerPair(
+    correct: 'Çumçu uçadi',
+    wrong: 'Çumçu uça olmaydi',
   ),
   'Ali > Vali, Vali > Olim': QuestionAnswerPair(correct: 'Olim', wrong: 'Vali'),
   '5, 9, 17, 33, ...': QuestionAnswerPair(correct: '65', wrong: '49'),
@@ -841,7 +841,7 @@ Future<void> tapAnyVisible(
   await scrollAndTap(tester, finder, settle: settle);
 }
 
-/// Walks through the 3-page Product Tour via "Keyingi" -> "Boshlash".
+/// Walks through the 3-page Product Tour via "Keyingi" -> "Boşlaş".
 Future<void> completeProductTour(WidgetTester tester) async {
   L10nExpect.expectAnyVisible(L10nExpect.tourPage1Titles);
   await tapAnyVisible(tester, L10nExpect.tourNext);
@@ -851,7 +851,7 @@ Future<void> completeProductTour(WidgetTester tester) async {
   await tapAnyVisible(tester, L10nExpect.tourFinish);
 }
 
-/// Skips the Product Tour via "O‘tkazib yuborish".
+/// Skips the Product Tour via "Ötkazib yuboriş".
 Future<void> skipProductTour(WidgetTester tester) async {
   await tapAnyVisible(tester, L10nExpect.tourSkip);
 }
@@ -872,21 +872,21 @@ Future<void> enterDemoMode(WidgetTester tester) async {
   await tapAnyVisible(tester, L10nExpect.demoEntry);
 }
 
-/// Selects a course by exact Uzbek title (e.g. 'Matematika', 'Ingliz tili', 'IT & Kodlash', 'Mantiq').
+/// Selects a course by exact Uzbek title (e.g. 'Matematika', 'Ingliz tili', 'IT & Kodlaş', 'Mantiq').
 Future<void> selectCourse(WidgetTester tester, String courseTitle) async {
   final courseFinder = find.text(courseTitle, findRichText: true);
   await scrollAndTap(tester, courseFinder);
 }
 
 /// On /onboarding, selects a non-beginner level ('Asoslarini bilaman' or
-/// 'Chuqurroq mashq qilmoqchiman') and settles before tapping 'Ixtiyoriy diagnostika'.
+/// 'Çuqurroq maşq qilmoqçiman') and settles before tapping 'Ixtiyoriy diagnostika'.
 Future<void> openOptionalDiagnostic(WidgetTester tester) async {
   final intermediate = find.textContaining(
     'Asoslarini bilaman',
     findRichText: true,
   );
   final advanced = find.textContaining(
-    'Chuqurroq mashq qilmoqchiman',
+    'Çuqurroq maşq qilmoqçiman',
     findRichText: true,
   );
   final levelFinder = intermediate.evaluate().isNotEmpty
@@ -998,12 +998,12 @@ Future<void> completePlacement(
     );
 
     final finishBtn = find.textContaining(
-      'Natijalarni Ko‘rish',
+      'Natijalarni Köriş',
       findRichText: true,
     );
     if (finishBtn.evaluate().isNotEmpty) {
       await scrollAndTap(tester, finishBtn);
-      final confirmBtn = find.text('Topshirish');
+      final confirmBtn = find.text('Topşiriş');
       if (confirmBtn.evaluate().isNotEmpty) {
         await tester.tap(confirmBtn.last);
         await tester.pumpAndSettle();
@@ -1023,13 +1023,13 @@ Future<void> completePlacement(
 }
 
 /// Advances through non-quiz steps of the open lesson, selects the correct or wrong
-/// quiz option via [lessonAnswerOracle], and taps 'TEKSHIRISH'.
+/// quiz option via [lessonAnswerOracle], and taps 'TEKŞIRIŞ'.
 Future<void> submitLessonQuiz(
   WidgetTester tester, {
   required bool correct,
 }) async {
   for (var i = 0; i < 6; i++) {
-    final checkBtn = find.textContaining('TEKSHIRISH', findRichText: true);
+    final checkBtn = find.textContaining('TEKŞIRIŞ', findRichText: true);
     if (checkBtn.evaluate().isNotEmpty) {
       final freeTextFinder = find.byKey(const Key('free_text_answer_input'));
       if (freeTextFinder.evaluate().isNotEmpty) {
@@ -1048,14 +1048,14 @@ Future<void> submitLessonQuiz(
       }
 
       if (find
-          .textContaining('Chapdan so‘zni tanlang', findRichText: true)
+          .textContaining('Çapdan sözni tanlang', findRichText: true)
           .evaluate()
           .isNotEmpty) {
         const pairs = [
           ('Good morning', 'Xayrli tong'),
-          ('Good evening', 'Xayrli kech'),
+          ('Good evening', 'Xayrli keç'),
           ('How are you?', 'Ahvolingiz qanday?'),
-          ("I'm fine, thanks.", 'Yaxshiman, rahmat.'),
+          ("I'm fine, thanks.", 'Yaxşiman, rahmat.'),
         ];
         final rightValues = correct
             ? pairs.map((e) => e.$2).toList()
@@ -1088,7 +1088,7 @@ Future<void> submitLessonQuiz(
       break;
     }
   }
-  fail('Reached end of lesson loop without finding TEKSHIRISH button');
+  fail('Reached end of lesson loop without finding TEKŞIRIŞ button');
 }
 
 /// Solves the open ReinforcementSheet using [lessonAnswerOracle].
@@ -1097,7 +1097,7 @@ Future<void> solveReinforcementSheet(WidgetTester tester) async {
   expect(
     find.descendant(
       of: sheetScope,
-      matching: find.textContaining('Mustahkamlash Mashqi', findRichText: true),
+      matching: find.textContaining('Mustahkamlaş Maşqi', findRichText: true),
     ),
     findsWidgets,
   );
@@ -1116,7 +1116,7 @@ Future<void> solveReinforcementSheet(WidgetTester tester) async {
     tester,
     find.descendant(
       of: sheetScope,
-      matching: find.textContaining('Javobni Tekshirish', findRichText: true),
+      matching: find.textContaining('Javobni Tekşiriş', findRichText: true),
     ),
   );
   expect(
@@ -1137,7 +1137,7 @@ Future<void> tapBottomNav(WidgetTester tester, List<String> candidates) async {
 }
 
 /// On Math /roadmap, locates the 'Funksiyalar' node card and taps its
-/// actionable CTA ('Mashq qilish', 'Boshlash', or 'Takrorlash') so tests
+/// actionable CTA ('Maşq qiliş', 'Boşlaş', or 'Takrorlaş') so tests
 /// reliably open `lesson_math_functions_01` instead of falling back to another node.
 Future<void> openMathFunctionsLessonFromRoadmap(WidgetTester tester) async {
   final funcTitle = find.text('Funksiyalar', findRichText: true);
@@ -1186,7 +1186,7 @@ Future<void> openMathFunctionsLessonFromRoadmap(WidgetTester tester) async {
             .isNotEmpty;
     if (hasOtherNodes) continue;
 
-    for (final label in ['Mashq qilish', 'Boshlash', 'Takrorlash']) {
+    for (final label in ['Maşq qiliş', 'Boşlaş', 'Takrorlaş']) {
       final cta = find.descendant(
         of: scoped,
         matching: find.textContaining(label, findRichText: true),
@@ -1203,7 +1203,7 @@ Future<void> openMathFunctionsLessonFromRoadmap(WidgetTester tester) async {
     nodeCta,
     isNotNull,
     reason:
-        'Funksiyalar node on /roadmap must expose an actionable CTA (Mashq qilish / Boshlash / Takrorlash)',
+        'Funksiyalar node on /roadmap must expose an actionable CTA (Maşq qiliş / Boşlaş / Takrorlaş)',
   );
   await scrollAndTap(tester, nodeCta!);
 }

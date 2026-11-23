@@ -70,10 +70,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Yo‘lchidan so‘rash'));
+      await tester.tap(find.byTooltip('Yölçidan söraş'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField).last, 'To‘g‘ri javobni ayt');
+      await tester.enterText(find.byType(TextField).last, 'Töğri javobni ayt');
       await tester.tap(find.byIcon(Icons.arrow_upward_rounded).last);
       await tester.pumpAndSettle();
 
@@ -204,14 +204,14 @@ void main() {
       await tester.ensureVisible(find.text(step4Correct));
       await tester.tap(find.text(step4Correct));
       await tester.pump();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Qadam 5 / 6'), findsOneWidget);
 
       // Immediately open AITutorScreen (NO 5s delay) and tap Send
-      await tester.tap(find.byTooltip('Yo‘lchidan so‘rash'));
+      await tester.tap(find.byTooltip('Yölçidan söraş'));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, 'Salom');

@@ -22,7 +22,7 @@ class ServerEvaluatedLearnerRepository extends InMemoryLearnerRepository {
     this.lastRequest = request;
     return {
       isCorrect: this.serverIsCorrect,
-      explanation: this.serverIsCorrect ? 'To‘g‘ri.' : 'Noto‘g‘ri.',
+      explanation: this.serverIsCorrect ? 'Töğri.' : 'Notöğri.',
       newSkillScore: this.serverIsCorrect ? 100 : 0,
       overallScore: this.serverIsCorrect ? 100 : 0,
       xpAwarded: this.serverIsCorrect ? 2 : 0,
@@ -41,7 +41,7 @@ const reinforcementQuestion: Question = {
   id: 'q_server_authoritative_reinforcement',
   courseId: 'course_math_01',
   skillId: 'skill_math_functions',
-  text: 'Qaysi javob to‘g‘ri?',
+  text: 'Qaysi javob töğri?',
   options: ['A', 'B'],
   // Deliberately contradictory/stale client data.
   correctIndex: 0,

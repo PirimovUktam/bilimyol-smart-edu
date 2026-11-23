@@ -110,10 +110,10 @@ void main() {
       final answer = await SupabaseAITutorService().askTutor(
         const AskTutorRequest(
           message:
-              'Hello va goodbye qachon ishlatiladi? O‘zbek tilida izoh bering.',
+              'Hello va goodbye qaçon işlatiladi? Özbek tilida izoh bering.',
           courseId: 'course_eng_01',
           skillId: 'skill_eng_vocab',
-          history: [(sender: 'user', text: 'Ingliz tilini noldan boshladim.')],
+          history: [(sender: 'user', text: 'Ingliz tilini noldan boşladim.')],
         ),
       );
       expect(answer.isAiGenerated, isTrue);

@@ -107,7 +107,8 @@ export class SubmitLessonAnswerUseCase {
     language: 'uz' | 'ru' = 'uz',
   ): Promise<LessonAnswerResult> {
     const trimmed = answerText.trim();
-    const normalized = normalizeFreeTextAnswer(trimmed);
+    const answerLanguage = question.courseId === 'course_eng_01' ? undefined : 'uz';
+    const normalized = normalizeFreeTextAnswer(trimmed, answerLanguage);
     const qType = question.questionType === 'fill_blank' ? 'fill_blank' : 'text_input';
 
     let isCorrect = false;
@@ -137,7 +138,7 @@ export class SubmitLessonAnswerUseCase {
       overallScore = serverResult.overallScore;
       xpAwarded = serverResult.xpAwarded;
     } else {
-      isCorrect = matchesAcceptedAnswer(trimmed, question.acceptedAnswers ?? []);
+      isCorrect = matchesAcceptedAnswer(trimmed, question.acceptedAnswers ?? [], answerLanguage);
       explanation = isCorrect
         ? getLocalizedQuestionExplanation(question, language)
         : getLocalizedMistakeFeedback(question, trimmed, language);

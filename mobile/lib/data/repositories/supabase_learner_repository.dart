@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/i_learner_repository.dart';
 import '../../domain/entities/learner_profile.dart';
+import '../../core/l10n/uzbek_alphabet.dart';
 import '../../domain/entities/placement_session.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
@@ -75,10 +76,10 @@ class SupabaseLearnerRepository extends ILearnerRepository {
                         isCorrect: row['is_correct'] as bool,
                         timeSpentSeconds: row['time_spent_seconds'] as int,
                       ),
-                      question: row['question_text'] as String,
-                      selected: row['selected_option'] as String,
-                      correct: row['correct_option'] as String,
-                      explanation: row['explanation'] as String,
+                      question: updatedCourseText(row['question_text'] as String, courseId),
+                      selected: updatedCourseText(row['selected_option'] as String, courseId),
+                      correct: updatedCourseText(row['correct_option'] as String, courseId),
+                      explanation: updatedCourseText(row['explanation'] as String, courseId),
                     );
                   })
                   .toList(growable: false),
@@ -106,7 +107,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
 
       // Fetch user profile from public.profiles table
@@ -118,7 +119,8 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
       if (userProfile == null ||
           userProfile['first_name'] == null ||
-          userProfile['first_name'] == 'Foydalanuvchi') {
+          userProfile['first_name'] == 'Foydalanuvchi' ||
+          userProfile['first_name'] == 'Foydalanuvçi') {
         final metaFirst = (user.userMetadata?['first_name'] as String? ?? '')
             .trim();
         final metaLast = (user.userMetadata?['last_name'] as String? ?? '')
@@ -127,7 +129,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
             ? metaFirst
             : (user.email != null
                   ? user.email!.split('@').first
-                  : 'Foydalanuvchi');
+                  : 'Foydalanuvçi');
         final resolvedLast = metaLast;
         final resolvedDisplay = resolvedLast.isNotEmpty
             ? '$resolvedFirst $resolvedLast'
@@ -246,7 +248,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final firstName =
           userProfile['first_name'] as String? ??
           user.userMetadata?['first_name'] as String? ??
-          (user.email != null ? user.email!.split('@').first : 'Foydalanuvchi');
+          (user.email != null ? user.email!.split('@').first : 'Foydalanuvçi');
 
       final placementScoreByCourse = <String, int>{
         for (final entry
@@ -344,7 +346,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     final client = Supabase.instance.client;
     final user = client.auth.currentUser;
     if (user == null || updated.id != user.id) {
-      throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+      throw StateError('Faol sessiya özgargan. Qayta kiring.');
     }
     final selected = fields ?? LearnerProfileField.values.toSet();
     final now = DateTime.now().toIso8601String();
@@ -382,7 +384,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       });
     }
     if (client.auth.currentUser?.id != user.id) {
-      throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+      throw StateError('Faol sessiya özgargan. Qayta kiring.');
     }
     return getProfile();
   }
@@ -431,7 +433,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
 
       await client.rpc(
@@ -452,7 +454,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
 
       final result = await client
@@ -475,7 +477,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           .eq('id', user.id);
 
       if (result is! Map || result['attempt_id'] == null) {
-        throw Exception('Placement natijasini serverga saqlab bo‘lmadi.');
+        throw Exception('Placement natijasini serverga saqlab bölmadi.');
       }
       return result['attempt_id'].toString();
     } catch (_) {
@@ -507,7 +509,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     );
 
     if (result is! Map || result['is_correct'] is! bool) {
-      throw Exception('Javobni serverda tekshirib bo‘lmadi.');
+      throw Exception('Javobni serverda tekşirib bölmadi.');
     }
     return PlacementAnswerEvaluation(isCorrect: result['is_correct'] == true);
   }
@@ -521,10 +523,10 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
       if (courseId == null || courseId.isEmpty) {
-        throw ArgumentError('Darsni saqlash uchun courseId talab qilinadi.');
+        throw ArgumentError('Darsni saqlaş uçun courseId talab qilinadi.');
       }
 
       final result = await client.rpc(
@@ -573,7 +575,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     final client = Supabase.instance.client;
     final user = client.auth.currentUser;
     if (user == null) {
-      throw Exception('Autentifikatsiyadan o‘tilmagan.');
+      throw Exception('Autentifikatsiyadan ötilmagan.');
     }
 
     // A signed-in completion must not fall back to demo state: that would make
@@ -647,7 +649,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           selectedAnswer: selectedAnswer,
         );
       }
-      throw Exception('Autentifikatsiyadan o‘tilmagan.');
+      throw Exception('Autentifikatsiyadan ötilmagan.');
     } catch (_) {
       // Do not turn a failed authenticated RPC into a locally successful
       // answer. The caller owns the loading/error state and can retry.
@@ -677,7 +679,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
-      throw Exception('Autentifikatsiyadan o‘tilmagan.');
+      throw Exception('Autentifikatsiyadan ötilmagan.');
     }
     try {
       return await _submitServerAnswer(
@@ -732,7 +734,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         ? Map<String, dynamic>.from(rpcRes)
         : <String, dynamic>{};
     if (!data.containsKey('is_correct')) {
-      throw Exception('Javobni serverda tekshirib bo‘lmadi.');
+      throw Exception('Javobni serverda tekşirib bölmadi.');
     }
     if (_pendingMasteryAnswer?.key == requestKey) _pendingMasteryAnswer = null;
     String? correctOption;
@@ -744,7 +746,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         });
         if (feedback is Map) {
           if (feedback['correctOption'] is String) {
-            correctOption = feedback['correctOption'] as String;
+            correctOption = updatedCourseText(feedback['correctOption'] as String, courseId);
           }
           if (feedback['explanation'] is String &&
               (feedback['explanation'] as String).trim().isNotEmpty) {
@@ -755,6 +757,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         // The graded answer is saved even when the additional feedback read fails.
       }
     }
+    final explanation = feedbackExplanation ?? data['explanation'] as String?;
     return AnswerAttemptRecord(
       id: 'server_${DateTime.now().microsecondsSinceEpoch}',
       courseId: courseId,
@@ -767,7 +770,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       timestamp: DateTime.now().millisecondsSinceEpoch,
       // The scoring RPC intentionally never returns the answer key.
       correctOption: correctOption,
-      explanation: feedbackExplanation ?? data['explanation'] as String?,
+      explanation: explanation == null ? null : updatedCourseText(explanation, courseId),
       newSkillScore: (data['new_skill_score'] as num?)?.toInt(),
       xpAwarded: (data['xp_awarded'] as num?)?.toInt() ?? 0,
       alreadyProcessed: data['already_processed'] == true,
@@ -781,11 +784,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     }
     final client = SupabaseConfig.client;
     if (client == null) {
-      throw StateError('Supabase ishga tushmadi. Qayta urinib ko‘ring.');
+      throw StateError('Supabase işga tuşmadi. Qayta urinib köring.');
     }
     final user = client.auth.currentUser;
     if (user == null) {
-      throw Exception('Autentifikatsiyadan o‘tilmagan.');
+      throw Exception('Autentifikatsiyadan ötilmagan.');
     }
 
     final rows = await client
@@ -827,7 +830,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
 
       final since = DateTime.now()
@@ -887,7 +890,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
       final result = await client.rpc(
         'award_xp',
@@ -918,7 +921,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final client = Supabase.instance.client;
       final user = client.auth.currentUser;
       if (user == null) {
-        throw Exception('Autentifikatsiyadan o‘tilmagan.');
+        throw Exception('Autentifikatsiyadan ötilmagan.');
       }
       final result = await client.rpc(
         'record_learning_activity',

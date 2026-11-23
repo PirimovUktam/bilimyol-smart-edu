@@ -658,8 +658,8 @@ describe('M3.3 Web CEFR A2 & B1 Curriculum Suite', () => {
       </AuthProvider>,
     );
     expect(uzHtml).toContain('data-question-mode="speaking_prompt"');
-    expect(uzHtml).toContain('O‘zini baholash');
-    expect(uzHtml).toContain('O‘z javobingizni yozing');
+    expect(uzHtml).toContain('Özini baholaş');
+    expect(uzHtml).toContain('Öz javobingizni yozing');
     expect(uzHtml).not.toContain('Official CEFR Certificate');
 
     // Completing the final step via nextStep() marks the lesson completed
@@ -738,7 +738,7 @@ describe('M3.3 Web CEFR A2 & B1 Curriculum Suite', () => {
     const b1AudioToWord = renderToStaticMarkup(
       <FlashcardDeck cards={[b1Card]} initialMode="audio_to_word" />,
     );
-    expect(b1AudioToWord).toContain('Talaffuzni tinglash');
+    expect(b1AudioToWord).toContain('Talaffuzni tinglaş');
     expect(b1AudioToWord).not.toContain(b1Card.front);
     expect(b1AudioToWord).not.toContain(b1Card.backUz);
 
@@ -801,53 +801,53 @@ describe('M3.3 Web CEFR A2 & B1 Curriculum Suite', () => {
     expect(htmlAfterA1).toContain('data-cefr-level="B2"');
     expect(htmlAfterA1).toContain('data-cefr-level="C1"');
     expect(htmlAfterA1).toContain('data-cefr-level="C2"');
-    expect(htmlAfterA1).toContain('Flashcard takrorlash (21)');
+    expect(htmlAfterA1).toContain('Flashcard takrorlaş (21)');
 
     const a2SectionAfterA1 = extractSectionByCefr(htmlAfterA1, 'A2');
-    expect(a2SectionAfterA1).toContain('Ochiq');
+    expect(a2SectionAfterA1).toContain('Oçiq');
     expect(a2SectionAfterA1).not.toContain('Avval yakunlang · A1');
     expect(a2SectionAfterA1).toContain('data-node-id="node_eng_a2_m1_directions"');
     expect(a2SectionAfterA1).toContain('data-node-id="node_eng_a2_exit"');
-    expect(a2SectionAfterA1).toContain('Darsni boshlash');
-    expect(a2SectionAfterA1).not.toContain('Rejalashtirilgan grammatika va lug‘at qamrovi');
+    expect(a2SectionAfterA1).toContain('Darsni boşlaş');
+    expect(a2SectionAfterA1).not.toContain('Rejalaştirilgan grammatika va luğat qamrovi');
 
     const b1SectionAfterA1 = extractSectionByCefr(htmlAfterA1, 'B1');
     expect(b1SectionAfterA1).toContain('Qulflangan');
     expect(b1SectionAfterA1).toContain('Avval yakunlang · A2');
     expect(b1SectionAfterA1).toContain('data-node-id="node_eng_b1_m1_travel"');
     expect(b1SectionAfterA1).toContain('data-node-id="node_eng_b1_exit"');
-    expect(b1SectionAfterA1).not.toContain('Darsni boshlash');
+    expect(b1SectionAfterA1).not.toContain('Darsni boşlaş');
 
     // Case 2: A1 + A2 exit completed -> B1 Available (SRS Hub = 17 A1 + 16 A2 + 4 B1 M1 = 37), B2 still Locked
     const afterA2Completed = [...afterA1Completed, ...ENGLISH_A2_ROADMAP_NODES.map((n) => n.id)];
     const afterA2LessonIds = [...afterA1LessonIds, ...ENGLISH_A2_LESSONS_LIST.map((l) => l.id)];
     const htmlAfterA2 = renderRoadmapWithCompleted(afterA2Completed, afterA2LessonIds);
 
-    expect(htmlAfterA2).toContain('Flashcard takrorlash (37)');
+    expect(htmlAfterA2).toContain('Flashcard takrorlaş (37)');
 
     const b1SectionAfterA2 = extractSectionByCefr(htmlAfterA2, 'B1');
-    expect(b1SectionAfterA2).toContain('Ochiq');
+    expect(b1SectionAfterA2).toContain('Oçiq');
     expect(b1SectionAfterA2).not.toContain('Avval yakunlang · A2');
-    expect(b1SectionAfterA2).toContain('Darsni boshlash');
-    expect(b1SectionAfterA2).not.toContain('Rejalashtirilgan grammatika va lug‘at qamrovi');
+    expect(b1SectionAfterA2).toContain('Darsni boşlaş');
+    expect(b1SectionAfterA2).not.toContain('Rejalaştirilgan grammatika va luğat qamrovi');
 
     const b2SectionAfterA2 = extractSectionByCefr(htmlAfterA2, 'B2');
     expect(b2SectionAfterA2).toContain('Qulflangan');
     expect(b2SectionAfterA2).toContain('Avval yakunlang · B1');
-    expect(b2SectionAfterA2).toContain('Rejalashtirilgan grammatika va lug‘at qamrovi');
+    expect(b2SectionAfterA2).toContain('Rejalaştirilgan grammatika va luğat qamrovi');
 
     // Case 3: A1 + A2 + B1 exit completed -> SRS Hub has all 49 cards, unpopulated B2 remains Locked
     const afterB1Completed = [...afterA2Completed, ...ENGLISH_B1_ROADMAP_NODES.map((n) => n.id)];
     const afterB1LessonIds = [...afterA2LessonIds, ...ENGLISH_B1_LESSONS_LIST.map((l) => l.id)];
     const htmlAfterB1 = renderRoadmapWithCompleted(afterB1Completed, afterB1LessonIds);
 
-    expect(htmlAfterB1).toContain('Flashcard takrorlash (49)');
+    expect(htmlAfterB1).toContain('Flashcard takrorlaş (49)');
 
     const b2SectionAfterB1 = extractSectionByCefr(htmlAfterB1, 'B2');
     expect(b2SectionAfterB1).toContain('Qulflangan');
-    expect(b2SectionAfterB1).not.toContain('Ochiq');
+    expect(b2SectionAfterB1).not.toContain('Oçiq');
     expect(b2SectionAfterB1).toContain('Avval yakunlang · B1');
-    expect(b2SectionAfterB1).toContain('Rejalashtirilgan grammatika va lug‘at qamrovi');
+    expect(b2SectionAfterB1).toContain('Rejalaştirilgan grammatika va luğat qamrovi');
 
     // Check cefr-skeleton raw JSON still matches the rendered level count
     const skeleton = JSON.parse(readFileSync('content/english/cefr-skeleton.json', 'utf8'));

@@ -958,7 +958,7 @@ class _StageNodePill extends StatelessWidget {
   }
 }
 
-/// Shared evolving "Mening bilim yo‘lim" knowledge-constellation painter
+/// Shared evolving "Mening bilim yölim" knowledge-constellation painter
 /// across all 3 Product Tour pages.
 class _KnowledgePathPainter extends CustomPainter {
   final int stage;

@@ -60,7 +60,7 @@ export const YolchiMessageBubble = memo(({
       >
         <header className="mb-1 flex items-center justify-between gap-3 text-[11px] font-bold">
           <span className={isYolchi ? 'text-brand-dark dark:text-sky-300' : 'text-purple-100'}>
-            {isYolchi ? 'Yo‘lchi AI' : 'Siz'}
+            {isYolchi ? 'Yölçi AI' : 'Siz'}
           </span>
         </header>
 

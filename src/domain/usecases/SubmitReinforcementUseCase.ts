@@ -33,16 +33,16 @@ export class SubmitReinforcementUseCase {
     language: 'uz' | 'ru' = 'uz',
   ): Promise<ReinforcementResult> {
     if (reinforcementQuestion.courseId !== courseId || reinforcementQuestion.skillId !== skillId) {
-      throw new Error('Mustahkamlash savoli kurs va ko‘nikma bilan mos emas.');
+      throw new Error('Mustahkamlaş savoli kurs va könikma bilan mos emas.');
     }
     const qType = reinforcementQuestion.questionType ?? 'multiple_choice';
     const isChoiceType =
       qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
     if (isChoiceType && (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= reinforcementQuestion.options.length)) {
-      throw new Error('Tanlangan javob indeksi noto‘g‘ri.');
+      throw new Error('Tanlangan javob indeksi notöğri.');
     }
     if (!isChoiceType && typeof selectedAnswerOverride !== 'string') {
-      throw new Error('Mustahkamlash javobi kiritilmadi.');
+      throw new Error('Mustahkamlaş javobi kiritilmadi.');
     }
 
     // The learner payload is intentionally answer-key-free. Evaluation must
@@ -107,7 +107,7 @@ export class SubmitReinforcementUseCase {
         xpAwarded: 0,
       });
       if (!completion) {
-        throw new Error('Mustahkamlash server natijasi yetishmaydi.');
+        throw new Error('Mustahkamlaş server natijasi yetişmaydi.');
       }
       const updatedProfile = await this.learnerRepo.getProfile();
       const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);

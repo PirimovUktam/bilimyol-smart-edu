@@ -1,3 +1,4 @@
+import { legacyUzbekSpelling, updatedCourseText, updatedUzbekSpelling } from '@/core/locales/uzbekAlphabet';
 import { ICourseRepository } from '@/domain/repositories/ICourseRepository';
 import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
@@ -7,7 +8,7 @@ import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 
 const normalizeSubjectValue = (value: string): SubjectType | null => {
-  const v = value.trim().toLowerCase();
+  const v = legacyUzbekSpelling(value.trim()).toLowerCase();
   if (['mathematics', 'math', 'matematika'].includes(v)) return 'mathematics';
   if (['english', 'ingliz', 'ingliz tili'].includes(v)) return 'english';
   if (['it', 'code', 'programming', 'dasturlash'].includes(v)) return 'it';
@@ -39,9 +40,9 @@ export function mapCourseSubject(row: { id: string; subject?: string | null }): 
  */
 export const mapCourseRow = (c: Record<string, unknown>): Course => ({
   id: c.id as string,
-  title: c.title as string,
+  title: updatedUzbekSpelling(c.title as string),
   subject: mapCourseSubject({ id: c.id as string, subject: (c.subject as string | null) ?? null }),
-  description: (c.description as string) || '',
+  description: updatedUzbekSpelling((c.description as string) || ''),
   iconName: (c.icon_name as string) || 'BookOpen',
   primaryColor: (c.primary_color_hex as string) || '#4F46E5',
   secondaryColor: (c.secondary_color_hex as string) || '#818CF8',
@@ -65,7 +66,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
   private async requireAuthenticatedUser(): Promise<void> {
     const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
-    if (!data.user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    if (!data.user) throw new Error('Autentifikatsiyadan ötilmagan.');
   }
 
   async getAllCourses(): Promise<Course[]> {
@@ -144,9 +145,9 @@ export class SupabaseCourseRepository implements ICourseRepository {
       return data.map((s) => ({
         id: s.id,
         courseId: s.course_id,
-        name: s.name,
+        name: updatedUzbekSpelling(s.name),
         code: s.code,
-        description: s.description || '',
+        description: updatedUzbekSpelling(s.description || ''),
         order: s.order_index ?? 0,
         orderIndex: s.order_index,
         iconName: s.icon_name || 'Target',
@@ -180,9 +181,9 @@ export class SupabaseCourseRepository implements ICourseRepository {
         id: q.id,
         courseId: q.course_id,
         skillId: q.skill_id,
-        text: q.text,
+        text: updatedCourseText(q.text, courseId),
         contextSnippet: q.context_snippet || undefined,
-        options: Array.isArray(q.options) ? q.options : [],
+        options: Array.isArray(q.options) ? q.options.map((text: string) => updatedCourseText(text, courseId)) : [],
         // The answer key is intentionally not exposed to the learner client.
         correctIndex: undefined,
         difficulty: q.difficulty || 'medium',

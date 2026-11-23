@@ -439,7 +439,7 @@ export const AdminDashboardView: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: COURSES CMS (FANLARNI BOSHQARISH) */}
+      {/* TAB 1: COURSES CMS (FANLARNI BOŞQARIŞ) */}
       {/* ========================================================================= */}
       {activeTab === 'courses' && (
         <div className="space-y-6">
@@ -520,7 +520,7 @@ export const AdminDashboardView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: SKILLS CMS (KO‘NIKMALAR VA MAVZULAR) */}
+      {/* TAB 3: SKILLS CMS (KÖNIKMALAR VA MAVZULAR) */}
       {/* ========================================================================= */}
       {activeTab === 'skills' && (
         <div className="space-y-6">
@@ -616,7 +616,7 @@ export const AdminDashboardView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 4: LESSONS CMS (DARSLIKLARNI BOSHQARISH) */}
+      {/* TAB 4: LESSONS CMS (DARSLIKLARNI BOŞQARIŞ) */}
       {/* ========================================================================= */}
       {activeTab === 'lessons' && (
         <div className="space-y-6">
@@ -735,7 +735,7 @@ export const AdminDashboardView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 5: QUESTIONS BANK CMS (SAVOLLARNI BOSHQARISH) */}
+      {/* TAB 5: QUESTIONS BANK CMS (SAVOLLARNI BOŞQARIŞ) */}
       {/* ========================================================================= */}
       {activeTab === 'questions' && (
         <div className="space-y-6">

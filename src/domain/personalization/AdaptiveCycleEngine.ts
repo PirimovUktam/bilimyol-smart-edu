@@ -67,9 +67,9 @@ const BASELINE_BY_LEVEL: Record<InitialLevel, number> = {
 };
 
 const GOAL_LABEL_UZ: Record<OnboardingGoal, string> = {
-  mastery: 'Asosiy mavzularni o‘zlashtirish',
+  mastery: 'Asosiy mavzularni özlaştiriş',
   exam_prep: 'Imtihon va testlarga tayyorgarlik',
-  skills_boost: 'Amaliy ko‘nikmalarni kuchaytirish',
+  skills_boost: 'Amaliy könikmalarni kuçaytiriş',
 };
 
 function findWeakestSkill(
@@ -104,7 +104,7 @@ function resolveActiveNode(roadmap: LearningPath | null | undefined): LearningPa
 }
 
 /**
- * Pure domain engine implementing BilimYo'l's 5-step Adaptive Learning Cycle,
+ * Pure domain engine implementing BilimYöl's 5-step Adaptive Learning Cycle,
  * 6-input Explainable AI transparent reasoning, and cycle effectiveness metrics.
  */
 export class AdaptiveCycleEngine {
@@ -168,10 +168,10 @@ export class AdaptiveCycleEngine {
         key: 'diagnostic',
         status: stepStatus(1, hasDiagnostics),
         metricLabel: hasDiagnostics
-          ? `${scoreValues.length} ko‘nikma baholangan`
+          ? `${scoreValues.length} könikma baholangan`
           : hasCourseConfigured
           ? 'Reja tanlangan'
-          : 'Boshlang‘ich tekshiruv',
+          : 'Boşlanğiç tekşiruv',
       },
       {
         step: 2,
@@ -180,9 +180,9 @@ export class AdaptiveCycleEngine {
         status: stepStatus(2, hasDiagnostics),
         metricLabel: hasDiagnostics
           ? weakScores.length > 0
-            ? `${weakScores.length} bo‘shliq · ${strongScores.length} kuchli`
-            : `${strongScores.length} kuchli mavzu`
-          : 'Bo‘shliqlar tahlili',
+            ? `${weakScores.length} böşliq · ${strongScores.length} kuçli`
+            : `${strongScores.length} kuçli mavzu`
+          : 'Böşliqlar tahlili',
       },
       {
         step: 3,
@@ -199,8 +199,8 @@ export class AdaptiveCycleEngine {
         key: 'practice',
         status: stepStatus(4, hasPracticeActivity),
         metricLabel: needsReinforcement
-          ? `Mustahkamlash: ${weakestSkill?.name ?? 'zaif mavzu'}`
-          : `${completedLessonsCount + completedReinforcementsCount} mashq bajarilgan`,
+          ? `Mustahkamlaş: ${weakestSkill?.name ?? 'zaif mavzu'}`
+          : `${completedLessonsCount + completedReinforcementsCount} maşq bajarilgan`,
       },
       {
         step: 5,
@@ -208,8 +208,8 @@ export class AdaptiveCycleEngine {
         key: 'progress',
         status: stepStatus(5, hasProgressMeasured),
         metricLabel: hasDiagnostics
-          ? `${overall}% o‘zlashtirish`
-          : 'Qayta o‘lchash',
+          ? `${overall}% özlaştiriş`
+          : 'Qayta ölçaş',
       },
     ];
 
@@ -223,12 +223,12 @@ export class AdaptiveCycleEngine {
       );
 
     const loopUpdateSummary = !hasDiagnostics
-      ? 'Diagnostika yoki ilk dars natijasi profilga yozilishi bilan keyingi shaxsiy qadam avtomatik yangilanadi.'
+      ? 'Diagnostika yoki ilk dars natijasi profilga yozilişi bilan keyingi şaxsiy qadam avtomatik yangilanadi.'
       : needsReinforcement && weakestSkill
-      ? `"${weakestSkill.name}" mavzusida ${weakestScoreObj?.score ?? 0}% ko‘rsatkich qayd etildi — shu sababli keyingi qadam sifatida mustahkamlash mashqi tanlandi.`
+      ? `"${weakestSkill.name}" mavzusida ${weakestScoreObj?.score ?? 0}% körsatkiç qayd etildi — şu sababli keyingi qadam sifatida mustahkamlaş maşqi tanlandi.`
       : hasTargetedPractice && weakestSkill
-      ? `"${weakestSkill.name}" mavzusi ${weakestScoreObj?.score ?? 0}% (50–69%) darajada — 70%+ mustahkam natija uchun maqsadli mashq tavsiya qilindi.`
-      : `So‘nggi natijalar asosida umumiy o‘zlashtirish ${overall}% ga yetdi va navbatdagi bosqich "${activeNode?.title ?? 'keyingi mavzu'}" ochildi.`;
+      ? `"${weakestSkill.name}" mavzusi ${weakestScoreObj?.score ?? 0}% (50–69%) darajada — 70%+ mustahkam natija uçun maqsadli maşq tavsiya qilindi.`
+      : `Sönggi natijalar asosida umumiy özlaştiriş ${overall}% ga yetdi va navbatdagi bosqiç "${activeNode?.title ?? 'keyingi mavzu'}" oçildi.`;
 
     return {
       activeStep,
@@ -261,7 +261,7 @@ export class AdaptiveCycleEngine {
         ? 'Yuqori sur’at'
         : completedCount >= 1
         ? 'Barqaror ritm'
-        : 'Boshlang‘ich temp';
+        : 'Boşlanğiç temp';
 
     const weakCount = scoreValues.filter((s) => s.score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN).length;
     const targetedCount = scoreValues.filter(
@@ -277,51 +277,51 @@ export class AdaptiveCycleEngine {
         value: GOAL_LABEL_UZ[goal],
         impact:
           goal === 'exam_prep'
-            ? 'Yuqori ball beruvchi mavzular va test aniqligi birinchi o‘ringa qo‘yiladi.'
+            ? 'Yuqori ball beruvçi mavzular va test aniqligi birinçi öringa qöyiladi.'
             : goal === 'skills_boost'
-            ? 'Amaliy mashqlar va xatoni tushunish ulushi oshiriladi.'
-            : 'Tayanch tushunchalar ketma-ket va mustahkam o‘zlashtiriladi.',
+            ? 'Amaliy maşqlar va xatoni tuşuniş uluşi oşiriladi.'
+            : 'Tayanç tuşunçalar ketma-ket va mustahkam özlaştiriladi.',
       },
       {
         key: 'skill_profile',
-        label: 'Ko‘nikmalar profili',
+        label: 'Könikmalar profili',
         value: weakestSkill
           ? `Fokus: ${weakestSkill.name}`
-          : `${skills.length} ta tayanch ko‘nikma`,
+          : `${skills.length} ta tayanç könikma`,
         impact: weakestSkill
-          ? `Eng past ko‘rsatkich (${weakestScoreObj?.score ?? 0}%) shu mavzuda aniqlangani uchun ustuvor etib belgilandi.`
-          : 'Diagnostikadan so‘ng kuchli va zaif mavzular xaritasi shakllanadi.',
+          ? `Eng past körsatkiç (${weakestScoreObj?.score ?? 0}%) şu mavzuda aniqlangani uçun ustuvor etib belgilandi.`
+          : 'Diagnostikadan söng kuçli va zaif mavzular xaritasi şakllanadi.',
       },
       {
         key: 'knowledge_level',
         label: 'Bilim darajasi',
-        value: scoreValues.length > 0 ? `${overall}% (${SkillScoringEngine.getMasteryLabelUz(overall)})` : 'Boshlang‘ich baholash kutilmoqda',
+        value: scoreValues.length > 0 ? `${overall}% (${SkillScoringEngine.getMasteryLabelUz(overall)})` : 'Boşlanğiç baholaş kutilmoqda',
         impact:
           overall < 50
-            ? 'Murakkab bosqichga o‘tishdan oldin asosiy bo‘shliqni yopish tavsiya qilinadi.'
-            : 'Keyingi bosqichga chiqish uchun mos qiyinlikdagi topshiriq tanlandi.',
+            ? 'Murakkab bosqiçga ötişdan oldin asosiy böşliqni yopiş tavsiya qilinadi.'
+            : 'Keyingi bosqiçga çiqiş uçun mos qiyinlikdagi topşiriq tanlandi.',
       },
       {
         key: 'error_pattern',
-        label: 'Xatolar va bo‘shliq',
+        label: 'Xatolar va böşliq',
         value:
           weakCount > 0
-            ? `${weakCount} ta bo‘shliq (<50%)`
+            ? `${weakCount} ta böşliq (<50%)`
             : targetedCount > 0
-            ? `${targetedCount} ta maqsadli mashq (50–69%)`
+            ? `${targetedCount} ta maqsadli maşq (50–69%)`
             : scoreValues.length > 0
-            ? 'Kritik bo‘shliq yo‘q'
+            ? 'Kritik böşliq yöq'
             : 'Xatolar hali qayd etilmagan',
         impact:
           weakCount > 0
-            ? `"${activeNode?.title ?? weakestSkill?.name ?? 'Mavzu'}" bo‘yicha mustahkamlash mashqi yo‘l xaritasiga qo‘shildi.`
+            ? `"${activeNode?.title ?? weakestSkill?.name ?? 'Mavzu'}" böyiça mustahkamlaş maşqi yöl xaritasiga qöşildi.`
             : targetedCount > 0
-            ? `"${weakestSkill?.name ?? activeNode?.title ?? 'Mavzu'}" bo‘yicha 70%+ ga chiqish uchun maqsadli mashq tavsiya etildi.`
-            : 'Xato aniqlanishi bilan tizim avtomatik tarzda qayta mashq tavsiya qiladi.',
+            ? `"${weakestSkill?.name ?? activeNode?.title ?? 'Mavzu'}" böyiça 70%+ ga çiqiş uçun maqsadli maşq tavsiya etildi.`
+            : 'Xato aniqlanişi bilan tizim avtomatik tarzda qayta maşq tavsiya qiladi.',
       },
       {
         key: 'learning_speed',
-        label: 'O‘rganish tezligi',
+        label: 'Örganiş tezligi',
         value: speedLabel,
         impact: `${completedCount} dars yakunlangan · ${streakDays} kun ketma-ket faollik asosida qadam yuklamasi moslandi.`,
       },
@@ -329,7 +329,7 @@ export class AdaptiveCycleEngine {
         key: 'daily_time',
         label: 'Kunlik vaqt',
         value: `${dailyMinutes} daqiqa / kun`,
-        impact: `${dailyMinutes} daqiqalik byudjetga mos qisqa dars + 5 daqiqalik nazorat mashqi rejalashtirildi.`,
+        impact: `${dailyMinutes} daqiqalik byudjetga mos qisqa dars + 5 daqiqalik nazorat maşqi rejalaştirildi.`,
       },
     ];
   }
@@ -348,16 +348,16 @@ export class AdaptiveCycleEngine {
         title: '5 daqiqalik adaptiv diagnostika',
         minutes: 5,
         type: 'diagnostic',
-        reason: 'Bilim profili va zaif mavzularni aniq xaritalash uchun boshlang‘ich qadam.',
+        reason: 'Bilim profili va zaif mavzularni aniq xaritalaş uçun boşlanğiç qadam.',
       });
     } else if (weakestSkill && weakestScoreObj && weakestScoreObj.score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN) {
       tasks.push({
         id: 'micro_reinf',
-        title: `Bo‘shliqni yopish: ${weakestSkill.name}`,
+        title: `Böşliqni yopiş: ${weakestSkill.name}`,
         minutes: 5,
         type: 'reinforcement',
         targetNodeId: `reinf_${activeNode?.id ?? weakestSkill.id}`,
-        reason: `${weakestScoreObj.score}% natijani 60%+ darajaga ko‘tarish uchun maqsadli mashq.`,
+        reason: `${weakestScoreObj.score}% natijani 60%+ darajaga kötariş uçun maqsadli maşq.`,
       });
     } else if (
       weakestSkill &&
@@ -366,11 +366,11 @@ export class AdaptiveCycleEngine {
     ) {
       tasks.push({
         id: 'micro_targeted',
-        title: `Maqsadli mashq: ${weakestSkill.name}`,
+        title: `Maqsadli maşq: ${weakestSkill.name}`,
         minutes: 5,
         type: 'reinforcement',
         targetNodeId: activeNode?.id,
-        reason: `${weakestScoreObj.score}% (50–69%) natijani 70%+ mustahkam darajaga olib chiqish uchun qo‘shimcha mashq.`,
+        reason: `${weakestScoreObj.score}% (50–69%) natijani 70%+ mustahkam darajaga olib çiqiş uçun qöşimça maşq.`,
       });
     }
 
@@ -382,17 +382,17 @@ export class AdaptiveCycleEngine {
         type: activeNode.isReinforcement ? 'reinforcement' : 'lesson',
         targetNodeId: activeNode.id,
         reason: activeNode.isReinforcement
-          ? 'Oldingi xatolarni qayta mustahkamlash bosqichi.'
-          : 'Ta’lim yo‘lingizdagi navbatdagi asosiy bosqich.',
+          ? 'Oldingi xatolarni qayta mustahkamlaş bosqiçi.'
+          : 'Ta’lim yölingizdagi navbatdagi asosiy bosqiç.',
       });
     }
 
     tasks.push({
       id: 'micro_review',
-      title: 'Yo‘lchi AI bilan 1 ta tezkor savol-javob tahlili',
+      title: 'Yölçi AI bilan 1 ta tezkor savol-javob tahlili',
       minutes: dailyMinutes >= 30 ? 10 : 5,
       type: 'lesson',
-      reason: 'Formative feedback: qoidani mustaqil tushuntira olish darajasini tekshirish.',
+      reason: 'Formative feedback: qoidani mustaqil tuşuntira oliş darajasini tekşiriş.',
     });
 
     return tasks.slice(0, 3);

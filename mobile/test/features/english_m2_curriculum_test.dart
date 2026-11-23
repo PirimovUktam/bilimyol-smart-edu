@@ -211,10 +211,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // All remembered/un-due -> empty state with Keyingi takrorlash (SRS) + Tasodifiy mashq
-      expect(find.text('Barcha kartochkalar ko‘rib chiqildi!'), findsOneWidget);
-      expect(find.text('Keyingi takrorlash (SRS)'), findsOneWidget);
-      expect(find.text('Tasodifiy mashq'), findsWidgets);
+      // All remembered/un-due -> empty state with Keyingi takrorlaş (SRS) + Tasodifiy maşq
+      expect(find.text('Barça kartoçkalar körib çiqildi!'), findsOneWidget);
+      expect(find.text('Keyingi takrorlaş (SRS)'), findsOneWidget);
+      expect(find.text('Tasodifiy maşq'), findsWidgets);
 
       // Broken image alt fallback test using a nonexistent asset path
       final brokenCard = LessonFlashcard(
@@ -245,7 +245,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Broken card fallback description'), findsOneWidget);
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       expect(find.text('/brəʊkən/'), findsOneWidget);
       expect(find.text('/broʊkən/'), findsOneWidget);
@@ -269,25 +269,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('SRS Takrorlash'), findsOneWidget);
+      expect(find.text('SRS Takrorlaş'), findsOneWidget);
       expect(find.text('Modul sinovi'), findsWidgets);
       expect(find.text('A1'), findsOneWidget);
 
       // Tap locked node card -> prerequisite snackbar
-      final lockedTitle = find.text('Present Simple: Bo‘sh joyni to‘ldirish');
+      final lockedTitle = find.text('Present Simple: Böş joyni töldiriş');
       await tester.scrollUntilVisible(lockedTitle, 200);
       await tester.tap(lockedTitle);
       await tester.pumpAndSettle();
       expect(find.byType(SnackBar), findsOneWidget);
 
-      // Math roadmap stays linear (no SRS Takrorlash)
+      // Math roadmap stays linear (no SRS Takrorlaş)
       await container.read(roadmapStateNotifierProvider.notifier).loadRoadmap('course_math_01');
       await tester.pumpAndSettle();
-      expect(find.text('SRS Takrorlash'), findsNothing);
+      expect(find.text('SRS Takrorlaş'), findsNothing);
       expect(find.text(seedRoadmapNodes['course_math_01']!.first.title), findsOneWidget);
     });
 
-    testWidgets('Rich exercises: wordMatch, sentenceOrder, speakingPrompt self-assessment, and checkpoint Qayta mashq', (tester) async {
+    testWidgets('Rich exercises: wordMatch, sentenceOrder, speakingPrompt self-assessment, and checkpoint Qayta maşq', (tester) async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -306,12 +306,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Advance to the interactive question step of U1 checkpoint
-      while (find.text('TEKSHIRISH').evaluate().isEmpty) {
+      while (find.text('TEKŞIRIŞ').evaluate().isEmpty) {
         await tester.tap(find.text('Keyingi qadam'));
         await tester.pumpAndSettle();
       }
 
-      // Pick wrong option on checkpoint -> Qayta mashq button appears
+      // Pick wrong option on checkpoint -> Qayta maşq button appears
       final stepQuestion = container
           .read(lessonSessionNotifierProvider)
           .lesson!
@@ -320,10 +320,10 @@ void main() {
       final wrongIdx = (stepQuestion.correctIndex + 1) % stepQuestion.options.length;
       await tester.tap(find.text(stepQuestion.options[wrongIdx]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Qayta mashq'), findsOneWidget);
+      expect(find.text('Qayta maşq'), findsOneWidget);
 
       // Speaking prompt self-assessment renders sample response & rubric checkboxes
       await container.read(lessonSessionNotifierProvider.notifier).startLesson('lesson_eng_a1_m1_speaking');
@@ -337,7 +337,7 @@ void main() {
         'Hello! My name is Aziza.',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(find.text('Namuna javob:'), findsOneWidget);
@@ -361,7 +361,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining('Привет, я Yo‘lchi AI', findRichText: true),
+        find.textContaining('Привет, я Yölçi AI', findRichText: true),
         findsOneWidget,
       );
       expect(find.text('Полезный ответ'), findsNothing);
@@ -521,7 +521,7 @@ void main() {
         lessonId: 'lesson_eng_a1_m1_greetings',
         questionId: 'q_eng_a1_m1_greet_match',
         selectedIndex: 0,
-        selectedAnswer: '{"pair_gm":"Xayrli tong","pair_ge":"Xayrli kech","pair_hay":"Ahvolingiz qanday?","pair_ift":"Yaxshiman, rahmat."}',
+        selectedAnswer: '{"pair_gm":"Xayrli tong","pair_ge":"Xayrli keç","pair_hay":"Ahvolingiz qanday?","pair_ift":"Yaxşiman, rahmat."}',
       );
       expect(attempt.isCorrect, isTrue);
       // Verify jsonEncode escaping on quotes doesn't throw FormatException on decode
@@ -554,7 +554,7 @@ void main() {
       expect(find.text('My sister ___ English at school every morning.'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('free_text_answer_input')), 'studies');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
@@ -589,7 +589,7 @@ void main() {
       // Step 2: listening MCQ (skill_eng_listening)
       await tester.tap(find.text('20:30'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -597,7 +597,7 @@ void main() {
       // Step 3: fillBlank (skill_eng_grammar)
       await tester.enterText(find.byKey(const Key('free_text_answer_input')), 'opens');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -609,17 +609,17 @@ void main() {
         await tester.tap(chip);
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
 
       // Step 5: reading MCQ (skill_eng_reading)
-      final readOpt = find.text('Yakshanba kuni soat 16:00–17:00 orasida suhbat davrasi bor va talabalarga choy bepul');
+      final readOpt = find.text('Yakşanba kuni soat 16:00–17:00 orasida suhbat davrasi bor va talabalarga çoy bepul');
       await tester.ensureVisible(readOpt);
       await tester.tap(readOpt);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
@@ -628,7 +628,7 @@ void main() {
       expect(find.text('Roadmap'), findsOneWidget);
     });
 
-    testWidgets('wordMatch at 390x844 renders Tozalash without overflow and completes', (tester) async {
+    testWidgets('wordMatch at 390x844 renders Tozalaş without overflow and completes', (tester) async {
       SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -657,7 +657,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Match first pair so Tozalash appears at 390px -> assert zero RenderFlex overflow
+      // Match first pair so Tozalaş appears at 390px -> assert zero RenderFlex overflow
       final gmLeft = find.text('Good morning');
       await tester.ensureVisible(gmLeft);
       await tester.tap(gmLeft);
@@ -666,13 +666,13 @@ void main() {
       await tester.ensureVisible(gmRight);
       await tester.tap(gmRight);
       await tester.pumpAndSettle();
-      expect(find.text('Tozalash'), findsOneWidget);
+      expect(find.text('Tozalaş'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       for (final pair in [
-        ('Good evening', 'Xayrli kech'),
+        ('Good evening', 'Xayrli keç'),
         ('How are you?', 'Ahvolingiz qanday?'),
-        ("I'm fine, thanks.", 'Yaxshiman, rahmat.'),
+        ("I'm fine, thanks.", 'Yaxşiman, rahmat.'),
       ]) {
         final left = find.text(pair.$1);
         await tester.ensureVisible(left);
@@ -683,14 +683,14 @@ void main() {
         await tester.tap(right);
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('sentenceOrder partial hint, Tozalash reset, and completion (lesson_eng_a1_m2_sentence_builder)', (tester) async {
+    testWidgets('sentenceOrder partial hint, Tozalaş reset, and completion (lesson_eng_a1_m2_sentence_builder)', (tester) async {
       SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -722,27 +722,27 @@ void main() {
       // Single token -> partial hint
       await tester.tap(find.widgetWithText(ActionChip, 'They'));
       await tester.pumpAndSettle();
-      expect(find.text('Tozalash'), findsOneWidget);
+      expect(find.text('Tozalaş'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Gapdagi barcha so‘zlarni tartiblang (1/6)'), findsOneWidget);
+      expect(find.textContaining('Gapdagi barça sözlarni tartiblang (1/6)'), findsOneWidget);
 
-      await tester.tap(find.text('Tozalash'));
+      await tester.tap(find.text('Tozalaş'));
       await tester.pumpAndSettle();
 
       for (final token in ['They', 'read', 'books', 'in', 'the', 'library.']) {
         await tester.tap(find.widgetWithText(ActionChip, token));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
     });
 
-    testWidgets('errorCorrection, Qayta mashq, and q_eng_a1_u3_cp_reinf multi-skill reinforcement', (tester) async {
+    testWidgets('errorCorrection, Qayta maşq, and q_eng_a1_u3_cp_reinf multi-skill reinforcement', (tester) async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -767,14 +767,14 @@ void main() {
       expect(find.text('The study desk is the window beside.'), findsOneWidget);
       await tester.tap(find.text('The study desk beside is the window.'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mavzuni mustahkamlash'), findsOneWidget);
-      expect(find.text('Qayta mashq'), findsOneWidget);
+      expect(find.text('Mavzuni mustahkamlaş'), findsOneWidget);
+      expect(find.text('Qayta maşq'), findsOneWidget);
 
       // Open ReinforcementSheet for q_eng_a1_u3_cp_reinf (skill_eng_listening)
-      final reinfBtn = find.text('Mavzuni mustahkamlash');
+      final reinfBtn = find.text('Mavzuni mustahkamlaş');
       await tester.ensureVisible(reinfBtn);
       await tester.tap(reinfBtn);
       await tester.pumpAndSettle();
@@ -782,7 +782,7 @@ void main() {
       await tester.ensureVisible(opt2230);
       await tester.tap(opt2230);
       await tester.pumpAndSettle();
-      final checkBtn = find.text('Javobni Tekshirish');
+      final checkBtn = find.text('Javobni Tekşiriş');
       await tester.ensureVisible(checkBtn);
       await tester.tap(checkBtn);
       await tester.pumpAndSettle();
@@ -795,7 +795,7 @@ void main() {
       );
 
       // Close sheet via Dashboard button
-      final dashBtn = find.text('Dashboardga O‘tish');
+      final dashBtn = find.text('Daşboardga Ötiş');
       await tester.ensureVisible(dashBtn);
       await tester.tap(dashBtn);
       await tester.pumpAndSettle();
@@ -899,12 +899,12 @@ void main() {
         'Hi Ben! My desk is beside the window.',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       expect(find.text('Namuna javob:'), findsOneWidget);
       expect(
-        find.text('O‘zini baholash (mustaqil yozma mashq): bu vazifa rasmiy CEFR sertifikati bermaydi.'),
+        find.text('Özini baholaş (mustaqil yozma maşq): bu vazifa rasmiy CEFR sertifikati bermaydi.'),
         findsOneWidget,
       );
       final firstCheck = find.byType(CheckboxListTile).first;
@@ -914,7 +914,7 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Yakunlash'));
+      await tester.tap(find.text('Yakunlaş'));
       await tester.pumpAndSettle();
 
       expect(container.read(lessonSessionNotifierProvider).isCompleted, isTrue);
@@ -961,7 +961,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Takrorlash: 1 • Shu darsda'), findsOneWidget);
+      expect(find.text('Takrorlaş: 1 • Şu darsda'), findsOneWidget);
       expect(find.text('phrase'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -993,13 +993,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("What's your name?"), findsOneWidget);
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();
 
       expect(find.text('Nice to meet you.'), findsOneWidget);
-      expect(find.text('Barcha kartochkalar ko‘rib chiqildi!'), findsNothing);
+      expect(find.text('Barça kartoçkalar körib çiqildi!'), findsNothing);
     });
 
     testWidgets('Standalone SRS Probe 1D preserves rotated need_practice order across reviewCount bump', (tester) async {
@@ -1036,9 +1036,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("What's your name?"), findsOneWidget);
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Yana mashq qilaman'));
+      await tester.tap(find.text('Yana maşq qilaman'));
       await tester.pumpAndSettle();
 
       expect(find.text('Nice to meet you.'), findsOneWidget);
@@ -1050,10 +1050,10 @@ void main() {
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
       const audioErrState = LessonAudioState(
         status: LessonAudioStatus.error,
-        errorMessage: 'Audio faylni yuklab bo‘lmadi.',
+        errorMessage: 'Audio faylni yuklab bölmadi.',
         errorCode: LessonAudioErrorCode.loadFailed,
       );
-      expect(audioErrState.localizedErrorMessage('uz'), 'Audio faylni yuklab bo‘lmadi.');
+      expect(audioErrState.localizedErrorMessage('uz'), 'Audio faylni yuklab bölmadi.');
       expect(audioErrState.localizedErrorMessage('ru'), 'Не удалось загрузить аудиофайл.');
 
       await tester.pumpWidget(
@@ -1075,7 +1075,7 @@ void main() {
       await tester.pump();
       expect(find.text('Главная'), findsOneWidget);
       expect(find.text('Не удалось загрузить данные.'), findsOneWidget);
-      expect(find.bySemanticsLabel('Yo‘lchi AI печатает...'), findsOneWidget);
+      expect(find.bySemanticsLabel('Yölçi AI печатает...'), findsOneWidget);
 
       await tester.pumpWidget(
         const ProviderScope(

@@ -1,8 +1,8 @@
 {
   "lessonId": "lesson_math_starter",
   "objectiveId": "node_math_addition",
-  "title": "Birlashtirish va olib tashlash",
-  "objective": "Qo‘shish va ayirishni predmetlar bilan ko‘rsatib, ifodaga aylantirish.",
+  "title": "Birlaştiriş va olib taşlaş",
+  "objective": "Qöşiş va ayirişni predmetlar bilan körsatib, ifodaga aylantiriş.",
   "language": "uz",
   "reviewStatus": "draft",
   "durationSeconds": 40,
@@ -11,26 +11,26 @@
     {
       "start": 0,
       "end": 9,
-      "narration": "Qo‘shishda guruhlarni birlashtiramiz. Bu yerda ikkita qizil doira va yana uchta ko‘k doira bor.",
-      "visual": "Chapda ikki doira, o‘ngda uch doira. Rang bilan birga har bir guruh ustida son yoziladi."
+      "narration": "Qöşişda guruhlarni birlaştiramiz. Bu yerda ikkita qizil doira va yana uçta kök doira bor.",
+      "visual": "Çapda ikki doira, öngda uç doira. Rang bilan birga har bir guruh ustida son yoziladi."
     },
     {
       "start": 9,
       "end": 20,
-      "narration": "Hammasini birga sanaymiz: bir, ikki, uch, to‘rt, besh. Demak, ikki qo‘shuv uch, teng besh.",
-      "visual": "Doiralar bir qatorga qo‘shiladi. Sanalganda har bir doira ajratiladi va 2 + 3 = 5 yozuvi chiqadi."
+      "narration": "Hammasini birga sanaymiz: bir, ikki, uç, tört, beş. Demak, ikki qöşuv uç, teng beş.",
+      "visual": "Doiralar bir qatorga qöşiladi. Sanalganda har bir doira ajratiladi va 2 + 3 = 5 yozuvi çiqadi."
     },
     {
       "start": 20,
       "end": 31,
-      "narration": "Ayirishda bir qismini olib tashlaymiz. Beshta doiradan bittasini olsak, to‘rtta qoladi.",
-      "visual": "Oxirgi doira chetga suriladi va ustidan chiziq tortiladi. Qolgan to‘rt doira yonida 5 − 1 = 4 yoziladi."
+      "narration": "Ayirişda bir qismini olib taşlaymiz. Beşta doiradan bittasini olsak, törtta qoladi.",
+      "visual": "Oxirgi doira çetga suriladi va ustidan çiziq tortiladi. Qolgan tört doira yonida 5 − 1 = 4 yoziladi."
     },
     {
       "start": 31,
       "end": 40,
-      "narration": "O‘zingiz sinab ko‘ring: oltita donadan ikkitasi olib tashlansa, qanday amal yozasiz?",
-      "visual": "Olti belgi va bo‘sh ifoda ko‘rsatiladi. Video javobni ochmaydi, o‘quvchiga o‘ylash vaqti beradi."
+      "narration": "Özingiz sinab köring: oltita donadan ikkitasi olib taşlansa, qanday amal yozasiz?",
+      "visual": "Olti belgi va böş ifoda körsatiladi. Video javobni oçmaydi, öquvçiga öylaş vaqti beradi."
     }
   ]
 }

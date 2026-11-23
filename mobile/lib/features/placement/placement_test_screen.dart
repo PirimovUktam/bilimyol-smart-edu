@@ -108,7 +108,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text(
-              lang == 'ru' ? 'Отправить ответы?' : 'Javoblarni topshirasizmi?',
+              lang == 'ru' ? 'Отправить ответы?' : 'Javoblarni topşirasizmi?',
             ),
             content: Text(s.placementConfirmBody),
             actions: [
@@ -321,7 +321,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                               Text(
                                 isRu
                                     ? 'Стартовый уровень: $cefrTier (${result.overallScore}%)'
-                                    : 'Tavsiya etilgan bosqich: $cefrTier (${result.overallScore}%)',
+                                    : 'Tavsiya etilgan bosqiç: $cefrTier (${result.overallScore}%)',
                                 style: AppTypography.ui(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
@@ -334,7 +334,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                           Text(
                             isRu
                                 ? 'Уровни B2–C2 появятся на следующем этапе (DEFERRED). Сейчас доступен маршрут A1–B1.'
-                                : 'B2–C2 darajalari keyingi bosqichda (DEFERRED) qo‘shiladi. Hozircha A1–B1 yo‘nalishida boshlashingiz mumkin.',
+                                : 'B2–C2 darajalari keyingi bosqiçda (DEFERRED) qöşiladi. Hozirça A1–B1 yönalişida boşlaşingiz mumkin.',
                             style: AppTypography.ui(
                               fontSize: 12.5,
                               color: c.graphite,
@@ -345,7 +345,7 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                           Text(
                             isRu
                                 ? 'Результат диагностики определяет стартовый маршрут и не заменяет освоение уроков. $cefrOfficialDisclaimerRu'
-                                : 'Diagnostika natijasi boshlang‘ich yo‘lni ko‘rsatadi va mustaqil dars o‘zlashtirishidan alohida saqlanadi. $cefrOfficialDisclaimerUz',
+                                : 'Diagnostika natijasi boşlanğiç yölni körsatadi va mustaqil dars özlaştirişidan alohida saqlanadi. $cefrOfficialDisclaimerUz',
                             style: AppTypography.ui(
                               fontSize: 11.5,
                               color: c.slatefine,

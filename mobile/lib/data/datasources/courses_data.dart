@@ -7,7 +7,7 @@ const List<Course> seedCourses = [
     titleRu: 'Математика',
     subject: SubjectType.mathematics,
     description:
-        'Mantiqiy fikrlash, masalalar va funksiyalarni chuqur mustahkamlash kursi.',
+        'Mantiqiy fikrlaş, masalalar va funksiyalarni çuqur mustahkamlaş kursi.',
     descriptionRu:
         'Курс для глубокого закрепления логического мышления, задач и функций.',
     iconName: 'calculator',
@@ -38,7 +38,7 @@ const List<Course> seedCourses = [
     titleRu: 'Английский язык',
     subject: SubjectType.english,
     description:
-        'Lug‘at, grammatika, tinglab tushunish va o‘qish ko‘nikmalarini rivojlantirish.',
+        'Luğat, grammatika, tinglab tuşuniş va öqiş könikmalarini rivojlantiriş.',
     descriptionRu:
         'Развитие словарного запаса, грамматики, аудирования и навыков чтения.',
     iconName: 'headphones',
@@ -91,11 +91,11 @@ const List<Course> seedCourses = [
   ),
   Course(
     id: 'course_it',
-    title: 'IT & Kodlash',
+    title: 'IT & Kodlaş',
     titleRu: 'IT и программирование',
     subject: SubjectType.it,
     description:
-        'Dasturlash asoslari, algoritmlar va axborot texnologiyalari kursi.',
+        'Dasturlaş asoslari, algoritmlar va axborot texnologiyalari kursi.',
     descriptionRu:
         'Курс по основам программирования, алгоритмам и информационным технологиям.',
     iconName: 'code',
@@ -117,7 +117,7 @@ const List<Course> seedCourses = [
     title: 'Mantiq',
     titleRu: 'Логика',
     subject: SubjectType.logic,
-    description: 'Mantiqiy fikrlash, deduksiya va intellektual boshqotirmalar.',
+    description: 'Mantiqiy fikrlaş, deduksiya va intellektual boşqotirmalar.',
     descriptionRu: 'Логическое мышление, дедукция и интеллектуальные задачи.',
     iconName: 'brain',
     primaryColorHex: '#10B981',

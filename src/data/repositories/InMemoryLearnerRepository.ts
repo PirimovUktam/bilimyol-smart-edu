@@ -35,27 +35,27 @@ function buildFreeTextWrongFeedback(
     if (!normalized) {
       return language === 'ru'
         ? 'Поле ответа пустое. Напишите полную фразу знакомства на английском.'
-        : 'Javob maydoni bo‘sh. Ingliz tilida to‘liq tanishuv gapini yozing.';
+        : 'Javob maydoni böş. Ingliz tilida töliq tanişuv gapini yozing.';
     }
     if (normalized === 'sam') {
       return language === 'ru'
         ? 'Одного имени недостаточно. Чтобы представиться по-английски, напишите полную фразу с «I\'m ...» или «My name is ...».'
-        : 'Faqat ismning o‘zi yetarli emas. Ingliz tilida o‘zingizni tanishtirish uchun «I\'m ...» yoki «My name is ...» shaklida to‘liq gap yozing.';
+        : 'Faqat ismning özi yetarli emas. Ingliz tilida özingizni taniştiriş uçun «I\'m ...» yoki «My name is ...» şaklida töliq gap yozing.';
     }
     if (normalized === 'goodbye' || normalized === 'bye' || normalized === 'good bye') {
       return language === 'ru'
         ? '«Goodbye» означает «до свидания». Собеседник спросил ваше имя («What\'s your name?»), поэтому ответьте фразой «I\'m ...» или «My name is ...».'
-        : '«Goodbye» — xayrlashuv so‘zi. Suhbatdosh «What\'s your name?» deb ismingizni so‘radi, shuning uchun «I\'m ...» yoki «My name is ...» deb o‘zingizni tanishtiring.';
+        : '«Goodbye» — xayrlaşuv sözi. Suhbatdoş «What\'s your name?» deb ismingizni söradi, şuning uçun «I\'m ...» yoki «My name is ...» deb özingizni taniştiring.';
     }
     if (normalized === 'hello' || normalized === 'hi') {
       return language === 'ru'
         ? 'Приветствие верное, но нужно также назвать своё имя с помощью «I\'m ...» или «My name is ...».'
-        : 'Salomlashish yaxshi, lekin ismingizni ham aytishingiz kerak. «I\'m ...» yoki «My name is ...» shaklida to‘liq gap yozing.';
+        : 'Salomlaşiş yaxşi, lekin ismingizni ham aytişingiz kerak. «I\'m ...» yoki «My name is ...» şaklida töliq gap yozing.';
     }
   } else if (!normalized) {
     return language === 'ru'
       ? 'Поле ответа пустое. Напишите ответ на английском.'
-      : 'Javob maydoni bo‘sh. Ingliz tilida javob yozing.';
+      : 'Javob maydoni böş. Ingliz tilida javob yozing.';
   }
   return getLocalizedMistakeFeedback(question, rawAnswer, language);
 }
@@ -104,8 +104,8 @@ function parseSelfAssessedSubmission(rawAnswer: string): { response: string; cri
 
 const DEFAULT_PROFILE: LearnerProfile = {
   id: 'learner_default_01',
-  name: 'Foydalanuvchi',
-  firstName: 'Foydalanuvchi',
+  name: 'Foydalanuvçi',
+  firstName: 'Foydalanuvçi',
   lastName: '',
   email: '',
   selectedCourseId: 'course_math_01',
@@ -401,8 +401,9 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       resolvedType === 'speaking_prompt' ||
       resolvedType === 'writing_prompt';
     const isTextRequest = resolvedType === 'text_input' || resolvedType === 'fill_blank';
+    const answerLanguage = request.courseId === 'course_eng_01' ? undefined : 'uz';
     const normalizedPayload = isTextRequest
-      ? normalizeFreeTextAnswer(request.selectedAnswer)
+      ? normalizeFreeTextAnswer(request.selectedAnswer, answerLanguage)
       : resolvedType === 'word_match'
       ? canonicalizeWordMatchJson(request.selectedAnswer)
       : request.selectedAnswer.trim();
@@ -416,7 +417,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         isPayloadKeyedType
           ? a.questionId === request.questionId &&
             (isTextRequest
-              ? normalizeFreeTextAnswer(a.selectedAnswer) === normalizedPayload
+              ? normalizeFreeTextAnswer(a.selectedAnswer, answerLanguage) === normalizedPayload
               : resolvedType === 'word_match'
               ? canonicalizeWordMatchJson(a.selectedAnswer) === normalizedPayload
               : a.selectedAnswer.trim() === normalizedPayload)
@@ -448,11 +449,15 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     let correctOption: string | undefined;
     let explanation = lang === 'ru'
       ? 'Верное решение и педагогическое объяснение.'
-      : 'To‘g‘ri yechim va pedagogik tushuntirish.';
+      : 'Töğri yeçim va pedagogik tuşuntiriş.';
 
     let isCorrect = false;
     if (matchedQuestion && (resolvedType === 'text_input' || resolvedType === 'fill_blank')) {
-      isCorrect = matchesAcceptedAnswer(request.selectedAnswer, matchedQuestion.acceptedAnswers ?? []);
+      isCorrect = matchesAcceptedAnswer(
+        request.selectedAnswer,
+        matchedQuestion.acceptedAnswers ?? [],
+        answerLanguage,
+      );
       correctIndex = 0;
       correctOption = undefined;
       explanation = isCorrect

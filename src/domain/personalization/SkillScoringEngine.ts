@@ -15,9 +15,9 @@ export class SkillScoringEngine {
 
   /**
    * Central level classification:
-   * 0–39: needs_remediation (Boshlang‘ich)
+   * 0–39: needs_remediation (Boşlanğiç)
    * 40–59: developing (Rivojlanmoqda)
-   * 60–79: proficient (O‘rta)
+   * 60–79: proficient (Örta)
    * 80–100: mastered (Yuqori)
    */
   public static getMasteryLevel(score: number): MasteryLevel {
@@ -35,11 +35,11 @@ export class SkillScoringEngine {
     const level = this.getMasteryLevel(score);
     switch (level) {
       case 'needs_remediation':
-        return 'Boshlang‘ich';
+        return 'Boşlanğiç';
       case 'developing':
         return 'Rivojlanmoqda';
       case 'proficient':
-        return 'O‘rta';
+        return 'Örta';
       case 'mastered':
         return 'Yuqori';
     }

@@ -25,8 +25,8 @@ const baseProgression = (overrides = {}) => [
     id: 'node_math_addition',
     course_id: 'course_math_01',
     skill_id: 'skill_math_addition',
-    title: 'Qo‘shish va ayirish',
-    description: 'Birlashtirish va ayrim qismini olib tashlashni sonlar bilan ifodalang.',
+    title: 'Qöşiş va ayiriş',
+    description: 'Birlaştiriş va ayrim qismini olib taşlaşni sonlar bilan ifodalang.',
     prerequisites: [],
     required_score: 80,
     target_lesson_id: 'lesson_math_starter',
@@ -46,8 +46,8 @@ const baseProgression = (overrides = {}) => [
     id: 'node_math_multiplication',
     course_id: 'course_math_01',
     skill_id: 'skill_math_multiplication',
-    title: 'Teng guruhlar va ko‘paytirish',
-    description: 'Teng guruhlarni takroriy qo‘shish va ko‘paytirish bilan ifodalang.',
+    title: 'Teng guruhlar va köpaytiriş',
+    description: 'Teng guruhlarni takroriy qöşiş va köpaytiriş bilan ifodalang.',
     prerequisites: ['node_math_addition'],
     required_score: 80,
     target_lesson_id: 'lesson_math_foundation_02',
@@ -171,9 +171,9 @@ try {
         {
           id: 'skill_math_addition',
           course_id: 'course_math_01',
-          name: 'Qo‘shish va ayirish',
+          name: 'Qöşiş va ayiriş',
           code: 'MATH_ADD',
-          description: 'Miqdorlarni birlashtirish va farqni topish.',
+          description: 'Miqdorlarni birlaştiriş va farqni topiş.',
           order_index: -2,
           icon_name: 'Calculator',
         },
@@ -182,7 +182,7 @@ try {
           course_id: 'course_math_01',
           name: 'Teng guruhlar',
           code: 'MATH_MUL',
-          description: 'Teng miqdorlarni takror qo‘shish va ko‘paytirish.',
+          description: 'Teng miqdorlarni takror qöşiş va köpaytiriş.',
           order_index: -1,
           icon_name: 'Calculator',
         },
@@ -194,8 +194,8 @@ try {
           id: 'lesson_math_starter',
           course_id: 'course_math_01',
           skill_id: 'skill_math_addition',
-          title: 'Qo‘shish va ayirishdan boshlaymiz',
-          summary: 'Qo‘shish va ayirish asoslari',
+          title: 'Qöşiş va ayirişdan boşlaymiz',
+          summary: 'Qöşiş va ayiriş asoslari',
           estimated_minutes: 8,
           is_locked: false,
           steps: [
@@ -203,19 +203,19 @@ try {
               id: 'step_1',
               stepNumber: 1,
               type: 'concept',
-              title: 'Asosiy tushuncha',
-              content: 'Ikki guruhni birlashtiramiz.',
+              title: 'Asosiy tuşunça',
+              content: 'Ikki guruhni birlaştiramiz.',
             },
             {
               id: 'step_2',
               stepNumber: 2,
               type: 'interactive_question',
-              title: 'Mustaqil mashq',
+              title: 'Mustaqil maşq',
               content: 'Javobni tanlang.',
               masteryCheckpoint: 'application',
               interactiveQuestion: {
                 id: 'q_pilot_lesson_math_starter_1',
-                text: '4 ta ko‘k va 3 ta oq tugma bor. Jami nechta?',
+                text: '4 ta kök va 3 ta oq tugma bor. Jami neçta?',
                 options: ['7', '1', '12'],
                 difficulty: 'easy',
               },
@@ -224,13 +224,13 @@ try {
               id: 'step_3',
               stepNumber: 3,
               type: 'concept',
-              title: 'Darsni yakunlash',
-              content: 'Yaxshi davom eting.',
+              title: 'Darsni yakunlaş',
+              content: 'Yaxşi davom eting.',
             },
           ],
           reinforcement_exercise: {
             id: 'q_pilot_lesson_math_starter_1',
-            text: '4 ta ko‘k va 3 ta oq tugma bor. Jami nechta?',
+            text: '4 ta kök va 3 ta oq tugma bor. Jami neçta?',
             options: ['7', '1', '12'],
             difficulty: 'easy',
           },
@@ -292,42 +292,42 @@ try {
 
   await page.goto(`${baseUrl}/?view=knowledge-map`, { waitUntil: 'domcontentloaded' });
   await main.getByRole('heading', { name: 'Diagnostika natijasi' }).waitFor({ state: 'visible' });
-  assert.equal(await main.getByRole('button', { name: 'Diagnostikani boshlash' }).count(), 0);
-  const startButtons = main.getByRole('button', { name: 'Birinchi mashqni boshlash' });
-  assert.equal(await startButtons.count(), 1, 'Expected exactly one Birinchi mashqni boshlash button');
-  assert.equal(await main.getByRole('progressbar', { name: 'Umumiy o‘zlashtirish' }).getAttribute('aria-valuenow'), '0');
+  assert.equal(await main.getByRole('button', { name: 'Diagnostikani boşlaş' }).count(), 0);
+  const startButtons = main.getByRole('button', { name: 'Birinçi maşqni boşlaş' });
+  assert.equal(await startButtons.count(), 1, 'Expected exactly one Birinçi maşqni boşlaş button');
+  assert.equal(await main.getByRole('progressbar', { name: 'Umumiy özlaştiriş' }).getAttribute('aria-valuenow'), '0');
   await main.getByText(/2-mavzu.*Qulflangan/).waitFor({ state: 'visible' });
-  assert.equal(await main.getByText(/xato qildingiz|Bilim bo‘shlig‘i aniqlandi/i).count(), 0);
+  assert.equal(await main.getByText(/xato qildingiz|Bilim böşliği aniqlandi/i).count(), 0);
 
   await startButtons.first().click();
   await page.waitForFunction((lessonId) => {
     const params = new URLSearchParams(window.location.search);
     return params.get('view') === 'lesson' && params.get('lessonId') === lessonId;
   }, expectedTargetLessonId);
-  await main.getByRole('heading', { name: 'Qo‘shish va ayirishdan boshlaymiz' }).waitFor({ state: 'visible' });
+  await main.getByRole('heading', { name: 'Qöşiş va ayirişdan boşlaymiz' }).waitFor({ state: 'visible' });
   console.log('PASS Pilot State B (4/4) click routes to open targetLessonId:', expectedTargetLessonId);
 
   // 1b. Answer one exercise in the lesson and return to Knowledge Map via browser Back (SPA navigation without reload)
   await main.getByRole('button', { name: 'Keyingi qadam' }).click();
   await main.getByText('7', { exact: true }).click();
-  await main.getByRole('button', { name: /Tekshirish/i }).click();
-  await main.getByText(/To‘g‘ri/i).first().waitFor({ state: 'visible' });
+  await main.getByRole('button', { name: /Tekşiriş/i }).click();
+  await main.getByText(/Töğri/i).first().waitFor({ state: 'visible' });
   await page.goBack();
   await main.getByText('1 · Baholangan mavzular').waitFor({ state: 'visible' });
   await main.getByText(/1\/5/).first().waitFor({ state: 'visible' });
-  assert.equal(await main.getByRole('button', { name: 'Birinchi mashqni boshlash' }).count(), 0);
+  assert.equal(await main.getByRole('button', { name: 'Birinçi maşqni boşlaş' }).count(), 0);
   console.log('PASS Pilot SPA return to KnowledgeMap after 1st exercise refreshes roadmap (answered > 0)');
 
-  // 2. State B fallback when no open lesson exists -> Ta'lim yo'li (roadmap)
+  // 2. State B fallback when no open lesson exists -> Ta'lim yöli (roadmap)
   currentProgression = baseProgression({ firstStatus: 'locked' });
   await page.goto(`${baseUrl}/?view=knowledge-map`, { waitUntil: 'domcontentloaded' });
   await main.getByRole('heading', { name: 'Diagnostika natijasi' }).waitFor({ state: 'visible' });
-  const fallbackButtons = main.getByRole('button', { name: 'Birinchi mashqni boshlash' });
+  const fallbackButtons = main.getByRole('button', { name: 'Birinçi maşqni boşlaş' });
   assert.equal(await fallbackButtons.count(), 1);
   await fallbackButtons.first().click();
   await page.waitForFunction(() => new URLSearchParams(window.location.search).get('view') === 'roadmap');
-  await main.getByRole('heading', { name: /Mening ta’lim yo‘lim/ }).waitFor({ state: 'visible' });
-  console.log('PASS Pilot State B fallback routes to Ta’lim yo‘li when no open lesson exists');
+  await main.getByRole('heading', { name: /Mening ta’lim yölim/ }).waitFor({ state: 'visible' });
+  console.log('PASS Pilot State B fallback routes to Ta’lim yöli when no open lesson exists');
 
   // 3. State B with diagnostic gap (< 100) names that skill
   currentSkillScores = [
@@ -352,7 +352,7 @@ try {
   await page.goto(`${baseUrl}/?view=knowledge-map`, { waitUntil: 'domcontentloaded' });
   await main.getByRole('heading', { name: 'Diagnostika natijasi' }).waitFor({ state: 'visible' });
   await main.getByText(/Teng guruhlar.*50%/).waitFor({ state: 'visible' });
-  assert.equal(await main.getByRole('button', { name: 'Birinchi mashqni boshlash' }).count(), 1);
+  assert.equal(await main.getByRole('button', { name: 'Birinçi maşqni boşlaş' }).count(), 1);
   console.log('PASS Pilot State B (score < 100) names gap skill');
 
   // 3b. Layout & theme checks on State B (360px/390px/1440px, light & dark)
@@ -364,7 +364,7 @@ try {
     }, theme);
     const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     assert.equal(hasOverflow, false, `Horizontal overflow detected at ${width}px (${theme})`);
-    assert.equal(await main.getByRole('button', { name: 'Birinchi mashqni boshlash' }).count(), 1);
+    assert.equal(await main.getByRole('button', { name: 'Birinçi maşqni boşlaş' }).count(), 1);
   }
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.evaluate(() => {
@@ -377,9 +377,9 @@ try {
   currentSkillScores = [];
   currentProgression = baseProgression();
   await page.goto(`${baseUrl}/?view=knowledge-map`, { waitUntil: 'domcontentloaded' });
-  await main.getByRole('button', { name: 'Diagnostikani boshlash' }).waitFor({ state: 'visible' });
-  assert.equal(await main.getByRole('button', { name: 'Birinchi mashqni boshlash' }).count(), 0);
-  console.log('PASS Pilot State A shows Diagnostikani boshlash');
+  await main.getByRole('button', { name: 'Diagnostikani boşlaş' }).waitFor({ state: 'visible' });
+  assert.equal(await main.getByRole('button', { name: 'Birinçi maşqni boşlaş' }).count(), 0);
+  console.log('PASS Pilot State A shows Diagnostikani boşlaş');
 
   // 5. Post-exercise (answered > 0) shows lesson progress
   currentSkillScores = [
@@ -395,8 +395,8 @@ try {
   currentProgression = baseProgression({ firstAnswered: 2, firstCorrect: 2, firstStatus: 'in_progress' });
   await page.goto(`${baseUrl}/?view=knowledge-map`, { waitUntil: 'domcontentloaded' });
   await main.getByText('1 · Baholangan mavzular').waitFor({ state: 'visible' });
-  assert.equal(await main.getByRole('button', { name: 'Birinchi mashqni boshlash' }).count(), 0);
-  assert.equal(await main.getByRole('button', { name: 'Diagnostikani boshlash' }).count(), 0);
+  assert.equal(await main.getByRole('button', { name: 'Birinçi maşqni boşlaş' }).count(), 0);
+  assert.equal(await main.getByRole('button', { name: 'Diagnostikani boşlaş' }).count(), 0);
   console.log('PASS Pilot post-exercise (answered > 0) shows lesson progress');
 
   assert.deepEqual(pageErrors, [], `Unexpected page errors: ${pageErrors.join(', ')}`);

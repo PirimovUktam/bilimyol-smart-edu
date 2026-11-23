@@ -44,7 +44,7 @@ async function checkThemeSwitchAndContrast(page, label) {
     };
   });
 
-  await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Qoronği rejimni yoqiş' }).click();
   assert.equal(await root.getAttribute('data-theme'), 'dark');
   const darkColors = await page.evaluate(() => {
     const bodyBg = getComputedStyle(document.body).backgroundColor;
@@ -64,7 +64,7 @@ async function checkThemeSwitchAndContrast(page, label) {
   assertions++;
 
   // Switch back to light so subsequent selectors keep a predictable baseline
-  await page.getByRole('button', { name: 'Yorug‘ rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Yoruğ rejimni yoqiş' }).click();
   assert.equal(await root.getAttribute('data-theme'), 'light');
 }
 
@@ -106,7 +106,7 @@ async function verifyAudioPlayPauseReplay(page, main, src, { keyboardReplay = fa
   await audio.evaluate((el) => {
     el.currentTime = 1.5;
   });
-  const replayBtn = main.getByRole('button', { name: 'Qayta tinglash' });
+  const replayBtn = main.getByRole('button', { name: 'Qayta tinglaş' });
   if (keyboardReplay) {
     await replayBtn.focus();
     await page.keyboard.press('Enter');
@@ -154,20 +154,20 @@ async function enterEnglishStarter(context) {
   const heading = (name) =>
     main.getByRole('heading', { name }).first().waitFor({ state: 'visible' });
 
-  const tourSkipBtn = main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true });
+  const tourSkipBtn = main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true });
   if (await tourSkipBtn.isVisible().catch(() => false)) {
     await tourSkipBtn.click();
   }
 
-  await click('Kirish');
-  await heading('Xush kelibsiz!');
-  await click('Namuna hisobi bilan kirish');
-  await heading('O‘zingizga mos fanni tanlang');
-  await click(/Ingliz tili fanini tanlash/);
-  await heading('O‘rganish rejangizni sozlang');
-  await main.getByRole('radio', { name: /Noldan boshlayman/ }).check();
-  await click('Birinchi darsni boshlash');
-  await heading('Birinchi inglizcha so‘zlar');
+  await click('Kiriş');
+  await heading('Xuş kelibsiz!');
+  await click('Namuna hisobi bilan kiriş');
+  await heading('Özingizga mos fanni tanlang');
+  await click(/Ingliz tili fanini tanlaş/);
+  await heading('Örganiş rejangizni sozlang');
+  await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+  await click('Birinçi darsni boşlaş');
+  await heading('Birinçi inglizça sözlar');
 
   return { page, main, click, heading, errors, remoteRequests };
 }
@@ -181,7 +181,7 @@ async function completeMcqLesson(page, main, click, optionText) {
     if (match && Number(match[1]) >= Number(match[2])) {
       break;
     }
-    const checkBtn = main.getByRole('button', { name: /Tekshirish/i });
+    const checkBtn = main.getByRole('button', { name: /Tekşiriş/i });
     if (await checkBtn.isVisible().catch(() => false)) {
       break;
     }
@@ -192,14 +192,14 @@ async function completeMcqLesson(page, main, click, optionText) {
       .locator('.edtech-card span.highlight', { hasText: new RegExp(`^Qadam ${curStep + 1}$`) })
       .waitFor({ state: 'visible' });
   }
-  const checkBtn = main.getByRole('button', { name: /Tekshirish/i });
+  const checkBtn = main.getByRole('button', { name: /Tekşiriş/i });
   await checkBtn.waitFor({ state: 'visible' });
   await main.getByText(optionText, { exact: true }).first().click();
   await checkBtn.click();
-  await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor();
+  await main.getByText('Töğri javob!', { exact: true }).waitFor();
   const dialog = page.getByRole('dialog', { name: 'Dars yakunlandi' });
   await dialog.waitFor();
-  await click('Ta’lim yo‘liga o‘tish', dialog);
+  await click('Ta’lim yöliga ötiş', dialog);
   await dialog.waitFor({ state: 'hidden' });
 }
 
@@ -214,7 +214,7 @@ try {
   const { page, main, click, heading, errors, remoteRequests } = await enterEnglishStarter(context);
 
   // Step 1: Concept
-  await heading('Asosiy tushuncha');
+  await heading('Asosiy tuşunça');
   await main.getByText(/«Hello» — salom/).first().waitFor();
   await checkNoOverflow(page, 'starter-step-1', 1440);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -223,7 +223,7 @@ try {
 
   // Step 2: Real two-voice WAV audio + Tashkent greeting illustration + Replay + Transcript
   await click('Keyingi qadam');
-  await heading('Birga misol ko‘ramiz');
+  await heading('Birga misol köramiz');
 
   const img = main.locator('img[src="/lesson-media/english/a1-starter-greeting.png"]');
   await img.waitFor({ state: 'visible' });
@@ -252,19 +252,19 @@ try {
   await checkThemeSwitchAndContrast(page, 'starter-step-2');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkNoOverflow(page, 'starter-step-2', 390);
-  await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Qoronği rejimni yoqiş' }).click();
   await checkNoOverflow(page, 'starter-step-2-dark', 390);
-  await page.getByRole('button', { name: 'Yorug‘ rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Yoruğ rejimni yoqiş' }).click();
   await page.setViewportSize({ width: 1440, height: 960 });
 
-  // Open & close Yo'lchi AI help modal before advancing, then verify reload restores Step 2
-  await click('Yo‘lchidan so‘rash');
-  const helpDialog = page.getByRole('dialog', { name: 'Yo‘lchi bilan shu dars haqida' });
+  // Open & close Yölçi AI help modal before advancing, then verify reload restores Step 2
+  await click('Yölçidan söraş');
+  const helpDialog = page.getByRole('dialog', { name: 'Yölçi bilan şu dars haqida' });
   await helpDialog.waitFor({ state: 'visible' });
-  await click('Yopish', helpDialog);
-  await heading('Birga misol ko‘ramiz');
+  await click('Yopiş', helpDialog);
+  await heading('Birga misol köramiz');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await heading('Birga misol ko‘ramiz');
+  await heading('Birga misol köramiz');
   assertions++;
 
   // Step 3: Flashcards (390px + Dark Mode + Audio + Keyboard + Re-queue + Non-mastery check)
@@ -276,13 +276,13 @@ try {
   await checkThemeSwitchAndContrast(page, 'starter-step-3-front');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkNoOverflow(page, 'starter-step-3', 390);
-  await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Qoronği rejimni yoqiş' }).click();
   await checkNoOverflow(page, 'starter-step-3-dark', 390);
-  await page.getByRole('button', { name: 'Yorug‘ rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Yoruğ rejimni yoqiş' }).click();
   await page.setViewportSize({ width: 1440, height: 960 });
 
-  // Keyboard activation of flashcard audio ("Talaffuzni tinglash")
-  const fcAudioBtn1 = main.getByRole('button', { name: /Talaffuzni tinglash/ });
+  // Keyboard activation of flashcard audio ("Talaffuzni tinglaş")
+  const fcAudioBtn1 = main.getByRole('button', { name: /Talaffuzni tinglaş/ });
   await fcAudioBtn1.waitFor({ state: 'visible' });
   const fcAudio1Promise = page.waitForResponse(
     (res) =>
@@ -294,8 +294,8 @@ try {
   await fcAudio1Promise;
   assertions++;
 
-  // Keyboard activation of "Javobni ko‘rish"
-  const revealBtn = main.getByRole('button', { name: 'Javobni ko‘rish' });
+  // Keyboard activation of "Javobni köriş"
+  const revealBtn = main.getByRole('button', { name: 'Javobni köriş' });
   await revealBtn.focus();
   await page.keyboard.press('Enter');
   await main.getByText('Ismingiz nima?', { exact: true }).waitFor({ state: 'visible' });
@@ -314,8 +314,8 @@ try {
   assert(!progressAfterFlip?.profile?.completedLessonIds?.includes('lesson_eng_starter'));
   assertions++;
 
-  // Keyboard Space on "Yana mashq qilaman" -> moves to fc_eng_starter_2 ("Nice to meet you.")
-  const needPracticeBtn = main.getByRole('button', { name: 'Yana mashq qilaman' });
+  // Keyboard Space on "Yana maşq qilaman" -> moves to fc_eng_starter_2 ("Nice to meet you.")
+  const needPracticeBtn = main.getByRole('button', { name: 'Yana maşq qilaman' });
   await needPracticeBtn.focus();
   await page.keyboard.press('Space');
   await main.getByRole('heading', { name: 'Nice to meet you.' }).waitFor({ state: 'visible' });
@@ -324,24 +324,24 @@ try {
       res.url().includes('/lesson-media/english/a1-starter-nice-to-meet-you.wav') &&
       (res.status() === 200 || res.status() === 206)
   );
-  await click(/Talaffuzni tinglash/);
+  await click(/Talaffuzni tinglaş/);
   await fcAudio2Promise;
-  await click('Javobni ko‘rish');
-  await main.getByText('Tanishganimdan xursandman.', { exact: true }).waitFor({ state: 'visible' });
+  await click('Javobni köriş');
+  await main.getByText('Tanişganimdan xursandman.', { exact: true }).waitFor({ state: 'visible' });
   const rememberedBtn = main.getByRole('button', { name: 'Eslab qoldim' });
   await rememberedBtn.focus();
   await page.keyboard.press('Enter');
 
   // Re-queued card 1 ("What's your name?") must return!
   await main.getByRole('heading', { name: "What's your name?" }).waitFor({ state: 'visible' });
-  await click('Javobni ko‘rish');
+  await click('Javobni köriş');
   await click('Eslab qoldim');
-  await main.getByRole('heading', { name: 'Barcha kartochkalar ko‘rib chiqildi' }).waitFor({ state: 'visible' });
+  await main.getByRole('heading', { name: 'Barça kartoçkalar körib çiqildi' }).waitFor({ state: 'visible' });
   assertions += 4;
 
   // Step 4: Free-Text Exercise (390px + Dark Mode + Anti-spoiler + Wrong Feedback + Keyboard Submit)
   await click('Keyingi qadam');
-  await heading('O‘rganganingizni sinab ko‘ring');
+  await heading('Örganganingizni sinab köring');
 
   const step4Text = await main.innerText();
   assert(!step4Text.includes("I'm Sam"), 'Step 4 prompt must NOT leak "I\'m Sam"');
@@ -354,45 +354,45 @@ try {
   await page.setViewportSize({ width: 1440, height: 960 });
 
   // Empty submit shows inline validation error
-  await click(/Tekshirish/i);
-  await main.getByText(/Javob maydoni bo‘sh/).waitFor({ state: 'visible' });
+  await click(/Tekşiriş/i);
+  await main.getByText(/Javob maydoni böş/).waitFor({ state: 'visible' });
 
   const input = main.getByRole('textbox', { name: /Javobingizni ingliz tilida yozing/ });
   // Wrong attempt 1: "Sam"
   await input.fill('Sam');
-  await click(/Tekshirish/i);
-  await main.getByText(/Faqat ismning o‘zi yetarli emas/).waitFor({ state: 'visible' });
-  assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0, 'Must NOT reveal answer on text_input mistake');
+  await click(/Tekşiriş/i);
+  await main.getByText(/Faqat ismning özi yetarli emas/).waitFor({ state: 'visible' });
+  assert.equal(await main.getByText(/Töğri javob:/).count(), 0, 'Must NOT reveal answer on text_input mistake');
   assert.equal(await main.getByRole('button', { name: 'Keyingi savol' }).count(), 0, 'Must NOT allow advancing on mistake');
   await checkThemeSwitchAndContrast(page, 'starter-step-4-wrong-feedback');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkNoOverflow(page, 'starter-step-4-wrong-feedback', 390);
-  await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Qoronği rejimni yoqiş' }).click();
   await checkNoOverflow(page, 'starter-step-4-wrong-feedback-dark', 390);
-  await page.getByRole('button', { name: 'Yorug‘ rejimni yoqish' }).click();
+  await page.getByRole('button', { name: 'Yoruğ rejimni yoqiş' }).click();
   await page.setViewportSize({ width: 1440, height: 960 });
   assertions += 3;
 
   // Wrong attempt 2: "Goodbye"
   await input.fill('Goodbye');
-  await click(/Tekshirish/i);
-  await main.getByText(/xayrlashuv so‘zi/).waitFor({ state: 'visible' });
-  assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
+  await click(/Tekşiriş/i);
+  await main.getByText(/xayrlaşuv sözi/).waitFor({ state: 'visible' });
+  assert.equal(await main.getByText(/Töğri javob:/).count(), 0);
   assertions += 2;
 
   // Correct attempt via keyboard Enter: "I'm Sam"
   await input.fill("I'm Sam");
   await input.press('Enter');
-  await main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+  await main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
   const completionDialog = page.getByRole('dialog', { name: 'Dars yakunlandi' });
   await completionDialog.waitFor({ state: 'visible' });
-  await click('Ta’lim yo‘liga o‘tish', completionDialog);
+  await click('Ta’lim yöliga ötiş', completionDialog);
   assertions += 2;
 
   // Reload persistence check after completion
-  await heading('Boshlang‘ich darslar');
+  await heading('Boşlanğiç darslar');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await heading('Boshlang‘ich darslar');
+  await heading('Boşlanğiç darslar');
   const savedAfterStarter = await page.evaluate(() =>
     JSON.parse(sessionStorage.getItem('bilimyol_demo_progress') || '{}')
   );
@@ -404,31 +404,31 @@ try {
   assertions += 2;
 
   // Complete lesson_eng_foundation_02 -> unlocks English Roadmap -> open node_eng_read!
-  await click('Boshlang‘ich darsni ochish');
+  await click('Boşlanğiç darsni oçiş');
   await heading('Men, siz va oddiy gaplar');
   await completeMcqLesson(page, main, click, 'am');
 
-  await heading('Mening ta’lim yo‘lim');
+  await heading('Mening ta’lim yölim');
   await checkNoOverflow(page, 'english-roadmap', 1440);
 
   // Node 1: Vocabulary
   const vocabCard = main.locator('li').filter({ has: page.getByRole('heading', { name: 'Vocabulary', exact: true }) });
-  await vocabCard.getByRole('button', { name: 'Darsni boshlash' }).click();
+  await vocabCard.getByRole('button', { name: 'Darsni boşlaş' }).click();
   await completeMcqLesson(page, main, click, 'between the chair and the shelf');
 
   // Node 2: Grammar
-  await heading('Mening ta’lim yo‘lim');
+  await heading('Mening ta’lim yölim');
   const gramCard = main.locator('li').filter({ has: page.getByRole('heading', { name: 'Grammar', exact: true }) });
-  await gramCard.getByRole('button', { name: 'Darsni boshlash' }).click();
+  await gramCard.getByRole('button', { name: 'Darsni boşlaş' }).click();
   await completeMcqLesson(page, main, click, 'does');
 
   // Node 3: Listening (also verify real WAV play/pause/replay, duration > 5s, and "in the afternoon"!)
-  await heading('Mening ta’lim yo‘lim');
+  await heading('Mening ta’lim yölim');
   const listCard = main.locator('li').filter({ has: page.getByRole('heading', { name: 'Listening', exact: true }) });
-  await listCard.getByRole('button', { name: 'Darsni boshlash' }).click();
-  await heading('1. Tinglab tushunish strategiyasi');
+  await listCard.getByRole('button', { name: 'Darsni boşlaş' }).click();
+  await heading('1. Tinglab tuşuniş strategiyasi');
   await click('Keyingi qadam');
-  await heading('2. Audio Xabarni Tinglash');
+  await heading('2. Audio Xabarni Tinglaş');
   await verifyAudioPlayPauseReplay(page, main, '/lesson-media/english/a1-listening-lecture-time.wav');
   await main.locator('summary', { hasText: 'Matnli bayon' }).click();
   await main.getByText(/in the afternoon/).waitFor({ state: 'visible' });
@@ -436,22 +436,22 @@ try {
   await completeMcqLesson(page, main, click, '15:15 (quarter past three)');
 
   // Node 4: Reading (formerly broken node_eng_read!)
-  await heading('Mening ta’lim yo‘lim');
+  await heading('Mening ta’lim yölim');
   const readCard = main.locator('li').filter({ has: page.getByRole('heading', { name: 'Reading', exact: true }) });
-  assert.equal(await readCard.getByText('Bu mavzu uchun dars mavjud emas.').count(), 0);
-  await readCard.getByRole('button', { name: 'Darsni boshlash' }).click();
-  await heading('Asosiy g‘oya va dalil');
+  assert.equal(await readCard.getByText('Bu mavzu uçun dars mavjud emas.').count(), 0);
+  await readCard.getByRole('button', { name: 'Darsni boşlaş' }).click();
+  await heading('Asosiy ğoya va dalil');
   await page.setViewportSize({ width: 390, height: 844 });
   await checkNoOverflow(page, 'reading-lesson', 390);
   await page.setViewportSize({ width: 1440, height: 960 });
-  await completeMcqLesson(page, main, click, 'To‘garak buyumlarni ta’mirlab, chiqindini kamaytiradi');
+  await completeMcqLesson(page, main, click, 'Tögarak buyumlarni ta’mirlab, çiqindini kamaytiradi');
   assertions += 2;
 
   // Course isolation check: switch to Mathematics -> course_math_01 remains uncompleted & untouched
-  await click('Fanni almashtirish', page);
-  await heading('O‘zingizga mos fanni tanlang');
-  await click(/Matematika fanini tanlash/);
-  await heading('O‘rganish rejangizni sozlang');
+  await click('Fanni almaştiriş', page);
+  await heading('Özingizga mos fanni tanlang');
+  await click(/Matematika fanini tanlaş/);
+  await heading('Örganiş rejangizni sozlang');
   const isolationState = await page.evaluate(() =>
     JSON.parse(sessionStorage.getItem('bilimyol_demo_progress') || '{}')
   );
@@ -477,16 +477,16 @@ try {
     reducedMotion: 'reduce',
   });
   const ctx2 = await enterEnglishStarter(context2);
-  await ctx2.heading('Asosiy tushuncha');
+  await ctx2.heading('Asosiy tuşunça');
   await ctx2.click('Keyingi qadam'); // Step 2
-  await ctx2.heading('Birga misol ko‘ramiz');
+  await ctx2.heading('Birga misol köramiz');
   await ctx2.click('Keyingi qadam'); // Step 3
   await ctx2.heading('Iboralarni eslab qolamiz');
   await ctx2.click('Keyingi qadam'); // Step 4
-  await ctx2.heading('O‘rganganingizni sinab ko‘ring');
+  await ctx2.heading('Örganganingizni sinab köring');
   await ctx2.main.getByRole('textbox', { name: /Javobingizni ingliz tilida yozing/ }).fill('My name is Sam.');
-  await ctx2.click(/Tekshirish/i);
-  await ctx2.main.getByText('To‘g‘ri javob!', { exact: true }).waitFor({ state: 'visible' });
+  await ctx2.click(/Tekşiriş/i);
+  await ctx2.main.getByText('Töğri javob!', { exact: true }).waitFor({ state: 'visible' });
   await ctx2.page.getByRole('dialog', { name: 'Dars yakunlandi' }).waitFor({ state: 'visible' });
   assertions += 2;
   assert.deepEqual(ctx2.remoteRequests, []);

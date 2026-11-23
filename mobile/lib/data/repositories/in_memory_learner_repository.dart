@@ -74,7 +74,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
 
   static LearnerProfile _defaultProfile() => LearnerProfile(
     id: 'learner_mobile_01',
-    name: 'Foydalanuvchi',
+    name: 'Foydalanuvçi',
     selectedCourseId: 'course_math_01',
     goal: OnboardingGoal.mastery,
     dailyMinutes: 15,

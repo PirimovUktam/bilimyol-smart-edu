@@ -280,7 +280,7 @@ function KnowledgeMapStage({
 
         <div className="hidden items-center gap-2 rounded-full border border-indigo-200/70 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-slate-700 sm:inline-flex dark:border-white/15 dark:bg-white/10 dark:text-indigo-100">
           <YolchiAIMascot size="xs" mood={isResult ? 'celebrating' : 'happy'} />
-          <span>Yo‘lchi AI</span>
+          <span>Yölçi AI</span>
         </div>
       </div>
 

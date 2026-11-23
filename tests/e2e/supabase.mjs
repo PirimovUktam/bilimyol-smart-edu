@@ -51,31 +51,31 @@ const first = learner();
 const second = learner();
 
 async function switchSubject(name) {
-  await click('Fanni almashtirish');
-  await waitFor(heading('O‘zingizga mos fanni tanlang'));
+  await click('Fanni almaştiriş');
+  await waitFor(heading('Özingizga mos fanni tanlang'));
   await click(name, main);
 }
 
 async function signup(account) {
   await page.goto(app, { waitUntil: 'domcontentloaded' });
-  const skipTourBtn = page.getByRole('button', { name: 'O‘tkazib yuborish', exact: true });
+  const skipTourBtn = page.getByRole('button', { name: 'Ötkazib yuboriş', exact: true });
   if (await skipTourBtn.isVisible().catch(() => false)) {
     await skipTourBtn.click();
   }
-  await click('Ro‘yxatdan o‘tish');
-  await page.getByLabel('Ism', { exact: true }).fill('Sinovchi');
+  await click('Röyxatdan ötiş');
+  await page.getByLabel('Ism', { exact: true }).fill('Sinovçi');
   await page.getByLabel('Familiya', { exact: true }).fill('Oquvchi');
   await page.getByLabel('Email manzilingiz', { exact: true }).fill(account.email);
   await page.getByLabel('Parol', { exact: true }).fill(account.password);
   await page.getByLabel('Parolni takrorlang', { exact: true }).fill(account.password);
-  await click('Ro‘yxatdan o‘tish');
-  await waitFor(heading('O‘zingizga mos fanni tanlang'));
+  await click('Röyxatdan ötiş');
+  await waitFor(heading('Özingizga mos fanni tanlang'));
 }
 
 async function login(account, password = account.password) {
   await page.getByLabel('Email manzilingiz', { exact: true }).fill(account.email);
   await page.getByLabel('Parol', { exact: true }).fill(password);
-  await click('Kirish');
+  await click('Kiriş');
 }
 
 async function mailLink(email) {
@@ -99,82 +99,82 @@ async function mailLink(email) {
 
 try {
   await signup(first);
-  await waitFor(main.getByRole('button', { name: /Matematika fanini tanlash/ }));
-  await click('Bosh sahifa', nav);
-  await waitFor(heading(/Assalomu alaykum, Sinovchi/));
+  await waitFor(main.getByRole('button', { name: /Matematika fanini tanlaş/ }));
+  await click('Boş sahifa', nav);
+  await waitFor(heading(/Assalomu alaykum, Sinovçi/));
   assert.equal(await page.evaluate(() => localStorage.getItem('bilimyol_auth_session')), null);
-  await waitFor(main.getByRole('button', { name: 'Fan tanlash', exact: true }));
+  await waitFor(main.getByRole('button', { name: 'Fan tanlaş', exact: true }));
   console.log('PASS configured signup and authoritative profile');
 
-  await switchSubject(/Ingliz tili fanini tanlash/);
-  await main.getByRole('radio', { name: /Noldan boshlayman/ }).check();
-  await click('Birinchi darsni boshlash', main);
-  await waitFor(heading('Birinchi inglizcha so‘zlar'));
-  await waitFor(heading('Asosiy tushuncha'));
+  await switchSubject(/Ingliz tili fanini tanlaş/);
+  await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+  await click('Birinçi darsni boşlaş', main);
+  await waitFor(heading('Birinçi inglizça sözlar'));
+  await waitFor(heading('Asosiy tuşunça'));
   assert.deepEqual(placementRequests, [], 'Starting from zero never opens a diagnostic session.');
   assert.equal(await main.getByRole('button', { name: 'Test', exact: true }).count(), 0);
   await click('Keyingi qadam', main);
-  await waitFor(heading('Birga misol ko‘ramiz'));
+  await waitFor(heading('Birga misol köramiz'));
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await waitFor(heading('Birga misol ko‘ramiz'));
-  await click('Ta’lim yo‘liga qaytish', main);
-  await click('Bosh sahifa', nav);
-  await click('Davom etish', main);
-  await waitFor(heading('Birinchi inglizcha so‘zlar'));
+  await waitFor(heading('Birga misol köramiz'));
+  await click('Ta’lim yöliga qaytiş', main);
+  await click('Boş sahifa', nav);
+  await click('Davom etiş', main);
+  await waitFor(heading('Birinçi inglizça sözlar'));
   await page.goto(app + '/?view=lesson&lessonId=lesson_math_starter', { waitUntil: 'domcontentloaded' });
-  await waitFor(heading('Dars noto‘g‘ri fanda'));
-  assert.equal(await heading('Qo‘shish va ayirishdan boshlaymiz').count(), 0);
+  await waitFor(heading('Dars notöğri fanda'));
+  assert.equal(await heading('Qöşiş va ayirişdan boşlaymiz').count(), 0);
   console.log('PASS configured beginner starts with English instruction, resumes after reload, and cannot open a foreign lesson');
 
-  await click('Yo‘l xaritasiga qaytish', main);
-  await switchSubject(/Matematika fanini tanlash/);
+  await click('Yöl xaritasiga qaytiş', main);
+  await switchSubject(/Matematika fanini tanlaş/);
   await main.getByRole('radio', { name: /Asoslarini bilaman/ }).check();
-  await click('Ta’lim yo‘lini ochish', main);
-  await waitFor(heading('Mening ta’lim yo‘lim'));
-  await click('Bosh sahifa', nav);
-  await click('Davom etish', main);
-  await waitFor(heading('Qo‘shish va ayirishdan boshlaymiz'));
-  await waitFor(heading('Asosiy tushuncha'));
+  await click('Ta’lim yölini oçiş', main);
+  await waitFor(heading('Mening ta’lim yölim'));
+  await click('Boş sahifa', nav);
+  await click('Davom etiş', main);
+  await waitFor(heading('Qöşiş va ayirişdan boşlaymiz'));
+  await waitFor(heading('Asosiy tuşunça'));
   const goToFirstAssessment = async () => {
     await click('Keyingi qadam', main);
-    await waitFor(heading('Birga mashq qilamiz'));
+    await waitFor(heading('Birga maşq qilamiz'));
     await click('Keyingi qadam', main);
-    await waitFor(heading(/Jami nechta tugma/));
+    await waitFor(heading(/Jami neçta tugma/));
   };
   await click('Keyingi qadam', main);
-  await waitFor(heading('Birga misol ko‘ramiz'));
+  await waitFor(heading('Birga misol köramiz'));
   await goToFirstAssessment();
-  assert.equal(await main.getByText(/To‘g‘ri javob:/).count(), 0);
+  assert.equal(await main.getByText(/Töğri javob:/).count(), 0);
   await main.getByText('1', { exact: true }).click();
-  await click(/Tekshirish/i, main);
-  await waitFor(main.getByText('To‘g‘ri javob: 7', { exact: true }));
+  await click(/Tekşiriş/i, main);
+  await waitFor(main.getByText('Töğri javob: 7', { exact: true }));
   assert.equal(diagnosisRequests.length, 0, 'Scoring does not depend on AI.');
-  await click('Yo‘lchi AI tahlili', main);
-  const diagnosisPanel = page.getByRole('dialog', { name: 'Yo‘lchi bilan xato tahlili' });
+  await click('Yölçi AI tahlili', main);
+  const diagnosisPanel = page.getByRole('dialog', { name: 'Yölçi bilan xato tahlili' });
   await waitFor(diagnosisPanel.getByText('Tayyor izoh', { exact: true }));
   assert.equal(diagnosisRequests.length, 1);
-  await click('Yopish', diagnosisPanel);
-  await click('Ishlangan misolga qaytish', main);
-  await waitFor(heading('Birga misol ko‘ramiz'));
+  await click('Yopiş', diagnosisPanel);
+  await click('Işlangan misolga qaytiş', main);
+  await waitFor(heading('Birga misol köramiz'));
   await goToFirstAssessment();
   const answer = async (text) => {
     await main.getByText(text, { exact: true }).click();
-    await click(/Tekshirish/i, main);
+    await click(/Tekşiriş/i, main);
     await click('Keyingi savol', main);
   };
   await answer('7');
   await answer('5');
-  await answer('6 toshga 2 tosh qo‘shildi');
+  await answer('6 toşga 2 toş qöşildi');
   await waitFor(heading('Qoidani eslang'));
   await click('Keyingi qadam', main);
   await answer('11 − 3');
   await answer('1');
-  await click('Darsni yakunlash', main);
+  await click('Darsni yakunlaş', main);
   await waitFor(page.getByRole('heading', { name: /Dars.*yakunlandi/i }));
-  await click('Ta’lim yo‘liga o‘tish');
-  await waitFor(heading('Teng guruhlar va ko‘paytirish'));
+  await click('Ta’lim yöliga ötiş');
+  await waitFor(heading('Teng guruhlar va köpaytiriş'));
   assert.equal(await main.locator('li').filter({ has: heading('Tenglamalar') })
-    .getByRole('button', { name: 'Darsni boshlash' }).count(), 0);
+    .getByRole('button', { name: 'Darsni boşlaş' }).count(), 0);
   await click('Natijalar', nav);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await waitFor(main.getByText('28', { exact: true }).first());
@@ -191,9 +191,9 @@ try {
   assert.equal(stats.data?.xp, 28);
   console.log('PASS math remediation, two checkpoints, first prerequisite unlock and persisted XP');
 
-  await switchSubject(/Ingliz tili fanini tanlash/);
+  await switchSubject(/Ingliz tili fanini tanlaş/);
   await click(/Ixtiyoriy diagnostika/, main);
-  await waitFor(heading('Boshlang‘ich diagnostika'));
+  await waitFor(heading('Boşlanğiç diagnostika'));
   const step = (number) => main.getByText(number + ' / 8 savol', { exact: true });
   const option = () => main.getByRole('radio').first();
   await waitFor(step(1));
@@ -211,13 +211,13 @@ try {
     await option().check();
     if (number < 8) await click('Keyingi savol', main);
   }
-  await click('Natijani ko‘rish', main);
-  const confirmation = page.getByRole('dialog', { name: 'Javoblarni topshirasizmi?' });
+  await click('Natijani köriş', main);
+  const confirmation = page.getByRole('dialog', { name: 'Javoblarni topşirasizmi?' });
   await waitFor(confirmation);
-  await click('Qaytish', confirmation);
+  await click('Qaytiş', confirmation);
   await waitFor(step(8));
-  await click('Natijani ko‘rish', main);
-  await click('Topshirish', confirmation);
+  await click('Natijani köriş', main);
+  await click('Topşiriş', confirmation);
   await waitFor(heading('Diagnostika yakunlandi'));
   await main.getByText('Javoblar tahlili', { exact: true }).click();
   await waitFor(main.getByText(/Siz belgilagan javob/).first());
@@ -227,16 +227,16 @@ try {
   const answers = await owner.from('placement_answers').select('is_correct').eq('attempt_id', placement.data.id);
   assert.equal(answers.data?.length, 8);
   assert.equal(placement.data.score, Math.round(answers.data.filter(({ is_correct }) => is_correct).length * 100 / 8));
-  await click('Shaxsiy yo‘lni ko‘rish', main);
-  await waitFor(heading('Mening ta’lim yo‘lim'));
+  await click('Şaxsiy yölni köriş', main);
+  await waitFor(heading('Mening ta’lim yölim'));
   console.log('PASS diagnostic resumes, grades once, reveals review after submission, and opens the roadmap');
 
   await click('Profil', page);
   await waitFor(heading('Profil'));
   await page.getByLabel('Kunlik vaqt', { exact: true }).selectOption('30');
-  await click('Sozlamalarni saqlash', main);
-  await waitFor(main.getByText('O‘rganish sozlamalari saqlandi.'));
-  const reminder = page.getByRole('checkbox', { name: 'Kunlik eslatmani ko‘rsatish' });
+  await click('Sozlamalarni saqlaş', main);
+  await waitFor(main.getByText('Örganiş sozlamalari saqlandi.'));
+  const reminder = page.getByRole('checkbox', { name: 'Kunlik eslatmani körsatiş' });
   await reminder.click();
   await page.waitForFunction(() => {
     const input = document.querySelector('main input[type=checkbox]');
@@ -246,39 +246,39 @@ try {
   assert.equal(prefs.data?.daily_minutes, 30);
   const reminders = await owner.from('user_preferences').select('notifications_enabled').eq('user_id', ownerId).single();
   assert.equal(reminders.data?.notifications_enabled, false);
-  await click('Chiqish', main);
-  await waitFor(heading('Xush kelibsiz!'));
+  await click('Çiqiş', main);
+  await waitFor(heading('Xuş kelibsiz!'));
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await waitFor(heading('Xush kelibsiz!'));
+  await waitFor(heading('Xuş kelibsiz!'));
   await login(first, 'Wrong-' + randomUUID());
   await waitFor(main.getByRole('alert').getByText('Email yoki parol xato.'));
-  await waitFor(heading('Xush kelibsiz!'));
+  await waitFor(heading('Xuş kelibsiz!'));
   console.log('PASS preferences and logout persisted, and invalid credentials keep the welcome screen');
 
   await click('Unutdingizmi?');
   await page.getByLabel('Email manzilingiz', { exact: true }).fill(first.email);
-  await click('Tiklash havolasini yuborish');
-  await waitFor(page.getByText('So‘rov qabul qilindi'));
+  await click('Tiklaş havolasini yuboriş');
+  await waitFor(page.getByText('Sörov qabul qilindi'));
   await page.goto(await mailLink(first.email), { waitUntil: 'domcontentloaded' });
   const newPassword = 'QA-new-' + randomUUID();
   await page.getByLabel('Yangi parol', { exact: true }).fill(newPassword);
   await page.getByLabel('Parolni takrorlang', { exact: true }).fill(newPassword);
-  await click('Parolni saqlash');
+  await click('Parolni saqlaş');
   await waitFor(page.getByText('Parol yangilandi!'));
-  await click('Kirish sahifasiga qaytish');
-  await waitFor(heading('Xush kelibsiz!'));
+  await click('Kiriş sahifasiga qaytiş');
+  await waitFor(heading('Xuş kelibsiz!'));
   await login(first, newPassword);
-  await waitFor(heading(/Assalomu alaykum, Sinovchi/));
+  await waitFor(heading(/Assalomu alaykum, Sinovçi/));
   console.log('PASS real recovery email, password update and login with the new password');
 
-  await click('Yo‘lchi AI', nav);
-  await waitFor(heading('Yo‘lchi AI'));
-  await page.getByRole('textbox', { name: 'Yo‘lchi AI ga savol yozing' }).fill('Chiziqli tenglama qanday yechiladi?');
-  await click('Savolni yuborish', main);
-  await waitFor(main.getByRole('button', { name: 'Qayta urinish' }));
-  await click('Qayta urinish', main);
-  await waitFor(main.getByRole('button', { name: 'Qayta urinish' }));
-  assert.equal(await main.getByText('Chiziqli tenglama qanday yechiladi?', { exact: true }).count(), 1);
+  await click('Yölçi AI', nav);
+  await waitFor(heading('Yölçi AI'));
+  await page.getByRole('textbox', { name: 'Yölçi AI ga savol yozing' }).fill('Çiziqli tenglama qanday yeçiladi?');
+  await click('Savolni yuboriş', main);
+  await waitFor(main.getByRole('button', { name: 'Qayta uriniş' }));
+  await click('Qayta uriniş', main);
+  await waitFor(main.getByRole('button', { name: 'Qayta uriniş' }));
+  assert.equal(await main.getByText('Çiziqli tenglama qanday yeçiladi?', { exact: true }).count(), 1);
   console.log('PASS unavailable AI is retryable and does not invent a chat answer');
 
   const outsider = api();
@@ -314,7 +314,7 @@ try {
     await login(staff);
     await waitFor(heading(/Administrator Konsoli/));
     await page.setViewportSize({ width: 390, height: 844 });
-    await click(/Yangi Fan Qo‘shish/i, main);
+    await click(/Yangi Fan Qöşiş/i, main);
     const editor = page.getByRole('dialog', { name: 'Fan ma’lumotlari' });
     await waitFor(editor);
     const title = 'QA kursi ' + randomUUID().slice(0, 8);
@@ -323,7 +323,7 @@ try {
     await editor.getByLabel('Fan turi').selectOption('logic');
     await editor.getByLabel('Holat').selectOption('false');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-    await click('Saqlash', editor);
+    await click('Saqlaş', editor);
     await waitFor(heading(title));
 
     const adminClient = api();

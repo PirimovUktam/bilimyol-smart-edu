@@ -101,23 +101,23 @@ describe('FlashcardDeck single-card audio_to_word re-queue privacy', () => {
     const initialTree = renderDeck();
     expect(extractTextAndAttrs(initialTree)).not.toContain('Desk');
 
-    // 2. Click "Javobni ko‘rish" -> reveals 'Desk'
-    const showBtn = findButtons(initialTree).find((b) => b.text.includes('Javobni ko‘rish'));
+    // 2. Click "Javobni köriş" -> reveals 'Desk'
+    const showBtn = findButtons(initialTree).find((b) => b.text.includes('Javobni köriş'));
     expect(showBtn).toBeDefined();
     showBtn!.onClick!();
 
     const revealedTree = renderDeck();
     expect(extractTextAndAttrs(revealedTree)).toContain('Desk');
 
-    // 3. Click "Yana mashq qilaman" -> single card returns unrevealed at queue[0] and MUST NOT leak 'Desk'
-    const practiceBtn = findButtons(revealedTree).find((b) => b.text.includes('Yana mashq qilaman'));
+    // 3. Click "Yana maşq qilaman" -> single card returns unrevealed at queue[0] and MUST NOT leak 'Desk'
+    const practiceBtn = findButtons(revealedTree).find((b) => b.text.includes('Yana maşq qilaman'));
     expect(practiceBtn).toBeDefined();
     practiceBtn!.onClick!();
 
     const requeuedTree = renderDeck();
     const requeuedText = extractTextAndAttrs(requeuedTree);
-    expect(requeuedText).toContain('Javobni ko‘rish');
-    expect(requeuedText).toContain('Yana mashq qilaman');
+    expect(requeuedText).toContain('Javobni köriş');
+    expect(requeuedText).toContain('Yana maşq qilaman');
     expect(requeuedText).not.toContain('Desk');
   });
 });

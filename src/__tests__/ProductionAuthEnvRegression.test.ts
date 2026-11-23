@@ -101,7 +101,7 @@ describe('Production Auth & Supabase Env Regression Tests', () => {
   it('J: Explicit demo activation sets isDemoMode and isolates guest session', () => {
     const demoProfile = {
       id: 'guest_user_01',
-      firstName: 'Foydalanuvchi',
+      firstName: 'Foydalanuvçi',
       role: 'student' as const,
     };
     const isDemoMode = true;

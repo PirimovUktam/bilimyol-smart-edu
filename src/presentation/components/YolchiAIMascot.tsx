@@ -275,7 +275,7 @@ export const YolchiAIMascot: React.FC<YolchiAIMascotProps> = ({
         <div className="relative p-3.5 bg-paper border border-hairline rounded-2xl rounded-tl-xs shadow-md shadow-brand/5 max-w-sm">
           <div className="flex items-center gap-1.5 mb-0.5">
             <span className="text-[11px] font-extrabold text-brand-dark uppercase tracking-wider">
-              Yo‘lchi AI
+              Yölçi AI
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-path lab-pulse" />
           </div>

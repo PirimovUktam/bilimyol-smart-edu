@@ -520,23 +520,23 @@ void main() {
 
       final scrollable = find.byType(Scrollable).first;
       await tester.scrollUntilVisible(
-        find.text('A2 — Boshlang‘ichdan yuqori daraja'),
+        find.text('A2 — Boşlanğiçdan yuqori daraja'),
         300,
         scrollable: scrollable,
       );
-      expect(find.text('A2 — Boshlang‘ichdan yuqori daraja'), findsOneWidget);
+      expect(find.text('A2 — Boşlanğiçdan yuqori daraja'), findsOneWidget);
       expect(find.text('0 / 8'), findsWidgets);
 
       // Tapping locked A2 node displays prerequisite SnackBar
       final a2FirstNode = find.text(
-        'Metro xaritasi, buyruq fe’llari, harakat predloglari va yo‘l ko‘rsatish nutq mashqi.',
+        'Metro xaritasi, buyruq fe’llari, harakat predloglari va yöl körsatiş nutq maşqi.',
       );
       await tester.scrollUntilVisible(a2FirstNode, 300, scrollable: scrollable);
       await tester.tap(a2FirstNode);
       await tester.pumpAndSettle();
       expect(find.byType(SnackBar), findsOneWidget);
       expect(
-        find.textContaining('Avval oldingi bosqichni yakunlang'),
+        find.textContaining('Avval oldingi bosqiçni yakunlang'),
         findsOneWidget,
       );
 
@@ -545,21 +545,21 @@ void main() {
         'Sayohat logistikasi: Present Perfect vs Past Simple',
       );
       await tester.scrollUntilVisible(b1FirstNode, 300, scrollable: scrollable);
-      expect(find.text('B1 — O‘rta daraja'), findsOneWidget);
+      expect(find.text('B1 — Örta daraja'), findsOneWidget);
       await tester.tap(b1FirstNode);
       await tester.pumpAndSettle();
       expect(find.byType(SnackBar), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('C2 — Mukammal egallash darajasi'),
+        find.text('C2 — Mukammal egallaş darajasi'),
         300,
         scrollable: scrollable,
         maxScrolls: 80,
       );
       expect(find.text('Keyingi darajalar (B2–C2)'), findsOneWidget);
-      expect(find.text('B2 — O‘rtadan yuqori daraja'), findsOneWidget);
+      expect(find.text('B2 — Örtadan yuqori daraja'), findsOneWidget);
       expect(find.text('C1 — Yuqori professional daraja'), findsOneWidget);
-      expect(find.text('C2 — Mukammal egallash darajasi'), findsOneWidget);
+      expect(find.text('C2 — Mukammal egallaş darajasi'), findsOneWidget);
 
       // Complete A1 exit node -> verify A2 unlocks on roadmap
       await container
@@ -571,7 +571,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.scrollUntilVisible(
-        find.text('A2 — Boshlang‘ichdan yuqori daraja'),
+        find.text('A2 — Boşlanğiçdan yuqori daraja'),
         -300,
         scrollable: scrollable,
       );
@@ -584,22 +584,22 @@ void main() {
       expect(
         find.descendant(
           of: a2Card.first,
-          matching: find.textContaining(RegExp(r'(Boshlash|Mashq qilish)')),
+          matching: find.textContaining(RegExp(r'(Boşlaş|Maşq qiliş)')),
         ),
         findsOneWidget,
       );
 
       // Open SRS Flashcards modal and confirm all 49 cards copy
       await tester.scrollUntilVisible(
-        find.text('SRS Takrorlash'),
+        find.text('SRS Takrorlaş'),
         -500,
         scrollable: scrollable,
       );
       expect(
-        find.textContaining('49 ta so‘z va iborani SRS asosida takrorlang'),
+        find.textContaining('49 ta söz va iborani SRS asosida takrorlang'),
         findsOneWidget,
       );
-      await tester.tap(find.text('SRS Takrorlash'));
+      await tester.tap(find.text('SRS Takrorlaş'));
       await tester.pumpAndSettle();
       expect(find.byType(FlashcardDeckWidget), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -654,7 +654,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(wrongText), 200);
       await tester.tap(find.text(wrongText));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       expect(
         find.text(qMcq.mistakeFeedbackByOption[wrongText]!.uz),
@@ -666,7 +666,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(correctText), 200);
       await tester.tap(find.text(correctText));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -678,7 +678,7 @@ void main() {
         'Go straight along Navoi Street and turn right at the pharmacy.',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       final speakQ = seedLessons['lesson_eng_a2_m1_directions']!
@@ -693,8 +693,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Yakunlash'));
-      await tester.tap(find.text('Yakunlash'));
+      await tester.ensureVisible(find.text('Yakunlaş'));
+      await tester.tap(find.text('Yakunlaş'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -724,7 +724,7 @@ void main() {
         await tester.tap(find.text(p.right));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -735,7 +735,7 @@ void main() {
         'much',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -762,7 +762,7 @@ void main() {
       );
       await tester.tap(find.text(b1M3Mcq.options[b1M3Mcq.correctIndex]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -776,7 +776,7 @@ void main() {
         await tester.tap(find.text(p.right));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -786,7 +786,7 @@ void main() {
         'While I was preparing the presentation, the electricity went out. Eventually, we saved everything.',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       final writeQ = b1M3.steps[5].interactiveQuestion!;
@@ -837,7 +837,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(convCorrect), 150);
       await tester.tap(find.text(convCorrect));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -847,7 +847,7 @@ void main() {
         "I'm going to visit my grandmother on Sunday.",
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -874,7 +874,7 @@ void main() {
       );
       await tester.tap(find.text(exitQ2.options[exitQ2.correctIndex]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -887,7 +887,7 @@ void main() {
       );
       await tester.tap(find.text(exitQ3.options[exitQ3.correctIndex]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -898,7 +898,7 @@ void main() {
         'visited',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -911,7 +911,7 @@ void main() {
         await tester.tap(chip.first);
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -938,7 +938,7 @@ void main() {
       );
       await tester.tap(find.text(b1M2Mcq.options[b1M2Mcq.correctIndex]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -949,7 +949,7 @@ void main() {
         b1M2Fill.acceptedAnswers.first,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
@@ -975,24 +975,24 @@ void main() {
       );
       await tester.tap(find.text(b1M2Mcq.options[wrongB1McqIdx]));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
 
       final errQ = b1M2.reinforcementExercise;
       expect(errQ.mode, QuestionMode.errorCorrection);
-      await tester.ensureVisible(find.text('Mavzuni mustahkamlash'));
-      await tester.tap(find.text('Mavzuni mustahkamlash'));
+      await tester.ensureVisible(find.text('Mavzuni mustahkamlaş'));
+      await tester.tap(find.text('Mavzuni mustahkamlaş'));
       await tester.pumpAndSettle();
       final errCorrect = errQ.options[errQ.correctIndex];
       await tester.ensureVisible(find.text(errCorrect));
       await tester.tap(find.text(errCorrect));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Javobni Tekshirish'));
-      await tester.tap(find.text('Javobni Tekshirish'));
+      await tester.ensureVisible(find.text('Javobni Tekşiriş'));
+      await tester.tap(find.text('Javobni Tekşiriş'));
       await tester.pumpAndSettle();
       expect(find.text('Ajoyib Natija!'), findsOneWidget);
-      await tester.ensureVisible(find.text('Dashboardga O‘tish'));
-      await tester.tap(find.text('Dashboardga O‘tish'));
+      await tester.ensureVisible(find.text('Daşboardga Ötiş'));
+      await tester.tap(find.text('Daşboardga Ötiş'));
       await tester.pumpAndSettle();
 
       // B1 M4 Decisions: step 4 conversation_completion
@@ -1013,9 +1013,9 @@ void main() {
       await tester.scrollUntilVisible(find.text(b1M4Correct), 150);
       await tester.tap(find.text(b1M4Correct));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('TEKSHIRISH'));
+      await tester.tap(find.text('TEKŞIRIŞ'));
       await tester.pumpAndSettle();
-      expect(find.text('To‘g‘ri javob!'), findsOneWidget);
+      expect(find.text('Töğri javob!'), findsOneWidget);
       expect(
         container.read(lessonSessionNotifierProvider).currentStepIndex,
         4,
@@ -1095,19 +1095,19 @@ void main() {
 
       // First card in A2 is 'turn left' with BrE /tɜːn left/ and AmE /tɜːrn left/
       expect(find.text('turn left'), findsOneWidget);
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
-      expect(find.text('chapga burilmoq'), findsOneWidget);
+      expect(find.text('çapga burilmoq'), findsOneWidget);
       expect(find.textContaining('/tɜːn left/'), findsOneWidget);
       expect(find.textContaining('/tɜːrn left/'), findsOneWidget);
 
-      // Tap "Yana mashq qilaman" -> re-queues 'turn left' and advances to 'go past'
-      await tester.tap(find.text('Yana mashq qilaman'));
+      // Tap "Yana maşq qilaman" -> re-queues 'turn left' and advances to 'go past'
+      await tester.tap(find.text('Yana maşq qilaman'));
       await tester.pumpAndSettle();
       expect(find.text('go past'), findsOneWidget);
 
       // Reveal 'go past' and tap "Eslab qoldim" -> persists in profile
-      await tester.tap(find.text('Javobni ko‘rish'));
+      await tester.tap(find.text('Javobni köriş'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Eslab qoldim'));
       await tester.pumpAndSettle();

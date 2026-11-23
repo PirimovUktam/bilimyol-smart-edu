@@ -3,7 +3,7 @@ import { isProtectedAuthReady } from '../core/utils/authGuards';
 
 const demoProfile = {
   id: 'guest_user_01',
-  firstName: 'Foydalanuvchi',
+  firstName: 'Foydalanuvçi',
   lastName: '',
   email: 'guest@bilimyol.uz',
   role: 'student' as const,

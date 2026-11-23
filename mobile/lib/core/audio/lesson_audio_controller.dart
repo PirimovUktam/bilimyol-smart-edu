@@ -71,19 +71,19 @@ class LessonAudioState {
     if (errorCode != null) {
       switch (errorCode!) {
         case LessonAudioErrorCode.loadFailed:
-          return 'Audio faylni yuklab bo‘lmadi.';
+          return 'Audio faylni yuklab bölmadi.';
         case LessonAudioErrorCode.interrupted:
-          return 'Audio ijrosi to‘xtatildi.';
+          return 'Audio ijrosi töxtatildi.';
         case LessonAudioErrorCode.missingPlugin:
-          return 'Audio pleyer ushbu qurilmada mavjud emas.';
+          return 'Audio pleyer uşbu qurilmada mavjud emas.';
         case LessonAudioErrorCode.openFailed:
-          return 'Audio faylni ochib bo‘lmadi.';
+          return 'Audio faylni oçib bölmadi.';
         case LessonAudioErrorCode.playFailed:
           return 'Audio ijro etilmadi.';
         case LessonAudioErrorCode.replayFailed:
           return 'Audio qayta ijro etilmadi.';
         case LessonAudioErrorCode.invalidSource:
-          return 'Media manzili noto‘g‘ri.';
+          return 'Media manzili notöğri.';
       }
     }
     return null;
@@ -236,7 +236,7 @@ class JustAudioLessonController implements LessonAudioController {
       _emit(
         _state.copyWith(
           status: LessonAudioStatus.error,
-          errorMessage: e.message ?? 'Audio faylni yuklab bo‘lmadi.',
+          errorMessage: e.message ?? 'Audio faylni yuklab bölmadi.',
           errorCode: LessonAudioErrorCode.loadFailed,
         ),
       );
@@ -245,7 +245,7 @@ class JustAudioLessonController implements LessonAudioController {
       _emit(
         _state.copyWith(
           status: LessonAudioStatus.error,
-          errorMessage: 'Audio ijrosi to‘xtatildi.',
+          errorMessage: 'Audio ijrosi töxtatildi.',
           errorCode: LessonAudioErrorCode.interrupted,
         ),
       );
@@ -254,7 +254,7 @@ class JustAudioLessonController implements LessonAudioController {
       _emit(
         _state.copyWith(
           status: LessonAudioStatus.error,
-          errorMessage: 'Audio pleyer ushbu qurilmada mavjud emas.',
+          errorMessage: 'Audio pleyer uşbu qurilmada mavjud emas.',
           errorCode: LessonAudioErrorCode.missingPlugin,
         ),
       );
@@ -263,7 +263,7 @@ class JustAudioLessonController implements LessonAudioController {
       _emit(
         _state.copyWith(
           status: LessonAudioStatus.error,
-          errorMessage: e.message ?? 'Audio faylni ochib bo‘lmadi.',
+          errorMessage: e.message ?? 'Audio faylni oçib bölmadi.',
           errorCode: LessonAudioErrorCode.openFailed,
         ),
       );
@@ -272,7 +272,7 @@ class JustAudioLessonController implements LessonAudioController {
       _emit(
         _state.copyWith(
           status: LessonAudioStatus.error,
-          errorMessage: 'Audio faylni ijro etib bo‘lmadi.',
+          errorMessage: 'Audio faylni ijro etib bölmadi.',
           errorCode: LessonAudioErrorCode.loadFailed,
         ),
       );
@@ -473,7 +473,7 @@ class FakeLessonAudioController implements LessonAudioController {
         _state.copyWith(
           status: LessonAudioStatus.error,
           assetPath: assetPath,
-          errorMessage: 'Audio faylni yuklab bo‘lmadi.',
+          errorMessage: 'Audio faylni yuklab bölmadi.',
           errorCode: LessonAudioErrorCode.loadFailed,
         ),
       );

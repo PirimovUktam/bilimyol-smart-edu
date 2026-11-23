@@ -142,7 +142,7 @@ abstract class ILearnerRepository {
   }) async {
     final current = await getProfile();
     if (current.selectedCourseId != courseId) {
-      throw StateError('Joriy fan o‘zgargan. Fanni qayta tanlang.');
+      throw StateError('Joriy fan özgargan. Fanni qayta tanlang.');
     }
     return updateProfile(
       current.copyWith(

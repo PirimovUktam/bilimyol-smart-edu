@@ -3,30 +3,30 @@
   "entries": [
     {
       "identifier": "urn:air:bilimyol.uz:context:llms",
-      "displayName": "BilimYo‘l Smart Edu — Platform Guide (llms.txt)",
+      "displayName": "BilimYöl Smart Edu — Platform Guide (llms.txt)",
       "type": "text/markdown; profile=\"urn:air:agent-skills\"",
       "mediaType": "text/markdown; profile=\"urn:air:agent-skills\"",
       "version": "1.0.0",
-      "description": "Structured Markdown overview of BilimYo‘l Smart Edu, its 5-step adaptive learning cycle, 6-input Explainable AI model, subjects, and public routes.",
+      "description": "Structured Markdown overview of BilimYöl Smart Edu, its 5-step adaptive learning cycle, 6-input Explainable AI model, subjects, and public routes.",
       "url": "https://bilimyol.uz/llms.txt",
       "representativeQueries": [
-        "How does the BilimYo‘l 5-step adaptive learning cycle work?",
-        "What 6 inputs does BilimYo‘l Explainable AI use for recommendations?",
+        "How does the BilimYöl 5-step adaptive learning cycle work?",
+        "What 6 inputs does BilimYöl Explainable AI use for recommendations?",
         "Which subjects and demo flows are available on bilimyol.uz?"
       ]
     },
     {
       "identifier": "urn:air:bilimyol.uz:agent:yolchi-ai",
-      "displayName": "Yo‘lchi AI Tutor",
+      "displayName": "Yölçi AI Tutor",
       "type": "application/a2a-agent-card+json",
       "mediaType": "application/a2a-agent-card+json",
       "version": "1.0.0",
       "description": "Adaptive learning mentor providing diagnostic feedback, mistake explanations, and personalized next-step study recommendations in Uzbek and Russian.",
       "url": "https://bilimyol.uz/.well-known/agent-card.json",
       "representativeQueries": [
-        "Explain why a learner received a reinforcement exercise in BilimYo‘l",
-        "Ask Yo‘lchi AI to help close a knowledge gap in mathematics or English",
-        "Summarize adaptive progress metrics on BilimYo‘l"
+        "Explain why a learner received a reinforcement exercise in BilimYöl",
+        "Ask Yölçi AI to help close a knowledge gap in mathematics or English",
+        "Summarize adaptive progress metrics on BilimYöl"
       ]
     }
   ]

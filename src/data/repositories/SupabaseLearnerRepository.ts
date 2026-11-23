@@ -12,6 +12,7 @@ import {
 import { FlashcardSrsEntry, LearnerProfile } from '../../domain/entities/LearnerProfile';
 import type { CefrLevelId } from '../../domain/entities/Question';
 import { computeNextFlashcardSrs } from '@/domain/personalization/FlashcardSrsEngine';
+import { updatedCourseText } from '@/core/locales/uzbekAlphabet';
 import type { PlacementSession } from '@/domain/entities/Assessment';
 import { learningDate } from '@/core/utils/learningDate';
 import { SkillScore } from '../../domain/entities/SkillScore';
@@ -136,7 +137,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
   private async requireAuthenticatedUser() {
     const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
-    if (!data.user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    if (!data.user) throw new Error('Autentifikatsiyadan ötilmagan.');
     return data.user;
   }
 
@@ -164,7 +165,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       if (!userProfileData || !userProfileData.first_name) {
         const metaFirst = (user.user_metadata?.first_name || '').trim();
         const metaLast = (user.user_metadata?.last_name || '').trim();
-        const resolvedFirst = metaFirst || (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
+        const resolvedFirst = metaFirst || (user.email ? user.email.split('@')[0] : 'Foydalanuvçi');
         const resolvedDisplay = metaLast ? `${resolvedFirst} ${metaLast}` : resolvedFirst;
 
         const editableProfile = {
@@ -242,7 +243,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
       const firstName = userProfileData?.first_name ||
         user.user_metadata?.first_name ||
-        (user.email ? user.email.split('@')[0] : 'Foydalanuvchi');
+        (user.email ? user.email.split('@')[0] : 'Foydalanuvçi');
       const lastName = userProfileData?.last_name || user.user_metadata?.last_name || '';
 
       const localPlacement = readLocalPlacementMeta(user.id);
@@ -290,7 +291,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
       // Sync public.profiles if name/names/avatar are updated
       if (updates.name !== undefined || updates.firstName !== undefined || updates.lastName !== undefined || updates.avatarUrl !== undefined) {
-        const newFirst = updates.firstName || updates.name || currentProfile.firstName || 'Foydalanuvchi';
+        const newFirst = updates.firstName || updates.name || currentProfile.firstName || 'Foydalanuvçi';
         const newLast = updates.lastName ?? currentProfile.lastName ?? '';
         const newDisplay = newLast ? `${newFirst} ${newLast}` : newFirst;
 
@@ -394,7 +395,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       });
 
       if (error || !result?.attempt_id) {
-        throw new Error(error?.message || 'Placement natijasini serverga saqlab bo‘lmadi.');
+        throw new Error(error?.message || 'Placement natijasini serverga saqlab bölmadi.');
       }
 
       return String(result.attempt_id);
@@ -413,7 +414,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     });
     if (error || !data?.session_id || (!data.question && !data.result)) {
       throw new Error(error?.code === '22023' || error?.code === '42501'
-        ? error.message : 'Diagnostika bilan bog‘lanib bo‘lmadi. Qayta urinib ko‘ring.');
+        ? error.message : 'Diagnostika bilan boğlanib bölmadi. Qayta urinib köring.');
     }
     const q = data.question;
     const review = data.result?.answers.map((a: {
@@ -421,15 +422,17 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       question_text: string; selected_option: string; correct_option: string; explanation: string;
     }) => ({
       questionId: a.question_id, selectedIndex: a.selected_index, isCorrect: a.is_correct,
-      timeSpentSeconds: a.time_spent_seconds, questionText: a.question_text,
-      selectedOption: a.selected_option, correctOption: a.correct_option, explanation: a.explanation,
+      timeSpentSeconds: a.time_spent_seconds, questionText: updatedCourseText(a.question_text, courseId),
+      selectedOption: updatedCourseText(a.selected_option, courseId),
+      correctOption: updatedCourseText(a.correct_option, courseId),
+      explanation: updatedCourseText(a.explanation, courseId),
     }));
     return {
       id: data.session_id, number: data.question_number, total: data.total_questions,
       wasReset: data.reset, canRetake: data.can_retake,
       question: q ? {
-        id: q.id, courseId: q.course_id, skillId: q.skill_id, text: q.text,
-        options: q.options, contextSnippet: q.context_snippet, formulaLatex: q.formula_latex,
+        id: q.id, courseId: q.course_id, skillId: q.skill_id, text: updatedCourseText(q.text, courseId),
+        options: Array.isArray(q.options) ? q.options.map((text: string) => updatedCourseText(text, courseId)) : [], contextSnippet: q.context_snippet, formulaLatex: q.formula_latex,
         audioSimText: q.audio_sim_text, audioSimSpeaker: q.audio_sim_speaker,
         difficulty: 'medium', explanation: '',
       } : null,
@@ -456,7 +459,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     });
 
     if (error || !data || typeof data.is_correct !== 'boolean') {
-      throw new Error(error?.message || 'Javobni serverda tekshirib bo‘lmadi.');
+      throw new Error(error?.message || 'Javobni serverda tekşirib bölmadi.');
     }
 
     return { isCorrect: Boolean(data.is_correct) };
@@ -499,7 +502,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     }
 
     if (!context?.courseId || !context?.skillId || !context?.questionId) {
-      throw new Error(`Mustahkamlash uchun course/skill/question konteksti yetishmaydi: ${reinforcementId}`);
+      throw new Error(`Mustahkamlaş uçun course/skill/question konteksti yetişmaydi: ${reinforcementId}`);
     }
 
     try {
@@ -510,7 +513,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         p_question_id: context.questionId,
         p_xp_awarded: context.xpAwarded,
       });
-      if (error || !data) throw error || new Error('Mustahkamlash serverda saqlanmadi.');
+      if (error || !data) throw error || new Error('Mustahkamlaş serverda saqlanmadi.');
       if (
         typeof data.old_score !== 'number' || !Number.isFinite(data.old_score) ||
         data.old_score < 0 || data.old_score > 100 ||
@@ -519,7 +522,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         typeof data.xp_awarded !== 'number' || !Number.isInteger(data.xp_awarded) ||
         data.xp_awarded < 0 || typeof data.already_processed !== 'boolean'
       ) {
-        throw new Error('Mustahkamlash server natijasi noto‘g‘ri.');
+        throw new Error('Mustahkamlaş server natijasi notöğri.');
       }
       return {
         oldScore: data.old_score,
@@ -565,7 +568,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
             p_skill_id: request.skillId,
             p_question_id: request.questionId,
           });
-          if (typeof feedback?.correctOption === 'string') correctOption = feedback.correctOption;
+          if (typeof feedback?.correctOption === 'string') correctOption = updatedCourseText(feedback.correctOption, request.courseId);
           if (typeof feedback?.explanation === 'string' && feedback.explanation) explanation = feedback.explanation;
         } catch {
           // Scoring has already committed. Keep that result usable.
@@ -573,7 +576,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       }
       const result: SubmitAnswerAttemptResult = {
         isCorrect: Boolean(data.is_correct),
-        explanation,
+        explanation: updatedCourseText(explanation, request.courseId),
         correctOption,
         newSkillScore: typeof data.new_skill_score === 'number' ? data.new_skill_score : 50,
         overallScore: typeof data.overall_score === 'number' ? data.overall_score : 50,
@@ -596,7 +599,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Autentifikatsiyadan o‘tilmagan.');
+      if (!user) throw new Error('Autentifikatsiyadan ötilmagan.');
 
       // Invoke server-side RPC if available
       const { data, error } = await supabase.rpc('submit_answer_attempt', {

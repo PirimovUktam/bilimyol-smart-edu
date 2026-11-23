@@ -545,7 +545,7 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
         error: (ref.read(appSettingsProvider).localeCode == 'ru' ||
                 _isRuPlatformLocale())
             ? 'Не удалось загрузить предметы. Попробуйте снова.'
-            : 'Kurslarni yuklab bo‘lmadi. Qayta urinib ko‘ring.',
+            : 'Kurslarni yuklab bölmadi. Qayta urinib köring.',
       );
     }
   }
@@ -583,7 +583,7 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
         error: (ref.read(appSettingsProvider).localeCode == 'ru' ||
                 _isRuPlatformLocale())
             ? 'Не удалось выбрать предмет. Попробуйте снова.'
-            : 'Kursni tanlab bo‘lmadi. Qayta urinib ko‘ring.',
+            : 'Kursni tanlab bölmadi. Qayta urinib köring.',
       );
     } finally {
       _isSelecting = false;
@@ -857,7 +857,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
           ? ((ref.read(appSettingsProvider).localeCode == 'ru' ||
                     _isRuPlatformLocale())
                 ? 'Вопросы обновлены или срок сессии истёк. Диагностика началась заново.'
-                : 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.')
+                : 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boşidan boşlandi.')
           : null,
     );
   }
@@ -1250,7 +1250,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         lesson: null,
         lessonError: resolvedLocale == 'ru'
             ? 'Не удалось загрузить данные урока. Попробуйте снова.'
-            : 'Dars ma’lumotlari yuklanmadi. Qayta urinib ko‘ring.',
+            : 'Dars ma’lumotlari yuklanmadi. Qayta urinib köring.',
       );
     }
   }
@@ -1310,7 +1310,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         isSubmittingAnswer: false,
         answerError: resolvedLocale == 'ru'
             ? 'Не удалось завершить урок. Попробуйте снова.'
-            : 'Darsni yakunlab bo‘lmadi. Qayta urinib ko‘ring.',
+            : 'Darsni yakunlab bölmadi. Qayta urinib köring.',
       );
     }
   }
@@ -1676,7 +1676,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         isSubmittingAnswer: false,
         answerError: resolvedLocale == 'ru'
             ? 'Не удалось проверить ответ. Проверьте интернет и попробуйте снова.'
-            : 'Javobni tekshirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
+            : 'Javobni tekşirib bölmadi. Internetni tekşirib, qayta urinib köring.',
       );
     }
   }
@@ -1742,7 +1742,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       state = state.copyWith(
         answerError: uiLocale == 'ru'
             ? 'Сначала правильно ответьте на все интерактивные вопросы урока.'
-            : 'Avval darsdagi barcha interaktiv savollarga to‘g‘ri javob bering.',
+            : 'Avval darsdagi barça interaktiv savollarga töğri javob bering.',
       );
       return false;
     }

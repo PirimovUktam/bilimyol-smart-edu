@@ -45,7 +45,7 @@ class SubmitPlacementTestUseCase {
     final questions = await courseRepository.getPlacementQuestions(courseId);
 
     if (submissions.isEmpty) {
-      throw ArgumentError('Placement javoblari bo‘sh bo‘lishi mumkin emas.');
+      throw ArgumentError('Placement javoblari böş bölişi mumkin emas.');
     }
     final questionsById = {
       for (final question in questions) question.id: question,

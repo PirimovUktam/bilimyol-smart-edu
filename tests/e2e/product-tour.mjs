@@ -74,14 +74,14 @@ try {
     const main = page.getByRole('main');
     await main.getByRole('heading', { level: 1, name: 'Qaysi dars aynan sizga mos?' }).waitFor();
     await main.getByText(/qisqa diagnostika orqali/i).waitFor();
-    await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).waitFor();
-    await main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
+    await main.getByRole('button', { name: 'Sinab köriş', exact: true }).waitFor();
+    await main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true }).click();
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
     const flag = await page.evaluate(() => localStorage.getItem('bilimyol.product_tour_completed'));
     assert.equal(flag, 'true');
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
-    assert.equal(await main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true }).count(), 0);
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
+    assert.equal(await main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true }).count(), 0);
     await context.close();
     assertions += 3;
     console.log('PASS fresh guest skip & reload persistence');
@@ -96,18 +96,18 @@ try {
     await checkNoOverflow(page, 'desktop light scene 1');
     await snap(page, 'scene1_desktop_light.png');
 
-    await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab ko‘ring.' }).waitFor();
+    await main.getByRole('button', { name: 'Sinab köriş', exact: true }).click();
+    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab köring.' }).waitFor();
     await checkNoOverflow(page, 'desktop light scene 2');
 
     // Wrong option -> hint feedback + retry allowed
     await main.getByRole('button', { name: 'is', exact: true }).click();
-    await main.getByText(/uchinchi shaxs/i).waitFor();
+    await main.getByText(/uçinçi şaxs/i).waitFor();
     assert.equal(await main.getByRole('button', { name: 'am', exact: true }).isDisabled(), false);
 
     // Correct option -> exact feedback
     await main.getByRole('button', { name: 'am', exact: true }).click();
-    await main.getByText('I bilan am ishlatiladi: I am a student.', { exact: true }).waitFor();
+    await main.getByText('I bilan am işlatiladi: I am a student.', { exact: true }).waitFor();
     await snap(page, 'scene2_desktop_light.png');
 
     // Verify guest isolation: zero progress/XP/tour flag persisted mid-tour
@@ -119,17 +119,17 @@ try {
     assert.deepEqual(storageSnapshot.sessionKeys, []);
 
     await main.getByRole('button', { name: 'Keyingi', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz ko‘rinib turadi.' }).waitFor();
+    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz körinib turadi.' }).waitFor();
     await main.getByText(/Namuna xaritasi/i).waitFor();
     await main.getByText('Kasblar va kundalik suhbat', { exact: true }).waitFor();
     await checkNoOverflow(page, 'desktop light scene 3');
     await snap(page, 'scene3_desktop_light.png');
 
-    await main.getByRole('button', { name: 'Boshlash', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
+    await main.getByRole('button', { name: 'Boşlaş', exact: true }).click();
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('bilimyol.product_tour_completed')), 'true');
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
     await context.close();
     assertions += 6;
     console.log('PASS desktop light 3-scene completion, exercise feedback & guest isolation');
@@ -142,16 +142,16 @@ try {
     const main = page.getByRole('main');
 
     // Toggle dark theme in PreferencesBar
-    await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish', exact: true }).click();
+    await page.getByRole('button', { name: 'Qoronği rejimni yoqiş', exact: true }).click();
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
     await main.getByRole('heading', { level: 1, name: 'Qaysi dars aynan sizga mos?' }).waitFor();
     await snap(page, 'scene1_desktop_dark.png');
 
-    await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab ko‘ring.' }).waitFor();
+    await main.getByRole('button', { name: 'Sinab köriş', exact: true }).click();
+    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab köring.' }).waitFor();
     // Advance without answering!
     await main.getByRole('button', { name: 'Keyingi', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz ko‘rinib turadi.' }).waitFor();
+    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz körinib turadi.' }).waitFor();
     await snap(page, 'scene3_desktop_dark.png');
 
     // Go back to Scene 2 in Dark + switch to RU to verify localized exercise & feedback
@@ -174,24 +174,24 @@ try {
     const main = page.getByRole('main');
 
     await checkNoOverflow(page, 'mobile 390 light scene 1');
-    await assertFirstFoldOnMobile(page, 'discovery', 'Sinab ko‘rish', 'mobile 390 light scene 1');
+    await assertFirstFoldOnMobile(page, 'discovery', 'Sinab köriş', 'mobile 390 light scene 1');
     await snap(page, 'scene1_mobile_390_light.png');
 
-    await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).click();
+    await main.getByRole('button', { name: 'Sinab köriş', exact: true }).click();
     await checkNoOverflow(page, 'mobile 390 light scene 2');
     await assertFirstFoldOnMobile(page, 'exercise', 'Keyingi', 'mobile 390 light scene 2 (unanswered)');
     await main.getByRole('button', { name: 'am', exact: true }).click();
-    await main.getByText('I bilan am ishlatiladi: I am a student.', { exact: true }).waitFor();
+    await main.getByText('I bilan am işlatiladi: I am a student.', { exact: true }).waitFor();
     await assertFirstFoldOnMobile(page, 'exercise', 'Keyingi', 'mobile 390 light scene 2 (answered)');
     await snap(page, 'scene2_mobile_390_light.png');
 
     await main.getByRole('button', { name: 'Keyingi', exact: true }).click();
     await checkNoOverflow(page, 'mobile 390 light scene 3');
-    await assertFirstFoldOnMobile(page, 'result', 'Boshlash', 'mobile 390 light scene 3');
+    await assertFirstFoldOnMobile(page, 'result', 'Boşlaş', 'mobile 390 light scene 3');
     await snap(page, 'scene3_mobile_390_light.png');
 
     // Mobile Dark renders across scenes
-    await page.getByRole('button', { name: 'Qorong‘i rejimni yoqish', exact: true }).click();
+    await page.getByRole('button', { name: 'Qoronği rejimni yoqiş', exact: true }).click();
     await checkNoOverflow(page, 'mobile 390 dark scene 3');
     await snap(page, 'scene3_mobile_390_dark.png');
     await main.getByRole('button', { name: 'Orqaga', exact: true }).click();
@@ -220,17 +220,17 @@ try {
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     const main = page.getByRole('main');
     await main.getByRole('heading', { level: 1, name: 'Qaysi dars aynan sizga mos?' }).waitFor();
-    await main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true }).click();
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
+    await main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true }).click();
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
     await context.close();
 
     // Direct routes & auth callback bypass tour
     const direct = await openFreshContext();
     await direct.page.goto(base + '/login', { waitUntil: 'domcontentloaded' });
-    await direct.page.getByRole('heading', { level: 1, name: 'Xush kelibsiz!' }).waitFor();
+    await direct.page.getByRole('heading', { level: 1, name: 'Xuş kelibsiz!' }).waitFor();
     await direct.page.goto(base + '/#access_token=dummy&type=recovery', { waitUntil: 'domcontentloaded' });
     assert.equal(
-      await direct.page.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).count(),
+      await direct.page.getByRole('button', { name: 'Sinab köriş', exact: true }).count(),
       0,
     );
     await direct.context.close();
@@ -243,32 +243,32 @@ try {
     const { context, page } = await openFreshContext({ viewport: { width: 1280, height: 800 } });
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     const main = page.getByRole('main');
-    await main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true }).click();
-    await main.getByRole('button', { name: 'Namuna hisobi bilan kirish', exact: true }).click();
-    await main.getByRole('heading', { name: 'O‘zingizga mos fanni tanlang' }).waitFor();
-    await main.getByRole('button', { name: /Ingliz tili fanini tanlash/ }).click();
-    await main.getByRole('radio', { name: /Noldan boshlayman/ }).check();
-    await main.getByRole('button', { name: 'Birinchi darsni boshlash', exact: true }).click();
-    await main.getByRole('heading', { name: 'Birinchi inglizcha so‘zlar' }).waitFor();
+    await main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true }).click();
+    await main.getByRole('button', { name: 'Namuna hisobi bilan kiriş', exact: true }).click();
+    await main.getByRole('heading', { name: 'Özingizga mos fanni tanlang' }).waitFor();
+    await main.getByRole('button', { name: /Ingliz tili fanini tanlaş/ }).click();
+    await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+    await main.getByRole('button', { name: 'Birinçi darsni boşlaş', exact: true }).click();
+    await main.getByRole('heading', { name: 'Birinçi inglizça sözlar' }).waitFor();
 
     // Reloading root while active demo session exists must bypass Product Tour
     await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
     await main.getByRole('heading', { name: /Assalomu alaykum/ }).waitFor();
-    assert.equal(await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).count(), 0);
+    assert.equal(await main.getByRole('button', { name: 'Sinab köriş', exact: true }).count(), 0);
 
-    // Navigate to Profile -> Tanishtiruvni qayta ko‘rish -> Complete -> returns to Profile
+    // Navigate to Profile -> Taniştiruvni qayta köriş -> Complete -> returns to Profile
     await page.getByRole('button', { name: 'Profil', exact: true }).first().click();
     await main.getByRole('heading', { level: 1, name: 'Profil' }).waitFor();
-    await main.getByRole('button', { name: 'Tanishtiruvni qayta ko‘rish', exact: true }).click();
+    await main.getByRole('button', { name: 'Taniştiruvni qayta köriş', exact: true }).click();
     await main.getByRole('heading', { level: 1, name: 'Qaysi dars aynan sizga mos?' }).waitFor();
-    await main.getByRole('button', { name: 'Sinab ko‘rish', exact: true }).click();
+    await main.getByRole('button', { name: 'Sinab köriş', exact: true }).click();
     await main.getByRole('button', { name: 'Keyingi', exact: true }).click();
-    await main.getByRole('button', { name: 'Boshlash', exact: true }).click();
+    await main.getByRole('button', { name: 'Boşlaş', exact: true }).click();
     await main.getByRole('heading', { level: 1, name: 'Profil' }).waitFor();
 
     // Replay again -> Skip -> also returns to Profile
-    await main.getByRole('button', { name: 'Tanishtiruvni qayta ko‘rish', exact: true }).click();
-    await main.getByRole('button', { name: 'O‘tkazib yuborish', exact: true }).click();
+    await main.getByRole('button', { name: 'Taniştiruvni qayta köriş', exact: true }).click();
+    await main.getByRole('button', { name: 'Ötkazib yuboriş', exact: true }).click();
     await main.getByRole('heading', { level: 1, name: 'Profil' }).waitFor();
 
     await context.close();
@@ -294,21 +294,21 @@ try {
       throw new Error(`Could not Tab to button containing "${targetName}"`);
     }
 
-    await tabToButton('Sinab ko‘rish');
+    await tabToButton('Sinab köriş');
     await page.keyboard.press('Enter');
-    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab ko‘ring.' }).waitFor();
+    await main.getByRole('heading', { level: 1, name: 'Bir savolni sinab köring.' }).waitFor();
 
     await tabToButton('am');
     await page.keyboard.press('Enter');
-    await main.getByText('I bilan am ishlatiladi: I am a student.', { exact: true }).waitFor();
+    await main.getByText('I bilan am işlatiladi: I am a student.', { exact: true }).waitFor();
 
     await tabToButton('Keyingi');
     await page.keyboard.press('Enter');
-    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz ko‘rinib turadi.' }).waitFor();
+    await main.getByRole('heading', { level: 1, name: 'Keyingi qadamingiz körinib turadi.' }).waitFor();
 
-    await tabToButton('Boshlash');
+    await tabToButton('Boşlaş');
     await page.keyboard.press('Enter');
-    await main.getByRole('heading', { level: 1, name: /O‘zingizga mos\s+yo‘ldan o‘rganing\./ }).waitFor();
+    await main.getByRole('heading', { level: 1, name: /Özingizga mos\s+yöldan örganing\./ }).waitFor();
 
     await context.close();
     assertions += 4;

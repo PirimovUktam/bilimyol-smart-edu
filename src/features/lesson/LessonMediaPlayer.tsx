@@ -6,7 +6,7 @@ import type { LessonMedia, MediaLanguage } from '@/domain/entities/LessonMedia';
 
 const CAPTION_LABELS: Record<MediaLanguage, string> = {
   en: 'English',
-  uz: 'O‘zbekcha',
+  uz: 'Özbekça',
   ru: 'Русский',
 };
 

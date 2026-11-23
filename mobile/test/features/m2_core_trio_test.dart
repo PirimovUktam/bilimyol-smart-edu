@@ -376,16 +376,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Page 1
-      expect(find.text('Nimadan boshlashni biling.'), findsOneWidget);
-      expect(find.text('O‘tkazib yuborish'), findsOneWidget);
+      expect(find.text('Nimadan boşlaşni biling.'), findsOneWidget);
+      expect(find.text('Ötkazib yuboriş'), findsOneWidget);
       expect(find.text('Keyingi'), findsOneWidget);
 
       // Swipe to Page 2
       await tester.drag(find.byType(PageView), const Offset(-320, 0));
       await tester.pumpAndSettle();
-      expect(find.text('Sizga mos darsni sinab ko‘ring.'), findsOneWidget);
+      expect(find.text('Sizga mos darsni sinab köring.'), findsOneWidget);
       expect(
-        find.text('4 ta qalamga yana 2 ta qalam qo‘shilsa, jami nechta bo‘ladi?'),
+        find.text('4 ta qalamga yana 2 ta qalam qöşilsa, jami neçta böladi?'),
         findsOneWidget,
       );
 
@@ -393,21 +393,21 @@ void main() {
       await tester.tap(find.text('4').last);
       await tester.pumpAndSettle();
       expect(
-        find.text('Yana bir bor urinib ko‘ring — javobni bosing.'),
+        find.text('Yana bir bor urinib köring — javobni bosing.'),
         findsOneWidget,
       );
       await tester.tap(find.text('6').last);
       await tester.pumpAndSettle();
       expect(
-        find.text('4 ta va 2 ta qalamni birlashtiramiz. 4 + 2 = 6.'),
+        find.text('4 ta va 2 ta qalamni birlaştiramiz. 4 + 2 = 6.'),
         findsOneWidget,
       );
 
       // Tap Keyingi -> Page 3
       await tester.tap(find.text('Keyingi'));
       await tester.pumpAndSettle();
-      expect(find.text('O‘sishingizni ko‘rib boring.'), findsOneWidget);
-      expect(find.text('Boshlash'), findsOneWidget);
+      expect(find.text('Ösişingizni körib boring.'), findsOneWidget);
+      expect(find.text('Boşlaş'), findsOneWidget);
       expect(find.text('+25 XP'), findsOneWidget);
 
       // Finish tour via appSettingsProvider check (WelcomeScreen navigates via GoRouter when mounted in router)
@@ -540,7 +540,7 @@ void main() {
         id: 'lesson_5opt',
         courseId: 'course_math_01',
         skillId: 'skill_math_functions',
-        title: 'Besh variantli savol',
+        title: 'Beş variantli savol',
         estimatedMinutes: 5,
         summary: 'Test',
         steps: [
@@ -549,12 +549,12 @@ void main() {
             stepNumber: 1,
             type: LessonStepType.interactiveQuestion,
             title: 'Savol',
-            content: 'To‘g‘ri variantni tanlang.',
+            content: 'Töğri variantni tanlang.',
             interactiveQuestion: Question(
               id: 'q_5opt',
               courseId: 'course_math_01',
               skillId: 'skill_math_functions',
-              text: '2 + 3 nechaga teng?',
+              text: '2 + 3 neçaga teng?',
               options: ['1', '3', '5', '7', '9'],
               correctIndex: 2,
               difficulty: QuestionDifficulty.easy,
@@ -761,10 +761,10 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Bugun nimani davom ettiraman?'), findsOneWidget);
-        expect(find.text('Davom etish'), findsOneWidget);
+        expect(find.text('Davom etiş'), findsOneWidget);
         expect(find.text('0/7 dars'), findsNothing);
-        expect(find.text('Ta’lim yo‘lini ochish'), findsNothing);
-        expect(find.text('Obuna bo‘lish'), findsNothing);
+        expect(find.text('Ta’lim yölini oçiş'), findsNothing);
+        expect(find.text('Obuna böliş'), findsNothing);
         await _maybeCapturePng(
           tester,
           boundaryKey,
@@ -812,10 +812,10 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('8').first);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('TEKSHIRISH'));
+        await tester.tap(find.text('TEKŞIRIŞ'));
         await tester.pumpAndSettle();
-        expect(find.text('To‘g‘ri javob: 11'), findsOneWidget);
-        expect(find.text('Endi nima qilish kerak?'), findsOneWidget);
+        expect(find.text('Töğri javob: 11'), findsOneWidget);
+        expect(find.text('Endi nima qiliş kerak?'), findsOneWidget);
         await _maybeCapturePng(
           tester,
           boundaryKey,
@@ -910,7 +910,7 @@ void main() {
           await tester.pumpAndSettle();
           final expectedLessonTitle = code == 'ru'
               ? 'Начинаем со сложения и вычитания'
-              : s.tourSlide2MiniLessonTitle('Qo‘shish va ayirishdan boshlaymiz');
+              : s.tourSlide2MiniLessonTitle('Qöşiş va ayirişdan boşlaymiz');
           final lessonTitleWidget = tester.widget<Text>(
             find.text(expectedLessonTitle),
           );
@@ -936,7 +936,7 @@ void main() {
             find.text(
               code == 'ru'
                   ? s.tourSlide2CorrectFeedback
-                  : '4 ta va 2 ta qalamni birlashtiramiz. 4 + 2 = 6.',
+                  : '4 ta va 2 ta qalamni birlaştiramiz. 4 + 2 = 6.',
             ),
             findsOneWidget,
           );
@@ -1042,7 +1042,7 @@ void main() {
           await tester.tap(find.text(s.nextStep));
           await tester.pumpAndSettle();
 
-          // Submit wrong option '8' -> TEKSHIRISH/ПРОВЕРИТЬ becomes disabled until a different option is picked
+          // Submit wrong option '8' -> TEKŞIRIŞ/ПРОВЕРИТЬ becomes disabled until a different option is picked
           final wrongOpt = find.text('8').first;
           await tester.ensureVisible(wrongOpt);
           await tester.tap(wrongOpt);
@@ -1068,7 +1068,7 @@ void main() {
             isNull,
           );
 
-          // Picking a different option re-enables TEKSHIRISH/ПРОВЕРИТЬ
+          // Picking a different option re-enables TEKŞIRIŞ/ПРОВЕРИТЬ
           final rightOpt = find.text('11').first;
           await tester.ensureVisible(rightOpt);
           await tester.tap(rightOpt);
@@ -1086,7 +1086,7 @@ void main() {
       }
     });
 
-    testWidgets('seedQuickDemo() reloads roadmap immediately with non-zero progress & Davom etish CTA', (tester) async {
+    testWidgets('seedQuickDemo() reloads roadmap immediately with non-zero progress & Davom etiş CTA', (tester) async {
       final repo = InMemoryLearnerRepository();
       final container = ProviderContainer(
         overrides: [
@@ -1117,9 +1117,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Davom etish'), findsOneWidget);
+      expect(find.text('Davom etiş'), findsOneWidget);
       expect(find.text('0/7 dars'), findsNothing);
-      expect(find.text('Ta’lim yo‘lini ochish'), findsNothing);
+      expect(find.text('Ta’lim yölini oçiş'), findsNothing);
       expect(find.textContaining('2/7 dars'), findsOneWidget);
     });
 
@@ -1333,8 +1333,8 @@ void main() {
                   throw StateError('transient failure');
                 }
                 return const AIExplanationResponse(
-                  tutorName: 'Yo‘lchi',
-                  title: 'Chiziqli funksiya',
+                  tutorName: 'Yölçi',
+                  title: 'Çiziqli funksiya',
                   explanation: 'f(4) = 2*4 + 3 = 11.',
                   remediationStep: 'Qayta hisoblang.',
                   suggestedAction: 'Mavzuni mustahkamlang',
@@ -1373,8 +1373,8 @@ void main() {
                   throw StateError('fast offline failure #$attempt');
                 }
                 return const AIExplanationResponse(
-                  tutorName: 'Yo‘lchi',
-                  title: 'Chiziqli funksiya',
+                  tutorName: 'Yölçi',
+                  title: 'Çiziqli funksiya',
                   explanation: 'f(4) = 2*4 + 3 = 11.',
                   remediationStep: 'Qayta hisoblang.',
                   suggestedAction: 'Mavzuni mustahkamlang',

@@ -9,7 +9,7 @@ void main() {
       id: 'addition',
       courseId: 'course_math_01',
       skillId: 'addition',
-      title: 'Qo‘shish',
+      title: 'Qöşiş',
       prerequisites: [],
       requiredScore: 80,
       status: NodeStatus.reinforcement,
@@ -46,7 +46,7 @@ void main() {
         'is_locked': true,
         'steps': [],
       }),
-      throwsA(isA<FormatException>().having((error) => error.message, 'message', contains('hali ochilmagan'))),
+      throwsA(isA<FormatException>().having((error) => error.message, 'message', contains('hali oçilmagan'))),
     );
   });
 }

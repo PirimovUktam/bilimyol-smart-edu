@@ -267,7 +267,7 @@ function LearningPreferences({ learner, course, onChooseSubject, onOpenLearningP
           <Button variant="ghost" size="sm" onClick={onChooseSubject}>{t('profile.switchSubject')}</Button>
           {course && (
             <Button variant="outline" size="sm" onClick={onOpenLearningPlan}>
-              {level ? levels[level] + ' · Darajani sozlash' : t('profile.chooseLevel')}
+              {level ? levels[level] + ' · Darajani sozlaş' : t('profile.chooseLevel')}
             </Button>
           )}
         </div>

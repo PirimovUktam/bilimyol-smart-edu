@@ -163,7 +163,7 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
     useLearnerStore.getState().clearSession();
   });
 
-  it('guards FlashcardDeck against double-click ratings on both Eslab qoldim and Yana mashq qilaman within one reveal', async () => {
+  it('guards FlashcardDeck against double-click ratings on both Eslab qoldim and Yana maşq qilaman within one reveal', async () => {
     const { FlashcardDeck } = await import('@/features/lesson/FlashcardDeck');
     const cards: LessonFlashcard[] = [
       {
@@ -178,10 +178,10 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
       {
         id: 'fc_dc_2',
         front: 'Ticket',
-        backUz: 'Chipta',
+        backUz: 'Çipta',
         backRu: 'Билет',
         example: 'Here is my ticket.',
-        exampleUz: 'Mana mening chiptam.',
+        exampleUz: 'Mana mening çiptam.',
         exampleRu: 'Вот мой билет.',
       },
     ];
@@ -193,11 +193,11 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
       return tree;
     };
 
-    // 1. Reveal card 1 and rapid double-click "Yana mashq qilaman"
+    // 1. Reveal card 1 and rapid double-click "Yana maşq qilaman"
     const initialTree = renderDeck();
-    findButtons(initialTree).find((b) => b.text.includes('Javobni ko‘rish'))!.onClick!();
+    findButtons(initialTree).find((b) => b.text.includes('Javobni köriş'))!.onClick!();
     const revealed1 = renderDeck();
-    const practiceBtn = findButtons(revealed1).find((b) => b.text.includes('Yana mashq qilaman'))!;
+    const practiceBtn = findButtons(revealed1).find((b) => b.text.includes('Yana maşq qilaman'))!;
     practiceBtn.onClick!();
     practiceBtn.onClick!();
     expect(onRateCard).toHaveBeenCalledTimes(1);
@@ -206,7 +206,7 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
     // 2. Card 2 should now be active (not skipped by double-click), reveal and double-click "Eslab qoldim"
     const afterPractice = renderDeck();
     expect(extractText(afterPractice)).toContain('Ticket');
-    findButtons(afterPractice).find((b) => b.text.includes('Javobni ko‘rish'))!.onClick!();
+    findButtons(afterPractice).find((b) => b.text.includes('Javobni köriş'))!.onClick!();
     const revealed2 = renderDeck();
     const rememberedBtn = findButtons(revealed2).find((b) => b.text.includes('Eslab qoldim'))!;
     rememberedBtn.onClick!();

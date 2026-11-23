@@ -41,7 +41,7 @@ describe('CourseSwitching', () => {
     const mathLesson2 = await lessonRepo.getLessonById('lesson_math_functions_02');
 
     expect(mathLesson1?.title).toContain('Funksiya');
-    expect(mathLesson2?.title).toContain('qiymatini topish');
+    expect(mathLesson2?.title).toContain('qiymatini topiş');
 
     const mathNodes = await lessonRepo.getBaseRoadmapNodes('course_math_01');
     const engNodes = await lessonRepo.getBaseRoadmapNodes('course_eng_01');

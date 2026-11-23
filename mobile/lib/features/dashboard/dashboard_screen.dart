@@ -28,7 +28,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  int _courseTabIndex = 0; // 0: Aktiv, 1: Tavsiya, 2: Barchasi
+  int _courseTabIndex = 0; // 0: Aktiv, 1: Tavsiya, 2: Barçasi
   String _searchQuery = '';
 
   static AppStrings _resolveStrings(BuildContext context) {
@@ -925,7 +925,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Yo‘lchi AI & Quick Actions Card
+                    // Yölçi AI & Quick Actions Card
                     EdTechReveal(
                       index: 4,
                       child: AppCard(

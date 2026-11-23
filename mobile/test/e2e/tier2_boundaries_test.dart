@@ -143,7 +143,7 @@ void main() {
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Moslashuvchan Yo‘l Xaritasi', findRichText: true),
+            find.textContaining('Moslaşuvçan Yöl Xaritasi', findRichText: true),
           );
           recorder.expectClean();
         },
@@ -164,12 +164,12 @@ void main() {
         );
         await scrollAndTap(
           tester,
-          find.textContaining('Moslashuvchan Yo‘l Xaritasi', findRichText: true),
+          find.textContaining('Moslaşuvçan Yöl Xaritasi', findRichText: true),
         );
         final cta =
-            find.textContaining('Mashq qilish', findRichText: true).evaluate().isNotEmpty
-            ? find.textContaining('Mashq qilish', findRichText: true)
-            : find.textContaining('Boshlash', findRichText: true);
+            find.textContaining('Maşq qiliş', findRichText: true).evaluate().isNotEmpty
+            ? find.textContaining('Maşq qiliş', findRichText: true)
+            : find.textContaining('Boşlaş', findRichText: true);
         await scrollAndTap(tester, cta);
         await scrollAndTap(
           tester,
@@ -189,7 +189,7 @@ void main() {
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Qoidani sodda tushuntir', findRichText: true),
+            find.textContaining('Qoidani sodda tuşuntir', findRichText: true),
           );
           recorder.expectClean();
         },
@@ -207,11 +207,11 @@ void main() {
           await selectCourse(tester, 'Matematika');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
           await submitLessonQuiz(tester, correct: true);
           await tapBottomNav(tester, L10nExpect.navProgress);
@@ -393,7 +393,7 @@ void main() {
         );
         await scrollAndTap(
           tester,
-          find.textContaining('Moslashuvchan Yo‘l Xaritasi', findRichText: true),
+          find.textContaining('Moslaşuvçan Yöl Xaritasi', findRichText: true),
         );
         recorder.expectClean();
       });
@@ -411,16 +411,16 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
           await submitLessonQuiz(tester, correct: false);
           await scrollAndTap(
             tester,
-            find.textContaining('Mavzuni mustahkamlash', findRichText: true),
+            find.textContaining('Mavzuni mustahkamlaş', findRichText: true),
           );
           recorder.expectClean();
         },
@@ -438,7 +438,7 @@ void main() {
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Qoidani sodda tushuntir', findRichText: true),
+            find.textContaining('Qoidani sodda tuşuntir', findRichText: true),
           );
 
           // Also open YolchiAiSheet at 360dp @ 2.0x via a wrong lesson answer.
@@ -447,19 +447,19 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
           await submitLessonQuiz(tester, correct: false);
           await scrollAndTap(
             tester,
-            find.textContaining('Yo‘lchi AI tahlili', findRichText: true),
+            find.textContaining('Yölçi AI tahlili', findRichText: true),
           );
           expect(
-            find.textContaining('Yo‘lchi', findRichText: true),
+            find.textContaining('Yölçi', findRichText: true),
             findsWidgets,
           );
           recorder.expectClean();
@@ -568,18 +568,18 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
-          await tester.tap(find.byTooltip('So‘z lug‘ati'));
+          await tester.tap(find.byTooltip('Söz luğati'));
           await tester.pumpAndSettle();
           await tester.enterText(find.byType(TextField).last, 'two words');
-          await scrollAndTap(tester, find.text('So‘zni izlash'));
+          await scrollAndTap(tester, find.text('Sözni izlaş'));
           expect(
-            find.textContaining('Bitta inglizcha so‘z kiriting', findRichText: true),
+            find.textContaining('Bitta inglizça söz kiriting', findRichText: true),
             findsOneWidget,
           );
           recorder.expectClean();
@@ -629,7 +629,7 @@ void main() {
         );
         await scrollAndTap(
           tester,
-          find.textContaining('Qoidani sodda tushuntir', findRichText: true),
+          find.textContaining('Qoidani sodda tuşuntir', findRichText: true),
         );
         expectScaffoldThemeBrightness(tester, Brightness.dark);
         recorder.expectClean();
@@ -664,9 +664,9 @@ void main() {
           mockPrefs: {E2EConfig.keyThemeMode: 'dark'},
         );
         final cta =
-            find.textContaining('Boshlash', findRichText: true).evaluate().isNotEmpty
-            ? find.textContaining('Boshlash', findRichText: true)
-            : find.textContaining('Mashq qilish', findRichText: true);
+            find.textContaining('Boşlaş', findRichText: true).evaluate().isNotEmpty
+            ? find.textContaining('Boşlaş', findRichText: true)
+            : find.textContaining('Maşq qiliş', findRichText: true);
         await scrollAndTap(tester, cta);
         expectScaffoldThemeBrightness(tester, Brightness.dark);
         recorder.expectClean();
@@ -704,19 +704,19 @@ void main() {
         L10nExpect.expectAnyVisible(L10nExpect.tourNextRu);
         L10nExpect.expectAnyVisible(L10nExpect.tourSkipRu);
         L10nExpect.expectNoneVisible([
-          'Nimadan boshlashni biling',
+          'Nimadan boşlaşni biling',
           'Keyingi',
-          'O‘tkazib yuborish',
+          'Ötkazib yuboriş',
         ]);
 
         await tapAnyVisible(tester, L10nExpect.tourNextRu);
         L10nExpect.expectAnyVisible(L10nExpect.tourPage2TitlesRu);
-        L10nExpect.expectNoneVisible(['Sizga mos darsni sinab ko‘ring']);
+        L10nExpect.expectNoneVisible(['Sizga mos darsni sinab köring']);
 
         await tapAnyVisible(tester, L10nExpect.tourNextRu);
         L10nExpect.expectAnyVisible(L10nExpect.tourPage3TitlesRu);
         L10nExpect.expectAnyVisible(L10nExpect.tourFinishRu);
-        L10nExpect.expectNoneVisible(['O‘sishingizni ko‘rib boring']);
+        L10nExpect.expectNoneVisible(['Ösişingizni körib boring']);
         recorder.expectClean();
       });
 
@@ -733,16 +733,16 @@ void main() {
         L10nExpect.expectAnyVisible(L10nExpect.loginButtonRu);
         L10nExpect.expectAnyVisible(L10nExpect.demoEntryRu);
         L10nExpect.expectNoneVisible([
-          'Xush kelibsiz',
-          'Namuna hisobi bilan kirish',
+          'Xuş kelibsiz',
+          'Namuna hisobi bilan kiriş',
         ]);
 
         appRouter.go('/register');
         await tester.pumpAndSettle();
         L10nExpect.expectAnyVisible(L10nExpect.registerHeadingRu);
         L10nExpect.expectNoneVisible([
-          'Yangi hisob yaratish',
-          'Hisob Yaratish',
+          'Yangi hisob yaratiş',
+          'Hisob Yaratiş',
         ]);
         recorder.expectClean();
       });
@@ -763,7 +763,7 @@ void main() {
           expect(find.text('Результаты'), findsOneWidget);
           expect(find.text('Профиль'), findsOneWidget);
           L10nExpect.expectAnyVisible(L10nExpect.dashboardCopyRu);
-          L10nExpect.expectNoneVisible(['Bosh sahifa', 'Bugungi maqsad']);
+          L10nExpect.expectNoneVisible(['Boş sahifa', 'Bugungi maqsad']);
           recorder.expectClean();
         },
       );
@@ -789,7 +789,7 @@ void main() {
           L10nExpect.expectAnyVisible(L10nExpect.coursesCopyRu);
           L10nExpect.expectNoneVisible([
             'Fanlar katalogi',
-            'Qaysi fanni o‘rganishni istaysiz',
+            'Qaysi fanni örganişni istaysiz',
           ]);
           recorder.expectClean();
         },
@@ -808,7 +808,7 @@ void main() {
           L10nExpect.expectAnyVisible(L10nExpect.progressCopyRu);
           L10nExpect.expectNoneVisible([
             'Mening natijalarim',
-            'Ta’lim ko‘rsatkichlari',
+            'Ta’lim körsatkiçlari',
           ]);
 
           appRouter.go('/profile');
@@ -816,8 +816,8 @@ void main() {
           L10nExpect.expectAnyVisible(L10nExpect.profileCopyRu);
           L10nExpect.expectNoneVisible([
             'Profilim',
-            'O‘quv sozlamalari',
-            'Hisobdan chiqish',
+            'Öquv sozlamalari',
+            'Hisobdan çiqiş',
           ]);
           recorder.expectClean();
         },
@@ -851,7 +851,7 @@ void main() {
     // -----------------------------------------------------------------------
     group('F4 & F10: Diagnostic Scoring & Roadmap Unlock Boundaries', () {
       testWidgets(
-        'T2.47 Math diagnostic <50% MUST produce enabled Boshlash or Mashq qilish on /roadmap',
+        'T2.47 Math diagnostic <50% MUST produce enabled Boşlaş or Maşq qiliş on /roadmap',
         (tester) async {
           final recorder = await pumpBilimYolApp(
             tester,
@@ -864,13 +864,13 @@ void main() {
           await completePlacement(tester, highAccuracy: false);
           await scrollAndTap(
             tester,
-            find.textContaining('Shaxsiy yo‘lni ko‘rish', findRichText: true),
+            find.textContaining('Şaxsiy yölni köriş', findRichText: true),
           );
 
           final ctaFinder =
-              find.textContaining('Mashq qilish', findRichText: true).evaluate().isNotEmpty
-              ? find.textContaining('Mashq qilish', findRichText: true)
-              : find.textContaining('Boshlash', findRichText: true);
+              find.textContaining('Maşq qiliş', findRichText: true).evaluate().isNotEmpty
+              ? find.textContaining('Maşq qiliş', findRichText: true)
+              : find.textContaining('Boşlaş', findRichText: true);
           expect(
             ctaFinder,
             findsWidgets,
@@ -887,7 +887,7 @@ void main() {
       );
 
       testWidgets(
-        'T2.48 English diagnostic <50% MUST produce enabled Boshlash or Mashq qilish on /roadmap',
+        'T2.48 English diagnostic <50% MUST produce enabled Boşlaş or Maşq qiliş on /roadmap',
         (tester) async {
           final recorder = await pumpBilimYolApp(
             tester,
@@ -900,13 +900,13 @@ void main() {
           await completePlacement(tester, highAccuracy: false);
           await scrollAndTap(
             tester,
-            find.textContaining('Shaxsiy yo‘lni ko‘rish', findRichText: true),
+            find.textContaining('Şaxsiy yölni köriş', findRichText: true),
           );
 
           final ctaFinder =
-              find.textContaining('Mashq qilish', findRichText: true).evaluate().isNotEmpty
-              ? find.textContaining('Mashq qilish', findRichText: true)
-              : find.textContaining('Boshlash', findRichText: true);
+              find.textContaining('Maşq qiliş', findRichText: true).evaluate().isNotEmpty
+              ? find.textContaining('Maşq qiliş', findRichText: true)
+              : find.textContaining('Boşlaş', findRichText: true);
           expect(ctaFinder, findsWidgets);
           await scrollAndTap(tester, ctaFinder);
           expect(
@@ -934,12 +934,12 @@ void main() {
 
           await scrollAndTap(
             tester,
-            find.textContaining('Shaxsiy yo‘lni ko‘rish', findRichText: true),
+            find.textContaining('Şaxsiy yölni köriş', findRichText: true),
           );
           // Contract #3: High scores (>=80%) advance/master early skills rather than
           // marking everything weak (<50%).
           expect(
-            find.textContaining('O‘zlashtirilgan', findRichText: true).evaluate().isNotEmpty ||
+            find.textContaining('Özlaştirilgan', findRichText: true).evaluate().isNotEmpty ||
                 find.textContaining('Bajarildi', findRichText: true).evaluate().isNotEmpty,
             isTrue,
             reason: '100% Math diagnostic must advance/unlock early roadmap nodes',
@@ -957,18 +957,18 @@ void main() {
             initialRoute: '/courses',
           );
 
-          await selectCourse(tester, 'IT & Kodlash');
+          await selectCourse(tester, 'IT & Kodlaş');
           await openOptionalDiagnostic(tester);
           await completePlacement(tester, highAccuracy: true);
           await scrollAndTap(
             tester,
-            find.textContaining('Shaxsiy yo‘lni ko‘rish', findRichText: true),
+            find.textContaining('Şaxsiy yölni köriş', findRichText: true),
           );
 
           expect(
-            find.textContaining('O‘zlashtirilgan', findRichText: true).evaluate().isNotEmpty ||
+            find.textContaining('Özlaştirilgan', findRichText: true).evaluate().isNotEmpty ||
                 find.textContaining('Bajarildi', findRichText: true).evaluate().isNotEmpty ||
-                find.textContaining('Takrorlash', findRichText: true).evaluate().isNotEmpty,
+                find.textContaining('Takrorlaş', findRichText: true).evaluate().isNotEmpty,
             isTrue,
             reason: '100% IT diagnostic must advance/unlock early roadmap nodes',
           );
@@ -977,7 +977,7 @@ void main() {
       );
 
       testWidgets(
-        'T2.51 double-tapping lesson TEKSHIRISH does not double-award XP',
+        'T2.51 double-tapping lesson TEKŞIRIŞ does not double-award XP',
         (tester) async {
           final recorder = await pumpBilimYolApp(
             tester,
@@ -988,11 +988,11 @@ void main() {
           await selectCourse(tester, 'Mantiq');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
 
           await scrollAndTap(
@@ -1004,7 +1004,7 @@ void main() {
             find.textContaining('Keyingi qadam', findRichText: true),
           );
           await scrollAndTap(tester, find.text('4 + 1 = 5'));
-          final checkBtn = find.textContaining('TEKSHIRISH', findRichText: true);
+          final checkBtn = find.textContaining('TEKŞIRIŞ', findRichText: true);
           await tester.tap(checkBtn);
           await tester.pump(const Duration(milliseconds: 20));
           if (checkBtn.evaluate().isNotEmpty) {
@@ -1094,23 +1094,23 @@ void main() {
           );
 
           await tester.tap(
-            find.textContaining('Qoidani sodda tushuntir', findRichText: true),
+            find.textContaining('Qoidani sodda tuşuntir', findRichText: true),
           );
           await tester.pump(const Duration(milliseconds: 50));
           expect(
-            find.bySemanticsLabel('Yo‘lchi AI yozmoqda...'),
+            find.bySemanticsLabel('Yölçi AI yozmoqda...'),
             findsOneWidget,
           );
 
           // Chip is disabled while sending -> tapping again must not increment askCalls.
           await tester.tap(
-            find.textContaining('Qoidani sodda tushuntir', findRichText: true).last,
+            find.textContaining('Qoidani sodda tuşuntir', findRichText: true).last,
           );
           await tester.pump(const Duration(milliseconds: 50));
           expect(fakeAi.askCalls, 1);
 
           completer.complete(
-            const AskTutorResponse(tutorName: 'Yo‘lchi AI', answer: 'Tayyor'),
+            const AskTutorResponse(tutorName: 'Yölçi AI', answer: 'Tayyor'),
           );
           await tester.pumpAndSettle();
           recorder.expectClean();
@@ -1118,7 +1118,7 @@ void main() {
       );
 
       testWidgets(
-        'T2.55 /ai-tutor shows error bubble and recovers via Qayta urinish',
+        'T2.55 /ai-tutor shows error bubble and recovers via Qayta uriniş',
         (tester) async {
           final fakeAi = FakeControllableAITutorService()..failAsk = true;
           final recorder = await pumpBilimYolApp(
@@ -1132,21 +1132,21 @@ void main() {
           await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
           await tester.pumpAndSettle();
 
-          expect(find.textContaining('Qayta urinish', findRichText: true), findsOneWidget);
+          expect(find.textContaining('Qayta uriniş', findRichText: true), findsOneWidget);
 
           fakeAi.failAsk = false;
           await scrollAndTap(
             tester,
-            find.textContaining('Qayta urinish', findRichText: true),
+            find.textContaining('Qayta uriniş', findRichText: true),
           );
 
-          expect(find.textContaining('qadam-baqadam yechim', findRichText: true), findsOneWidget);
+          expect(find.textContaining('qadam-baqadam yeçim', findRichText: true), findsOneWidget);
           recorder.expectClean();
         },
       );
 
       testWidgets(
-        'T2.56 YolchiAiSheet shows error state and recovers on Qayta urinish',
+        'T2.56 YolchiAiSheet shows error state and recovers on Qayta uriniş',
         (tester) async {
           final fakeAi = FakeControllableAITutorService()..failExplain = true;
           final recorder = await pumpBilimYolApp(
@@ -1159,29 +1159,29 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
           await submitLessonQuiz(tester, correct: false);
           await scrollAndTap(
             tester,
-            find.textContaining('Yo‘lchi AI tahlili', findRichText: true),
+            find.textContaining('Yölçi AI tahlili', findRichText: true),
           );
 
           expect(
-            find.textContaining('Yo‘lchi izohini yuklab bo‘lmadi', findRichText: true),
+            find.textContaining('Yölçi izohini yuklab bölmadi', findRichText: true),
             findsOneWidget,
           );
           fakeAi.failExplain = false;
           await scrollAndTap(
             tester,
-            find.textContaining('Qayta urinish', findRichText: true),
+            find.textContaining('Qayta uriniş', findRichText: true),
           );
           expect(
-            find.textContaining('Xatoni tahlil qilish', findRichText: true),
+            find.textContaining('Xatoni tahlil qiliş', findRichText: true),
             findsOneWidget,
           );
           recorder.expectClean();
@@ -1200,21 +1200,21 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
-          await tester.tap(find.byTooltip('So‘z lug‘ati'));
+          await tester.tap(find.byTooltip('Söz luğati'));
           await tester.pumpAndSettle();
 
           await tester.enterText(find.byType(TextField).last, 'two words');
-          await tester.tap(find.text('So‘zni izlash'));
+          await tester.tap(find.text('Sözni izlaş'));
           await tester.pumpAndSettle();
 
           expect(
-            find.textContaining('Bitta inglizcha so‘z kiriting', findRichText: true),
+            find.textContaining('Bitta inglizça söz kiriting', findRichText: true),
             findsOneWidget,
           );
           recorder.expectClean();
@@ -1231,7 +1231,7 @@ void main() {
           );
 
           expect(
-            find.textContaining('Hali o‘quv faoliyati qayd etilmagan', findRichText: true),
+            find.textContaining('Hali öquv faoliyati qayd etilmagan', findRichText: true),
             findsOneWidget,
           );
           expect(
@@ -1254,11 +1254,11 @@ void main() {
           await tester.enterText(fields.at(0), 'Aziza');
           await tester.enterText(fields.at(1), 'aziza@misol.uz');
           await tester.enterText(fields.at(2), 'parol123');
-          await tester.enterText(fields.at(3), 'boshqa999');
+          await tester.enterText(fields.at(3), 'boşqa999');
 
           await scrollAndTap(
             tester,
-            find.textContaining('Hisob Yaratish', findRichText: true),
+            find.textContaining('Hisob Yaratiş', findRichText: true),
           );
           expect(
             find.textContaining('mos', findRichText: true),
@@ -1279,7 +1279,7 @@ void main() {
           await tester.enterText(find.byType(TextField).first, 'not-an-email');
           await scrollAndTap(
             tester,
-            find.textContaining('Tiklash havolasini yuborish', findRichText: true),
+            find.textContaining('Tiklaş havolasini yuboriş', findRichText: true),
           );
           expect(
             find.textContaining('email', findRichText: true),
@@ -1301,13 +1301,13 @@ void main() {
           );
 
           expect(
-            find.textContaining('Nimadan boshlashni biling', findRichText: true),
+            find.textContaining('Nimadan boşlaşni biling', findRichText: true),
             findsNothing,
           );
           L10nExpect.expectAnyVisible([
             'Bugungi maqsad',
             'Fanlar katalogi',
-            'Fan tanlash',
+            'Fan tanlaş',
             'Qaysi fanni',
             'Выбрать предмет',
           ]);
@@ -1332,9 +1332,9 @@ void main() {
           expectScaffoldThemeBrightness(tester, Brightness.dark);
           L10nExpect.expectAnyVisible(L10nExpect.loginButtonRu);
           L10nExpect.expectNoneVisible([
-            'Nimadan boshlashni biling',
+            'Nimadan boşlaşni biling',
             'Знайте, с чего начать',
-            'Xush kelibsiz',
+            'Xuş kelibsiz',
           ]);
           recorder.expectClean();
         },
@@ -1354,7 +1354,7 @@ void main() {
           await completePlacement(tester, highAccuracy: true);
           await scrollAndTap(
             tester,
-            find.textContaining('Shaxsiy yo‘lni ko‘rish', findRichText: true),
+            find.textContaining('Şaxsiy yölni köriş', findRichText: true),
           );
           await openMathFunctionsLessonFromRoadmap(tester);
 
@@ -1395,11 +1395,11 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boshlayman', findRichText: true),
+            find.textContaining('Noldan boşlayman', findRichText: true),
           );
           await scrollAndTap(
             tester,
-            find.textContaining('Birinchi darsni boshlash', findRichText: true),
+            find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,

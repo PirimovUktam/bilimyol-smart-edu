@@ -71,11 +71,11 @@ export class GeminiAITutorService implements IAITutorService {
       }
 
       return {
-        tutorName: data.tutorName || 'Yo‘lchi AI',
-        title: data.title || 'Xatoni tahlil qilish',
+        tutorName: data.tutorName || 'Yölçi AI',
+        title: data.title || 'Xatoni tahlil qiliş',
         explanation: data.explanation || `Siz ${request.selectedOption} ni tanladingiz.`,
-        remediationStep: data.remediationStep || 'Mavzuni qadamma-qadam takrorlash tavsiya etiladi.',
-        suggestedAction: data.suggestedAction || 'Keling, ushbu mavzuni qisqa mashq bilan mustahkamlaymiz.',
+        remediationStep: data.remediationStep || 'Mavzuni qadamma-qadam takrorlaş tavsiya etiladi.',
+        suggestedAction: data.suggestedAction || 'Keling, uşbu mavzuni qisqa maşq bilan mustahkamlaymiz.',
         motivation: data.motivation,
         reinforcementNeeded: data.reinforcementNeeded ?? true,
         isDeterministicFallback: Boolean(data.isDeterministicFallback),
@@ -215,7 +215,7 @@ export class GeminiAITutorService implements IAITutorService {
     const questionId = request.questionId?.trim() || undefined;
     if (!message) {
       return {
-        tutorName: 'Yo‘lchi AI',
+        tutorName: 'Yölçi AI',
         answer: request.language === 'ru' ? 'Пожалуйста, напишите ваш вопрос.' : 'Iltimos, savolingizni yozing.',
         isAiGenerated: false,
         isDeterministicFallback: true,
@@ -247,7 +247,7 @@ export class GeminiAITutorService implements IAITutorService {
       }
 
       return {
-        tutorName: data.tutorName || 'Yo‘lchi AI',
+        tutorName: data.tutorName || 'Yölçi AI',
         answer: data.answer,
         isAiGenerated: Boolean(data.isAiGenerated),
         isDeterministicFallback: Boolean(data.isDeterministicFallback),
@@ -278,7 +278,7 @@ export class GeminiAITutorService implements IAITutorService {
       case 'course_eng_01':
         return publishQuestionWithRegisteredKey({
           ...base,
-          text: 'Mustahkamlash: “She is reading a book” gapida fe’l qaysi zamonida ishlatilgan?',
+          text: 'Mustahkamlaş: “She is reading a book” gapida fe’l qaysi zamonida işlatilgan?',
           options: ['Present Continuous', 'Past Simple', 'Future Simple', 'Present Perfect'],
           correctIndex: 0,
           explanation: '“is reading” — hozirgi davomiy zamon (Present Continuous).',
@@ -286,23 +286,23 @@ export class GeminiAITutorService implements IAITutorService {
       case 'course_it':
         return publishQuestionWithRegisteredKey({
           ...base,
-          text: 'Mustahkamlash: `for` sikli qaysi shart bajarilganda to‘xtaydi?',
-          options: ['Shart bajarilganda', 'Birinchi qadamda', 'Doim 10 marta', 'Faqat xato bo‘lganda'],
+          text: 'Mustahkamlaş: `for` sikli qaysi şart bajarilganda töxtaydi?',
+          options: ['Şart bajarilganda', 'Birinçi qadamda', 'Doim 10 marta', 'Faqat xato bölganda'],
           correctIndex: 0,
-          explanation: '`for` sikli berilgan shart (shartli ifoda) yolg‘on bo‘lganda to‘xtaydi.',
+          explanation: '`for` sikli berilgan şart (şartli ifoda) yolğon bölganda töxtaydi.',
         });
       case 'course_logic':
         return publishQuestionWithRegisteredKey({
           ...base,
-          text: 'Mustahkamlash: 2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?',
+          text: 'Mustahkamlaş: 2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?',
           options: ['24', '30', '32', '34'],
           correctIndex: 2,
-          explanation: 'Har bir had 2 baravar oshadi: 16 × 2 = 32.',
+          explanation: 'Har bir had 2 baravar oşadi: 16 × 2 = 32.',
         });
       case 'course_math_01':
         return publishQuestionWithRegisteredKey({
           ...base,
-          text: 'Mustahkamlash: f(x) = 3x + 2 funksiya berilgan. Agar x = 2 bo‘lsa, f(2) nechaga teng?',
+          text: 'Mustahkamlaş: f(x) = 3x + 2 funksiya berilgan. Agar x = 2 bölsa, f(2) neçaga teng?',
           formulaLatex: 'f(2) = 3(2) + 2',
           options: ['8', '6', '7', '5'],
           correctIndex: 0,
@@ -311,10 +311,10 @@ export class GeminiAITutorService implements IAITutorService {
       default:
         return publishQuestionWithRegisteredKey({
           ...base,
-          text: 'Mustahkamlash: ushbu mavzuni qayta ko‘rib chiqish va misollar yechish tavsiya etiladi.',
-          options: ['Tushundim', 'Qayta ko‘rish kerak', 'Savollarim bor', 'Yana mashq qilaman'],
+          text: 'Mustahkamlaş: uşbu mavzuni qayta körib çiqiş va misollar yeçiş tavsiya etiladi.',
+          options: ['Tuşundim', 'Qayta köriş kerak', 'Savollarim bor', 'Yana maşq qilaman'],
           correctIndex: 0,
-          explanation: 'Mavzuni mustahkamlash uchun qo‘shimcha misollar yechib ko‘ring.',
+          explanation: 'Mavzuni mustahkamlaş uçun qöşimça misollar yeçib köring.',
         });
     }
   }

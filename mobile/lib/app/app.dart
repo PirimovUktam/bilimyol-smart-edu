@@ -13,7 +13,7 @@ class BilimYolApp extends ConsumerWidget {
     final settings = ref.watch(appSettingsProvider);
 
     return MaterialApp.router(
-      title: 'BilimYo‘l Smart Edu',
+      title: 'BilimYöl Smart Edu',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
