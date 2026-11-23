@@ -165,7 +165,7 @@ async function enterEnglishStarter(context) {
   await heading('Özingizga mos fanni tanlang');
   await click(/Ingliz tili fanini tanlaş/);
   await heading('Örganiş rejangizni sozlang');
-  await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+  await main.getByRole('radio', { name: /Dars bilan boşlaş/ }).check();
   await click('Birinçi darsni boşlaş');
   await heading('Birinçi inglizça sözlar');
 

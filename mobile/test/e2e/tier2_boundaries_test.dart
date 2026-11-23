@@ -207,7 +207,7 @@ void main() {
           await selectCourse(tester, 'Matematika');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -411,7 +411,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -447,7 +447,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -568,7 +568,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -988,7 +988,7 @@ void main() {
           await selectCourse(tester, 'Mantiq');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -1152,7 +1152,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -1193,7 +1193,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,
@@ -1388,7 +1388,7 @@ void main() {
           await selectCourse(tester, 'Ingliz tili');
           await scrollAndTap(
             tester,
-            find.textContaining('Noldan boşlayman', findRichText: true),
+            find.textContaining('Dars bilan boşlaş', findRichText: true),
           );
           await scrollAndTap(
             tester,

@@ -247,7 +247,7 @@ try {
     await main.getByRole('button', { name: 'Namuna hisobi bilan kiriş', exact: true }).click();
     await main.getByRole('heading', { name: 'Özingizga mos fanni tanlang' }).waitFor();
     await main.getByRole('button', { name: /Ingliz tili fanini tanlaş/ }).click();
-    await main.getByRole('radio', { name: /Noldan boşlayman/ }).check();
+    await main.getByRole('radio', { name: /Dars bilan boşlaş/ }).check();
     await main.getByRole('button', { name: 'Birinçi darsni boşlaş', exact: true }).click();
     await main.getByRole('heading', { name: 'Birinçi inglizça sözlar' }).waitFor();
 

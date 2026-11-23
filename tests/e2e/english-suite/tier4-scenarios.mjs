@@ -647,7 +647,7 @@ export function registerTests() {
         await finishCompletionDialog(page);
 
         await helpers.selectCourse(page, 'course_math_01');
-        await main.getByRole('radio', { name: /Начинаю с нуля/i }).check();
+        await main.getByRole('radio', { name: /Начать с урока/i }).check();
         await main.getByRole('button', { name: 'Начать первый урок' }).click();
         await completeMcqLesson(page, /^([A-D]\s+)?6$/i);
 

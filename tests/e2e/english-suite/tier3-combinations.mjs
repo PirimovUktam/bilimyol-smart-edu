@@ -205,8 +205,8 @@ export function registerTests() {
 
         await helpers.pressTabUntilFocused(
           page,
-          main.getByRole('radio', { name: /Noldan boşlayman/i }),
-          'Noldan boşlayman',
+          main.getByRole('radio', { name: /Dars bilan boşlaş/i }),
+          'Dars bilan boşlaş',
         );
         await page.keyboard.press('Space');
 

@@ -7,7 +7,6 @@ import 'session_preview.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_semantic_colors.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/app_badge.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/edtech_reveal.dart';
@@ -116,8 +115,22 @@ class _LearningPlanForm extends ConsumerStatefulWidget {
   ConsumerState<_LearningPlanForm> createState() => _LearningPlanFormState();
 }
 
+enum _Start { guided, map, diagnostic }
+
 class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
-  late InitialLevel? _level = widget.profile.courseLevels[widget.course.id];
+  InitialLevel? get _saved => widget.profile.courseLevels[widget.course.id];
+  late _Start? _route = _saved == null
+      ? null
+      : _saved == InitialLevel.beginner
+      ? _Start.guided
+      : _Start.map;
+  InitialLevel? get _level => switch (_route) {
+    null => null,
+    _Start.guided => InitialLevel.beginner,
+    _Start.diagnostic => _saved ?? InitialLevel.beginner,
+    _Start.map =>
+      _saved == InitialLevel.advanced ? _saved : InitialLevel.intermediate,
+  };
   late OnboardingGoal _goal = widget.profile.goal;
   late int _minutes = [15, 30, 60].contains(widget.profile.dailyMinutes)
       ? widget.profile.dailyMinutes
@@ -135,7 +148,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     });
   }
 
-  Future<void> _start({bool diagnostic = false}) async {
+  Future<void> _start() async {
     final level = _level;
     final s = _resolveStrings(context);
     if (_saving || level == null) return;
@@ -157,14 +170,15 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
           ref.read(courseStateNotifierProvider).activeCourse?.id != course.id) {
         return;
       }
-      if (diagnostic && level != InitialLevel.beginner) {
+      if (_route == _Start.diagnostic) {
         context.pushReplacement('/placement');
         return;
       }
 
-      final starter = pendingFoundationLesson(
+      final starter = resolveNextLearningLesson(
         course,
         ref.read(learnerStateNotifierProvider).valueOrNull,
+        ref.read(roadmapStateNotifierProvider).valueOrNull,
       );
       if (level == InitialLevel.beginner && starter != null) {
         await ref
@@ -209,45 +223,55 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
     );
     final hasPendingStarter =
         pendingFoundationLesson(widget.course, draft) != null;
+    final guidedLesson =
+        beginner &&
+        resolveNextLearningLesson(
+              widget.course,
+              draft,
+              ref.watch(roadmapStateNotifierProvider).valueOrNull,
+            ) !=
+            null;
 
-    final levelChoices = [
+    final routes = [
       (
-        level: InitialLevel.beginner,
-        title: s.startFromZero,
-        detail: s.levelBeginnerDesc,
-        pill: s.levelPillBeginner,
-        badgeVariant: AppBadgeVariant.emerald,
-        icon: Icons.spa_outlined,
+        _Start.guided,
+        s.entryGuided,
+        s.entryGuidedHint,
+        Icons.menu_book_rounded,
       ),
+      (_Start.map, s.entryMap, s.entryMapHint, Icons.route_outlined),
       (
-        level: InitialLevel.intermediate,
-        title: s.levelIntermediateTitle,
-        detail: s.levelIntermediateDesc,
-        pill: s.levelPillIntermediate,
-        badgeVariant: AppBadgeVariant.blue,
-        icon: Icons.trending_up_rounded,
-      ),
-      (
-        level: InitialLevel.advanced,
-        title: s.levelAdvancedTitle,
-        detail: s.levelAdvancedDesc,
-        pill: s.levelPillAdvanced,
-        badgeVariant: AppBadgeVariant.teal,
-        icon: Icons.bolt_rounded,
+        _Start.diagnostic,
+        s.entryDiagnostic,
+        s.entryDiagnosticHint,
+        Icons.fact_check_outlined,
       ),
     ];
-
     final goals = {
-      OnboardingGoal.mastery: s.goalMastery,
-      OnboardingGoal.examPrep: s.goalExamPrep,
-      OnboardingGoal.skillsBoost: s.goalSkillsBoost,
+      OnboardingGoal.mastery: s.entryMastery,
+      OnboardingGoal.examPrep: s.entryExamPrep,
+      OnboardingGoal.skillsBoost: s.entrySkillsBoost,
+    };
+    final goalHint = switch (_goal) {
+      OnboardingGoal.examPrep => s.entryExamHint,
+      OnboardingGoal.skillsBoost => s.entryPracticeHint,
+      OnboardingGoal.mastery => switch (widget.course.subject) {
+        SubjectType.logic => s.entryLogic,
+        SubjectType.english => s.entryEnglish,
+        SubjectType.mathematics => s.entryMathematics,
+        SubjectType.it => s.entryIt,
+      },
     };
 
     return Center(
       child: _PlanPanel(
         action: AppButton(
-          text: beginner && hasPendingStarter
+          text: _route == _Start.diagnostic
+              ? s.entryTestAction
+              : beginner && hasPendingStarter
               ? s.startFirstLesson
+              : guidedLesson
+              ? s.continueLearning
               : s.openRoadmap,
           isFullWidth: true,
           size: AppButtonSize.large,
@@ -292,7 +316,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    s.onboardingQuestion,
+                    s.entryStart,
                     style: AppTypography.ui(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -302,7 +326,7 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    s.onboardingSubtitle,
+                    s.entryIntro,
                     style: AppTypography.ui(
                       fontSize: 14,
                       color: c.graphite,
@@ -313,121 +337,77 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
               ),
             ),
             const SizedBox(height: 18),
-            for (final (idx, choice) in levelChoices.indexed) ...[
-              EdTechReveal(
-                index: idx + 1,
+            for (final (route, title, hint, icon) in routes)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Semantics(
-                  button: true,
-                  selected: _level == choice.level,
+                  selected: route == _route,
                   inMutuallyExclusiveGroup: true,
-                  label: '${choice.title}, ${choice.pill}',
                   child: AppCard(
-                    padding: const EdgeInsets.all(14),
-                    borderColor: _level == choice.level ? c.brand : c.hairline,
-                    borderWidth: _level == choice.level ? 1.8 : 1.0,
-                    backgroundColor: _level == choice.level
+                    padding: const EdgeInsets.all(12),
+                    borderColor: route == _route ? c.brand : c.hairline,
+                    backgroundColor: route == _route
                         ? Color.alphaBlend(c.brandSoft, c.paper)
                         : c.paper,
                     onTap: _saving
                         ? null
-                        : () => setState(() => _level = choice.level),
+                        : () => setState(() => _route = route),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Icon(
-                            _level == choice.level
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: _level == choice.level
-                                ? c.brand
-                                : c.slatefine,
-                            size: 22,
-                          ),
-                        ),
+                        Icon(icon, color: c.brand),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Text(
-                                    choice.title,
-                                    style: AppTypography.ui(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: c.ink,
-                                    ),
-                                  ),
-                                  AppBadge(
-                                    text: choice.pill,
-                                    variant: choice.badgeVariant,
-                                    icon: Icon(
-                                      choice.icon,
-                                      size: 12,
-                                      color: switch (choice.badgeVariant) {
-                                        AppBadgeVariant.emerald =>
-                                          c.successText,
-                                        AppBadgeVariant.teal => c.path,
-                                        _ => c.isDark ? c.brandStrong : c.brand,
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 5),
                               Text(
-                                choice.detail,
+                                title,
+                                style: AppTypography.ui(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.ink,
+                                ),
+                              ),
+                              Text(
+                                hint,
                                 style: AppTypography.ui(
                                   fontSize: 13,
                                   color: c.graphite,
-                                  height: 1.4,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        if (route == _route)
+                          Icon(Icons.check_rounded, color: c.brand),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-            ],
+            const SizedBox(height: 14),
+            Text(s.entryGoal, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            DropdownButtonFormField<OnboardingGoal>(
-              initialValue: _goal,
-              isExpanded: true,
-              dropdownColor: c.paper,
-              style: AppTypography.ui(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: c.ink,
-              ),
-              decoration: InputDecoration(labelText: s.goalLabel),
-              items: [
-                for (final entry in goals.entries)
-                  DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(
-                      entry.value,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.ui(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: c.ink,
-                      ),
-                    ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final goal in goals.entries)
+                  ChoiceChip(
+                    label: Text(goal.value),
+                    selected: _goal == goal.key,
+                    onSelected: _saving
+                        ? null
+                        : (_) => setState(() => _goal = goal.key),
                   ),
               ],
-              onChanged: _saving
-                  ? null
-                  : (value) => setState(() => _goal = value ?? _goal),
+            ),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                goalHint,
+                style: AppTypography.ui(fontSize: 13, color: c.graphite),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -499,12 +479,26 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
               ],
             ),
             const SizedBox(height: 18),
-            SessionPreview(
-              course: widget.course,
-              profile: draft,
-              sample: _level == null,
-              strings: s,
+            Text(
+              s.sharedPlanTiming,
+              style: AppTypography.ui(fontSize: 12, color: c.graphite),
             ),
+            const SizedBox(height: 12),
+            if (_route == _Start.diagnostic)
+              AppCard(
+                child: ListTile(
+                  leading: const Icon(Icons.fact_check_outlined),
+                  title: Text(s.entryTestFirst),
+                  subtitle: Text(s.entryTestExplain),
+                ),
+              )
+            else
+              SessionPreview(
+                course: widget.course,
+                profile: draft,
+                sample: _level == null,
+                strings: s,
+              ),
             const SizedBox(height: 16),
             if (_error case final message?)
               Padding(
@@ -529,15 +523,6 @@ class _LearningPlanFormState extends ConsumerState<_LearningPlanForm> {
                   ),
                 ),
               ),
-            if (_level != null && !beginner) ...[
-              const SizedBox(height: 10),
-              AppButton(
-                text: s.optionalDiagnosticBtn,
-                isFullWidth: true,
-                variant: AppButtonVariant.outline,
-                onPressed: _saving ? null : () => _start(diagnostic: true),
-              ),
-            ],
           ],
         ),
       ),

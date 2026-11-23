@@ -57,15 +57,15 @@ export function registerTests() {
         const main = page.getByRole('main');
 
         await helpers.selectCourse(page, 'course_eng_01');
-        await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
+        await main.getByRole('radio', { name: /Mavzuni özim tanlayman/i }).check();
         await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_it');
-        await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
+        await main.getByRole('radio', { name: /Mavzuni özim tanlayman/i }).check();
         await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_math_01');
-        await main.getByRole('radio', { name: /Asoslarini bilaman/i }).check();
+        await main.getByRole('radio', { name: /Mavzuni özim tanlayman/i }).check();
         await main.getByRole('button', { name: 'Ta’lim yölini oçiş' }).click();
 
         await helpers.selectCourse(page, 'course_eng_01');
@@ -142,7 +142,7 @@ export function registerTests() {
         await helpers.selectCourse(page, 'course_math_01');
         const main = page.getByRole('main');
 
-        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('radio', { name: /Dars bilan boşlaş/i }).check();
         await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
         await completeMcqLesson(page, /^([A-D]\s+)?6$/i);
 
@@ -154,7 +154,7 @@ export function registerTests() {
           .getByRole('heading', { name: /Örganiş rejangizni sozlang/i })
           .first()
           .waitFor({ state: 'visible' });
-        await main.getByRole('radio', { name: /Noldan boşlayman/i }).check();
+        await main.getByRole('radio', { name: /Dars bilan boşlaş/i }).check();
         await main.getByRole('button', { name: 'Birinçi darsni boşlaş' }).click();
         await main
           .getByRole('heading', { name: 'Birinçi inglizça sözlar' })

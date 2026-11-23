@@ -874,7 +874,7 @@ void main() {
 
       await tester.tap(find.text('Ingliz tili').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Noldan boşlayman'));
+      await tester.tap(find.text('Dars bilan boşlaş'));
       await tester.pumpAndSettle();
       final startBtn = find.text('Birinçi darsni boşlaş');
       await tester.scrollUntilVisible(startBtn.hitTestable(), 180);

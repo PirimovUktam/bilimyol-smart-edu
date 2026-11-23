@@ -1105,7 +1105,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('С чего хотите начать?'), findsOneWidget);
+      expect(find.text('С чего начнём?'), findsOneWidget);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
