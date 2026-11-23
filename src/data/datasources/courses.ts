@@ -1,3 +1,4 @@
+import logic from '../../../content/logic/published.json';
 import { Course } from '@/domain/entities/Course';
 import { ENGLISH_A1_CURRICULUM_META } from './english/a1';
 import { ENGLISH_ALL_LESSONS_ORDER } from './english';
@@ -49,12 +50,12 @@ export const SEED_COURSES: Course[] = [
     id: 'course_logic',
     title: 'Mantiq',
     subject: 'logic',
-    description: 'Mantiqiy fikrlaş, deduksiya va intellektual boşqotirmalar.',
+    description: 'Mulohaza, dalil va qonuniyatlarni 6 bosqiçda amaliy vaziyatlar bilan örganing.',
     iconName: 'Brain',
     primaryColor: '#10B981',
     secondaryColor: '#059669',
     skills: ['skill_logic_puzzles', 'skill_logic_patterns'],
-    lessons: ['lesson_logic_puzzles_01', 'lesson_logic_patterns_01', 'lesson_logic_starter', 'lesson_logic_foundation_02'],
+    lessons: logic.lessons.map((lesson) => lesson.id),
     starterLessonId: 'lesson_logic_starter',
     foundationLessonIds: ['lesson_logic_starter', 'lesson_logic_foundation_02'],
     totalStudentsEstimate: 850,

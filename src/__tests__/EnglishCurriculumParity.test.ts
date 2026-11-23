@@ -2175,6 +2175,7 @@ dartParser.parseFile('mobile/lib/data/datasources/english/b1_roadmap_data.dart')
 dartParser.parseFile('mobile/lib/data/datasources/english/placement_questions_data.dart');
 dartParser.parseFile('mobile/lib/data/datasources/questions_data.dart');
 dartParser.parseFile('mobile/lib/data/datasources/starter_lessons_data.dart');
+dartParser.parseFile('mobile/lib/data/datasources/logic_curriculum.dart');
 dartParser.parseFile('mobile/lib/data/datasources/lessons_data.dart');
 dartParser.parseFile('mobile/lib/data/datasources/roadmaps_data.dart');
 dartParser.parseFile('mobile/lib/data/datasources/courses_data.dart');

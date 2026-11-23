@@ -1,0 +1,180 @@
+{
+  "stages": [
+    {"uz":"Mulohaza","ru":"Высказывания","diagram":"truth"},
+    {"uz":"Mantiqiy boğlovçilar","ru":"Связки","diagram":"gates"},
+    {"uz":"Xulosa va qarşi misol","ru":"Вывод и контрпример","diagram":"counterexample"},
+    {"uz":"Dalil va da’vo","ru":"Аргумент и данные","diagram":"argument"},
+    {"uz":"Qonuniyatlar","ru":"Закономерности","diagram":"patterns"},
+    {"uz":"Tatbiq","ru":"Применение","diagram":"schedule"}
+  ],
+  "lessons": [
+    {
+      "id": "lesson_logic_starter",
+      "node": "node_logic_starter",
+      "stage": 1,
+      "skill": "skill_logic_puzzles",
+      "title": ["Rost va yolğon gaplar","Истина и ложь"],
+      "hook": ["Kutubxona e’lonida «Bugun oçiq» va «Soat neça?» yozilgan. Qaysi birini tekşira olasiz?","На объявлении «Сегодня открыто» и «Который час?». Что можно проверить?"],
+      "example": ["E’lonni jadval bilan tekşiring. «Bugun oçiq» rost yoki yolğon böladi. Savol esa ma’lumot söraydi.","Сверьте объявление с расписанием. «Сегодня открыто» истинно или ложно. Вопрос запрашивает сведения."],
+      "checks": [
+        [["Qaysi gapni rost yoki yolğon deyiş mumkin? A) Soat neça? B) Avtobus soat 9 da ketadi. C) Eşikni yoping.","Что может быть истинным или ложным? A) Который час? B) Автобус уходит в 9. C) Закройте дверь."],1,["B jadval bilan tekşiriladi. A savol, C buyruq.","B проверяется по расписанию. A — вопрос, C — приказ."]],
+        [["Soat 9 da belgilangan avtobus 9:15 da ketdi. «U 9 da ketdi» qanday? A) Rost B) Savol C) Yolğon","Автобус отправился в 9:15. «Он отправился в 9» — это A) истина B) вопрос C) ложь."],2,["Gap tekşiriladi, lekin haqiqiy vaqtga mos kelmaydi.","Высказывание можно проверить, но оно не соответствует времени."]],
+        [["«Derazani oçing» qaysi turga kiradi? A) Buyruq B) Mulohaza C) Savol","«Откройте окно» — это A) указание B) высказывание C) вопрос."],0,["Buyruq harakatni söraydi, fakt bildirmaydi.","Указание просит выполнить действие и ничего не утверждает."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_foundation_02",
+      "node": "node_logic_foundation_02",
+      "stage": 1,
+      "skill": "skill_logic_puzzles",
+      "title": ["Mulohazani inkor qiliş","Отрицание высказывания"],
+      "hook": ["Guruhdagi hamma odam keldi degan gapni bitta dalil bilan qanday rad etasiz?","Как одним наблюдением опровергнуть фразу «Все пришли»?"],
+      "example": ["«Hamma keldi» gapining inkori «Kamida bir kişi kelmadi». Bitta kelmagan kişi kifoya.","Отрицание «Все пришли» — «Хотя бы один не пришёл». Достаточно одного отсутствующего."],
+      "checks": [
+        [["«Barça daftarlar kök» gapining inkori qaysi? A) Heç biri kök emas B) Kamida bittasi kök emas C) Bittasi kök","Отрицание «Все тетради синие»: A) ни одна не синяя B) хотя бы одна не синяя C) одна синяя."],1,["Bitta kök bölmagan daftar umumiy da’voni rad etadi.","Достаточно одной несиней тетради."]],
+        [["«Heç kim keçikmadi» gapini rad eting. A) Kamida bir kişi keçikdi B) Hamma keçikdi C) Hamma vaqtida keldi","Опровергните «Никто не опоздал». A) хотя бы один опоздал B) все опоздали C) все пришли вовремя."],0,["Hamma keçikişi şart emas. Bitta holat yetarli.","Все опаздывать не обязаны. Достаточно одного случая."]],
+        [["«Kamida bitta fayl tayyor» inkori qaysi? A) Hamma fayl tayyor B) Ayrimlari tayyor C) Heç biri tayyor emas","Отрицание «Хотя бы один файл готов»: A) все готовы B) некоторые готовы C) ни один не готов."],2,["Bitta ham tayyor bölmasa, dastlabki gap yolğon.","Если ни один не готов, исходное утверждение ложно."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_connectives",
+      "node": "node_logic_connectives",
+      "stage": 2,
+      "skill": "skill_logic_puzzles",
+      "title": ["«Va» hamda «yoki»","«И» и «или»"],
+      "hook": ["Sayohatga daftar va ruçka kerak. Faqat bittasini olganingizda şart bajariladimi?","Для поездки нужны тетрадь и ручка. Достаточно взять одно?"],
+      "example": ["«A va B» uçun ikkalasi ham kerak. Darsdagi «A yoki B» kamida bittasini anglatadi. Ikki javob rost bölişi ham mumkin.","Для «A и B» нужны оба условия. Здесь «A или B» означает хотя бы одно и допускает оба."],
+      "checks": [
+        [["Ruçka bor, daftar yöq. «Daftar va ruçka bor» qaysi? A) Rost B) Yolğon C) Bilib bölmaydi","Ручка есть, тетради нет. «Есть и тетрадь, и ручка» — A) истинно B) ложно C) неизвестно."],1,["«Va»da bitta yolğon şart butun gapni yolğon qiladi.","Для «и» ложность одного условия делает ложным всё высказывание."]],
+        [["Ham kitob, ham jurnal bor. «Kamida bittasi bor» qaysi? A) Yolğon B) Noma’lum C) Rost","Есть и книга, и журнал. «Есть хотя бы одно» — A) ложно B) неизвестно C) истинно."],2,["Ikkita mavjud narsa ham kamida bitta degani.","Два предмета удовлетворяют условию «хотя бы один»."]],
+        [["Faylni USB yoki email orqali yuboriş mumkin, ikkalasi ham ruxsat. Email yetadimi? A) Ha B) Yöq, ikkalasi şart C) Faqat USB","Разрешены USB и email, достаточно любого. Хватит ли email? A) да B) нет, нужны оба C) только USB."],0,["Email berilgan ikki imkoniyatdan biri.","Email — один из двух разрешённых способов."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_puzzles_01",
+      "node": "node_logic_puzzles",
+      "stage": 2,
+      "skill": "skill_logic_puzzles",
+      "title": ["Şartdan töğri xulosa","Вывод из условия"],
+      "hook": ["«Agar iş topşirilsa, tasdiq keladi». İş topşirilgan. Endi nimani kutasiz?","«Если работа отправлена, приходит подтверждение». Работа отправлена. Чего ждать?"],
+      "example": ["«Agar A bölsa, B» qoidasi va A ma’lum bölsa, B kelib çiqadi. B ning özi A ni isbotlamaydi.","Из «если A, то B» и известного A следует B. Само B не доказывает A."],
+      "checks": [
+        [["Qoidaga köra elektr uzilsa, ogohlantiriş yonadi. Elektr uzildi. A) Ogohlantiriş yonadi B) Yonmaydi C) Noma’lum","При отключении электричества загорается сигнал. Электричество отключилось. A) сигнал загорится B) не загорится C) неизвестно."],0,["Qoidada yetarli şart bajarildi.","Достаточное условие выполнено."]],
+        [["Agar yağingarçilik bölsa, musobaqa zalda. Musobaqa zalda. Nima aniq? A) Yağingarçilik böldi B) U bölmadi C) Sabab noma’lum","Если осадки, соревнование в зале. Соревнование в зале. Что известно? A) были осадки B) осадков не было C) причина неизвестна."],2,["Zal tanlanişining boşqa sababi ham bölişi mumkin.","Зал могли выбрать по другой причине."]],
+        [["Agar ruxsat berilsa, karta faollaşadi. Ruxsat berildi. A) Karta faol emas B) Karta faol C) Sabab noma’lum","При выдаче разрешения карта активируется. Разрешение выдано. A) карта неактивна B) карта активна C) неизвестно."],1,["A bajarilgani B ni kafolatlaydi.","Выполнение A гарантирует B."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_reverse",
+      "node": "node_logic_reverse",
+      "stage": 3,
+      "skill": "skill_logic_puzzles",
+      "title": ["Teskari xulosani tekşiriş","Проверка обратного вывода"],
+      "hook": ["Agar avtobus yölga çiqsa, çiroği yonadi. Çiroq yonmagan. Avtobus yölga çiqqanmi?","Если автобус выехал, горит его фонарь. Фонарь не горит. Автобус выехал?"],
+      "example": ["Agar A ⇒ B va B yolğon bölsa, A ham yolğon. A yolğon bölsa, B haqida umumiy xulosa yöq.","Из A ⇒ B и отсутствия B следует отсутствие A. Из отсутствия A вывод о B не следует."],
+      "checks": [
+        [["Karta işlasa, panel yaşil yonadi. Panel yaşil emas. A) Karta işlaydi B) İşlamaydi C) Noma’lum","Рабочая карта включает зелёный индикатор. Индикатор не зелёный. A) карта работает B) не работает C) неизвестно."],1,["Karta işlaganida panel yaşil bölar edi.","При рабочей карте индикатор был бы зелёным."]],
+        [["«Agar kutubxona oçiq bölsa, çiroği yonadi». U yopiq. Çiroq qanday? A) Öçgan B) Yonib turibdi C) Noma’lum","Если библиотека открыта, горит свет. Она закрыта. Что со светом? A) погашен B) горит C) неизвестно."],2,["Yopiq binoda ham navbatçi çiroqni yoqib qöyişi mumkin.","Свет мог оставить дежурный."]],
+        [["Agar fayl yuklansa, röyxatda körinadi. Röyxatda yöq. A) Yuklanmagan B) Yuklangan C) Xulosa yöq","Загруженный файл есть в списке. Его нет в списке. A) не загружен B) загружен C) вывода нет."],0,["Qoidaga zid holatni A ni inkor qilib yeçasiz.","По правилу отсутствие результата исключает исходное условие."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_counterexample",
+      "node": "node_logic_counterexample",
+      "stage": 3,
+      "skill": "skill_logic_puzzles",
+      "title": ["Qarşi misol","Контрпример"],
+      "hook": ["«Barça juft sonlar 4 ga bölinadi» degan gapni tekşiring.","Проверьте утверждение «Все чётные числа делятся на 4»."],
+      "example": ["6 juft, lekin 4 ga bölinmaydi. U da’voning doirasiga kiradi va aytilgan xususiyatga ega emas.","6 — чётное, но на 4 не делится. Оно входит в область утверждения и нарушает свойство."],
+      "checks": [
+        [["«Barça törtburçaklar kvadrat» gapiga qarşi misol. A) Uçburçak B) Kvadrat C) Tomonlari 2 va 5 töğri törtburçak","Контрпример к «Все четырёхугольники — квадраты»: A) треугольник B) квадрат C) прямоугольник 2 на 5."],2,["C törtburçak, tomonlari teng emas.","C — четырёхугольник с неравными сторонами."]],
+        [["«Barça juft sonlar 10 dan katta» gapiga qarşi misol. A) 6 B) 11 C) 12","Контрпример к «Все чётные числа больше 10»: A) 6 B) 11 C) 12."],0,["6 juft va 10 dan kiçik.","6 — чётное и меньше 10."]],
+        [["«Barça A lar B» ga qarşi misol nimaga ega? A) Faqat B B) A, lekin B emas C) A va B","Каким должен быть контрпример к «Все A — B»? A) только B B) A, но не B C) A и B."],1,["Misol da’voning A doirasida bölişi kerak.","Пример должен относиться к области A."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_argument_map",
+      "node": "node_logic_argument_map",
+      "stage": 4,
+      "skill": "skill_logic_puzzles",
+      "title": ["Dalil xaritasi","Карта аргумента"],
+      "hook": ["Xabarda xulosani toping va uni qaysi ikki gap birga asoslaşini köring.","Найдите вывод в сообщении и два суждения, которые вместе его поддерживают."],
+      "example": ["Barça olma meva. Bu olma. Ikkala dalil birga «bu meva» xulosasini beradi.","Все яблоки — фрукты. Это яблоко. Вместе эти посылки дают вывод «Это фрукт»."],
+      "checks": [
+        [["Barça musobaqa iştirokçilari röyxatda. Zebo musobaqada qatnaşadi. Xulosa? A) Zebo röyxatda B) Zebo ğolib C) Hamma Zebo bilan bir guruhda","Все участники в списке. Зебо участвует. Вывод: A) Зебо в списке B) Зебо победит C) все в одной группе с Зебо."],0,["Ikki dalil röyxatga oid, ğolibga oid dalil yöq.","Общие сведения и частный случай дают вывод о списке."]],
+        [["«Sumkada uç kitob, men bittasini oldim, demak ikkita qoldi.» Xulosa qaysi? A) Uç kitob bor edi B) Bittasini oldim C) Ikkita qoldi","«В сумке было три книги, я взял одну, значит осталось две». Вывод: A) было три B) взял одну C) осталось две."],2,["C avvalgi ikkita gap asosida kelib çiqadi.","C следует из первых двух суждений."]],
+        [["«Bu A. Barça A lar B» ni nima yakunlaydi? A) Bu A emas B) Bu B C) Hamma B lar A","«Это A. Все A — B». Вывод: A) это не A B) это B C) все B — A."],1,["A ga tegişli obyektga umumiy qoida tatbiq etiladi.","Общее правило применяется к объекту A."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_evidence",
+      "node": "node_logic_evidence",
+      "stage": 4,
+      "skill": "skill_logic_puzzles",
+      "title": ["Dalilning çegarasi","Граница доказательства"],
+      "hook": ["«Tekşirilgan ikki sinfda usul foyda berdi» degan xabarni öqing. Butun maktab haqida nima deyiş mumkin?","«В двух проверенных классах метод помог». Что можно сказать обо всей школе?"],
+      "example": ["Ma’lumot ikki sinfni qamrab oladi. Boşqa sinflarga xulosa yoyişdan oldin ularni ham tekşiramiz.","Данные относятся к двум классам. Для вывода о других классах нужны их данные."],
+      "checks": [
+        [["Uç avtobusdan biri keçikdi. Nima aniq? A) Hamma avtobus keçikadi B) Uçta kuzatuvda bitta keçikiş bor C) Ertaga ham bittasi keçikadi","Один из трёх наблюдаемых автобусов опоздал. Что установлено? A) все опаздывают B) в трёх наблюдениях одно опоздание C) завтра один опоздает."],1,["B da’vo kuzatuvlar doirasida qoladi.","B остаётся в пределах наблюдений."]],
+        [["Xabar «barça içimliklar sovuq» deydi. Eng mos tekşiruv? A) Xabarning layklarini sanaş B) Bitta rasmni köriş C) Har bir içimlik haroratini ölçaş","«Все напитки холодные». Как это проверить? A) подсчитать лайки B) посмотреть одно фото C) измерить температуру каждого."],2,["Ölçov aynan da’vodagi haroratni va töliq doirani tekşiradi.","Измерение проверяет требуемое свойство у всех объектов."]],
+        [["Bitta maktabdan olingan natija haqida qaysi gap ehtiyotkor? A) Şu maktabda kuzatildi B) Butun şaharda rost C) Keyingi yilda ham aynan şunday","Как осторожно описать данные одной школы? A) наблюдали в этой школе B) так во всём городе C) так же будет в следующем году."],0,["Dalilning joy va vaqt doirasini saqlang.","Сохраняйте границы данных по месту и времени."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_patterns_01",
+      "node": "node_logic_patterns",
+      "stage": 5,
+      "skill": "skill_logic_patterns",
+      "title": ["Ketma-ketlikdagi özgariş","Изменения в последовательности"],
+      "hook": ["Bir daftar 3 ming, ikkitasi 6 ming, uçtasi 9 ming. Narxdagi har bir qadamni yozing.","Одна тетрадь стоит 3 тысячи, две — 6, три — 9. Как меняется стоимость?"],
+      "example": ["3 → 6 → 9. Har safar +3. Keyingi qiymat 12. Qoidani ayting, söng yangi hadni hisoblang.","3 → 6 → 9. Каждый раз +3. Далее 12. Сначала назовите правило, затем считайте."],
+      "checks": [
+        [["Qoida har qadamda +4. 2, 6, 10, … Keyingi? A) 12 B) 14 C) 16","Правило +4. 2, 6, 10, … Что дальше? A) 12 B) 14 C) 16."],1,["10 + 4 = 14.","10 + 4 = 14."]],
+        [["Qoida har qadamda ×2. 3, 6, 12, … Keyingi? A) 15 B) 18 C) 24","Правило ×2. 3, 6, 12, … Что дальше? A) 15 B) 18 C) 24."],2,["12 ni ikki baravar qilsak, 24 böladi.","Удвоение 12 даёт 24."]],
+        [["10, 7, 4. Har gal bir xil farq. Qaysi qoida? A) −3 B) +3 C) ÷3","10, 7, 4. Разность постоянна. Какое правило? A) −3 B) +3 C) ÷3."],0,["Har ikki oraliqda ham uç kamaygan.","На обоих переходах число уменьшилось на три."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_rules",
+      "node": "node_logic_rules",
+      "stage": 5,
+      "skill": "skill_logic_patterns",
+      "title": ["Bir neçta qoida","Несколько возможных правил"],
+      "hook": ["Qisqa ketma-ketlikka ikki xil qoida ham mos kelişi mumkin. Ularni qaysi yangi had ajratadi?","К короткой последовательности могут подходить два правила. Какой новый член их различит?"],
+      "example": ["2, 4, 6 dan söng «har doim +2» 8 ni beradi, «2,4,6 takrorlanadi» 2 ni beradi. Törtinçi had qoidalarni ajratadi.","После 2, 4, 6 правило «всегда +2» даёт 8, а повтор «2, 4, 6» даёт 2. Четвёртый член различает правила."],
+      "checks": [
+        [["2,4,6,2 berildi. Mos qoida? A) +2 B) 2,4,6 takrori C) ×2","Дано 2, 4, 6, 2. Какое правило подходит? A) +2 B) повтор 2, 4, 6 C) ×2."],1,["+2 törtinçi joyda 8 beradi.","Правило +2 дало бы четвёртым числом 8."]],
+        [["1,2,4. «×2» va «+1,+2,+1,+2…» farazlari. Keyingi had 8 bölsa, qaysi biri mos? A) ×2 B) Ikkinçi C) Ikkalasi","1, 2, 4. Гипотезы: «×2» и «+1, +2, +1, +2…». Следующий член 8. Что подходит? A) ×2 B) второе C) оба."],0,["Ikkinçi qoida 4 dan söng 5 ni beradi.","Второе правило дало бы 5."]],
+        [["Ikki faraz bir xil navbatdagi natijani beradi. Eng yaxşi qadam? A) Ilk farazni tanlaş B) Ikkalasi ham isbotlangan deyiş C) Başorat farq qiladigan navbatni tekşiriş","Две гипотезы дают одинаковый ближайший результат. Как их различить? A) выбрать первую B) принять обе как доказанные C) проверить шаг, где прогнозы расходятся."],2,["Farqlovçi ma’lumot taxminlarni sinaş imkonini beradi.","Различающее наблюдение позволяет проверить гипотезы."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_constraints",
+      "node": "node_logic_constraints",
+      "stage": 6,
+      "skill": "skill_logic_patterns",
+      "title": ["Çeklovli jadval","Расписание с ограничениями"],
+      "hook": ["Uçta tadbir bir vaqtda bölmasligi kerak. Qaysi örinlardan boşlaş qulay?","Три события не могут иметь одно время. С чего начать расстановку?"],
+      "example": ["A B dan oldin, C oxirida. Avval C ni joylang. Qolgan örinlarda A, B böladi.","A раньше B, C последний. Сначала поставьте C. Оставшиеся места займут A и B."],
+      "checks": [
+        [["A B dan oldin, C oxirida. Mos jadval? A) B,A,C B) A,B,C C) C,A,B","A раньше B, C последний. Подходящий порядок: A) B, A, C B) A, B, C C) C, A, B."],1,["Har ikki şart birga bajarilişi kerak.","Оба ограничения должны выполняться одновременно."]],
+        [["D birinçi emas va F oxirida. Boşqa şart yöq. Mos jadval? A) E,D,F B) D,E,F C) E,F,D","D не первый, F последний. Подходящий порядок: A) E, D, F B) D, E, F C) E, F, D."],0,["D ikkinçi, F uçinçi. Ikkala şart bajarildi.","D второй, F третий. Оба условия выполнены."]],
+        [["A dan keyin darhol B va C A dan oldin. Mos jadval? A) A,C,B B) A,B,C C) C,A,B","B сразу после A, C раньше A. Порядок: A) A, C, B B) A, B, C C) C, A, B."],2,["A va B yonma-yon, C esa oldinda.","A и B соседние, C идёт раньше."]]
+      ]
+    },
+    {
+      "id": "lesson_logic_capstone",
+      "node": "node_logic_capstone",
+      "stage": 6,
+      "skill": "skill_logic_patterns",
+      "title": ["Yakuniy mantiq vaziyati","Итоговая логическая задача"],
+      "hook": ["Maktab xabarida «Ruxsatli jamoalar zalga kiradi, binobarin zaldagi hamma ruxsatli» deyildi. Qaysi qadam dalilsiz?","«Группы с разрешением входят в зал, значит у всех в зале есть разрешение». Где необоснованный шаг?"],
+      "example": ["Ruxsat zalga kiriş uçun yetarli. Ammo ruxsatsiz tomoşabin ham zalda bölsa, «zaldagi hamma ruxsatli» xulosasi yolğon.","Разрешения достаточно для входа. Зритель без разрешения в зале опровергает вывод «У всех в зале есть разрешение»."],
+      "checks": [
+        [["Qoidada «Agar maşq bitgan bölsa, belgi çiqadi». Belgi yöq. Xulosa? A) Maşq bitmagan B) Maşq bitgan C) Noma’lum","«Если упражнение закончено, появляется отметка». Отметки нет. A) упражнение не закончено B) закончено C) неизвестно."],0,["A bajarilganda B çiqardi, şuning uçun A bajarilmagan.","При выполнении A появился бы B, поэтому A не выполнено."]],
+        [["«Barça uçraşuv ertalab» xabarini nima rad etadi? A) Bir ertalabgi uçraşuv B) Uçta ertalabgi uçraşuv C) Bir keçki uçraşuv","Что опровергает «Все встречи утром»? A) одна утренняя встреча B) три утренних встречи C) одна вечерняя встреча."],2,["Bitta keçki uçraşuv ham umumiy da’voni rad etadi.","Одной вечерней встречи достаточно для опровержения."]],
+        [["Ikki jamoadan söraldi, ikkalasi yangi jadvalni yoqtirdi. Isbotlangan xulosa? A) Hamma yoqtirdi B) Söralgan ikki jamoa yoqtirdi C) Heç kim qarşi emas","Опросили две команды, обе одобрили график. Установлено: A) всем нравится B) двум опрошенным нравится C) никто не против."],1,["Dalil faqat ikki jamoani qamragan.","Данные охватывают только две команды."]]
+      ]
+    }
+  ]
+}

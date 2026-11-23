@@ -1,3 +1,4 @@
+import logic from '../../../content/logic/published.json';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { ENGLISH_ALL_ROADMAP_NODES } from './english';
 
@@ -101,37 +102,5 @@ export const SEED_ROADMAP_NODES: Record<string, LearningPathNode[]> = {
     },
   ],
 
-  // =========================================================================
-  // LOGIC — adaptive learning path
-  // =========================================================================
-  course_logic: [
-    {
-      id: 'node_logic_puzzles',
-      courseId: 'course_logic',
-      skillId: 'skill_logic_puzzles',
-      title: 'Mantiqiy boşqotirmalar',
-      description: 'Deduktiv xulosalar va şartli mulohazalarni yeçiş.',
-      prerequisites: [],
-      requiredScore: 50,
-      status: 'available',
-      isReinforcement: false,
-      targetLessonId: 'lesson_logic_puzzles_01',
-      estimatedMinutes: 15,
-      order: 1,
-    },
-    {
-      id: 'node_logic_patterns',
-      courseId: 'course_logic',
-      skillId: 'skill_logic_patterns',
-      title: 'Qonuniyatlar',
-      description: 'Sonli va şakl qonuniyatlarini topiş va davom ettiriş.',
-      prerequisites: ['node_logic_puzzles'],
-      requiredScore: 50,
-      status: 'locked',
-      isReinforcement: false,
-      targetLessonId: 'lesson_logic_patterns_01',
-      estimatedMinutes: 18,
-      order: 2,
-    },
-  ],
+  course_logic: logic.roadmap as LearningPathNode[],
 };
