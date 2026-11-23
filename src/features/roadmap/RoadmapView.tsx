@@ -14,6 +14,7 @@ import {
   PenTool,
   Play,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Zap,
 } from 'lucide-react';
@@ -33,6 +34,8 @@ import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngin
 import { RecommendationEngine } from '@/domain/personalization/RecommendationEngine';
 import { AdaptiveCyclePanel } from '@/features/adaptive/AdaptiveCyclePanel';
 import { FlashcardDeck } from '@/features/lesson/FlashcardDeck';
+import { StudyPlanPreview } from '@/features/onboarding/StudyPlanPreview';
+import { useStudyPlan } from '@/features/onboarding/useStudyPlan';
 import { ReinforcementModal } from '@/features/reinforcement/ReinforcementModal';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
@@ -48,10 +51,11 @@ interface RoadmapViewProps {
   onOpenKnowledgeMap: () => void;
   onChooseCourse: () => void;
   onConfigure: () => void;
+  onEditPlan?: () => void;
   onStartPlacement?: () => void;
 }
 
-export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure, onStartPlacement }: RoadmapViewProps) {
+export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse, onConfigure, onEditPlan, onStartPlacement }: RoadmapViewProps) {
   const { language, t } = useTranslation();
   const course = useCourseStore((state) => state.activeCourse);
   const skills = useCourseStore((state) => state.activeCourseSkills);
@@ -87,6 +91,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const foundationPath = course ? foundationLessons(course) : [];
   const ready = Boolean(course && hasStartedCourse(course, profile));
   const foundationCompleted = foundationPath.filter((id) => profile?.completedLessonIds.includes(id)).length;
+  const minutes = profile?.dailyMinutes ?? 15;
+  const level = courseId && ready ? profile?.courseLevels?.[courseId] ?? 'intermediate' : null;
+  const studyPlan = useStudyPlan(course, profile, path, level, profile?.goal ?? 'mastery', minutes);
+  const plannedNext = studyPlan.sessions[0]?.items[0];
+  const nextPlanId = !foundation && plannedNext?.ready ? plannedNext.id : null;
   const shown = nodes.filter((node) => filter === 'all' || (filter === 'active'
     ? node.status !== 'locked' && (node.status !== 'completed' || node.mastery?.reviewDue) : node.status === 'completed'));
   const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
@@ -604,16 +613,22 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
         highlightWord={t('path.highlight')}
         description={t('path.description')}
         action={
-          ready && (
-            <Button
-              variant="outline"
-              leftIcon={<Compass aria-hidden="true" className="size-4 text-brand" />}
-              onClick={onOpenKnowledgeMap}
-              className="min-h-11"
-            >{t('path.map')}</Button>
-          )
+          ready && <div className="flex flex-wrap gap-2">
+            <Button variant="outline" leftIcon={<SlidersHorizontal aria-hidden="true" className="size-4 text-brand" />} onClick={onEditPlan ?? onConfigure}>{t('studyPlan.edit')}</Button>
+            <Button variant="outline" leftIcon={<Compass aria-hidden="true" className="size-4 text-brand" />} onClick={onOpenKnowledgeMap}>{t('path.map')}</Button>
+          </div>
         }
       />
+
+      {ready && (path || foundation) && (
+        <StudyPlanPreview
+          wide
+          sessions={studyPlan.sessions}
+          minutes={minutes}
+          status={studyPlan.loading ? 'loading' : studyPlan.unavailable ? 'unavailable' : 'empty'}
+          action={nextPlanId ? { label: t('courses.continue'), run: () => onStartLesson(nextPlanId) } : undefined}
+        />
+      )}
 
       {!course ? (
         <Card className="space-y-4">
@@ -639,6 +654,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
               {foundationPath.map((id, index) => {
                 const done = profile?.completedLessonIds.includes(id) ?? false;
                 const current = id === foundation;
+                const entry = studyPlan.foundation.find((item) => item.id === id) ?? topics.find((node) => node.targetLessonId === id);
                 return (
                   <li key={id} aria-current={current ? 'step' : undefined} style={{ animationDelay: `${index * 80}ms` }} className="fade-up">
                     <span className={'timeline-marker ' + (current ? 'timeline-current' : done ? 'bg-emerald-500! text-white! border-emerald-500!' : '')}>
@@ -652,7 +668,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                         <Badge variant={done ? 'emerald' : current ? 'indigo' : 'slate'} size="sm">
                           {done ? t('path.completed') : current ? t('path.nextLesson') : t('path.nextStage')}
                         </Badge>
-                        <h3 className="heading text-base font-extrabold">{index + 1}{t('path.foundationNumber')}</h3>
+                        <h3 className="heading text-base font-extrabold">{entry ? (language === 'ru' ? entry.titleRu ?? entry.title : entry.title) : `${index + 1}${t('path.foundationNumber')}`}</h3>
                       </div>
                       {(current || done) && (
                         <Button variant={current ? 'primary' : 'outline'} size="sm" onClick={() => onStartLesson(id)}>
@@ -689,13 +705,10 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
         <SectionState kind="loading" title={t('path.loading')} />
       ) : (
         <>
-          <section className="learning-hero fade-up stagger-1 grid items-center gap-5 rounded-3xl p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-8">
-            <div className="min-w-0 space-y-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-indigo-100">
-                <Sparkles aria-hidden="true" className="size-3.5 text-sky-300" />
-                {isEnglishCourse ? t('path.cefrLevelsEyebrow') : t('path.yourPlan')}
-              </span>
-              <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
+          <section className="grid items-center gap-4 rounded-3xl border border-hairline bg-paper p-5 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="min-w-0 space-y-2">
+              {isEnglishCourse && <p className="text-xs font-semibold text-brand-dark">{t('path.cefrLevelsEyebrow')}</p>}
+              <h2 className="heading text-lg font-extrabold">
                 {completed} / {topics.length} {t(policy ? 'path.masteredTopics' : 'path.topicsDone')}</h2>
               {topics.length > 0 && (
                 <Progress
@@ -713,16 +726,16 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                   variant="outline"
                   aria-expanded={showSrsHub}
                   leftIcon={<Layers aria-hidden="true" className="size-4" />}
-                  className="min-h-11 w-fit border-white/60 bg-white/15 text-white hover:bg-white/25"
+                  className="min-h-11 w-fit"
                   onClick={handleToggleSrsHub}
                 >
                   {t('path.srsHubButton')} ({dueEnglishFlashcards.length})
                 </Button>
               )}
-              {lesson && (
+              {lesson && !nextPlanId && (
                 <Button
                   variant="outline"
-                  className="min-h-11 w-fit border-white bg-white text-brand hover:bg-indigo-50"
+                  className="min-h-11 w-fit"
                   onClick={() => onStartLesson(lesson)}
                   rightIcon={<ArrowRight aria-hidden="true" className="size-4" />}
                 >{t('courses.continue')}</Button>

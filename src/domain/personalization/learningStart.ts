@@ -1,5 +1,6 @@
 import type { Course } from '@/domain/entities/Course';
 import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
+import type { InitialLevel } from '@/core/types/common';
 import { isSupabaseConfigured } from '@/core/config/supabase';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
@@ -24,8 +25,12 @@ export function foundationLessons(course: Course): string[] {
 }
 
 export function pendingFoundationLesson(course: Course | null, profile: LearnerProfile | null): string | null {
-  if (!course || usesMathMastery(course.id) || profile?.courseLevels?.[course.id] !== 'beginner') return null;
+  return pendingFoundationLessons(course, profile, course ? profile?.courseLevels?.[course.id] : undefined)[0] ?? null;
+}
+
+export function pendingFoundationLessons(course: Course | null, profile: LearnerProfile | null, level?: InitialLevel | null): string[] {
+  if (!course || usesMathMastery(course.id) || level !== 'beginner') return [];
   const placedCefr = profile?.placementCefrByCourse?.[course.id];
-  if (placedCefr === 'A1' || placedCefr === 'A2' || placedCefr === 'B1') return null;
-  return foundationLessons(course).find((id) => !profile.completedLessonIds.includes(id)) ?? null;
+  if (placedCefr === 'A1' || placedCefr === 'A2' || placedCefr === 'B1') return [];
+  return foundationLessons(course).filter((id) => !profile?.completedLessonIds.includes(id));
 }
