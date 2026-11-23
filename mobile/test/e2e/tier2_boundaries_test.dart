@@ -995,15 +995,8 @@ void main() {
             find.textContaining('Birinçi darsni boşlaş', findRichText: true),
           );
 
-          await scrollAndTap(
-            tester,
-            find.textContaining('Keyingi qadam', findRichText: true),
-          );
-          await scrollAndTap(
-            tester,
-            find.textContaining('Keyingi qadam', findRichText: true),
-          );
-          await scrollAndTap(tester, find.text('4 + 1 = 5'));
+          await submitLessonQuiz(tester, correct: true);
+          await scrollAndTap(tester, find.text('C'));
           final checkBtn = find.textContaining('TEKŞIRIŞ', findRichText: true);
           await tester.tap(checkBtn);
           await tester.pump(const Duration(milliseconds: 20));
@@ -1013,10 +1006,10 @@ void main() {
           await tester.pumpAndSettle();
 
           await tapBottomNav(tester, L10nExpect.navProgress);
-          expect(find.textContaining('22 XP', findRichText: true), findsWidgets);
+          expect(find.textContaining('24 XP', findRichText: true), findsWidgets);
           expect(
             find.textContaining(
-              RegExp(r'\b(24|40|42|44)\s*XP'),
+              RegExp(r'\b(26|44|46)\s*XP'),
               findRichText: true,
             ),
             findsNothing,
