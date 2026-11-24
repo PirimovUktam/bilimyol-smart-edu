@@ -1,0 +1,140 @@
+# BilimYo‘l Smart Edu — Local Hallmark Design Skill Integration Report
+
+**Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_0_critical_containment`  
+**Branch:** `fix/wave-0-critical-containment`  
+**Baseline Audit Commit (`READ-ONLY`):** `5c22343b2246dedcee7866cd11931c48346cf65c`  
+**Prior Verified Checkpoints on Branch:** `W0-B1` (`10a652a..2028245`, [W0-B1_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/docs/implementation/wave-0/W0-B1_REPORT.md)), `W0-B2` (`08a2004..19e6c55`, [W0-B2_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/docs/implementation/wave-0/W0-B2_REPORT.md))
+
+---
+
+## 1. Repository, Version & License
+
+- **Upstream Repository:** `https://github.com/Nutlope/hallmark` (Together AI / Nutlope)
+- **Inspected Upstream Commit (`main`):** `04977e15f3dfd6ee4b74c887dac3eb52665d6c92` (`pushed_at: 2026-11-11T11:56:16Z`; `0` published GitHub releases or git tags)
+- **Installed Package / Skill Version:** **`2.0.0`** (from upstream `package.json` and [SKILL.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/.agents/skills/hallmark/SKILL.md#L1-L8))
+- **CLI Version Used:** `skills@1.9.0`
+- **License:** **MIT License** (`Copyright (c) 2026 Hallmark contributors`; verbatim copy preserved at [.agents/skills/hallmark/LICENSE](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/.agents/skills/hallmark/LICENSE)). Upstream `scripts/photos.json` indexes Wikimedia Commons URLs licensed under `CC0`, Public Domain, `CC BY`, or `CC BY-SA` and bundles zero binary image assets.
+
+---
+
+## 2. Phase 0 Security & Dependency Inspection Summary
+
+Before running installation inside `fix_wave_0_critical_containment`:
+
+- **Script & Network Audit:**
+  - Core design verification scripts (`theme.mjs`, `sloplint.mjs`, `refcheck.mjs`, `lint-hook.mjs`) run offline on Node (`>= 18` for Hallmark; local runtime `v24.12.0` satisfies both Hallmark and `skills@1.9.0` `>= 22.20`) with zero external API keys.
+  - Optional `scripts/imagegen.mjs` reads `TOGETHER_API_KEY` only when explicitly invoked and fails closed (`exit 3`, code `no-key`) when unset. `TOGETHER_API_KEY` is not set and `imagegen.mjs` is not invoked.
+  - Optional Claude Code edit hook (`scripts/install-hook.mjs`) was inspected and **not executed**; no `.claude/settings.json` hook was added.
+  - Anonymous `skills` CLI telemetry was explicitly suppressed during installation and listing via `DISABLE_TELEMETRY=1` and `DO_NOT_TRACK=1`.
+- **No Global or Package Lockfile Mutation:** Installation avoided `-g` and left `package.json`, `package-lock.json`, `mobile/pubspec.yaml`, `mobile/pubspec.lock`, and all global user skill folders (`%USERPROFILE%\.agents\skills`, `.claude`, `.gemini`, `.config\opencode`, `.codex`) untouched.
+
+---
+
+## 3. Installation Details & Target Verification
+
+- **Installation Command Run (in `fix_wave_0_critical_containment`, after HTTP/2 clone reset `curl 56` retry with `GIT_HTTP_VERSION=HTTP/1.1`):**
+
+```powershell
+$env:DISABLE_TELEMETRY = '1'
+$env:DO_NOT_TRACK = '1'
+$env:GIT_HTTP_VERSION = 'HTTP/1.1'
+npx --yes skills@1.9.0 add nutlope/hallmark --skill hallmark -a antigravity -a codex -a opencode -a cursor -y
+```
+
+- **Actual Installation Location:** [.agents/skills/hallmark/](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/.agents/skills/hallmark) (`187` copied files across `SKILL.md`, `LICENSE`, `agents/`, `references/`, `scripts/`). Note: project-scoped single-skill installation via `--skill hallmark` did not generate `skills-lock.json` or any extra files outside `.agents/skills/hallmark/`.
+- **Supported Harnesses:** `antigravity` (`antigravity-cli`), `codex`, `cursor`, and `opencode` automatically share project `.agents/skills/hallmark/` (`agents.md` in `skills@1.9.0` also lists `gemini-cli` and `github-copilot` under `.agents/skills/`). Optional `claude-code` (`.claude/skills/hallmark`) was omitted per approved decision `A3`.
+- **Discoverability Verification (`npx --yes skills@1.9.0 list`):** Exited `0` listing all `5` project skills cleanly: `bilimyol-english-content-qa`, `bilimyol-english-curriculum`, `bilimyol-journey-qa`, `edtech-redesign`, and `hallmark` (`Source: Nutlope/hallmark`).
+
+---
+
+## 4. Phase 2 Functional Verification Results
+
+All checks ran read-only against the installed skill directory and isolated scratch HTML fixtures in `<appDataDir>\brain\...\scratch\hallmark_verify_fixture\`, leaving **zero** `.hallmark/` artifacts inside `fix_wave_0_critical_containment`:
+
+| Check | Command | Exit Code | Observed Result |
+|---|---|---|---|
+| Node runtime | `node --version` | `0` | `v24.12.0` |
+| Skill registry discovery | `npx --yes skills@1.9.0 list` | `0` | `hallmark` discovered alongside all `4` BilimYo‘l project skills |
+| Theme validation | `node .agents/skills/hallmark/scripts/theme.mjs validate @themeFiles` | `0` | Validated **`51` markdown files** under `.agents/skills/hallmark/references/themes/*.md` cleanly |
+| Reference integrity | `node .agents/skills/hallmark/scripts/refcheck.mjs --errors` | `0` | `refcheck: clean across 101 reference files` |
+| Static lint (clean fixture) | `node .agents/skills/hallmark/scripts/sloplint.mjs <scratch>/modern-minimal.html --json` | `0` | `fails: 0`, `reflex: 0`, `warns: 0` (`render: "off"`) |
+| Static lint (slopped fixture) | `node .agents/skills/hallmark/scripts/sloplint.mjs <scratch>/slopped.html --json` | `1` | Detected `fails: 24` (`2a`, `4`, `10a`, `15`, `19`, `20`, `27`, `30a`, `33`, `34`, `48`, `50`, `54`, `55a`, `56`), `reflex: 15`, `warns: 4` (`render: "off"`) |
+| Project Web sanity checks | `npm run typecheck` & `npm run lint` | `0` / `0` | `tsc` `0` errors; `oxlint` `0` errors (`6` pre-existing warnings only) |
+| Product & lockfile diff | `git diff -- src supabase mobile package.json package-lock.json mobile/pubspec.yaml mobile/pubspec.lock` | `0` | Empty (`0` tracked product or dependency changes) |
+
+---
+
+## 5. Browser Tooling & `/browser` Audit
+
+- **Chrome Binary:** Installed at `C:\Program Files\Google\Chrome\Application\chrome.exe`.
+- **`puppeteer-core` / `puppeteer`:** Absent both locally in `node_modules` and globally (`npm root -g`). Per user approval (`A2`), `puppeteer-core` was **not** installed locally or globally so all lockfiles and global npm state remain unchanged.
+- **Playwright:** `playwright@1.64.0` remains installed in project `devDependencies` for BilimYo‘l's existing Playwright E2E and browser visual audits (though Hallmark's `sloplint.mjs --render` and `capture.mjs` look specifically for `puppeteer-core` / `puppeteer`).
+- **`/browser` Subagent (`a66921da`):** Invoked during Phase 0; reported **`BLOCKED`** (`server name chrome_devtools failed to load: context deadline exceeded`) because Chrome remote debugging (`DevToolsActivePort`) was unavailable. GitHub Phase 0 inspection therefore completed directly via read-only HTTPS requests.
+
+---
+
+## 6. Existing Skills, Rules & Precedence Check
+
+SHA-256 verification before and after `npx skills add` confirms **zero overwrites or mutations** to existing project instructions and skills:
+
+| Existing File | SHA-256 (Pre = Post Install) | Status |
+|---|---|---|
+| `.agents/rules/edtech-ui.md` | `586DDCD4957C4060E5E6B1DC7863D332E1B216C2B535B5E53A853DB01B13D108` | Unchanged |
+| `.agents/skills/bilimyol-english-content-qa/SKILL.md` | `317D750AB656543A3D78F99A55311B821241C379A674B396E69061E06EA98DA5` | Unchanged |
+| `.agents/skills/bilimyol-english-curriculum/SKILL.md` | `4C04556F29F4C26614CF6DCB1335F0DB3B63671184EC21A19BAC06E3345AD4E3` | Unchanged |
+| `.agents/skills/bilimyol-journey-qa/SKILL.md` | `847CD018C36B0EDEC5B15FD524F5BB91178482F44B9D8C93F123895ADC101BB6` | Unchanged |
+| `.agents/skills/edtech-redesign/SKILL.md` | `4CC6283D7D1EC6A9839EDEED27763FB9D4D0A38441B0BCE5A08FBAA00CC3B55D` | Unchanged |
+| `package-lock.json` | `B8EA0991D28EB7FF1A485211D23C0B0A23627881B9AF46D4307608D21D9FAF1C` | Unchanged |
+| `mobile/pubspec.lock` | `C776FEE94C3985662EAC9B9453C4E89A7D5C23332B3ED340D63A029B3C36EE7E` | Unchanged |
+
+**Documented Rule Conflict & Precedence Policy:**  
+Hallmark's `The Floor` bans pill eyebrows (`Floor #9` / `Gate 54`), purple-to-blue gradients (`Floor #11` / `Gate 2a`), multi-color headings (`Gate 38iii`), and un-stamped CSS files (`Floor #15` / `Gate 20`). BilimYo‘l's always-on [edtech-ui.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/.agents/rules/edtech-ui.md) and [edtech-redesign SKILL.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/.agents/skills/edtech-redesign/SKILL.md) explicitly mandate `.highlight` pill badges and `#4F46E5`/`#10B981` split-color headings. Per Hallmark's own `SKILL.md` trigger rule (*"Never use it on an existing design unless the user names Hallmark"*) and Antigravity's rule precedence, `.agents/rules/edtech-ui.md` stays authoritative for BilimYo‘l brand surfaces; any future approved `/hallmark` run must record explicit waivers when preserving `.highlight` pill badges or brand accents alongside existing `theme.css`/`index.css`.
+
+---
+
+## 7. Files Created or Changed (Current Batch)
+
+- **Created:** `.agents/skills/hallmark/**` (`187` files — Hallmark `v2.0.0` skill, MIT license, references, themes, and scripts)
+- **Created:** `docs/implementation/wave-0/HALLMARK_INTEGRATION_REPORT.md` (this report)
+- **Modified:** **None** (`0` files touched in `src/`, `mobile/`, `supabase/`, `package.json`, lockfiles, `.agents/rules/`, existing `.agents/skills/`, or global `%USERPROFILE%` configs)
+
+---
+
+## 8. BilimYo‘l Hallmark Design Usage Policy
+
+### Appropriate Future Surfaces (Explicitly Approved Batches Only)
+
+- Web marketing, landing, and pitch/demo showcase pages
+- Web dashboard & analytics visual hierarchy
+- Web lesson, roadmap, and course card presentation
+- Design token consistency, light/dark contrast, typography scale, `:focus-visible` states, and responsive breakpoints
+
+### Mandatory Restrictions (`10` Rules)
+
+1. Preserve BilimYo‘l's existing brand identity and approved design tokens.
+2. Do not blindly apply all 50 Hallmark themes.
+3. Do not replace the existing Tailwind CSS / UI component framework.
+4. Do not rewrite React or Flutter architecture.
+5. Do not allow Hallmark to remove functional controls.
+6. Never remove authentication checks, route guards, data bindings, or event handlers.
+7. Never fabricate testimonials, student metrics, uptime stats, or educational claims (`Gate 46a` aligns cleanly with `FIX-P2-05`).
+8. Do not introduce external image CDNs, Wikimedia hotlinks (`photos.json`), or external fonts without explicit approval.
+9. Never run `/hallmark redesign <path>` on already approved screens without a dedicated, approved UI batch.
+10. Keep all changes compliant with **WCAG 2.2 AA** acceptance criteria.
+
+### Standard Commands & Visual Gate Pipeline
+
+- **Read-only audit report:** `/hallmark audit <path>`
+- **Approved redesign batch only:** `/hallmark redesign <path>`
+- **Mandatory Quality Pipeline for Future Web Visual Batches:**  
+  `Implement UI -> Hallmark static lint (sloplint.mjs) -> Browser render (Playwright / optional puppeteer-core) -> Accessibility checks (WCAG 2.2 AA) -> Existing product regression tests (Vitest/E2E) -> Independent review`
+- **Backend-only batches:** Hallmark is **not** required and should not be invoked.
+
+---
+
+## 9. Known Limitations & Cross-Batch Context
+
+- **Web/HTML-Only Scope:** `sloplint.mjs` lints HTML, CSS, JSX, TSX, Vue, Svelte, and Astro source; it provides **no** automated analysis for Flutter/Dart widgets (`mobile/` continues using `flutter_a11y_agent`, `flutter analyze`, `dart analyze --fatal-infos`, and widget overflow/contrast golden tests).
+- **Render Tier Unavailable Without Approval:** `sloplint.mjs --render` and `capture.mjs` require `puppeteer-core` or `puppeteer` and therefore were intentionally skipped (`render: "off"`). Existing `playwright@1.64.0` covers rendered BilimYo‘l DOM/screenshot testing until render-tier `puppeteer-core` is explicitly approved.
+- **Standalone Supporting Tool:** Hallmark improves Web presentation quality only; it does not verify database RLS/RPC security, AI prompt boundaries, pedagogical soundness, or cross-platform state correctness.
+- **Wave 0 Status:** Verified product containment batches [W0-B1_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/docs/implementation/wave-0/W0-B1_REPORT.md) (`2028245`) and [W0-B2_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/docs/implementation/wave-0/W0-B2_REPORT.md) (`19e6c55`) remain intact (`4/121` `FIXED_LOCAL`, `117/121` `OPEN` in [REMEDIATION_PROGRESS.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_0_critical_containment/docs/implementation/REMEDIATION_PROGRESS.md)). Ready for **`W0-B3`** upon explicit approval.
