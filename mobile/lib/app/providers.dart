@@ -1798,15 +1798,14 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         targetQuestion.skillId.startsWith('skill_eng_');
     final skillId = allowMultiSkill ? targetQuestion.skillId : lesson.skillId;
 
-    final reinforcementNodeId = deriveCanonicalReinforcementNodeId(
-      roadmap: ref.read(roadmapStateNotifierProvider).value,
-      courseId: courseId,
-      skillId: skillId,
-      lessonId: lesson.id,
-    );
-
     try {
       if (!_isCurrent(session, step, generation)) return null;
+      final reinforcementNodeId = deriveCanonicalReinforcementNodeId(
+        roadmap: ref.read(roadmapStateNotifierProvider).valueOrNull,
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lesson.id,
+      );
       final submitReinfUseCase = ref.read(submitReinforcementUseCaseProvider);
       final result = await submitReinfUseCase.execute(
         courseId: courseId,
@@ -1861,38 +1860,41 @@ String deriveCanonicalReinforcementNodeId({
 }) {
   final cleanLessonId = lessonId?.trim();
   if (roadmap != null && roadmap.courseId == courseId) {
-    final baseByLesson = (cleanLessonId != null && cleanLessonId.isNotEmpty)
-        ? roadmap.nodes
-            .where((n) => !n.isReinforcement && n.targetLessonId == cleanLessonId)
-            .firstOrNull
-        : null;
+    if (cleanLessonId != null && cleanLessonId.isNotEmpty) {
+      final baseByLesson = roadmap.nodes
+          .where((n) => !n.isReinforcement && n.targetLessonId == cleanLessonId)
+          .firstOrNull;
+      final explicitByLesson = roadmap.nodes
+          .where(
+            (n) =>
+                n.isReinforcement &&
+                (n.targetLessonId == cleanLessonId ||
+                    (baseByLesson != null && n.id == 'reinf_${baseByLesson.id}')),
+          )
+          .firstOrNull;
+      if (explicitByLesson != null) return explicitByLesson.id;
+      if (baseByLesson != null) {
+        return baseByLesson.id.startsWith('reinf_')
+            ? baseByLesson.id
+            : 'reinf_${baseByLesson.id}';
+      }
+      return cleanLessonId.startsWith('reinf_')
+          ? cleanLessonId
+          : 'reinf_lesson_$cleanLessonId';
+    }
 
-    final explicitReinf =
-        ((cleanLessonId != null && cleanLessonId.isNotEmpty)
-            ? roadmap.nodes
-                .where(
-                  (n) =>
-                      n.isReinforcement &&
-                      (n.targetLessonId == cleanLessonId ||
-                          (baseByLesson != null &&
-                              n.id == 'reinf_${baseByLesson.id}')),
-                )
-                .firstOrNull
-            : null) ??
-        roadmap.nodes
-            .where((n) => n.isReinforcement && n.skillId == skillId)
-            .firstOrNull;
-    if (explicitReinf != null) return explicitReinf.id;
+    final explicitBySkill = roadmap.nodes
+        .where((n) => n.isReinforcement && n.skillId == skillId)
+        .firstOrNull;
+    if (explicitBySkill != null) return explicitBySkill.id;
 
-    final baseNode =
-        baseByLesson ??
-        roadmap.nodes
-            .where((n) => !n.isReinforcement && n.skillId == skillId)
-            .firstOrNull;
-    if (baseNode != null) {
-      return baseNode.id.startsWith('reinf_')
-          ? baseNode.id
-          : 'reinf_${baseNode.id}';
+    final baseBySkill = roadmap.nodes
+        .where((n) => !n.isReinforcement && n.skillId == skillId)
+        .firstOrNull;
+    if (baseBySkill != null) {
+      return baseBySkill.id.startsWith('reinf_')
+          ? baseBySkill.id
+          : 'reinf_${baseBySkill.id}';
     }
   }
   if (cleanLessonId != null && cleanLessonId.isNotEmpty) {

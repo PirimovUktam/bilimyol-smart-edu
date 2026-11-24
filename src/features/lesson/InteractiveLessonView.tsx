@@ -1082,9 +1082,9 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-coral/10 border border-coral/30 font-mono text-[11px] font-bold text-ink">
                             <XCircle className="w-3.5 h-3.5 text-coral" />{t('lesson.selectedAnswer')}{' '}{lastAnswerResult.selectedOption || '—'}
                           </span>
-                          {!hideCorrectSpoiler && (
+                          {!hideCorrectSpoiler && Boolean(lastAnswerResult.correctOption) && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mint/15 border border-mint/30 font-mono text-[11px] font-bold text-ink">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-mint" />{t('lesson.rightAnswer')}{' '}{lastAnswerResult.correctOption || '—'}
+                              <CheckCircle2 className="w-3.5 h-3.5 text-mint" />{t('lesson.rightAnswer')}{' '}{lastAnswerResult.correctOption}
                             </span>
                           )}
                         </div>

@@ -14,9 +14,10 @@ $$;
 INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
   ('00000000-0000-0000-0000-000000000701', 'w0b1-math-beginner@example.invalid', '{}'),
   ('00000000-0000-0000-0000-000000000702', 'w0b1-it-student@example.invalid', '{}'),
-  ('00000000-0000-0000-0000-000000000703', 'w0b1-unknown-q@example.invalid', '{}');
+  ('00000000-0000-0000-0000-000000000703', 'w0b1-unknown-q@example.invalid', '{}'),
+  ('00000000-0000-0000-0000-000000000704', 'w0b1-reverse-alias@example.invalid', '{}');
 
--- Unpublished and archived CMS draft fixtures for FIX-P0-27 oracle checks.
+-- Unpublished, archived, multi-skill, and AI-generated fixtures for FIX-P0-27/28 checks.
 INSERT INTO public.lessons (
   id, course_id, skill_id, title, summary, steps, reinforcement_exercise, is_published, is_archived
 ) VALUES
@@ -41,7 +42,32 @@ INSERT INTO public.lessons (
     NULL,
     true,
     true
+  ),
+  (
+    'lesson_w0b1_multiskill',
+    'course_eng_01',
+    'skill_eng_vocab',
+    'Multi-skill Fixture',
+    '',
+    '[{"id":"s1","type":"interactive_question","interactiveQuestion":{"id":"q_w0b1_ms_gram_step","skillId":"skill_eng_grammar","text":"She ___ happy.","options":["is","are"],"correctIndex":0,"explanation":"Singular she uses is."}}]'::jsonb,
+    '{"id":"q_w0b1_ms_reinf","skillId":"skill_eng_grammar","text":"They ___ happy.","options":["is","are"],"correctIndex":1,"explanation":"Plural they uses are."}'::jsonb,
+    true,
+    false
   );
+
+INSERT INTO public.generated_lessons (
+  id, course_id, skill_id, topic, title, summary, objective, steps, questions
+) VALUES (
+  'gl_w0b1_it_reinf',
+  'course_it',
+  'skill_it_python',
+  'Variables',
+  'AI Lesson Fixture',
+  'Summary',
+  'Objective',
+  '[]'::jsonb,
+  '[{"id":"q_gl_w0b1_1","text":"x = 2; x + 3 = ?","options":["4","5","6"],"correctIndex":1,"explanation":"2 + 3 = 5."}]'::jsonb
+);
 
 -- ============================================================================
 -- 1. FIX-P2-22: Least-privilege SECURITY DEFINER surface (Cloud + Legacy DBs)
@@ -61,9 +87,8 @@ SELECT pg_temp.assert_w0b1(
   'FIX-P2-22: public.award_xp is revoked from client roles'
 );
 SELECT pg_temp.assert_w0b1(
-  NOT has_function_privilege('authenticated', 'public.sync_profile(text,text,text)', 'execute')
-    AND NOT has_function_privilege('anon', 'public.sync_profile(text,text,text)', 'execute'),
-  'FIX-P2-22: legacy public.sync_profile is revoked from client roles'
+  to_regprocedure('public.sync_profile(text,text,text)') IS NULL,
+  'FIX-P2-22: legacy public.sync_profile is dropped'
 );
 SELECT pg_temp.assert_w0b1(
   NOT has_function_privilege('authenticated', 'public.promote_user_to_admin(text)', 'execute')
@@ -75,6 +100,23 @@ SELECT pg_temp.assert_w0b1(
   NOT has_function_privilege('authenticated', 'public.evaluate_placement_answer(text,text,integer)', 'execute')
     AND NOT has_function_privilege('service_role', 'public.evaluate_placement_answer(text,text,integer)', 'execute'),
   'FIX-P2-22: retired public.evaluate_placement_answer is revoked from all API roles'
+);
+SELECT pg_temp.assert_w0b1(
+  NOT has_function_privilege('authenticated', 'public.enforce_profile_role_protection()', 'execute')
+    AND NOT has_function_privilege('service_role', 'public.enforce_profile_role_protection()', 'execute')
+    AND NOT has_function_privilege('anon', 'public.enforce_profile_role_protection()', 'execute'),
+  'FIX-P2-22: trigger helper public.enforce_profile_role_protection() is revoked from API roles'
+);
+SELECT pg_temp.assert_w0b1(
+  NOT has_schema_privilege('authenticated', 'bilimyol_private', 'USAGE')
+    AND NOT has_schema_privilege('anon', 'bilimyol_private', 'USAGE')
+    AND NOT has_function_privilege('authenticated', 'bilimyol_private.award_xp(uuid,integer,text)', 'execute')
+    AND NOT has_function_privilege('service_role', 'bilimyol_private.award_xp(uuid,integer,text)', 'execute')
+    AND NOT has_function_privilege('authenticated', 'bilimyol_private.submit_answer_attempt(uuid,text,text,text,text,integer,text,text)', 'execute')
+    AND NOT has_function_privilege('service_role', 'bilimyol_private.submit_answer_attempt(uuid,text,text,text,text,integer,text,text)', 'execute')
+    AND NOT has_function_privilege('authenticated', 'bilimyol_private.resolve_reinforcement_target(text,text,text)', 'execute')
+    AND NOT has_function_privilege('service_role', 'bilimyol_private.resolve_reinforcement_target(text,text,text)', 'execute'),
+  'FIX-P2-22: bilimyol_private schema and internal helpers are inaccessible to API roles'
 );
 
 -- ============================================================================
@@ -162,8 +204,27 @@ BEGIN
     public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'selectedOption' = '1',
     'FIX-P0-28: 1st mistake still records authoritative selectedOption'
   );
+  RESET ROLE;
+  SET LOCAL ROLE service_role;
+  PERFORM pg_temp.assert_w0b1(
+    public.tutor_mistake_context(
+      '00000000-0000-0000-0000-000000000701',
+      'course_math_01',
+      'skill_math_addition',
+      'q_pilot_lesson_math_starter_1'
+    )->>'correctOption' IS NULL
+    AND public.tutor_mistake_context(
+      '00000000-0000-0000-0000-000000000701',
+      'course_math_01',
+      'skill_math_addition',
+      'q_pilot_lesson_math_starter_1'
+    )->>'explanation' = 'Ishlangan misolni ko‘rib chiqing va qayta urinib ko‘ring.',
+    'FIX-P0-28: 1st mistake tutor_mistake_context withholds correctOption and explanation from Yolchi AI'
+  );
+  RESET ROLE;
+  SET LOCAL ROLE authenticated;
 
-  -- After 2nd wrong attempt exhausts the retry, get_mistake_feedback reveals correctOption ('7').
+  -- After 2nd wrong attempt exhausts the retry, both RPCs reveal correctOption ('7').
   PERFORM public.submit_answer_attempt(
     auth.uid(), 'course_math_01', 'skill_math_addition',
     'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 2, '12', 'w0b1-math-wrong-2'
@@ -172,6 +233,19 @@ BEGIN
     public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'correctOption' = '7',
     'FIX-P0-28: exhausted 2nd wrong attempt reveals authoritative correctOption'
   );
+  RESET ROLE;
+  SET LOCAL ROLE service_role;
+  PERFORM pg_temp.assert_w0b1(
+    public.tutor_mistake_context(
+      '00000000-0000-0000-0000-000000000701',
+      'course_math_01',
+      'skill_math_addition',
+      'q_pilot_lesson_math_starter_1'
+    )->>'correctOption' = '7',
+    'FIX-P0-28: exhausted 2nd wrong attempt reveals correctOption to tutor_mistake_context'
+  );
+  RESET ROLE;
+  SET LOCAL ROLE authenticated;
 
   -- 2e. Unlocked Math reinforcement (reinf_node_math_addition & reinf_lesson_lesson_math_starter)
   --     now grades cleanly instead of failing with 42501, and completes without 2-RPC self-lockout!
@@ -260,22 +334,20 @@ END;
 $$;
 RESET ROLE;
 
--- Advance existing timestamps slightly so a subsequent wrong attempt is strictly newer than reinforcement_attempts.created_at
-UPDATE public.reinforcement_attempts
-SET created_at = now() - interval '5 seconds'
-WHERE user_id = '00000000-0000-0000-0000-000000000702';
-
 SET LOCAL ROLE authenticated;
+
 DO $$
 DECLARE
   v_reinf_score INT;
   v_after_miss JSONB;
+  v_high_reinf JSONB;
 BEGIN
   SELECT score INTO v_reinf_score
   FROM public.learner_skill_scores
   WHERE user_id = auth.uid() AND course_id = 'course_it' AND skill_id = 'skill_it_python';
 
-  -- Failing a subsequent newer lesson question must NOT stay frozen at after_score forever.
+  -- Failing a subsequent newer lesson question must NOT stay frozen at after_score forever
+  -- (verified within the exact same SQL transaction via monotonic clock_timestamp(), zero backdating!).
   v_after_miss := public.submit_answer_attempt(
     auth.uid(), 'course_it', 'skill_it_python',
     'lesson_it_starter', 'q_lesson_it_starter_quiz', 0, 'print', 'w0b1-newer-wrong-attempt'
@@ -285,6 +357,103 @@ BEGIN
       AND (public.recalculate_skill_scores('course_it')->'skill_it_python'->>'score')::INT = (v_after_miss->>'new_skill_score')::INT,
     'FIX-P0-28: subsequent wrong attempt supersedes stale reinforcement floor consistently'
   );
+
+  -- Multi-skill step attribution & cross-skill reinforcement guard:
+  -- q_w0b1_ms_gram_step has skillId=skill_eng_grammar on a skill_eng_vocab parent lesson.
+  -- Trying to credit skill_eng_vocab must be rejected with 22023, while skill_eng_grammar succeeds.
+  BEGIN
+    PERFORM public.submit_answer_attempt(
+      auth.uid(), 'course_eng_01', 'skill_eng_vocab',
+      'lesson_w0b1_multiskill', 'q_w0b1_ms_gram_step', 0, 'is', 'w0b1-ms-wrong-skill'
+    );
+    RAISE EXCEPTION 'ASSERT [W0-B1]: multi-skill step credited parent lesson skill instead of item skillId';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL;
+  END;
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_grammar',
+    'lesson_w0b1_multiskill', 'q_w0b1_ms_gram_step', 0, 'is', 'w0b1-ms-gram-pass'
+  );
+
+  -- v_before >= required_score (70) must block reinforcement completion with 42501.
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_grammar',
+    'reinf_lesson_lesson_w0b1_multiskill', 'q_w0b1_ms_reinf', 1, 'are', 'w0b1-high-score-reinf-sub'
+  );
+  BEGIN
+    v_high_reinf := public.complete_reinforcement(
+      'reinf_lesson_lesson_w0b1_multiskill', 'course_eng_01', 'skill_eng_grammar', 'q_w0b1_ms_reinf', 30
+    );
+    RAISE EXCEPTION 'ASSERT [W0-B1]: complete_reinforcement allowed already-mastered skill (>= required_score)';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  -- Non-math generated_lessons AI lesson supports reinf_lesson_<id> reinforcement cleanly.
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_it', 'skill_it_python',
+    'reinf_lesson_gl_w0b1_it_reinf', 'q_gl_w0b1_1', 1, '5', 'w0b1-gl-reinf-sub'
+  );
+  PERFORM pg_temp.assert_w0b1(
+    (public.complete_reinforcement(
+      'reinf_lesson_gl_w0b1_it_reinf', 'course_it', 'skill_it_python', 'q_gl_w0b1_1', 30
+    )->>'xp_awarded')::INT = 30,
+    'FIX-P0-27: non-math generated_lessons supports reinf_lesson_<id> reinforcement'
+  );
+END;
+$$;
+RESET ROLE;
+
+-- ============================================================================
+-- 3b. Reverse-order reinf_lesson_* persists canonical reinf_node_* & blocks alias
+-- ============================================================================
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000704', true);
+SET LOCAL ROLE authenticated;
+
+DO $$
+DECLARE
+  v_first JSONB;
+  v_retry JSONB;
+BEGIN
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_it', 'skill_it_python',
+    'lesson_it_python_01', 'q_live_it_python_01_quiz', 0, '123', 'w0b1-rev-miss'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_it', 'skill_it_python',
+    'reinf_lesson_lesson_it_python_01', 'q_live_it_python_01_practice', 2, '"62"', 'w0b1-rev-lesson-reinf'
+  );
+  v_first := public.complete_reinforcement(
+    'reinf_lesson_lesson_it_python_01', 'course_it', 'skill_it_python', 'q_live_it_python_01_practice', 30
+  );
+  PERFORM pg_temp.assert_w0b1(
+    (v_first->>'xp_awarded')::INT = 30
+      AND EXISTS (
+        SELECT 1 FROM public.reinforcement_attempts ra
+        WHERE ra.user_id = auth.uid() AND ra.reinforcement_node_id = 'reinf_node_it_python'
+      ),
+    'FIX-P0-28: reinf_lesson_* persists canonical reinf_node_* in reinforcement_attempts'
+  );
+
+  -- Exact same alias retry stays idempotent (xp_awarded = 0).
+  v_retry := public.complete_reinforcement(
+    'reinf_lesson_lesson_it_python_01', 'course_it', 'skill_it_python', 'q_live_it_python_01_practice', 30
+  );
+  PERFORM pg_temp.assert_w0b1(
+    (v_retry->>'already_processed')::BOOLEAN = true AND (v_retry->>'xp_awarded')::INT = 0,
+    'FIX-P0-28: retrying same reinf_lesson_* alias stays idempotent'
+  );
+
+  -- Trying to double-dip via canonical reinf_node_it_python is rejected with 42501.
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_it', 'skill_it_python',
+    'reinf_node_it_python', 'q_live_it_python_01_practice', 2, '"62"', 'w0b1-rev-canon-dup'
+  );
+  BEGIN
+    PERFORM public.complete_reinforcement(
+      'reinf_node_it_python', 'course_it', 'skill_it_python', 'q_live_it_python_01_practice', 30
+    );
+    RAISE EXCEPTION 'ASSERT [W0-B1]: canonical alias double-dipped after reinf_lesson_*';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
 END;
 $$;
 RESET ROLE;

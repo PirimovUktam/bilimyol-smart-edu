@@ -34,6 +34,7 @@ import { RecommendationEngine } from '@/domain/personalization/RecommendationEng
 import { AdaptiveCyclePanel } from '@/features/adaptive/AdaptiveCyclePanel';
 import { FlashcardDeck } from '@/features/lesson/FlashcardDeck';
 import { ReinforcementModal } from '@/features/reinforcement/ReinforcementModal';
+import { resolveRoadmapPracticeBaseNode } from '@/features/reinforcement/reinforcementNodeId';
 import { Badge } from '@/presentation/components/Badge';
 import { Button } from '@/presentation/components/Button';
 import { Card } from '@/presentation/components/Card';
@@ -158,18 +159,17 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     setPracticeLoading(node.id);
     setPracticeError('');
     try {
-      const baseNode = !node.isReinforcement
-        ? node
-        : topics.find(
-            (topic) =>
-              topic.skillId === node.skillId &&
-              (!node.targetLessonId || topic.targetLessonId === node.targetLessonId),
-          ) ?? topics.find((topic) => topic.skillId === node.skillId);
+      const baseNode = resolveRoadmapPracticeBaseNode(nodes, node);
       const targetLessonId = node.targetLessonId || baseNode?.targetLessonId;
       const linked = targetLessonId
         ? await supabaseLessonRepository.getLessonById(targetLessonId)
         : await supabaseLessonRepository.getLessonByCourseAndSkill(node.courseId, node.skillId);
-      if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId) {
+      if (
+        !linked ||
+        linked.courseId !== node.courseId ||
+        (linked.skillId !== node.skillId &&
+          linked.reinforcementExercise?.skillId !== node.skillId)
+      ) {
         throw new Error(t('path.noExercise'));
       }
       setPractice({
