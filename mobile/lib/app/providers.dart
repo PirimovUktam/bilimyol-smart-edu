@@ -1798,20 +1798,12 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         targetQuestion.skillId.startsWith('skill_eng_');
     final skillId = allowMultiSkill ? targetQuestion.skillId : lesson.skillId;
 
-    // Derive a course-scoped reinforcement node id — never hardcode another
-    // course's node (the old 'reinf_node_math_func' leaked across courses).
-    String reinforcementNodeId = 'reinf_${courseId}_$skillId';
-    try {
-      final roadmap = ref.read(roadmapStateNotifierProvider).value;
-      if (roadmap != null && roadmap.courseId == courseId) {
-        final node = roadmap.nodes
-            .where((n) => n.isReinforcement && n.skillId == skillId)
-            .firstOrNull;
-        if (node != null) reinforcementNodeId = node.id;
-      }
-    } catch (_) {
-      // Keep the deterministic scoped fallback id.
-    }
+    final reinforcementNodeId = deriveCanonicalReinforcementNodeId(
+      roadmap: ref.read(roadmapStateNotifierProvider).value,
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: lesson.id,
+    );
 
     try {
       if (!_isCurrent(session, step, generation)) return null;
@@ -1859,6 +1851,56 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       }
     }
   }
+}
+
+String deriveCanonicalReinforcementNodeId({
+  required LearningPath? roadmap,
+  required String courseId,
+  required String skillId,
+  String? lessonId,
+}) {
+  final cleanLessonId = lessonId?.trim();
+  if (roadmap != null && roadmap.courseId == courseId) {
+    final baseByLesson = (cleanLessonId != null && cleanLessonId.isNotEmpty)
+        ? roadmap.nodes
+            .where((n) => !n.isReinforcement && n.targetLessonId == cleanLessonId)
+            .firstOrNull
+        : null;
+
+    final explicitReinf =
+        ((cleanLessonId != null && cleanLessonId.isNotEmpty)
+            ? roadmap.nodes
+                .where(
+                  (n) =>
+                      n.isReinforcement &&
+                      (n.targetLessonId == cleanLessonId ||
+                          (baseByLesson != null &&
+                              n.id == 'reinf_${baseByLesson.id}')),
+                )
+                .firstOrNull
+            : null) ??
+        roadmap.nodes
+            .where((n) => n.isReinforcement && n.skillId == skillId)
+            .firstOrNull;
+    if (explicitReinf != null) return explicitReinf.id;
+
+    final baseNode =
+        baseByLesson ??
+        roadmap.nodes
+            .where((n) => !n.isReinforcement && n.skillId == skillId)
+            .firstOrNull;
+    if (baseNode != null) {
+      return baseNode.id.startsWith('reinf_')
+          ? baseNode.id
+          : 'reinf_${baseNode.id}';
+    }
+  }
+  if (cleanLessonId != null && cleanLessonId.isNotEmpty) {
+    return cleanLessonId.startsWith('reinf_')
+        ? cleanLessonId
+        : 'reinf_lesson_$cleanLessonId';
+  }
+  return 'reinf_${courseId}_$skillId';
 }
 
 final lessonSessionNotifierProvider =

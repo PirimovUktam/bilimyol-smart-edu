@@ -46,11 +46,16 @@ SELECT pg_temp.assert_condition(
 SELECT public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition',
   'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 1, 'untrusted text', 'tutor-fixture');
 SELECT pg_temp.assert_condition(
-  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'correctOption' = '7',
-  'own verified mistake provides an authoritative answer');
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'correctOption' IS NULL,
+  'first mistake on active Math checkpoint withholds correctOption');
 SELECT pg_temp.assert_condition(
   public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'selectedOption' = '1',
   'client submitted text does not control the explanation');
+SELECT public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition',
+  'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 2, 'untrusted text 2', 'tutor-fixture-retry');
+SELECT pg_temp.assert_condition(
+  public.get_mistake_feedback('course_math_01', 'skill_math_addition', 'q_pilot_lesson_math_starter_1')->>'correctOption' = '7',
+  'exhausted retry provides an authoritative answer');
 SELECT pg_temp.assert_condition(public.set_learning_reminders(false) = false, 'learner reminder setting persisted');
 SELECT pg_temp.assert_condition(
   (public.record_session_heartbeat('00000000-0000-0000-0000-000000000411', 'course_math_01', 'lesson_math_starter')->>'added_active_seconds')::int BETWEEN 30 AND 60,

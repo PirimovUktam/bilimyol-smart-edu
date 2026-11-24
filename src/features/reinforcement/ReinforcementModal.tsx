@@ -16,6 +16,8 @@ interface ReinforcementModalProps {
   question: Question;
   courseId: string;
   skillId: string;
+  lessonId?: string;
+  reinforcementNodeId?: string;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -25,6 +27,8 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   question,
   courseId,
   skillId,
+  lessonId,
+  reinforcementNodeId: explicitReinforcementNodeId,
   onSuccess,
   onClose,
 }) => {
@@ -118,7 +122,9 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   const handleSubmit = async () => {
     if (!canSubmit || isUpdating) return;
 
-    const reinforcementNodeId = deriveReinforcementNodeId(roadmap, courseId, skillId);
+    const reinforcementNodeId =
+      explicitReinforcementNodeId ||
+      deriveReinforcementNodeId(roadmap, courseId, skillId, lessonId);
     const overrideAnswer = isTextMode
       ? textInput.trim()
       : isMatchMode

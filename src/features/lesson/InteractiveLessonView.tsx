@@ -1275,6 +1275,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
         question={currentLesson.reinforcementExercise}
         courseId={currentLesson.courseId}
         skillId={currentLesson.reinforcementExercise.skillId || currentLesson.skillId}
+        lessonId={currentLesson.id}
         onSuccess={() => {
           closeReinforcement();
           onFinish();

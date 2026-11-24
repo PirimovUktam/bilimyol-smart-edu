@@ -59,7 +59,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const roadmap = useRoadmapStore((state) => state.roadmap);
   const error = useRoadmapStore((state) => state.error);
   const [filter, setFilter] = useState<keyof typeof filters>('all');
-  const [practice, setPractice] = useState<Question | null>(null);
+  const [practice, setPractice] = useState<{
+    question: Question;
+    lessonId: string;
+    reinforcementNodeId?: string;
+  } | null>(null);
   const [practiceLoading, setPracticeLoading] = useState<string | null>(null);
   const [practiceError, setPracticeError] = useState('');
   const [lockedNoticeNodeId, setLockedNoticeNodeId] = useState<string | null>(null);
@@ -154,14 +158,31 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     setPracticeLoading(node.id);
     setPracticeError('');
     try {
-      const baseNode = topics.find((topic) => topic.skillId === node.skillId);
-      const linked = baseNode?.targetLessonId
-        ? await supabaseLessonRepository.getLessonById(baseNode.targetLessonId)
+      const baseNode = !node.isReinforcement
+        ? node
+        : topics.find(
+            (topic) =>
+              topic.skillId === node.skillId &&
+              (!node.targetLessonId || topic.targetLessonId === node.targetLessonId),
+          ) ?? topics.find((topic) => topic.skillId === node.skillId);
+      const targetLessonId = node.targetLessonId || baseNode?.targetLessonId;
+      const linked = targetLessonId
+        ? await supabaseLessonRepository.getLessonById(targetLessonId)
         : await supabaseLessonRepository.getLessonByCourseAndSkill(node.courseId, node.skillId);
       if (!linked || linked.courseId !== node.courseId || linked.skillId !== node.skillId) {
         throw new Error(t('path.noExercise'));
       }
-      setPractice(linked.reinforcementExercise);
+      setPractice({
+        question: linked.reinforcementExercise,
+        lessonId: linked.id,
+        reinforcementNodeId: node.isReinforcement
+          ? node.id
+          : baseNode
+          ? baseNode.id.startsWith('reinf_')
+            ? baseNode.id
+            : `reinf_${baseNode.id}`
+          : undefined,
+      });
     } catch {
       setPracticeError(t('path.exerciseFailed'));
     } finally {
@@ -818,9 +839,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
       {practice && (
         <ReinforcementModal
           isOpen
-          question={practice}
-          courseId={practice.courseId}
-          skillId={practice.skillId}
+          question={practice.question}
+          courseId={practice.question.courseId}
+          skillId={practice.question.skillId}
+          lessonId={practice.lessonId}
+          reinforcementNodeId={practice.reinforcementNodeId}
           onClose={() => setPractice(null)}
           onSuccess={() => {
             setPractice(null);

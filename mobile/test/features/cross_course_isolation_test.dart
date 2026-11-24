@@ -250,7 +250,7 @@ void main() {
     );
 
     test(
-      'roadmap from another course is ignored — scoped fallback id is used',
+      'roadmap from another course is ignored — canonical lesson-scoped id is used',
       () async {
         final learnerRepo = InMemoryLearnerRepository();
         await learnerRepo.saveSkillScores('course_eng_01', {
@@ -284,7 +284,11 @@ void main() {
         final profile = await learnerRepo.getProfile();
         expect(
           profile.completedReinforcementIds,
-          contains('reinf_course_eng_01_skill_eng_listening'),
+          contains('reinf_lesson_lesson_eng_listening_01'),
+        );
+        expect(
+          profile.completedReinforcementIds,
+          isNot(contains('reinf_course_eng_01_skill_eng_listening')),
         );
         expect(
           profile.completedReinforcementIds,
