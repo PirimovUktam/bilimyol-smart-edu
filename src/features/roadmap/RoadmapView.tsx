@@ -1,6 +1,6 @@
 import { translate as t } from '@/core/locales/useTranslation';
 import { useTranslation } from '@/core/locales/useTranslation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Award,
@@ -21,7 +21,7 @@ import { useCourseStore } from '@/app/store/useCourseStore';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
 import { useRoadmapStore } from '@/app/store/useRoadmapStore';
 import { resolveNextLearningLesson, resolveRoadmapNodeLessonId } from '@/app/router/lessonResolution';
-import { ENGLISH_ALL_FLASHCARD_ENTRIES } from '@/data/datasources/english/flashcards';
+import { ENGLISH_FLASHCARD_SRS_META } from '@/data/datasources/english/flashcardSrsMeta';
 import { ENGLISH_CEFR_LEVELS } from '@/data/datasources/english/curriculum';
 import { supabaseLessonRepository } from '@/data/repositories/SupabaseLessonRepository';
 import type { LessonFlashcard } from '@/domain/entities/Lesson';
@@ -69,18 +69,28 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const [practiceError, setPracticeError] = useState('');
   const [lockedNoticeNodeId, setLockedNoticeNodeId] = useState<string | null>(null);
   const [showSrsHub, setShowSrsHub] = useState(false);
+  const [srsHubLoading, setSrsHubLoading] = useState(false);
+  const [srsHubError, setSrsHubError] = useState('');
   const [srsHubSession, setSrsHubSession] = useState<{
     cards: LessonFlashcard[];
     startEmpty: boolean;
   }>({ cards: [], startEmpty: false });
+  const flashcardDeckPromiseRef = useRef<Promise<typeof import('@/data/datasources/english/flashcards')> | null>(null);
+  const srsHubOpenTokenRef = useRef(0);
   const courseId = course?.id;
   const isEnglishCourse = courseId === 'course_eng_01';
 
   useEffect(() => {
+    srsHubOpenTokenRef.current += 1;
     if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
     setLockedNoticeNodeId(null);
     setShowSrsHub(false);
-  }, [courseId]);
+    setSrsHubLoading(false);
+    setSrsHubError('');
+    if (isEnglishCourse) {
+      flashcardDeckPromiseRef.current ??= import('@/data/datasources/english/flashcards');
+    }
+  }, [courseId, isEnglishCourse]);
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
   const nodes = useMemo(() => path?.nodes ?? [], [path?.nodes]);
@@ -117,14 +127,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
         .map((n) => n.targetLessonId as string),
       ...(profile?.completedLessonIds ?? []),
     ]);
-    const pool = ENGLISH_ALL_FLASHCARD_ENTRIES
-      .filter((entry) => unlockedLessonIds.has(entry.lessonId))
-      .map((entry) => entry.card);
-    return pool.length > 0 ? pool : ENGLISH_ALL_FLASHCARD_ENTRIES.map((entry) => entry.card);
+    const pool = ENGLISH_FLASHCARD_SRS_META.filter((entry) => unlockedLessonIds.has(entry.lessonId));
+    return pool.length > 0 ? pool : ENGLISH_FLASHCARD_SRS_META;
   }, [isEnglishCourse, nodes, profile?.completedLessonIds]);
 
   const dueEnglishFlashcards = useMemo(() => {
-    const due = unlockedEnglishFlashcards.filter((card) => isFlashcardDue(englishSrsMap[card.id]));
+    const due = unlockedEnglishFlashcards.filter((entry) => isFlashcardDue(englishSrsMap[entry.id]));
     const rank = (cardId: string): number => {
       const entry = englishSrsMap[cardId];
       if (entry?.status === 'need_practice') return 0;
@@ -142,16 +150,39 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     });
   }, [unlockedEnglishFlashcards, englishSrsMap]);
 
-  const handleToggleSrsHub = () => {
-    if (!showSrsHub) {
+  const handleToggleSrsHub = async () => {
+    if (showSrsHub) {
+      srsHubOpenTokenRef.current += 1;
+      setShowSrsHub(false);
+      setSrsHubLoading(false);
+      return;
+    }
+    const token = ++srsHubOpenTokenRef.current;
+    setSrsHubLoading(true);
+    setSrsHubError('');
+    try {
+      flashcardDeckPromiseRef.current ??= import('@/data/datasources/english/flashcards');
+      const { ENGLISH_FLASHCARD_BY_ID } = await flashcardDeckPromiseRef.current;
+      if (srsHubOpenTokenRef.current !== token) return;
       const hasDue = dueEnglishFlashcards.length > 0;
+      const orderedMeta = hasDue ? dueEnglishFlashcards : unlockedEnglishFlashcards;
+      const cards = orderedMeta
+        .map((entry) => ENGLISH_FLASHCARD_BY_ID[entry.id])
+        .filter((card): card is LessonFlashcard => Boolean(card));
       setSrsHubSession({
-        cards: hasDue ? dueEnglishFlashcards : unlockedEnglishFlashcards,
+        cards,
         startEmpty: !hasDue,
       });
       setShowSrsHub(true);
-    } else {
-      setShowSrsHub(false);
+    } catch {
+      flashcardDeckPromiseRef.current = null;
+      if (srsHubOpenTokenRef.current === token) {
+        setSrsHubError(t('path.exerciseFailed'));
+      }
+    } finally {
+      if (srsHubOpenTokenRef.current === token) {
+        setSrsHubLoading(false);
+      }
     }
   };
 
@@ -733,9 +764,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                 <Button
                   variant="outline"
                   aria-expanded={showSrsHub}
+                  disabled={srsHubLoading}
+                  isLoading={srsHubLoading}
                   leftIcon={<Layers aria-hidden="true" className="size-4" />}
                   className="min-h-11 w-fit border-white/60 bg-white/15 text-white hover:bg-white/25"
-                  onClick={handleToggleSrsHub}
+                  onClick={() => void handleToggleSrsHub()}
                 >
                   {t('path.srsHubButton')} ({dueEnglishFlashcards.length})
                 </Button>
@@ -750,6 +783,12 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
               )}
             </div>
           </section>
+
+          {isEnglishCourse && srsHubError && (
+            <p role="alert" className="rounded-2xl border border-coral/25 bg-coral/10 p-3.5 text-sm text-ink">
+              {srsHubError}
+            </p>
+          )}
 
           {isEnglishCourse && showSrsHub && (
             <section

@@ -2,6 +2,8 @@ import {
   IAITutorService,
   AIExplanationRequest,
   AIExplanationResponse,
+  GenerateQuestionRequest,
+  GenerateReinforcementRequest,
   GenerateLessonRequest,
   GeneratedLessonResponse,
   GeneratedQuestionResponse,
@@ -54,7 +56,7 @@ export class DemoAITutorService implements IAITutorService {
     }
 
     if (request.courseId === 'course_eng_01') {
-      return buildEnglishMistakeExplanation(request);
+      return await buildEnglishMistakeExplanation(request);
     }
 
     // Generic pedagogical fallback for any other question
@@ -357,9 +359,78 @@ export class DemoAITutorService implements IAITutorService {
     };
   }
 
+  async generateQuestion(request: GenerateQuestionRequest): Promise<GeneratedQuestionResponse> {
+    return this.buildFallbackQuestion(request, request.difficulty);
+  }
+
+  async generateReinforcement(request: GenerateReinforcementRequest): Promise<GeneratedQuestionResponse> {
+    return this.buildFallbackQuestion(request, 'easy');
+  }
+
+  private buildFallbackQuestion(
+    request: { courseId: string; skillId: string },
+    difficulty: 'easy' | 'medium' | 'hard',
+  ): GeneratedQuestionResponse {
+    const base = {
+      id: `q_fallback_${request.skillId}_${difficulty}`,
+      courseId: request.courseId,
+      skillId: request.skillId,
+      difficulty,
+      isAiGenerated: false,
+      isDeterministicFallback: true,
+    } as const;
+
+    // Subject-scoped deterministic fallbacks — a math question must never be
+    // served for English / IT / logic courses (and vice versa). The answer key
+    // is registered server-side (demo) and stripped from the client payload.
+    switch (request.courseId) {
+      case 'course_eng_01':
+        return publishQuestionWithRegisteredKey({
+          ...base,
+          text: 'Mustahkamlash: “She is reading a book” gapida fe’l qaysi zamonida ishlatilgan?',
+          options: ['Present Continuous', 'Past Simple', 'Future Simple', 'Present Perfect'],
+          correctIndex: 0,
+          explanation: '“is reading” — hozirgi davomiy zamon (Present Continuous).',
+        });
+      case 'course_it':
+        return publishQuestionWithRegisteredKey({
+          ...base,
+          text: 'Mustahkamlash: `for` sikli qaysi shart bajarilganda to‘xtaydi?',
+          options: ['Shart bajarilganda', 'Birinchi qadamda', 'Doim 10 marta', 'Faqat xato bo‘lganda'],
+          correctIndex: 0,
+          explanation: '`for` sikli berilgan shart (shartli ifoda) yolg‘on bo‘lganda to‘xtaydi.',
+        });
+      case 'course_logic':
+        return publishQuestionWithRegisteredKey({
+          ...base,
+          text: 'Mustahkamlash: 2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?',
+          options: ['24', '30', '32', '34'],
+          correctIndex: 2,
+          explanation: 'Har bir had 2 baravar oshadi: 16 × 2 = 32.',
+        });
+      case 'course_math_01':
+        return publishQuestionWithRegisteredKey({
+          ...base,
+          text: 'Mustahkamlash: f(x) = 3x + 2 funksiya berilgan. Agar x = 2 bo‘lsa, f(2) nechaga teng?',
+          formulaLatex: 'f(2) = 3(2) + 2',
+          options: ['8', '6', '7', '5'],
+          correctIndex: 0,
+          explanation: 'f(2) = 3×2 + 2 = 6 + 2 = 8.',
+        });
+      default:
+        return publishQuestionWithRegisteredKey({
+          ...base,
+          text: 'Mustahkamlash: ushbu mavzuni qayta ko‘rib chiqish va misollar yechish tavsiya etiladi.',
+          options: ['Tushundim', 'Qayta ko‘rish kerak', 'Savollarim bor', 'Yana mashq qilaman'],
+          correctIndex: 0,
+          explanation: 'Mavzuni mustahkamlash uchun qo‘shimcha misollar yechib ko‘ring.',
+        });
+    }
+  }
+
   async askTutor(request: AskTutorRequest): Promise<AskTutorResponse> {
     if (request.courseId === 'course_eng_01') {
-      return buildEnglishTutorReply(request);
+      return await buildEnglishTutorReply(request);
     }
     const topic = request.topic || 'bu mavzu';
     return {

@@ -3,9 +3,13 @@ import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
 import { supabaseCourseRepository } from '@/data/repositories/SupabaseCourseRepository';
 import { useLearnerStore } from '@/app/store/useLearnerStore';
-import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { useLessonStore } from '@/app/store/useLessonStore';
-import { usePlacementStore } from '@/app/store/usePlacementStore';
+import {
+  ACTIVE_COURSE_STORAGE_KEY,
+  invalidateCourseScopedStores,
+  registerSessionResetHandler,
+} from '@/core/runtime/sessionReset';
+
+export { ACTIVE_COURSE_STORAGE_KEY };
 
 /**
  * Single source of truth for the active course:
@@ -13,7 +17,6 @@ import { usePlacementStore } from '@/app/store/usePlacementStore';
  * - local cache: localStorage (instant restore after reload, offline fallback)
  * activeCourse in this store is derived from those sources, never from courses[0].
  */
-export const ACTIVE_COURSE_STORAGE_KEY = 'bilimyol_active_course_id';
 
 const readPersistedCourseId = (): string | null => {
   try {
@@ -52,9 +55,7 @@ const courseSelectionError = (courseId: string): Error =>
   new Error(`Kurs topilmadi: "${courseId}". Mavjud kurslardan birini tanlang.`);
 
 const invalidateCourseScopedState = (): void => {
-  useRoadmapStore.getState().clearSession();
-  useLessonStore.getState().clearSession();
-  usePlacementStore.getState().resetPlacement();
+  invalidateCourseScopedStores();
 };
 
 export const useCourseStore = create<CourseState>((set, get) => {
@@ -138,3 +139,5 @@ export const useCourseStore = create<CourseState>((set, get) => {
     },
   };
 });
+
+registerSessionResetHandler(() => useCourseStore.getState().clearSession());

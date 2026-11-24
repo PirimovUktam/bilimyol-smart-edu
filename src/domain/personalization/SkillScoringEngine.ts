@@ -79,7 +79,7 @@ export class SkillScoringEngine {
    */
   public static computePlacementScores(
     courseId: string,
-    questions: Question[],
+    questions: ReadonlyArray<Pick<Question, 'id' | 'skillId'>>,
     submissions: QuestionAnswerSubmission[]
   ): Record<SkillId, SkillScore> {
     const skillScoreMap: Record<SkillId, SkillScore> = {};

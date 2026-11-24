@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { LearnerProfile } from '@/domain/entities/LearnerProfile';
 import { OnboardingGoal, DailyTimeCommitment, InitialLevel } from '@/core/types/common';
 import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRepository';
+import { registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 interface LearnerState {
   profile: LearnerProfile | null;
@@ -126,3 +127,5 @@ export const useLearnerStore = create<LearnerState>((set) => {
     },
   };
 });
+
+registerSessionResetHandler(() => useLearnerStore.getState().clearSession());

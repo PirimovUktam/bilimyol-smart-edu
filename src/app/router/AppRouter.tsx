@@ -18,7 +18,6 @@ import { hasStartedCourse, pendingFoundationLesson } from '@/domain/personalizat
 import { activeLearningTracker } from '@/core/services/ActiveLearningTracker';
 import { Button } from '@/presentation/components/Button';
 import { withMotionPreferences } from '@/presentation/components/withMotionPreferences';
-import { InteractiveLessonView } from '@/features/lesson/InteractiveLessonView';
 
 import { SectionState } from '@/presentation/components/SectionState';
 import { RouteErrorBoundary } from '@/presentation/components/RouteErrorBoundary';
@@ -26,9 +25,7 @@ import type { ComponentType } from 'react';
 
 function lazyAnimated<Props extends object>(load: () => Promise<ComponentType<Props>>) {
   return lazy(async () => {
-    const [View, { withMotionPreferences }] = await Promise.all([
-      load(), import('@/presentation/components/withMotionPreferences'),
-    ]);
+    const View = await load();
     return { default: withMotionPreferences(View) };
   });
 }
@@ -79,7 +76,9 @@ const LazyKnowledgeMapView = lazy(() =>
 const LazyRoadmapView = lazyAnimated(() =>
   import('@/features/roadmap/RoadmapView').then((m) => m.RoadmapView)
 );
-const EagerInteractiveLessonView = withMotionPreferences(InteractiveLessonView);
+const LazyInteractiveLessonView = lazyAnimated(() =>
+  import('@/features/lesson/InteractiveLessonView').then((m) => m.InteractiveLessonView)
+);
 const LazyDashboardView = lazy(() =>
   import('@/features/dashboard/DashboardView').then((m) => ({ default: m.DashboardView }))
 );
@@ -322,7 +321,7 @@ export function AppRouter() {
           onChooseCourse={() => navigate('course-selection')} onConfigure={() => navigate('onboarding')}
           onStartPlacement={() => navigate('placement')} />;
       case 'lesson':
-        return lessonId ? <EagerInteractiveLessonView key={lessonId} lessonId={lessonId}
+        return lessonId ? <LazyInteractiveLessonView key={lessonId} lessonId={lessonId}
           onFinish={openRoadmap} onBackToRoadmap={openRoadmap} />
           : <div className="learning-page"><SectionState title={t('shell.lessonMissing')}
             description={t('shell.chooseLesson')} />

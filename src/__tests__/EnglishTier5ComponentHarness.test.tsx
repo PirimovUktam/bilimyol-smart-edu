@@ -278,8 +278,11 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
       return tree;
     };
 
-    // Initial mount loads lesson_eng_a1_exit; second render mimics React re-rendering with loaded lesson
+    // Initial mount loads lesson_eng_a1_exit; await dynamic Demo repo load, then second render mimics React re-rendering with loaded lesson
     renderView();
+    await vi.waitFor(() => {
+      expect(useLessonStore.getState().currentLesson?.id).toBe('lesson_eng_a1_exit');
+    });
     renderView();
     const exitLesson = useLessonStore.getState().currentLesson!;
     expect(exitLesson.id).toBe('lesson_eng_a1_exit');

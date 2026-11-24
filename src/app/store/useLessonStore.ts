@@ -8,6 +8,7 @@ import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases
 import { usePreferences } from '@/core/preferences/preferences';
 
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import { registerCourseInvalidationHandler, registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 const aiService = new GeminiAITutorService();
 
@@ -978,3 +979,6 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     });
   },
 }));
+
+registerSessionResetHandler(() => useLessonStore.getState().clearSession());
+registerCourseInvalidationHandler(() => useLessonStore.getState().clearSession());

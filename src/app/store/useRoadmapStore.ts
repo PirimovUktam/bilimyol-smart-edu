@@ -5,6 +5,7 @@ import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRe
 import { GetRoadmapUseCase } from '@/domain/usecases/GetRoadmapUseCase';
 import { SubmitReinforcementUseCase, ReinforcementResult } from '@/domain/usecases/SubmitReinforcementUseCase';
 import { Question } from '@/domain/entities/Question';
+import { registerCourseInvalidationHandler, registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 interface RoadmapState {
   roadmap: LearningPath | null;
@@ -143,3 +144,6 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
     },
   };
 });
+
+registerSessionResetHandler(() => useRoadmapStore.getState().clearSession());
+registerCourseInvalidationHandler(() => useRoadmapStore.getState().clearSession());

@@ -43,7 +43,9 @@ import { Formula, LearningText } from '@/presentation/components/LearningText';
 import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { Modal } from '@/presentation/components/Modal';
-import { TutorConversation } from '@/features/ai-tutor/YolchiAIChatView';
+const LazyTutorConversation = React.lazy(() =>
+  import('@/features/ai-tutor/YolchiAIChatView').then((m) => ({ default: m.TutorConversation }))
+);
 import { clearLessonPosition, readLessonPosition, saveLessonPosition } from './readingPosition';
 import { DictionaryLookup } from '@/features/dictionary/DictionaryLookup';
 
@@ -1246,16 +1248,20 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       </motion.div>
 
       {help && <Modal isOpen onClose={() => setHelp(null)} title={help === 'tutor' ? t('lesson.lessonChat') : t('lesson.englishDictionary')}>
-        {help === 'tutor' ? <TutorConversation compact
-          conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
-          courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
-          lessonId={currentLesson.id}
-          topic={localizedLessonTitle} score={savedScore}
-          questionId={interactiveQ?.id || undefined}
-          questionPrompt={interactiveQ ? localizedQuestionText : undefined}
-          questionSkillId={interactiveQ?.skillId}
-          recentMistakes={recentMistakeHints}
-          isDemoMode={isDemoMode} /> : <DictionaryLookup />}
+        {help === 'tutor' ? (
+          <React.Suspense fallback={<p role="status" className="py-4 text-sm text-slatefine">{t('shell.pageLoading')}</p>}>
+            <LazyTutorConversation compact
+              conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
+              courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
+              lessonId={currentLesson.id}
+              topic={localizedLessonTitle} score={savedScore}
+              questionId={interactiveQ?.id || undefined}
+              questionPrompt={interactiveQ ? localizedQuestionText : undefined}
+              questionSkillId={interactiveQ?.skillId}
+              recentMistakes={recentMistakeHints}
+              isDemoMode={isDemoMode} />
+          </React.Suspense>
+        ) : <DictionaryLookup />}
       </Modal>}
 
       {/* Yo'lchi AI Feedback Panel */}

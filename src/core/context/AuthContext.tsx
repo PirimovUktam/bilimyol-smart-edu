@@ -2,11 +2,7 @@ import { LocalizedError } from '@/core/locales/LocalizedError';
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
-import { useLearnerStore } from '@/app/store/useLearnerStore';
-import { useCourseStore, ACTIVE_COURSE_STORAGE_KEY } from '@/app/store/useCourseStore';
-import { useRoadmapStore } from '@/app/store/useRoadmapStore';
-import { useLessonStore } from '@/app/store/useLessonStore';
-import { usePlacementStore } from '@/app/store/usePlacementStore';
+import { ACTIVE_COURSE_STORAGE_KEY, resetAllSessionStores } from '@/core/runtime/sessionReset';
 import { isDemoRuntimeActive, setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { clearTutorHistory } from '@/core/runtime/tutorHistory';
 import { authError } from '@/core/utils/authErrors';
@@ -104,11 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const clearSessionStores = useCallback(() => {
-    useLearnerStore.getState().clearSession();
-    useCourseStore.getState().clearSession();
-    useRoadmapStore.getState().clearSession();
-    useLessonStore.getState().clearSession();
-    usePlacementStore.getState().resetPlacement();
+    resetAllSessionStores();
     clearTutorHistory();
     try {
       localStorage.removeItem(ACTIVE_COURSE_STORAGE_KEY);

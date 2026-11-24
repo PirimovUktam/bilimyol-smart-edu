@@ -11,7 +11,8 @@ import {
   computeEnglishPlacementCefr,
   getEnglishPlacementEntryNodeId,
 } from '@/domain/personalization/EnglishCefrPlacement';
-import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
+import { PLACEMENT_QUESTION_METADATA } from '@/data/datasources/placementMetadata';
+import { registerCourseInvalidationHandler, registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 /** Minimum interval between answer submissions (ms) to prevent rapid-fire abuse. */
 const MIN_SUBMIT_INTERVAL_MS = 800;
@@ -57,7 +58,7 @@ async function sessionState(session: PlacementSession, isCurrent: () => boolean)
   if (result && isCurrent()) await useLearnerStore.getState().loadProfile().catch(() => undefined);
   let learner = useLearnerStore.getState().profile;
   if (result && result.courseId === 'course_eng_01' && isCurrent()) {
-    const engBank = PLACEMENT_QUESTIONS['course_eng_01'] ?? [];
+    const engBank = PLACEMENT_QUESTION_METADATA['course_eng_01'] ?? [];
     const placementScores = SkillScoringEngine.computePlacementScores(result.courseId, engBank, result.submissions);
     const overallScore = SkillScoringEngine.computeOverallScore(placementScores);
     const placementCefr =
@@ -361,3 +362,6 @@ export const usePlacementStore = create<PlacementState>((set, get) => ({
     });
   },
 }));
+
+registerSessionResetHandler(() => usePlacementStore.getState().resetPlacement());
+registerCourseInvalidationHandler(() => usePlacementStore.getState().resetPlacement());

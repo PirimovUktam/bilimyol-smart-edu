@@ -10,11 +10,10 @@ import {
   AskTutorRequest,
   AskTutorResponse,
 } from './IAITutorService';
-import { DemoAITutorService } from './DemoAITutorService';
+import type { DemoAITutorService } from './DemoAITutorService';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { LocalizedError } from '@/core/locales/LocalizedError';
 import type { MessageKey } from '@/core/locales/messages';
-import { publishQuestionWithRegisteredKey } from '@/core/runtime/questionAnswerKeys';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 
 /**
@@ -42,12 +41,22 @@ const describeEdgeError = (status: number | null): MessageKey => {
 };
 
 export class GeminiAITutorService implements IAITutorService {
-  private fallbackService = new DemoAITutorService();
+  private fallbackServicePromise?: Promise<DemoAITutorService>;
+
+  private getFallbackService(): Promise<DemoAITutorService> {
+    this.fallbackServicePromise ??= import('./DemoAITutorService')
+      .then((m) => new m.DemoAITutorService())
+      .catch((err) => {
+        this.fallbackServicePromise = undefined;
+        throw err;
+      });
+    return this.fallbackServicePromise;
+  }
 
   async explainMistake(request: AIExplanationRequest): Promise<AIExplanationResponse> {
     const questionId = request.questionId?.trim() || undefined;
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      const fb = await this.fallbackService.explainMistake({
+      const fb = await (await this.getFallbackService()).explainMistake({
         ...request,
         questionId: questionId ?? '',
       });
@@ -89,7 +98,7 @@ export class GeminiAITutorService implements IAITutorService {
 
   async generateQuestion(request: GenerateQuestionRequest): Promise<GeneratedQuestionResponse> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.getFallbackQuestion(request, request.difficulty);
+      return (await this.getFallbackService()).generateQuestion(request);
     }
 
     try {
@@ -124,7 +133,7 @@ export class GeminiAITutorService implements IAITutorService {
 
   async generateReinforcement(request: GenerateReinforcementRequest): Promise<GeneratedQuestionResponse> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.getFallbackQuestion(request, 'easy');
+      return (await this.getFallbackService()).generateReinforcement(request);
     }
 
     try {
@@ -159,7 +168,7 @@ export class GeminiAITutorService implements IAITutorService {
 
   async generateLesson(request: GenerateLessonRequest): Promise<GeneratedLessonResponse> {
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackService.generateLesson(request);
+      return (await this.getFallbackService()).generateLesson(request);
     }
 
     try {
@@ -227,7 +236,7 @@ export class GeminiAITutorService implements IAITutorService {
     }
 
     if (isDemoRuntimeActive() || !isSupabaseConfigured) {
-      return this.fallbackService.askTutor({ ...request, questionId });
+      return (await this.getFallbackService()).askTutor({ ...request, questionId });
     }
 
     try {
@@ -255,67 +264,6 @@ export class GeminiAITutorService implements IAITutorService {
     } catch (err) {
       if (err instanceof GeminiAIServiceError) throw err;
       throw new GeminiAIServiceError(describeEdgeError(extractStatus(err)));
-    }
-  }
-
-  private getFallbackQuestion(
-    request: { courseId: string; skillId: string },
-    difficulty: 'easy' | 'medium' | 'hard'
-  ): GeneratedQuestionResponse {
-    const base = {
-      id: `q_fallback_${request.skillId}_${difficulty}`,
-      courseId: request.courseId,
-      skillId: request.skillId,
-      difficulty,
-      isAiGenerated: false,
-      isDeterministicFallback: true,
-    } as const;
-
-    // Subject-scoped deterministic fallbacks — a math question must never be
-    // served for English / IT / logic courses (and vice versa). The answer key
-    // is registered server-side (demo) and stripped from the client payload.
-    switch (request.courseId) {
-      case 'course_eng_01':
-        return publishQuestionWithRegisteredKey({
-          ...base,
-          text: 'Mustahkamlash: “She is reading a book” gapida fe’l qaysi zamonida ishlatilgan?',
-          options: ['Present Continuous', 'Past Simple', 'Future Simple', 'Present Perfect'],
-          correctIndex: 0,
-          explanation: '“is reading” — hozirgi davomiy zamon (Present Continuous).',
-        });
-      case 'course_it':
-        return publishQuestionWithRegisteredKey({
-          ...base,
-          text: 'Mustahkamlash: `for` sikli qaysi shart bajarilganda to‘xtaydi?',
-          options: ['Shart bajarilganda', 'Birinchi qadamda', 'Doim 10 marta', 'Faqat xato bo‘lganda'],
-          correctIndex: 0,
-          explanation: '`for` sikli berilgan shart (shartli ifoda) yolg‘on bo‘lganda to‘xtaydi.',
-        });
-      case 'course_logic':
-        return publishQuestionWithRegisteredKey({
-          ...base,
-          text: 'Mustahkamlash: 2, 4, 8, 16, ... ketma-ketligidagi keyingi son qaysi?',
-          options: ['24', '30', '32', '34'],
-          correctIndex: 2,
-          explanation: 'Har bir had 2 baravar oshadi: 16 × 2 = 32.',
-        });
-      case 'course_math_01':
-        return publishQuestionWithRegisteredKey({
-          ...base,
-          text: 'Mustahkamlash: f(x) = 3x + 2 funksiya berilgan. Agar x = 2 bo‘lsa, f(2) nechaga teng?',
-          formulaLatex: 'f(2) = 3(2) + 2',
-          options: ['8', '6', '7', '5'],
-          correctIndex: 0,
-          explanation: 'f(2) = 3×2 + 2 = 6 + 2 = 8.',
-        });
-      default:
-        return publishQuestionWithRegisteredKey({
-          ...base,
-          text: 'Mustahkamlash: ushbu mavzuni qayta ko‘rib chiqish va misollar yechish tavsiya etiladi.',
-          options: ['Tushundim', 'Qayta ko‘rish kerak', 'Savollarim bor', 'Yana mashq qilaman'],
-          correctIndex: 0,
-          explanation: 'Mavzuni mustahkamlash uchun qo‘shimcha misollar yechib ko‘ring.',
-        });
     }
   }
 }

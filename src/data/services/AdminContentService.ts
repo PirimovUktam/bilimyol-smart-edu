@@ -3,10 +3,6 @@ import { Course } from '@/domain/entities/Course';
 import { Skill } from '@/domain/entities/Skill';
 import { Lesson } from '@/domain/entities/Lesson';
 import { Question } from '@/domain/entities/Question';
-import { SEED_COURSES } from '../datasources/courses';
-import { SEED_SKILLS } from '../datasources/skills';
-import { SEED_LESSONS } from '../datasources/lessons';
-import { PLACEMENT_QUESTIONS } from '../datasources/questions';
 import { mapCourseSubject } from '@/data/repositories/SupabaseCourseRepository';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 
@@ -31,23 +27,50 @@ function demoPage<T>(rows: T[], page: number) {
   return pageOf(rows.slice(page * pageSize, (page + 1) * pageSize + 1));
 }
 
-// In-memory fallbacks mutable stores
-let inMemoryCourses: Course[] = [...SEED_COURSES];
-let inMemorySkills: Skill[] = [...SEED_SKILLS];
-let inMemoryLessons: AdminLessonRecord[] = Object.values(SEED_LESSONS).map((l) => ({
-  ...l,
-  isPublished: true,
-  isArchived: false,
-}));
-let inMemoryQuestions: AdminQuestionRecord[] = [];
-for (const [courseId, qList] of Object.entries(PLACEMENT_QUESTIONS)) {
-  for (const q of qList) {
-    inMemoryQuestions.push({
-      ...q,
-      courseId,
-      isPlacement: true,
-    });
-  }
+interface AdminDemoStores {
+  courses: Course[];
+  skills: Skill[];
+  lessons: AdminLessonRecord[];
+  questions: AdminQuestionRecord[];
+}
+
+let demoStores: AdminDemoStores | null = null;
+let demoStoresPromise: Promise<AdminDemoStores> | null = null;
+
+async function ensureDemoStores(): Promise<AdminDemoStores> {
+  if (demoStores) return demoStores;
+  demoStoresPromise ??= Promise.all([
+    import('../datasources/courses'),
+    import('../datasources/skills'),
+    import('../datasources/lessons'),
+    import('../datasources/questions'),
+  ]).then(([coursesMod, skillsMod, lessonsMod, questionsMod]) => {
+    const questions: AdminQuestionRecord[] = [];
+    for (const [courseId, qList] of Object.entries(questionsMod.PLACEMENT_QUESTIONS)) {
+      for (const q of qList) {
+        questions.push({
+          ...q,
+          courseId,
+          isPlacement: true,
+        });
+      }
+    }
+    demoStores = {
+      courses: [...coursesMod.SEED_COURSES],
+      skills: [...skillsMod.SEED_SKILLS],
+      lessons: Object.values(lessonsMod.SEED_LESSONS).map((l) => ({
+        ...l,
+        isPublished: true,
+        isArchived: false,
+      })),
+      questions,
+    };
+    return demoStores;
+  }).catch((err) => {
+    demoStoresPromise = null;
+    throw err;
+  });
+  return demoStoresPromise;
 }
 
 export class AdminContentService {
@@ -56,7 +79,8 @@ export class AdminContentService {
   // =========================================================================
   async getCourses(): Promise<Course[]> {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return [...inMemoryCourses];
+      const stores = await ensureDemoStores();
+      return [...stores.courses];
     }
     const { data, error } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
     if (error) throw new Error('Fanlarni serverdan yuklab bo‘lmadi.');
@@ -112,9 +136,10 @@ export class AdminContentService {
     }
 
     // Update in-memory
-    const idx = inMemoryCourses.findIndex((c) => c.id === id);
-    if (idx >= 0) inMemoryCourses[idx] = newCourse;
-    else inMemoryCourses.unshift(newCourse);
+    const stores = await ensureDemoStores();
+    const idx = stores.courses.findIndex((c) => c.id === id);
+    if (idx >= 0) stores.courses[idx] = newCourse;
+    else stores.courses.unshift(newCourse);
 
     return newCourse;
   }
@@ -125,7 +150,8 @@ export class AdminContentService {
       if (error) throw new Error(`Fanni o‘chirishda xatolik: ${error.message}`);
       return;
     }
-    inMemoryCourses = inMemoryCourses.filter((c) => c.id !== courseId);
+    const stores = await ensureDemoStores();
+    stores.courses = stores.courses.filter((c) => c.id !== courseId);
   }
 
   // =========================================================================
@@ -133,7 +159,8 @@ export class AdminContentService {
   // =========================================================================
   async getSkills(courseId: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return demoPage(inMemorySkills.filter((s) => s.courseId === courseId), page);
+      const stores = await ensureDemoStores();
+      return demoPage(stores.skills.filter((s) => s.courseId === courseId), page);
     }
     const { data, error } = await supabase.from('skills')
       .select('id,course_id,name,code,description,order_index,icon_name')
@@ -154,7 +181,8 @@ export class AdminContentService {
 
   async getSkillOptions(courseId: string): Promise<Pick<Skill, 'id' | 'name'>[]> {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return inMemorySkills.filter((skill) => skill.courseId === courseId);
+      const stores = await ensureDemoStores();
+      return stores.skills.filter((skill) => skill.courseId === courseId);
     }
     const rows: Pick<Skill, 'id' | 'name'>[] = [];
     for (let offset = 0; ; offset += 100) {
@@ -168,18 +196,18 @@ export class AdminContentService {
 
   async saveSkill(skill: Partial<Skill>): Promise<Skill> {
     const id = skill.id || `skill_${Date.now()}`;
-    const newSkill: Skill = {
-      id,
-      courseId: skill.courseId || 'course_math_01',
-      name: skill.name || 'Yangi Ko‘nikma',
-      code: skill.code || 'SKILL_NEW',
-      description: skill.description || '',
-      order: skill.order ?? skill.orderIndex ?? (inMemorySkills.length + 1),
-      orderIndex: skill.orderIndex ?? skill.order ?? (inMemorySkills.length + 1),
-      iconName: skill.iconName || 'Target',
-    };
-
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      const fallbackOrder = skill.order ?? skill.orderIndex ?? 1;
+      const newSkill: Skill = {
+        id,
+        courseId: skill.courseId || 'course_math_01',
+        name: skill.name || 'Yangi Ko‘nikma',
+        code: skill.code || 'SKILL_NEW',
+        description: skill.description || '',
+        order: fallbackOrder,
+        orderIndex: skill.orderIndex ?? skill.order ?? fallbackOrder,
+        iconName: skill.iconName || 'Target',
+      };
       const { error } = await supabase.from('skills').upsert({
         id: newSkill.id,
         course_id: newSkill.courseId,
@@ -193,9 +221,21 @@ export class AdminContentService {
       return newSkill;
     }
 
-    const idx = inMemorySkills.findIndex((s) => s.id === id);
-    if (idx >= 0) inMemorySkills[idx] = newSkill;
-    else inMemorySkills.push(newSkill);
+    const stores = await ensureDemoStores();
+    const defaultOrder = stores.skills.length + 1;
+    const newSkill: Skill = {
+      id,
+      courseId: skill.courseId || 'course_math_01',
+      name: skill.name || 'Yangi Ko‘nikma',
+      code: skill.code || 'SKILL_NEW',
+      description: skill.description || '',
+      order: skill.order ?? skill.orderIndex ?? defaultOrder,
+      orderIndex: skill.orderIndex ?? skill.order ?? defaultOrder,
+      iconName: skill.iconName || 'Target',
+    };
+    const idx = stores.skills.findIndex((s) => s.id === id);
+    if (idx >= 0) stores.skills[idx] = newSkill;
+    else stores.skills.push(newSkill);
 
     return newSkill;
   }
@@ -206,7 +246,8 @@ export class AdminContentService {
       if (error) throw new Error(`Ko‘nikmani o‘chirishda xatolik: ${error.message}`);
       return;
     }
-    inMemorySkills = inMemorySkills.filter((s) => s.id !== skillId);
+    const stores = await ensureDemoStores();
+    stores.skills = stores.skills.filter((s) => s.id !== skillId);
   }
 
   // =========================================================================
@@ -214,7 +255,8 @@ export class AdminContentService {
   // =========================================================================
   async getLessons(courseId: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return demoPage(inMemoryLessons.filter((l) => l.courseId === courseId), page);
+      const stores = await ensureDemoStores();
+      return demoPage(stores.lessons.filter((l) => l.courseId === courseId), page);
     }
     // Learner access uses learner_lessons; CMS reads use the role-gated view
     // so answer-key JSON never travels to ordinary authenticated clients.
@@ -239,7 +281,8 @@ export class AdminContentService {
 
   async getLessonDetails(lessonId: string): Promise<Pick<AdminLessonRecord, 'steps' | 'reinforcementExercise'>> {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      const lesson = inMemoryLessons.find((row) => row.id === lessonId);
+      const stores = await ensureDemoStores();
+      const lesson = stores.lessons.find((row) => row.id === lessonId);
       if (!lesson) throw new Error('Dars topilmadi.');
       return { steps: lesson.steps, reinforcementExercise: lesson.reinforcementExercise };
     }
@@ -299,9 +342,10 @@ export class AdminContentService {
       return newLesson;
     }
 
-    const idx = inMemoryLessons.findIndex((l) => l.id === id);
-    if (idx >= 0) inMemoryLessons[idx] = newLesson;
-    else inMemoryLessons.unshift(newLesson);
+    const stores = await ensureDemoStores();
+    const idx = stores.lessons.findIndex((l) => l.id === id);
+    if (idx >= 0) stores.lessons[idx] = newLesson;
+    else stores.lessons.unshift(newLesson);
 
     return newLesson;
   }
@@ -315,7 +359,8 @@ export class AdminContentService {
       if (error) throw new Error(`Nashr holatini o‘zgartirishda xatolik: ${error.message}`);
       return;
     }
-    const l = inMemoryLessons.find((item) => item.id === lessonId);
+    const stores = await ensureDemoStores();
+    const l = stores.lessons.find((item) => item.id === lessonId);
     if (l) l.isPublished = isPublished;
   }
 
@@ -328,7 +373,8 @@ export class AdminContentService {
       if (error) throw new Error(`Arxiv holatini o‘zgartirishda xatolik: ${error.message}`);
       return;
     }
-    const l = inMemoryLessons.find((item) => item.id === lessonId);
+    const stores = await ensureDemoStores();
+    const l = stores.lessons.find((item) => item.id === lessonId);
     if (l) l.isArchived = isArchived;
   }
 
@@ -338,7 +384,8 @@ export class AdminContentService {
       if (error) throw new Error(`Darsni o‘chirishda xatolik: ${error.message}`);
       return;
     }
-    inMemoryLessons = inMemoryLessons.filter((l) => l.id !== lessonId);
+    const stores = await ensureDemoStores();
+    stores.lessons = stores.lessons.filter((l) => l.id !== lessonId);
   }
 
   // =========================================================================
@@ -346,7 +393,8 @@ export class AdminContentService {
   // =========================================================================
   async getQuestions(courseId: string, skillId?: string, page = 0) {
     if (!isSupabaseConfigured || isDemoRuntimeActive()) {
-      return demoPage(inMemoryQuestions.filter((q) => q.courseId === courseId && (!skillId || q.skillId === skillId)), page);
+      const stores = await ensureDemoStores();
+      return demoPage(stores.questions.filter((q) => q.courseId === courseId && (!skillId || q.skillId === skillId)), page);
     }
     // Answer keys are exposed only through the admin-only security-definer
     // view; learner-facing question reads never receive correct_index.
@@ -404,9 +452,10 @@ export class AdminContentService {
       return newQuestion;
     }
 
-    const idx = inMemoryQuestions.findIndex((q) => q.id === id);
-    if (idx >= 0) inMemoryQuestions[idx] = newQuestion;
-    else inMemoryQuestions.unshift(newQuestion);
+    const stores = await ensureDemoStores();
+    const idx = stores.questions.findIndex((q) => q.id === id);
+    if (idx >= 0) stores.questions[idx] = newQuestion;
+    else stores.questions.unshift(newQuestion);
 
     return newQuestion;
   }
@@ -417,7 +466,8 @@ export class AdminContentService {
       if (error) throw new Error(`Savolni o‘chirishda xatolik: ${error.message}`);
       return;
     }
-    inMemoryQuestions = inMemoryQuestions.filter((q) => q.id !== questionId);
+    const stores = await ensureDemoStores();
+    stores.questions = stores.questions.filter((q) => q.id !== questionId);
   }
 }
 

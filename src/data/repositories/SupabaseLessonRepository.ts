@@ -11,7 +11,7 @@ import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 import { LocalizedError } from '@/core/locales/LocalizedError';
 import { MATH_MASTERY_COURSE } from '@/domain/personalization/learningStart';
-import { inMemoryLessonRepository } from './InMemoryLessonRepository';
+import type { InMemoryLessonRepository } from './InMemoryLessonRepository';
 
 interface MathProgressionRow {
   id: string;
@@ -268,8 +268,19 @@ export function mapLearnerLesson(row: any): Lesson {
 }
 
 export class SupabaseLessonRepository implements ILessonRepository {
-  private async demoRepository() {
-    return inMemoryLessonRepository;
+  private demoRepoPromise?: Promise<InMemoryLessonRepository>;
+  private demoRepoInstance?: InMemoryLessonRepository;
+  private liveRuntimeLessons = new Map<string, Lesson>();
+
+  private demoRepository(): Promise<InMemoryLessonRepository> {
+    this.demoRepoPromise ??= import('./InMemoryLessonRepository').then((module) => {
+      this.demoRepoInstance = module.inMemoryLessonRepository;
+      return module.inMemoryLessonRepository;
+    }).catch((err) => {
+      this.demoRepoPromise = undefined;
+      throw err;
+    });
+    return this.demoRepoPromise;
   }
 
   private async requireAuthenticatedUser(): Promise<void> {
@@ -282,7 +293,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
     if (!isDemoRuntimeActive() && isSupabaseConfigured) {
       return null;
     }
-    return inMemoryLessonRepository.getLessonByIdSync(lessonId);
+    return this.demoRepoInstance?.getLessonByIdSync(lessonId) ?? null;
   }
 
   async getLessonById(lessonId: string): Promise<Lesson | null> {
@@ -315,6 +326,11 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
       if (genRow) {
         return mapLearnerLesson(genRow);
+      }
+
+      const liveCached = this.liveRuntimeLessons.get(lessonId);
+      if (liveCached) {
+        return { ...liveCached };
       }
 
       return null;
@@ -424,7 +440,11 @@ export class SupabaseLessonRepository implements ILessonRepository {
     // `generated_lessons` table is exclusively the Edge Function's
     // responsibility (service_role) — clients must never write the shared
     // cache, otherwise one learner could poison content for everyone.
-    await (await this.demoRepository()).saveLesson(lesson);
+    if (isDemoRuntimeActive() || !isSupabaseConfigured) {
+      await (await this.demoRepository()).saveLesson(lesson);
+      return;
+    }
+    this.liveRuntimeLessons.set(lesson.id, { ...lesson });
   }
 }
 

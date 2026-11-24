@@ -2,7 +2,7 @@ import type { CefrLevelId, Question, QuestionAnswerSubmission } from '../entitie
 
 export type PlacementCefrLevel = 'Pre-A1' | 'A1' | 'A2' | 'B1';
 
-function resolveQuestionCefrTier(question: Question): 'A1' | 'A2' | 'B1' {
+function resolveQuestionCefrTier(question: Pick<Question, 'difficulty' | 'cefrLevel'>): 'A1' | 'A2' | 'B1' {
   if (question.cefrLevel === 'B1' || question.cefrLevel === 'B2' || question.cefrLevel === 'C1' || question.cefrLevel === 'C2') {
     return 'B1';
   }
@@ -19,7 +19,7 @@ function resolveQuestionCefrTier(question: Question): 'A1' | 'A2' | 'B1' {
  * act as a floor without ever exceeding B1.
  */
 export function computeEnglishPlacementCefr(
-  questions: Question[],
+  questions: ReadonlyArray<Pick<Question, 'id' | 'difficulty' | 'cefrLevel'>>,
   submissions: QuestionAnswerSubmission[],
   completedNodeIds: string[] = [],
 ): PlacementCefrLevel {

@@ -7,14 +7,36 @@ import type {
 import type { Lesson, LessonFlashcard } from '@/domain/entities/Lesson';
 import type { Question } from '@/domain/entities/Question';
 import { getLocalizedMistakeFeedback, getLocalizedQuestionExplanation } from '@/domain/entities/Question';
-import {
-  ENGLISH_ALL_LESSONS,
-  ENGLISH_ALL_LESSONS_LIST,
-  ENGLISH_ALL_QUESTIONS,
-} from './english';
-import { ENGLISH_FLASHCARDS_BY_LESSON } from './english/flashcards';
-import { PLACEMENT_QUESTIONS } from './questions';
-import { SEED_SKILLS } from './skills';
+interface EnglishDemoData {
+  ENGLISH_ALL_LESSONS: typeof import('./english').ENGLISH_ALL_LESSONS;
+  ENGLISH_ALL_LESSONS_LIST: typeof import('./english').ENGLISH_ALL_LESSONS_LIST;
+  ENGLISH_ALL_QUESTIONS: typeof import('./english').ENGLISH_ALL_QUESTIONS;
+  ENGLISH_FLASHCARDS_BY_LESSON: typeof import('./english/flashcards').ENGLISH_FLASHCARDS_BY_LESSON;
+  PLACEMENT_QUESTIONS: typeof import('./questions').PLACEMENT_QUESTIONS;
+  SEED_SKILLS: typeof import('./skills').SEED_SKILLS;
+}
+
+let englishDemoDataPromise: Promise<EnglishDemoData> | null = null;
+
+function loadEnglishDemoData(): Promise<EnglishDemoData> {
+  englishDemoDataPromise ??= Promise.all([
+    import('./english'),
+    import('./english/flashcards'),
+    import('./questions'),
+    import('./skills'),
+  ]).then(([eng, fc, q, s]) => ({
+    ENGLISH_ALL_LESSONS: eng.ENGLISH_ALL_LESSONS,
+    ENGLISH_ALL_LESSONS_LIST: eng.ENGLISH_ALL_LESSONS_LIST,
+    ENGLISH_ALL_QUESTIONS: eng.ENGLISH_ALL_QUESTIONS,
+    ENGLISH_FLASHCARDS_BY_LESSON: fc.ENGLISH_FLASHCARDS_BY_LESSON,
+    PLACEMENT_QUESTIONS: q.PLACEMENT_QUESTIONS,
+    SEED_SKILLS: s.SEED_SKILLS,
+  })).catch((err) => {
+    englishDemoDataPromise = null;
+    throw err;
+  });
+  return englishDemoDataPromise;
+}
 
 export interface AIDemoFeedback {
   courseId: string;
@@ -68,20 +90,25 @@ const SKILL_COACHING_NOTES: Record<string, { uz: string; ru: string }> = {
   },
 };
 
-function findEnglishQuestion(questionId?: string): Question | undefined {
+function findEnglishQuestion(data: EnglishDemoData, questionId?: string): Question | undefined {
   if (!questionId) return undefined;
   return (
-    ENGLISH_ALL_QUESTIONS.find((q) => q.id === questionId) ||
-    (PLACEMENT_QUESTIONS['course_eng_01'] ?? []).find((q) => q.id === questionId)
+    data.ENGLISH_ALL_QUESTIONS.find((q) => q.id === questionId) ||
+    (data.PLACEMENT_QUESTIONS['course_eng_01'] ?? []).find((q) => q.id === questionId)
   );
 }
 
-function findEnglishLesson(lessonId?: string, questionId?: string, skillId?: string): Lesson | undefined {
-  if (lessonId && ENGLISH_ALL_LESSONS[lessonId]) {
-    return ENGLISH_ALL_LESSONS[lessonId];
+function findEnglishLesson(
+  data: EnglishDemoData,
+  lessonId?: string,
+  questionId?: string,
+  skillId?: string,
+): Lesson | undefined {
+  if (lessonId && data.ENGLISH_ALL_LESSONS[lessonId]) {
+    return data.ENGLISH_ALL_LESSONS[lessonId];
   }
   if (questionId) {
-    const byQuestion = ENGLISH_ALL_LESSONS_LIST.find(
+    const byQuestion = data.ENGLISH_ALL_LESSONS_LIST.find(
       (lesson) =>
         lesson.reinforcementExercise?.id === questionId ||
         lesson.alternateExercise?.id === questionId ||
@@ -90,7 +117,7 @@ function findEnglishLesson(lessonId?: string, questionId?: string, skillId?: str
     if (byQuestion) return byQuestion;
   }
   if (skillId) {
-    return ENGLISH_ALL_LESSONS_LIST.find((lesson) => lesson.skillId === skillId);
+    return data.ENGLISH_ALL_LESSONS_LIST.find((lesson) => lesson.skillId === skillId);
   }
   return undefined;
 }
@@ -288,12 +315,15 @@ export function isAnswerRevealRequest(message: string): boolean {
   ].some((pattern) => pattern.test(normalized));
 }
 
-export function buildEnglishMistakeExplanation(request: AIExplanationRequest): AIExplanationResponse {
+export async function buildEnglishMistakeExplanation(
+  request: AIExplanationRequest,
+): Promise<AIExplanationResponse> {
+  const data = await loadEnglishDemoData();
   const lang: 'uz' | 'ru' = request.language === 'ru' ? 'ru' : 'uz';
-  const question = findEnglishQuestion(request.questionId);
+  const question = findEnglishQuestion(data, request.questionId);
   const resolvedSkillId = question?.skillId || request.skillId;
-  const lesson = findEnglishLesson(request.lessonId, request.questionId, resolvedSkillId);
-  const skill = SEED_SKILLS.find((s) => s.id === resolvedSkillId);
+  const lesson = findEnglishLesson(data, request.lessonId, request.questionId, resolvedSkillId);
+  const skill = data.SEED_SKILLS.find((s) => s.id === resolvedSkillId);
   const lessonTitle = selectSafeLessonTitle(lesson, question, lang, '');
   const canDo = selectSafeCanDo(lesson, question, lang);
   const ruleCue = selectSafeRuleCue(lesson, question, resolvedSkillId, lang);
@@ -394,13 +424,14 @@ export function buildEnglishMistakeExplanation(request: AIExplanationRequest): A
   };
 }
 
-export function buildEnglishTutorReply(request: AskTutorRequest): AskTutorResponse {
+export async function buildEnglishTutorReply(request: AskTutorRequest): Promise<AskTutorResponse> {
+  const data = await loadEnglishDemoData();
   const lang: 'uz' | 'ru' = request.language === 'ru' ? 'ru' : 'uz';
-  const question = findEnglishQuestion(request.questionId);
+  const question = findEnglishQuestion(data, request.questionId);
   const resolvedSkillId = request.questionSkillId || question?.skillId || request.skillId;
-  const lesson = findEnglishLesson(request.lessonId, request.questionId, resolvedSkillId);
-  const skill = SEED_SKILLS.find((s) => s.id === resolvedSkillId);
-  const flashcards = lesson ? (ENGLISH_FLASHCARDS_BY_LESSON[lesson.id] ?? []) : [];
+  const lesson = findEnglishLesson(data, request.lessonId, request.questionId, resolvedSkillId);
+  const skill = data.SEED_SKILLS.find((s) => s.id === resolvedSkillId);
+  const flashcards = lesson ? (data.ENGLISH_FLASHCARDS_BY_LESSON[lesson.id] ?? []) : [];
   const safeCard = pickSafeFlashcard(flashcards, question);
 
   const lessonTitle = selectSafeLessonTitle(
