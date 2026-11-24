@@ -8,6 +8,7 @@ import {
 import { Question, QuestionType } from '@/domain/entities/Question';
 import { LearningPathNode } from '@/domain/entities/LearningPathNode';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { registerSessionResetHandler } from '@/core/runtime/sessionReset';
 import { supabase, isSupabaseConfigured } from '@/core/config/supabase';
 import { LocalizedError } from '@/core/locales/LocalizedError';
 import { MATH_MASTERY_COURSE } from '@/domain/personalization/learningStart';
@@ -446,6 +447,14 @@ export class SupabaseLessonRepository implements ILessonRepository {
     }
     this.liveRuntimeLessons.set(lesson.id, { ...lesson });
   }
+
+  clearRuntimeCache(): void {
+    this.liveRuntimeLessons.clear();
+  }
 }
 
 export const supabaseLessonRepository = new SupabaseLessonRepository();
+
+registerSessionResetHandler(() => {
+  supabaseLessonRepository.clearRuntimeCache();
+});

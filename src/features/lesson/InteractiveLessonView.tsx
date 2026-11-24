@@ -43,9 +43,76 @@ import { Formula, LearningText } from '@/presentation/components/LearningText';
 import { PageHeader } from '@/presentation/components/PageHeader';
 import { Progress } from '@/presentation/components/Progress';
 import { Modal } from '@/presentation/components/Modal';
-const LazyTutorConversation = React.lazy(() =>
-  import('@/features/ai-tutor/YolchiAIChatView').then((m) => ({ default: m.TutorConversation }))
-);
+let lazyTutorLoadFailed = false;
+
+function createLazyTutorConversation() {
+  return React.lazy(() =>
+    import('@/features/ai-tutor/YolchiAIChatView')
+      .then((m) => ({ default: m.TutorConversation }))
+      .catch((error) => {
+        lazyTutorLoadFailed = true;
+        throw error;
+      }),
+  );
+}
+
+let LazyTutorConversation = createLazyTutorConversation();
+
+function resetLazyTutorConversationIfFailed() {
+  if (!lazyTutorLoadFailed) return;
+  lazyTutorLoadFailed = false;
+  LazyTutorConversation = createLazyTutorConversation();
+}
+
+interface TutorModalErrorBoundaryProps {
+  errorTitle: string;
+  errorDescription: string;
+  retryLabel: string;
+  closeLabel: string;
+  onRetry: () => void;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+class TutorModalErrorBoundary extends React.Component<
+  TutorModalErrorBoundaryProps,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error): void {
+    console.warn('Tutor modal chunk failed to load:', error);
+  }
+
+  private handleRetry = (): void => {
+    this.props.onRetry();
+    this.setState({ hasError: false });
+  };
+
+  render(): React.ReactNode {
+    if (!this.state.hasError) {
+      return this.props.children;
+    }
+    return (
+      <div role="alert" className="space-y-3 rounded-2xl border border-coral/25 bg-coral/10 p-4 text-sm text-ink">
+        <p className="font-semibold">{this.props.errorTitle}</p>
+        <p className="text-slatefine">{this.props.errorDescription}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={this.handleRetry}>
+            {this.props.retryLabel}
+          </Button>
+          <Button size="sm" variant="outline" onClick={this.props.onClose}>
+            {this.props.closeLabel}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+}
 import { clearLessonPosition, readLessonPosition, saveLessonPosition } from './readingPosition';
 import { DictionaryLookup } from '@/features/dictionary/DictionaryLookup';
 
@@ -133,6 +200,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   const [localInputError, setLocalInputError] = useState<string | null>(null);
   const [hasSubmittedCurrent, setHasSubmittedCurrent] = useState<boolean>(false);
   const [help, setHelp] = useState<'tutor' | 'dictionary' | null>(null);
+  const [tutorRetryNonce, setTutorRetryNonce] = useState(0);
   const restoredSessionKey = useRef<string | null>(null);
   const textInputRef = useRef<HTMLInputElement | null>(null);
   const productiveInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1247,22 +1315,46 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
           </div>
       </motion.div>
 
-      {help && <Modal isOpen onClose={() => setHelp(null)} title={help === 'tutor' ? t('lesson.lessonChat') : t('lesson.englishDictionary')}>
-        {help === 'tutor' ? (
-          <React.Suspense fallback={<p role="status" className="py-4 text-sm text-slatefine">{t('shell.pageLoading')}</p>}>
-            <LazyTutorConversation compact
-              conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
-              courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
-              lessonId={currentLesson.id}
-              topic={localizedLessonTitle} score={savedScore}
-              questionId={interactiveQ?.id || undefined}
-              questionPrompt={interactiveQ ? localizedQuestionText : undefined}
-              questionSkillId={interactiveQ?.skillId}
-              recentMistakes={recentMistakeHints}
-              isDemoMode={isDemoMode} />
-          </React.Suspense>
-        ) : <DictionaryLookup />}
-      </Modal>}
+      {help && (
+        <Modal
+          isOpen
+          onClose={() => {
+            resetLazyTutorConversationIfFailed();
+            setHelp(null);
+          }}
+          title={help === 'tutor' ? t('lesson.lessonChat') : t('lesson.englishDictionary')}
+        >
+          {help === 'tutor' ? (
+            <TutorModalErrorBoundary
+              errorTitle={t('shell.openFailed')}
+              errorDescription={t('shell.reloadDescription')}
+              retryLabel={t('courses.retry')}
+              closeLabel={t('courses.close')}
+              onRetry={() => {
+                resetLazyTutorConversationIfFailed();
+                setTutorRetryNonce((prev) => prev + 1);
+              }}
+              onClose={() => {
+                resetLazyTutorConversationIfFailed();
+                setHelp(null);
+              }}
+            >
+              <React.Suspense key={tutorRetryNonce} fallback={<p role="status" className="py-4 text-sm text-slatefine">{t('shell.pageLoading')}</p>}>
+                <LazyTutorConversation compact
+                  conversation={[account?.id, currentLesson.courseId, currentLesson.id].join('/')}
+                  courseId={currentLesson.courseId} courseTitle={activeCourse.title} skillId={currentLesson.skillId}
+                  lessonId={currentLesson.id}
+                  topic={localizedLessonTitle} score={savedScore}
+                  questionId={interactiveQ?.id || undefined}
+                  questionPrompt={interactiveQ ? localizedQuestionText : undefined}
+                  questionSkillId={interactiveQ?.skillId}
+                  recentMistakes={recentMistakeHints}
+                  isDemoMode={isDemoMode} />
+              </React.Suspense>
+            </TutorModalErrorBoundary>
+          ) : <DictionaryLookup />}
+        </Modal>
+      )}
 
       {/* Yo'lchi AI Feedback Panel */}
       {showAIPanel && lastAnswerResult && interactiveQ && <YolchiAIPanel

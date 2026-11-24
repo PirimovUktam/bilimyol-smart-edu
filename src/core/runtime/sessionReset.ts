@@ -12,7 +12,11 @@ export function registerSessionResetHandler(handler: () => void): () => void {
 
 export function resetAllSessionStores(): void {
   for (const handler of sessionResetHandlers) {
-    handler();
+    try {
+      handler();
+    } catch (error) {
+      console.warn('Session reset handler failed:', error);
+    }
   }
 }
 
@@ -25,6 +29,10 @@ export function registerCourseInvalidationHandler(handler: () => void): () => vo
 
 export function invalidateCourseScopedStores(): void {
   for (const handler of courseInvalidationHandlers) {
-    handler();
+    try {
+      handler();
+    } catch (error) {
+      console.warn('Course invalidation handler failed:', error);
+    }
   }
 }

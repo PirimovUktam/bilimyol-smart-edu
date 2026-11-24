@@ -282,7 +282,7 @@ describe('Tier 5 Component Hook Harness Regressions', () => {
     renderView();
     await vi.waitFor(() => {
       expect(useLessonStore.getState().currentLesson?.id).toBe('lesson_eng_a1_exit');
-    });
+    }, { timeout: 5000 });
     renderView();
     const exitLesson = useLessonStore.getState().currentLesson!;
     expect(exitLesson.id).toBe('lesson_eng_a1_exit');

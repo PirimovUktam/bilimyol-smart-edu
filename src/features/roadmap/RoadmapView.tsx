@@ -80,6 +80,14 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const courseId = course?.id;
   const isEnglishCourse = courseId === 'course_eng_01';
 
+  const loadFlashcardDeck = () => {
+    flashcardDeckPromiseRef.current ??= import('@/data/datasources/english/flashcards').catch((err) => {
+      flashcardDeckPromiseRef.current = null;
+      throw err;
+    });
+    return flashcardDeckPromiseRef.current;
+  };
+
   useEffect(() => {
     srsHubOpenTokenRef.current += 1;
     if (courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
@@ -88,8 +96,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     setSrsHubLoading(false);
     setSrsHubError('');
     if (isEnglishCourse) {
-      flashcardDeckPromiseRef.current ??= import('@/data/datasources/english/flashcards');
+      void loadFlashcardDeck().catch(() => undefined);
     }
+    return () => {
+      srsHubOpenTokenRef.current += 1;
+    };
   }, [courseId, isEnglishCourse]);
 
   const path = roadmap?.courseId === courseId ? roadmap : null;
@@ -161,8 +172,7 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
     setSrsHubLoading(true);
     setSrsHubError('');
     try {
-      flashcardDeckPromiseRef.current ??= import('@/data/datasources/english/flashcards');
-      const { ENGLISH_FLASHCARD_BY_ID } = await flashcardDeckPromiseRef.current;
+      const { ENGLISH_FLASHCARD_BY_ID } = await loadFlashcardDeck();
       if (srsHubOpenTokenRef.current !== token) return;
       const hasDue = dueEnglishFlashcards.length > 0;
       const orderedMeta = hasDue ? dueEnglishFlashcards : unlockedEnglishFlashcards;
@@ -803,7 +813,11 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowSrsHub(false)}
+                  onClick={() => {
+                    srsHubOpenTokenRef.current += 1;
+                    setShowSrsHub(false);
+                    setSrsHubLoading(false);
+                  }}
                   className="min-h-11"
                 >
                   {t('path.srsCloseHub')}
