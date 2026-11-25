@@ -226,13 +226,46 @@ describe('W0-B3 Web PKCE, /reset-password lock, logout cache purge & admin getUs
     const sessionMem = createMemoryStorage();
     const historyReplace = vi.fn();
     const historyPush = vi.fn();
-    vi.stubGlobal('localStorage', localMem.storage);
+    const storageListeners = new Set<(event: StorageEvent) => void>();
+    const dispatchStorageEvent = (key: string | null) => {
+      for (const listener of [...storageListeners]) {
+        listener({ key } as StorageEvent);
+      }
+    };
+    const crossTabLocalStorage: Storage = {
+      get length() {
+        return localMem.storage.length;
+      },
+      key: (index: number) => localMem.storage.key(index),
+      getItem: (key: string) => localMem.storage.getItem(key),
+      setItem: (key: string, value: string) => {
+        localMem.storage.setItem(key, value);
+        dispatchStorageEvent(key);
+      },
+      removeItem: (key: string) => {
+        localMem.storage.removeItem(key);
+        dispatchStorageEvent(key);
+      },
+      clear: () => {
+        localMem.storage.clear();
+        dispatchStorageEvent(null);
+      },
+    };
+    vi.stubGlobal('localStorage', crossTabLocalStorage);
     vi.stubGlobal('sessionStorage', sessionMem.storage);
     vi.stubGlobal('window', {
       location: { pathname: '/reset-password', search: '', hash: '', origin: 'https://bilimyol.test' },
       history: { replaceState: historyReplace, pushState: historyPush },
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === 'storage' && typeof listener === 'function') {
+          storageListeners.add(listener as (event: StorageEvent) => void);
+        }
+      }),
+      removeEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === 'storage' && typeof listener === 'function') {
+          storageListeners.delete(listener as (event: StorageEvent) => void);
+        }
+      }),
       scrollTo: vi.fn(),
     });
 
@@ -261,6 +294,8 @@ describe('W0-B3 Web PKCE, /reset-password lock, logout cache purge & admin getUs
       if (authState.updateUserError) {
         return { data: { user: null }, error: authState.updateUserError };
       }
+      // GoTrueClient emits USER_UPDATED before updateUser() resolves back to callers.
+      for (const cb of [...listeners]) cb('USER_UPDATED', authState.currentSession);
       return { data: { user: authState.currentSession?.user ?? null }, error: null };
     });
 
@@ -404,12 +439,16 @@ describe('W0-B3 Web PKCE, /reset-password lock, logout cache purge & admin getUs
     let tab2Ctx = renderTab2();
     expect(tab2Ctx.isPasswordRecovery).toBe(true);
 
-    // Update password in F5 tab -> clears recovery lock in BOTH tabs, and historical amr in USER_UPDATED / TOKEN_REFRESHED does NOT re-lock
+    // Update password in F5 tab (updateUserMock emits USER_UPDATED before resolving) ->
+    // storage event immediately unlocks Tab 2 WITHOUT waiting for TOKEN_REFRESHED/F5,
+    // and subsequent historical amr in USER_UPDATED / TOKEN_REFRESHED does NOT re-lock.
     const updateRes = await f5Ctx.updatePassword('NewStrongPass123');
     expect(updateRes.error).toBeNull();
     expect(localMem.storage.getItem('bilimyol_recovery_user_id')).toBeNull();
     f5Ctx = renderF5();
+    tab2Ctx = renderTab2();
     expect(f5Ctx.isPasswordRecovery).toBe(false);
+    expect(tab2Ctx.isPasswordRecovery).toBe(false);
 
     authState.currentSession = refreshedHistoricalRecoverySession;
     for (const cb of [...listeners]) cb('USER_UPDATED', refreshedHistoricalRecoverySession);
@@ -421,6 +460,7 @@ describe('W0-B3 Web PKCE, /reset-password lock, logout cache purge & admin getUs
     expect(tab2Ctx.isPasswordRecovery).toBe(false);
     hooksTab2.unmount();
     hooksF5.unmount();
+    expect(storageListeners.size).toBe(0);
 
     // Bare /reset-password pathname with normal password session never triggers recovery
     const hooksNormal = createHookDispatcher();

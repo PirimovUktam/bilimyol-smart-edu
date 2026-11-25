@@ -315,7 +315,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const getActiveClearedRecovery = useCallback((): ClearedRecoveryToken => {
-    return clearedRecoveryRef.current ?? readStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY);
+    const stored = readStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY);
+    if (stored) return stored;
+    return recoveryStorageAvailable.current ? null : clearedRecoveryRef.current;
   }, []);
 
   const clearSessionStores = useCallback(() => {
@@ -535,6 +537,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
+    const syncRecoveryFromStorage = (event: StorageEvent) => {
+      if (!mounted) return;
+      if (
+        event.key !== null &&
+        event.key !== RECOVERY_USER_STORAGE_KEY &&
+        event.key !== CLEARED_RECOVERY_STORAGE_KEY
+      ) {
+        return;
+      }
+      clearedRecoveryRef.current = parseClearedToken(readStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY));
+      if (!activeSessionRef.current?.user) {
+        recoveryUserId.current = readStorageWithFallback(RECOVERY_USER_STORAGE_KEY);
+        setIsPasswordRecovery(false);
+        return;
+      }
+      const recoveryState = resolveInitialOrEventRecoveryState({
+        event: 'STORAGE_SYNC',
+        session: activeSessionRef.current,
+        storedRecoveryUserId: getStoredRecoveryUserId(),
+        clearedToken: getActiveClearedRecovery(),
+      });
+      recoveryUserId.current = recoveryState.recoveryUserId;
+      setIsPasswordRecovery(recoveryState.isPasswordRecovery);
+    };
+
+    const hasWindowStorage = typeof window !== 'undefined' && typeof window.addEventListener === 'function';
+    if (hasWindowStorage) {
+      window.addEventListener('storage', syncRecoveryFromStorage);
+    }
+
     if (isSupabaseConfigured) {
       const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
         if (!mounted) return;
@@ -572,7 +604,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (recoveryState.isPasswordRecovery) {
           setRecoveryUser(recoveryState.recoveryUserId);
-        } else if (changedAccount || !recoveryState.isPasswordRecovery) {
+        } else {
           setRecoveryUser(null);
         }
         if (changedAccount) {
@@ -606,6 +638,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return () => {
         mounted = false;
+        if (hasWindowStorage) {
+          window.removeEventListener('storage', syncRecoveryFromStorage);
+        }
         invalidatePendingAuth();
         authListener.subscription.unsubscribe();
       };
@@ -613,6 +648,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      if (hasWindowStorage) {
+        window.removeEventListener('storage', syncRecoveryFromStorage);
+      }
       invalidatePendingAuth();
     };
   }, [clearAuthState, clearClearedRecovery, clearSessionStores, fetchProfile, getActiveClearedRecovery, getStoredRecoveryUserId, invalidatePendingAuth, setRecoveryUser]);
