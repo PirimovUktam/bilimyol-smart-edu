@@ -120,9 +120,11 @@ final GoRouter appRouter = GoRouter(
   redirect: (context, state) {
     final recoveryActive = SupabaseConfig.isRecoveryActive;
     final isRemoteConfigured = SupabaseConfig.hasRemoteConfiguration;
+    final client = SupabaseConfig.client;
     final isLoggedIn =
-        (SupabaseConfig.authUserIdListenable.value ??
-            SupabaseConfig.client?.auth.currentUser?.id) !=
+        (client != null
+            ? client.auth.currentUser?.id
+            : SupabaseConfig.authUserIdListenable.value) !=
         null;
     final isDemoActive = demoSessionActive.value;
     final isSessionActive = isRemoteConfigured ? isLoggedIn : isDemoActive;

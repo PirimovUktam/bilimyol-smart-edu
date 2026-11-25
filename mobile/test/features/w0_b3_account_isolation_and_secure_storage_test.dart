@@ -1058,6 +1058,33 @@ void main() {
           'remembered',
         );
         expect(await storage.getDemoLearnerSnapshot(), isNull);
+
+        // Mid-flight account change during post-write getProfile() throws StateError.
+        final srsProfileGate = Completer<void>();
+        final midFlightClient = _buildMockSupabaseClient(
+          delayProfileFetch: true,
+          profileFetchGate: srsProfileGate,
+        );
+        addTearDown(midFlightClient.dispose);
+        await midFlightClient.auth.setInitialSession(
+          jsonEncode(_buildTestSession(userId: 'user-a', expired: false).toJson()),
+        );
+        final midFlightRepo = SupabaseLearnerRepository(
+          storage: storage,
+          client: midFlightClient,
+        );
+        final inFlightReview = expectLater(
+          midFlightRepo.recordFlashcardReview(
+            courseId: 'course_eng_01',
+            cardId: 'fc_a_2',
+            remembered: true,
+          ),
+          throwsStateError,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await midFlightClient.auth.signOut(scope: SignOutScope.local);
+        srsProfileGate.complete();
+        await inFlightReview;
       },
     );
 
@@ -1611,6 +1638,133 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         expect(SupabaseConfig.isRecoveryActive, isFalse);
         expect(await restartedStorage.getRecoveryUserId(), isNull);
+      },
+    );
+
+    testWidgets(
+      '6. Same-ProviderContainer logout -> re-login syncs auth state immediately without ReplaySubject race and routes returning learner to /dashboard',
+      (tester) async {
+        SupabaseConfig.hasRemoteConfiguration = true;
+        final storage = await LocalStorageService.load();
+        mockProfilesOverride = {
+          'user-returning': {
+            'user_id': 'user-returning',
+            'selected_course_id': 'course_math_01',
+            'goal': 'mastery',
+            'daily_minutes': 20,
+            'initial_level': 'intermediate',
+            'course_levels': {'course_math_01': 'intermediate'},
+            'placement_score_by_course': const <String, dynamic>{},
+            'placement_cefr_by_course': const <String, dynamic>{},
+          },
+        };
+        final client = widgetScopedClient!;
+        await SupabaseConfig.bindClientForTesting(client, storage: storage);
+        await client.auth.setInitialSession(
+          jsonEncode(
+            _buildTestSession(userId: 'user-returning', expired: false).toJson(),
+          ),
+        );
+
+        final sameContainer = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(storage),
+            courseRepositoryProvider.overrideWithValue(_SpyCourseRepository()),
+            lessonRepositoryProvider.overrideWithValue(InMemoryLessonRepository()),
+          ],
+        );
+        addTearDown(sameContainer.dispose);
+
+        final router = GoRouter(
+          initialLocation: '/profile',
+          refreshListenable: Listenable.merge([
+            SupabaseConfig.authUserIdListenable,
+            SupabaseConfig.recoveryActiveListenable,
+            SupabaseConfig.authStateRevisionListenable,
+            postLoginHydrating,
+            activeSessionHasStartedCourse,
+          ]),
+          redirect: (context, state) {
+            final activeClient = SupabaseConfig.client;
+            final isLoggedIn =
+                (activeClient != null
+                    ? activeClient.auth.currentUser?.id
+                    : SupabaseConfig.authUserIdListenable.value) !=
+                null;
+            return resolveAppRedirect(
+              path: state.matchedLocation,
+              uri: state.uri,
+              recoveryActive: SupabaseConfig.isRecoveryActive,
+              isRemoteConfigured: SupabaseConfig.hasRemoteConfiguration,
+              isLoggedIn: isLoggedIn,
+              isDemoActive: demoSessionActive.value,
+              isTourCompleted: productTourCompleted.value,
+              hasStartedAnyCourse: resolveAppHasStartedCourse(
+                context,
+                isSessionActive: isLoggedIn,
+                recoveryActive: SupabaseConfig.isRecoveryActive,
+              ),
+              isHydratingProfile: postLoginHydrating.value,
+            );
+          },
+          routes: [
+            GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+            GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
+            GoRoute(path: '/courses', builder: (_, _) => const Text('COURSES_DEST')),
+            GoRoute(path: '/dashboard', builder: (_, _) => const Text('DASHBOARD_DEST')),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: sameContainer,
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              locale: const Locale('uz'),
+              supportedLocales: AppStrings.supportedLocales,
+              localizationsDelegates: AppStrings.localizationsDelegates,
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Step 1: Logout from ProfileScreen in the existing ProviderContainer.
+        final logoutBtn = find.text(AppStrings.uz.logout);
+        await tester.ensureVisible(logoutBtn);
+        await tester.tap(logoutBtn);
+        await tester.pumpAndSettle();
+
+        expect(client.auth.currentUser, isNull);
+        expect(sameContainer.read(authSessionUserIdProvider), isNull);
+        expect(router.routeInformationProvider.value.uri.path, '/login');
+        // Ensure logged-out providers are initialized with sessionScope == null.
+        expect(sameContainer.read(learnerStateNotifierProvider).valueOrNull, isNull);
+        expect(sameContainer.read(courseStateNotifierProvider).courses, isEmpty);
+
+        // Step 2: Re-login as returning learner in the SAME ProviderContainer.
+        final textFields = find.byType(TextField);
+        await tester.enterText(textFields.at(0), 'user-returning@example.test');
+        await tester.enterText(textFields.at(1), 'StrongPass123');
+        final loginBtn = find.text(AppStrings.uz.loginAction);
+        await tester.ensureVisible(loginBtn);
+        await tester.tap(loginBtn);
+        await tester.pumpAndSettle();
+
+        expect(sameContainer.read(authSessionUserIdProvider), 'user-returning');
+        expect(activeSessionHasStartedCourse.value, isTrue);
+        expect(router.routeInformationProvider.value.uri.path, '/dashboard');
+        expect(find.text('DASHBOARD_DEST'), findsOneWidget);
+        expect(find.text('COURSES_DEST'), findsNothing);
+
+        // Verify synchronous currentUser takes precedence over any lagging listenable
+        // and syncCurrentAuthState() updates authUserIdListenable synchronously.
+        await client.auth.signOut(scope: SignOutScope.local);
+        sameContainer.invalidate(authSessionUserIdProvider);
+        expect(sameContainer.read(authSessionUserIdProvider), isNull);
+        SupabaseConfig.syncCurrentAuthState();
+        expect(SupabaseConfig.authUserIdListenable.value, isNull);
       },
     );
   });

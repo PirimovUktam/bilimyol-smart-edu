@@ -364,6 +364,40 @@ class SupabaseConfig {
     _authStateRevisionNotifier.value++;
   }
 
+  /// Synchronizes [authUserIdListenable] and [recoveryActiveListenable] with the
+  /// synchronous `currentSession`/`currentUser` on [client] immediately after
+  /// `signInWithPassword` or `signOut`, without waiting for GoTrue's async
+  /// `onAuthStateChange` stream delivery.
+  static void syncCurrentAuthState({LocalStorageService? storage}) {
+    final authClient = client?.auth;
+    if (authClient == null) return;
+    final resolvedStorage = storage ?? _recoveryStorage;
+    if (resolvedStorage != null) {
+      _applyAuthState(
+        event: null,
+        session: authClient.currentSession,
+        storage: resolvedStorage,
+      );
+      return;
+    }
+    final userId = authClient.currentUser?.id;
+    if (userId == null) {
+      _recoveryUserId = null;
+      _clearedRecoveryClaim = null;
+      _completingRecoverySignOut = false;
+      activeSessionHasStartedCourse.value = false;
+      _recoveryActiveNotifier.value = false;
+    } else {
+      final unresolvedAmr = hasUnresolvedRecoveryAmrClaim(
+        authClient.currentSession,
+      );
+      _recoveryActiveNotifier.value =
+          (_recoveryUserId == userId) || unresolvedAmr;
+    }
+    _authUserIdNotifier.value = userId;
+    _authStateRevisionNotifier.value++;
+  }
+
   /// Non-blocking startup session verification bounded to [timeout].
   ///
   /// Uses `refreshSession()` when the local access token is already expired
@@ -398,6 +432,7 @@ class SupabaseConfig {
         if (auth.currentSession?.user.id == initialUserId) {
           try {
             await auth.signOut(scope: SignOutScope.local);
+            syncCurrentAuthState();
           } catch (_) {
             // Best-effort local signOut.
           }

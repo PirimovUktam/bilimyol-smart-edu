@@ -113,6 +113,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final auth = SupabaseConfig.client?.auth;
       if (auth == null) throw StateError('No auth client.');
       await auth.signOut(scope: SignOutScope.local);
+      SupabaseConfig.syncCurrentAuthState();
       await SupabaseConfig.clearPasswordRecovery();
       await resetSessionState(container);
       if (mounted) context.go('/login');

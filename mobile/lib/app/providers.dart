@@ -173,8 +173,10 @@ final appSettingsProvider =
 String? _resolveCurrentAuthSessionScope() {
   if (SupabaseConfig.hasRemoteConfiguration) {
     if (SupabaseConfig.isRecoveryActive) return null;
-    return SupabaseConfig.authUserIdListenable.value ??
-        SupabaseConfig.client?.auth.currentUser?.id;
+    final client = SupabaseConfig.client;
+    return client != null
+        ? client.auth.currentUser?.id
+        : SupabaseConfig.authUserIdListenable.value;
   }
   return demoSessionActive.value ? 'demo' : null;
 }
@@ -217,6 +219,7 @@ Future<void> resetSessionState(ProviderContainer container) async {
   } catch (_) {
     // Best-effort local state clear.
   }
+  container.invalidate(authSessionUserIdProvider);
   container.invalidate(learnerRepositoryProvider);
   container.invalidate(learnerStateNotifierProvider);
   container.invalidate(courseStateNotifierProvider);

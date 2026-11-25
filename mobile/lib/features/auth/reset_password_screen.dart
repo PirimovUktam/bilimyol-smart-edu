@@ -59,6 +59,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await client.auth.updateUser(UserAttributes(password: _password.text));
       final updatedSession = client.auth.currentSession;
       await client.auth.signOut(scope: SignOutScope.local);
+      SupabaseConfig.syncCurrentAuthState();
       await SupabaseConfig.clearPasswordRecovery(session: updatedSession);
       await _resetProvidersIfMounted();
       if (mounted) {
@@ -86,6 +87,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       final auth = SupabaseConfig.client?.auth;
       final session = auth?.currentSession;
       await auth?.signOut(scope: SignOutScope.local);
+      SupabaseConfig.syncCurrentAuthState();
       await SupabaseConfig.clearPasswordRecovery(session: session);
       await _resetProvidersIfMounted();
       if (mounted) context.go('/login');

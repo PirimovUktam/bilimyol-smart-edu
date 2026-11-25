@@ -491,6 +491,10 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
           await _writeUserFlashcardSrs(expectedUserId, nextByCourse);
           final remoteProfile = await getProfile();
+          if (_client.auth.currentUser?.id != expectedUserId ||
+              remoteProfile.id != expectedUserId) {
+            throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+          }
           return remoteProfile.copyWith(flashcardSrsByCourse: nextByCourse);
         });
     _srsWriteChain = next.then<void>((_) {}, onError: (Object _) {});
