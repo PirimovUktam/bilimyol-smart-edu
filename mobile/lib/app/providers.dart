@@ -169,23 +169,91 @@ final appSettingsProvider =
       return AppSettingsNotifier(storage, initial: initial);
     });
 
-// --- Singleton Service & Repository Providers ---
-final aiTutorServiceProvider = Provider<IAITutorService>(
-  (ref) => SupabaseConfig.hasRemoteConfiguration
+// --- Auth Session Scope & Singleton Service / Repository Providers ---
+String? _resolveCurrentAuthSessionScope() {
+  if (SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isRecoveryActive) return null;
+    return SupabaseConfig.authUserIdListenable.value ??
+        SupabaseConfig.client?.auth.currentUser?.id;
+  }
+  return demoSessionActive.value ? 'demo' : null;
+}
+
+final Provider<String?> authSessionUserIdProvider = Provider<String?>((ref) {
+  var activeScope = _resolveCurrentAuthSessionScope();
+
+  void onSessionSignalChanged() {
+    final nextScope = _resolveCurrentAuthSessionScope();
+    if (activeScope != null && nextScope != activeScope) {
+      activeSessionHasStartedCourse.value = false;
+      postLoginHydrating.value = false;
+      unawaited(
+        ref.read(localStorageServiceProvider).clearDemoLearnerSnapshot(),
+      );
+    }
+    activeScope = nextScope;
+    ref.invalidateSelf();
+  }
+
+  SupabaseConfig.authUserIdListenable.addListener(onSessionSignalChanged);
+  SupabaseConfig.recoveryActiveListenable.addListener(onSessionSignalChanged);
+  demoSessionActive.addListener(onSessionSignalChanged);
+  ref.onDispose(() {
+    SupabaseConfig.authUserIdListenable.removeListener(onSessionSignalChanged);
+    SupabaseConfig.recoveryActiveListenable.removeListener(
+      onSessionSignalChanged,
+    );
+    demoSessionActive.removeListener(onSessionSignalChanged);
+  });
+
+  return activeScope;
+});
+
+Future<void> resetSessionState(ProviderContainer container) async {
+  activeSessionHasStartedCourse.value = false;
+  postLoginHydrating.value = false;
+  try {
+    await container.read(learnerRepositoryProvider).clearLocalState();
+  } catch (_) {
+    // Best-effort local state clear.
+  }
+  container.invalidate(learnerRepositoryProvider);
+  container.invalidate(learnerStateNotifierProvider);
+  container.invalidate(courseStateNotifierProvider);
+  container.invalidate(roadmapStateNotifierProvider);
+  container.invalidate(placementStateNotifierProvider);
+  container.invalidate(lessonSessionNotifierProvider);
+}
+
+final aiTutorServiceProvider = Provider<IAITutorService>((ref) {
+  ref.watch(authSessionUserIdProvider);
+  return SupabaseConfig.hasRemoteConfiguration
       ? SupabaseAITutorService()
-      : DemoAITutorService(),
-);
-final courseRepositoryProvider = Provider<ICourseRepository>(
-  (ref) => SupabaseCourseRepository(),
-);
-final lessonRepositoryProvider = Provider<ILessonRepository>(
-  (ref) => SupabaseLessonRepository(),
-);
-final learnerRepositoryProvider = Provider<ILearnerRepository>(
-  (ref) => SupabaseLearnerRepository(
-    storage: ref.watch(localStorageServiceProvider),
-  ),
-);
+      : DemoAITutorService();
+});
+final courseRepositoryProvider = Provider<ICourseRepository>((ref) {
+  ref.watch(authSessionUserIdProvider);
+  return SupabaseCourseRepository();
+});
+final lessonRepositoryProvider = Provider<ILessonRepository>((ref) {
+  ref.watch(authSessionUserIdProvider);
+  return SupabaseLessonRepository();
+});
+final Provider<ILearnerRepository> learnerRepositoryProvider =
+    Provider<ILearnerRepository>((ref) {
+  final scope = ref.watch(authSessionUserIdProvider);
+  final storage = ref.watch(localStorageServiceProvider);
+  final repo = SupabaseLearnerRepository(storage: storage);
+  if (scope != null) {
+    ref.onDispose(() {
+      final nextScope = _resolveCurrentAuthSessionScope();
+      if (nextScope != scope) {
+        unawaited(repo.clearLocalState());
+      }
+    });
+  }
+  return repo;
+});
 
 bool _isFlutterTestBinding() => WidgetsBinding.instance.runtimeType
     .toString()
@@ -281,14 +349,23 @@ final resetDemoUseCaseProvider = Provider(
 // 1. Learner Profile Notifier
 class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
   final Ref ref;
+  final String? sessionScope;
   int _loadGeneration = 0;
 
-  LearnerStateNotifier(this.ref) : super(const AsyncValue.loading()) {
-    loadProfile();
+  bool get _isLoggedOutRemote =>
+      sessionScope == null &&
+      ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
+  LearnerStateNotifier(this.ref, {this.sessionScope})
+    : super(const AsyncValue.loading()) {
+    if (!_isLoggedOutRemote) {
+      loadProfile();
+    }
   }
 
   // Session-triggered refreshes must not publish after that session is replaced.
   Future<void> loadProfile({bool Function()? isCurrent}) async {
+    if (_isLoggedOutRemote) return;
     final generation = ++_loadGeneration;
     try {
       final repo = ref.read(learnerRepositoryProvider);
@@ -316,6 +393,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     required int dailyMinutes,
     required InitialLevel initialLevel,
   }) async {
+    if (_isLoggedOutRemote) return;
     final repo = ref.read(learnerRepositoryProvider);
     final saved = await repo.saveCourseLearningPlan(
       courseId: courseId,
@@ -333,6 +411,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
   }
 
   Future<void> updateDisplayName(String rawName) async {
+    if (_isLoggedOutRemote) return;
     final trimmed = rawName.trim();
     if (trimmed.isEmpty) {
       throw ArgumentError('Name must not be empty');
@@ -428,6 +507,7 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     required String cardId,
     required bool remembered,
   }) async {
+    if (_isLoggedOutRemote) return;
     final repo = ref.read(learnerRepositoryProvider);
     final updated = await repo.recordFlashcardReview(
       courseId: courseId,
@@ -443,7 +523,8 @@ final learnerStateNotifierProvider =
     StateNotifierProvider<LearnerStateNotifier, AsyncValue<LearnerProfile>>((
       ref,
     ) {
-      return LearnerStateNotifier(ref);
+      final scope = ref.watch(authSessionUserIdProvider);
+      return LearnerStateNotifier(ref, sessionScope: scope);
     });
 
 // 2. Course State Notifier
@@ -481,16 +562,40 @@ class CourseState {
 
 class CourseStateNotifier extends StateNotifier<CourseState> {
   final Ref ref;
+  final String? sessionScope;
   int _initGeneration = 0;
   Future<void>? _initFuture;
   bool _isSelecting = false;
 
-  CourseStateNotifier(this.ref)
-    : super(const CourseState(courses: [], activeSkills: [], isLoading: true)) {
-    init();
+  bool get _isLoggedOutRemote =>
+      sessionScope == null &&
+      ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
+  CourseStateNotifier(this.ref, {this.sessionScope})
+    : super(
+        CourseState(
+          courses: const [],
+          activeSkills: const [],
+          isLoading: !(sessionScope == null &&
+              ref
+                  .read(learnerRepositoryProvider)
+                  .supportsServerPlacementPersistence),
+        ),
+      ) {
+    if (!_isLoggedOutRemote) {
+      init();
+    }
   }
 
   Future<void> init() {
+    if (_isLoggedOutRemote) {
+      state = const CourseState(
+        courses: [],
+        activeSkills: [],
+        isLoading: false,
+      );
+      return Future.value();
+    }
     final generation = ++_initGeneration;
     late final Future<void> future;
     future = _runInit(generation).whenComplete(() {
@@ -551,7 +656,7 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
   }
 
   Future<void> selectCourse(String courseId) async {
-    if (!mounted || _isSelecting) return;
+    if (!mounted || _isSelecting || _isLoggedOutRemote) return;
     _isSelecting = true;
     try {
       final pendingInit = _initFuture;
@@ -593,7 +698,8 @@ class CourseStateNotifier extends StateNotifier<CourseState> {
 
 final courseStateNotifierProvider =
     StateNotifierProvider<CourseStateNotifier, CourseState>((ref) {
-      return CourseStateNotifier(ref);
+      final scope = ref.watch(authSessionUserIdProvider);
+      return CourseStateNotifier(ref, sessionScope: scope);
     });
 
 // 3. Placement Test State Notifier
@@ -678,9 +784,14 @@ class PlacementState {
 
 class PlacementStateNotifier extends StateNotifier<PlacementState> {
   final Ref ref;
+  final String? sessionScope;
   Object _request = Object();
 
-  PlacementStateNotifier(this.ref)
+  bool get _isLoggedOutRemote =>
+      sessionScope == null &&
+      ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
+  PlacementStateNotifier(this.ref, {this.sessionScope})
     : super(
         const PlacementState(
           courseId: '',
@@ -691,6 +802,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
       );
 
   Future<void> loadQuestions(String courseId, {bool restart = false}) async {
+    if (_isLoggedOutRemote) return;
     final request = _request = Object();
     bool isCurrent() => mounted && identical(_request, request);
     state = PlacementState(
@@ -872,6 +984,7 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
     int selectedIndex, {
     bool bypassRateLimit = false,
   }) async {
+    if (_isLoggedOutRemote) return false;
     final currentQ = state.currentQuestion;
     if (currentQ == null || state.isSubmitting) return false;
 
@@ -1032,17 +1145,25 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
 
 final placementStateNotifierProvider =
     StateNotifierProvider<PlacementStateNotifier, PlacementState>((ref) {
-      return PlacementStateNotifier(ref);
+      final scope = ref.watch(authSessionUserIdProvider);
+      return PlacementStateNotifier(ref, sessionScope: scope);
     });
 
 // 4. Roadmap State Notifier
 class RoadmapStateNotifier extends StateNotifier<AsyncValue<LearningPath>> {
   final Ref ref;
+  final String? sessionScope;
   int _loadGeneration = 0;
 
-  RoadmapStateNotifier(this.ref) : super(const AsyncValue.loading());
+  bool get _isLoggedOutRemote =>
+      sessionScope == null &&
+      ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
+  RoadmapStateNotifier(this.ref, {this.sessionScope})
+    : super(const AsyncValue.loading());
 
   Future<void> loadRoadmap(String courseId) async {
+    if (_isLoggedOutRemote) return;
     final generation = ++_loadGeneration;
     state = const AsyncValue.loading();
     try {
@@ -1066,7 +1187,8 @@ final roadmapStateNotifierProvider =
     StateNotifierProvider<RoadmapStateNotifier, AsyncValue<LearningPath>>((
       ref,
     ) {
-      return RoadmapStateNotifier(ref);
+      final scope = ref.watch(authSessionUserIdProvider);
+      return RoadmapStateNotifier(ref, sessionScope: scope);
     });
 
 // 5. Lesson State Notifier
@@ -1180,6 +1302,7 @@ class LessonSessionState {
 
 class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   final Ref ref;
+  final String? sessionScope;
   int _lessonGeneration = 0;
   int _stepGeneration = 0;
   int _answerGeneration = 0;
@@ -1188,13 +1311,23 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   ReinforcementResult? _completedReinforcement;
   String? _lastLessonId;
 
+  bool get _isLoggedOutRemote =>
+      sessionScope == null &&
+      ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
   int get sessionGeneration => _lessonGeneration;
   int get stepGeneration => _stepGeneration;
 
-  LessonSessionNotifier(this.ref) : super(const LessonSessionState());
+  LessonSessionNotifier(this.ref, {this.sessionScope})
+    : super(const LessonSessionState());
 
-  String? get _accountId =>
-      ref.read(learnerStateNotifierProvider).valueOrNull?.id;
+  String? get _accountId {
+    final scope = sessionScope;
+    if (scope != null && scope.isNotEmpty && scope != 'demo') {
+      return scope;
+    }
+    return ref.read(learnerStateNotifierProvider).valueOrNull?.id;
+  }
 
   String _resolveLocale(String? uiLocale) =>
       uiLocale ??
@@ -1204,6 +1337,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           : 'uz');
 
   Future<void> startLesson(String lessonId, {String? uiLocale}) async {
+    if (_isLoggedOutRemote) return;
     final generation = ++_lessonGeneration;
     _stepGeneration++;
     _answerGeneration++;
@@ -1223,7 +1357,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       final rawRestoredStep = (!lesson.requiresMastery && !alreadyCompleted)
           ? await LessonReadingPositionStore.readStepIndex(
               lesson,
-              accountId: profile?.id,
+              accountId: _accountId,
             )
           : 0;
       final restoredStep = lesson.steps.isEmpty
@@ -1261,6 +1395,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   }
 
   Future<void> nextStep({String? uiLocale}) async {
+    if (_isLoggedOutRemote) return;
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) return;
     final resolvedLocale = _resolveLocale(uiLocale);
@@ -1505,6 +1640,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   }
 
   Future<void> submitInteractiveQuiz({String? uiLocale}) async {
+    if (_isLoggedOutRemote) return;
     final lesson = state.lesson;
     if (lesson == null ||
         state.isSubmittingAnswer ||
@@ -1778,6 +1914,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     List<String>? orderedTokens,
     bool useAlternate = false,
   }) async {
+    if (_isLoggedOutRemote) return null;
     final lesson = state.lesson;
     if (lesson == null || state.isSubmittingAnswer || state.isCompleted) {
       return null;
@@ -1907,5 +2044,6 @@ String deriveCanonicalReinforcementNodeId({
 
 final lessonSessionNotifierProvider =
     StateNotifierProvider<LessonSessionNotifier, LessonSessionState>((ref) {
-      return LessonSessionNotifier(ref);
+      final scope = ref.watch(authSessionUserIdProvider);
+      return LessonSessionNotifier(ref, sessionScope: scope);
     });

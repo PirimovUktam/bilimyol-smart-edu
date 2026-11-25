@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show SocketException;
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/demo_session.dart';
 import '../auth/secure_auth_storage.dart';
+import '../storage/local_storage_service.dart';
 
 class SupabaseConfig {
   /// Values are supplied at compile time with `--dart-define` or
@@ -22,6 +26,38 @@ class SupabaseConfig {
   /// initialization failed. This prevents an online outage from being treated
   /// as demo mode and exposing bundled answer keys or accepting local scores.
   static bool hasRemoteConfiguration = false;
+
+  static final ValueNotifier<String?> _authUserIdNotifier =
+      ValueNotifier<String?>(null);
+  static final ValueNotifier<bool> _recoveryActiveNotifier =
+      ValueNotifier<bool>(false);
+  static final ValueNotifier<int> _authStateRevisionNotifier =
+      ValueNotifier<int>(0);
+
+  static ValueListenable<String?> get authUserIdListenable =>
+      _authUserIdNotifier;
+  static ValueListenable<bool> get recoveryActiveListenable =>
+      _recoveryActiveNotifier;
+  static ValueListenable<int> get authStateRevisionListenable =>
+      _authStateRevisionNotifier;
+  static bool get isRecoveryActive => _recoveryActiveNotifier.value;
+
+  static StreamSubscription<AuthState>? _authSubscription;
+  static SupabaseClient? _clientOverride;
+  static LocalStorageService? _recoveryStorage;
+  static String? _recoveryUserId;
+  static ({
+    String userId,
+    String accessToken,
+    int recoveryTimestamp,
+    int clearedAt,
+  })?
+  _clearedRecoveryClaim;
+  static bool _completingRecoverySignOut = false;
+
+  static void setCompletingRecoverySignOut(bool value) {
+    _completingRecoverySignOut = value;
+  }
 
   static bool isValidSupabaseUrl(String rawUrl) {
     final trimmed = rawUrl.trim();
@@ -82,7 +118,7 @@ class SupabaseConfig {
     return 'sb-${uri.host.split('.').first}-auth-token';
   }
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({LocalStorageService? storage}) async {
     hasRemoteConfiguration =
         isValidSupabaseUrl(supabaseUrl) &&
         supabaseAnonKey.isNotEmpty &&
@@ -95,6 +131,7 @@ class SupabaseConfig {
     }
 
     try {
+      final resolvedStorage = storage ?? await LocalStorageService.load();
       final persistSessionKey = persistSessionKeyForUrl(supabaseUrl);
       final coordinator = SecureAuthStorageCoordinator(
         persistSessionKey: persistSessionKey,
@@ -110,9 +147,221 @@ class SupabaseConfig {
         ),
       );
       isConfigured = true;
+      await _attachAuthListener(
+        Supabase.instance.client.auth,
+        storage: resolvedStorage,
+      );
     } catch (_) {
       isConfigured = false;
     }
+  }
+
+  @visibleForTesting
+  static Future<void> bindClientForTesting(
+    SupabaseClient? testClient, {
+    LocalStorageService? storage,
+  }) async {
+    await _authSubscription?.cancel();
+    _authSubscription = null;
+    _clientOverride = testClient;
+    _recoveryUserId = null;
+    _clearedRecoveryClaim = null;
+    _completingRecoverySignOut = false;
+
+    if (testClient == null) {
+      _recoveryStorage = null;
+      _recoveryActiveNotifier.value = false;
+      _authUserIdNotifier.value = null;
+      _authStateRevisionNotifier.value++;
+      return;
+    }
+
+    final resolvedStorage = storage ?? await LocalStorageService.load();
+    await _attachAuthListener(testClient.auth, storage: resolvedStorage);
+  }
+
+  static Future<void> _attachAuthListener(
+    GoTrueClient authClient, {
+    required LocalStorageService storage,
+  }) async {
+    await _authSubscription?.cancel();
+    _recoveryStorage = storage;
+    _recoveryUserId =
+        storage.getRecoveryUserIdSync() ?? await storage.getRecoveryUserId();
+    _applyAuthState(
+      event: null,
+      session: authClient.currentSession,
+      storage: storage,
+    );
+    _authSubscription = authClient.onAuthStateChange.listen(
+      (state) {
+        _applyAuthState(
+          event: state.event,
+          session: state.session ?? authClient.currentSession,
+          storage: storage,
+        );
+      },
+      onError: (Object _) {
+        _authStateRevisionNotifier.value++;
+      },
+    );
+  }
+
+  static Map<String, dynamic>? _decodeJwtPayload(String? token) {
+    if (token == null || token.isEmpty) return null;
+    final parts = token.split('.');
+    if (parts.length < 2) return null;
+    try {
+      final normalized = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      final padded = normalized.padRight(
+        normalized.length + ((4 - (normalized.length % 4)) % 4),
+        '=',
+      );
+      final decoded = jsonDecode(utf8.decode(base64Url.decode(padded)));
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static List<({String method, int timestamp})> _extractAmrEntries(
+    Map<String, dynamic>? payload,
+  ) {
+    final rawAmr = payload?['amr'];
+    if (rawAmr is! List) return const [];
+    final entries = <({String method, int timestamp})>[];
+    for (final item in rawAmr) {
+      if (item is String && item.isNotEmpty) {
+        entries.add((method: item, timestamp: 0));
+      } else if (item is Map) {
+        final method = item['method'];
+        if (method is String && method.isNotEmpty) {
+          final ts = item['timestamp'];
+          entries.add((
+            method: method,
+            timestamp: ts is num ? ts.toInt() : 0,
+          ));
+        }
+      }
+    }
+    return entries;
+  }
+
+  static bool hasUnresolvedRecoveryAmrClaim(Session? session) {
+    if (session == null) return false;
+    final payload = _decodeJwtPayload(session.accessToken);
+    final entries = _extractAmrEntries(payload);
+    final recoveryEntries = entries.where((e) => e.method == 'recovery').toList();
+    if (recoveryEntries.isEmpty) return false;
+
+    final latestRecoveryTs = recoveryEntries
+        .map((e) => e.timestamp)
+        .reduce((a, b) => a > b ? a : b);
+    final hasNewerPassword = entries.any(
+      (e) => e.method == 'password' && e.timestamp > latestRecoveryTs,
+    );
+    if (hasNewerPassword) return false;
+
+    final cleared = _clearedRecoveryClaim;
+    if (cleared != null && cleared.userId == session.user.id) {
+      if (cleared.accessToken == session.accessToken) {
+        return false;
+      }
+      if (latestRecoveryTs > 0 && latestRecoveryTs <= cleared.recoveryTimestamp) {
+        return false;
+      }
+      final iat = payload?['iat'];
+      final iatSec = iat is num ? iat.toInt() : null;
+      if (latestRecoveryTs == 0 &&
+          (iatSec == null || iatSec <= cleared.clearedAt)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static void _recordClearedRecoveryClaim(Session session) {
+    final payload = _decodeJwtPayload(session.accessToken);
+    final entries = _extractAmrEntries(payload);
+    final recoveryEntries = entries.where((e) => e.method == 'recovery');
+    var latestRecoveryTs = 0;
+    for (final entry in recoveryEntries) {
+      if (entry.timestamp > latestRecoveryTs) {
+        latestRecoveryTs = entry.timestamp;
+      }
+    }
+    _clearedRecoveryClaim = (
+      userId: session.user.id,
+      accessToken: session.accessToken,
+      recoveryTimestamp: latestRecoveryTs,
+      clearedAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+  }
+
+  static void _applyAuthState({
+    required AuthChangeEvent? event,
+    required Session? session,
+    required LocalStorageService storage,
+  }) {
+    if (event == AuthChangeEvent.signedOut || session == null) {
+      _recoveryUserId = null;
+      _clearedRecoveryClaim = null;
+      _completingRecoverySignOut = false;
+      unawaited(storage.clearRecoveryUserId());
+      activeSessionHasStartedCourse.value = false;
+      _recoveryActiveNotifier.value = false;
+      _authUserIdNotifier.value = null;
+      _authStateRevisionNotifier.value++;
+      return;
+    }
+
+    final userId = session.user.id;
+    if (event == AuthChangeEvent.passwordRecovery) {
+      _recoveryUserId = userId;
+      _clearedRecoveryClaim = null;
+      unawaited(storage.setRecoveryUserId(userId));
+      _recoveryActiveNotifier.value = true;
+    } else if (event == AuthChangeEvent.userUpdated &&
+        (_recoveryUserId == userId ||
+            _recoveryActiveNotifier.value ||
+            hasUnresolvedRecoveryAmrClaim(session))) {
+      if (!_completingRecoverySignOut) {
+        _recordClearedRecoveryClaim(session);
+        _recoveryUserId = null;
+        unawaited(storage.clearRecoveryUserId());
+        _recoveryActiveNotifier.value = false;
+      }
+    } else {
+      if (_recoveryUserId != null && _recoveryUserId != userId) {
+        _recoveryUserId = null;
+        unawaited(storage.clearRecoveryUserId());
+      }
+      final unresolvedAmr = hasUnresolvedRecoveryAmrClaim(session);
+      if (unresolvedAmr && _recoveryUserId != userId) {
+        _recoveryUserId = userId;
+        unawaited(storage.setRecoveryUserId(userId));
+      }
+      _recoveryActiveNotifier.value =
+          (_recoveryUserId == userId) || unresolvedAmr;
+    }
+
+    _authUserIdNotifier.value = userId;
+    _authStateRevisionNotifier.value++;
+  }
+
+  static Future<void> clearPasswordRecovery({
+    Session? session,
+    LocalStorageService? storage,
+  }) async {
+    final resolvedStorage = storage ?? _recoveryStorage;
+    final activeSession = session ?? client?.auth.currentSession;
+    if (activeSession != null) {
+      _recordClearedRecoveryClaim(activeSession);
+    }
+    _recoveryUserId = null;
+    await resolvedStorage?.clearRecoveryUserId();
+    _recoveryActiveNotifier.value = false;
+    _authStateRevisionNotifier.value++;
   }
 
   /// Non-blocking startup session verification bounded to [timeout].
@@ -160,6 +409,7 @@ class SupabaseConfig {
   }
 
   static SupabaseClient? get client {
+    if (_clientOverride != null) return _clientOverride;
     if (!isConfigured) return null;
     try {
       return Supabase.instance.client;

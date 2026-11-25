@@ -71,6 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMsg = null;
     });
 
+    postLoginHydrating.value = true;
     try {
       await client.auth.signInWithPassword(email: email, password: password);
       container.invalidate(courseStateNotifierProvider);
@@ -78,7 +79,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       container.invalidate(placementStateNotifierProvider);
       container.invalidate(lessonSessionNotifierProvider);
       await container.read(learnerStateNotifierProvider.notifier).loadProfile();
+      await container.read(courseStateNotifierProvider.notifier).init();
 
+      postLoginHydrating.value = false;
       if (mounted) {
         setState(() => _isLoading = false);
         context.go(
@@ -92,6 +95,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _errorMsg = authErrorMessage(error, strings: s);
         });
       }
+    } finally {
+      postLoginHydrating.value = false;
     }
   }
 
@@ -101,7 +106,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
     final courses = ref.read(courseStateNotifierProvider).courses;
     var hasStarted =
-        activeSessionHasStartedCourse.value ||
         (profile != null &&
             (courses.isNotEmpty
                 ? courses.any((c) => hasStartedCourse(c, profile))

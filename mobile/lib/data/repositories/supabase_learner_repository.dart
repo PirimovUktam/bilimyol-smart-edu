@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,11 +15,20 @@ import 'supabase_course_repository.dart';
 
 class SupabaseLearnerRepository extends ILearnerRepository {
   final InMemoryLearnerRepository _fallbackRepo;
+  final SupabaseClient? _clientOverride;
   Future<void> _srsWriteChain = Future<void>.value();
   ({String scope, String key})? _pendingMasteryAnswer;
 
-  SupabaseLearnerRepository({LocalStorageService? storage})
-    : _fallbackRepo = InMemoryLearnerRepository(storage: storage);
+  SupabaseLearnerRepository({
+    LocalStorageService? storage,
+    SupabaseClient? client,
+  }) : _fallbackRepo = InMemoryLearnerRepository(storage: storage),
+       _clientOverride = client;
+
+  LocalStorageService get _storage => _fallbackRepo.storage;
+
+  SupabaseClient get _client =>
+      _clientOverride ?? SupabaseConfig.client ?? Supabase.instance.client;
 
   @override
   bool get supportsNodeCompletion => !SupabaseConfig.hasRemoteConfiguration;
@@ -38,7 +48,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     int? selectedIndex,
     bool restart = false,
   }) async {
-    final data = await Supabase.instance.client.rpc(
+    final client = _client;
+    if (client.auth.currentUser == null) {
+      throw StateError('Autentifikatsiyadan o‘tilmagan.');
+    }
+    final data = await client.rpc(
       'advance_placement',
       params: {
         'p_course_id': courseId,
@@ -103,7 +117,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.getProfile();
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -267,6 +281,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
             entry.key: (entry.value as String).trim(),
       };
 
+      final userSrs = await _readUserFlashcardSrs(user.id);
+      if (client.auth.currentUser?.id != user.id) {
+        throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+      }
+
       return LearnerProfile(
         id: user.id,
         name: firstName,
@@ -290,6 +309,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         scoresByCourse: scoresByCourse,
         placementScoreByCourse: placementScoreByCourse,
         placementCefrByCourse: placementCefrByCourse,
+        flashcardSrsByCourse: userSrs,
         completedLessonIds: completedLessonIds,
         completedNodeIds: completedNodeIds,
         completedReinforcementIds: completedReinfIds,
@@ -317,7 +337,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         initialLevel: initialLevel,
       );
     }
-    await Supabase.instance.client.rpc(
+    final client = _client;
+    if (client.auth.currentUser == null) {
+      throw StateError('Autentifikatsiyadan o‘tilmagan.');
+    }
+    await client.rpc(
       'save_course_learning_plan',
       params: {
         'p_course_id': courseId,
@@ -341,7 +365,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     if (!SupabaseConfig.hasRemoteConfiguration) {
       return _fallbackRepo.updateProfile(updated, fields: fields);
     }
-    final client = Supabase.instance.client;
+    final client = _client;
     final user = client.auth.currentUser;
     if (user == null || updated.id != user.id) {
       throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
@@ -400,23 +424,127 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         remembered: remembered,
       );
     }
+    final initialUser = _client.auth.currentUser;
+    if (initialUser == null) {
+      return Future.error(StateError('Autentifikatsiyadan o‘tilmagan.'));
+    }
+    final expectedUserId = initialUser.id;
     final next = _srsWriteChain
         .catchError((Object _) {})
         .then((_) async {
-          // Cache SRS locally while keeping remote profile authoritative.
-          await _fallbackRepo.recordFlashcardReview(
-            courseId: courseId,
-            cardId: cardId,
-            remembered: remembered,
+          final activeUser = _client.auth.currentUser;
+          if (activeUser == null || activeUser.id != expectedUserId) {
+            throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+          }
+
+          final currentByCourse = await _readUserFlashcardSrs(expectedUserId);
+          if (_client.auth.currentUser?.id != expectedUserId) {
+            throw StateError('Faol sessiya o‘zgargan. Qayta kiring.');
+          }
+
+          final currentCourseMap = Map<String, FlashcardSrsRecord>.from(
+            currentByCourse[courseId] ?? const {},
           );
-          final localProfile = await _fallbackRepo.getProfile();
+          final prev = currentCourseMap[cardId] ?? const FlashcardSrsRecord();
+          final nowUtc = DateTime.now().toUtc();
+          final nowIso = nowUtc.toIso8601String();
+          final nextRecord = remembered
+              ? () {
+                  final nextBucket = (prev.intervalBucket + 1).clamp(1, 3);
+                  final nextReviewBucket = switch (nextBucket) {
+                    1 => 'daily',
+                    2 => '3_days',
+                    _ => 'mastered',
+                  };
+                  final nextDueAt = nowUtc
+                      .add(
+                        Duration(
+                          days: nextBucket == 1
+                              ? 1
+                              : nextBucket == 2
+                              ? 3
+                              : 7,
+                        ),
+                      )
+                      .toIso8601String();
+                  return FlashcardSrsRecord(
+                    status: 'remembered',
+                    reviewCount: prev.reviewCount + 1,
+                    intervalBucket: nextBucket,
+                    lastReviewedAt: nowIso,
+                    nextReviewBucket: nextReviewBucket,
+                    nextReviewAt: nextDueAt,
+                  );
+                }()
+              : FlashcardSrsRecord(
+                  status: 'need_practice',
+                  reviewCount: prev.reviewCount + 1,
+                  intervalBucket: 0,
+                  lastReviewedAt: nowIso,
+                  nextReviewBucket: 'session_next',
+                  nextReviewAt: nowIso,
+                );
+          currentCourseMap[cardId] = nextRecord;
+          final nextByCourse =
+              Map<String, Map<String, FlashcardSrsRecord>>.from(currentByCourse)
+                ..[courseId] = currentCourseMap;
+
+          await _writeUserFlashcardSrs(expectedUserId, nextByCourse);
           final remoteProfile = await getProfile();
-          return remoteProfile.copyWith(
-            flashcardSrsByCourse: localProfile.flashcardSrsByCourse,
-          );
+          return remoteProfile.copyWith(flashcardSrsByCourse: nextByCourse);
         });
     _srsWriteChain = next.then<void>((_) {}, onError: (Object _) {});
     return next;
+  }
+
+  Future<Map<String, Map<String, FlashcardSrsRecord>>> _readUserFlashcardSrs(
+    String userId,
+  ) async {
+    final raw = await _storage.getUserFlashcardSrsJson(userId);
+    if (raw == null || raw.trim().isEmpty) {
+      return const {};
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      final result = <String, Map<String, FlashcardSrsRecord>>{};
+      for (final courseEntry in decoded.entries) {
+        final courseId = courseEntry.key;
+        final rawCards = courseEntry.value;
+        if (courseId is String && rawCards is Map) {
+          final cardsMap = <String, FlashcardSrsRecord>{};
+          for (final cardEntry in rawCards.entries) {
+            final cardId = cardEntry.key;
+            final rawRecord = cardEntry.value;
+            if (cardId is String && rawRecord is Map) {
+              cardsMap[cardId] = FlashcardSrsRecord.fromJson(
+                Map<String, dynamic>.from(rawRecord),
+              );
+            }
+          }
+          if (cardsMap.isNotEmpty) {
+            result[courseId] = cardsMap;
+          }
+        }
+      }
+      return result;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> _writeUserFlashcardSrs(
+    String userId,
+    Map<String, Map<String, FlashcardSrsRecord>> srsByCourse,
+  ) async {
+    final payload = <String, Map<String, Map<String, dynamic>>>{
+      for (final courseEntry in srsByCourse.entries)
+        courseEntry.key: {
+          for (final cardEntry in courseEntry.value.entries)
+            cardEntry.key: cardEntry.value.toJson(),
+        },
+    };
+    await _storage.setUserFlashcardSrsJson(userId, jsonEncode(payload));
   }
 
   @override
@@ -428,7 +556,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.saveSkillScores(courseId, scores);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -449,7 +577,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.savePlacementAttempt(data);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -497,7 +625,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       );
     }
 
-    final result = await Supabase.instance.client.rpc(
+    final client = _client;
+    if (client.auth.currentUser == null) {
+      throw StateError('Autentifikatsiyadan o‘tilmagan.');
+    }
+    final result = await client.rpc(
       'evaluate_placement_answer',
       params: {
         'p_course_id': courseId,
@@ -518,7 +650,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.markLessonCompleted(lessonId, courseId: courseId);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -570,7 +702,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         xpAwarded: xpAwarded,
       );
     }
-    final client = Supabase.instance.client;
+    final client = _client;
     final user = client.auth.currentUser;
     if (user == null) {
       throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -634,7 +766,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       );
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user != null) {
         return _submitServerAnswer(
@@ -675,7 +807,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       );
     }
 
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _client.auth.currentUser;
     if (user == null) {
       throw Exception('Autentifikatsiyadan o‘tilmagan.');
     }
@@ -704,7 +836,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   }) async {
-    final client = Supabase.instance.client;
+    final client = _client;
     final mastery = courseId == mathMasteryCourse && questionId.startsWith('q_pilot_');
     final answerKey = '$lessonId:$questionId:$selectedIndex';
     final scope = '${user.id}:$answerKey';
@@ -779,7 +911,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     if (!SupabaseConfig.hasRemoteConfiguration) {
       return _fallbackRepo.getAnswerAttempts(limit);
     }
-    final client = SupabaseConfig.client;
+    final client = _clientOverride ?? SupabaseConfig.client;
     if (client == null) {
       throw StateError('Supabase ishga tushmadi. Qayta urinib ko‘ring.');
     }
@@ -824,7 +956,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.getDailyActivity(days);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -884,7 +1016,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.addXp(amount, actionIdempotencyKey);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -915,7 +1047,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       return _fallbackRepo.recordDailyActivity(dateStr);
     }
     try {
-      final client = Supabase.instance.client;
+      final client = _client;
       final user = client.auth.currentUser;
       if (user == null) {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
@@ -945,6 +1077,8 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<void> clearLocalState() async {
+    _pendingMasteryAnswer = null;
+    _srsWriteChain = Future<void>.value();
     await _fallbackRepo.resetAll();
   }
 

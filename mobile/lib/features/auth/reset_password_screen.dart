@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../app/providers.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_semantic_colors.dart';
@@ -32,6 +34,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _resetProvidersIfMounted() async {
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      await resetSessionState(container);
+    } catch (_) {
+      // Standalone widget tests without ProviderScope do not hold session providers.
+    }
+  }
+
   Future<void> _save() async {
     final s = AppStrings.of(context);
     if (_busy || !_form.currentState!.validate()) return;
@@ -39,12 +50,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       _busy = true;
       _error = null;
     });
+    SupabaseConfig.setCompletingRecoverySignOut(true);
     try {
       final client = SupabaseConfig.client;
       if (client == null) {
         throw StateError(s.authServiceOfflineShort);
       }
       await client.auth.updateUser(UserAttributes(password: _password.text));
+      final updatedSession = client.auth.currentSession;
+      await client.auth.signOut(scope: SignOutScope.local);
+      await SupabaseConfig.clearPasswordRecovery(session: updatedSession);
+      await _resetProvidersIfMounted();
       if (mounted) {
         _password.clear();
         setState(() => _saved = true);
@@ -54,6 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         setState(() => _error = s.resetSaveFailedError);
       }
     } finally {
+      SupabaseConfig.setCompletingRecoverySignOut(false);
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -66,7 +83,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       _error = null;
     });
     try {
-      await SupabaseConfig.client?.auth.signOut(scope: SignOutScope.local);
+      final auth = SupabaseConfig.client?.auth;
+      final session = auth?.currentSession;
+      await auth?.signOut(scope: SignOutScope.local);
+      await SupabaseConfig.clearPasswordRecovery(session: session);
+      await _resetProvidersIfMounted();
       if (mounted) context.go('/login');
     } catch (_) {
       if (mounted) {

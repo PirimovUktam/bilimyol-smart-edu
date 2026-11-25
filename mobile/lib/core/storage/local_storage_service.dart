@@ -17,6 +17,9 @@ class LocalStorageService {
       'bilimyol.demo_learner_snapshot';
   static const String secureStorageInitializedKey =
       'bilimyol.secure_storage_initialized_v1';
+  static const String recoveryUserIdKey = 'bilimyol.recovery_user_id';
+
+  static String srsKeyForUser(String userId) => 'bilimyol.srs.$userId';
 
   SharedPreferences? _prefs;
   Future<SharedPreferences?>? _prefsFuture;
@@ -205,6 +208,24 @@ class LocalStorageService {
 
   Future<void> setSecureStorageInitialized(bool initialized) =>
       setBool(secureStorageInitializedKey, initialized);
+
+  String? getRecoveryUserIdSync() => getStringSync(recoveryUserIdKey);
+
+  Future<String?> getRecoveryUserId() => getString(recoveryUserIdKey);
+
+  Future<void> setRecoveryUserId(String userId) =>
+      setString(recoveryUserIdKey, userId);
+
+  Future<void> clearRecoveryUserId() => remove(recoveryUserIdKey);
+
+  Future<String?> getUserFlashcardSrsJson(String userId) =>
+      getString(srsKeyForUser(userId));
+
+  Future<void> setUserFlashcardSrsJson(String userId, String json) =>
+      setString(srsKeyForUser(userId), json);
+
+  Future<void> clearUserFlashcardSrsJson(String userId) =>
+      remove(srsKeyForUser(userId));
 
   static String _normalizeLocale(String? code) => code == 'ru' ? 'ru' : 'uz';
 

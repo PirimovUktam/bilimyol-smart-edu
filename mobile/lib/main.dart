@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,8 +13,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  await SupabaseConfig.initialize();
   final storage = await LocalStorageService.load();
+  await SupabaseConfig.initialize(storage: storage);
+  if (SupabaseConfig.isConfigured) {
+    unawaited(SupabaseConfig.verifyActiveSessionOrSignOut());
+  }
 
   productTourCompleted.value = storage.getProductTourCompletedSync();
   if (!SupabaseConfig.hasRemoteConfiguration) {

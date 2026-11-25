@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 final demoSessionActive = ValueNotifier<bool>(false);
 final productTourCompleted = ValueNotifier<bool>(false);
 final activeSessionHasStartedCourse = ValueNotifier<bool>(false);
+final postLoginHydrating = ValueNotifier<bool>(false);
 
 bool hasStartedCourseInDemoSnapshot(String? rawJson) {
   if (rawJson == null || rawJson.trim().isEmpty) return false;

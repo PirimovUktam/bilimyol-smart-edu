@@ -77,6 +77,13 @@ class LessonReadingPositionStore {
     return int.tryParse(raw.toString().trim());
   }
 
+  static String _storageKey(Lesson lesson, {String? accountId}) {
+    if (accountId != null && accountId.isNotEmpty) {
+      return tupleKey(accountId, lesson.courseId, lesson.id);
+    }
+    return primaryKey(lesson.id);
+  }
+
   static Future<int> readStepIndex(
     Lesson lesson, {
     String? accountId,
@@ -84,18 +91,9 @@ class LessonReadingPositionStore {
   }) async {
     final prefs = await getPrefsSafe(preferencesProvider);
     if (prefs == null) return 0;
-    final primary = _readInt(prefs, primaryKey(lesson.id));
-    if (primary != null) {
-      return clampStepIndex(lesson, primary);
-    }
-    if (accountId != null && accountId.isNotEmpty) {
-      final tupleVal = _readInt(
-        prefs,
-        tupleKey(accountId, lesson.courseId, lesson.id),
-      );
-      if (tupleVal != null) {
-        return clampStepIndex(lesson, tupleVal);
-      }
+    final stored = _readInt(prefs, _storageKey(lesson, accountId: accountId));
+    if (stored != null) {
+      return clampStepIndex(lesson, stored);
     }
     return 0;
   }
@@ -110,13 +108,10 @@ class LessonReadingPositionStore {
     if (prefs == null) return;
     final clamped = clampStepIndex(lesson, stepIndex);
     try {
-      await prefs.setString(primaryKey(lesson.id), clamped.toString());
-      if (accountId != null && accountId.isNotEmpty) {
-        await prefs.setString(
-          tupleKey(accountId, lesson.courseId, lesson.id),
-          clamped.toString(),
-        );
-      }
+      await prefs.setString(
+        _storageKey(lesson, accountId: accountId),
+        clamped.toString(),
+      );
     } catch (_) {
       // Best-effort reading checkpoint persistence.
     }
@@ -130,10 +125,7 @@ class LessonReadingPositionStore {
     final prefs = await getPrefsSafe(preferencesProvider);
     if (prefs == null) return;
     try {
-      await prefs.remove(primaryKey(lesson.id));
-      if (accountId != null && accountId.isNotEmpty) {
-        await prefs.remove(tupleKey(accountId, lesson.courseId, lesson.id));
-      }
+      await prefs.remove(_storageKey(lesson, accountId: accountId));
     } catch (_) {
       // Best-effort cleanup.
     }

@@ -101,25 +101,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
     final s = _resolveStrings(context);
-    if (demoSessionActive.value) {
-      final container = ProviderScope.containerOf(context, listen: false);
-      container.invalidate(placementStateNotifierProvider);
-      container.invalidate(lessonSessionNotifierProvider);
-      demoSessionActive.value = false;
-      context.go('/login');
-      return;
-    }
     final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _isLoggingOut = true);
     try {
+      if (demoSessionActive.value) {
+        demoSessionActive.value = false;
+        await resetSessionState(container);
+        if (mounted) context.go('/login');
+        return;
+      }
       final auth = SupabaseConfig.client?.auth;
       if (auth == null) throw StateError('No auth client.');
       await auth.signOut(scope: SignOutScope.local);
-      container.invalidate(learnerStateNotifierProvider);
-      container.invalidate(courseStateNotifierProvider);
-      container.invalidate(roadmapStateNotifierProvider);
-      container.invalidate(placementStateNotifierProvider);
-      container.invalidate(lessonSessionNotifierProvider);
+      await SupabaseConfig.clearPasswordRecovery();
+      await resetSessionState(container);
       if (mounted) context.go('/login');
     } catch (_) {
       if (mounted) {

@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers.dart';
 import '../core/auth/demo_session.dart';
 import '../core/config/supabase_config.dart';
@@ -24,34 +22,6 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/progress/progress_screen.dart';
 import '../features/ai_tutor/ai_tutor_screen.dart';
 
-/// Bridges Supabase auth state changes into a [Listenable] so GoRouter can
-/// re-evaluate its redirect guard whenever the session appears or disappears.
-class _AuthRefreshNotifier extends ChangeNotifier {
-  StreamSubscription<AuthState>? _sub;
-  String? _recoveryUserId;
-
-  bool get recoveryActive =>
-      _recoveryUserId != null &&
-      _recoveryUserId == SupabaseConfig.client?.auth.currentUser?.id;
-
-  _AuthRefreshNotifier() {
-    _sub = SupabaseConfig.client?.auth.onAuthStateChange.listen((state) {
-      if (state.event == AuthChangeEvent.passwordRecovery) {
-        _recoveryUserId = state.session?.user.id;
-      } else if (state.event == AuthChangeEvent.signedOut) {
-        _recoveryUserId = null;
-      }
-      notifyListeners();
-    }, onError: (Object _) => notifyListeners());
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-}
-
 const Set<String> _publicRoutes = {
   '/welcome',
   '/login',
@@ -59,7 +29,15 @@ const Set<String> _publicRoutes = {
   '/forgot-password',
 };
 
-bool _resolveHasStartedCourse(BuildContext context) {
+@visibleForTesting
+bool resolveAppHasStartedCourse(
+  BuildContext context, {
+  required bool isSessionActive,
+  required bool recoveryActive,
+}) {
+  if (!isSessionActive || recoveryActive) {
+    return false;
+  }
   try {
     final container = ProviderScope.containerOf(context, listen: false);
     final courses = container.read(courseStateNotifierProvider).courses;
@@ -83,12 +61,17 @@ String? resolveAppRedirect({
   required bool isDemoActive,
   required bool isTourCompleted,
   required bool hasStartedAnyCourse,
+  bool isHydratingProfile = false,
 }) {
   if (recoveryActive) {
     return path == '/reset-password' ? null : '/reset-password';
   }
 
   if (path == '/welcome' && uri.queryParameters['replay'] == '1') {
+    return null;
+  }
+
+  if (isHydratingProfile && path == '/login') {
     return null;
   }
 
@@ -123,25 +106,40 @@ String? resolveAppRedirect({
   return null;
 }
 
-final _authRefresh = _AuthRefreshNotifier();
 final GoRouter appRouter = GoRouter(
   initialLocation: '/welcome',
   refreshListenable: Listenable.merge([
-    _authRefresh,
+    SupabaseConfig.authUserIdListenable,
+    SupabaseConfig.recoveryActiveListenable,
+    SupabaseConfig.authStateRevisionListenable,
     demoSessionActive,
     productTourCompleted,
     activeSessionHasStartedCourse,
+    postLoginHydrating,
   ]),
   redirect: (context, state) {
+    final recoveryActive = SupabaseConfig.isRecoveryActive;
+    final isRemoteConfigured = SupabaseConfig.hasRemoteConfiguration;
+    final isLoggedIn =
+        (SupabaseConfig.authUserIdListenable.value ??
+            SupabaseConfig.client?.auth.currentUser?.id) !=
+        null;
+    final isDemoActive = demoSessionActive.value;
+    final isSessionActive = isRemoteConfigured ? isLoggedIn : isDemoActive;
     return resolveAppRedirect(
       path: state.matchedLocation,
       uri: state.uri,
-      recoveryActive: _authRefresh.recoveryActive,
-      isRemoteConfigured: SupabaseConfig.hasRemoteConfiguration,
-      isLoggedIn: SupabaseConfig.client?.auth.currentUser != null,
-      isDemoActive: demoSessionActive.value,
+      recoveryActive: recoveryActive,
+      isRemoteConfigured: isRemoteConfigured,
+      isLoggedIn: isLoggedIn,
+      isDemoActive: isDemoActive,
       isTourCompleted: productTourCompleted.value,
-      hasStartedAnyCourse: _resolveHasStartedCourse(context),
+      hasStartedAnyCourse: resolveAppHasStartedCourse(
+        context,
+        isSessionActive: isSessionActive,
+        recoveryActive: recoveryActive,
+      ),
+      isHydratingProfile: postLoginHydrating.value,
     );
   },
   routes: [
