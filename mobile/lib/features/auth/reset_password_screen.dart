@@ -34,10 +34,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _resetProvidersIfMounted() async {
+  ProviderContainer? _tryCaptureProviderContainer() {
     try {
-      final container = ProviderScope.containerOf(context, listen: false);
-      await resetSessionState(container);
+      return ProviderScope.containerOf(context, listen: false);
+    } catch (_) {
+      // Standalone widget tests without ProviderScope do not hold session providers.
+      return null;
+    }
+  }
+
+  Future<void> _resetProvidersIfMounted([
+    ProviderContainer? capturedContainer,
+  ]) async {
+    try {
+      final container =
+          capturedContainer ??
+          (mounted ? ProviderScope.containerOf(context, listen: false) : null);
+      if (container != null) {
+        await resetSessionState(container);
+      }
     } catch (_) {
       // Standalone widget tests without ProviderScope do not hold session providers.
     }
@@ -46,6 +61,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Future<void> _save() async {
     final s = AppStrings.of(context);
     if (_busy || !_form.currentState!.validate()) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final hasRouter = GoRouter.maybeOf(context) != null;
+    final container = _tryCaptureProviderContainer();
     setState(() {
       _busy = true;
       _error = null;
@@ -61,9 +79,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await client.auth.signOut(scope: SignOutScope.local);
       SupabaseConfig.syncCurrentAuthState();
       await SupabaseConfig.clearPasswordRecovery(session: updatedSession);
-      await _resetProvidersIfMounted();
+      await _resetProvidersIfMounted(container);
       if (mounted) {
         _password.clear();
+      }
+      if (hasRouter) {
+        if (messenger != null && messenger.mounted) {
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(s.passwordUpdatedHeading)));
+        }
+        if (mounted && GoRouter.maybeOf(context) != null) {
+          context.go('/login');
+        }
+      } else if (mounted) {
         setState(() => _saved = true);
       }
     } catch (_) {

@@ -853,6 +853,7 @@ void main() {
     SupabaseClient? widgetScopedClient;
     Map<String, Map<String, dynamic>>? mockProfilesOverride;
     Completer<void>? mockProfileGate;
+    void Function(String path)? mockOnRequest;
 
     setUp(() {
       prevRemote = SupabaseConfig.hasRemoteConfiguration;
@@ -867,9 +868,11 @@ void main() {
       postLoginHydrating.value = false;
       mockProfilesOverride = null;
       mockProfileGate = null;
+      mockOnRequest = null;
       widgetScopedClient = _buildMockSupabaseClient(
         learnerProfilesByUserIdResolver: () => mockProfilesOverride,
         profileFetchGateResolver: () => mockProfileGate,
+        onRequest: (path) => mockOnRequest?.call(path),
       );
     });
 
@@ -1765,6 +1768,210 @@ void main() {
         expect(sameContainer.read(authSessionUserIdProvider), isNull);
         SupabaseConfig.syncCurrentAuthState();
         expect(SupabaseConfig.authUserIdListenable.value, isNull);
+      },
+    );
+
+    testWidgets(
+      '7. GoRouter-hosted ResetPasswordScreen._save() fails closed (updateUser + signOut + clearPasswordRecovery), redirects to /login, and shows passwordUpdatedHeading SnackBar',
+      (tester) async {
+        SupabaseConfig.hasRemoteConfiguration = true;
+        final storage = await LocalStorageService.load();
+        final requestedPaths = <String>[];
+        mockOnRequest = requestedPaths.add;
+        final client = widgetScopedClient!;
+        await SupabaseConfig.bindClientForTesting(client, storage: storage);
+
+        await client.auth.setInitialSession(
+          jsonEncode(
+            _buildTestSession(
+              userId: 'user-rec',
+              expired: false,
+              amr: [
+                {'method': 'recovery', 'timestamp': 1000},
+              ],
+            ).toJson(),
+          ),
+        );
+        await tester.pump();
+        expect(SupabaseConfig.isRecoveryActive, isTrue);
+        expect(await storage.getRecoveryUserId(), 'user-rec');
+
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(storage),
+            courseRepositoryProvider.overrideWithValue(_SpyCourseRepository()),
+            lessonRepositoryProvider.overrideWithValue(InMemoryLessonRepository()),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final learnerBefore = container.read(learnerStateNotifierProvider.notifier);
+        final courseBefore = container.read(courseStateNotifierProvider.notifier);
+        final roadmapBefore = container.read(roadmapStateNotifierProvider.notifier);
+        final placementBefore = container.read(placementStateNotifierProvider.notifier);
+        final lessonBefore = container.read(lessonSessionNotifierProvider.notifier);
+        activeSessionHasStartedCourse.value = true;
+
+        final router = GoRouter(
+          initialLocation: '/reset-password',
+          refreshListenable: Listenable.merge([
+            SupabaseConfig.authUserIdListenable,
+            SupabaseConfig.recoveryActiveListenable,
+            SupabaseConfig.authStateRevisionListenable,
+            postLoginHydrating,
+            activeSessionHasStartedCourse,
+          ]),
+          redirect: (context, state) {
+            final activeClient = SupabaseConfig.client;
+            final isLoggedIn =
+                (activeClient != null
+                    ? activeClient.auth.currentUser?.id
+                    : SupabaseConfig.authUserIdListenable.value) !=
+                null;
+            return resolveAppRedirect(
+              path: state.matchedLocation,
+              uri: state.uri,
+              recoveryActive: SupabaseConfig.isRecoveryActive,
+              isRemoteConfigured: SupabaseConfig.hasRemoteConfiguration,
+              isLoggedIn: isLoggedIn,
+              isDemoActive: demoSessionActive.value,
+              isTourCompleted: productTourCompleted.value,
+              hasStartedAnyCourse: resolveAppHasStartedCourse(
+                context,
+                isSessionActive: isLoggedIn,
+                recoveryActive: SupabaseConfig.isRecoveryActive,
+              ),
+              isHydratingProfile: postLoginHydrating.value,
+            );
+          },
+          routes: [
+            GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+            GoRoute(
+              path: '/reset-password',
+              builder: (_, _) => const ResetPasswordScreen(),
+            ),
+            GoRoute(path: '/courses', builder: (_, _) => const Text('COURSES_DEST')),
+            GoRoute(path: '/dashboard', builder: (_, _) => const Text('DASHBOARD_DEST')),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp.router(
+              theme: AppTheme.lightTheme,
+              locale: const Locale('uz'),
+              supportedLocales: AppStrings.supportedLocales,
+              localizationsDelegates: AppStrings.localizationsDelegates,
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ResetPasswordScreen), findsOneWidget);
+
+        final passwordFields = find.byType(TextFormField);
+        await tester.enterText(passwordFields.at(0), 'NewStrongPass123!');
+        await tester.enterText(passwordFields.at(1), 'NewStrongPass123!');
+
+        final saveBtn = find.text(AppStrings.uz.savePasswordAction);
+        await tester.ensureVisible(saveBtn);
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
+
+        // (a) updateUser + signOut + clearPasswordRecovery + provider reset ran.
+        expect(requestedPaths, anyElement(endsWith('/auth/v1/user')));
+        expect(client.auth.currentSession, isNull);
+        expect(client.auth.currentUser, isNull);
+        expect(SupabaseConfig.isRecoveryActive, isFalse);
+        expect(SupabaseConfig.authUserIdListenable.value, isNull);
+        expect(await storage.getRecoveryUserId(), isNull);
+        expect(container.read(authSessionUserIdProvider), isNull);
+        expect(activeSessionHasStartedCourse.value, isFalse);
+        expect(
+          identical(container.read(learnerStateNotifierProvider.notifier), learnerBefore),
+          isFalse,
+        );
+        expect(
+          identical(container.read(courseStateNotifierProvider.notifier), courseBefore),
+          isFalse,
+        );
+        expect(
+          identical(container.read(roadmapStateNotifierProvider.notifier), roadmapBefore),
+          isFalse,
+        );
+        expect(
+          identical(container.read(placementStateNotifierProvider.notifier), placementBefore),
+          isFalse,
+        );
+        expect(
+          identical(container.read(lessonSessionNotifierProvider.notifier), lessonBefore),
+          isFalse,
+        );
+
+        // (b) Router redirected to /login with zero active session / zero recovery lock.
+        expect(router.routeInformationProvider.value.uri.path, '/login');
+        expect(find.byType(LoginScreen), findsOneWidget);
+        expect(find.byType(ResetPasswordScreen), findsNothing);
+
+        // (c) Confirmation SnackBar is rendered and visible on /login.
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(SnackBar),
+            matching: find.text(AppStrings.uz.passwordUpdatedHeading),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      '8. Standalone ResetPasswordScreen._save() without GoRouter still sets _saved = true and shows passwordUpdatedHeading',
+      (tester) async {
+        SupabaseConfig.hasRemoteConfiguration = true;
+        final storage = await LocalStorageService.load();
+        final client = widgetScopedClient!;
+        await SupabaseConfig.bindClientForTesting(client, storage: storage);
+        await client.auth.setInitialSession(
+          jsonEncode(
+            _buildTestSession(
+              userId: 'user-rec',
+              expired: false,
+              amr: [
+                {'method': 'recovery', 'timestamp': 1000},
+              ],
+            ).toJson(),
+          ),
+        );
+        await tester.pump();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('uz'),
+            supportedLocales: AppStrings.supportedLocales,
+            localizationsDelegates: AppStrings.localizationsDelegates,
+            home: const ResetPasswordScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final passwordFields = find.byType(TextFormField);
+        await tester.enterText(passwordFields.at(0), 'NewStrongPass123!');
+        await tester.enterText(passwordFields.at(1), 'NewStrongPass123!');
+
+        final saveBtn = find.text(AppStrings.uz.savePasswordAction);
+        await tester.ensureVisible(saveBtn);
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
+
+        expect(client.auth.currentSession, isNull);
+        expect(SupabaseConfig.isRecoveryActive, isFalse);
+        expect(find.text(AppStrings.uz.passwordUpdatedHeading), findsOneWidget);
+        expect(find.text(AppStrings.uz.backToLoginAction), findsOneWidget);
       },
     );
   });
