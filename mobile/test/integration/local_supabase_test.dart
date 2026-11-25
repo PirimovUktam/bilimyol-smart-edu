@@ -21,12 +21,13 @@ const mailbox = String.fromEnvironment('BILIMYOL_LOCAL_MAILBOX');
 bool _isLoopback(Uri uri) =>
     uri.scheme == 'http' && ['127.0.0.1', 'localhost'].contains(uri.host);
 
-Future<Uri> _recoveryRedirect(
+Future<Uri> _mailVerificationLink(
   HttpClient http,
   Uri mail,
   Uri backend,
-  String email,
-) async {
+  String email, {
+  required String expectedType,
+}) async {
   Future<Map<String, dynamic>> jsonAt(Uri uri) async {
     final response = await (await http.getUrl(uri)).close();
     return jsonDecode(await utf8.decoder.bind(response).join())
@@ -52,28 +53,71 @@ Future<Uri> _recoveryRedirect(
       final verification = Uri.parse(link.group(1)!);
       if (!_isLoopback(verification) || verification.origin != backend.origin) {
         throw StateError(
-          'Recovery verification escaped the disposable backend.',
+          'Auth verification escaped the disposable backend.',
         );
       }
-      final request = await http.getUrl(verification)
-        ..followRedirects = false;
-      final response = await request.close();
-      await response.drain<void>();
-      final location = Uri.parse(
-        response.headers.value(HttpHeaders.locationHeader)!,
-      );
-      if (location.queryParameters['code'] == null) {
-        throw StateError(
-          'PKCE code missing from the verified recovery redirect.',
-        );
+      if (verification.queryParameters['type'] != expectedType) {
+        continue;
       }
-      return Uri.parse(
-        SupabaseConfig.passwordRecoveryUrl,
-      ).replace(query: location.query);
+      return verification;
     }
     await Future<void>.delayed(const Duration(milliseconds: 500));
   }
-  throw StateError('The recovery message did not arrive in the local mailbox.');
+  throw StateError(
+    'The $expectedType message did not arrive in the local mailbox.',
+  );
+}
+
+Future<void> _confirmSignupFromMailpit(
+  HttpClient http,
+  Uri mail,
+  Uri backend,
+  String email,
+) async {
+  final verification = await _mailVerificationLink(
+    http,
+    mail,
+    backend,
+    email,
+    expectedType: 'signup',
+  );
+  final request = await http.getUrl(verification)..followRedirects = false;
+  final response = await request.close();
+  await response.drain<void>();
+  if (response.statusCode < 200 || response.statusCode >= 400) {
+    throw StateError(
+      'Signup verification returned unexpected status ${response.statusCode}.',
+    );
+  }
+}
+
+Future<Uri> _recoveryRedirect(
+  HttpClient http,
+  Uri mail,
+  Uri backend,
+  String email,
+) async {
+  final verification = await _mailVerificationLink(
+    http,
+    mail,
+    backend,
+    email,
+    expectedType: 'recovery',
+  );
+  final request = await http.getUrl(verification)..followRedirects = false;
+  final response = await request.close();
+  await response.drain<void>();
+  final location = Uri.parse(
+    response.headers.value(HttpHeaders.locationHeader)!,
+  );
+  if (location.queryParameters['code'] == null) {
+    throw StateError(
+      'PKCE code missing from the verified recovery redirect.',
+    );
+  }
+  return Uri.parse(
+    SupabaseConfig.passwordRecoveryUrl,
+  ).replace(query: location.query);
 }
 
 void main() {
@@ -90,11 +134,33 @@ void main() {
       await SupabaseConfig.initialize();
       addTearDown(() => Supabase.instance.dispose());
       final stamp = DateTime.now().microsecondsSinceEpoch;
+      final tutorEmail = 'flutter-ai-qa$stamp@example.test';
+      final tutorPassword = 'QA-local-$stamp';
       final signup = await Supabase.instance.client.auth.signUp(
-        email: 'flutter-ai-qa$stamp@example.test',
-        password: 'QA-local-$stamp',
+        email: tutorEmail,
+        password: tutorPassword,
       );
-      expect(signup.session, isNotNull);
+      if (signup.session == null) {
+        final mail = Uri.tryParse(mailbox);
+        if (mail == null || !_isLoopback(mail)) {
+          throw StateError(
+            'BILIMYOL_LOCAL_MAILBOX is required when email confirmations are enabled.',
+          );
+        }
+        final http = HttpClient();
+        addTearDown(() => http.close(force: true));
+        await _confirmSignupFromMailpit(
+          http,
+          mail,
+          Uri.parse(SupabaseConfig.supabaseUrl),
+          tutorEmail,
+        );
+        final signedIn = await Supabase.instance.client.auth.signInWithPassword(
+          email: tutorEmail,
+          password: tutorPassword,
+        );
+        expect(signedIn.session, isNotNull);
+      }
       final repo = SupabaseLearnerRepository();
       final profile = await repo.getProfile();
       await repo.updateProfile(
@@ -145,6 +211,8 @@ void main() {
       expect(SupabaseConfig.isConfigured, isTrue);
       addTearDown(() => Supabase.instance.dispose());
 
+      final http = HttpClient();
+      addTearDown(() => http.close(force: true));
       final client = Supabase.instance.client;
       final stamp = DateTime.now().microsecondsSinceEpoch;
       final email = 'flutterqa$stamp@example.test';
@@ -154,7 +222,14 @@ void main() {
         password: password,
         data: {'first_name': 'Flutter', 'last_name': 'Sinov'},
       );
-      expect(signup.session, isNotNull);
+      if (signup.session == null) {
+        await _confirmSignupFromMailpit(http, mail, backend, email);
+        final confirmedSession = await client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+        expect(confirmedSession.session, isNotNull);
+      }
       final repo = SupabaseLearnerRepository();
       expect((await repo.getProfile()).name, 'Flutter');
       final profile = await client
@@ -223,8 +298,6 @@ void main() {
         email,
         redirectTo: SupabaseConfig.passwordRecoveryUrl,
       );
-      final http = HttpClient();
-      addTearDown(() => http.close(force: true));
       final redirect = await _recoveryRedirect(http, mail, backend, email);
       final recovery = client.auth.onAuthStateChange.firstWhere(
         (event) => event.event == AuthChangeEvent.passwordRecovery,

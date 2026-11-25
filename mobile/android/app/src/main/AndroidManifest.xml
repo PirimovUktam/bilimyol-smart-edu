@@ -3,7 +3,8 @@
     <application
         android:label="BilimYo‘l Smart Edu"
         android:name="${applicationName}"
-        android:icon="@drawable/bilimyol_launcher">
+        android:icon="@drawable/bilimyol_launcher"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

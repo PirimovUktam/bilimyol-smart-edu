@@ -15,6 +15,8 @@ class LocalStorageService {
   static const String demoSessionActiveKey = 'bilimyol.demo_session_active';
   static const String demoLearnerSnapshotKey =
       'bilimyol.demo_learner_snapshot';
+  static const String secureStorageInitializedKey =
+      'bilimyol.secure_storage_initialized_v1';
 
   SharedPreferences? _prefs;
   Future<SharedPreferences?>? _prefsFuture;
@@ -194,6 +196,15 @@ class LocalStorageService {
       setString(demoLearnerSnapshotKey, json);
 
   Future<void> clearDemoLearnerSnapshot() => remove(demoLearnerSnapshotKey);
+
+  bool getSecureStorageInitializedSync() =>
+      getBoolSync(secureStorageInitializedKey, defaultValue: false);
+
+  Future<bool> getSecureStorageInitialized() =>
+      getBool(secureStorageInitializedKey, defaultValue: false);
+
+  Future<void> setSecureStorageInitialized(bool initialized) =>
+      setBool(secureStorageInitializedKey, initialized);
 
   static String _normalizeLocale(String? code) => code == 'ru' ? 'ru' : 'uz';
 
