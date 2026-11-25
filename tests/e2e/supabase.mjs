@@ -69,6 +69,8 @@ async function signup(account) {
   await page.getByLabel('Parol', { exact: true }).fill(account.password);
   await page.getByLabel('Parolni takrorlang', { exact: true }).fill(account.password);
   await click('Ro‘yxatdan o‘tish');
+  await waitFor(page.getByRole('status'));
+  await page.goto(await mailLink(account.email, 'signup'), { waitUntil: 'domcontentloaded' });
   await waitFor(heading('O‘zingizga mos fanni tanlang'));
 }
 
@@ -78,23 +80,26 @@ async function login(account, password = account.password) {
   await click('Kirish');
 }
 
-async function mailLink(email) {
+async function mailLink(email, expectedType) {
   for (let retry = 0; retry < 30; retry++) {
     const index = await fetch(mail + '/api/v1/messages').then((response) => response.json());
-    const message = index.messages?.find((item) => item.To?.some((recipient) => recipient.Address === email));
-    if (message) {
+    const messages = (index.messages ?? []).filter((item) =>
+      item.To?.some((recipient) => recipient.Address === email)
+    );
+    for (const message of messages) {
       const { HTML, Text } = await fetch(mail + '/api/v1/message/' + message.ID).then((response) => response.json());
       const link = (HTML ?? '').match(/href="([^"]+\/auth\/v1\/verify[^"]+)"/)?.[1] ??
         (Text ?? '').match(/https?:\/\/[^\s<>]+\/auth\/v1\/verify[^\s<>]+/)?.[0];
-      if (link) {
-        const url = new URL(link.replaceAll('&amp;', '&'));
-        assert.equal(url.origin, backend, 'Recovery must stay on the disposable server.');
+      if (!link) continue;
+      const url = new URL(link.replaceAll('&amp;', '&'));
+      assert.equal(url.origin, backend, 'Auth verification link must stay on the disposable server.');
+      if (!expectedType || url.searchParams.get('type') === expectedType) {
         return url.href;
       }
     }
     await new Promise((resolve) => setTimeout(resolve, 400));
   }
-  throw new Error('Recovery message did not reach the local mailbox.');
+  throw new Error('Auth (' + (expectedType ?? 'any') + ') message did not reach the local mailbox.');
 }
 
 try {
@@ -259,7 +264,7 @@ try {
   await page.getByLabel('Email manzilingiz', { exact: true }).fill(first.email);
   await click('Tiklash havolasini yuborish');
   await waitFor(page.getByText('So‘rov qabul qilindi'));
-  await page.goto(await mailLink(first.email), { waitUntil: 'domcontentloaded' });
+  await page.goto(await mailLink(first.email, 'recovery'), { waitUntil: 'domcontentloaded' });
   const newPassword = 'QA-new-' + randomUUID();
   await page.getByLabel('Yangi parol', { exact: true }).fill(newPassword);
   await page.getByLabel('Parolni takrorlang', { exact: true }).fill(newPassword);
@@ -283,7 +288,12 @@ try {
 
   const outsider = api();
   const outsiderAuth = await outsider.auth.signUp(second);
-  assert(!outsiderAuth.error && outsiderAuth.data.session, 'Second disposable learner can sign up.');
+  assert(!outsiderAuth.error && outsiderAuth.data.user, 'Second disposable learner can sign up.');
+  const confirmUrl = await mailLink(second.email, 'signup');
+  const confirmRes = await fetch(confirmUrl, { redirect: 'manual' });
+  assert(confirmRes.status >= 200 && confirmRes.status < 400, 'Second disposable learner confirms email.');
+  const outsiderLogin = await outsider.auth.signInWithPassword(second);
+  assert(!outsiderLogin.error && outsiderLogin.data.session, 'Second disposable learner signs in after confirmation.');
   const readOther = await outsider.from('lesson_progress').select('lesson_id').eq('user_id', ownerId);
   assert.deepEqual(readOther.data, []);
   const readPlacement = await outsider.from('placement_answers').select('id').eq('attempt_id', placement.data.id);
