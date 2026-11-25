@@ -1,3 +1,4 @@
+import { registerSessionResetHandler } from '@/core/runtime/sessionReset';
 import { permuteQuestionOptions } from '@/core/utils/questionOptionOrder';
 import { Question } from '@/domain/entities/Question';
 
@@ -70,3 +71,5 @@ export function publishQuestionWithRegisteredKey<T extends AuthoredQuestion>(
   delete clone.explanation;
   return clone as Omit<T, 'correctIndex' | 'explanation'>;
 }
+
+registerSessionResetHandler(clearQuestionAnswerKeys);

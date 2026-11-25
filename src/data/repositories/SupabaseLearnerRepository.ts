@@ -18,6 +18,7 @@ import { SkillScore } from '../../domain/entities/SkillScore';
 import type { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
 import { supabaseLessonRepository } from './SupabaseLessonRepository';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { registerSessionResetHandler } from '@/core/runtime/sessionReset';
 import { supabase, isSupabaseConfigured } from '../../core/config/supabase';
 
 /**
@@ -741,6 +742,19 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     this.srsQueue = next.catch(() => {});
     return next;
   }
+
+  clearSessionState(): void {
+    this.fallbackRepo = undefined;
+    this.demoReminders = true;
+    this.srsQueue = Promise.resolve();
+    try {
+      globalThis.sessionStorage?.removeItem('bilimyol_demo_progress');
+    } catch { /* Ignore storage errors during logout cleanup. */ }
+  }
 }
 
 export const supabaseLearnerRepository = new SupabaseLearnerRepository();
+
+registerSessionResetHandler(() => {
+  supabaseLearnerRepository.clearSessionState();
+});

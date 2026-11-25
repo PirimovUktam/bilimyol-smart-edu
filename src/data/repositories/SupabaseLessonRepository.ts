@@ -450,6 +450,7 @@ export class SupabaseLessonRepository implements ILessonRepository {
 
   clearRuntimeCache(): void {
     this.liveRuntimeLessons.clear();
+    this.demoRepoInstance?.clearRuntimeCache();
   }
 }
 

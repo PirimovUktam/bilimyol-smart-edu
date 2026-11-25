@@ -8,9 +8,21 @@ import { PasswordInput } from '@/presentation/components/PasswordInput';
 import { SectionState } from '@/presentation/components/SectionState';
 import { AuthLayout } from './AuthLayout';
 
+export function shouldSignOutOnRecoveryExit({
+  isPasswordRecovery,
+  done,
+  hasSession,
+}: {
+  isPasswordRecovery: boolean;
+  done: boolean;
+  hasSession: boolean;
+}): boolean {
+  return isPasswordRecovery || done || hasSession;
+}
+
 export function ResetPasswordView({ onNavigateLogin }: { onNavigateLogin: () => void }) {
   const { t } = useTranslation();
-  const { updatePassword, signOut, isLoading, isPasswordRecovery } = useAuth();
+  const { updatePassword, signOut, isLoading, isPasswordRecovery, session } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<Error | null>(null);
@@ -35,7 +47,7 @@ export function ResetPasswordView({ onNavigateLogin }: { onNavigateLogin: () => 
 
   const returnToLogin = async () => {
     try {
-      if (isPasswordRecovery || done) await signOut();
+      if (shouldSignOutOnRecoveryExit({ isPasswordRecovery, done, hasSession: Boolean(session) })) await signOut();
       onNavigateLogin();
     } catch {
       setError(new LocalizedError('auth.logoutFailed'));

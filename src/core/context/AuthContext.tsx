@@ -43,6 +43,190 @@ const defaultDemoProfile: UserProfile = {
   role: 'student',
 };
 
+export const RECOVERY_USER_STORAGE_KEY = 'bilimyol_recovery_user_id';
+const CLEARED_RECOVERY_STORAGE_KEY = 'bilimyol_recovery_cleared_claim';
+
+export interface ClearedRecoveryClaim {
+  userId?: string;
+  accessToken?: string;
+  recoveryTimestamp?: number;
+  clearedAt?: number;
+}
+
+export type ClearedRecoveryToken = string | number | ClearedRecoveryClaim | null;
+
+export interface ResolveRecoveryStateInput {
+  event: string;
+  session: Session | null;
+  storedRecoveryUserId: string | null;
+  clearedToken?: ClearedRecoveryToken;
+}
+
+export interface ResolveRecoveryStateResult {
+  isPasswordRecovery: boolean;
+  recoveryUserId: string | null;
+  clearClearedMarker: boolean;
+}
+
+interface NormalizedAmrEntry {
+  method: string;
+  timestamp: number;
+}
+
+function decodeJwtPayload(token: string | undefined | null): Record<string, unknown> | null {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+    const json = typeof globalThis.atob === 'function'
+      ? globalThis.atob(padded)
+      : Buffer.from(padded, 'base64').toString('utf8');
+    const parsed = JSON.parse(json) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractAmrEntries(session: Session | null, payload: Record<string, unknown> | null): NormalizedAmrEntry[] {
+  const rawAmr = payload?.amr ?? (session as { amr?: unknown } | null)?.amr;
+  if (!Array.isArray(rawAmr)) return [];
+  const entries: NormalizedAmrEntry[] = [];
+  for (const item of rawAmr) {
+    if (typeof item === 'string' && item) {
+      entries.push({ method: item, timestamp: 0 });
+    } else if (item && typeof item === 'object' && typeof (item as { method?: unknown }).method === 'string') {
+      const ts = (item as { timestamp?: unknown }).timestamp;
+      entries.push({
+        method: (item as { method: string }).method,
+        timestamp: typeof ts === 'number' && Number.isFinite(ts) ? ts : 0,
+      });
+    }
+  }
+  return entries;
+}
+
+function parseClearedToken(clearedToken?: ClearedRecoveryToken): ClearedRecoveryClaim | null {
+  if (clearedToken === undefined || clearedToken === null) return null;
+  if (typeof clearedToken === 'number' && Number.isFinite(clearedToken)) {
+    return { clearedAt: clearedToken };
+  }
+  if (typeof clearedToken === 'string') {
+    const trimmed = clearedToken.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        if (parsed && typeof parsed === 'object') return parsed as ClearedRecoveryClaim;
+      } catch { /* Treat as raw access token when not JSON. */ }
+    }
+    return { accessToken: trimmed };
+  }
+  if (typeof clearedToken === 'object') return clearedToken;
+  return null;
+}
+
+export function hasUnresolvedRecoveryAmrClaim(
+  session: Session | null,
+  clearedToken?: ClearedRecoveryToken,
+): boolean {
+  if (!session?.user?.id) return false;
+  const payload = decodeJwtPayload(session.access_token);
+  const entries = extractAmrEntries(session, payload);
+  const recoveryEntries = entries.filter((entry) => entry.method === 'recovery');
+  if (recoveryEntries.length === 0) return false;
+
+  const latestRecoveryTs = Math.max(...recoveryEntries.map((entry) => entry.timestamp));
+  const hasNewerPasswordAuth = entries.some(
+    (entry) => entry.method === 'password' && entry.timestamp > latestRecoveryTs,
+  );
+  if (hasNewerPasswordAuth) return false;
+
+  const cleared = parseClearedToken(clearedToken);
+  if (cleared && (!cleared.userId || cleared.userId === session.user.id)) {
+    if (cleared.accessToken && session.access_token === cleared.accessToken) {
+      return false;
+    }
+    if (
+      typeof cleared.recoveryTimestamp === 'number' &&
+      Number.isFinite(cleared.recoveryTimestamp) &&
+      latestRecoveryTs > 0 &&
+      latestRecoveryTs <= cleared.recoveryTimestamp
+    ) {
+      return false;
+    }
+    if (typeof cleared.clearedAt === 'number' && Number.isFinite(cleared.clearedAt)) {
+      if (latestRecoveryTs > 0 && latestRecoveryTs <= cleared.clearedAt) {
+        return false;
+      }
+      const iat = typeof payload?.iat === 'number' && Number.isFinite(payload.iat) ? payload.iat : undefined;
+      if (latestRecoveryTs === 0 && (iat === undefined || iat <= cleared.clearedAt)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+export function resolveInitialOrEventRecoveryState({
+  event,
+  session,
+  storedRecoveryUserId,
+  clearedToken,
+}: ResolveRecoveryStateInput): ResolveRecoveryStateResult {
+  if (event === 'SIGNED_OUT' || !session?.user?.id) {
+    return { isPasswordRecovery: false, recoveryUserId: null, clearClearedMarker: false };
+  }
+  const userId = session.user.id;
+  if (event === 'PASSWORD_RECOVERY') {
+    return { isPasswordRecovery: true, recoveryUserId: userId, clearClearedMarker: true };
+  }
+  if (storedRecoveryUserId === userId || hasUnresolvedRecoveryAmrClaim(session, clearedToken)) {
+    return { isPasswordRecovery: true, recoveryUserId: userId, clearClearedMarker: false };
+  }
+  return { isPasswordRecovery: false, recoveryUserId: null, clearClearedMarker: false };
+}
+
+function readStorageWithFallback(key: string): string | null {
+  try {
+    const value = globalThis.localStorage?.getItem(key);
+    if (value) return value;
+  } catch { /* Fall back to sessionStorage when localStorage is unavailable. */ }
+  try {
+    const value = globalThis.sessionStorage?.getItem(key);
+    if (value) return value;
+  } catch { /* Storage unavailable; fall back to in-memory state. */ }
+  return null;
+}
+
+function writeStorageWithFallback(key: string, value: string | null): boolean {
+  if (value === null) {
+    let ok = true;
+    try {
+      globalThis.localStorage?.removeItem(key);
+    } catch { ok = false; }
+    try {
+      globalThis.sessionStorage?.removeItem(key);
+    } catch { ok = false; }
+    return ok;
+  }
+  try {
+    globalThis.localStorage?.setItem(key, value);
+    try {
+      globalThis.sessionStorage?.removeItem(key);
+    } catch { /* Ignore fallback cleanup error. */ }
+    return true;
+  } catch { /* Fall back to sessionStorage when localStorage is blocked. */ }
+  try {
+    globalThis.sessionStorage?.setItem(key, value);
+    return true;
+  } catch { /* In-memory ref still tracks the active tab. */ }
+  return false;
+}
+
 const DEMO_SESSION_KEY = 'bilimyol_demo_session';
 
 function readDemoProfile(): UserProfile | null {
@@ -88,15 +272,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const authRevision = useRef(0);
   const authAction = useRef(0);
   const activeUserId = useRef<string | null>(null);
+  const activeSessionRef = useRef<Session | null>(null);
   const pendingAuth = useRef<{ request: number; email: string; userId?: string } | null>(null);
   // Entries live only until their action settles, including canceled SDK calls.
   const authOperations = useRef(new Map<number, string>());
   const signingOut = useRef<number | null>(null);
   const recoveryUserId = useRef<string | null>(null);
+  const recoveryStorageAvailable = useRef(true);
+  const clearedRecoveryRef = useRef<ClearedRecoveryClaim | null>(null);
 
   const setRecoveryUser = useCallback((userId: string | null) => {
     recoveryUserId.current = userId;
+    recoveryStorageAvailable.current = writeStorageWithFallback(RECOVERY_USER_STORAGE_KEY, userId);
     setIsPasswordRecovery(userId !== null);
+  }, []);
+
+  const getStoredRecoveryUserId = useCallback((): string | null => {
+    const stored = readStorageWithFallback(RECOVERY_USER_STORAGE_KEY);
+    if (stored) return stored;
+    return recoveryStorageAvailable.current ? null : recoveryUserId.current;
+  }, []);
+
+  const clearClearedRecovery = useCallback(() => {
+    clearedRecoveryRef.current = null;
+    writeStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY, null);
+  }, []);
+
+  const recordClearedRecovery = useCallback((userId: string, currentSession: Session | null) => {
+    const payload = decodeJwtPayload(currentSession?.access_token);
+    const entries = extractAmrEntries(currentSession, payload);
+    const recoveryTimestamps = entries
+      .filter((entry) => entry.method === 'recovery' && entry.timestamp > 0)
+      .map((entry) => entry.timestamp);
+    const claim: ClearedRecoveryClaim = {
+      userId,
+      accessToken: currentSession?.access_token,
+      recoveryTimestamp: recoveryTimestamps.length > 0 ? Math.max(...recoveryTimestamps) : undefined,
+      clearedAt: Math.floor(Date.now() / 1000),
+    };
+    clearedRecoveryRef.current = claim;
+    writeStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY, JSON.stringify(claim));
+  }, []);
+
+  const getActiveClearedRecovery = useCallback((): ClearedRecoveryToken => {
+    return clearedRecoveryRef.current ?? readStorageWithFallback(CLEARED_RECOVERY_STORAGE_KEY);
   }, []);
 
   const clearSessionStores = useCallback(() => {
@@ -117,6 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearAuthState = useCallback(() => {
     invalidatePendingAuth();
     activeUserId.current = null;
+    activeSessionRef.current = null;
     setDemoRuntimeActive(false);
     storeDemoProfile(null);
     clearSessionStores();
@@ -139,11 +359,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // A previous account's data must not render while another login is pending.
     if (activeUserId.current || profile) clearSessionStores();
     activeUserId.current = null;
+    activeSessionRef.current = null;
     setUser(null);
     setSession(null);
     setProfile(null);
     setIsDemoMode(false);
     setRecoveryUser(null);
+    clearClearedRecovery();
     setIsLoading(true);
     return request;
   };
@@ -285,13 +507,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data } = await supabase.auth.getSession();
         if (isCurrentStartup()) {
           activeUserId.current = data.session?.user.id ?? null;
+          activeSessionRef.current = data.session;
           setSession(data.session);
           setUser(data.session?.user ?? null);
           if (data.session?.user) {
+            const recoveryState = resolveInitialOrEventRecoveryState({
+              event: 'INITIAL_SESSION',
+              session: data.session,
+              storedRecoveryUserId: getStoredRecoveryUserId(),
+              clearedToken: getActiveClearedRecovery(),
+            });
+            setRecoveryUser(recoveryState.recoveryUserId);
             storeDemoProfile(null);
             setDemoRuntimeActive(false);
             await fetchProfile(data.session.user.id, data.session.user.email ?? '');
           } else {
+            setRecoveryUser(null);
             clearSessionStores();
             restoreDemo();
           }
@@ -330,9 +561,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           pendingAuth.current = null;
         }
         const changedAccount = activeUserId.current !== newSession.user.id;
-        if (event === 'PASSWORD_RECOVERY') {
-          setRecoveryUser(newSession.user.id);
-        } else if (changedAccount) {
+        const recoveryState = resolveInitialOrEventRecoveryState({
+          event,
+          session: newSession,
+          storedRecoveryUserId: getStoredRecoveryUserId(),
+          clearedToken: event === 'PASSWORD_RECOVERY' ? null : getActiveClearedRecovery(),
+        });
+        if (recoveryState.clearClearedMarker) {
+          clearClearedRecovery();
+        }
+        if (recoveryState.isPasswordRecovery) {
+          setRecoveryUser(recoveryState.recoveryUserId);
+        } else if (changedAccount || !recoveryState.isPasswordRecovery) {
           setRecoveryUser(null);
         }
         if (changedAccount) {
@@ -341,6 +581,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
         activeUserId.current = newSession.user.id;
+        activeSessionRef.current = newSession;
         storeDemoProfile(null);
         setDemoRuntimeActive(false);
         setSession(newSession);
@@ -374,7 +615,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       invalidatePendingAuth();
     };
-  }, [clearAuthState, clearSessionStores, fetchProfile, invalidatePendingAuth, setRecoveryUser]);
+  }, [clearAuthState, clearClearedRecovery, clearSessionStores, fetchProfile, getActiveClearedRecovery, getStoredRecoveryUserId, invalidatePendingAuth, setRecoveryUser]);
 
   const signIn = async (email: string, password: string) => {
     if (signingOut.current !== null) return { error: staleActionError() };
@@ -391,6 +632,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: staleActionError() };
       }
       activeUserId.current = authData.user.id;
+      activeSessionRef.current = authData.session;
       setUser(authData.user);
       setSession(authData.session);
       const resolved = await fetchProfile(authData.user.id, authData.user.email ?? email);
@@ -455,6 +697,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: staleActionError() };
       }
       activeUserId.current = signUpData.user.id;
+      activeSessionRef.current = signUpData.session;
       setUser(signUpData.user);
       setSession(signUpData.session);
       const resolved = await fetchProfile(
@@ -527,7 +770,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sets the new password on the recovery session Supabase establishes after
   // the emailed link is opened. Without this, the reset email is a dead end.
   const updatePassword = async (newPassword: string) => {
-    const recoveryId = recoveryUserId.current;
+    const recoveryId = getStoredRecoveryUserId();
     if (!isSupabaseConfigured || !recoveryId || recoveryId !== activeUserId.current) {
       return { error: new LocalizedError('errors.recoveryRequired') };
     }
@@ -539,6 +782,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         return { error: new LocalizedError('errors.passwordUpdate') };
       }
+      recordClearedRecovery(recoveryId, activeSessionRef.current);
       setRecoveryUser(null);
       return { error: null };
     } catch {

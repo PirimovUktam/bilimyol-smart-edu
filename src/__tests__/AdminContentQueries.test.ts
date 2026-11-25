@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { supabase } from '../core/config/supabase';
 import { adminContentService } from '../data/services/AdminContentService';
 
 const fetchBackend = vi.hoisted(() => vi.fn<typeof fetch>());
@@ -15,7 +16,14 @@ vi.mock('../core/config/supabase', async () => {
 
 const requestedUrl = (index = 0) => new URL(String(fetchBackend.mock.calls[index][0]));
 
-beforeEach(() => fetchBackend.mockReset());
+beforeEach(() => {
+  fetchBackend.mockReset();
+  vi.restoreAllMocks();
+  vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({
+    data: { user: { id: 'admin-test-user' } as never },
+    error: null,
+  });
+});
 
 describe('Admin content queries', () => {
   it('pages within the course and skill through the admin question view', async () => {

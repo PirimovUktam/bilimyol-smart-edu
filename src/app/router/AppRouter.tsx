@@ -160,7 +160,7 @@ export function AppRouter() {
   const [setupError, setSetupError] = useState(false);
   const [readyLearner, setReadyLearner] = useState<string | null>(null);
   const { profile, session, isDemoMode, isPasswordRecovery, isLoading } = useAuth();
-  const hasUsableAuth = isProtectedAuthReady(session, profile, isDemoMode);
+  const hasUsableAuth = !isPasswordRecovery && isProtectedAuthReady(session, profile, isDemoMode);
   const isAdmin = profile?.role === 'admin';
   const isShowcase = view === 'demo' || view === 'pitch';
   const isTourView = view === 'tour';
@@ -196,9 +196,12 @@ export function AppRouter() {
   }, [learnerId, setupRetry]);
 
   useEffect(() => {
+    if (!isLoading && isPasswordRecovery && view !== 'reset-password') {
+      navigate('reset-password', undefined, true);
+      return;
+    }
     if (isLoading || isShowcase || isTourView || view === 'reset-password') return;
-    if (isPasswordRecovery) navigate('reset-password', undefined, true);
-    else if (!hasUsableAuth && isWorkspace) navigate('login', undefined, true);
+    if (!hasUsableAuth && isWorkspace) navigate('login', undefined, true);
     else if (hasUsableAuth && !isWorkspace) {
       if (isAdmin) navigate('admin', undefined, true);
       else if (setupError || (learnerId && readyLearner === learnerId && (isDemoMode || learnerProfile?.id === learnerId))) {

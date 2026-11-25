@@ -5,6 +5,7 @@ import { Lesson } from '@/domain/entities/Lesson';
 import { Question } from '@/domain/entities/Question';
 import { mapCourseSubject } from '@/data/repositories/SupabaseCourseRepository';
 import { isDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 export interface AdminLessonRecord extends Omit<Lesson, 'reinforcementExercise'> {
   reinforcementExercise: Lesson['reinforcementExercise'] | null;
@@ -37,43 +38,70 @@ interface AdminDemoStores {
 let demoStores: AdminDemoStores | null = null;
 let demoStoresPromise: Promise<AdminDemoStores> | null = null;
 
+export function clearAdminDemoStores(): void {
+  demoStores = null;
+  demoStoresPromise = null;
+}
+
+registerSessionResetHandler(clearAdminDemoStores);
+
 async function ensureDemoStores(): Promise<AdminDemoStores> {
   if (demoStores) return demoStores;
-  demoStoresPromise ??= Promise.all([
-    import('../datasources/courses'),
-    import('../datasources/skills'),
-    import('../datasources/lessons'),
-    import('../datasources/questions'),
-  ]).then(([coursesMod, skillsMod, lessonsMod, questionsMod]) => {
-    const questions: AdminQuestionRecord[] = [];
-    for (const [courseId, qList] of Object.entries(questionsMod.PLACEMENT_QUESTIONS)) {
-      for (const q of qList) {
-        questions.push({
-          ...q,
-          courseId,
-          isPlacement: true,
-        });
+  if (!demoStoresPromise) {
+    const pending = Promise.all([
+      import('../datasources/courses'),
+      import('../datasources/skills'),
+      import('../datasources/lessons'),
+      import('../datasources/questions'),
+    ]).then(([coursesMod, skillsMod, lessonsMod, questionsMod]) => {
+      const questions: AdminQuestionRecord[] = [];
+      for (const [courseId, qList] of Object.entries(questionsMod.PLACEMENT_QUESTIONS)) {
+        for (const q of qList) {
+          questions.push({
+            ...q,
+            courseId,
+            isPlacement: true,
+          });
+        }
       }
-    }
-    demoStores = {
-      courses: [...coursesMod.SEED_COURSES],
-      skills: [...skillsMod.SEED_SKILLS],
-      lessons: Object.values(lessonsMod.SEED_LESSONS).map((l) => ({
-        ...l,
-        isPublished: true,
-        isArchived: false,
-      })),
-      questions,
-    };
-    return demoStores;
-  }).catch((err) => {
-    demoStoresPromise = null;
-    throw err;
-  });
+      const initialized: AdminDemoStores = {
+        courses: [...coursesMod.SEED_COURSES],
+        skills: [...skillsMod.SEED_SKILLS],
+        lessons: Object.values(lessonsMod.SEED_LESSONS).map((l) => ({
+          ...l,
+          isPublished: true,
+          isArchived: false,
+        })),
+        questions,
+      };
+      if (demoStoresPromise === pending) {
+        demoStores = initialized;
+      }
+      return initialized;
+    }).catch((err) => {
+      if (demoStoresPromise === pending) {
+        demoStoresPromise = null;
+      }
+      throw err;
+    });
+    demoStoresPromise = pending;
+  }
   return demoStoresPromise;
 }
 
 export class AdminContentService {
+  async requireAdminSession(): Promise<void> {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      throw error instanceof Error
+        ? error
+        : new Error((error as { message?: string }).message || 'Autentifikatsiyadan o‘tilmagan.');
+    }
+    if (!data?.user) {
+      throw new Error('Autentifikatsiyadan o‘tilmagan.');
+    }
+  }
+
   // =========================================================================
   // 1. COURSES MANAGEMENT (FANLAR)
   // =========================================================================
@@ -82,6 +110,7 @@ export class AdminContentService {
       const stores = await ensureDemoStores();
       return [...stores.courses];
     }
+    await this.requireAdminSession();
     const { data, error } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
     if (error) throw new Error('Fanlarni serverdan yuklab bo‘lmadi.');
     return (data ?? []).map((c) => ({
@@ -120,6 +149,7 @@ export class AdminContentService {
     };
 
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase.from('courses').upsert({
         id: newCourse.id,
         title: newCourse.title,
@@ -146,6 +176,7 @@ export class AdminContentService {
 
   async deleteCourse(courseId: string): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase.from('courses').delete().eq('id', courseId);
       if (error) throw new Error(`Fanni o‘chirishda xatolik: ${error.message}`);
       return;
@@ -162,6 +193,7 @@ export class AdminContentService {
       const stores = await ensureDemoStores();
       return demoPage(stores.skills.filter((s) => s.courseId === courseId), page);
     }
+    await this.requireAdminSession();
     const { data, error } = await supabase.from('skills')
       .select('id,course_id,name,code,description,order_index,icon_name')
       .eq('course_id', courseId).order('order_index').order('id')
@@ -184,6 +216,7 @@ export class AdminContentService {
       const stores = await ensureDemoStores();
       return stores.skills.filter((skill) => skill.courseId === courseId);
     }
+    await this.requireAdminSession();
     const rows: Pick<Skill, 'id' | 'name'>[] = [];
     for (let offset = 0; ; offset += 100) {
       const { data, error } = await supabase.from('skills').select('id,name').eq('course_id', courseId)
@@ -197,6 +230,7 @@ export class AdminContentService {
   async saveSkill(skill: Partial<Skill>): Promise<Skill> {
     const id = skill.id || `skill_${Date.now()}`;
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const fallbackOrder = skill.order ?? skill.orderIndex ?? 1;
       const newSkill: Skill = {
         id,
@@ -242,6 +276,7 @@ export class AdminContentService {
 
   async deleteSkill(skillId: string): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase.from('skills').delete().eq('id', skillId);
       if (error) throw new Error(`Ko‘nikmani o‘chirishda xatolik: ${error.message}`);
       return;
@@ -258,6 +293,7 @@ export class AdminContentService {
       const stores = await ensureDemoStores();
       return demoPage(stores.lessons.filter((l) => l.courseId === courseId), page);
     }
+    await this.requireAdminSession();
     // Learner access uses learner_lessons; CMS reads use the role-gated view
     // so answer-key JSON never travels to ordinary authenticated clients.
     const { data, error } = await supabase.from('admin_lessons')
@@ -286,6 +322,7 @@ export class AdminContentService {
       if (!lesson) throw new Error('Dars topilmadi.');
       return { steps: lesson.steps, reinforcementExercise: lesson.reinforcementExercise };
     }
+    await this.requireAdminSession();
     const { data, error } = await supabase.from('admin_lessons')
       .select('steps,reinforcement_exercise').eq('id', lessonId).single();
     if (error || !data) throw new Error(error?.message ?? 'Dars topilmadi.');
@@ -325,6 +362,7 @@ export class AdminContentService {
     };
 
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { data, error } = await supabase.rpc('admin_save_lesson', { p_lesson: {
         id: newLesson.id,
         course_id: newLesson.courseId,
@@ -352,6 +390,7 @@ export class AdminContentService {
 
   async toggleLessonPublish(lessonId: string, isPublished: boolean): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase
         .from('lessons')
         .update({ is_published: isPublished, updated_at: new Date().toISOString() })
@@ -366,6 +405,7 @@ export class AdminContentService {
 
   async toggleLessonArchive(lessonId: string, isArchived: boolean): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase
         .from('lessons')
         .update({ is_archived: isArchived, updated_at: new Date().toISOString() })
@@ -380,6 +420,7 @@ export class AdminContentService {
 
   async deleteLesson(lessonId: string): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
       if (error) throw new Error(`Darsni o‘chirishda xatolik: ${error.message}`);
       return;
@@ -396,6 +437,7 @@ export class AdminContentService {
       const stores = await ensureDemoStores();
       return demoPage(stores.questions.filter((q) => q.courseId === courseId && (!skillId || q.skillId === skillId)), page);
     }
+    await this.requireAdminSession();
     // Answer keys are exposed only through the admin-only security-definer
     // view; learner-facing question reads never receive correct_index.
     let query = supabase.from('admin_questions')
@@ -436,6 +478,7 @@ export class AdminContentService {
     };
 
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { data, error } = await supabase.rpc('admin_save_question', { p_question: {
         id: newQuestion.id,
         course_id: newQuestion.courseId,
@@ -462,6 +505,7 @@ export class AdminContentService {
 
   async deleteQuestion(questionId: string): Promise<void> {
     if (isSupabaseConfigured && !isDemoRuntimeActive()) {
+      await this.requireAdminSession();
       const { error } = await supabase.from('questions').delete().eq('id', questionId);
       if (error) throw new Error(`Savolni o‘chirishda xatolik: ${error.message}`);
       return;
