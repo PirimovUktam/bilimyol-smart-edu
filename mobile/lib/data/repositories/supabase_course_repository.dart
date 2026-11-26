@@ -130,7 +130,7 @@ class SupabaseCourseRepository implements ICourseRepository {
 
   @override
   Future<List<Course>> getAllCourses() async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getAllCourses();
     }
     return _readCourses();
@@ -161,7 +161,7 @@ class SupabaseCourseRepository implements ICourseRepository {
 
   @override
   Future<Course?> getCourseById(String courseId) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getCourseById(courseId);
     }
     return (await _readCourses(courseId)).firstOrNull;
@@ -169,7 +169,7 @@ class SupabaseCourseRepository implements ICourseRepository {
 
   @override
   Future<List<Skill>> getSkillsByCourseId(String courseId) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getSkillsByCourseId(courseId);
     }
     final client = _requireClient();
@@ -189,7 +189,7 @@ class SupabaseCourseRepository implements ICourseRepository {
 
   @override
   Future<List<Question>> getPlacementQuestions(String courseId) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getPlacementQuestions(courseId);
     }
     final client = _requireClient();

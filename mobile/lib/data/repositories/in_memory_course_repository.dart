@@ -26,8 +26,8 @@ class InMemoryCourseRepository implements ICourseRepository {
   @override
   Future<List<Question>> getPlacementQuestions(String courseId) async {
     // Placement seed rows carry correctIndex. Never use them as a fallback in
-    // configured/online mode when the learner should receive server content.
-    if (SupabaseConfig.hasRemoteConfiguration) return const [];
+    // configured/online or production mode when the learner should receive server content.
+    if (!SupabaseConfig.isDemoModeActive) return const [];
     return List.unmodifiable(placementQuestionsData[courseId] ?? []);
   }
 }

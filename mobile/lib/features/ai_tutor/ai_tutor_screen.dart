@@ -302,7 +302,7 @@ class _AITutorScreenState extends ConsumerState<AITutorScreen> {
 
     final String statusLabel;
     final AppBadgeVariant statusVariant;
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       statusLabel = s.aiTutorStatusDemo;
       statusVariant = AppBadgeVariant.blue;
     } else if (_serviceOnline == false) {

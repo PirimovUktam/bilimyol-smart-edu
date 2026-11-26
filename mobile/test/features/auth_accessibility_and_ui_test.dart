@@ -1877,9 +1877,12 @@ void main() {
 
           // 9. AITutorScreen _serviceOnline == true subtitle, ActionChip border & send button
           final prevRemoteConfig = SupabaseConfig.hasRemoteConfiguration;
+          final prevDemoActive = demoSessionActive.value;
           SupabaseConfig.hasRemoteConfiguration = true;
+          demoSessionActive.value = false;
           addTearDown(() {
             SupabaseConfig.hasRemoteConfiguration = prevRemoteConfig;
+            demoSessionActive.value = prevDemoActive;
           });
           await tester.pumpWidget(
             _wrapScreen(
@@ -3512,9 +3515,12 @@ void main() {
 
           // Pushed lesson-scoped AITutorScreen (canPop == true, remote config = true) across uz & ru: initial, online, offline
           final prevRemote = SupabaseConfig.hasRemoteConfiguration;
+          final prevDemo = demoSessionActive.value;
           SupabaseConfig.hasRemoteConfiguration = true;
+          demoSessionActive.value = false;
           addTearDown(() {
             SupabaseConfig.hasRemoteConfiguration = prevRemote;
+            demoSessionActive.value = prevDemo;
           });
 
           for (final localeCode in ['uz', 'ru']) {

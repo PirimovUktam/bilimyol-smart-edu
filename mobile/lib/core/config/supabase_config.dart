@@ -17,8 +17,27 @@ class SupabaseConfig {
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
   );
+  static const String appEnv = String.fromEnvironment(
+    'APP_ENV',
+    defaultValue: 'development',
+  );
   static const passwordRecoveryUrl =
       'uz.bilimyol.mobile://auth/reset-password';
+
+  @visibleForTesting
+  static bool? isProductionEnvOverride;
+
+  static bool get isProductionEnv =>
+      isProductionEnvOverride ??
+      (appEnv.trim().toLowerCase() == 'production');
+
+  static bool get isDemoModeAllowed => !isProductionEnv;
+
+  static bool get isDemoModeActive =>
+      isDemoModeAllowed &&
+      (!hasRemoteConfiguration || demoSessionActive.value);
+
+  static String? configurationError;
 
   static bool isConfigured = false;
 
@@ -66,7 +85,7 @@ class SupabaseConfig {
     if (uri == null || uri.host.isEmpty) return false;
     final scheme = uri.scheme.toLowerCase();
     if (scheme == 'https') return true;
-    if (scheme == 'http') {
+    if (scheme == 'http' && !isProductionEnv) {
       final host = uri.host.toLowerCase();
       return host == '127.0.0.1' || host == 'localhost' || host == '::1';
     }
@@ -118,15 +137,43 @@ class SupabaseConfig {
     return 'sb-${uri.host.split('.').first}-auth-token';
   }
 
+  static bool isServiceRoleKey(String rawKey) {
+    final trimmed = rawKey.trim();
+    if (trimmed.isEmpty) return false;
+    final lower = trimmed.toLowerCase();
+    if (lower.startsWith('sb_secret_')) return true;
+    final payload = _decodeJwtPayload(trimmed);
+    final role = payload?['role'];
+    if (role is String && role.trim().toLowerCase() == 'service_role') {
+      return true;
+    }
+    return lower.contains('service_role');
+  }
+
   static Future<void> initialize({LocalStorageService? storage}) async {
-    hasRemoteConfiguration =
+    configurationError = null;
+    if (isProductionEnv) {
+      demoSessionActive.value = false;
+      activeSessionHasStartedCourse.value = false;
+    }
+
+    final hasValidCredentials =
         isValidSupabaseUrl(supabaseUrl) &&
         supabaseAnonKey.isNotEmpty &&
         !supabaseUrl.contains('bilimyol-demo') &&
-        !supabaseAnonKey.contains('demo-anon-key');
+        !supabaseAnonKey.contains('demo-anon-key') &&
+        !isServiceRoleKey(supabaseAnonKey);
+    hasRemoteConfiguration = hasValidCredentials;
 
     if (!hasRemoteConfiguration) {
       isConfigured = false;
+      if (isServiceRoleKey(supabaseAnonKey)) {
+        configurationError =
+            'Privileged service_role key must never be bundled in the client.';
+      } else if (isProductionEnv) {
+        configurationError =
+            'Production build requires valid SUPABASE_URL and SUPABASE_ANON_KEY.';
+      }
       return;
     }
 
@@ -151,8 +198,9 @@ class SupabaseConfig {
         Supabase.instance.client.auth,
         storage: resolvedStorage,
       );
-    } catch (_) {
+    } catch (error) {
       isConfigured = false;
+      configurationError = error.toString();
     }
   }
 
@@ -315,6 +363,7 @@ class SupabaseConfig {
       return;
     }
 
+    demoSessionActive.value = false;
     final userId = session.user.id;
     if (event == AuthChangeEvent.passwordRecovery) {
       _recoveryUserId = userId;
@@ -388,6 +437,7 @@ class SupabaseConfig {
       activeSessionHasStartedCourse.value = false;
       _recoveryActiveNotifier.value = false;
     } else {
+      demoSessionActive.value = false;
       final unresolvedAmr = hasUnresolvedRecoveryAmrClaim(
         authClient.currentSession,
       );

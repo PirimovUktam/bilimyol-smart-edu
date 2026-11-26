@@ -31,14 +31,14 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       _clientOverride ?? SupabaseConfig.client ?? Supabase.instance.client;
 
   @override
-  bool get supportsNodeCompletion => !SupabaseConfig.hasRemoteConfiguration;
+  bool get supportsNodeCompletion => SupabaseConfig.isDemoModeActive;
 
   @override
   bool get supportsServerPlacementPersistence =>
-      SupabaseConfig.hasRemoteConfiguration;
+      !SupabaseConfig.isDemoModeActive;
 
   @override
-  bool get supportsPlacementSessions => SupabaseConfig.hasRemoteConfiguration;
+  bool get supportsPlacementSessions => !SupabaseConfig.isDemoModeActive;
 
   @override
   Future<PlacementSession> advancePlacement(
@@ -104,7 +104,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   bool get supportsServerReinforcementPersistence =>
-      SupabaseConfig.hasRemoteConfiguration;
+      !SupabaseConfig.isDemoModeActive;
 
   @override
   Future<LearnerProfile> getCurrentProfile() async {
@@ -113,7 +113,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<LearnerProfile> getProfile() async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.getProfile();
     }
     try {
@@ -329,7 +329,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int dailyMinutes,
     required InitialLevel initialLevel,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.saveCourseLearningPlan(
         courseId: courseId,
         goal: goal,
@@ -362,7 +362,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     LearnerProfile updated, {
     Set<LearnerProfileField>? fields,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.updateProfile(updated, fields: fields);
     }
     final client = _client;
@@ -417,7 +417,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required String cardId,
     required bool remembered,
   }) {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.recordFlashcardReview(
         courseId: courseId,
         cardId: cardId,
@@ -556,7 +556,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     String courseId,
     Map<String, SkillScore> scores,
   ) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.saveSkillScores(courseId, scores);
     }
     try {
@@ -577,7 +577,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<String> savePlacementAttempt(PlacementAttemptData data) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.savePlacementAttempt(data);
     }
     try {
@@ -621,7 +621,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required String questionId,
     required int selectedIndex,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.evaluatePlacementAnswer(
         courseId: courseId,
         questionId: questionId,
@@ -650,7 +650,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<void> markLessonCompleted(String lessonId, {String? courseId}) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.markLessonCompleted(lessonId, courseId: courseId);
     }
     try {
@@ -677,7 +677,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<void> markNodeCompleted(String nodeId, {String? courseId}) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.markNodeCompleted(nodeId, courseId: courseId);
     }
     throw UnsupportedError(
@@ -695,7 +695,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int afterScore,
     required int xpAwarded,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.markReinforcementCompleted(
         reinforcementId: reinforcementId,
         courseId: courseId,
@@ -758,7 +758,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required String selectedAnswer,
     required bool isCorrect,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.recordAnswerAttempt(
         courseId: courseId,
         skillId: skillId,
@@ -800,7 +800,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   }) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.submitAnswerAttempt(
         courseId: courseId,
         skillId: skillId,
@@ -912,7 +912,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<List<AnswerAttemptRecord>> getAnswerAttempts([int limit = 10]) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.getAnswerAttempts(limit);
     }
     final client = _clientOverride ?? SupabaseConfig.client;
@@ -956,7 +956,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<List<DailyActivitySummary>> getDailyActivity([int days = 7]) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.getDailyActivity(days);
     }
     try {
@@ -1016,7 +1016,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<int> addXp(int amount, [String? actionIdempotencyKey]) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.addXp(amount, actionIdempotencyKey);
     }
     try {
@@ -1047,7 +1047,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     final tashkent = DateTime.now().toUtc().add(const Duration(hours: 5));
     final today = dateStr ?? tashkent.toIso8601String().split('T').first;
 
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.recordDailyActivity(dateStr);
     }
     try {
@@ -1071,7 +1071,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<LearnerProfile> resetAll() async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallbackRepo.resetAll();
     }
     throw UnsupportedError(

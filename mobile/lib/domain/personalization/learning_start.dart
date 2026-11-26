@@ -1,12 +1,15 @@
 import '../entities/course.dart';
 import '../entities/learner_profile.dart';
 import '../entities/learning_path_node.dart';
+import '../../core/auth/demo_session.dart';
 import '../../core/config/supabase_config.dart';
 
 const mathMasteryCourse = 'course_math_01';
 
 bool usesMathMastery(String? courseId) =>
-    courseId == mathMasteryCourse && SupabaseConfig.hasRemoteConfiguration;
+    courseId == mathMasteryCourse &&
+    SupabaseConfig.hasRemoteConfiguration &&
+    (SupabaseConfig.isProductionEnv || !demoSessionActive.value);
 
 bool hasStartedCourse(Course course, LearnerProfile? profile) =>
     profile != null &&

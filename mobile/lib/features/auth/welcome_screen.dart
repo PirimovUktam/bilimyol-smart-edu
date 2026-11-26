@@ -44,9 +44,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     try {
       await ref.read(appSettingsProvider.notifier).completeProductTour();
       if (!mounted) return;
-      final hasActiveSession = SupabaseConfig.hasRemoteConfiguration
-          ? SupabaseConfig.client?.auth.currentUser != null
-          : demoSessionActive.value;
+      final hasActiveSession =
+          (!SupabaseConfig.isProductionEnv && demoSessionActive.value) ||
+          (SupabaseConfig.hasRemoteConfiguration &&
+              SupabaseConfig.client?.auth.currentUser != null);
       if (widget.isReplay && hasActiveSession) {
         if (context.canPop()) {
           context.pop();

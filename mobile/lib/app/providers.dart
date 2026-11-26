@@ -171,6 +171,17 @@ final appSettingsProvider =
 
 // --- Auth Session Scope & Singleton Service / Repository Providers ---
 String? _resolveCurrentAuthSessionScope() {
+  if (SupabaseConfig.isProductionEnv) {
+    if (!SupabaseConfig.hasRemoteConfiguration ||
+        SupabaseConfig.isRecoveryActive) {
+      return null;
+    }
+    final client = SupabaseConfig.client;
+    return client != null
+        ? client.auth.currentUser?.id
+        : SupabaseConfig.authUserIdListenable.value;
+  }
+  if (demoSessionActive.value) return 'demo';
   if (SupabaseConfig.hasRemoteConfiguration) {
     if (SupabaseConfig.isRecoveryActive) return null;
     final client = SupabaseConfig.client;
@@ -178,7 +189,7 @@ String? _resolveCurrentAuthSessionScope() {
         ? client.auth.currentUser?.id
         : SupabaseConfig.authUserIdListenable.value;
   }
-  return demoSessionActive.value ? 'demo' : null;
+  return null;
 }
 
 final Provider<String?> authSessionUserIdProvider = Provider<String?>((ref) {
@@ -230,9 +241,9 @@ Future<void> resetSessionState(ProviderContainer container) async {
 
 final aiTutorServiceProvider = Provider<IAITutorService>((ref) {
   ref.watch(authSessionUserIdProvider);
-  return SupabaseConfig.hasRemoteConfiguration
-      ? SupabaseAITutorService()
-      : DemoAITutorService();
+  return SupabaseConfig.isDemoModeActive
+      ? DemoAITutorService()
+      : SupabaseAITutorService();
 });
 final courseRepositoryProvider = Provider<ICourseRepository>((ref) {
   ref.watch(authSessionUserIdProvider);
@@ -1860,7 +1871,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           (question.options.length < 2 ||
               question.options.any((option) => option.trim().isEmpty));
       final invalidText = question.usesTextEvaluation &&
-          !SupabaseConfig.hasRemoteConfiguration &&
+          SupabaseConfig.isDemoModeActive &&
           !question.acceptedAnswers.any((answer) => answer.trim().isNotEmpty);
       final invalidWordMatch = question.mode == QuestionMode.wordMatch &&
           question.matchPairs.isEmpty;

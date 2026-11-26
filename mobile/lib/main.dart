@@ -20,14 +20,26 @@ void main() async {
   }
 
   productTourCompleted.value = storage.getProductTourCompletedSync();
-  if (!SupabaseConfig.hasRemoteConfiguration) {
-    demoSessionActive.value = storage.getDemoSessionActiveSync();
-    activeSessionHasStartedCourse.value = demoSessionActive.value
-        ? hasStartedCourseInDemoSnapshot(
-            storage.getStringSync(LocalStorageService.demoLearnerSnapshotKey),
-          )
-        : false;
+  if (!SupabaseConfig.isProductionEnv) {
+    if (!SupabaseConfig.hasRemoteConfiguration) {
+      demoSessionActive.value = storage.getDemoSessionActiveSync();
+      activeSessionHasStartedCourse.value = demoSessionActive.value
+          ? hasStartedCourseInDemoSnapshot(
+              storage.getStringSync(LocalStorageService.demoLearnerSnapshotKey),
+            )
+          : false;
+    } else {
+      demoSessionActive.value = false;
+      activeSessionHasStartedCourse.value = false;
+    }
     demoSessionActive.addListener(() {
+      if (SupabaseConfig.isProductionEnv) {
+        if (demoSessionActive.value) {
+          demoSessionActive.value = false;
+        }
+        activeSessionHasStartedCourse.value = false;
+        return;
+      }
       storage.setDemoSessionActive(demoSessionActive.value);
       if (demoSessionActive.value) {
         if (!activeSessionHasStartedCourse.value) {

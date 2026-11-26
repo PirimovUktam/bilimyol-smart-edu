@@ -31,7 +31,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
   }
 
   Future<void> _resetDemo() async {
-    if (_resetting || SupabaseConfig.hasRemoteConfiguration) return;
+    if (_resetting || !SupabaseConfig.isDemoModeActive) return;
     final router = GoRouter.maybeOf(context);
     final startMatches = router?.routerDelegate.currentConfiguration.matches;
     final startLocation = (startMatches != null && startMatches.isNotEmpty)
@@ -75,7 +75,7 @@ class _DemoControlBarState extends ConsumerState<DemoControlBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (SupabaseConfig.hasRemoteConfiguration) return const SizedBox.shrink();
+    if (!SupabaseConfig.isDemoModeActive) return const SizedBox.shrink();
     final s = _resolveStrings(context);
     final c = AppSemanticColors.of(context);
     return Container(

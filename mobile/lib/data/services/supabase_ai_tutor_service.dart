@@ -62,7 +62,7 @@ class SupabaseAITutorService implements IAITutorService {
         );
       }
 
-      if (SupabaseConfig.hasRemoteConfiguration) {
+      if (!SupabaseConfig.isDemoModeActive) {
         throw const AITutorUnavailableException(
           'Yo‘lchi AI hozircha javob bera olmadi. Iltimos, qayta urinib ko‘ring.',
         );
@@ -72,7 +72,7 @@ class SupabaseAITutorService implements IAITutorService {
       );
       return _fallbackService.explainMistake(request);
     } catch (err) {
-      if (SupabaseConfig.hasRemoteConfiguration) {
+      if (!SupabaseConfig.isDemoModeActive) {
         if (err is AITutorUnavailableException) rethrow;
         throw const AITutorUnavailableException(
           'Yo‘lchi AI xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',
@@ -131,7 +131,7 @@ class SupabaseAITutorService implements IAITutorService {
         );
       }
 
-      if (SupabaseConfig.hasRemoteConfiguration) {
+      if (!SupabaseConfig.isDemoModeActive) {
         throw const AITutorUnavailableException(
           'Dars kontenti hozircha yuklanmadi. Internetni tekshirib qayta urinib ko‘ring.',
         );
@@ -141,7 +141,7 @@ class SupabaseAITutorService implements IAITutorService {
       );
       return _fallbackService.generateLesson(request);
     } catch (err) {
-      if (SupabaseConfig.hasRemoteConfiguration) {
+      if (!SupabaseConfig.isDemoModeActive) {
         if (err is AITutorUnavailableException) rethrow;
         throw const AITutorUnavailableException(
           'Dars kontenti xizmatiga ulanib bo‘lmadi. Internetni tekshirib qayta urinib ko‘ring.',

@@ -470,7 +470,7 @@ class SupabaseLessonRepository implements ILessonRepository {
 
   @override
   Future<Lesson?> getLessonById(String lessonId) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getLessonById(lessonId);
     }
     final client = _requireClient();
@@ -484,7 +484,7 @@ class SupabaseLessonRepository implements ILessonRepository {
     String courseId,
     String skillId,
   ) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getLessonByCourseAndSkill(courseId, skillId);
     }
     final client = _requireClient();
@@ -618,7 +618,7 @@ class SupabaseLessonRepository implements ILessonRepository {
 
   @override
   Future<List<LearningPathNode>> getBaseRoadmapNodes(String courseId) async {
-    if (!SupabaseConfig.hasRemoteConfiguration) {
+    if (SupabaseConfig.isDemoModeActive) {
       return _fallback.getBaseRoadmapNodes(courseId);
     }
     final client = _requireClient();

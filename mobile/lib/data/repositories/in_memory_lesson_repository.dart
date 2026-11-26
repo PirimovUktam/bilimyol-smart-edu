@@ -9,14 +9,14 @@ class InMemoryLessonRepository implements ILessonRepository {
   @override
   Future<Lesson?> getLessonById(String lessonId) async {
     // Seed lessons contain answer keys for demo mode only. Once Supabase is
-    // configured, a content outage must not quietly reveal that seed data.
-    if (SupabaseConfig.hasRemoteConfiguration) return null;
+    // configured (or in production), outages must not reveal seed data.
+    if (!SupabaseConfig.isDemoModeActive) return null;
     return seedLessons[lessonId];
   }
 
   @override
   Future<Lesson?> getLessonByCourseAndSkill(String courseId, String skillId) async {
-    if (SupabaseConfig.hasRemoteConfiguration) return null;
+    if (!SupabaseConfig.isDemoModeActive) return null;
     return seedLessons.values
         .where((l) => l.courseId == courseId && l.skillId == skillId)
         .firstOrNull;
@@ -24,7 +24,7 @@ class InMemoryLessonRepository implements ILessonRepository {
 
   @override
   Future<List<LearningPathNode>> getBaseRoadmapNodes(String courseId) async {
-    if (SupabaseConfig.hasRemoteConfiguration) return const [];
+    if (!SupabaseConfig.isDemoModeActive) return const [];
     return List.of(seedRoadmapNodes[courseId] ?? []);
   }
 }

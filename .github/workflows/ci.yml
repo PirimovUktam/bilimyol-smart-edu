@@ -5,10 +5,18 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   web:
     name: Web — typecheck, lint, tests, build, e2e
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,6 +28,8 @@ jobs:
         run: npm ci
       - name: Type check
         run: npm run typecheck
+      - name: Type check tests
+        run: npm run typecheck:tests
       - name: Lint
         run: npm run lint
       - name: Unit / integration tests
@@ -72,9 +82,10 @@ jobs:
         if: always()
         run: supabase stop --no-backup
 
-  mobile:
-    name: Mobile — analyze, tests, release APK
+  mobile-test:
+    name: Mobile — lockfile pub get, strict analyze, tests
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: mobile
@@ -87,18 +98,154 @@ jobs:
           flutter-version: '3.45.0-0.1.pre'
           channel: beta
           cache: true
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Analyze
-        run: flutter analyze
+      - name: Install dependencies (enforced lockfile)
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze (strict)
+        run: flutter analyze --fatal-infos
       - name: Tests
         run: flutter test
-      - name: Build release APK
-        run: flutter build apk --release
+
+  mobile-release:
+    name: Mobile — signed production APK release
+    needs: mobile-test
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required release secrets
+        id: release_gate
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || \
+             [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || \
+             [ -z "$ANDROID_KEY_ALIAS" ] || \
+             [ -z "$ANDROID_KEY_PASSWORD" ] || \
+             [ -z "$SUPABASE_URL" ] || \
+             [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "BLOCKED — RELEASE SIGNING CREDENTIALS MISSING: skipping signed release APK build and upload."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          trimmed_anon_key="$(printf '%s' "$SUPABASE_ANON_KEY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -z "$trimmed_anon_key" ]; then
+            echo "BLOCKED — RELEASE SIGNING CREDENTIALS MISSING: skipping signed release APK build and upload."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          lower_anon_key="$(printf '%s' "$trimmed_anon_key" | tr '[:upper:]' '[:lower:]')"
+          if [[ "$lower_anon_key" == sb_secret_* ]] || [[ "$lower_anon_key" == *service_role* ]]; then
+            echo "::error::Refusing to embed a secret key into the client APK."
+            exit 1
+          fi
+          IFS='.' read -r jwt_header jwt_payload jwt_sig jwt_extra <<< "$trimmed_anon_key"
+          if [ -n "${jwt_header:-}" ] && [ -n "${jwt_payload:-}" ] && [ -n "${jwt_sig:-}" ] && [ -z "${jwt_extra:-}" ]; then
+            if ! command -v jq >/dev/null 2>&1; then
+              echo "::error::jq is required to validate SUPABASE_ANON_KEY JWT claims."
+              exit 1
+            fi
+            b64_payload="$(printf '%s' "$jwt_payload" | tr '_-' '/+')"
+            pad_len=$(( (4 - (${#b64_payload} % 4)) % 4 ))
+            if [ "$pad_len" -gt 0 ]; then
+              b64_payload="${b64_payload}$(printf '%*s' "$pad_len" '' | tr ' ' '=')"
+            fi
+            if decoded_payload="$(printf '%s' "$b64_payload" | base64 -d 2>/dev/null)"; then
+              jwt_role="$(printf '%s' "$decoded_payload" | jq -r '.role // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' || true)"
+              if [ "$jwt_role" = "service_role" ]; then
+                echo "::error::Refusing to embed a service_role JWT into the client APK."
+                exit 1
+              fi
+            fi
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        if: steps.release_gate.outputs.ready == 'true'
+        with:
+          flutter-version: '3.45.0-0.1.pre'
+          channel: beta
+          cache: true
+      - name: Install dependencies (enforced lockfile)
+        if: steps.release_gate.outputs.ready == 'true'
+        run: flutter pub get --enforce-lockfile
+      - name: Materialize release signing and production config in RUNNER_TEMP
+        if: steps.release_gate.outputs.ready == 'true'
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/debug-info"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n ' | base64 -d > "$RUNNER_TEMP/release-keystore.jks"
+          escaped_store_password="${ANDROID_KEYSTORE_PASSWORD//\\/\\\\}"
+          escaped_key_alias="${ANDROID_KEY_ALIAS//\\/\\\\}"
+          escaped_key_password="${ANDROID_KEY_PASSWORD//\\/\\\\}"
+          {
+            printf 'storeFile=%s\n' "$RUNNER_TEMP/release-keystore.jks"
+            printf 'storePassword=%s\n' "$escaped_store_password"
+            printf 'keyAlias=%s\n' "$escaped_key_alias"
+            printf 'keyPassword=%s\n' "$escaped_key_password"
+          } > "$RUNNER_TEMP/key.properties"
+          chmod 600 "$RUNNER_TEMP/release-keystore.jks" "$RUNNER_TEMP/key.properties"
+          jq -n \
+            --arg app_env "production" \
+            --arg supabase_url "$SUPABASE_URL" \
+            --arg supabase_anon_key "$SUPABASE_ANON_KEY" \
+            '{APP_ENV: $app_env, SUPABASE_URL: $supabase_url, SUPABASE_ANON_KEY: $supabase_anon_key}' \
+            > "$RUNNER_TEMP/dart-defines.json"
+          chmod 600 "$RUNNER_TEMP/dart-defines.json"
+      - name: Build signed and obfuscated production APK
+        if: steps.release_gate.outputs.ready == 'true'
+        env:
+          ANDROID_KEY_PROPERTIES_PATH: ${{ runner.temp }}/key.properties
+        run: >
+          flutter build apk --release
+          --dart-define-from-file="$RUNNER_TEMP/dart-defines.json"
+          --obfuscate
+          --split-debug-info="$RUNNER_TEMP/debug-info"
+      - name: Verify APK signature is not debug keystore
+        if: steps.release_gate.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk_path="build/app/outputs/flutter-apk/app-release.apk"
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          apksigner_bin="$(find "$sdk_root/build-tools" -maxdepth 2 -type f -name apksigner 2>/dev/null | sort -V | tail -n 1 || true)"
+          if [ -z "$apksigner_bin" ] || [ ! -x "$apksigner_bin" ]; then
+            echo "::error::apksigner binary not found under $sdk_root/build-tools"
+            exit 1
+          fi
+          cert_info="$("$apksigner_bin" verify --print-certs "$apk_path")"
+          echo "$cert_info"
+          if echo "$cert_info" | grep -qi "Android Debug"; then
+            echo "::error::Release APK must not be signed with the Android Debug certificate."
+            exit 1
+          fi
       - name: Upload release APK artifact
+        if: steps.release_gate.outputs.ready == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: bilimyol-mobile-release-apk
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Clean up temporary secret files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/release-keystore.jks" "$RUNNER_TEMP/key.properties" "$RUNNER_TEMP/dart-defines.json" "$RUNNER_TEMP/debug-info"

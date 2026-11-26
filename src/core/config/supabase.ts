@@ -10,9 +10,36 @@ export function isValidSupabaseUrl(url: string): boolean {
   return /^https:\/\/[a-z0-9][a-z0-9-]*\.supabase\.co\/?$/i.test(url.trim());
 }
 
+// Reject privileged service_role or sb_secret_* keys from ever initializing the
+// client-side Supabase bundle.
+export function isServiceRoleKey(rawKey: string): boolean {
+  const trimmed = rawKey.trim();
+  if (!trimmed) return false;
+  if (/^sb_secret_/i.test(trimmed)) return true;
+  if (/\bservice_role\b/i.test(trimmed)) return true;
+
+  const parts = trimmed.split('.');
+  if (parts.length !== 3) return false;
+
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const json =
+      typeof atob === 'function'
+        ? new TextDecoder().decode(Uint8Array.from(atob(padded), (ch) => ch.charCodeAt(0)))
+        : Buffer.from(padded, 'base64').toString('utf8');
+    const payload = JSON.parse(json) as { role?: unknown } | null;
+    return typeof payload?.role === 'string' && payload.role.trim().toLowerCase() === 'service_role';
+  } catch {
+    return false;
+  }
+}
+
 export const isSupabaseConfigured = Boolean(
-  rawSupabaseKey && (isValidSupabaseUrl(rawSupabaseUrl) ||
-    (import.meta.env.DEV && /^http:\/\/(?:127\.0\.0\.1|localhost):\d+\/?$/.test(rawSupabaseUrl))),
+  rawSupabaseKey &&
+    !isServiceRoleKey(rawSupabaseKey) &&
+    (isValidSupabaseUrl(rawSupabaseUrl) ||
+      (import.meta.env.DEV && /^http:\/\/(?:127\.0\.0\.1|localhost):\d+\/?$/.test(rawSupabaseUrl))),
 );
 
 // Fail closed: when env is missing or malformed, do NOT silently fall back to a

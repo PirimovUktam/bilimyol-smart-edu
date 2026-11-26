@@ -74,6 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     postLoginHydrating.value = true;
     try {
       await client.auth.signInWithPassword(email: email, password: password);
+      demoSessionActive.value = false;
       SupabaseConfig.syncCurrentAuthState();
       container.invalidate(authSessionUserIdProvider);
       container.invalidate(learnerStateNotifierProvider);
@@ -104,7 +105,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleQuickDemo() async {
-    if (SupabaseConfig.hasRemoteConfiguration) return;
+    if (SupabaseConfig.isProductionEnv || SupabaseConfig.hasRemoteConfiguration) {
+      return;
+    }
     final storage = ref.read(localStorageServiceProvider);
     final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
     final courses = ref.read(courseStateNotifierProvider).courses;
@@ -383,7 +386,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 14),
 
-                        if (!SupabaseConfig.hasRemoteConfiguration) ...[
+                        if (!SupabaseConfig.isProductionEnv &&
+                            !SupabaseConfig.hasRemoteConfiguration) ...[
                           Row(
                             children: [
                               Expanded(child: Divider(color: c.hairline)),

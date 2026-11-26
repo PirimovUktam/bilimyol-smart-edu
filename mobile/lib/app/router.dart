@@ -62,6 +62,7 @@ String? resolveAppRedirect({
   required bool isTourCompleted,
   required bool hasStartedAnyCourse,
   bool isHydratingProfile = false,
+  bool isDemoAllowed = true,
 }) {
   if (recoveryActive) {
     return path == '/reset-password' ? null : '/reset-password';
@@ -75,7 +76,10 @@ String? resolveAppRedirect({
     return null;
   }
 
-  final isSessionActive = isRemoteConfigured ? isLoggedIn : isDemoActive;
+  final effectiveDemoActive = isDemoAllowed && isDemoActive;
+  final isSessionActive = isRemoteConfigured
+      ? (isLoggedIn || effectiveDemoActive)
+      : effectiveDemoActive;
   if (isSessionActive) {
     final destination = hasStartedAnyCourse ? '/dashboard' : '/courses';
     if (path == '/' ||
@@ -119,15 +123,19 @@ final GoRouter appRouter = GoRouter(
   ]),
   redirect: (context, state) {
     final recoveryActive = SupabaseConfig.isRecoveryActive;
-    final isRemoteConfigured = SupabaseConfig.hasRemoteConfiguration;
+    final isRemoteConfigured =
+        SupabaseConfig.hasRemoteConfiguration || SupabaseConfig.isProductionEnv;
+    final isDemoAllowed = SupabaseConfig.isDemoModeAllowed;
     final client = SupabaseConfig.client;
     final isLoggedIn =
         (client != null
             ? client.auth.currentUser?.id
             : SupabaseConfig.authUserIdListenable.value) !=
         null;
-    final isDemoActive = demoSessionActive.value;
-    final isSessionActive = isRemoteConfigured ? isLoggedIn : isDemoActive;
+    final isDemoActive = isDemoAllowed && demoSessionActive.value;
+    final isSessionActive = isRemoteConfigured
+        ? (isLoggedIn || isDemoActive)
+        : isDemoActive;
     return resolveAppRedirect(
       path: state.matchedLocation,
       uri: state.uri,
@@ -142,6 +150,7 @@ final GoRouter appRouter = GoRouter(
         recoveryActive: recoveryActive,
       ),
       isHydratingProfile: postLoginHydrating.value,
+      isDemoAllowed: isDemoAllowed,
     );
   },
   routes: [

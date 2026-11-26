@@ -37,6 +37,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
+    testTimeout: 15000,
     // Local snapshots and worktree copies are not part of this test suite.
     exclude: ['**/node_modules/**', '**/dist/**', 'artifacts/**', '.claude/**', '**/.claude/**', '.agents/**', '**/.agents/**']
   }
