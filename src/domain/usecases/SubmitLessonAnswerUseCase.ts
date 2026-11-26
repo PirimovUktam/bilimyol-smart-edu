@@ -1,4 +1,5 @@
 import { ILearnerRepository } from '../repositories/ILearnerRepository';
+import { generateAttemptUuid } from '@/core/utils/attemptUuid';
 import {
   Question,
   evaluateSentenceOrder,
@@ -6,7 +7,6 @@ import {
   getLocalizedMistakeFeedback,
   getLocalizedQuestionExplanation,
   matchesAcceptedAnswer,
-  normalizeFreeTextAnswer,
 } from '../entities/Question';
 
 export interface LessonAnswerResult {
@@ -40,6 +40,7 @@ export class SubmitLessonAnswerUseCase {
 
     if (this.learnerRepo) {
       if (typeof this.learnerRepo.submitAnswerAttempt === 'function') {
+        const effectiveKey = idempotencyKey ?? generateAttemptUuid();
         const serverResult = await this.learnerRepo.submitAnswerAttempt({
           courseId: question.courseId,
           skillId: question.skillId,
@@ -50,7 +51,7 @@ export class SubmitLessonAnswerUseCase {
           questionType: question.questionType,
           evaluationMode: question.evaluationMode,
           language,
-          idempotencyKey: idempotencyKey ?? `attempt_${lessonId || 'general'}_${question.id}_${selectedIndex}`,
+          idempotencyKey: effectiveKey,
         });
 
         isCorrect = serverResult.isCorrect;
@@ -76,6 +77,7 @@ export class SubmitLessonAnswerUseCase {
           selectedIndex,
           selectedAnswer: selectedOption,
           isCorrect,
+          idempotencyKey: idempotencyKey ?? generateAttemptUuid(),
         });
       }
     } else {
@@ -107,7 +109,6 @@ export class SubmitLessonAnswerUseCase {
     language: 'uz' | 'ru' = 'uz',
   ): Promise<LessonAnswerResult> {
     const trimmed = answerText.trim();
-    const normalized = normalizeFreeTextAnswer(trimmed);
     const qType = question.questionType === 'fill_blank' ? 'fill_blank' : 'text_input';
 
     let isCorrect = false;
@@ -127,8 +128,7 @@ export class SubmitLessonAnswerUseCase {
         questionType: qType,
         evaluationMode: question.evaluationMode ?? 'deterministic',
         language,
-        idempotencyKey:
-          idempotencyKey ?? `attempt_${lessonId || 'general'}_${question.id}_text_${normalized}`,
+        idempotencyKey: idempotencyKey ?? generateAttemptUuid(),
       });
 
       isCorrect = serverResult.isCorrect;
@@ -184,9 +184,7 @@ export class SubmitLessonAnswerUseCase {
         questionType: qType,
         evaluationMode: question.evaluationMode ?? 'deterministic',
         language,
-        idempotencyKey:
-          idempotencyKey ??
-          `attempt_${lessonId || 'general'}_${question.id}_${qType}_${payload.serializedAnswer}`,
+        idempotencyKey: idempotencyKey ?? generateAttemptUuid(),
       });
       isCorrect = serverResult.isCorrect;
       explanation = serverResult.explanation;
@@ -248,8 +246,7 @@ export class SubmitLessonAnswerUseCase {
         questionType: qType,
         evaluationMode: 'self_assessed',
         language,
-        idempotencyKey:
-          idempotencyKey ?? `attempt_${lessonId || 'general'}_${question.id}_${qType}_${trimmed}`,
+        idempotencyKey: idempotencyKey ?? generateAttemptUuid(),
       });
       isCorrect = serverResult.isCorrect;
       explanation = serverResult.explanation;

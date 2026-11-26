@@ -12,6 +12,8 @@ export interface AnswerAttemptRecord {
   selectedIndex: number;
   selectedAnswer: string;
   isCorrect: boolean;
+  xpAwarded?: number;
+  idempotencyKey?: string;
   timestamp: number;
 }
 
@@ -82,6 +84,7 @@ export interface DailyActivitySummary {
   lessonsCompleted: number;
   questionsAnswered?: number;
   correctAnswers?: number;
+  accuracyPercent?: number;
 }
 
 export interface ILearnerRepository {

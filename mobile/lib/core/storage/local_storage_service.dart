@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,8 +20,24 @@ class LocalStorageService {
   static const String secureStorageInitializedKey =
       'bilimyol.secure_storage_initialized_v1';
   static const String recoveryUserIdKey = 'bilimyol.recovery_user_id';
+  static const String pendingAttemptPrefix = 'bilimyol.pending_attempt.';
+  static const String lessonPassedPrefix = 'bilimyol.lesson_passed.';
 
   static String srsKeyForUser(String userId) => 'bilimyol.srs.$userId';
+
+  static String pendingAttemptKey({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required String questionId,
+  }) =>
+      '$pendingAttemptPrefix${jsonEncode([accountScope, courseId, lessonId, questionId])}';
+
+  static String lessonPassedKey({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+  }) => '$lessonPassedPrefix${jsonEncode([accountScope, courseId, lessonId])}';
 
   SharedPreferences? _prefs;
   Future<SharedPreferences?>? _prefsFuture;
@@ -198,7 +216,139 @@ class LocalStorageService {
   Future<void> setDemoLearnerSnapshot(String json) =>
       setString(demoLearnerSnapshotKey, json);
 
-  Future<void> clearDemoLearnerSnapshot() => remove(demoLearnerSnapshotKey);
+  Future<void> clearDemoLearnerSnapshot() async {
+    await remove(demoLearnerSnapshotKey);
+    await clearDemoAndAnonymousLessonRecovery();
+  }
+
+  Future<void> clearDemoAndAnonymousLessonRecovery() async {
+    bool isDemoOrAnonKey(String k) =>
+        (k.startsWith(pendingAttemptPrefix) ||
+            k.startsWith(lessonPassedPrefix)) &&
+        (k.contains('["demo",') || k.contains('["anonymous",'));
+
+    _memoryFallback.removeWhere((k, _) => isDemoOrAnonKey(k));
+    final prefs = await _resolvePrefs();
+    if (prefs != null) {
+      try {
+        final toRemove = prefs.getKeys().where(isDemoOrAnonKey).toList();
+        for (final key in toRemove) {
+          await prefs.remove(key);
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<Map<String, dynamic>?> getPendingAttempt({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required String questionId,
+  }) async {
+    final raw = await getString(
+      pendingAttemptKey(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: lessonId,
+        questionId: questionId,
+      ),
+    );
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setPendingAttempt({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required String questionId,
+    required Map<String, dynamic> data,
+  }) => setString(
+    pendingAttemptKey(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: lessonId,
+      questionId: questionId,
+    ),
+    jsonEncode(data),
+  );
+
+  Future<void> clearPendingAttempt({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required String questionId,
+  }) => remove(
+    pendingAttemptKey(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: lessonId,
+      questionId: questionId,
+    ),
+  );
+
+  Future<Set<String>> getPassedLessonQuestionIds({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+  }) async {
+    final raw = await getString(
+      lessonPassedKey(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: lessonId,
+      ),
+    );
+    if (raw == null || raw.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<String>()
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toSet();
+      }
+    } catch (_) {}
+    return const {};
+  }
+
+  Future<void> setPassedLessonQuestionIds({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required Iterable<String> questionIds,
+  }) {
+    final clean = questionIds
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    final key = lessonPassedKey(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: lessonId,
+    );
+    if (clean.isEmpty) return remove(key);
+    return setString(key, jsonEncode(clean));
+  }
+
+  Future<void> clearPassedLessonQuestionIds({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+  }) => remove(
+    lessonPassedKey(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: lessonId,
+    ),
+  );
 
   bool getSecureStorageInitializedSync() =>
       getBoolSync(secureStorageInitializedKey, defaultValue: false);

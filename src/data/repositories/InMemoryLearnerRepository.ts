@@ -15,6 +15,7 @@ import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
 import { SEED_LESSONS } from '@/data/datasources/lessons';
 import { SEED_ROADMAP_NODES } from '@/data/datasources/roadmaps';
 import { getQuestionAnswerKey } from '@/core/runtime/questionAnswerKeys';
+import { learningDate } from '@/core/utils/learningDate';
 import {
   Question,
   evaluateSentenceOrder,
@@ -388,6 +389,18 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   async submitAnswerAttempt(request: SubmitAnswerAttemptRequest): Promise<SubmitAnswerAttemptResult> {
+    if (request.idempotencyKey !== undefined) {
+      if (!request.idempotencyKey.trim()) {
+        throw new Error('Idempotency kaliti bo‘sh satr bo‘lishi mumkin emas.');
+      }
+      if (request.idempotencyKey.length > 128) {
+        throw new Error('Idempotency kaliti uzunligi 128 belgidan oshmasligi shart.');
+      }
+    }
+    if ((request.selectedAnswer ?? '').length > 4000) {
+      throw new Error('Javob matni 4000 belgidan oshmasligi shart.');
+    }
+
     // Server-side lookup of the authoritative question before computing idempotency key
     // so direct callers omitting questionType still get payload-keyed idempotency.
     const matchedQuestion = this.findQuestionById(request.questionId);
@@ -406,31 +419,58 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       : resolvedType === 'word_match'
       ? canonicalizeWordMatchJson(request.selectedAnswer)
       : request.selectedAnswer.trim();
-    const idempotencyKey =
-      request.idempotencyKey ||
-      (isPayloadKeyedType
-        ? `${request.lessonId}:${request.questionId}:${resolvedType}:${normalizedPayload}`
-        : `${request.lessonId}:${request.questionId}:${request.selectedIndex}`);
-    if (this.processedActionKeys.has(idempotencyKey)) {
-      const existing = this.answerAttempts.find((a) =>
-        isPayloadKeyedType
-          ? a.questionId === request.questionId &&
-            (isTextRequest
-              ? normalizeFreeTextAnswer(a.selectedAnswer) === normalizedPayload
+
+    const explicitKey = request.idempotencyKey?.trim() || undefined;
+    let existingAttempt: AnswerAttemptRecord | undefined;
+
+    if (explicitKey) {
+      if (this.processedActionKeys.has(explicitKey)) {
+        existingAttempt = this.answerAttempts.find((a) => a.idempotencyKey === explicitKey);
+        if (
+          existingAttempt &&
+          (existingAttempt.courseId !== request.courseId ||
+            existingAttempt.skillId !== request.skillId ||
+            (existingAttempt.lessonId ?? '') !== request.lessonId ||
+            existingAttempt.questionId !== request.questionId ||
+            existingAttempt.selectedIndex !== request.selectedIndex ||
+            existingAttempt.selectedAnswer !== request.selectedAnswer)
+        ) {
+          throw new Error('Idempotency kaliti boshqa javob uchun ishlatilgan.');
+        }
+      }
+    } else {
+      // Legacy direct repository calls omitting idempotencyKey deduplicate only
+      // against the immediately latest attempt on the same (lessonId, questionId).
+      for (let i = this.answerAttempts.length - 1; i >= 0; i--) {
+        const candidate = this.answerAttempts[i];
+        if ((candidate.lessonId ?? '') === request.lessonId && candidate.questionId === request.questionId) {
+          const samePayload = isPayloadKeyedType
+            ? isTextRequest
+              ? normalizeFreeTextAnswer(candidate.selectedAnswer) === normalizedPayload
               : resolvedType === 'word_match'
-              ? canonicalizeWordMatchJson(a.selectedAnswer) === normalizedPayload
-              : a.selectedAnswer.trim() === normalizedPayload)
-          : a.questionId === request.questionId && a.selectedIndex === request.selectedIndex
-      );
-      const isCorrectExisting = existing ? existing.isCorrect : false;
+              ? canonicalizeWordMatchJson(candidate.selectedAnswer) === normalizedPayload
+              : candidate.selectedAnswer.trim() === normalizedPayload
+            : candidate.selectedIndex === request.selectedIndex;
+          if (samePayload) {
+            existingAttempt = candidate;
+          }
+          break;
+        }
+      }
+    }
+
+    if ((explicitKey && this.processedActionKeys.has(explicitKey)) || existingAttempt) {
+      const isCorrectExisting = existingAttempt ? existingAttempt.isCorrect : false;
       const repeatedExplanation =
         isPayloadKeyedType && matchedQuestion && !isCorrectExisting
           ? (isTextRequest
               ? buildFreeTextWrongFeedback(request.selectedAnswer, matchedQuestion, lang)
               : getLocalizedMistakeFeedback(matchedQuestion, request.selectedAnswer, lang))
-          : lang === 'ru'
-            ? 'Ответ уже был сохранён ранее.'
-            : 'Javob avval qayd etilgan.';
+          : isCorrectExisting && matchedQuestion
+            ? getLocalizedQuestionExplanation(matchedQuestion, lang)
+            : lang === 'ru'
+              ? 'Ответ уже был сохранён ранее.'
+              : 'Javob avval qayd etilgan.';
       const skillScore = this.profile.scoresByCourse[request.courseId]?.[request.skillId]?.score ?? 50;
       const overall = SkillScoringEngine.computeOverallScore(this.profile.scoresByCourse[request.courseId] || {});
       return {
@@ -511,7 +551,19 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       isCorrect = correctIndex !== undefined ? request.selectedIndex === correctIndex : false;
     }
 
-    this.processedActionKeys.add(idempotencyKey);
+    if (explicitKey) {
+      this.processedActionKeys.add(explicitKey);
+    }
+
+    let xpAwarded = 0;
+    if (isCorrect) {
+      const xpKey = `xp_question_${request.questionId}`;
+      if (!this.processedActionKeys.has(xpKey)) {
+        this.processedActionKeys.add(xpKey);
+        xpAwarded = 2;
+        this.profile.xp = (this.profile.xp || 0) + 2;
+      }
+    }
 
     const record: AnswerAttemptRecord = {
       id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -523,19 +575,12 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       selectedIndex: request.selectedIndex,
       selectedAnswer: request.selectedAnswer,
       isCorrect,
+      xpAwarded,
+      idempotencyKey: explicitKey,
       timestamp: Date.now(),
     };
     this.answerAttempts.push(record);
 
-    let xpAwarded = 0;
-    if (isCorrect) {
-      const xpKey = `xp_question_${request.questionId}`;
-      if (!this.processedActionKeys.has(xpKey)) {
-        this.processedActionKeys.add(xpKey);
-        xpAwarded = 2;
-        this.profile.xp = (this.profile.xp || 0) + 2;
-      }
-    }
     await this.recordDailyActivity();
 
     // Recalculate skill score over unique questions (latest attempt each) for non-placement attempts only.
@@ -575,17 +620,54 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   async recordAnswerAttempt(attempt: Omit<AnswerAttemptRecord, 'id' | 'timestamp'>): Promise<AnswerAttemptRecord> {
+    const explicitKey = attempt.idempotencyKey?.trim() || undefined;
+    if (attempt.idempotencyKey !== undefined && !explicitKey) {
+      throw new Error('Idempotency kaliti bo‘sh satr bo‘lishi mumkin emas.');
+    }
+    if (explicitKey && explicitKey.length > 128) {
+      throw new Error('Idempotency kaliti uzunligi 128 belgidan oshmasligi shart.');
+    }
+    if ((attempt.selectedAnswer ?? '').length > 4000) {
+      throw new Error('Javob matni 4000 belgidan oshmasligi shart.');
+    }
+    if (explicitKey && this.processedActionKeys.has(explicitKey)) {
+      const existing = this.answerAttempts.find((a) => a.idempotencyKey === explicitKey);
+      if (existing) {
+        if (
+          existing.courseId !== attempt.courseId ||
+          existing.skillId !== attempt.skillId ||
+          (existing.lessonId ?? '') !== (attempt.lessonId ?? '') ||
+          existing.questionId !== attempt.questionId ||
+          existing.selectedIndex !== attempt.selectedIndex ||
+          existing.selectedAnswer !== attempt.selectedAnswer
+        ) {
+          throw new Error('Idempotency kaliti boshqa javob uchun ishlatilgan.');
+        }
+        return { ...existing, xpAwarded: 0 };
+      }
+    }
+    if (explicitKey) {
+      this.processedActionKeys.add(explicitKey);
+    }
+
+    let xpAwarded = 0;
+    if (attempt.isCorrect) {
+      const xpKey = `xp_question_${attempt.questionId}`;
+      if (!this.processedActionKeys.has(xpKey)) {
+        this.processedActionKeys.add(xpKey);
+        xpAwarded = 2;
+        this.profile.xp = (this.profile.xp || 0) + 2;
+      }
+    }
+
     const record: AnswerAttemptRecord = {
       ...attempt,
+      xpAwarded,
+      idempotencyKey: explicitKey,
       id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       timestamp: Date.now(),
     };
     this.answerAttempts.push(record);
-
-    // If answer is correct, award +2 XP idempotently
-    if (attempt.isCorrect) {
-      await this.addXp(2, `answer_${attempt.questionId}_${record.id}`);
-    }
     await this.recordDailyActivity();
 
     // Recalculate cumulative unique-question skill score for independent lesson/reinforcement attempts only.
@@ -615,22 +697,36 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
 
   async getDailyActivity(days: number = 7): Promise<DailyActivitySummary[]> {
     const result: DailyActivitySummary[] = [];
-    const dayMs = 1000 * 60 * 60 * 24;
     const now = Date.now();
 
     for (let i = days - 1; i >= 0; i--) {
-      const dateStr = new Date(now - i * dayMs).toISOString().split('T')[0];
+      const dateStr = learningDate(i, now);
       const dayAttempts = this.answerAttempts.filter(
-        (a) => new Date(a.timestamp).toISOString().split('T')[0] === dateStr
+        (a) => learningDate(0, a.timestamp) === dateStr
       );
-      const correct = dayAttempts.filter((a) => a.isCorrect).length;
+      // Deduplicate by (activity_date, question_id) using each question's latest outcome on that day.
+      const latestByQuestion = new Map<string, AnswerAttemptRecord>();
+      let xpEarned = 0;
+      for (const a of dayAttempts) {
+        latestByQuestion.set(a.questionId, a);
+        xpEarned += typeof a.xpAwarded === 'number' ? a.xpAwarded : 0;
+      }
+      const questionsAnswered = latestByQuestion.size;
+      let correctAnswers = 0;
+      latestByQuestion.forEach((a) => {
+        if (a.isCorrect) correctAnswers += 1;
+      });
+      const accuracyPercent =
+        questionsAnswered > 0 ? Math.round((correctAnswers * 100) / questionsAnswered) : 0;
+
       result.push({
         date: dateStr,
         activeMinutes: 0,
-        xpEarned: correct * 2,
+        xpEarned,
         lessonsCompleted: 0,
-        questionsAnswered: dayAttempts.length,
-        correctAnswers: correct,
+        questionsAnswered,
+        correctAnswers,
+        accuracyPercent,
       });
     }
 

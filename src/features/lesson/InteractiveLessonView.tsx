@@ -172,6 +172,7 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     showAIPanel,
     showReinforcementModal,
     isCompleted,
+    answeredQuestionIds,
     correctAnswerCount,
     consecutiveMistakes,
     loadLesson,
@@ -247,15 +248,15 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
       );
       const position = needsReview
         ? Math.max(0, currentLesson.steps.findIndex((step) => step.type === 'visual_example'))
-        : readLessonPosition(account.id, currentLesson);
+        : readLessonPosition(account.id, currentLesson, answeredQuestionIds);
       if (position !== currentStepIndex) {
         goToStep(position);
         return;
       }
     }
     if (isCompleted) clearLessonPosition(account.id, currentLesson);
-    else saveLessonPosition(account.id, currentLesson, currentStepIndex);
-  }, [account, currentLesson, lessonSessionId, lessonId, activeCourse?.id, currentStepIndex, isCompleted, goToStep]);
+    else saveLessonPosition(account.id, currentLesson, currentStepIndex, answeredQuestionIds);
+  }, [account, currentLesson, lessonSessionId, lessonId, activeCourse?.id, currentStepIndex, isCompleted, answeredQuestionIds, goToStep]);
 
   const currentStep = currentLesson?.steps[currentStepIndex];
   const interactiveQ = currentStep?.interactiveQuestion;

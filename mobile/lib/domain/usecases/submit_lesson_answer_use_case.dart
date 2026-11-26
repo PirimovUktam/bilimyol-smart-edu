@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../core/utils/attempt_uuid.dart';
 import '../entities/question.dart';
 import '../personalization/starter_question_feedback.dart';
 import '../repositories/i_learner_repository.dart';
@@ -31,15 +32,21 @@ class SubmitLessonAnswerUseCase {
     String? selectedText,
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
+    String? idempotencyKey,
     String uiLocale = 'uz',
   }) async {
+    final resolvedKey =
+        (idempotencyKey != null && idempotencyKey.trim().isNotEmpty)
+        ? idempotencyKey.trim()
+        : generateAttemptUuidV4();
+
     if (question.usesTextEvaluation) {
       final answerText = (selectedText ?? '').trim();
       if (answerText.isEmpty) {
         throw ArgumentError.value(selectedText, 'selectedText');
       }
       final effectiveIndex = selectedIndex ?? 0;
-      final attempt = await learnerRepository.recordAnswerAttempt(
+      final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
         skillId: question.skillId,
         lessonId: lessonId,
@@ -47,6 +54,7 @@ class SubmitLessonAnswerUseCase {
         selectedIndex: effectiveIndex,
         selectedAnswer: answerText,
         isCorrect: question.isTextAnswerCorrect(answerText),
+        idempotencyKey: resolvedKey,
       );
       final isCorrect = attempt.isCorrect;
       final starterFeedback = isCorrect
@@ -90,7 +98,7 @@ class SubmitLessonAnswerUseCase {
           })
           .join(', ');
       final isLocallyCorrect = question.isWordMatchCorrect(pairs);
-      final attempt = await learnerRepository.recordAnswerAttempt(
+      final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
         skillId: question.skillId,
         lessonId: lessonId,
@@ -98,6 +106,7 @@ class SubmitLessonAnswerUseCase {
         selectedIndex: 0,
         selectedAnswer: serialized,
         isCorrect: isLocallyCorrect,
+        idempotencyKey: resolvedKey,
       );
       final isPartial = pairs.length < question.matchPairs.length;
       final partialHint = isPartial
@@ -131,7 +140,7 @@ class SubmitLessonAnswerUseCase {
       }
       final joined = tokens.join(' ').trim();
       final isLocallyCorrect = question.isSentenceOrderCorrect(tokens);
-      final attempt = await learnerRepository.recordAnswerAttempt(
+      final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
         skillId: question.skillId,
         lessonId: lessonId,
@@ -139,6 +148,7 @@ class SubmitLessonAnswerUseCase {
         selectedIndex: 0,
         selectedAnswer: joined,
         isCorrect: isLocallyCorrect,
+        idempotencyKey: resolvedKey,
       );
       final isPartial = tokens.length < question.orderedTokens.length;
       final partialHint = isPartial
@@ -167,7 +177,7 @@ class SubmitLessonAnswerUseCase {
 
     if (question.isSelfAssessed) {
       final responseText = (selectedText ?? '').trim();
-      final attempt = await learnerRepository.recordAnswerAttempt(
+      final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
         skillId: question.skillId,
         lessonId: lessonId,
@@ -175,6 +185,7 @@ class SubmitLessonAnswerUseCase {
         selectedIndex: 0,
         selectedAnswer: responseText,
         isCorrect: responseText.isNotEmpty,
+        idempotencyKey: resolvedKey,
       );
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
@@ -186,7 +197,7 @@ class SubmitLessonAnswerUseCase {
 
     final idx = selectedIndex!;
     final selectedOption = question.options[idx];
-    final attempt = await learnerRepository.recordAnswerAttempt(
+    final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
       courseId: question.courseId,
       skillId: question.skillId,
       lessonId: lessonId,
@@ -196,6 +207,7 @@ class SubmitLessonAnswerUseCase {
       // Used only by the offline repository. Authenticated scoring is returned
       // by the server RPC and is read from `attempt.isCorrect` below.
       isCorrect: idx == question.correctIndex,
+      idempotencyKey: resolvedKey,
     );
     final isCorrect = attempt.isCorrect;
     // Server-authoritative repositories may return the correct option directly;

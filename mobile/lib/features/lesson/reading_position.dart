@@ -12,18 +12,36 @@ class LessonReadingPositionStore {
   static String tupleKey(String accountId, String courseId, String lessonId) =>
       'bilimyol-reading:${jsonEncode([accountId, courseId, lessonId])}';
 
-  static int maxSafeStepIndex(Lesson lesson) {
+  static int maxSafeStepIndex(
+    Lesson lesson, {
+    Set<String> passedQuestionIds = const {},
+  }) {
     if (lesson.steps.isEmpty) return 0;
-    final firstExercise = lesson.steps.indexWhere(
-      (step) => step.type == LessonStepType.interactiveQuestion,
-    );
-    if (firstExercise >= 0) return firstExercise;
+    final firstUnansweredExercise = lesson.steps.indexWhere((step) {
+      final hasExercise =
+          step.type == LessonStepType.interactiveQuestion ||
+          step.interactiveQuestion != null;
+      if (!hasExercise) return false;
+      final qId = step.interactiveQuestion?.id;
+      if (qId != null && passedQuestionIds.contains(qId)) {
+        return false;
+      }
+      return true;
+    });
+    if (firstUnansweredExercise >= 0) return firstUnansweredExercise;
     return lesson.steps.length - 1;
   }
 
-  static int clampStepIndex(Lesson lesson, int? rawIndex) {
+  static int clampStepIndex(
+    Lesson lesson,
+    int? rawIndex, {
+    Set<String> passedQuestionIds = const {},
+  }) {
     if (rawIndex == null || lesson.steps.isEmpty) return 0;
-    final maxSafe = maxSafeStepIndex(lesson);
+    final maxSafe = maxSafeStepIndex(
+      lesson,
+      passedQuestionIds: passedQuestionIds,
+    );
     if (rawIndex < 0) return 0;
     if (rawIndex > maxSafe) return maxSafe;
     return rawIndex;
@@ -87,13 +105,18 @@ class LessonReadingPositionStore {
   static Future<int> readStepIndex(
     Lesson lesson, {
     String? accountId,
+    Set<String> passedQuestionIds = const {},
     Future<SharedPreferences> Function()? preferencesProvider,
   }) async {
     final prefs = await getPrefsSafe(preferencesProvider);
     if (prefs == null) return 0;
     final stored = _readInt(prefs, _storageKey(lesson, accountId: accountId));
     if (stored != null) {
-      return clampStepIndex(lesson, stored);
+      return clampStepIndex(
+        lesson,
+        stored,
+        passedQuestionIds: passedQuestionIds,
+      );
     }
     return 0;
   }
@@ -102,11 +125,16 @@ class LessonReadingPositionStore {
     Lesson lesson,
     int stepIndex, {
     String? accountId,
+    Set<String> passedQuestionIds = const {},
     Future<SharedPreferences> Function()? preferencesProvider,
   }) async {
     final prefs = await getPrefsSafe(preferencesProvider);
     if (prefs == null) return;
-    final clamped = clampStepIndex(lesson, stepIndex);
+    final clamped = clampStepIndex(
+      lesson,
+      stepIndex,
+      passedQuestionIds: passedQuestionIds,
+    );
     try {
       await prefs.setString(
         _storageKey(lesson, accountId: accountId),

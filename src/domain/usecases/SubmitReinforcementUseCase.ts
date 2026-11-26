@@ -1,10 +1,11 @@
-import { ILearnerRepository } from '../repositories/ILearnerRepository';
+import { ILearnerRepository, SubmitAnswerAttemptResult } from '../repositories/ILearnerRepository';
 import { ILessonRepository } from '../repositories/ILessonRepository';
 import { Question } from '../entities/Question';
 import { SkillScoringEngine } from '../personalization/SkillScoringEngine';
 import { ProgressEngine } from '../personalization/ProgressEngine';
 import { RouteEngine } from '../personalization/RouteEngine';
 import { LearningPath } from '../entities/LearningPathNode';
+import { generateAttemptUuid } from '@/core/utils/attemptUuid';
 
 export interface ReinforcementResult {
   isCorrect: boolean;
@@ -31,6 +32,11 @@ export class SubmitReinforcementUseCase {
     selectedIndex: number,
     selectedAnswerOverride?: string,
     language: 'uz' | 'ru' = 'uz',
+    attemptOptions?: {
+      idempotencyKey?: string;
+      cachedAttemptResult?: SubmitAnswerAttemptResult;
+      onAttemptGraded?: (result: SubmitAnswerAttemptResult) => void;
+    },
   ): Promise<ReinforcementResult> {
     if (reinforcementQuestion.courseId !== courseId || reinforcementQuestion.skillId !== skillId) {
       throw new Error('Mustahkamlash savoli kurs va ko‘nikma bilan mos emas.');
@@ -54,20 +60,23 @@ export class SubmitReinforcementUseCase {
     const selectedAnswer = isChoiceType
       ? reinforcementQuestion.options[selectedIndex] || ''
       : (selectedAnswerOverride ?? '');
-    const answerResult = await this.learnerRepo.submitAnswerAttempt({
-      courseId,
-      skillId,
-      lessonId: reinforcementNodeId,
-      questionId: reinforcementQuestion.id,
-      selectedIndex: isChoiceType ? selectedIndex : 0,
-      selectedAnswer,
-      questionType: reinforcementQuestion.questionType,
-      evaluationMode: reinforcementQuestion.evaluationMode,
-      language,
-      idempotencyKey: isChoiceType
-        ? `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${selectedIndex}`
-        : `reinforcement_${reinforcementNodeId}_${reinforcementQuestion.id}_${qType}_${selectedAnswer}`,
-    });
+    const answerResult =
+      attemptOptions?.cachedAttemptResult ??
+      (await this.learnerRepo.submitAnswerAttempt({
+        courseId,
+        skillId,
+        lessonId: reinforcementNodeId,
+        questionId: reinforcementQuestion.id,
+        selectedIndex: isChoiceType ? selectedIndex : 0,
+        selectedAnswer,
+        questionType: reinforcementQuestion.questionType,
+        evaluationMode: reinforcementQuestion.evaluationMode,
+        language,
+        idempotencyKey: attemptOptions?.idempotencyKey ?? generateAttemptUuid(),
+      }));
+    if (!attemptOptions?.cachedAttemptResult) {
+      attemptOptions?.onAttemptGraded?.(answerResult);
+    }
     const isCorrect = answerResult.isCorrect;
 
     if (!isCorrect) {

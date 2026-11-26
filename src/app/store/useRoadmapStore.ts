@@ -5,6 +5,13 @@ import { supabaseLearnerRepository } from '@/data/repositories/SupabaseLearnerRe
 import { GetRoadmapUseCase } from '@/domain/usecases/GetRoadmapUseCase';
 import { SubmitReinforcementUseCase, ReinforcementResult } from '@/domain/usecases/SubmitReinforcementUseCase';
 import { Question } from '@/domain/entities/Question';
+import { useLearnerStore } from '@/app/store/useLearnerStore';
+import {
+  clearPendingAttempt,
+  getOrCreatePendingAttempt,
+  markPendingAttemptGraded,
+  resolveRecoveryAccountScope,
+} from '@/features/lesson/lessonRecoveryStorage';
 import { registerCourseInvalidationHandler, registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 interface RoadmapState {
@@ -106,6 +113,22 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
       set({ isUpdating: true, isLoading: false, error: null });
       try {
         if (currentOperation !== operation) throw reinforcementCancelled();
+        const accountScope = resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id);
+        const qType = reinforcementQuestion.questionType ?? 'multiple_choice';
+        const isChoiceType =
+          qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+        const payloadSignature = isChoiceType
+          ? `idx:${selectedIndex}`
+          : `${qType}:${selectedAnswerOverride ?? ''}`;
+        const pendingAttempt = getOrCreatePendingAttempt({
+          accountId: accountScope,
+          courseId,
+          lessonId: reinforcementNodeId,
+          questionId: reinforcementQuestion.id,
+          payloadSignature,
+          selectedIndex: isChoiceType ? selectedIndex : 0,
+          selectedText: selectedAnswerOverride,
+        });
         const useCase = new SubmitReinforcementUseCase(supabaseLearnerRepository, supabaseLessonRepository);
         const result = await useCase.execute(
           courseId,
@@ -115,8 +138,17 @@ export const useRoadmapStore = create<RoadmapState>((set) => {
           selectedIndex,
           selectedAnswerOverride,
           language,
+          {
+            idempotencyKey: pendingAttempt.attemptId,
+            cachedAttemptResult:
+              pendingAttempt.status === 'graded' ? pendingAttempt.cachedServerResult : undefined,
+            onAttemptGraded: (serverResult) => {
+              markPendingAttemptGraded(pendingAttempt, { serverResult });
+            },
+          },
         );
         if (currentOperation !== operation) throw reinforcementCancelled();
+        clearPendingAttempt(accountScope, courseId, reinforcementNodeId, reinforcementQuestion.id);
 
         if (result.isCorrect) {
           set({

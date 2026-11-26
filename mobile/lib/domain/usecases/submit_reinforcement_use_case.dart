@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../core/utils/attempt_uuid.dart';
 import '../repositories/i_learner_repository.dart';
 import '../repositories/i_lesson_repository.dart';
 import '../entities/question.dart';
@@ -43,6 +44,9 @@ class SubmitReinforcementUseCase {
     String? selectedText,
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
+    String? idempotencyKey,
+    AnswerAttemptRecord? cachedAttempt,
+    void Function(AnswerAttemptRecord)? onAttemptGraded,
   }) async {
     if (courseId.isEmpty ||
         skillId.isEmpty ||
@@ -86,16 +90,26 @@ class SubmitReinforcementUseCase {
     final courseScores = profile.scoresByCourse[courseId] ?? {};
     final currentSkillScore = courseScores[skillId]?.score ?? 0;
 
+    final resolvedKey =
+        (idempotencyKey != null && idempotencyKey.trim().isNotEmpty)
+        ? idempotencyKey.trim()
+        : generateAttemptUuidV4();
+
     // Correctness is deliberately absent from this call. The repository owns
     // the source of truth (server RPC when authenticated, demo data offline).
-    final answerAttempt = await learnerRepository.submitAnswerAttempt(
-      courseId: courseId,
-      skillId: skillId,
-      lessonId: reinforcementNodeId,
-      questionId: reinforcementQuestion.id,
-      selectedIndex: effectiveIndex,
-      selectedAnswer: serializedAnswer,
-    );
+    final answerAttempt = cachedAttempt ??
+        await learnerRepository.submitAnswerAttemptIdempotent(
+          courseId: courseId,
+          skillId: skillId,
+          lessonId: reinforcementNodeId,
+          questionId: reinforcementQuestion.id,
+          selectedIndex: effectiveIndex,
+          selectedAnswer: serializedAnswer,
+          idempotencyKey: resolvedKey,
+        );
+    if (cachedAttempt == null) {
+      onAttemptGraded?.call(answerAttempt);
+    }
     final isCorrect = answerAttempt.isCorrect;
 
     if (!isCorrect) {

@@ -1,14 +1,14 @@
 # BilimYo‘l Smart Edu — Cumulative Engineering Remediation Progress Tracker
 
 - **Repository:** `PirimovUktam/bilimyol-smart-edu`
-- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_0_b4_release_ci_tests` (`fix/wave-0-b4-release-ci-tests`, continuing from `fix/wave-0-critical-containment` @ `a86d5e43642bb9ac279e13514a5720b99952ba40`)
+- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_1_b1_core_learning_integrity` (`fix/wave-1-b1-core-learning-integrity`, continuing from `fix/wave-0-b4-release-ci-tests` @ `1845f5096e0df4b0cf3c0603ac1184866905f6d2`)
 - **Baseline Audit Commit (`READ-ONLY`):** `5c22343b2246dedcee7866cd11931c48346cf65c`
 - **Baseline Composite Score (Preserved):** **`49.28 / 100` (`NO-GO`)** — *score is NOT inflated before full cross-wave remediation + staging/production verification*
-- **Latest Executed Batch:** **Wave 0 · Batch `W0-B4`** (`FIX-P2-11` `FIXED_LOCAL`; `FIX-P0-26` `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` for real-signed APK verification while local Gradle/R8/CI/`APP_ENV=production` hardening & DOM TDD infra are complete)
+- **Latest Executed Batch:** **Wave 1 · Batch `W1-B1`** (`FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23` `FIXED_LOCAL`; `FIX-P0-26` remains `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` from `W0-B4`)
 - **Status Taxonomy:** `OPEN` | `IN_PROGRESS` | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `BLOCKED`
 
 > [!NOTE]
-> Completed Wave 0 items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`) are marked strictly **`FIXED_LOCAL`** based on local test, build, SQL/Postgres 17.11, Deno, Flutter, Android Gradle, and independent multi-reviewer verification. `FIX-P0-26` is marked **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) because production release keystore and CI secrets are absent locally/in-repo, even though local Gradle fail-closed signing, R8/ProGuard, CI workflow split, `APP_ENV=production` fail-closed guards, disposable-keystore R8 APK verification, and minimal DOM TDD infrastructure (`jsdom` + `@testing-library/react` + `@testing-library/jest-dom` + `tsconfig.test.json`) are implemented and verified locally. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
+> Completed Wave 0 & Wave 1 (`W1-B1`) items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`, `FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23`) are marked strictly **`FIXED_LOCAL`** based on local test, build, disposable PostgreSQL `17.11`, Deno, Flutter, Android Gradle, and E2E verification. `FIX-P0-26` remains **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) until real production keystore and CI secrets are provisioned. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
 
 ---
 
@@ -16,11 +16,11 @@
 
 | Original Severity | Total Findings | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `OPEN` | `BLOCKED` |
 |---|---:|---:|---:|---:|---:|---:|
-| `P0` | 28 | 4 | 0 | 0 | 23 | 1 |
-| `P1` | 55 | 2 | 0 | 0 | 53 | 0 |
-| `P2` | 30 | 2 | 0 | 0 | 28 | 0 |
+| `P0` | 28 | 5 | 0 | 0 | 22 | 1 |
+| `P1` | 55 | 3 | 0 | 0 | 52 | 0 |
+| `P2` | 30 | 3 | 0 | 0 | 27 | 0 |
 | `P3` | 8 | 0 | 0 | 0 | 8 | 0 |
-| **Total** | **121** | **8** | **0** | **0** | **112** | **1** |
+| **Total** | **121** | **11** | **0** | **0** | **109** | **1** |
 
 ---
 
@@ -28,14 +28,14 @@
 
 | Wave | Batches (`FIXED_LOCAL` / Total) | Total Findings | `FIXED_LOCAL` | `OPEN` | `BLOCKED` | Status |
 |---|---|---:|---:|---:|---:|---|
-| **Wave 0** | `W0-B1` (3/3), `W0-B2` (1/1), `W0-B3` (3/3), `W0-B4` (1/2, 1 `BLOCKED`) | 9 | 8 | 0 | 1 | Wave 0 Local Hardening Complete (`FIX-P0-26` Real Signing `BLOCKED` on Secrets; Wave 1 Next) |
-| **Wave 1** | `W1-B1` (0/3), `W1-B2` (0/2), `W1-B3` (0/8), `W1-B4` (0/7) | 20 | 0 | 20 | 0 | Not Started |
+| **Wave 0** | `W0-B1` (3/3), `W0-B2` (1/1), `W0-B3` (3/3), `W0-B4` (1/2, 1 `BLOCKED`) | 9 | 8 | 0 | 1 | Wave 0 Local Hardening Complete (`FIX-P0-26` Real Signing `BLOCKED` on Secrets) |
+| **Wave 1** | `W1-B1` (3/3), `W1-B2` (0/2), `W1-B3` (0/8), `W1-B4` (0/7) | 20 | 3 | 17 | 0 | In Progress (`W1-B1` `FIXED_LOCAL`; `W1-B2` Next) |
 | **Wave 2** | `W2-B1` (0/4), `W2-B2` (0/5), `W2-B3` (0/6), `W2-B4` (0/9) | 24 | 0 | 24 | 0 | Not Started |
 | **Wave 3** | `W3-B1` (0/5), `W3-B2` (0/5), `W3-B3` (0/4) | 14 | 0 | 14 | 0 | Not Started |
 | **Wave 4** | `W4-B1` (0/4), `W4-B2` (0/6), `W4-B3` (0/6) | 16 | 0 | 16 | 0 | Not Started |
 | **Wave 5** | `W5-B1` (0/4), `W5-B2` (0/7), `W5-B3` (0/6), `W5-B4` (0/5) | 22 | 0 | 22 | 0 | Not Started |
 | **Wave 6** | `W6-B1` (0/3), `W6-B2` (0/1), `W6-B3` (0/6), `W6-B4` (0/6) | 16 | 0 | 16 | 0 | Not Started |
-| **Total** | **26 Atomic Batches** | **121** | **8** | **112** | **1** | **8 / 121 Fixed Locally, 1 / 121 Blocked** |
+| **Total** | **26 Atomic Batches** | **121** | **11** | **109** | **1** | **11 / 121 Fixed Locally, 1 / 121 Blocked** |
 
 ---
 
@@ -66,7 +66,7 @@
 | `FIX-P0-21` | `P0` | `W5-B2` | `OPEN` | — | — | — | Implement in `W5-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-22` | `P0` | `W5-B2` | `OPEN` | — | — | — | Implement in `W5-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-23` | `P0` | `W0-B2` | `FIXED_LOCAL` | `08a2004`, `00fa3a9` | Web `W0B2BundleAnswerKeyIsolation.test.ts` (6/6), Vitest (56/56 files, 342/342 tests), `tsc` (0), `oxlint` (0 errors), `vite build` (`index` 160.17 kB, 0 preloaded answer keys, flashcards <25 kB, all chunks <500 kB, 0 warnings); Deno (2/2); PG 17.11 W0-B1 gate + Flutter passed | `spec-reviewer` (`3b31d323`): `COMPLIANT`; `final-reviewer` (`2808834f`): `APPROVED`; `research` (`ef01612e`): `PASS`; `re-reviewer` (`5d3d54ce`): `ALL ADDRESSED — APPROVED` | Staging/production CDN deploy asset & network-waterfall verification + Wave 4 compile-time demo bundle removal |
-| `FIX-P0-24` | `P0` | `W1-B1` | `OPEN` | — | — | — | Implement in `W1-B1`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P0-24` | `P0` | `W1-B1` | `FIXED_LOCAL` | `fix/wave-1-b1-core-learning-integrity` (`fix: implement per-attempt learning answer idempotency`) | PG 17.11 (`29/29` Cloud & Legacy migrations + `2x` idempotency, `10/10` SQL suites x2 postures incl. `w1_b1_idempotency_constraints_and_daily_stats_regression.sql`, 2-session `READ COMMITTED` duplicate-UUID race `attempts=1, gp_xp=2, events=1`); Web `W1B1CoreLearningIntegrity.test.tsx` (4/4), Vitest (`60/60` files, `359/359` tests), `typecheck` & `typecheck:tests` (0), `lint` (0 err), `build` (`0` warnings), `test:e2e` (0); Flutter `w1_b1_core_learning_integrity_test.dart` (5/5), `flutter analyze --fatal-infos` (0), `flutter test --no-pub` (`526` passed, `2` skips) | Self-verified (`W1-B1` TDD `RED` -> `GREEN`) | Staging & production Supabase migration `20261126000100` apply + live end-to-end verification (`UNVERIFIED`) |
 | `FIX-P0-25` | `P0` | `W0-B3` | `FIXED_LOCAL` | `f4972ae`, `8ab11ed`, `02435d2`, `5e85b79`, `32ad3c6` | Web `W0B3AuthSessionAndRecoveryIsolation.test.tsx` (5/5), Vitest (57/57 files, 347/347 tests), `tsc` (0), `oxlint` (0 errors), `vite build` (0 warnings, 0 preloaded answer keys); Flutter `w0_b3_account_isolation_and_secure_storage_test.dart` (15/15 incl. GoRouter & standalone `ResetPasswordScreen._save()`), `flutter analyze --fatal-infos` (0), `flutter test` (`514` passed, `2` offline skips); Deno (`2/2`); PG 17.11 (`18/18` SQL suites) | `spec-reviewer` (`0a6dea03`, `2e5629d3` -> `re-reviewer` `f07f4c3e`, `31c91577`): `COMPLIANT`/`APPROVE`; `code-reviewer` (`9bd1a397` -> `b0e57a13`, `c1bc561e`, `d0a468f4` -> `459fd74c`): `APPROVE`; `teamwork_auditor` (`d57308b0`): `CLEAN`; `final-reviewer` (`9f5ddc48`): `APPROVED` | Staging/production multi-account & `/reset-password` browser/device E2E verification against deployed Supabase (`FIXED_LOCAL` only) |
 | `FIX-P0-26` | `P0` | `W0-B4` | `BLOCKED` | `fix/wave-0-b4-release-ci-tests` (`fix: harden Android release pipeline and test infrastructure`) | Local hardening & fail-closed verified (`W0B4ReleasePipelineAndSecurity` 6/6, `W0B4DomTestInfra` 2/2, `npm test` 59/59 & 355/355, `typecheck` 0, `typecheck:tests` 0, `lint` 0 err, `build` 0, `test:e2e` 0; `flutter analyze --fatal-infos` 0, `flutter test` 521 passed / 2 skips, `w0_b4_release_config_and_demo_guard_test` 7/7; Gradle `:app:signingReport` `Config: null`, release/R8/bundle tasks fail-closed; disposable-keystore R8 APK 79.6MB + `mapping.txt` 23MB + `apksigner` verified; CI PyYAML + 22x `bash -n` + `release_gate` JWT sim; 0/16 bug-codifying suites modified, 15 owned by `W1`–`W5`) | `spec-reviewer`: `APPROVE`; `code-reviewer`: `APPROVE`; `qa-reviewer`: `APPROVE`; `security-reviewer`: `REQUEST_CHANGES` -> `security-reviewer-r2`: `APPROVE`; `teamwork_challenger`: `ISSUES_FOUND` -> remediated; `teamwork_auditor`: `CLEAN` -> `r2`: `CLEAN`; `final-reviewer`: `APPROVE` | **`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`**: provision GitHub Secrets (`ANDROID_KEYSTORE_*`, `SUPABASE_*`), verify real-signed CI `mobile-release` APK (`apksigner`), extract real cert SHA-256 for `assetlinks.json`, and remediate 15 deferred bug-codifying suites in `W1`–`W5` |
 | `FIX-P0-27` | `P0` | `W0-B1` | `FIXED_LOCAL` | `10a652a`, `6040f39` (`2028245`) | PG 17.11 (27/27 Cloud & Legacy migrations, 2x idempotency, 16/16 SQL suites, 16-worker concurrency 0 deadlocks); Web (`W0B1ReinforcementResolution` + full Vitest); Flutter (`w0_b1_reinforcement_resolution_test` + 499 passed / 2 skipped); Deno (2/2) | `re-reviewer` (`e74a556a`): `ALL ADDRESSED — APPROVED`; `spec-reviewer` (`406922c2`): `COMPLIANT` | Staging & production Supabase migration apply + live RPC/Edge verification (NOT deployed yet) |
@@ -125,7 +125,7 @@
 | `FIX-P1-52` | `P1` | `W5-B3` | `OPEN` | — | — | — | Implement in `W5-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-53` | `P1` | `W5-B3` | `OPEN` | — | — | — | Implement in `W5-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-54` | `P1` | `W6-B2` | `OPEN` | — | — | — | Implement in `W6-B2`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-55` | `P1` | `W1-B1` | `OPEN` | — | — | — | Implement in `W1-B1`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-55` | `P1` | `W1-B1` | `FIXED_LOCAL` | `fix/wave-1-b1-core-learning-integrity` (`fix: implement per-attempt learning answer idempotency`) | Web durable `lessonRecoveryStorage.ts` + `readingPosition.ts` + `useLessonStore` + `useRoadmapStore` + `AuthContext` (`signUp` half-signed-up recovery & offline `signOut` local wipe) (`W1B1CoreLearningIntegrity.test.tsx` 4/4, `60/60` Vitest, `test:e2e` 0); Mobile `LocalStorageService` + `LessonReadingPositionStore` (`interactiveQuestion != null` & `passedQuestionIds`) + `LessonSessionNotifier` + `RegisterScreen` + `ProfileScreen._handleLogout` (`w1_b1_core_learning_integrity_test.dart` 5/5, `526` passed / `2` skips) | Self-verified (`W1-B1` TDD `RED` -> `GREEN`) | Staging & production browser/device crash/reload/auth recovery verification (`UNVERIFIED`) |
 | `FIX-P2-01` | `P2` | `W2-B4` | `OPEN` | — | — | — | Implement in `W2-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-02` | `P2` | `W2-B4` | `OPEN` | — | — | — | Implement in `W2-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-03` | `P2` | `W4-B3` | `OPEN` | — | — | — | Implement in `W4-B3`, pass TDD/regression gates, then verify in staging & production |
@@ -148,7 +148,7 @@
 | `FIX-P2-20` | `P2` | `W4-B3` | `OPEN` | — | — | — | Implement in `W4-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-21` | `P2` | `W6-B1` | `OPEN` | — | — | — | Implement in `W6-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-22` | `P2` | `W0-B1` | `FIXED_LOCAL` | `10a652a`, `6040f39` (`2028245`) | PG 17.11 (27/27 Cloud & Legacy migrations, 2x idempotency, 16/16 SQL suites, 16-worker concurrency 0 deadlocks); Web (`W0B1ReinforcementResolution` + full Vitest); Flutter (`w0_b1_reinforcement_resolution_test` + 499 passed / 2 skipped); Deno (2/2) | `re-reviewer` (`e74a556a`): `ALL ADDRESSED — APPROVED`; `spec-reviewer` (`406922c2`): `COMPLIANT` | Staging & production Supabase migration apply + live RPC/Edge verification (NOT deployed yet) |
-| `FIX-P2-23` | `P2` | `W1-B1` | `OPEN` | — | — | — | Implement in `W1-B1`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P2-23` | `P2` | `W1-B1` | `FIXED_LOCAL` | `fix/wave-1-b1-core-learning-integrity` (`fix: implement per-attempt learning answer idempotency`) | PG 17.11 migration `20261126000100` (`<=128` key & `<=4000` text bounds, `CHECK` constraints across 10 tables, `roadmap_nodes.order_index NUMERIC(8,2)`, `<=60/hr` session cap, `bilimyol_private.daily_question_outcomes` `(user_id, activity_date, question_id)` deduplication; `10/10` SQL suites x2 postures); Web `InMemoryLearnerRepository.ts` + `SupabaseLearnerRepository.ts` (`60/60` Vitest); Mobile `in_memory_learner_repository.dart` + `supabase_learner_repository.dart` (`526` passed / `2` skips) | Self-verified (`W1-B1` TDD `RED` -> `GREEN`) | Staging & production Supabase migration `20261126000100` apply + live constraint/telemetry verification (`UNVERIFIED`) |
 | `FIX-P2-24` | `P2` | `W6-B3` | `OPEN` | — | — | — | Implement in `W6-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-25` | `P2` | `W6-B3` | `OPEN` | — | — | — | Implement in `W6-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-26` | `P2` | `W5-B4` | `OPEN` | — | — | — | Implement in `W5-B4`, pass TDD/regression gates, then verify in staging & production |
@@ -179,3 +179,18 @@
   - **Web:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors, `9` pre-existing warnings), `npm test` (`59/59` files, `355/355` tests), `npm run build` (`2380` modules, `0` warnings), `npm run test:e2e` (`42` Product Tour + `88` layout/demo + Pilot Knowledge Map checks passed), `git diff --check` (`0`).
   - **Flutter & Gradle & CI:** `flutter analyze --fatal-infos` (`0`), `flutter test --no-pub` (`521` passed, `2` env-gated skips, `0` failed), Gradle `:app:signingReport` (`Config: null`), fail-closed `:app:assembleRelease` / `:app:minifyReleaseWithR8` / `:app:signReleaseBundle` / `:app:packageReleaseBundle` (`EXIT=1` `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`), PyYAML + `22`x `bash -n` + Git Bash `release_gate` JWT simulation (`0`).
 - **Next Step:** Provision GitHub Secrets (`ANDROID_KEYSTORE_*`, `SUPABASE_*`) to close `FIX-P0-26` real-signed APK verification & extract release SHA-256 for `assetlinks.json` -> begin **Wave 1 (`W1-B1`)** on approval.
+
+---
+
+## 5. `W1-B1` Batch Execution Summary (`fix/wave-1-b1-core-learning-integrity` — Committed Local Remediation)
+
+- **Report:** [W1-B1_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b1_core_learning_integrity/docs/implementation/wave-1/W1-B1_REPORT.md) | **Plan:** [W1-B1_IMPLEMENTATION_PLAN.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b1_core_learning_integrity/docs/implementation/wave-1/W1-B1_IMPLEMENTATION_PLAN.md) | **Audit Mirror:** [W1-B1_EXECUTION_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b1_core_learning_integrity/docs/hackathon-audit/W1-B1_EXECUTION_REPORT.md)
+- **Findings Resolved (`FIXED_LOCAL`):**
+  - **`FIX-P0-24` (`FIXED_LOCAL`):** Per-attempt RFC 4122 v4 UUIDs across Web and Flutter lesson + reinforcement flows, exact UUID reuse on transport retry, `pg_advisory_xact_lock` + `ON CONFLICT` serialization, `selected_answer` replay verification, non-spoiler replay explanation gating, per-question XP cap (`+2` once per `questionId`), and `Correct → Wrong → Correct` completion parity (`0` `42501` errors).
+  - **`FIX-P1-55` (`FIXED_LOCAL`):** Durable user-scoped pending attempt & `answeredQuestionIds` / `_passedQuestionIds` persistence across timeouts, `complete_lesson` / `complete_reinforcement` partial failures, `F5` reloads, and app restarts; `step.interactiveQuestion != null` & `passedQuestionIds`-aware step clamping; `/register` half-signed-up session recovery without HTTP `422`; offline/unconfigured `signOut` guaranteed local cleanup.
+  - **`FIX-P2-23` (`FIXED_LOCAL`):** `<=128` idempotency key and `<=4000` selected text bounds (`0` `54000` B-tree crashes), domain `CHECK` constraints across 10 tables + `roadmap_nodes.order_index NUMERIC(8,2)` + `<=60/hr` session creation cap, and `(user_id, activity_date, question_id)` daily question statistics deduplication across PostgreSQL (`bilimyol_private.daily_question_outcomes`), Web `InMemoryLearnerRepository.ts`, and Mobile `in_memory_learner_repository.dart`.
+- **Verification Summary:**
+  - **PostgreSQL `17.11` (Disposable Local):** `29/29` migrations + `2x` idempotency on `Cloud-Default` & `Legacy-Grant`; `10/10` SQL suites (`20/20` runs); real 2-session `READ COMMITTED` duplicate-UUID race (`attempts=1, gp_xp=2, gamification_events=1`).
+  - **Web & Deno:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors), `npm test` (`60/60` files, `359/359` tests), `npm run build` (`2382` modules, `0` warnings), `npm run test:e2e` (`0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`0`).
+  - **Flutter:** `flutter analyze --no-pub --fatal-infos` (`0`), `flutter test --no-pub test/features/w1_b1_core_learning_integrity_test.dart` (`5/5`), `flutter test --no-pub` (`526` passed, `2` env-gated skips, `0` failed).
+- **Next Step:** Stop after `W1-B1` report; await review before `W1-B2`.

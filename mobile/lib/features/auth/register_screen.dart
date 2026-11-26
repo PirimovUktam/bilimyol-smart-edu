@@ -119,27 +119,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     try {
-      final res = await client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'first_name': firstName},
-      );
+      final existingSession = client.auth.currentSession;
+      final hasMatchingActiveSession =
+          !SupabaseConfig.isRecoveryActive &&
+          existingSession != null &&
+          existingSession.user.email?.trim().toLowerCase() ==
+              email.toLowerCase();
 
-      if (res.session == null) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.registerEmailConfirmNotice)),
+      if (!hasMatchingActiveSession) {
+        final res = await client.auth.signUp(
+          email: email,
+          password: password,
+          data: {'first_name': firstName},
         );
-        context.go('/login');
-        return;
+
+        if (res.session == null) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(s.registerEmailConfirmNotice)),
+          );
+          context.go('/login');
+          return;
+        }
       }
 
+      SupabaseConfig.syncCurrentAuthState();
       container.invalidate(courseStateNotifierProvider);
       container.invalidate(roadmapStateNotifierProvider);
       container.invalidate(placementStateNotifierProvider);
       container.invalidate(lessonSessionNotifierProvider);
       await container.read(learnerStateNotifierProvider.notifier).loadProfile();
+      final learnerState = container.read(learnerStateNotifierProvider);
+      if (learnerState.hasError) {
+        throw learnerState.error!;
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);

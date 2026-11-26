@@ -100,29 +100,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
-    final s = _resolveStrings(context);
     final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _isLoggingOut = true);
     try {
-      if (demoSessionActive.value) {
-        demoSessionActive.value = false;
-        await resetSessionState(container);
-        if (mounted) context.go('/login');
-        return;
-      }
+      demoSessionActive.value = false;
       final auth = SupabaseConfig.client?.auth;
-      if (auth == null) throw StateError('No auth client.');
-      await auth.signOut(scope: SignOutScope.local);
+      if (auth != null) {
+        try {
+          await auth.signOut(scope: SignOutScope.local);
+        } catch (_) {
+          // Proceed with local session purge even when GoTrue throws offline.
+        }
+      }
       SupabaseConfig.syncCurrentAuthState();
       await SupabaseConfig.clearPasswordRecovery();
       await resetSessionState(container);
       if (mounted) context.go('/login');
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.signOutFailedError)),
-        );
-      }
     } finally {
       if (mounted) setState(() => _isLoggingOut = false);
     }

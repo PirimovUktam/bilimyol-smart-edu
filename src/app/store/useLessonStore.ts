@@ -8,6 +8,18 @@ import { SubmitLessonAnswerUseCase, LessonAnswerResult } from '@/domain/usecases
 import { usePreferences } from '@/core/preferences/preferences';
 
 import { useLearnerStore } from '@/app/store/useLearnerStore';
+import {
+  clearNodeTestRecoveryMemoryIfHeadless,
+  clearPendingAttempt,
+  clearPersistedLessonProgress,
+  getOrCreatePendingAttempt,
+  markPendingAttemptGraded,
+  readPendingAttempt,
+  readPersistedAnsweredQuestionIds,
+  resolveRecoveryAccountScope,
+  writePersistedAnsweredQuestionIds,
+} from '@/features/lesson/lessonRecoveryStorage';
+import { clearLessonPosition } from '@/features/lesson/readingPosition';
 import { registerCourseInvalidationHandler, registerSessionResetHandler } from '@/core/runtime/sessionReset';
 
 const aiService = new GeminiAITutorService();
@@ -17,11 +29,62 @@ const aiService = new GeminiAITutorService();
 let sessionToken = {};
 let evaluationToken = {};
 let nextLessonSessionId = 0;
-let pendingMasteryAnswer: { session: object; questionId: string; answerKey: string; key: string } | null = null;
 // Keep one persistence receipt for the active lesson session. Navigation can
 // discard UI work, but must not start a second RPC or repeat a confirmed write
 // when only the profile read-back needs retrying.
 let completionRequest: { session: object; lesson: Lesson; promise: Promise<void> } | null = null;
+
+function collectLessonQuestionIds(lesson: Lesson): Set<string> {
+  const ids = new Set<string>();
+  for (const step of lesson.steps ?? []) {
+    if (step?.interactiveQuestion?.id) {
+      ids.add(step.interactiveQuestion.id);
+    }
+  }
+  if (lesson.alternateExercise?.id) {
+    ids.add(lesson.alternateExercise.id);
+  }
+  if (lesson.reinforcementExercise?.id) {
+    ids.add(lesson.reinforcementExercise.id);
+  }
+  return ids;
+}
+
+function hydrateInitialLessonRecovery(lesson: Lesson): {
+  answeredQuestionIds: string[];
+  selectedAnswerIndex: number | null;
+} {
+  const profile = useLearnerStore.getState().profile;
+  const accountScope = resolveRecoveryAccountScope(profile?.id);
+  const questionIds = collectLessonQuestionIds(lesson);
+  if (profile?.completedLessonIds?.includes(lesson.id)) {
+    clearPersistedLessonProgress(accountScope, lesson.courseId, lesson.id, [...questionIds]);
+    return { answeredQuestionIds: [], selectedAnswerIndex: null };
+  }
+  const answeredQuestionIds = readPersistedAnsweredQuestionIds(
+    accountScope,
+    lesson.courseId,
+    lesson.id,
+    questionIds,
+  );
+  const firstStepQuestionId = lesson.steps[0]?.interactiveQuestion?.id;
+  const pending = firstStepQuestionId
+    ? readPendingAttempt(accountScope, lesson.courseId, lesson.id, firstStepQuestionId)
+    : null;
+  return {
+    answeredQuestionIds,
+    selectedAnswerIndex: typeof pending?.selectedIndex === 'number' ? pending.selectedIndex : null,
+  };
+}
+
+function resolveStepPendingSelection(lesson: Lesson | null, stepIndex: number): number | null {
+  if (!lesson || !Number.isInteger(stepIndex) || stepIndex < 0) return null;
+  const qId = lesson.steps[stepIndex]?.interactiveQuestion?.id;
+  if (!qId) return null;
+  const accountScope = resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id);
+  const pending = readPendingAttempt(accountScope, lesson.courseId, lesson.id, qId);
+  return typeof pending?.selectedIndex === 'number' ? pending.selectedIndex : null;
+}
 
 const persistCompletion = (lesson: Lesson, session: object): Promise<void> => {
   if (completionRequest?.session === session && completionRequest.lesson === lesson) {
@@ -185,6 +248,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       ? supabaseLessonRepository.getCachedDemoLessonSync?.(lessonId) ?? null
       : null;
     if (syncDemoLesson && syncDemoLesson.id === lessonId) {
+      const recovered = hydrateInitialLessonRecovery(syncDemoLesson);
       set({
         isLoading: false,
         error: null,
@@ -193,13 +257,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         currentStepIndex: 0,
         isEvaluatingAnswer: false,
         isCompletingLesson: false,
-        selectedAnswerIndex: null,
+        selectedAnswerIndex: recovered.selectedAnswerIndex,
         lastAnswerResult: null,
         showAIPanel: false,
         showReinforcementModal: false,
         isCompleted: false,
-        answeredQuestionIds: [],
-        correctAnswerCount: 0,
+        answeredQuestionIds: recovered.answeredQuestionIds,
+        correctAnswerCount: recovered.answeredQuestionIds.length,
         consecutiveMistakes: 0,
         consecutiveMistakeSkillId: null,
       });
@@ -239,7 +303,16 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         return;
       }
       if (lesson.id !== lessonId) throw new Error('So‘ralgan dars o‘rniga boshqa dars qaytdi.');
-      set({ currentLesson: lesson, lessonSessionId: ++nextLessonSessionId, isLoading: false, error: null });
+      const recovered = hydrateInitialLessonRecovery(lesson);
+      set({
+        currentLesson: lesson,
+        lessonSessionId: ++nextLessonSessionId,
+        isLoading: false,
+        error: null,
+        selectedAnswerIndex: recovered.selectedAnswerIndex,
+        answeredQuestionIds: recovered.answeredQuestionIds,
+        correctAnswerCount: recovered.answeredQuestionIds.length,
+      });
     } catch (err: any) {
       if (!isCurrent()) return;
       set({
@@ -363,11 +436,12 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     if (!currentLesson || isLoading || isCompletingLesson || isCompleted) return;
     if (!Number.isInteger(currentStepIndex) || currentStepIndex < 0 || !currentLesson.steps[currentStepIndex]) return;
     if (currentStepIndex < currentLesson.steps.length - 1) {
+      const nextIdx = currentStepIndex + 1;
       evaluationToken = {};
       set({
-        currentStepIndex: currentStepIndex + 1,
+        currentStepIndex: nextIdx,
         isEvaluatingAnswer: false,
-        selectedAnswerIndex: null,
+        selectedAnswerIndex: resolveStepPendingSelection(currentLesson, nextIdx),
         lastAnswerResult: null,
         showAIPanel: false,
         error: null,
@@ -406,6 +480,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       }
       useLearnerStore.setState({ profile, isLoading: false });
       if (!isCurrent()) return;
+      const accountScope = resolveRecoveryAccountScope(profile.id || learnerId);
+      clearPersistedLessonProgress(accountScope, currentLesson.courseId, currentLesson.id, [
+        ...collectLessonQuestionIds(currentLesson),
+      ]);
+      clearLessonPosition(profile.id || learnerId, currentLesson);
       set({ isCompleted: true, isCompletingLesson: false, error: null });
     } catch (err: any) {
       if (!isCurrent()) return;
@@ -418,14 +497,15 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   },
 
   prevStep: () => {
-    const { currentStepIndex } = get();
+    const { currentLesson, currentStepIndex } = get();
     if (currentStepIndex > 0) {
+      const prevIdx = currentStepIndex - 1;
       evaluationToken = {};
       set({
-        currentStepIndex: currentStepIndex - 1,
+        currentStepIndex: prevIdx,
         isEvaluatingAnswer: false,
         isCompletingLesson: false,
-        selectedAnswerIndex: null,
+        selectedAnswerIndex: resolveStepPendingSelection(currentLesson, prevIdx),
         lastAnswerResult: null,
         showAIPanel: false,
         error: null,
@@ -442,7 +522,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         currentStepIndex: index,
         isEvaluatingAnswer: false,
         isCompletingLesson: false,
-        selectedAnswerIndex: null,
+        selectedAnswerIndex: resolveStepPendingSelection(currentLesson, index),
         lastAnswerResult: null,
         showAIPanel: false,
         error: null,
@@ -465,6 +545,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const requestSession = sessionToken;
     const requestEvaluation = evaluationToken = {};
     const learnerId = useLearnerStore.getState().profile?.id;
+    const accountScope = resolveRecoveryAccountScope(learnerId);
     const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
       get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
     // loadProfile publishes after its own await without a session guard. Fetch
@@ -490,24 +571,32 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
-      let attemptKey: string | undefined;
-      if (currentLesson.requiresMastery) {
-        const answerKey = `idx:${selectedIndex}`;
-        if (pendingMasteryAnswer?.session !== requestSession || pendingMasteryAnswer.questionId !== question.id ||
-            pendingMasteryAnswer.answerKey !== answerKey) {
-          pendingMasteryAnswer = { session: requestSession, questionId: question.id, answerKey, key: crypto.randomUUID() };
-        }
-        attemptKey = pendingMasteryAnswer.key;
-      }
+      const pending = getOrCreatePendingAttempt({
+        accountId: accountScope,
+        courseId: currentLesson.courseId,
+        lessonId: currentLesson.id,
+        questionId: question.id,
+        payloadSignature: `idx:${selectedIndex}`,
+        selectedIndex,
+      });
       const language = usePreferences.getState().language;
-      const result = await useCase.execute(question, selectedIndex, currentLesson.id, attemptKey, language);
-      if (pendingMasteryAnswer?.key === attemptKey) pendingMasteryAnswer = null;
-      if (!isCurrent()) return null;
+      let result: LessonAnswerResult;
+      if (pending.status === 'graded' && pending.cachedLessonResult) {
+        result = pending.cachedLessonResult;
+      } else {
+        result = await useCase.execute(question, selectedIndex, currentLesson.id, pending.attemptId, language);
+        if (!isCurrent()) {
+          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          return null;
+        }
+        markPendingAttemptGraded(pending, { lessonResult: result });
+      }
 
       if (result.isCorrect) {
         const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
           ? get().answeredQuestionIds
           : [...get().answeredQuestionIds, question.id];
+        writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, answeredQuestionIds);
         const isCompleted = shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
           hasPassedRequiredQuestions(currentLesson, answeredQuestionIds);
         if (isCompleted && !get().isCompleted) {
@@ -517,6 +606,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         }
         await refreshProfile(isCompleted);
         if (!isCurrent()) return null;
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+        if (isCompleted) {
+          clearPersistedLessonProgress(accountScope, currentLesson.courseId, currentLesson.id, [
+            ...collectLessonQuestionIds(currentLesson),
+          ]);
+          clearLessonPosition(learnerId, currentLesson);
+        }
         set({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
@@ -530,6 +626,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         });
       } else {
         await refreshProfile();
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
         if (!isCurrent()) return null;
         const nextMistakeCount =
           get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
@@ -575,6 +672,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const requestSession = sessionToken;
     const requestEvaluation = evaluationToken = {};
     const learnerId = useLearnerStore.getState().profile?.id;
+    const accountScope = resolveRecoveryAccountScope(learnerId);
     const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
       get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
     const refreshProfile = async (expectCompletion = false) => {
@@ -598,24 +696,33 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
-      let attemptKey: string | undefined;
-      if (currentLesson.requiresMastery) {
-        const answerKey = `text:${normalized}`;
-        if (pendingMasteryAnswer?.session !== requestSession || pendingMasteryAnswer.questionId !== question.id ||
-            pendingMasteryAnswer.answerKey !== answerKey) {
-          pendingMasteryAnswer = { session: requestSession, questionId: question.id, answerKey, key: crypto.randomUUID() };
-        }
-        attemptKey = pendingMasteryAnswer.key;
-      }
+      const pending = getOrCreatePendingAttempt({
+        accountId: accountScope,
+        courseId: currentLesson.courseId,
+        lessonId: currentLesson.id,
+        questionId: question.id,
+        payloadSignature: `text:${normalized}`,
+        selectedIndex: 0,
+        selectedText: trimmed,
+      });
       const language = usePreferences.getState().language;
-      const result = await useCase.executeText(question, trimmed, currentLesson.id, attemptKey, language);
-      if (pendingMasteryAnswer?.key === attemptKey) pendingMasteryAnswer = null;
-      if (!isCurrent()) return null;
+      let result: LessonAnswerResult;
+      if (pending.status === 'graded' && pending.cachedLessonResult) {
+        result = pending.cachedLessonResult;
+      } else {
+        result = await useCase.executeText(question, trimmed, currentLesson.id, pending.attemptId, language);
+        if (!isCurrent()) {
+          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          return null;
+        }
+        markPendingAttemptGraded(pending, { lessonResult: result });
+      }
 
       if (result.isCorrect) {
         const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
           ? get().answeredQuestionIds
           : [...get().answeredQuestionIds, question.id];
+        writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, answeredQuestionIds);
         const isCompleted = shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
           hasPassedRequiredQuestions(currentLesson, answeredQuestionIds);
         if (isCompleted && !get().isCompleted) {
@@ -625,6 +732,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         }
         await refreshProfile(isCompleted);
         if (!isCurrent()) return null;
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+        if (isCompleted) {
+          clearPersistedLessonProgress(accountScope, currentLesson.courseId, currentLesson.id, [
+            ...collectLessonQuestionIds(currentLesson),
+          ]);
+          clearLessonPosition(learnerId, currentLesson);
+        }
         set({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
@@ -638,6 +752,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         });
       } else {
         await refreshProfile();
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
         if (!isCurrent()) return null;
         const nextMistakeCount =
           get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
@@ -707,6 +822,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const requestSession = sessionToken;
     const requestEvaluation = evaluationToken = {};
     const learnerId = useLearnerStore.getState().profile?.id;
+    const accountScope = resolveRecoveryAccountScope(learnerId);
     const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
       get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
     const refreshProfile = async (expectCompletion = false) => {
@@ -731,25 +847,44 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
+      const pending = getOrCreatePendingAttempt({
+        accountId: accountScope,
+        courseId: currentLesson.courseId,
+        lessonId: currentLesson.id,
+        questionId: question.id,
+        payloadSignature: `struct:${qType}:${serializedAnswer}`,
+        selectedIndex: 0,
+        selectedText: serializedAnswer,
+      });
       const language = usePreferences.getState().language;
-      const result = await useCase.executeStructured(
-        question,
-        {
-          serializedAnswer,
-          displayAnswer,
-          matchPairs: payload.matchPairs,
-          orderedTokens: payload.orderedTokens,
-        },
-        currentLesson.id,
-        undefined,
-        language,
-      );
-      if (!isCurrent()) return null;
+      let result: LessonAnswerResult;
+      if (pending.status === 'graded' && pending.cachedLessonResult) {
+        result = pending.cachedLessonResult;
+      } else {
+        result = await useCase.executeStructured(
+          question,
+          {
+            serializedAnswer,
+            displayAnswer,
+            matchPairs: payload.matchPairs,
+            orderedTokens: payload.orderedTokens,
+          },
+          currentLesson.id,
+          pending.attemptId,
+          language,
+        );
+        if (!isCurrent()) {
+          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          return null;
+        }
+        markPendingAttemptGraded(pending, { lessonResult: result });
+      }
 
       if (result.isCorrect) {
         const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
           ? get().answeredQuestionIds
           : [...get().answeredQuestionIds, question.id];
+        writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, answeredQuestionIds);
         const completed = shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
           hasPassedRequiredQuestions(currentLesson, answeredQuestionIds);
         if (completed && !get().isCompleted) {
@@ -759,6 +894,13 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         }
         await refreshProfile(completed);
         if (!isCurrent()) return null;
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+        if (completed) {
+          clearPersistedLessonProgress(accountScope, currentLesson.courseId, currentLesson.id, [
+            ...collectLessonQuestionIds(currentLesson),
+          ]);
+          clearLessonPosition(learnerId, currentLesson);
+        }
         set({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
@@ -772,6 +914,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         });
       } else {
         await refreshProfile();
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
         if (!isCurrent()) return null;
         const nextMistakeCount =
           get().consecutiveMistakeSkillId === question.skillId ? get().consecutiveMistakes + 1 : 1;
@@ -813,6 +956,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const requestSession = sessionToken;
     const requestEvaluation = evaluationToken = {};
     const learnerId = useLearnerStore.getState().profile?.id;
+    const accountScope = resolveRecoveryAccountScope(learnerId);
     const isCurrent = () => sessionToken === requestSession && evaluationToken === requestEvaluation &&
       get().currentLesson === currentLesson && get().currentStepIndex === currentStepIndex;
     const refreshProfile = async (expectCompletion = false) => {
@@ -837,25 +981,49 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const useCase = new SubmitLessonAnswerUseCase(supabaseLearnerRepository);
       if (!isCurrent()) return null;
+      const payloadSignature = `self:${question.questionType}:${JSON.stringify({
+        response: trimmed,
+        criteria: [...checkedCriteriaIds].sort(),
+      })}`;
+      const pending = getOrCreatePendingAttempt({
+        accountId: accountScope,
+        courseId: currentLesson.courseId,
+        lessonId: currentLesson.id,
+        questionId: question.id,
+        payloadSignature,
+        selectedIndex: 0,
+        selectedText: trimmed,
+      });
       const language = usePreferences.getState().language;
-      const result = await useCase.executeSelfAssessed(
-        question,
-        trimmed,
-        checkedCriteriaIds,
-        currentLesson.id,
-        undefined,
-        language,
-      );
-      if (!isCurrent()) return null;
+      let result: LessonAnswerResult;
+      if (pending.status === 'graded' && pending.cachedLessonResult) {
+        result = pending.cachedLessonResult;
+      } else {
+        result = await useCase.executeSelfAssessed(
+          question,
+          trimmed,
+          checkedCriteriaIds,
+          currentLesson.id,
+          pending.attemptId,
+          language,
+        );
+        if (!isCurrent()) {
+          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          return null;
+        }
+        markPendingAttemptGraded(pending, { lessonResult: result });
+      }
 
       if (result.isCorrect) {
         const answeredQuestionIds = get().answeredQuestionIds.includes(question.id)
           ? get().answeredQuestionIds
           : [...get().answeredQuestionIds, question.id];
+        writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, answeredQuestionIds);
         // Do NOT complete immediately: allow reviewing model answer & rubric checkboxes,
         // then complete via nextStep() when the learner clicks "Darsni yakunlash".
         await refreshProfile(false);
         if (!isCurrent()) return null;
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
         set({
           lastAnswerResult: result,
           isEvaluatingAnswer: false,
@@ -866,6 +1034,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         });
       } else {
         await refreshProfile();
+        clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
         if (!isCurrent()) return null;
         set({
           lastAnswerResult: result,
@@ -896,6 +1065,10 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     if (!step) return false;
     if (currentLesson.steps.some((item) => item.interactiveQuestion?.id === alt.id)) {
       return false;
+    }
+    if (step.interactiveQuestion?.id) {
+      const accountScope = resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id);
+      clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, step.interactiveQuestion.id);
     }
     const updatedSteps = currentLesson.steps.map((item, idx) =>
       idx === currentStepIndex ? { ...item, interactiveQuestion: alt } : item
@@ -937,6 +1110,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     sessionToken = {};
     evaluationToken = {};
     completionRequest = null;
+    clearNodeTestRecoveryMemoryIfHeadless();
     set({
       currentLesson: null,
       lessonSessionId: 0,
@@ -961,6 +1135,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     sessionToken = {};
     evaluationToken = {};
     completionRequest = null;
+    clearNodeTestRecoveryMemoryIfHeadless();
     set({
       currentStepIndex: 0,
       isLoading: false,

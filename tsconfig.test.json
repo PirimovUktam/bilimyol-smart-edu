@@ -12,7 +12,9 @@
     "src/test/**/*.ts",
     "src/test/**/*.tsx",
     "src/__tests__/W0B4*.ts",
-    "src/__tests__/W0B4*.tsx"
+    "src/__tests__/W0B4*.tsx",
+    "src/__tests__/W1B1*.ts",
+    "src/__tests__/W1B1*.tsx"
   ],
   "exclude": []
 }

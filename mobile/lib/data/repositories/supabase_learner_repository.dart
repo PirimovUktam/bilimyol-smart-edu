@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/i_learner_repository.dart';
@@ -9,15 +8,29 @@ import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/storage/local_storage_service.dart';
-import '../../domain/personalization/learning_start.dart';
+import '../../core/utils/attempt_uuid.dart';
 import 'in_memory_learner_repository.dart';
 import 'supabase_course_repository.dart';
 
 class SupabaseLearnerRepository extends ILearnerRepository {
+  static final RegExp _httpsAvatarRegex = RegExp(
+    r'^https://[^\s<>"]+$',
+    caseSensitive: false,
+  );
+
+  static String? _sanitizeAvatarUrl(Object? raw) {
+    if (raw is! String) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed.length <= 2048 && _httpsAvatarRegex.hasMatch(trimmed)) {
+      return trimmed;
+    }
+    return null;
+  }
+
   final InMemoryLearnerRepository _fallbackRepo;
   final SupabaseClient? _clientOverride;
   Future<void> _srsWriteChain = Future<void>.value();
-  ({String scope, String key})? _pendingMasteryAnswer;
 
   SupabaseLearnerRepository({
     LocalStorageService? storage,
@@ -151,7 +164,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           'first_name': resolvedFirst,
           'last_name': resolvedLast,
           'display_name': resolvedDisplay,
-          'avatar_url': user.userMetadata?['avatar_url'],
+          'avatar_url': _sanitizeAvatarUrl(user.userMetadata?['avatar_url']),
           'updated_at': DateTime.now().toIso8601String(),
         };
         if (userProfile != null) {
@@ -840,17 +853,53 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   }) async {
-    final client = _client;
-    final mastery = courseId == mathMasteryCourse && questionId.startsWith('q_pilot_');
-    final answerKey = '$lessonId:$questionId:$selectedIndex';
-    final scope = '${user.id}:$answerKey';
-    if (mastery && _pendingMasteryAnswer?.scope != scope) {
-      _pendingMasteryAnswer = (
-        scope: scope,
-        key: 'mastery:${DateTime.now().microsecondsSinceEpoch}:${Random.secure().nextInt(1 << 31)}',
+    if (selectedAnswer.length > 4000) {
+      throw ArgumentError(
+        'Javob matni uzunligi 4000 belgidan oshmasligi shart.',
       );
     }
-    final requestKey = mastery ? _pendingMasteryAnswer!.key : answerKey;
+    final explicitKey = ILearnerRepository.currentAttemptIdempotencyKey;
+    if (explicitKey != null) {
+      final trimmedKey = explicitKey.trim();
+      if (trimmedKey.isEmpty || trimmedKey.length > 128) {
+        throw ArgumentError(
+          'Idempotency kaliti 1..128 belgi oralig‘ida bo‘lishi shart.',
+        );
+      }
+    }
+
+    final client = _client;
+    final payloadSig = '$selectedIndex:$selectedAnswer';
+    final existingPending = await _storage.getPendingAttempt(
+      accountScope: user.id,
+      courseId: courseId,
+      lessonId: lessonId,
+      questionId: questionId,
+    );
+    final String requestKey;
+    if (existingPending != null &&
+        existingPending['payloadSig'] == payloadSig &&
+        existingPending['attemptId'] is String &&
+        (existingPending['attemptId'] as String).trim().isNotEmpty) {
+      requestKey = (existingPending['attemptId'] as String).trim();
+    } else {
+      requestKey = explicitKey != null
+          ? explicitKey.trim()
+          : generateAttemptUuidV4();
+      await _storage.setPendingAttempt(
+        accountScope: user.id,
+        courseId: courseId,
+        lessonId: lessonId,
+        questionId: questionId,
+        data: {
+          'attemptId': requestKey,
+          'payloadSig': payloadSig,
+          'selectedIndex': selectedIndex,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        },
+      );
+    }
+
     final rpcRes = await client.rpc(
       'submit_answer_attempt',
       params: {
@@ -870,7 +919,12 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     if (!data.containsKey('is_correct')) {
       throw Exception('Javobni serverda tekshirib bo‘lmadi.');
     }
-    if (_pendingMasteryAnswer?.key == requestKey) _pendingMasteryAnswer = null;
+    await _storage.clearPendingAttempt(
+      accountScope: user.id,
+      courseId: courseId,
+      lessonId: lessonId,
+      questionId: questionId,
+    );
     String? correctOption;
     String? feedbackExplanation;
     if (data['is_correct'] == false) {
@@ -907,6 +961,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       newSkillScore: (data['new_skill_score'] as num?)?.toInt(),
       xpAwarded: (data['xp_awarded'] as num?)?.toInt() ?? 0,
       alreadyProcessed: data['already_processed'] == true,
+      idempotencyKey: requestKey,
     );
   }
 
@@ -966,7 +1021,10 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         throw Exception('Autentifikatsiyadan o‘tilmagan.');
       }
 
-      final since = DateTime.now()
+      final todayTashkent = DateTime.now().toUtc().add(
+        const Duration(hours: 5),
+      );
+      final since = todayTashkent
           .subtract(Duration(days: days - 1))
           .toIso8601String()
           .split('T')
@@ -974,7 +1032,10 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
       final rows = await client
           .from('daily_learning_stats')
-          .select('activity_date, active_seconds, xp_earned, lessons_completed')
+          .select(
+            'activity_date, active_seconds, xp_earned, lessons_completed, '
+            'questions_answered, correct_answers, accuracy_percent',
+          )
           .eq('user_id', user.id)
           .gte('activity_date', since)
           .order('activity_date', ascending: true);
@@ -982,18 +1043,24 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       final byDate = <String, DailyActivitySummary>{};
       for (final row in (rows as List)) {
         final date = row['activity_date'] as String;
+        final qAns = (row['questions_answered'] as num?)?.toInt() ?? 0;
+        final cAns = (row['correct_answers'] as num?)?.toInt() ?? 0;
+        final acc = (row['accuracy_percent'] as num?)?.toInt() ??
+            (qAns > 0 ? ((cAns * 100) / qAns).round() : 0);
         byDate[date] = DailyActivitySummary(
           date: date,
           activeMinutes: ((row['active_seconds'] as num?)?.toInt() ?? 0) ~/ 60,
           xpEarned: (row['xp_earned'] as num?)?.toInt() ?? 0,
           lessonsCompleted: (row['lessons_completed'] as num?)?.toInt() ?? 0,
+          questionsAnswered: qAns,
+          correctAnswers: cAns,
+          accuracyPercent: acc,
         );
       }
 
       final result = <DailyActivitySummary>[];
-      final today = DateTime.now();
       for (int i = days - 1; i >= 0; i--) {
-        final dateStr = today
+        final dateStr = todayTashkent
             .subtract(Duration(days: i))
             .toIso8601String()
             .split('T')
@@ -1081,7 +1148,6 @@ class SupabaseLearnerRepository extends ILearnerRepository {
 
   @override
   Future<void> clearLocalState() async {
-    _pendingMasteryAnswer = null;
     _srsWriteChain = Future<void>.value();
     await _fallbackRepo.resetAll();
   }

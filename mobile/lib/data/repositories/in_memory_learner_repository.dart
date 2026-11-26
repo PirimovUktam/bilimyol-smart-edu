@@ -571,10 +571,95 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     required String selectedAnswer,
     required bool isCorrect,
   }) {
+    if (selectedAnswer.length > 4000) {
+      return Future<AnswerAttemptRecord>.error(
+        ArgumentError('Javob matni uzunligi 4000 belgidan oshmasligi shart.'),
+      );
+    }
+    final rawExplicitKey = ILearnerRepository.currentAttemptIdempotencyKey;
+    String? explicitKey;
+    if (rawExplicitKey != null) {
+      explicitKey = rawExplicitKey.trim();
+      if (explicitKey.isEmpty || explicitKey.length > 128) {
+        return Future<AnswerAttemptRecord>.error(
+          ArgumentError(
+            'Idempotency kaliti 1..128 belgi oralig‘ida bo‘lishi shart.',
+          ),
+        );
+      }
+    }
+
     return _runSerializedMutation((epoch) async {
       await _ensureHydrated();
-      final record = AnswerAttemptRecord(
-        id: 'att_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}',
+      if (explicitKey != null) {
+        final existing = _answerAttempts
+            .where((a) => a.idempotencyKey == explicitKey)
+            .firstOrNull;
+        if (existing != null) {
+          if (existing.courseId != courseId ||
+              existing.skillId != skillId ||
+              existing.lessonId != lessonId ||
+              existing.questionId != questionId ||
+              existing.selectedIndex != selectedIndex ||
+              existing.selectedAnswer != selectedAnswer) {
+            throw ArgumentError(
+              'Idempotency kaliti boshqa javob uchun ishlatilgan.',
+            );
+          }
+          return AnswerAttemptRecord(
+            id: existing.id,
+            courseId: existing.courseId,
+            skillId: existing.skillId,
+            lessonId: existing.lessonId,
+            questionId: existing.questionId,
+            selectedIndex: existing.selectedIndex,
+            selectedAnswer: existing.selectedAnswer,
+            isCorrect: existing.isCorrect,
+            timestamp: existing.timestamp,
+            correctOption: existing.correctOption,
+            explanation: existing.explanation,
+            newSkillScore: existing.newSkillScore ??
+                _profile.scoresByCourse[courseId]?[skillId]?.score,
+            xpAwarded: 0,
+            alreadyProcessed: true,
+            idempotencyKey: explicitKey,
+          );
+        }
+      }
+
+      final attemptId =
+          'att_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}';
+      final attemptTs = DateTime.now().millisecondsSinceEpoch;
+      if (epoch != _hydrationEpoch) {
+        return AnswerAttemptRecord(
+          id: attemptId,
+          courseId: courseId,
+          skillId: skillId,
+          lessonId: lessonId,
+          questionId: questionId,
+          selectedIndex: selectedIndex,
+          selectedAnswer: selectedAnswer,
+          isCorrect: isCorrect,
+          timestamp: attemptTs,
+          correctOption: isCorrect ? selectedAnswer : null,
+          idempotencyKey: explicitKey,
+        );
+      }
+
+      final prevProfile = _profile;
+      final prevWasDirty = _dirtySnapshotPendingPersist;
+      final today = DateTime.now().toIso8601String().split('T').first;
+      final actionKey = isCorrect ? 'answer_correct_$questionId' : null;
+      final attemptKeyMarker =
+          explicitKey != null ? 'attempt_key:$explicitKey' : null;
+
+      final addedActionKey =
+          actionKey != null && _processedActionKeys.add(actionKey);
+      final addedAttemptMarker =
+          attemptKeyMarker != null &&
+          _processedActionKeys.add(attemptKeyMarker);
+      final provisionalRecord = AnswerAttemptRecord(
+        id: attemptId,
         courseId: courseId,
         skillId: skillId,
         lessonId: lessonId,
@@ -582,19 +667,13 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         selectedIndex: selectedIndex,
         selectedAnswer: selectedAnswer,
         isCorrect: isCorrect,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
+        timestamp: attemptTs,
         correctOption: isCorrect ? selectedAnswer : null,
+        xpAwarded: addedActionKey ? 2 : 0,
+        alreadyProcessed: false,
+        idempotencyKey: explicitKey,
       );
-      if (epoch != _hydrationEpoch) return record;
-
-      final prevProfile = _profile;
-      final prevWasDirty = _dirtySnapshotPendingPersist;
-      final today = DateTime.now().toIso8601String().split('T').first;
-      final actionKey = isCorrect ? 'answer_${questionId}_${record.id}' : null;
-
-      _answerAttempts.add(record);
-      final addedActionKey =
-          actionKey != null && _processedActionKeys.add(actionKey);
+      _answerAttempts.add(provisionalRecord);
       final addedToday = _applyDailyActivityInMemory(today);
 
       // English placement scores remain isolated from independent lesson mastery.
@@ -602,6 +681,28 @@ class InMemoryLearnerRepository extends ILearnerRepository {
           (courseId == 'course_eng_01' && lessonId == 'placement_test')
               ? null
               : _computeCourseSkillScore(courseId, skillId);
+      final record = computedScore == null
+          ? provisionalRecord
+          : AnswerAttemptRecord(
+              id: provisionalRecord.id,
+              courseId: provisionalRecord.courseId,
+              skillId: provisionalRecord.skillId,
+              lessonId: provisionalRecord.lessonId,
+              questionId: provisionalRecord.questionId,
+              selectedIndex: provisionalRecord.selectedIndex,
+              selectedAnswer: provisionalRecord.selectedAnswer,
+              isCorrect: provisionalRecord.isCorrect,
+              timestamp: provisionalRecord.timestamp,
+              correctOption: provisionalRecord.correctOption,
+              newSkillScore: computedScore.score,
+              xpAwarded: provisionalRecord.xpAwarded,
+              alreadyProcessed: false,
+              idempotencyKey: explicitKey,
+            );
+      if (!identical(record, provisionalRecord)) {
+        _answerAttempts[_answerAttempts.length - 1] = record;
+      }
+
       final currentScores = Map<String, Map<String, SkillScore>>.from(
         _profile.scoresByCourse,
       );
@@ -628,6 +729,9 @@ class InMemoryLearnerRepository extends ILearnerRepository {
             if (addedActionKey) {
               _processedActionKeys.remove(actionKey);
             }
+            if (addedAttemptMarker) {
+              _processedActionKeys.remove(attemptKeyMarker);
+            }
             if (addedToday) {
               _recordedActivityDates.remove(today);
             }
@@ -639,6 +743,9 @@ class InMemoryLearnerRepository extends ILearnerRepository {
               _profile = _profile.copyWith(
                 xp: (_profile.xp - 2).clamp(0, 1 << 30),
               );
+            }
+            if (addedAttemptMarker) {
+              _processedActionKeys.remove(attemptKeyMarker);
             }
             if (addedToday) {
               _recordedActivityDates.remove(today);
@@ -796,13 +903,27 @@ class InMemoryLearnerRepository extends ILearnerRepository {
             ).toIso8601String().split('T').first ==
             dateStr;
       }).toList();
-      final correct = dayAttempts.where((a) => a.isCorrect).length;
+      final latestByQuestion = <String, AnswerAttemptRecord>{};
+      for (final attempt in dayAttempts) {
+        latestByQuestion[attempt.questionId] = attempt;
+      }
+      final questionsAnswered = latestByQuestion.length;
+      final correctAnswers = latestByQuestion.values
+          .where((a) => a.isCorrect)
+          .length;
+      final accuracyPercent = questionsAnswered > 0
+          ? ((correctAnswers * 100) / questionsAnswered).round()
+          : 0;
+      final xpEarned = dayAttempts.fold<int>(0, (sum, a) => sum + a.xpAwarded);
       result.add(
         DailyActivitySummary(
           date: dateStr,
-          activeMinutes: (dayAttempts.length * 1.5).round(),
-          xpEarned: correct * 2,
+          activeMinutes: (questionsAnswered * 1.5).round(),
+          xpEarned: xpEarned,
           lessonsCompleted: 0,
+          questionsAnswered: questionsAnswered,
+          correctAnswers: correctAnswers,
+          accuracyPercent: accuracyPercent,
         ),
       );
     }
@@ -1045,7 +1166,9 @@ class InMemoryLearnerRepository extends ILearnerRepository {
           : fallback.selectedCourseId,
       goal: _parseGoal(json['goal'] is String ? json['goal'] as String : null) ??
           fallback.goal,
-      dailyMinutes: json['dailyMinutes'] is num
+      dailyMinutes: json['dailyMinutes'] is num &&
+              (json['dailyMinutes'] as num).toInt() >= 5 &&
+              (json['dailyMinutes'] as num).toInt() <= 240
           ? (json['dailyMinutes'] as num).toInt()
           : fallback.dailyMinutes,
       initialLevel:
@@ -1127,6 +1250,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     if (a.newSkillScore != null) 'newSkillScore': a.newSkillScore,
     'xpAwarded': a.xpAwarded,
     'alreadyProcessed': a.alreadyProcessed,
+    if (a.idempotencyKey != null) 'idempotencyKey': a.idempotencyKey,
   };
 
   static AnswerAttemptRecord? _attemptFromJson(dynamic raw) {
@@ -1170,6 +1294,9 @@ class InMemoryLearnerRepository extends ILearnerRepository {
           : null,
       xpAwarded: raw['xpAwarded'] is num ? (raw['xpAwarded'] as num).toInt() : 0,
       alreadyProcessed: raw['alreadyProcessed'] == true,
+      idempotencyKey: raw['idempotencyKey'] is String
+          ? raw['idempotencyKey'] as String
+          : null,
     );
   }
 

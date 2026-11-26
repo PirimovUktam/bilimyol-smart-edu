@@ -14,6 +14,7 @@ import type { CefrLevelId } from '../../domain/entities/Question';
 import { computeNextFlashcardSrs } from '@/domain/personalization/FlashcardSrsEngine';
 import type { PlacementSession } from '@/domain/entities/Assessment';
 import { learningDate } from '@/core/utils/learningDate';
+import { generateAttemptUuid } from '@/core/utils/attemptUuid';
 import { SkillScore } from '../../domain/entities/SkillScore';
 import type { InMemoryLearnerRepository } from './InMemoryLearnerRepository';
 import { supabaseLessonRepository } from './SupabaseLessonRepository';
@@ -541,6 +542,12 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
     try {
       const user = await this.requireAuthenticatedUser();
+      if (request.idempotencyKey && request.idempotencyKey.length > 128) {
+        throw new Error('Idempotency kaliti uzunligi 128 belgidan oshmasligi shart.');
+      }
+      if (request.selectedAnswer && request.selectedAnswer.length > 4000) {
+        throw new Error('Javob matni 4000 belgidan oshmasligi shart.');
+      }
 
       const { data, error } = await supabase.rpc('submit_answer_attempt', {
         p_user_id: user.id,
@@ -550,7 +557,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         p_question_id: request.questionId,
         p_selected_index: request.selectedIndex,
         p_selected_text: request.selectedAnswer,
-        p_idempotency_key: request.idempotencyKey || null,
+        p_idempotency_key: request.idempotencyKey || generateAttemptUuid(),
       });
 
       if (error || !data) {
@@ -608,7 +615,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         p_question_id: attempt.questionId,
         p_selected_index: attempt.selectedIndex,
         p_selected_text: attempt.selectedAnswer,
-        p_idempotency_key: `${attempt.lessonId || 'general'}:${attempt.questionId}:${attempt.selectedIndex}`,
+        p_idempotency_key: attempt.idempotencyKey || generateAttemptUuid(),
       });
 
       if (error || !data) throw new Error(error?.message || 'Javob serverda saqlanmadi.');
@@ -662,7 +669,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
        const { data, error } = await supabase
         .from('daily_learning_stats')
-        .select('activity_date, active_seconds, xp_earned, lessons_completed, questions_answered, correct_answers')
+        .select('activity_date, active_seconds, xp_earned, lessons_completed, questions_answered, correct_answers, accuracy_percent')
         .eq('user_id', user.id)
         .gte('activity_date', since)
         .order('activity_date', { ascending: true });
@@ -677,6 +684,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
           lessonsCompleted: row.lessons_completed || 0,
           questionsAnswered: row.questions_answered ?? 0,
           correctAnswers: row.correct_answers ?? 0,
+          accuracyPercent: row.accuracy_percent ?? 0,
         });
       }
 
@@ -685,7 +693,15 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       for (let i = days - 1; i >= 0; i--) {
         const dateStr = learningDate(i, now);
         result.push(
-          byDate.get(dateStr) || { date: dateStr, activeMinutes: 0, xpEarned: 0, lessonsCompleted: 0 }
+          byDate.get(dateStr) || {
+            date: dateStr,
+            activeMinutes: 0,
+            xpEarned: 0,
+            lessonsCompleted: 0,
+            questionsAnswered: 0,
+            correctAnswers: 0,
+            accuracyPercent: 0,
+          }
         );
       }
       return result;

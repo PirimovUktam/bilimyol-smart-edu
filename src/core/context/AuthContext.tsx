@@ -251,6 +251,15 @@ function storeDemoProfile(profile: UserProfile | null) {
   } catch { /* A demo can still run in the current page. */ }
 }
 
+function sanitizeAvatarUrl(raw?: string | null): string {
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  if (!trimmed) return '';
+  if (trimmed.length <= 2048 && /^https:\/\/[^\s<>"]+$/i.test(trimmed)) {
+    return trimmed;
+  }
+  return '';
+}
+
 interface ProfileFetchOptions {
   provisionIfMissing?: {
     firstName: string;
@@ -441,7 +450,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           firstName: resolvedFirst,
           lastName: data.last_name || '',
           email: data.email || email,
-          avatarUrl: data.avatar_url || '',
+          avatarUrl: sanitizeAvatarUrl(data.avatar_url),
           role: userRole,
         };
 
@@ -698,8 +707,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (signingOut.current !== null) return { error: staleActionError() };
     if (!isSupabaseConfigured) return { error: new LocalizedError('errors.unavailable') };
 
+    const normalizedEmail = email.trim().toLowerCase();
+    let existingSession: Session | null = null;
+    if (!isPasswordRecovery && profile === null) {
+      let candidate = activeSessionRef.current;
+      if (!candidate?.user && typeof supabase.auth.getSession === 'function') {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          candidate = sessionData?.session ?? null;
+        } catch {
+          candidate = null;
+        }
+      }
+      if (
+        candidate?.user?.id &&
+        candidate.user.email?.trim().toLowerCase() === normalizedEmail
+      ) {
+        existingSession = candidate;
+      }
+    }
+
     const request = beginAuthAction(email);
     try {
+      if (existingSession?.user) {
+        activeUserId.current = existingSession.user.id;
+        activeSessionRef.current = existingSession;
+        setUser(existingSession.user);
+        setSession(existingSession);
+        const recovered = await fetchProfile(
+          existingSession.user.id,
+          existingSession.user.email ?? email,
+          {
+            provisionIfMissing: { firstName, lastName },
+            throwOnError: true,
+          },
+        );
+        if (request !== authAction.current) return { error: staleActionError() };
+        return recovered
+          ? { error: null }
+          : { error: new LocalizedError('errors.profileLoad') };
+      }
+
       const signUpOptions: {
         data: { first_name: string; last_name: string };
         emailRedirectTo?: string;
@@ -770,10 +818,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signingOut.current = request;
     try {
       const result = await supabase.auth.signOut({ scope });
-      if (result?.error) throw new LocalizedError('auth.logoutFailed');
-      if (authAction.current === request) clearAuthState();
+      if (result?.error && scope === 'global') {
+        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      }
+    } catch {
+      if (scope === 'global') {
+        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      }
     } finally {
-      if (signingOut.current === request) signingOut.current = null;
+      if (authAction.current === request) {
+        clearAuthState();
+      }
+      if (signingOut.current === request) {
+        signingOut.current = null;
+      }
     }
   };
 
@@ -836,7 +894,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...profile,
       firstName: data.firstName ?? profile.firstName,
       lastName: data.lastName ?? profile.lastName,
-      avatarUrl: data.avatarUrl ?? profile.avatarUrl,
+      avatarUrl:
+        data.avatarUrl !== undefined
+          ? sanitizeAvatarUrl(data.avatarUrl)
+          : sanitizeAvatarUrl(profile.avatarUrl),
     };
 
     if (isDemoMode) {

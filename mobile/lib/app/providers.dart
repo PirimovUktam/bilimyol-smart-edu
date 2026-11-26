@@ -1322,6 +1322,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
   int _answerGeneration = 0;
   final Set<String> _passedQuestionIds = {};
   final Map<String, LessonAnswerResult> _pendingSubmittedResults = {};
+  final Map<String, AnswerAttemptRecord> _pendingReinforcementAttempts = {};
   ReinforcementResult? _completedReinforcement;
   String? _lastLessonId;
 
@@ -1343,6 +1344,11 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     return ref.read(learnerStateNotifierProvider).valueOrNull?.id;
   }
 
+  String get _storageAccountScope {
+    final id = _accountId?.trim();
+    return (id != null && id.isNotEmpty) ? id : 'demo';
+  }
+
   String _resolveLocale(String? uiLocale) =>
       uiLocale ??
       ((ref.read(appSettingsProvider).localeCode == 'ru' ||
@@ -1357,6 +1363,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     _answerGeneration++;
     _passedQuestionIds.clear();
     _pendingSubmittedResults.clear();
+    _pendingReinforcementAttempts.clear();
     _completedReinforcement = null;
     _lastLessonId = lessonId;
     final resolvedLocale = _resolveLocale(uiLocale);
@@ -1368,10 +1375,33 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       final profile = ref.read(learnerStateNotifierProvider).valueOrNull;
       final alreadyCompleted =
           profile?.completedLessonIds.contains(lesson.id) ?? false;
+      final storage = ref.read(localStorageServiceProvider);
+      if (alreadyCompleted) {
+        await storage.clearPassedLessonQuestionIds(
+          accountScope: _storageAccountScope,
+          courseId: lesson.courseId,
+          lessonId: lesson.id,
+        );
+      } else {
+        final validStepQuestionIds = lesson.steps
+            .map((s) => s.interactiveQuestion?.id)
+            .whereType<String>()
+            .toSet();
+        final persistedPassed = await storage.getPassedLessonQuestionIds(
+          accountScope: _storageAccountScope,
+          courseId: lesson.courseId,
+          lessonId: lesson.id,
+        );
+        _passedQuestionIds.addAll(
+          persistedPassed.where(validStepQuestionIds.contains),
+        );
+      }
+      if (!mounted || generation != _lessonGeneration) return;
       final rawRestoredStep = (!lesson.requiresMastery && !alreadyCompleted)
           ? await LessonReadingPositionStore.readStepIndex(
               lesson,
               accountId: _accountId,
+              passedQuestionIds: _passedQuestionIds,
             )
           : 0;
       final restoredStep = lesson.steps.isEmpty
@@ -1433,6 +1463,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
             lesson,
             nextIndex,
             accountId: _accountId,
+            passedQuestionIds: Set<String>.from(_passedQuestionIds),
           ),
         );
       }
@@ -1487,6 +1518,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
             lesson,
             prevIndex,
             accountId: _accountId,
+            passedQuestionIds: Set<String>.from(_passedQuestionIds),
           ),
         );
       }
@@ -1516,6 +1548,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           lesson,
           targetIndex,
           accountId: _accountId,
+          passedQuestionIds: Set<String>.from(_passedQuestionIds),
         ),
       );
     }
@@ -1743,6 +1776,15 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         updatedSkillStreaks[question.skillId] = 0;
         updatedQuestionStreaks[question.id] = 0;
         _passedQuestionIds.add(question.id);
+        await ref
+            .read(localStorageServiceProvider)
+            .setPassedLessonQuestionIds(
+              accountScope: _storageAccountScope,
+              courseId: lesson.courseId,
+              lessonId: lesson.id,
+              questionIds: _passedQuestionIds,
+            );
+        if (!_isCurrent(session, step, generation)) return;
         if (completedOnFinalStep) {
           final completed = await _completeLesson(
             lesson,
@@ -1900,6 +1942,11 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         .read(learnerRepositoryProvider)
         .markLessonCompleted(lesson.id, courseId: lesson.courseId);
     if (!_isCurrent(session, step, answer)) return false;
+    await ref.read(localStorageServiceProvider).clearPassedLessonQuestionIds(
+      accountScope: _storageAccountScope,
+      courseId: lesson.courseId,
+      lessonId: lesson.id,
+    );
     await LessonReadingPositionStore.clearStepIndex(
       lesson,
       accountId: _accountId,
@@ -1957,6 +2004,14 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         skillId: skillId,
         lessonId: lesson.id,
       );
+      final reinfInputSig = selectedText != null
+          ? 'txt:${selectedText.trim()}'
+          : matchedPairs != null
+          ? 'pairs:${(matchedPairs.entries.map((e) => '${e.key}=${e.value}').toList()..sort()).join('&')}'
+          : orderedTokens != null
+          ? 'ord:${orderedTokens.join('\u0001')}'
+          : 'idx:$selectedIndex';
+      final reinfCacheKey = '$reinforcementNodeId:${targetQuestion.id}:$reinfInputSig';
       final submitReinfUseCase = ref.read(submitReinforcementUseCaseProvider);
       final result = await submitReinfUseCase.execute(
         courseId: courseId,
@@ -1967,10 +2022,17 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         selectedText: selectedText,
         matchedPairs: matchedPairs,
         orderedTokens: orderedTokens,
+        cachedAttempt: _pendingReinforcementAttempts[reinfCacheKey],
+        onAttemptGraded: (attempt) {
+          if (attempt.isCorrect) {
+            _pendingReinforcementAttempts[reinfCacheKey] = attempt;
+          }
+        },
       );
 
       if (!_isCurrent(session, step, generation)) return null;
 
+      _pendingReinforcementAttempts.remove(reinfCacheKey);
       if (result.isCorrect) _completedReinforcement = result;
       state = state.copyWith(reinforcementResult: result);
       if (!_isCurrent(session, step, generation)) return null;

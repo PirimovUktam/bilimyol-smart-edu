@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../entities/learner_profile.dart';
 import '../entities/placement_session.dart';
 import '../entities/skill_score.dart';
@@ -29,6 +31,7 @@ class AnswerAttemptRecord {
   final int? newSkillScore;
   final int xpAwarded;
   final bool alreadyProcessed;
+  final String? idempotencyKey;
 
   const AnswerAttemptRecord({
     required this.id,
@@ -45,6 +48,7 @@ class AnswerAttemptRecord {
     this.newSkillScore,
     this.xpAwarded = 0,
     this.alreadyProcessed = false,
+    this.idempotencyKey,
   });
 }
 
@@ -101,12 +105,18 @@ class DailyActivitySummary {
   final int activeMinutes;
   final int xpEarned;
   final int lessonsCompleted;
+  final int questionsAnswered;
+  final int correctAnswers;
+  final int accuracyPercent;
 
   const DailyActivitySummary({
     required this.date,
     required this.activeMinutes,
     required this.xpEarned,
     required this.lessonsCompleted,
+    this.questionsAnswered = 0,
+    this.correctAnswers = 0,
+    this.accuracyPercent = 0,
   });
 }
 
@@ -277,6 +287,9 @@ abstract class ILearnerRepository {
     required int afterScore,
     required int xpAwarded,
   });
+  static String? get currentAttemptIdempotencyKey =>
+      Zone.current[#bilimyolAttemptIdempotencyKey] as String?;
+
   Future<AnswerAttemptRecord> recordAnswerAttempt({
     required String courseId,
     required String skillId,
@@ -286,6 +299,41 @@ abstract class ILearnerRepository {
     required String selectedAnswer,
     required bool isCorrect,
   });
+
+  Future<AnswerAttemptRecord> recordAnswerAttemptIdempotent({
+    required String courseId,
+    required String skillId,
+    required String lessonId,
+    required String questionId,
+    required int selectedIndex,
+    required String selectedAnswer,
+    required bool isCorrect,
+    String? idempotencyKey,
+  }) {
+    if (idempotencyKey == null) {
+      return recordAnswerAttempt(
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lessonId,
+        questionId: questionId,
+        selectedIndex: selectedIndex,
+        selectedAnswer: selectedAnswer,
+        isCorrect: isCorrect,
+      );
+    }
+    return runZoned(
+      () => recordAnswerAttempt(
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lessonId,
+        questionId: questionId,
+        selectedIndex: selectedIndex,
+        selectedAnswer: selectedAnswer,
+        isCorrect: isCorrect,
+      ),
+      zoneValues: {#bilimyolAttemptIdempotencyKey: idempotencyKey},
+    );
+  }
 
   /// Submits an answer without accepting a client-computed correctness value.
   /// Online repositories must evaluate it against trusted server content;
@@ -298,6 +346,38 @@ abstract class ILearnerRepository {
     required int selectedIndex,
     required String selectedAnswer,
   });
+
+  Future<AnswerAttemptRecord> submitAnswerAttemptIdempotent({
+    required String courseId,
+    required String skillId,
+    required String lessonId,
+    required String questionId,
+    required int selectedIndex,
+    required String selectedAnswer,
+    String? idempotencyKey,
+  }) {
+    if (idempotencyKey == null) {
+      return submitAnswerAttempt(
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lessonId,
+        questionId: questionId,
+        selectedIndex: selectedIndex,
+        selectedAnswer: selectedAnswer,
+      );
+    }
+    return runZoned(
+      () => submitAnswerAttempt(
+        courseId: courseId,
+        skillId: skillId,
+        lessonId: lessonId,
+        questionId: questionId,
+        selectedIndex: selectedIndex,
+        selectedAnswer: selectedAnswer,
+      ),
+      zoneValues: {#bilimyolAttemptIdempotencyKey: idempotencyKey},
+    );
+  }
   Future<List<AnswerAttemptRecord>> getAnswerAttempts([int limit = 10]);
   Future<List<DailyActivitySummary>> getDailyActivity([int days = 7]);
   Future<int> addXp(int amount, [String? actionIdempotencyKey]);
