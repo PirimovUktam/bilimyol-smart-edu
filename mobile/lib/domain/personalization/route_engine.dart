@@ -85,13 +85,18 @@ class RouteEngine {
         effectiveCompletedIds.add(baseNode.id);
       }
 
+      final reinforcementId = 'reinf_${baseNode.id}';
+      final isReinforcementCompleted = completedReinforcementIds.contains(
+        reinforcementId,
+      );
+
       NodeStatus status = NodeStatus.locked;
       if (isCompleted) {
         status = NodeStatus.completed;
       } else if (!prerequisitesMet && !placementUnlocked) {
         status = NodeStatus.locked;
-      } else if (needsPractice) {
-        // Score < 50 => requires reinforcement
+      } else if (needsPractice && !isReinforcementCompleted) {
+        // Score < 50 and reinforcement not yet completed => requires reinforcement
         status = NodeStatus.reinforcement;
       } else {
         status = NodeStatus.available;
@@ -104,11 +109,8 @@ class RouteEngine {
 
       adaptedNodes.add(updatedNode);
 
-      // Attach reinforcement node for low scores (< 50) not yet completed
-      if (needsPractice && !isCompleted) {
-        final reinforcementId = 'reinf_${baseNode.id}';
-        final isReinforcementCompleted =
-            completedReinforcementIds.contains(reinforcementId);
+      // Attach active reinforcement node only while low score (< 50) is not yet remediated
+      if (needsPractice && !isCompleted && !isReinforcementCompleted) {
 
         final reinforcementNode = LearningPathNode(
           id: reinforcementId,

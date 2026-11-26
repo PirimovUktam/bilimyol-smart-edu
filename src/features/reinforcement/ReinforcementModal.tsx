@@ -129,7 +129,14 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
       ? textInput.trim()
       : isMatchMode
       ? JSON.stringify(
-          Object.fromEntries(Object.entries(matchedPairs).sort(([a], [b]) => a.localeCompare(b))),
+          Object.fromEntries(
+            Object.entries(matchedPairs)
+              .map(([leftId, rightVal]) => {
+                const rightPair = question.matchPairs?.find((p) => p.id === rightVal);
+                return [leftId, rightPair ? rightPair.right : rightVal] as const;
+              })
+              .sort(([a], [b]) => a.localeCompare(b)),
+          ),
         )
       : isOrderMode
       ? JSON.stringify(pickedTokenIndices.map((idx) => shuffledOrder[idx]?.token ?? '').filter(Boolean))

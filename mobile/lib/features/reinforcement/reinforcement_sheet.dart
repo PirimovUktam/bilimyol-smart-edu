@@ -19,6 +19,13 @@ class ReinforcementSheet extends StatefulWidget {
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
   })? onSubmitRich;
+  final Future<ReinforcementResult?> Function({
+    required int selectedIndex,
+    String? selectedText,
+    Map<String, String>? matchedPairs,
+    List<String>? orderedTokens,
+    List<String>? checkedCriteriaIds,
+  })? onSubmitRichWithRubric;
   final VoidCallback onGoToDashboard;
 
   const ReinforcementSheet({
@@ -26,6 +33,7 @@ class ReinforcementSheet extends StatefulWidget {
     required this.question,
     required this.onSubmit,
     this.onSubmitRich,
+    this.onSubmitRichWithRubric,
     required this.onGoToDashboard,
   });
 
@@ -700,67 +708,96 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
 
                 if (_result != null && !_result!.isCorrect) ...[
                   const SizedBox(height: 6),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: c.errorSoft,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: c.error.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (q.usesOptionSelection) ...[
-                          if (_selectedOption != null &&
-                              _selectedOption! >= 0 &&
-                              _selectedOption! < q.options.length)
-                            Text(
-                              s.youSelected(q.options[_selectedOption!]),
-                              style: AppTypography.ui(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: c.errorText,
+                  Builder(
+                    builder: (context) {
+                      final serverCorrect = (_result?.correctOption ?? '')
+                          .trim();
+                      final effectiveCorrectText = correctText.isNotEmpty
+                          ? correctText
+                          : serverCorrect;
+                      final orderCorrectText = q.correctIndex >= 0
+                          ? q.orderedTokens.join(' ')
+                          : serverCorrect;
+                      final localExplanation = q
+                          .localizedExplanation(lang)
+                          .trim();
+                      final effectiveExplanation = localExplanation.isNotEmpty
+                          ? localExplanation
+                          : (_result?.explanation ?? '').trim();
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: c.errorSoft,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: c.error.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (q.usesOptionSelection) ...[
+                              if (_selectedOption != null &&
+                                  _selectedOption! >= 0 &&
+                                  _selectedOption! < q.options.length)
+                                Text(
+                                  s.youSelected(q.options[_selectedOption!]),
+                                  style: AppTypography.ui(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: c.errorText,
+                                  ),
+                                ),
+                              if (effectiveCorrectText.isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  s.correctAnswerIs(effectiveCorrectText),
+                                  style: AppTypography.ui(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: c.successText,
+                                  ),
+                                ),
+                              ],
+                            ] else if (isOrder &&
+                                orderCorrectText.isNotEmpty) ...[
+                              Text(
+                                isRu
+                                    ? 'Правильный порядок: $orderCorrectText'
+                                    : 'To‘g‘ri tartib: $orderCorrectText',
+                                style: AppTypography.ui(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.successText,
+                                ),
                               ),
-                            ),
-                          if (correctText.isNotEmpty) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              s.correctAnswerIs(correctText),
-                              style: AppTypography.ui(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w800,
-                                color: c.successText,
+                            ] else if ((isText || isWordMatch) &&
+                                serverCorrect.isNotEmpty) ...[
+                              Text(
+                                s.correctAnswerIs(serverCorrect),
+                                style: AppTypography.ui(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: c.successText,
+                                ),
                               ),
-                            ),
+                            ],
+                            if (effectiveExplanation.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                effectiveExplanation,
+                                style: AppTypography.ui(
+                                  fontSize: 12.5,
+                                  height: 1.4,
+                                  color: c.graphite,
+                                ),
+                              ),
+                            ],
                           ],
-                        ] else if (isOrder) ...[
-                          Text(
-                            isRu
-                                ? 'Правильный порядок: ${q.orderedTokens.join(' ')}'
-                                : 'To‘g‘ri tartib: ${q.orderedTokens.join(' ')}',
-                            style: AppTypography.ui(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              color: c.successText,
-                            ),
-                          ),
-                        ],
-                        if (q.localizedExplanation(lang).trim().isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            q.localizedExplanation(lang),
-                            style: AppTypography.ui(
-                              fontSize: 12.5,
-                              height: 1.4,
-                              color: c.graphite,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -776,7 +813,21 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                           setState(() => _isSubmitting = true);
                           ReinforcementResult? res;
                           try {
-                            if (widget.onSubmitRich != null) {
+                            if (widget.onSubmitRichWithRubric != null) {
+                              res = await widget.onSubmitRichWithRubric!(
+                                selectedIndex: _selectedOption ?? 0,
+                                selectedText: (isText || isSelfAssessed)
+                                    ? _textController.text.trim()
+                                    : null,
+                                matchedPairs: isWordMatch
+                                    ? Map<String, String>.from(_matchedPairs)
+                                    : null,
+                                orderedTokens: isOrder ? _selectedTokens : null,
+                                checkedCriteriaIds: isSelfAssessed
+                                    ? (_checkedRubricIds.toList()..sort())
+                                    : null,
+                              );
+                            } else if (widget.onSubmitRich != null) {
                               res = await widget.onSubmitRich!(
                                 selectedIndex: _selectedOption ?? 0,
                                 selectedText: (isText || isSelfAssessed)

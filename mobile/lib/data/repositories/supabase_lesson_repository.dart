@@ -11,6 +11,8 @@ import 'in_memory_lesson_repository.dart';
 
 /// Reads only learner-safe lesson views when the remote backend is configured.
 class SupabaseLessonRepository implements ILessonRepository {
+  static const String roadmapNodesSelectColumns = '*';
+
   final InMemoryLessonRepository _fallback = InMemoryLessonRepository();
 
   SupabaseClient _requireClient() {
@@ -127,10 +129,14 @@ class SupabaseLessonRepository implements ILessonRepository {
     final mode = _questionMode(
       _firstNonEmpty(raw['mode'], raw['questionType'], raw['question_type']),
     );
+    final resolvedSkillId = _string(
+      _firstNonEmpty(raw['skillId'], raw['skill_id']),
+      skillId,
+    );
     return Question(
       id: _string(raw['id']),
       courseId: courseId,
-      skillId: skillId,
+      skillId: resolvedSkillId,
       skillDomain:
           raw['skillDomain'] as String? ?? raw['skill_domain'] as String?,
       cefrLevel: raw['cefrLevel'] as String? ?? raw['cefr_level'] as String?,
@@ -429,6 +435,9 @@ class SupabaseLessonRepository implements ILessonRepository {
       officialCefrDisclaimerRu:
           raw['officialCefrDisclaimerRu'] as String? ??
           raw['official_cefr_disclaimer_ru'] as String?,
+      pedagogy17: raw['pedagogy17'] is Map
+          ? Map<String, dynamic>.from(raw['pedagogy17'] as Map)
+          : null,
       steps: steps,
       reinforcementExercise: reinforcement,
       alternateExercise: rawAlternate is Map
@@ -438,9 +447,14 @@ class SupabaseLessonRepository implements ILessonRepository {
               skillId: skillId,
             )
           : null,
-      requiresMastery: raw['steps'] is List && (raw['steps'] as List).whereType<Map>().any(
-        (step) => step['masteryCheckpoint'] == 'application' || step['masteryCheckpoint'] == 'retrieval',
-      ),
+      requiresMastery: raw['requires_mastery'] == true ||
+          raw['requiresMastery'] == true ||
+          (raw['steps'] is List &&
+              (raw['steps'] as List).whereType<Map>().any(
+                (step) =>
+                    step['masteryCheckpoint'] == 'application' ||
+                    step['masteryCheckpoint'] == 'retrieval',
+              )),
     );
   }
 
@@ -625,11 +639,7 @@ class SupabaseLessonRepository implements ILessonRepository {
     await _requireAuthenticated(client);
     final Object? rows = courseId == mathMasteryCourse ? await client.rpc('get_math_progression') : await client
         .from('roadmap_nodes')
-        .select(
-          'id, course_id, skill_id, title, description, prerequisites, '
-          'required_score, is_reinforcement, target_lesson_id, '
-          'estimated_minutes, order_index, is_active',
-        )
+        .select(roadmapNodesSelectColumns)
         .eq('course_id', courseId)
         .eq('is_active', true)
         .order('order_index');

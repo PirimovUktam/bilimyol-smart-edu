@@ -81,10 +81,15 @@ const sanitizeQuestion = (raw: any, courseId: string, skillId: string): Question
     ? (raw.dialogueContext || raw.dialogue_context).filter((line: unknown): line is string => typeof line === 'string')
     : undefined;
 
+  const resolvedSkillId =
+    typeof (raw.skillId || raw.skill_id) === 'string' && (raw.skillId || raw.skill_id).trim().length > 0
+      ? (raw.skillId || raw.skill_id).trim()
+      : skillId;
+
   return {
     id: raw.id,
     courseId,
-    skillId,
+    skillId: resolvedSkillId,
     ...(typeof (raw.skillDomain || raw.skill_domain) === 'string'
       ? { skillDomain: raw.skillDomain || raw.skill_domain }
       : {}),
@@ -259,8 +264,15 @@ export function mapLearnerLesson(row: any): Lesson {
     estimatedMinutes: row.estimated_minutes || 15,
     summary: row.summary || '',
     ...(typeof (row.summary_ru || row.summaryRu) === 'string' ? { summaryRu: row.summary_ru || row.summaryRu } : {}),
+    ...(typeof (row.official_cefr_disclaimer_uz || row.officialCefrDisclaimerUz) === 'string'
+      ? { officialCefrDisclaimerUz: row.official_cefr_disclaimer_uz || row.officialCefrDisclaimerUz }
+      : {}),
+    ...(typeof (row.official_cefr_disclaimer_ru || row.officialCefrDisclaimerRu) === 'string'
+      ? { officialCefrDisclaimerRu: row.official_cefr_disclaimer_ru || row.officialCefrDisclaimerRu }
+      : {}),
+    ...(row.pedagogy17 && typeof row.pedagogy17 === 'object' ? { pedagogy17: row.pedagogy17 } : {}),
     steps,
-    requiresMastery: steps.some((step) => step.masteryCheckpoint),
+    requiresMastery: Boolean(row.requires_mastery || row.requiresMastery || steps.some((step) => step.masteryCheckpoint)),
     reinforcementExercise,
     ...(alternateExercise ? { alternateExercise } : {}),
     isAiGenerated: Boolean(row.generation_model && row.generation_model !== 'deterministic-fallback'),

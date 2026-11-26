@@ -1,14 +1,14 @@
 # BilimYo‘l Smart Edu — Cumulative Engineering Remediation Progress Tracker
 
 - **Repository:** `PirimovUktam/bilimyol-smart-edu`
-- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_1_b1_core_learning_integrity` (`fix/wave-1-b1-core-learning-integrity`, continuing from `fix/wave-0-b4-release-ci-tests` @ `1845f5096e0df4b0cf3c0603ac1184866905f6d2`)
+- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_1_b2_cefr_sql_grading_parity` (`fix/wave-1-b2-cefr-sql-grading-parity`, continuing from `fix/wave-1-b1-core-learning-integrity` @ `5376a0cf4f0cef005c7e28ab13bf518318e6fed8`)
 - **Baseline Audit Commit (`READ-ONLY`):** `5c22343b2246dedcee7866cd11931c48346cf65c`
 - **Baseline Composite Score (Preserved):** **`49.28 / 100` (`NO-GO`)** — *score is NOT inflated before full cross-wave remediation + staging/production verification*
-- **Latest Executed Batch:** **Wave 1 · Batch `W1-B1`** (`FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23` `FIXED_LOCAL`; `FIX-P0-26` remains `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` from `W0-B4`)
+- **Latest Executed Batch:** **Wave 1 · Batch `W1-B2`** (`FIX-P0-01`, `FIX-P1-40` `FIXED_LOCAL`; `FIX-P0-26` remains `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` from `W0-B4`)
 - **Status Taxonomy:** `OPEN` | `IN_PROGRESS` | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `BLOCKED`
 
 > [!NOTE]
-> Completed Wave 0 & Wave 1 (`W1-B1`) items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`, `FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23`) are marked strictly **`FIXED_LOCAL`** based on local test, build, disposable PostgreSQL `17.11`, Deno, Flutter, Android Gradle, and E2E verification. `FIX-P0-26` remains **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) until real production keystore and CI secrets are provisioned. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
+> Completed Wave 0 & Wave 1 (`W1-B1`, `W1-B2`) items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`, `FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23`, `FIX-P0-01`, `FIX-P1-40`) are marked strictly **`FIXED_LOCAL`** based on local test, build, disposable PostgreSQL `17.11`, Deno, Flutter, Android Gradle, and E2E verification. `FIX-P0-26` remains **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) until real production keystore and CI secrets are provisioned. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
 
 ---
 
@@ -16,11 +16,11 @@
 
 | Original Severity | Total Findings | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `OPEN` | `BLOCKED` |
 |---|---:|---:|---:|---:|---:|---:|
-| `P0` | 28 | 5 | 0 | 0 | 22 | 1 |
-| `P1` | 55 | 3 | 0 | 0 | 52 | 0 |
+| `P0` | 28 | 6 | 0 | 0 | 21 | 1 |
+| `P1` | 55 | 4 | 0 | 0 | 51 | 0 |
 | `P2` | 30 | 3 | 0 | 0 | 27 | 0 |
 | `P3` | 8 | 0 | 0 | 0 | 8 | 0 |
-| **Total** | **121** | **11** | **0** | **0** | **109** | **1** |
+| **Total** | **121** | **13** | **0** | **0** | **107** | **1** |
 
 ---
 
@@ -29,13 +29,13 @@
 | Wave | Batches (`FIXED_LOCAL` / Total) | Total Findings | `FIXED_LOCAL` | `OPEN` | `BLOCKED` | Status |
 |---|---|---:|---:|---:|---:|---|
 | **Wave 0** | `W0-B1` (3/3), `W0-B2` (1/1), `W0-B3` (3/3), `W0-B4` (1/2, 1 `BLOCKED`) | 9 | 8 | 0 | 1 | Wave 0 Local Hardening Complete (`FIX-P0-26` Real Signing `BLOCKED` on Secrets) |
-| **Wave 1** | `W1-B1` (3/3), `W1-B2` (0/2), `W1-B3` (0/8), `W1-B4` (0/7) | 20 | 3 | 17 | 0 | In Progress (`W1-B1` `FIXED_LOCAL`; `W1-B2` Next) |
+| **Wave 1** | `W1-B1` (3/3), `W1-B2` (2/2), `W1-B3` (0/8), `W1-B4` (0/7) | 20 | 5 | 15 | 0 | In Progress (`W1-B1`, `W1-B2` `FIXED_LOCAL`; `W1-B3` Next) |
 | **Wave 2** | `W2-B1` (0/4), `W2-B2` (0/5), `W2-B3` (0/6), `W2-B4` (0/9) | 24 | 0 | 24 | 0 | Not Started |
 | **Wave 3** | `W3-B1` (0/5), `W3-B2` (0/5), `W3-B3` (0/4) | 14 | 0 | 14 | 0 | Not Started |
 | **Wave 4** | `W4-B1` (0/4), `W4-B2` (0/6), `W4-B3` (0/6) | 16 | 0 | 16 | 0 | Not Started |
 | **Wave 5** | `W5-B1` (0/4), `W5-B2` (0/7), `W5-B3` (0/6), `W5-B4` (0/5) | 22 | 0 | 22 | 0 | Not Started |
 | **Wave 6** | `W6-B1` (0/3), `W6-B2` (0/1), `W6-B3` (0/6), `W6-B4` (0/6) | 16 | 0 | 16 | 0 | Not Started |
-| **Total** | **26 Atomic Batches** | **121** | **11** | **109** | **1** | **11 / 121 Fixed Locally, 1 / 121 Blocked** |
+| **Total** | **26 Atomic Batches** | **121** | **13** | **107** | **1** | **13 / 121 Fixed Locally, 1 / 121 Blocked** |
 
 ---
 
@@ -43,7 +43,7 @@
 
 | Finding ID | Original Severity | Assigned Wave/Batch | Current Status | Fix Commit | Regression Evidence | Reviewer Verdict | Remaining Verification |
 |---|---|---|---|---|---|---|---|
-| `FIX-P0-01` | `P0` | `W1-B2` | `OPEN` | — | — | — | Implement in `W1-B2`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P0-01` | `P0` | `W1-B2` | `FIXED_LOCAL` | `fix/wave-1-b2-cefr-sql-grading-parity` | PG 17.11 migration `20261127000100` (`33` CEFR A1-B1 lessons + `31` nodes seeded with `SEED_LESSONS` option permutation, `learner_lessons` `unlocked_math_lesson_ids` single-CTE rewrite `0` `OFFSET 0`, `sanitize_learner_content` stripping `acceptedAnswers`/`explanationRu`/`mistakeFeedbackByOption` & scrambling `orderedTokens`/`matchPairs`, 9-mode + `alternate_exercise` server grading; `2x` idempotency + `11/11` SQL suites x2 postures = `22/22` runs); Web `SupabaseLessonRepository.ts` (`W1B2CefrSqlAndGradingParity.test.tsx` 4/4, `61/61` Vitest, `364/364` tests); Mobile `supabase_lesson_repository.dart` `select('*')` (`w1_b2_cefr_sql_and_grading_parity_test.dart` 4/4, `532` passed / `2` skips) | Pending independent review | Staging & production Supabase migration `20261127000100` apply + live end-to-end verification (`UNVERIFIED`) |
 | `FIX-P0-02` | `P0` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-03` | `P0` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-04` | `P0` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
@@ -110,7 +110,7 @@
 | `FIX-P1-37` | `P1` | `W4-B1` | `OPEN` | — | — | — | Implement in `W4-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-38` | `P1` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-39` | `P1` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-40` | `P1` | `W1-B2` | `OPEN` | — | — | — | Implement in `W1-B2`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-40` | `P1` | `W1-B2` | `FIXED_LOCAL` | `fix/wave-1-b2-cefr-sql-grading-parity` | Unified JSON `p_selected_text` wire format across Web (`useLessonStore.ts`, `ReinforcementModal.tsx`) & Flutter (`SubmitLessonAnswerUseCase`, `SubmitReinforcementUseCase`); multi-skill step & `alternate_exercise` completion in `public.complete_lesson`; non-MCQ `tutor_mistake_context` + Mobile `ReinforcementResult` / `ReinforcementSheet` feedback; `<28% -> >=50%` clearance in `complete_reinforcement` & `RouteEngine` (`22/22` PG17 SQL runs, `61/61` Vitest, `532` Flutter tests incl. `T3.11`, `test:e2e` 0) | Pending independent review | Staging & production cross-platform RPC & reinforcement verification (`UNVERIFIED`) |
 | `FIX-P1-41` | `P1` | `W4-B3` | `OPEN` | — | — | — | Implement in `W4-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-42` | `P1` | `W4-B1` | `OPEN` | — | — | — | Implement in `W4-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-43` | `P1` | `W6-B1` | `OPEN` | — | — | — | Implement in `W6-B1`, pass TDD/regression gates, then verify in staging & production |
@@ -194,3 +194,17 @@
   - **Web & Deno:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors), `npm test` (`60/60` files, `360/360` tests), `npm run build` (`2382` modules, `0` warnings), `npm run test:e2e` (`0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`0`).
   - **Flutter:** `flutter analyze --no-pub --fatal-infos` (`0`), `flutter test --no-pub test/features/w1_b1_core_learning_integrity_test.dart test/features/lesson_session_persistence_test.dart` (`18/18` [`7/7` `W1-B1` + `11/11` session persistence]), `flutter test --no-pub` (`528` passed, `2` env-gated skips, `0` failed).
 - **Next Step:** Stop after `W1-B1` report; await review before `W1-B2`.
+
+---
+
+## 6. `W1-B2` Batch Execution Summary (`fix/wave-1-b2-cefr-sql-grading-parity` — Committed Local Remediation)
+
+- **Report:** [W1-B2_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b2_cefr_sql_grading_parity/docs/implementation/wave-1/W1-B2_REPORT.md) | **Plan:** [W1-B2_IMPLEMENTATION_PLAN.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b2_cefr_sql_grading_parity/docs/implementation/wave-1/W1-B2_IMPLEMENTATION_PLAN.md) | **Audit Mirror:** [W1-B2_EXECUTION_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b2_cefr_sql_grading_parity/docs/hackathon-audit/W1-B2_EXECUTION_REPORT.md)
+- **Findings Resolved (`FIXED_LOCAL`):**
+  - **`FIX-P0-01` (`FIXED_LOCAL`):** Seeded all `33` canonical CEFR A1–B1 English `lessons` and `31` `roadmap_nodes` into PostgreSQL (`20261127000100`) with deterministic `SEED_LESSONS` option permutation; rewrote `public.learner_lessons` to a single `public.unlocked_math_lesson_ids()` CTE (`0` `OFFSET 0`, `0` per-row `can_open_math_lesson` lateral loops, Coupling #2); hardened `public.sanitize_learner_content(JSONB)` against `acceptedAnswers`, `explanationRu`, `mistakeFeedbackByOption`, `orderedTokens`, and `matchPairs` leaks; extended `bilimyol_private.submit_answer_attempt` to grade all `9` question modes + `alternate_exercise`; selected all `26` columns in Mobile `SupabaseLessonRepository.getBaseRoadmapNodes` (`select('*')`); preserved per-question `skillId`, CEFR disclaimers, and `pedagogy17` across Web & Mobile; and updated owned bug-codifying test #12 (`supabase/tests/beginner_learning_start_regression.sql:29-34,50-53`).
+  - **`FIX-P1-40` (`FIXED_LOCAL`):** Standardized `p_selected_text` JSON wire format across Web and Flutter (`sentence_order` JSON token array, key-sorted `word_match` `{"<leftId>":"<selectedRightText>"}`, `self_assessed` `{"response":"...","criteria":[...]}` with `selectedIndex: 0`); added multi-skill step & `alternate_exercise` completion support in `public.complete_lesson`; extended `public.tutor_mistake_context` for non-MCQ wrong-answer feedback and surfaced `correctOption` & `explanation` in Mobile `ReinforcementResult` / `ReinforcementSheet`; and cleared `<28%` stuck `reinforcement` loops via `GREATEST(50, ...)` in `public.complete_reinforcement` and `!isReinforcementCompleted` in Web/Mobile `RouteEngine`.
+- **Verification Summary:**
+  - **PostgreSQL `17.11` (Disposable Local):** `30/30` migrations + `2x` idempotency + `EXPLAIN` single-CTE check on `Cloud-Default` & `Legacy-Grant`; `11/11` SQL suites (`22/22` runs, `EXIT=0`).
+  - **Web & Deno:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors), `npm test` (`61/61` files, `364/364` tests), `npm run build` (`2382` modules, `0` warnings), `npm run test:e2e` (`0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`0`, `4/4` files).
+  - **Flutter:** `flutter analyze --no-pub --fatal-infos` (`0`), `flutter test --no-pub test/features/w1_b2_cefr_sql_and_grading_parity_test.dart` (`4/4`), `flutter test --no-pub` (`532` passed, `2` env-gated skips, `0` failed).
+- **Next Step:** Stop after `W1-B2` report; await review before `W1-B3`.

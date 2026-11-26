@@ -2088,11 +2088,12 @@ class _InteractiveLessonScreenState
             useAlternate: useAlternate,
           );
         },
-        onSubmitRich: ({
+        onSubmitRichWithRubric: ({
           required int selectedIndex,
           String? selectedText,
           Map<String, String>? matchedPairs,
           List<String>? orderedTokens,
+          List<String>? checkedCriteriaIds,
         }) async {
           if (!context.mounted ||
               !identical(
@@ -2108,6 +2109,7 @@ class _InteractiveLessonScreenState
             selectedText: selectedText,
             matchedPairs: matchedPairs,
             orderedTokens: orderedTokens,
+            checkedCriteriaIds: checkedCriteriaIds,
             useAlternate: useAlternate,
           );
         },

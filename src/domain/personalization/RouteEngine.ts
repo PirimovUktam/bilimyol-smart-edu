@@ -50,6 +50,9 @@ export class RouteEngine {
       const isCompleted = completedNodeIds.includes(baseNode.id);
       const isPlacementUnlocked = placementUnlockedIds.has(baseNode.id);
 
+      const reinforcementId = `reinf_${baseNode.id}`;
+      const isReinforcementCompleted = completedReinforcementIds.includes(reinforcementId);
+
       // Check prerequisites
       const prerequisitesMet =
         baseNode.prerequisites.every((prereqId) => completedNodeIds.includes(prereqId)) ||
@@ -63,8 +66,8 @@ export class RouteEngine {
         status = 'locked';
       } else {
         // Prerequisites are met
-        if (needsPractice) {
-          // Score < 50 => requires reinforcement
+        if (needsPractice && !isReinforcementCompleted) {
+          // Score < 50 and reinforcement not yet completed => requires reinforcement
           status = 'reinforcement';
         } else {
           status = 'available';
@@ -88,8 +91,6 @@ export class RouteEngine {
       adaptedNodes.push(updatedNode);
 
       // If the node is in reinforcement or has low score, we attach reinforcement flow
-      const reinforcementId = `reinf_${baseNode.id}`;
-      const isReinforcementCompleted = completedReinforcementIds.includes(reinforcementId);
       if ((needsPractice && !isCompleted) || isReinforcementCompleted) {
 
         const reinforcementNode: LearningPathNode = {

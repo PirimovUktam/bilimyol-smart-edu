@@ -175,6 +175,7 @@ class Lesson {
   final String? summaryRu;
   final String? officialCefrDisclaimerUz;
   final String? officialCefrDisclaimerRu;
+  final Map<String, dynamic>? pedagogy17;
   final List<LessonStep> steps;
   final Question reinforcementExercise;
   final Question? alternateExercise;
@@ -199,6 +200,7 @@ class Lesson {
     this.summaryRu,
     this.officialCefrDisclaimerUz,
     this.officialCefrDisclaimerRu,
+    this.pedagogy17,
     required this.steps,
     required this.reinforcementExercise,
     this.alternateExercise,

@@ -223,7 +223,10 @@ class Question {
     }
     for (final pair in matchPairs) {
       final selected = selectedRightByPairId[pair.id];
-      if (selected == null || selected.trim() != pair.right.trim()) {
+      if (selected == null) return false;
+      final normalizedSelected = normalizeTextAnswer(selected);
+      if (normalizedSelected.isEmpty ||
+          normalizedSelected != normalizeTextAnswer(pair.right)) {
         return false;
       }
     }
@@ -242,10 +245,13 @@ class Question {
       }
       if (exact) return true;
     }
-    if (acceptedAnswers.isNotEmpty) {
-      return isTextAnswerCorrect(submittedTokens.join(' '));
+    final joined = submittedTokens.join(' ');
+    if (acceptedAnswers.isNotEmpty && isTextAnswerCorrect(joined)) {
+      return true;
     }
-    return false;
+    final normalizedJoined = normalizeTextAnswer(joined);
+    return normalizedJoined.isNotEmpty &&
+        normalizedJoined == normalizeTextAnswer(orderedTokens.join(' '));
   }
 
   String localizedText(String uiLocale) {

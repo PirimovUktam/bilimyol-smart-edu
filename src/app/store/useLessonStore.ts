@@ -838,12 +838,18 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       return null;
     }
 
-    const serializedAnswer = qType === 'word_match'
-      ? JSON.stringify(
-          Object.fromEntries(
-            Object.entries(payload.matchPairs ?? {}).sort(([a], [b]) => a.localeCompare(b)),
-          ),
+    const resolvedMatchPairs = qType === 'word_match'
+      ? Object.fromEntries(
+          Object.entries(payload.matchPairs ?? {})
+            .map(([leftId, rightVal]) => {
+              const rightPair = question.matchPairs?.find((p) => p.id === rightVal);
+              return [leftId, rightPair ? rightPair.right : rightVal] as const;
+            })
+            .sort(([a], [b]) => a.localeCompare(b)),
         )
+      : undefined;
+    const serializedAnswer = qType === 'word_match'
+      ? JSON.stringify(resolvedMatchPairs ?? {})
       : JSON.stringify(payload.orderedTokens ?? []);
     const displayAnswer = qType === 'word_match'
       ? Object.entries(payload.matchPairs ?? {})
@@ -904,7 +910,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           {
             serializedAnswer,
             displayAnswer,
-            matchPairs: payload.matchPairs,
+            matchPairs: resolvedMatchPairs ?? payload.matchPairs,
             orderedTokens: payload.orderedTokens,
           },
           currentLesson.id,

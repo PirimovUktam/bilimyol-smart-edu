@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import '../../core/utils/attempt_uuid.dart';
 import '../entities/question.dart';
@@ -32,6 +33,7 @@ class SubmitLessonAnswerUseCase {
     String? selectedText,
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
+    List<String>? checkedCriteriaIds,
     String? idempotencyKey,
     String uiLocale = 'uz',
   }) async {
@@ -74,7 +76,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: isCorrect,
         selectedOption: answerText,
-        correctOption: '',
+        correctOption: attempt.correctOption ?? '',
         explanation: isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -87,7 +89,8 @@ class SubmitLessonAnswerUseCase {
       if (pairs.isEmpty) {
         throw ArgumentError.value(matchedPairs, 'matchedPairs');
       }
-      final serialized = jsonEncode(pairs);
+      final sortedPairs = SplayTreeMap<String, String>.from(pairs);
+      final serialized = jsonEncode(sortedPairs);
       final summary = pairs.entries
           .map((e) {
             final left = question.matchPairs
@@ -123,7 +126,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: summary.isEmpty ? '—' : summary,
-        correctOption: '',
+        correctOption: attempt.correctOption ?? '',
         explanation: attempt.isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -139,6 +142,7 @@ class SubmitLessonAnswerUseCase {
         throw ArgumentError.value(orderedTokens, 'orderedTokens');
       }
       final joined = tokens.join(' ').trim();
+      final serialized = jsonEncode(tokens);
       final isLocallyCorrect = question.isSentenceOrderCorrect(tokens);
       final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
@@ -146,7 +150,7 @@ class SubmitLessonAnswerUseCase {
         lessonId: lessonId,
         questionId: question.id,
         selectedIndex: 0,
-        selectedAnswer: joined,
+        selectedAnswer: serialized,
         isCorrect: isLocallyCorrect,
         idempotencyKey: resolvedKey,
       );
@@ -165,7 +169,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: joined.isEmpty ? '—' : joined,
-        correctOption: '',
+        correctOption: attempt.correctOption ?? '',
         explanation: attempt.isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -177,20 +181,26 @@ class SubmitLessonAnswerUseCase {
 
     if (question.isSelfAssessed) {
       final responseText = (selectedText ?? '').trim();
+      final sortedCriteria = [...(checkedCriteriaIds ?? const <String>[])]
+        ..sort();
+      final serialized = jsonEncode({
+        'response': responseText,
+        'criteria': sortedCriteria,
+      });
       final attempt = await learnerRepository.recordAnswerAttemptIdempotent(
         courseId: question.courseId,
         skillId: question.skillId,
         lessonId: lessonId,
         questionId: question.id,
         selectedIndex: 0,
-        selectedAnswer: responseText,
+        selectedAnswer: serialized,
         isCorrect: responseText.isNotEmpty,
         idempotencyKey: resolvedKey,
       );
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: responseText,
-        correctOption: '',
+        correctOption: attempt.correctOption ?? '',
         explanation: attempt.explanation ?? question.localizedExplanation(uiLocale),
       );
     }

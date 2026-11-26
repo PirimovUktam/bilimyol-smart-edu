@@ -1925,7 +1925,12 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         ? state.selectedOptionIndex!
         : 0;
     final selectedText = isTextOrSelf ? state.textAnswer.trim() : null;
-    final inputKey = isTextOrSelf
+    final checkedCriteriaSnapshot = question.isSelfAssessed
+        ? (state.checkedRubricIds.toList()..sort())
+        : null;
+    final inputKey = question.isSelfAssessed
+        ? '$selectedText|${(checkedCriteriaSnapshot ?? const <String>[]).join(',')}'
+        : isTextOrSelf
         ? selectedText!
         : isWordMatch
         ? (state.selectedMatchPairs.entries
@@ -2010,6 +2015,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           selectedText: selectedText,
           matchedPairs: matchedPairsSnapshot,
           orderedTokens: orderedTokensSnapshot,
+          checkedCriteriaIds: checkedCriteriaSnapshot,
           idempotencyKey: attemptId,
           uiLocale: resolvedLocale,
         );
@@ -2279,6 +2285,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     String? selectedText,
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
+    List<String>? checkedCriteriaIds,
     bool useAlternate = false,
   }) async {
     if (_isLoggedOutRemote) return null;
@@ -2376,6 +2383,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         selectedText: selectedText,
         matchedPairs: matchedPairs,
         orderedTokens: orderedTokens,
+        checkedCriteriaIds: checkedCriteriaIds,
         idempotencyKey: attemptId,
         cachedAttempt: cachedAttempt,
         onAttemptGraded: (attempt) {

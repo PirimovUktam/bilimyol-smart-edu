@@ -881,7 +881,20 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       }
     }
     bool hasValidPayload(Question candidate) {
-      if (candidate.usesTextEvaluation || candidate.isSelfAssessed) {
+      if (candidate.isSelfAssessed) {
+        final trimmed = selectedAnswer.trim();
+        if (trimmed.startsWith('{')) {
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map) {
+              return (decoded['response']?.toString().trim().isNotEmpty ??
+                  false);
+            }
+          } catch (_) {}
+        }
+        return trimmed.isNotEmpty;
+      }
+      if (candidate.usesTextEvaluation) {
         return selectedAnswer.trim().isNotEmpty;
       }
       if (candidate.mode == QuestionMode.wordMatch) {
@@ -919,18 +932,39 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         return false;
       }
       if (candidate.mode == QuestionMode.sentenceOrder) {
+        final trimmed = selectedAnswer.trim();
+        if (trimmed.startsWith('[')) {
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is List) {
+              return candidate.isSentenceOrderCorrect(
+                decoded.map((e) => e.toString()).toList(growable: false),
+              );
+            }
+          } catch (_) {}
+        }
         return candidate.isTextAnswerCorrect(selectedAnswer) ||
-            candidate.orderedTokens.join(' ').trim() == selectedAnswer.trim();
+            candidate.orderedTokens.join(' ').trim() == trimmed;
       }
       if (candidate.isSelfAssessed) {
-        return selectedAnswer.trim().isNotEmpty;
+        final trimmed = selectedAnswer.trim();
+        if (trimmed.startsWith('{')) {
+          try {
+            final decoded = jsonDecode(trimmed);
+            if (decoded is Map) {
+              return (decoded['response']?.toString().trim().isNotEmpty ??
+                  false);
+            }
+          } catch (_) {}
+        }
+        return trimmed.isNotEmpty;
       }
       return selectedIndex == candidate.correctIndex;
     }
 
     final isCorrect = evaluateAnswer(question);
 
-    return recordAnswerAttempt(
+    final recorded = await recordAnswerAttempt(
       courseId: courseId,
       skillId: skillId,
       lessonId: lessonId,
@@ -938,6 +972,47 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       selectedIndex: selectedIndex,
       selectedAnswer: selectedAnswer,
       isCorrect: isCorrect,
+    );
+    String? resolvedCorrectOption;
+    if (!isCorrect) {
+      if (question.usesOptionSelection &&
+          question.correctIndex >= 0 &&
+          question.correctIndex < question.options.length) {
+        resolvedCorrectOption = question.options[question.correctIndex];
+      } else if (question.usesTextEvaluation &&
+          question.acceptedAnswers.isNotEmpty) {
+        resolvedCorrectOption = question.acceptedAnswers.first;
+      } else if (question.mode == QuestionMode.sentenceOrder &&
+          question.orderedTokens.isNotEmpty) {
+        resolvedCorrectOption = question.orderedTokens.join(' ');
+      } else if (question.mode == QuestionMode.wordMatch &&
+          question.matchPairs.isNotEmpty) {
+        resolvedCorrectOption = question.matchPairs
+            .map((p) => '${p.left} → ${p.right}')
+            .join(', ');
+      }
+    }
+    final resolvedExplanation = isCorrect
+        ? (question.explanation.isNotEmpty ? question.explanation : null)
+        : (question.explanation.isNotEmpty
+              ? question.explanation
+              : question.wrongFeedback);
+    return AnswerAttemptRecord(
+      id: recorded.id,
+      courseId: recorded.courseId,
+      skillId: recorded.skillId,
+      lessonId: recorded.lessonId,
+      questionId: recorded.questionId,
+      selectedIndex: recorded.selectedIndex,
+      selectedAnswer: recorded.selectedAnswer,
+      isCorrect: recorded.isCorrect,
+      timestamp: recorded.timestamp,
+      correctOption: resolvedCorrectOption,
+      explanation: resolvedExplanation,
+      newSkillScore: recorded.newSkillScore,
+      xpAwarded: recorded.xpAwarded,
+      alreadyProcessed: recorded.alreadyProcessed,
+      idempotencyKey: recorded.idempotencyKey,
     );
   }
 

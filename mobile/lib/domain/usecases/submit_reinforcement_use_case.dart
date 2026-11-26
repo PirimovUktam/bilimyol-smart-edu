@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import '../../core/utils/attempt_uuid.dart';
@@ -16,6 +17,8 @@ class ReinforcementResult {
   final int newScore;
   final int xpAwarded;
   final LearningPath updatedRoadmap;
+  final String? correctOption;
+  final String? explanation;
 
   const ReinforcementResult({
     required this.isCorrect,
@@ -23,6 +26,8 @@ class ReinforcementResult {
     required this.newScore,
     required this.xpAwarded,
     required this.updatedRoadmap,
+    this.correctOption,
+    this.explanation,
   });
 }
 
@@ -44,6 +49,7 @@ class SubmitReinforcementUseCase {
     String? selectedText,
     Map<String, String>? matchedPairs,
     List<String>? orderedTokens,
+    List<String>? checkedCriteriaIds,
     String? idempotencyKey,
     AnswerAttemptRecord? cachedAttempt,
     void Function(AnswerAttemptRecord)? onAttemptGraded,
@@ -58,8 +64,17 @@ class SubmitReinforcementUseCase {
     }
     late final String serializedAnswer;
     late final int effectiveIndex;
-    if (reinforcementQuestion.usesTextEvaluation ||
-        reinforcementQuestion.isSelfAssessed) {
+    if (reinforcementQuestion.isSelfAssessed) {
+      final text = (selectedText ?? '').trim();
+      if (text.isEmpty) throw ArgumentError.value(selectedText, 'selectedText');
+      final sortedCriteria = [...(checkedCriteriaIds ?? const <String>[])]
+        ..sort();
+      serializedAnswer = jsonEncode({
+        'response': text,
+        'criteria': sortedCriteria,
+      });
+      effectiveIndex = 0;
+    } else if (reinforcementQuestion.usesTextEvaluation) {
       final text = (selectedText ?? '').trim();
       if (text.isEmpty) throw ArgumentError.value(selectedText, 'selectedText');
       serializedAnswer = text;
@@ -69,14 +84,14 @@ class SubmitReinforcementUseCase {
       if (tokens.isEmpty) {
         throw ArgumentError.value(orderedTokens, 'orderedTokens');
       }
-      serializedAnswer = tokens.join(' ').trim();
+      serializedAnswer = jsonEncode(tokens);
       effectiveIndex = 0;
     } else if (reinforcementQuestion.mode == QuestionMode.wordMatch) {
       final pairs = matchedPairs ?? const <String, String>{};
       if (pairs.isEmpty) {
         throw ArgumentError.value(matchedPairs, 'matchedPairs');
       }
-      serializedAnswer = jsonEncode(pairs);
+      serializedAnswer = jsonEncode(SplayTreeMap<String, String>.from(pairs));
       effectiveIndex = 0;
     } else {
       if (selectedIndex < 0 ||
@@ -132,6 +147,8 @@ class SubmitReinforcementUseCase {
         newScore: actualScore,
         xpAwarded: 0,
         updatedRoadmap: currentRoadmap,
+        correctOption: answerAttempt.correctOption,
+        explanation: answerAttempt.explanation,
       );
     }
 

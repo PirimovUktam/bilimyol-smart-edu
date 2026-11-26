@@ -28,7 +28,8 @@ SELECT pg_temp.assert_condition((
 ), 'switching courses preserves both levels');
 SELECT pg_temp.assert_condition((
   SELECT steps->0->>'type' = 'concept' AND steps->1->>'type' = 'audio_simulation'
-    AND steps->2->>'type' = 'interactive_question' AND steps::TEXT NOT LIKE '%correctIndex%'
+    AND steps->2->>'type' = 'flashcard' AND steps->3->>'type' = 'interactive_question'
+    AND steps::TEXT NOT LIKE '%correctIndex%' AND steps::TEXT NOT LIKE '%acceptedAnswers%'
   FROM public.learner_lessons WHERE id = 'lesson_eng_starter'
 ), 'English starts with explanation and example before a sanitized exercise');
 SELECT pg_temp.assert_condition(NOT EXISTS (SELECT 1 FROM public.placement_attempts WHERE user_id = auth.uid()),
@@ -48,7 +49,7 @@ END;
 $$;
 SELECT pg_temp.assert_condition((
   public.submit_answer_attempt(auth.uid(), 'course_eng_01', 'skill_eng_vocab', 'lesson_eng_starter',
-    'q_lesson_eng_starter_quiz', 1, 'Hello')->>'is_correct'
+    'q_lesson_eng_starter_quiz', 0, 'I am Sam')->>'is_correct'
 )::BOOLEAN, 'the starter exercise is scored by the existing trusted lesson grader');
 SELECT pg_temp.assert_condition((public.complete_lesson('lesson_eng_starter', 'course_eng_01')->>'completed')::BOOLEAN,
   'a starter lesson can be completed through the standard learner flow');
