@@ -114,6 +114,7 @@ class TutorModalErrorBoundary extends React.Component<
   }
 }
 import { clearLessonPosition, readLessonPosition, saveLessonPosition } from './readingPosition';
+import { readPendingAttempt, resolveRecoveryAccountScope } from './lessonRecoveryStorage';
 import { DictionaryLookup } from '@/features/dictionary/DictionaryLookup';
 
 function hashString(value: string): number {
@@ -225,18 +226,72 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
 
   const activeQuestionId = currentLesson?.steps[currentStepIndex]?.interactiveQuestion?.id ?? '';
 
+  const currentStep = currentLesson?.steps[currentStepIndex];
+  const interactiveQ = currentStep?.interactiveQuestion;
+
+  const shuffledRightPairs = useMemo<WordMatchPair[]>(() => {
+    if (!interactiveQ?.matchPairs) return [];
+    return deterministicPermute(interactiveQ.matchPairs, interactiveQ.id);
+  }, [interactiveQ?.id, interactiveQ?.matchPairs]);
+
+  const shuffledOrderTokens = useMemo<Array<{ index: number; token: string }>>(() => {
+    if (!interactiveQ?.orderedTokens) return [];
+    const indexed = interactiveQ.orderedTokens.map((token, index) => ({ index, token }));
+    return deterministicPermute(indexed, interactiveQ.id);
+  }, [interactiveQ?.id, interactiveQ?.orderedTokens]);
+
   useEffect(() => {
-    // Each step owns its answer controls; a previous step must not disable or
-    // carry its selection into the next question.
+    // Each step owns its answer controls; restore any unconfirmed pending attempt
+    // for this exact question across reloads without carrying prior step inputs.
+    setSelectedMatchLeft(null);
+    setLocalInputError(null);
+    setHasSubmittedCurrent(false);
+    if (currentLesson && activeQuestionId) {
+      const accountScope = resolveRecoveryAccountScope(account?.id ?? profile?.id);
+      const pending = readPendingAttempt(
+        accountScope,
+        currentLesson.courseId,
+        currentLesson.id,
+        activeQuestionId,
+      );
+      if (pending) {
+        const qType = interactiveQ?.questionType ?? 'multiple_choice';
+        const isChoice =
+          qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+        setPickedOption(isChoice && typeof pending.selectedIndex === 'number' ? pending.selectedIndex : null);
+        setTextAnswer(
+          (qType === 'text_input' || qType === 'fill_blank' || qType === 'speaking_prompt' || qType === 'writing_prompt') &&
+            typeof pending.selectedText === 'string'
+            ? pending.selectedText
+            : '',
+        );
+        setMatchedPairs(qType === 'word_match' && pending.matchedPairs ? pending.matchedPairs : {});
+        if (qType === 'sentence_order' && Array.isArray(pending.orderedTokens)) {
+          const used = new Set<number>();
+          const restoredIndices: number[] = [];
+          for (const tok of pending.orderedTokens) {
+            const foundIdx = shuffledOrderTokens.findIndex(
+              (entry, idx) => !used.has(idx) && entry.token === tok,
+            );
+            if (foundIdx >= 0) {
+              used.add(foundIdx);
+              restoredIndices.push(foundIdx);
+            }
+          }
+          setOrderedTokenIndices(restoredIndices);
+        } else {
+          setOrderedTokenIndices([]);
+        }
+        setCheckedRubricIds(Array.isArray(pending.checkedCriteriaIds) ? pending.checkedCriteriaIds : []);
+        return;
+      }
+    }
     setPickedOption(null);
     setTextAnswer('');
     setMatchedPairs({});
-    setSelectedMatchLeft(null);
     setOrderedTokenIndices([]);
     setCheckedRubricIds([]);
-    setLocalInputError(null);
-    setHasSubmittedCurrent(false);
-  }, [currentStepIndex, activeQuestionId]);
+  }, [currentStepIndex, activeQuestionId, currentLesson, account?.id, profile?.id, interactiveQ?.questionType, shuffledOrderTokens]);
 
   useEffect(() => {
     if (!account || !currentLesson || currentLesson.id !== lessonId || currentLesson.courseId !== activeCourse?.id) return;
@@ -257,20 +312,6 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
     if (isCompleted) clearLessonPosition(account.id, currentLesson);
     else saveLessonPosition(account.id, currentLesson, currentStepIndex, answeredQuestionIds);
   }, [account, currentLesson, lessonSessionId, lessonId, activeCourse?.id, currentStepIndex, isCompleted, answeredQuestionIds, goToStep]);
-
-  const currentStep = currentLesson?.steps[currentStepIndex];
-  const interactiveQ = currentStep?.interactiveQuestion;
-
-  const shuffledRightPairs = useMemo<WordMatchPair[]>(() => {
-    if (!interactiveQ?.matchPairs) return [];
-    return deterministicPermute(interactiveQ.matchPairs, interactiveQ.id);
-  }, [interactiveQ?.id, interactiveQ?.matchPairs]);
-
-  const shuffledOrderTokens = useMemo<Array<{ index: number; token: string }>>(() => {
-    if (!interactiveQ?.orderedTokens) return [];
-    const indexed = interactiveQ.orderedTokens.map((token, index) => ({ index, token }));
-    return deterministicPermute(indexed, interactiveQ.id);
-  }, [interactiveQ?.id, interactiveQ?.orderedTokens]);
 
   const recentMistakeHints = useMemo(() => {
     const courseId = currentLesson?.courseId;

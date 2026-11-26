@@ -63,6 +63,7 @@ class SupabaseConfig {
 
   static StreamSubscription<AuthState>? _authSubscription;
   static SupabaseClient? _clientOverride;
+  static SecureAuthStorageCoordinator? _activeStorageCoordinator;
   static LocalStorageService? _recoveryStorage;
   static String? _recoveryUserId;
   static ({
@@ -183,6 +184,7 @@ class SupabaseConfig {
       final coordinator = SecureAuthStorageCoordinator(
         persistSessionKey: persistSessionKey,
       );
+      _activeStorageCoordinator = coordinator;
       await Supabase.initialize(
         url: supabaseUrl,
         publishableKey: supabaseAnonKey,
@@ -212,6 +214,7 @@ class SupabaseConfig {
     await _authSubscription?.cancel();
     _authSubscription = null;
     _clientOverride = testClient;
+    _activeStorageCoordinator = null;
     _recoveryUserId = null;
     _clearedRecoveryClaim = null;
     _completingRecoverySignOut = false;
@@ -398,6 +401,18 @@ class SupabaseConfig {
     _authStateRevisionNotifier.value++;
   }
 
+  @visibleForTesting
+  static void setAuthUserIdForTesting(
+    String? userId, {
+    SecureAuthStorageCoordinator? coordinator,
+  }) {
+    _authUserIdNotifier.value = userId;
+    if (coordinator != null) {
+      _activeStorageCoordinator = coordinator;
+    }
+    _authStateRevisionNotifier.value++;
+  }
+
   static Future<void> clearPasswordRecovery({
     Session? session,
     LocalStorageService? storage,
@@ -445,6 +460,52 @@ class SupabaseConfig {
           (_recoveryUserId == userId) || unresolvedAmr;
     }
     _authUserIdNotifier.value = userId;
+    _authStateRevisionNotifier.value++;
+  }
+
+  /// Guarantees local auth state and encrypted session storage are purged on
+  /// explicit user logout even when [client] is null (offline cold-boot) or
+  /// [GoTrueClient.signOut] throws.
+  static Future<void> forceLocalSignOutCleanup({
+    LocalStorageService? storage,
+  }) async {
+    final authClient = client?.auth;
+    if (authClient != null) {
+      try {
+        await authClient.signOut(scope: SignOutScope.local);
+      } catch (_) {
+        // Proceed with unconditional local purge below.
+      }
+    }
+
+    final coordinator =
+        _activeStorageCoordinator ??
+        (isValidSupabaseUrl(supabaseUrl)
+            ? SecureAuthStorageCoordinator(
+                persistSessionKey: persistSessionKeyForUrl(supabaseUrl),
+              )
+            : null);
+    if (coordinator != null) {
+      try {
+        await coordinator.purgePersistedAuthArtifacts();
+      } catch (_) {
+        // Best-effort secure token purge.
+      }
+    }
+
+    final resolvedStorage = storage ?? _recoveryStorage;
+    _recoveryUserId = null;
+    _clearedRecoveryClaim = null;
+    _completingRecoverySignOut = false;
+    activeSessionHasStartedCourse.value = false;
+    _recoveryActiveNotifier.value = false;
+    try {
+      await resolvedStorage?.clearRecoveryUserId();
+    } catch (_) {}
+    _authUserIdNotifier.value = authClient?.currentUser?.id;
+    if (authClient == null || authClient.currentSession == null) {
+      _authUserIdNotifier.value = null;
+    }
     _authStateRevisionNotifier.value++;
   }
 

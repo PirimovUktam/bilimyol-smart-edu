@@ -61,28 +61,34 @@ class LessonReadingPositionStore {
     Future<SharedPreferences> Function()? provider,
   ]) async {
     try {
-      final getInstance = provider ?? SharedPreferences.getInstance;
-      final future = getInstance();
       if (provider == null && _isWidgetTestBinding()) {
         SharedPreferences? resolved;
         var done = false;
-        unawaited(
-          future.then(
-            (prefs) {
-              resolved = prefs;
-              done = true;
-            },
-            onError: (_, _) {
-              done = true;
-            },
-          ),
+        runZonedGuarded(
+          () {
+            unawaited(
+              SharedPreferences.getInstance().then(
+                (prefs) {
+                  resolved = prefs;
+                  done = true;
+                },
+                onError: (Object _, StackTrace _) {
+                  done = true;
+                },
+              ),
+            );
+          },
+          (Object _, StackTrace _) {
+            done = true;
+          },
         );
         for (var i = 0; i < 32 && !done; i++) {
           await Future<void>.microtask(() {});
         }
         return done ? resolved : null;
       }
-      return await future;
+      final getInstance = provider ?? SharedPreferences.getInstance;
+      return await getInstance();
     } catch (_) {
       return null;
     }

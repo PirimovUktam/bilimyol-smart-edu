@@ -136,7 +136,9 @@ UPDATE public.answer_attempts
 SET idempotency_key = CASE
       WHEN idempotency_key IS NULL THEN NULL
       WHEN pg_catalog.btrim(idempotency_key) = '' THEN NULL
-      ELSE pg_catalog.left(idempotency_key, 128)
+      WHEN pg_catalog.char_length(idempotency_key) > 128
+        THEN pg_catalog.left(idempotency_key, 58) || ':' || pg_catalog.md5(idempotency_key) || ':' || id::TEXT
+      ELSE idempotency_key
     END,
     selected_answer = pg_catalog.left(COALESCE(selected_answer, ''), 4000),
     lesson_id = COALESCE(NULLIF(pg_catalog.left(pg_catalog.btrim(lesson_id), 160), ''), 'general'),
@@ -155,7 +157,9 @@ UPDATE public.placement_attempts
 SET idempotency_key = CASE
       WHEN idempotency_key IS NULL THEN NULL
       WHEN pg_catalog.btrim(idempotency_key) = '' THEN NULL
-      ELSE pg_catalog.left(idempotency_key, 128)
+      WHEN pg_catalog.char_length(idempotency_key) > 128
+        THEN pg_catalog.left(idempotency_key, 58) || ':' || pg_catalog.md5(idempotency_key) || ':' || id::TEXT
+      ELSE idempotency_key
     END,
     score = GREATEST(0, LEAST(100, score))
 WHERE (idempotency_key IS NOT NULL AND (pg_catalog.btrim(idempotency_key) = '' OR pg_catalog.char_length(idempotency_key) > 128))
@@ -1249,7 +1253,15 @@ BEGIN
         pg_catalog.clock_timestamp()
       )
     )
-  );
+  )
+  ON CONFLICT (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING;
+
+  IF NOT FOUND AND v_eff_idempotency IS NOT NULL THEN
+    RETURN bilimyol_private.submit_answer_attempt(
+      p_user_id, p_course_id, p_skill_id, p_lesson_id, p_question_id,
+      p_selected_index, p_selected_text, p_idempotency_key
+    );
+  END IF;
 
   SELECT pg_catalog.count(*)::INT,
          pg_catalog.count(*) FILTER (WHERE latest.is_correct = true)::INT

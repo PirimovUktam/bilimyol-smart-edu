@@ -719,11 +719,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           candidate = null;
         }
       }
-      if (
-        candidate?.user?.id &&
-        candidate.user.email?.trim().toLowerCase() === normalizedEmail
-      ) {
-        existingSession = candidate;
+      if (candidate?.user?.id) {
+        if (candidate.user.email?.trim().toLowerCase() === normalizedEmail) {
+          existingSession = candidate;
+        } else {
+          // Purge stale half-signed-up session for a different email so a failed or
+          // confirmation-gated signup never leaves the previous account authenticated.
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+          activeUserId.current = null;
+          activeSessionRef.current = null;
+          setUser(null);
+          setSession(null);
+        }
       }
     }
 

@@ -171,6 +171,25 @@ class SecureAuthStorageCoordinator {
     await _deleteRaw(key);
   }
 
+  /// Purges all persisted auth session and PKCE verifier keys from both
+  /// encrypted secure storage and legacy SharedPreferences, even when
+  /// [SupabaseConfig.client] failed to initialize offline.
+  Future<void> purgePersistedAuthArtifacts() async {
+    for (final key in _migrationKeys) {
+      await _deleteRaw(key);
+    }
+    try {
+      final prefs = await _prefsProvider();
+      for (final key in _migrationKeys) {
+        if (prefs.containsKey(key)) {
+          await prefs.remove(key);
+        }
+      }
+    } catch (_) {
+      // Best-effort cleanup in headless/unmocked environments.
+    }
+  }
+
   Future<String?> _readRaw(String key) async {
     if (_useMemoryFallback) {
       return _memoryFallback[key];

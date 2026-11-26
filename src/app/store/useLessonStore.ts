@@ -586,7 +586,25 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       } else {
         result = await useCase.execute(question, selectedIndex, currentLesson.id, pending.attemptId, language);
         if (!isCurrent()) {
-          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          if (resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id) === accountScope) {
+            if (result.isCorrect) {
+              const persistedAnswered = [
+                ...new Set([
+                  ...readPersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id),
+                  question.id,
+                ]),
+              ];
+              writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, persistedAnswered);
+              if (
+                shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
+                hasPassedRequiredQuestions(currentLesson, persistedAnswered)
+              ) {
+                markPendingAttemptGraded(pending, { lessonResult: result });
+                return null;
+              }
+            }
+            clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          }
           return null;
         }
         markPendingAttemptGraded(pending, { lessonResult: result });
@@ -712,7 +730,25 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       } else {
         result = await useCase.executeText(question, trimmed, currentLesson.id, pending.attemptId, language);
         if (!isCurrent()) {
-          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          if (resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id) === accountScope) {
+            if (result.isCorrect) {
+              const persistedAnswered = [
+                ...new Set([
+                  ...readPersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id),
+                  question.id,
+                ]),
+              ];
+              writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, persistedAnswered);
+              if (
+                shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
+                hasPassedRequiredQuestions(currentLesson, persistedAnswered)
+              ) {
+                markPendingAttemptGraded(pending, { lessonResult: result });
+                return null;
+              }
+            }
+            clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          }
           return null;
         }
         markPendingAttemptGraded(pending, { lessonResult: result });
@@ -855,6 +891,8 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         payloadSignature: `struct:${qType}:${serializedAnswer}`,
         selectedIndex: 0,
         selectedText: serializedAnswer,
+        matchedPairs: payload.matchPairs,
+        orderedTokens: payload.orderedTokens,
       });
       const language = usePreferences.getState().language;
       let result: LessonAnswerResult;
@@ -874,7 +912,25 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           language,
         );
         if (!isCurrent()) {
-          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          if (resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id) === accountScope) {
+            if (result.isCorrect) {
+              const persistedAnswered = [
+                ...new Set([
+                  ...readPersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id),
+                  question.id,
+                ]),
+              ];
+              writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, persistedAnswered);
+              if (
+                shouldCompleteLesson(currentStepIndex, currentLesson.steps.length) &&
+                hasPassedRequiredQuestions(currentLesson, persistedAnswered)
+              ) {
+                markPendingAttemptGraded(pending, { lessonResult: result });
+                return null;
+              }
+            }
+            clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          }
           return null;
         }
         markPendingAttemptGraded(pending, { lessonResult: result });
@@ -993,6 +1049,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
         payloadSignature,
         selectedIndex: 0,
         selectedText: trimmed,
+        checkedCriteriaIds,
       });
       const language = usePreferences.getState().language;
       let result: LessonAnswerResult;
@@ -1008,7 +1065,18 @@ export const useLessonStore = create<LessonState>((set, get) => ({
           language,
         );
         if (!isCurrent()) {
-          clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          if (resolveRecoveryAccountScope(useLearnerStore.getState().profile?.id) === accountScope) {
+            if (result.isCorrect) {
+              const persistedAnswered = [
+                ...new Set([
+                  ...readPersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id),
+                  question.id,
+                ]),
+              ];
+              writePersistedAnsweredQuestionIds(accountScope, currentLesson.courseId, currentLesson.id, persistedAnswered);
+            }
+            clearPendingAttempt(accountScope, currentLesson.courseId, currentLesson.id, question.id);
+          }
           return null;
         }
         markPendingAttemptGraded(pending, { lessonResult: result });

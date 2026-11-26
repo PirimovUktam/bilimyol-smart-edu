@@ -876,8 +876,12 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       lessonId: lessonId,
       questionId: questionId,
     );
+    final managedBySession =
+        existingPending?['managedBySession'] == true && explicitKey != null;
     final String requestKey;
-    if (existingPending != null &&
+    if (managedBySession) {
+      requestKey = explicitKey.trim();
+    } else if (existingPending != null &&
         existingPending['payloadSig'] == payloadSig &&
         existingPending['attemptId'] is String &&
         (existingPending['attemptId'] as String).trim().isNotEmpty) {
@@ -919,12 +923,14 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     if (!data.containsKey('is_correct')) {
       throw Exception('Javobni serverda tekshirib bo‘lmadi.');
     }
-    await _storage.clearPendingAttempt(
-      accountScope: user.id,
-      courseId: courseId,
-      lessonId: lessonId,
-      questionId: questionId,
-    );
+    if (!managedBySession) {
+      await _storage.clearPendingAttempt(
+        accountScope: user.id,
+        courseId: courseId,
+        lessonId: lessonId,
+        questionId: questionId,
+      );
+    }
     String? correctOption;
     String? feedbackExplanation;
     if (data['is_correct'] == false) {

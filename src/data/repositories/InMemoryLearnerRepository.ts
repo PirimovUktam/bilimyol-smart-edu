@@ -211,10 +211,17 @@ const normalizeStoredProfile = (raw: unknown): LearnerProfile => {
   };
 };
 
+interface DailyBonusEvent {
+  timestamp: number;
+  xpEarned: number;
+  lessonsCompleted: number;
+}
+
 export class InMemoryLearnerRepository implements ILearnerRepository {
   readonly supportsNodeCompletion = true;
   private profile: LearnerProfile = createDefaultProfile();
   private answerAttempts: AnswerAttemptRecord[] = [];
+  private dailyBonusEvents: DailyBonusEvent[] = [];
   private processedActionKeys: Set<string> = new Set();
   private recordedActivityDates: Set<string> = new Set();
 
@@ -227,6 +234,15 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       this.answerAttempts = stored.answerAttempts.filter(
         (attempt: unknown): attempt is AnswerAttemptRecord => isPlainRecord(attempt),
       );
+      this.dailyBonusEvents = Array.isArray(stored.dailyBonusEvents)
+        ? stored.dailyBonusEvents
+            .filter((ev: unknown): ev is Record<string, unknown> => isPlainRecord(ev) && typeof ev.timestamp === 'number')
+            .map((ev: Record<string, unknown>) => ({
+              timestamp: ev.timestamp as number,
+              xpEarned: typeof ev.xpEarned === 'number' ? ev.xpEarned : 0,
+              lessonsCompleted: typeof ev.lessonsCompleted === 'number' ? ev.lessonsCompleted : 0,
+            }))
+        : [];
       this.processedActionKeys = new Set(normalizeStringArray(stored.processedActionKeys));
       this.recordedActivityDates = new Set(normalizeStringArray(stored.recordedActivityDates));
     } catch { /* A malformed snapshot starts a fresh demo. */ }
@@ -237,6 +253,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       this.tabStorage?.().setItem(DEMO_PROGRESS_KEY, JSON.stringify({
         profile: this.profile,
         answerAttempts: this.answerAttempts,
+        dailyBonusEvents: this.dailyBonusEvents,
         processedActionKeys: [...this.processedActionKeys],
         recordedActivityDates: [...this.recordedActivityDates],
       }));
@@ -346,7 +363,14 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       this.profile.completedNodeIds = [
         ...new Set([...this.profile.completedNodeIds, ...targetNodeIds]),
       ];
-      await this.addXp(20, `lesson_completed_${lessonId}`);
+      const prevXp = this.profile.xp || 0;
+      const nextXp = await this.addXp(20, `lesson_completed_${lessonId}`);
+      this.dailyBonusEvents.push({
+        timestamp: Date.now(),
+        xpEarned: Math.max(0, nextXp - prevXp),
+        lessonsCompleted: 1,
+      });
+      this.saveTabProgress();
       await this.recordDailyActivity();
     }
   }
@@ -361,8 +385,14 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   async markReinforcementCompleted(reinforcementId: string, _context?: ReinforcementCompletionContext): Promise<void> {
     if (!this.profile.completedReinforcementIds.includes(reinforcementId)) {
       this.profile.completedReinforcementIds.push(reinforcementId);
+      const prevXp = this.profile.xp || 0;
+      const nextXp = await this.addXp(15, `reinforcement_completed_${reinforcementId}`);
+      this.dailyBonusEvents.push({
+        timestamp: Date.now(),
+        xpEarned: Math.max(0, nextXp - prevXp),
+        lessonsCompleted: 0,
+      });
       this.saveTabProgress();
-      await this.addXp(15, `reinforcement_completed_${reinforcementId}`);
       await this.recordDailyActivity();
     }
   }
@@ -711,6 +741,13 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         latestByQuestion.set(a.questionId, a);
         xpEarned += typeof a.xpAwarded === 'number' ? a.xpAwarded : 0;
       }
+      let lessonsCompleted = 0;
+      for (const ev of this.dailyBonusEvents) {
+        if (learningDate(0, ev.timestamp) === dateStr) {
+          xpEarned += ev.xpEarned;
+          lessonsCompleted += ev.lessonsCompleted;
+        }
+      }
       const questionsAnswered = latestByQuestion.size;
       let correctAnswers = 0;
       latestByQuestion.forEach((a) => {
@@ -723,7 +760,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         date: dateStr,
         activeMinutes: 0,
         xpEarned,
-        lessonsCompleted: 0,
+        lessonsCompleted,
         questionsAnswered,
         correctAnswers,
         accuracyPercent,
@@ -779,6 +816,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   async resetAll(): Promise<LearnerProfile> {
     this.profile = createDefaultProfile();
     this.answerAttempts = [];
+    this.dailyBonusEvents = [];
     this.processedActionKeys.clear();
     this.recordedActivityDates.clear();
     this.saveTabProgress();

@@ -13,10 +13,10 @@ Full detailed engineering & test verification report: [docs/implementation/wave-
 ## Verification Summary
 
 - **PostgreSQL `17.11` (Disposable Local Cluster):**
-  - All `29` migrations applied cleanly + `2x` idempotency verified under both `Cloud-Default` and `Legacy-Grant` postures.
+  - All `29` migrations applied cleanly + `2x` idempotency + legacy `>128`-char shared-prefix collision harness verified under both `Cloud-Default` and `Legacy-Grant` postures.
   - All `10/10` SQL regression suites passed on both postures (`20/20` runs), including `supabase/tests/w1_b1_idempotency_constraints_and_daily_stats_regression.sql`.
   - Real 2-session `READ COMMITTED` concurrent duplicate-UUID `submit_answer_attempt` race test passed (`attempts=1`, `gamification_profiles.xp=2`, `gamification_events=1`, one `already_processed=false` and one `already_processed=true`).
 - **Web:**
-  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`60/60` files, `359/359` tests), `npm run build` (`2382` modules, `0` warnings, `W0-B2` zero preloaded answer keys preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`EXIT=0`).
+  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`60/60` files, `360/360` tests), `npm run build` (`2382` modules, `0` warnings, `W0-B2` zero preloaded answer keys preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`EXIT=0`).
 - **Flutter Mobile:**
-  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b1_core_learning_integrity_test.dart` (`5/5` passed), full `flutter test --no-pub` (`526` passed, `2` env-gated skips, `0` failed).
+  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b1_core_learning_integrity_test.dart test/features/lesson_session_persistence_test.dart` (`18/18` passed [`7/7` `W1-B1` + `11/11` session persistence]), full `flutter test --no-pub` (`528` passed, `2` env-gated skips, `0` failed).

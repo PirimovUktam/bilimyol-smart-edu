@@ -6,6 +6,7 @@ import '../core/auth/demo_session.dart';
 import '../core/config/supabase_config.dart';
 import '../core/l10n/app_strings.dart';
 import '../core/storage/local_storage_service.dart';
+import '../core/utils/attempt_uuid.dart';
 import '../data/repositories/supabase_course_repository.dart';
 import '../data/repositories/supabase_lesson_repository.dart';
 import '../domain/repositories/i_course_repository.dart';
@@ -1356,6 +1357,196 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           ? 'ru'
           : 'uz');
 
+  static Map<String, dynamic> _lessonResultToJson(LessonAnswerResult r) => {
+    'isCorrect': r.isCorrect,
+    'selectedOption': r.selectedOption,
+    'correctOption': r.correctOption,
+    'explanation': r.explanation,
+    if (r.optionFeedback != null) 'optionFeedback': r.optionFeedback,
+  };
+
+  static LessonAnswerResult? _lessonResultFromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final isCorrect = raw['isCorrect'];
+    final selectedOption = raw['selectedOption'];
+    final correctOption = raw['correctOption'];
+    final explanation = raw['explanation'];
+    if (isCorrect is! bool ||
+        selectedOption is! String ||
+        correctOption is! String ||
+        explanation is! String) {
+      return null;
+    }
+    return LessonAnswerResult(
+      isCorrect: isCorrect,
+      selectedOption: selectedOption,
+      correctOption: correctOption,
+      explanation: explanation,
+      optionFeedback: raw['optionFeedback'] is String
+          ? raw['optionFeedback'] as String
+          : null,
+    );
+  }
+
+  static Map<String, dynamic> _attemptRecordToJson(AnswerAttemptRecord a) => {
+    'id': a.id,
+    'courseId': a.courseId,
+    'skillId': a.skillId,
+    'lessonId': a.lessonId,
+    'questionId': a.questionId,
+    'selectedIndex': a.selectedIndex,
+    'selectedAnswer': a.selectedAnswer,
+    'isCorrect': a.isCorrect,
+    'timestamp': a.timestamp,
+    if (a.correctOption != null) 'correctOption': a.correctOption,
+    if (a.explanation != null) 'explanation': a.explanation,
+    if (a.newSkillScore != null) 'newSkillScore': a.newSkillScore,
+    'xpAwarded': a.xpAwarded,
+    'alreadyProcessed': a.alreadyProcessed,
+    if (a.idempotencyKey != null) 'idempotencyKey': a.idempotencyKey,
+  };
+
+  static AnswerAttemptRecord? _attemptRecordFromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final id = raw['id'];
+    final courseId = raw['courseId'];
+    final skillId = raw['skillId'];
+    final lessonId = raw['lessonId'];
+    final questionId = raw['questionId'];
+    final selectedIndex = raw['selectedIndex'];
+    final selectedAnswer = raw['selectedAnswer'];
+    final isCorrect = raw['isCorrect'];
+    final timestamp = raw['timestamp'];
+    if (id is! String ||
+        courseId is! String ||
+        skillId is! String ||
+        lessonId is! String ||
+        questionId is! String ||
+        selectedIndex is! num ||
+        selectedAnswer is! String ||
+        isCorrect is! bool ||
+        timestamp is! num) {
+      return null;
+    }
+    return AnswerAttemptRecord(
+      id: id,
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: lessonId,
+      questionId: questionId,
+      selectedIndex: selectedIndex.toInt(),
+      selectedAnswer: selectedAnswer,
+      isCorrect: isCorrect,
+      timestamp: timestamp.toInt(),
+      correctOption: raw['correctOption'] is String
+          ? raw['correctOption'] as String
+          : null,
+      explanation: raw['explanation'] is String
+          ? raw['explanation'] as String
+          : null,
+      newSkillScore: raw['newSkillScore'] is num
+          ? (raw['newSkillScore'] as num).toInt()
+          : null,
+      xpAwarded: raw['xpAwarded'] is num ? (raw['xpAwarded'] as num).toInt() : 0,
+      alreadyProcessed: raw['alreadyProcessed'] == true,
+      idempotencyKey: raw['idempotencyKey'] is String
+          ? raw['idempotencyKey'] as String
+          : null,
+    );
+  }
+
+  ({
+    int? selectedOptionIndex,
+    String textAnswer,
+    Map<String, String> selectedMatchPairs,
+    List<String> selectedOrderTokens,
+  }) _extractPendingStepInputs(Lesson lesson, int stepIndex, Map<String, dynamic>? pending) {
+    if (pending == null ||
+        stepIndex < 0 ||
+        stepIndex >= lesson.steps.length) {
+      return (
+        selectedOptionIndex: null,
+        textAnswer: '',
+        selectedMatchPairs: const {},
+        selectedOrderTokens: const [],
+      );
+    }
+    final question = lesson.steps[stepIndex].interactiveQuestion;
+    if (question == null) {
+      return (
+        selectedOptionIndex: null,
+        textAnswer: '',
+        selectedMatchPairs: const {},
+        selectedOrderTokens: const [],
+      );
+    }
+    final rawIndex = pending['selectedIndex'];
+    final selectedOptionIndex =
+        question.usesOptionSelection &&
+            rawIndex is num &&
+            rawIndex.toInt() >= 0 &&
+            rawIndex.toInt() < question.options.length
+        ? rawIndex.toInt()
+        : null;
+    final textAnswer =
+        (question.usesTextEvaluation || question.isSelfAssessed) &&
+            pending['selectedText'] is String
+        ? pending['selectedText'] as String
+        : '';
+    final rawPairs = pending['matchedPairs'];
+    final selectedMatchPairs =
+        question.mode == QuestionMode.wordMatch && rawPairs is Map
+        ? {
+            for (final e in rawPairs.entries)
+              if (e.key is String && e.value is String)
+                e.key as String: e.value as String,
+          }
+        : const <String, String>{};
+    final rawTokens = pending['orderedTokens'];
+    final selectedOrderTokens =
+        question.mode == QuestionMode.sentenceOrder && rawTokens is List
+        ? rawTokens.whereType<String>().toList(growable: false)
+        : const <String>[];
+    return (
+      selectedOptionIndex: selectedOptionIndex,
+      textAnswer: textAnswer,
+      selectedMatchPairs: selectedMatchPairs,
+      selectedOrderTokens: selectedOrderTokens,
+    );
+  }
+
+  LessonSessionState _applyStepWithPendingSync(Lesson lesson, int targetStepIndex) {
+    final qId = (targetStepIndex >= 0 && targetStepIndex < lesson.steps.length)
+        ? lesson.steps[targetStepIndex].interactiveQuestion?.id
+        : null;
+    final pending = qId != null
+        ? ref.read(localStorageServiceProvider).getPendingAttemptSync(
+            accountScope: _storageAccountScope,
+            courseId: lesson.courseId,
+            lessonId: lesson.id,
+            questionId: qId,
+          )
+        : null;
+    final restored = _extractPendingStepInputs(lesson, targetStepIndex, pending);
+    return state.copyWith(
+      currentStepIndex: targetStepIndex,
+      selectedOptionIndex: restored.selectedOptionIndex,
+      clearSelectedOption: restored.selectedOptionIndex == null,
+      textAnswer: restored.textAnswer,
+      clearTextAnswer: restored.textAnswer.isEmpty,
+      selectedMatchPairs: restored.selectedMatchPairs,
+      selectedOrderTokens: restored.selectedOrderTokens,
+      clearRichExerciseState:
+          restored.selectedMatchPairs.isEmpty &&
+          restored.selectedOrderTokens.isEmpty,
+      clearActiveMatchLeftId: true,
+      clearAnswerResult: true,
+      clearAnswerError: true,
+      clearReinforcementResult: true,
+      showReinforcementSheet: false,
+    );
+  }
+
   Future<void> startLesson(String lessonId, {String? uiLocale}) async {
     if (_isLoggedOutRemote) return;
     final generation = ++_lessonGeneration;
@@ -1376,17 +1567,29 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       final alreadyCompleted =
           profile?.completedLessonIds.contains(lesson.id) ?? false;
       final storage = ref.read(localStorageServiceProvider);
+      final validStepQuestionIds = lesson.steps
+          .map((s) => s.interactiveQuestion?.id)
+          .whereType<String>()
+          .toSet();
       if (alreadyCompleted) {
         await storage.clearPassedLessonQuestionIds(
           accountScope: _storageAccountScope,
           courseId: lesson.courseId,
           lessonId: lesson.id,
         );
+        for (final qId in validStepQuestionIds) {
+          await storage.clearPendingAttempt(
+            accountScope: _storageAccountScope,
+            courseId: lesson.courseId,
+            lessonId: lesson.id,
+            questionId: qId,
+          );
+        }
+        await LessonReadingPositionStore.clearStepIndex(
+          lesson,
+          accountId: _accountId,
+        );
       } else {
-        final validStepQuestionIds = lesson.steps
-            .map((s) => s.interactiveQuestion?.id)
-            .whereType<String>()
-            .toSet();
         final persistedPassed = await storage.getPassedLessonQuestionIds(
           accountScope: _storageAccountScope,
           courseId: lesson.courseId,
@@ -1397,21 +1600,58 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         );
       }
       if (!mounted || generation != _lessonGeneration) return;
-      final rawRestoredStep = (!lesson.requiresMastery && !alreadyCompleted)
-          ? await LessonReadingPositionStore.readStepIndex(
-              lesson,
-              accountId: _accountId,
-              passedQuestionIds: _passedQuestionIds,
-            )
-          : 0;
+      final roadmap = ref.read(roadmapStateNotifierProvider).valueOrNull;
+      final needsReview =
+          lesson.requiresMastery &&
+          (roadmap?.nodes.any(
+                (node) =>
+                    node.targetLessonId == lesson.id &&
+                    node.status == NodeStatus.reinforcement,
+              ) ??
+              false);
+      final int rawRestoredStep;
+      if (alreadyCompleted) {
+        rawRestoredStep = 0;
+      } else if (needsReview) {
+        final workedIdx = lesson.steps.indexWhere(
+          (step) => step.type == LessonStepType.visualExample,
+        );
+        rawRestoredStep = workedIdx < 0 ? 0 : workedIdx;
+      } else {
+        rawRestoredStep = await LessonReadingPositionStore.readStepIndex(
+          lesson,
+          accountId: _accountId,
+          passedQuestionIds: _passedQuestionIds,
+        );
+      }
       final restoredStep = lesson.steps.isEmpty
           ? 0
           : rawRestoredStep.clamp(0, lesson.steps.length - 1);
+      final restoredQuestionId = lesson.steps.isEmpty
+          ? null
+          : lesson.steps[restoredStep].interactiveQuestion?.id;
+      final pendingOnRestoredStep =
+          (!alreadyCompleted && restoredQuestionId != null)
+          ? await storage.getPendingAttempt(
+              accountScope: _storageAccountScope,
+              courseId: lesson.courseId,
+              lessonId: lesson.id,
+              questionId: restoredQuestionId,
+            )
+          : null;
       if (!mounted || generation != _lessonGeneration) return;
+      final restoredInputs = _extractPendingStepInputs(
+        lesson,
+        restoredStep,
+        pendingOnRestoredStep,
+      );
       state = LessonSessionState(
         lesson: lesson,
         currentStepIndex: restoredStep,
-        selectedOptionIndex: null,
+        selectedOptionIndex: restoredInputs.selectedOptionIndex,
+        textAnswer: restoredInputs.textAnswer,
+        selectedMatchPairs: restoredInputs.selectedMatchPairs,
+        selectedOrderTokens: restoredInputs.selectedOrderTokens,
         answerResult: null,
         isSubmittingAnswer: false,
         lessonError: null,
@@ -1447,26 +1687,15 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       final nextIndex = state.currentStepIndex + 1;
       _stepGeneration++;
       _answerGeneration++;
-      state = state.copyWith(
-        currentStepIndex: nextIndex,
-        clearSelectedOption: true,
-        clearTextAnswer: true,
-        clearRichExerciseState: true,
-        clearAnswerResult: true,
-        clearAnswerError: true,
-        clearReinforcementResult: true,
-        showReinforcementSheet: false,
+      state = _applyStepWithPendingSync(lesson, nextIndex);
+      unawaited(
+        LessonReadingPositionStore.saveStepIndex(
+          lesson,
+          nextIndex,
+          accountId: _accountId,
+          passedQuestionIds: Set<String>.from(_passedQuestionIds),
+        ),
       );
-      if (!lesson.requiresMastery) {
-        unawaited(
-          LessonReadingPositionStore.saveStepIndex(
-            lesson,
-            nextIndex,
-            accountId: _accountId,
-            passedQuestionIds: Set<String>.from(_passedQuestionIds),
-          ),
-        );
-      }
       return;
     }
 
@@ -1502,26 +1731,15 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       final prevIndex = state.currentStepIndex - 1;
       _stepGeneration++;
       _answerGeneration++;
-      state = state.copyWith(
-        currentStepIndex: prevIndex,
-        clearSelectedOption: true,
-        clearTextAnswer: true,
-        clearRichExerciseState: true,
-        clearAnswerResult: true,
-        clearAnswerError: true,
-        clearReinforcementResult: true,
-        showReinforcementSheet: false,
+      state = _applyStepWithPendingSync(lesson, prevIndex);
+      unawaited(
+        LessonReadingPositionStore.saveStepIndex(
+          lesson,
+          prevIndex,
+          accountId: _accountId,
+          passedQuestionIds: Set<String>.from(_passedQuestionIds),
+        ),
       );
-      if (!lesson.requiresMastery) {
-        unawaited(
-          LessonReadingPositionStore.saveStepIndex(
-            lesson,
-            prevIndex,
-            accountId: _accountId,
-            passedQuestionIds: Set<String>.from(_passedQuestionIds),
-          ),
-        );
-      }
     }
   }
 
@@ -1532,26 +1750,15 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     final targetIndex = index < 0 ? 0 : index;
     _stepGeneration++;
     _answerGeneration++;
-    state = state.copyWith(
-      currentStepIndex: targetIndex,
-      clearSelectedOption: true,
-      clearTextAnswer: true,
-      clearRichExerciseState: true,
-      clearAnswerResult: true,
-      clearAnswerError: true,
-      clearReinforcementResult: true,
-      showReinforcementSheet: false,
+    state = _applyStepWithPendingSync(lesson, targetIndex);
+    unawaited(
+      LessonReadingPositionStore.saveStepIndex(
+        lesson,
+        targetIndex,
+        accountId: _accountId,
+        passedQuestionIds: Set<String>.from(_passedQuestionIds),
+      ),
     );
-    if (!lesson.requiresMastery) {
-      unawaited(
-        LessonReadingPositionStore.saveStepIndex(
-          lesson,
-          targetIndex,
-          accountId: _accountId,
-          passedQuestionIds: Set<String>.from(_passedQuestionIds),
-        ),
-      );
-    }
   }
 
   LessonStep? _activeStep(Lesson lesson) {
@@ -1741,24 +1948,107 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
     );
 
     var justSubmitted = false;
+    final storage = ref.read(localStorageServiceProvider);
+    final accountScope = _storageAccountScope;
+    final matchedPairsSnapshot = isWordMatch
+        ? Map<String, String>.from(state.selectedMatchPairs)
+        : null;
+    final orderedTokensSnapshot = isSentenceOrder
+        ? List<String>.from(state.selectedOrderTokens)
+        : null;
     try {
       if (!_isCurrent(session, step, generation)) return;
       var result = _pendingSubmittedResults[cacheKey];
+      var existingPending = await storage.getPendingAttempt(
+        accountScope: accountScope,
+        courseId: lesson.courseId,
+        lessonId: lesson.id,
+        questionId: question.id,
+      );
+      if (!_isCurrent(session, step, generation)) return;
+      if (result == null &&
+          existingPending != null &&
+          existingPending['payloadSig'] == inputKey &&
+          existingPending['status'] == 'graded') {
+        result = _lessonResultFromJson(existingPending['cachedLessonResult']);
+      }
       if (result == null) {
+        final String attemptId;
+        if (existingPending != null &&
+            existingPending['payloadSig'] == inputKey &&
+            existingPending['attemptId'] is String &&
+            (existingPending['attemptId'] as String).trim().isNotEmpty) {
+          attemptId = (existingPending['attemptId'] as String).trim();
+        } else {
+          attemptId = generateAttemptUuidV4();
+        }
+        final submittingData = <String, dynamic>{
+          'managedBySession': true,
+          'attemptId': attemptId,
+          'payloadSig': inputKey,
+          'status': 'submitting',
+          'selectedIndex': selectedIndex,
+          'selectedText': ?selectedText,
+          'matchedPairs': ?matchedPairsSnapshot,
+          'orderedTokens': ?orderedTokensSnapshot,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        };
+        await storage.setPendingAttempt(
+          accountScope: accountScope,
+          courseId: lesson.courseId,
+          lessonId: lesson.id,
+          questionId: question.id,
+          data: submittingData,
+        );
+        if (!_isCurrent(session, step, generation)) return;
+
         final submitUseCase = ref.read(submitLessonAnswerUseCaseProvider);
         result = await submitUseCase.execute(
           question: question,
           lessonId: lesson.id,
           selectedIndex: selectedIndex,
           selectedText: selectedText,
-          matchedPairs: isWordMatch ? state.selectedMatchPairs : null,
-          orderedTokens: isSentenceOrder ? state.selectedOrderTokens : null,
+          matchedPairs: matchedPairsSnapshot,
+          orderedTokens: orderedTokensSnapshot,
+          idempotencyKey: attemptId,
           uiLocale: resolvedLocale,
         );
-        if (!_isCurrent(session, step, generation)) return;
         justSubmitted = true;
+        final gradedData = <String, dynamic>{
+          ...submittingData,
+          'status': 'graded',
+          'cachedLessonResult': _lessonResultToJson(result),
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        };
         if (result.isCorrect) {
+          _passedQuestionIds.add(question.id);
+          await storage.setPassedLessonQuestionIds(
+            accountScope: accountScope,
+            courseId: lesson.courseId,
+            lessonId: lesson.id,
+            questionIds: _passedQuestionIds,
+          );
           _pendingSubmittedResults[cacheKey] = result;
+        }
+        await storage.setPendingAttempt(
+          accountScope: accountScope,
+          courseId: lesson.courseId,
+          lessonId: lesson.id,
+          questionId: question.id,
+          data: gradedData,
+        );
+        if (!_isCurrent(session, step, generation)) {
+          if (!result.isCorrect ||
+              currentStepIndex < lesson.steps.length - 1 ||
+              question.isSelfAssessed) {
+            await storage.clearPendingAttempt(
+              accountScope: accountScope,
+              courseId: lesson.courseId,
+              lessonId: lesson.id,
+              questionId: question.id,
+            );
+          }
+          return;
         }
       }
       final updatedSkillStreaks = Map<String, int>.from(
@@ -1775,16 +2065,16 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       if (result.isCorrect) {
         updatedSkillStreaks[question.skillId] = 0;
         updatedQuestionStreaks[question.id] = 0;
-        _passedQuestionIds.add(question.id);
-        await ref
-            .read(localStorageServiceProvider)
-            .setPassedLessonQuestionIds(
-              accountScope: _storageAccountScope,
-              courseId: lesson.courseId,
-              lessonId: lesson.id,
-              questionIds: _passedQuestionIds,
-            );
-        if (!_isCurrent(session, step, generation)) return;
+        if (!_passedQuestionIds.contains(question.id)) {
+          _passedQuestionIds.add(question.id);
+          await storage.setPassedLessonQuestionIds(
+            accountScope: accountScope,
+            courseId: lesson.courseId,
+            lessonId: lesson.id,
+            questionIds: _passedQuestionIds,
+          );
+          if (!_isCurrent(session, step, generation)) return;
+        }
         if (completedOnFinalStep) {
           final completed = await _completeLesson(
             lesson,
@@ -1847,6 +2137,13 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       }
       if (!_isCurrent(session, step, generation)) return;
       _pendingSubmittedResults.remove(cacheKey);
+      await storage.clearPendingAttempt(
+        accountScope: accountScope,
+        courseId: lesson.courseId,
+        lessonId: lesson.id,
+        questionId: question.id,
+      );
+      if (!_isCurrent(session, step, generation)) return;
       state = state.copyWith(
         isSubmittingAnswer: false,
         answerResult: result,
@@ -1942,11 +2239,20 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         .read(learnerRepositoryProvider)
         .markLessonCompleted(lesson.id, courseId: lesson.courseId);
     if (!_isCurrent(session, step, answer)) return false;
-    await ref.read(localStorageServiceProvider).clearPassedLessonQuestionIds(
+    final storage = ref.read(localStorageServiceProvider);
+    await storage.clearPassedLessonQuestionIds(
       accountScope: _storageAccountScope,
       courseId: lesson.courseId,
       lessonId: lesson.id,
     );
+    for (final qId in requiredIds) {
+      await storage.clearPendingAttempt(
+        accountScope: _storageAccountScope,
+        courseId: lesson.courseId,
+        lessonId: lesson.id,
+        questionId: qId,
+      );
+    }
     await LessonReadingPositionStore.clearStepIndex(
       lesson,
       accountId: _accountId,
@@ -2012,6 +2318,54 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
           ? 'ord:${orderedTokens.join('\u0001')}'
           : 'idx:$selectedIndex';
       final reinfCacheKey = '$reinforcementNodeId:${targetQuestion.id}:$reinfInputSig';
+      final storage = ref.read(localStorageServiceProvider);
+      final accountScope = _storageAccountScope;
+      final existingPending = await storage.getPendingAttempt(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: reinforcementNodeId,
+        questionId: targetQuestion.id,
+      );
+      if (!_isCurrent(session, step, generation)) return null;
+      var cachedAttempt = _pendingReinforcementAttempts[reinfCacheKey];
+      if (cachedAttempt == null &&
+          existingPending != null &&
+          existingPending['payloadSig'] == reinfInputSig &&
+          existingPending['status'] == 'graded') {
+        cachedAttempt = _attemptRecordFromJson(existingPending['cachedAttempt']);
+      }
+      final String attemptId;
+      if (existingPending != null &&
+          existingPending['payloadSig'] == reinfInputSig &&
+          existingPending['attemptId'] is String &&
+          (existingPending['attemptId'] as String).trim().isNotEmpty) {
+        attemptId = (existingPending['attemptId'] as String).trim();
+      } else {
+        attemptId = generateAttemptUuidV4();
+      }
+      final submittingData = <String, dynamic>{
+        'managedBySession': true,
+        'attemptId': attemptId,
+        'payloadSig': reinfInputSig,
+        'status': cachedAttempt != null ? 'graded' : 'submitting',
+        'selectedIndex': selectedIndex,
+        'selectedText': ?selectedText,
+        'matchedPairs': ?matchedPairs,
+        'orderedTokens': ?orderedTokens,
+        if (cachedAttempt != null)
+          'cachedAttempt': _attemptRecordToJson(cachedAttempt),
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      if (cachedAttempt == null) {
+        await storage.setPendingAttempt(
+          accountScope: accountScope,
+          courseId: courseId,
+          lessonId: reinforcementNodeId,
+          questionId: targetQuestion.id,
+          data: submittingData,
+        );
+        if (!_isCurrent(session, step, generation)) return null;
+      }
       final submitReinfUseCase = ref.read(submitReinforcementUseCaseProvider);
       final result = await submitReinfUseCase.execute(
         courseId: courseId,
@@ -2022,17 +2376,36 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         selectedText: selectedText,
         matchedPairs: matchedPairs,
         orderedTokens: orderedTokens,
-        cachedAttempt: _pendingReinforcementAttempts[reinfCacheKey],
+        idempotencyKey: attemptId,
+        cachedAttempt: cachedAttempt,
         onAttemptGraded: (attempt) {
-          if (attempt.isCorrect) {
-            _pendingReinforcementAttempts[reinfCacheKey] = attempt;
-          }
+          _pendingReinforcementAttempts[reinfCacheKey] = attempt;
+          unawaited(
+            storage.setPendingAttempt(
+              accountScope: accountScope,
+              courseId: courseId,
+              lessonId: reinforcementNodeId,
+              questionId: targetQuestion.id,
+              data: {
+                ...submittingData,
+                'status': 'graded',
+                'cachedAttempt': _attemptRecordToJson(attempt),
+                'updatedAt': DateTime.now().millisecondsSinceEpoch,
+              },
+            ),
+          );
         },
       );
 
       if (!_isCurrent(session, step, generation)) return null;
 
       _pendingReinforcementAttempts.remove(reinfCacheKey);
+      await storage.clearPendingAttempt(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: reinforcementNodeId,
+        questionId: targetQuestion.id,
+      );
       if (result.isCorrect) _completedReinforcement = result;
       state = state.copyWith(reinforcementResult: result);
       if (!_isCurrent(session, step, generation)) return null;

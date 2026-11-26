@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../core/auth/auth_error_message.dart';
@@ -127,6 +128,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               email.toLowerCase();
 
       if (!hasMatchingActiveSession) {
+        if (!SupabaseConfig.isRecoveryActive && existingSession != null) {
+          // Purge stale half-signed-up session for a different email before
+          // attempting registration so a failed or confirmation-gated signup
+          // never leaves the prior account authenticated.
+          try {
+            await client.auth.signOut(scope: SignOutScope.local);
+          } catch (_) {}
+          SupabaseConfig.syncCurrentAuthState();
+        }
         final res = await client.auth.signUp(
           email: email,
           password: password,

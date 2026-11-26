@@ -298,6 +298,22 @@ BEGIN
     AND v_stats.xp_earned = 4,
     'FIX-P2-23: correcting Q1 updates same-day deduplicated accuracy to 2/2 (100%) without inflating questions_answered'
   );
+
+  -- Completing the lesson increments lessons_completed (+1) and xp_earned (+20 -> 24) without altering question accuracy
+  PERFORM public.complete_lesson('lesson_w1b1_cwc', 'course_eng_01');
+  SELECT questions_answered, correct_answers, accuracy_percent, xp_earned, lessons_completed
+  INTO v_stats
+  FROM public.daily_learning_stats
+  WHERE user_id = auth.uid() AND activity_date = v_today;
+
+  PERFORM pg_temp.assert_w1b1(
+    v_stats.questions_answered = 2
+    AND v_stats.correct_answers = 2
+    AND v_stats.accuracy_percent = 100
+    AND v_stats.xp_earned = 24
+    AND v_stats.lessons_completed = 1,
+    'FIX-P2-23: lesson completion adds +20 XP and lessons_completed=1 in daily_learning_stats while preserving deduplicated accuracy'
+  );
 END;
 $$;
 

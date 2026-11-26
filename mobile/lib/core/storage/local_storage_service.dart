@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -62,11 +63,24 @@ class LocalStorageService {
   Future<SharedPreferences?> _initPrefs() async {
     try {
       if (_isAutomatedWidgetTest) {
+        final guardedPrefs = Completer<SharedPreferences?>();
+        runZonedGuarded(
+          () {
+            SharedPreferences.getInstance().then<void>(
+              (p) {
+                if (!guardedPrefs.isCompleted) guardedPrefs.complete(p);
+              },
+              onError: (Object _) {
+                if (!guardedPrefs.isCompleted) guardedPrefs.complete(null);
+              },
+            );
+          },
+          (Object _, StackTrace _) {
+            if (!guardedPrefs.isCompleted) guardedPrefs.complete(null);
+          },
+        );
         _prefs = await Future.any<SharedPreferences?>([
-          SharedPreferences.getInstance().then<SharedPreferences?>(
-            (p) => p,
-            onError: (Object _) => null,
-          ),
+          guardedPrefs.future,
           _microtaskFallback(),
         ]);
       } else {
@@ -236,6 +250,29 @@ class LocalStorageService {
           await prefs.remove(key);
         }
       } catch (_) {}
+    }
+  }
+
+  Map<String, dynamic>? getPendingAttemptSync({
+    required String accountScope,
+    required String courseId,
+    required String lessonId,
+    required String questionId,
+  }) {
+    final raw = getStringSync(
+      pendingAttemptKey(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: lessonId,
+        questionId: questionId,
+      ),
+    );
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+    } catch (_) {
+      return null;
     }
   }
 

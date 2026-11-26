@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../core/auth/demo_session.dart';
@@ -104,15 +103,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _isLoggingOut = true);
     try {
       demoSessionActive.value = false;
-      final auth = SupabaseConfig.client?.auth;
-      if (auth != null) {
-        try {
-          await auth.signOut(scope: SignOutScope.local);
-        } catch (_) {
-          // Proceed with local session purge even when GoTrue throws offline.
-        }
-      }
-      SupabaseConfig.syncCurrentAuthState();
+      await SupabaseConfig.forceLocalSignOutCleanup(
+        storage: container.read(localStorageServiceProvider),
+      );
       await SupabaseConfig.clearPasswordRecovery();
       await resetSessionState(container);
       if (mounted) context.go('/login');

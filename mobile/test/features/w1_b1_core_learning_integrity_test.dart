@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bilimyol_mobile/app/providers.dart';
 import 'package:bilimyol_mobile/core/auth/demo_session.dart';
+import 'package:bilimyol_mobile/core/auth/secure_auth_storage.dart';
 import 'package:bilimyol_mobile/core/config/supabase_config.dart';
 import 'package:bilimyol_mobile/core/storage/local_storage_service.dart';
 import 'package:bilimyol_mobile/core/widgets/app_button.dart';
@@ -31,6 +33,46 @@ final RegExp _uuidV4Regex = RegExp(
   r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
   caseSensitive: false,
 );
+
+const MethodChannel _secureStorageChannel = MethodChannel(
+  'plugins.it_nomads.com/flutter_secure_storage',
+);
+
+class _FakeSecureChannel {
+  final Map<String, String> store = <String, String>{};
+
+  void attach() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_secureStorageChannel, (call) async {
+          final args = (call.arguments as Map?)?.cast<String, dynamic>() ?? {};
+          final key = args['key'] as String?;
+          switch (call.method) {
+            case 'read':
+              return store[key];
+            case 'write':
+              store[key!] = args['value'] as String;
+              return null;
+            case 'delete':
+              store.remove(key);
+              return null;
+            case 'deleteAll':
+              store.clear();
+              return null;
+            case 'containsKey':
+              return store.containsKey(key);
+            case 'readAll':
+              return Map<String, String>.from(store);
+            default:
+              return null;
+          }
+        });
+  }
+
+  void detach() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_secureStorageChannel, null);
+  }
+}
 
 String _jwtForUser(String userId, {String email = 'learner@example.invalid'}) {
   String b64(Map<String, dynamic> m) =>
@@ -184,6 +226,25 @@ void main() {
       httpClient: MockClient((req) async {
         if (req.url.path.endsWith('/signup')) {
           signUpCalls++;
+          final body = req.body.isNotEmpty
+              ? (jsonDecode(req.body) as Map<String, dynamic>)
+              : const <String, dynamic>{};
+          if (body['email'] == 'other@example.invalid') {
+            return http.Response(
+              jsonEncode({
+                'id': 'user-other-confirm',
+                'aud': 'authenticated',
+                'role': 'authenticated',
+                'email': 'other@example.invalid',
+                'app_metadata': {'provider': 'email'},
+                'user_metadata': {'first_name': 'Sardor'},
+                'created_at': '2026-11-26T00:00:00.000Z',
+              }),
+              200,
+              request: req,
+              headers: {'content-type': 'application/json'},
+            );
+          }
           if (signUpCalls > 1) {
             return http.Response(
               jsonEncode({'code': 422, 'msg': 'User already registered'}),
@@ -492,14 +553,36 @@ void main() {
         expect(daily.single.correctAnswers, equals(1));
         expect(daily.single.accuracyPercent, equals(50));
         expect(daily.single.xpEarned, equals(2));
+
+        // Completing a lesson increments daily lessonsCompleted (+1) and xpEarned (+20 -> 22)
+        await repo.markLessonCompleted(
+          'lesson_eng_starter',
+          courseId: 'course_eng_01',
+        );
+        final afterLessonDaily = await repo.getDailyActivity(1);
+        expect(afterLessonDaily.single.lessonsCompleted, equals(1));
+        expect(afterLessonDaily.single.xpEarned, equals(22));
       },
     );
 
     testWidgets(
-      '4. FIX-P1-55: ProfileScreen logout succeeds and navigates to /login even when SupabaseConfig.client is null',
+      '4. FIX-P1-55: ProfileScreen logout clears authUserIdListenable & SecureAuthStorageCoordinator tokens and navigates to /login even when SupabaseConfig.client is null',
       (tester) async {
+        final fakeSecure = _FakeSecureChannel()..attach();
+        addTearDown(fakeSecure.detach);
         SupabaseConfig.hasRemoteConfiguration = true;
         await SupabaseConfig.bindClientForTesting(null);
+        final coordinator = SecureAuthStorageCoordinator(
+          persistSessionKey: 'sb-example-auth-token',
+          allowInMemoryTestFallback: true,
+        );
+        await coordinator.write('sb-example-auth-token', '{"access_token":"stale"}');
+        expect(fakeSecure.store.containsKey('sb-example-auth-token'), isTrue);
+        SupabaseConfig.setAuthUserIdForTesting(
+          'offline-user',
+          coordinator: coordinator,
+        );
+        expect(SupabaseConfig.authUserIdListenable.value, equals('offline-user'));
         final storage = await LocalStorageService.load();
 
         final router = GoRouter(
@@ -538,6 +621,12 @@ void main() {
           ProviderScope(
             overrides: [
               localStorageServiceProvider.overrideWithValue(storage),
+              courseRepositoryProvider.overrideWithValue(
+                InMemoryCourseRepository(),
+              ),
+              lessonRepositoryProvider.overrideWithValue(
+                InMemoryLessonRepository(),
+              ),
               learnerRepositoryProvider.overrideWithValue(
                 _StaticProfileRepo(fakeProfile, storage: storage),
               ),
@@ -545,16 +634,22 @@ void main() {
             child: MaterialApp.router(routerConfig: router),
           ),
         );
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
 
         final logoutFinder = find.byIcon(Icons.logout_rounded);
         expect(logoutFinder, findsOneWidget);
         await tester.ensureVisible(logoutFinder);
+        await tester.pump(const Duration(milliseconds: 100));
         await tester.tap(logoutFinder);
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
 
         expect(find.text('LOGIN_SCREEN_REACHED'), findsOneWidget);
+        expect(SupabaseConfig.authUserIdListenable.value, isNull);
+        expect(fakeSecure.store.containsKey('sb-example-auth-token'), isFalse);
       },
+      timeout: const Timeout(Duration(seconds: 30)),
     );
 
     testWidgets(
@@ -651,6 +746,343 @@ void main() {
 
         expect(signUpCalls, equals(1));
         expect(find.text('COURSES_SCREEN_REACHED'), findsOneWidget);
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      '6. FIX-P0-24 & FIX-P1-55: requiresMastery lessons recover mid-checkpoint progress across restart AND final-step complete_lesson drop + app restart skips duplicate submit_answer_attempt',
+      () async {
+        SupabaseConfig.hasRemoteConfiguration = true;
+        final storage = await LocalStorageService.load();
+        var submitRpcCount = 0;
+        var failCompleteLesson = true;
+        final completedLessons = <String>{};
+
+        final masteryLesson = Lesson(
+          id: 'lesson_w1b1_mastery_restart',
+          courseId: 'course_math_01',
+          skillId: 'skill_math_addition',
+          title: 'Mastery Restart Recovery',
+          estimatedMinutes: 8,
+          summary: 'Summary',
+          requiresMastery: true,
+          reinforcementExercise: Question(
+            id: 'q_w1b1_math_reinf',
+            courseId: 'course_math_01',
+            skillId: 'skill_math_addition',
+            text: '2 + 2 = ?',
+            options: const ['3', '4'],
+            correctIndex: 1,
+            difficulty: QuestionDifficulty.easy,
+            explanation: '4',
+          ),
+          steps: const [
+            LessonStep(
+              id: 'm0',
+              stepNumber: 1,
+              type: LessonStepType.interactiveQuestion,
+              title: 'Check 1',
+              content: '1 + 1 = ?',
+              interactiveQuestion: Question(
+                id: 'q_w1b1_math_1',
+                courseId: 'course_math_01',
+                skillId: 'skill_math_addition',
+                text: '1 + 1 = ?',
+                options: ['1', '2'],
+                correctIndex: 1,
+                difficulty: QuestionDifficulty.easy,
+                explanation: '2',
+              ),
+            ),
+            LessonStep(
+              id: 'm1',
+              stepNumber: 2,
+              type: LessonStepType.interactiveQuestion,
+              title: 'Check 2',
+              content: '3 + 2 = ?',
+              interactiveQuestion: Question(
+                id: 'q_w1b1_math_2',
+                courseId: 'course_math_01',
+                skillId: 'skill_math_addition',
+                text: '3 + 2 = ?',
+                options: ['4', '5'],
+                correctIndex: 1,
+                difficulty: QuestionDifficulty.easy,
+                explanation: '5',
+              ),
+            ),
+          ],
+        );
+
+        final client = SupabaseClient(
+          'https://example.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.sig',
+          authOptions: AuthClientOptions(
+            autoRefreshToken: false,
+            pkceAsyncStorage: _MemoryGotrueStorage(),
+          ),
+          httpClient: MockClient((req) async {
+            if (req.url.path.endsWith('/rpc/submit_answer_attempt')) {
+              submitRpcCount++;
+              return http.Response(
+                jsonEncode({
+                  'is_correct': true,
+                  'explanation': 'Right',
+                  'new_skill_score': 100,
+                  'overall_score': 100,
+                  'xp_awarded': 2,
+                  'already_processed': false,
+                }),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (req.url.path.endsWith('/rpc/complete_lesson')) {
+              if (failCompleteLesson) {
+                throw http.ClientException('complete_lesson network drop');
+              }
+              completedLessons.add(masteryLesson.id);
+              return http.Response(
+                jsonEncode({'completed': true, 'xp_awarded': 20}),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (req.url.path.endsWith('/profiles')) {
+              return http.Response(
+                jsonEncode({
+                  'id': 'user-w1b1-mastery',
+                  'first_name': 'Sardor',
+                  'last_name': '',
+                  'display_name': 'Sardor',
+                  'email': 'mastery@example.invalid',
+                  'role': 'student',
+                }),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (req.url.path.endsWith('/learner_profiles')) {
+              return http.Response(
+                jsonEncode({
+                  'user_id': 'user-w1b1-mastery',
+                  'selected_course_id': 'course_math_01',
+                  'goal': 'mastery',
+                  'daily_minutes': 15,
+                  'initial_level': 'beginner',
+                  'course_levels': {},
+                }),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (req.url.path.endsWith('/gamification_profiles')) {
+              return http.Response(
+                jsonEncode({
+                  'user_id': 'user-w1b1-mastery',
+                  'xp': 10,
+                  'streak_days': 1,
+                  'last_activity_date': '2026-11-26',
+                }),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            if (req.url.path.endsWith('/lesson_progress')) {
+              return http.Response(
+                jsonEncode([
+                  for (final id in completedLessons)
+                    {'lesson_id': id, 'status': 'completed'},
+                ]),
+                200,
+                request: req,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              '[]',
+              200,
+              request: req,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        );
+        addTearDown(client.dispose);
+        await client.auth.setInitialSession(
+          jsonEncode(
+            _sessionForUser(
+              'user-w1b1-mastery',
+              email: 'mastery@example.invalid',
+            ).toJson(),
+          ),
+        );
+        await SupabaseConfig.bindClientForTesting(client, storage: storage);
+
+        final container1 = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(storage),
+            lessonRepositoryProvider.overrideWithValue(
+              _SingleLessonRepo(masteryLesson),
+            ),
+            learnerRepositoryProvider.overrideWithValue(
+              SupabaseLearnerRepository(storage: storage, client: client),
+            ),
+          ],
+        );
+        addTearDown(container1.dispose);
+
+        await container1.read(learnerStateNotifierProvider.notifier).loadProfile();
+        final session1 = container1.read(lessonSessionNotifierProvider.notifier);
+        await session1.startLesson(masteryLesson.id);
+        session1.selectOption(1);
+        await session1.submitInteractiveQuiz(); // Q1 passes (submitRpcCount == 1)
+        expect(submitRpcCount, equals(1));
+        await session1.nextStep(); // Step 0 -> Step 1 (final step)
+        session1.selectOption(1);
+        await session1.submitInteractiveQuiz(); // Q2 submit succeeds (submitRpcCount == 2), complete_lesson drops!
+        expect(submitRpcCount, equals(2));
+        expect(container1.read(lessonSessionNotifierProvider).isCompleted, isFalse);
+
+        // Simulate full app restart (new ProviderContainer sharing persistent storage)!
+        final container2 = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(storage),
+            lessonRepositoryProvider.overrideWithValue(
+              _SingleLessonRepo(masteryLesson),
+            ),
+            learnerRepositoryProvider.overrideWithValue(
+              SupabaseLearnerRepository(storage: storage, client: client),
+            ),
+          ],
+        );
+        addTearDown(container2.dispose);
+
+        await container2.read(learnerStateNotifierProvider.notifier).loadProfile();
+        final session2 = container2.read(lessonSessionNotifierProvider.notifier);
+        await session2.startLesson(masteryLesson.id);
+
+        // Restored at Step 1 (requiresMastery!) AND pending selectedOptionIndex == 1 is hydrated!
+        expect(
+          container2.read(lessonSessionNotifierProvider).currentStepIndex,
+          equals(1),
+        );
+        expect(
+          container2.read(lessonSessionNotifierProvider).selectedOptionIndex,
+          equals(1),
+        );
+
+        // Retry submit after restart -> skips submit_answer_attempt (still 2!) and completes lesson!
+        failCompleteLesson = false;
+        await session2.submitInteractiveQuiz();
+        expect(submitRpcCount, equals(2));
+        expect(container2.read(lessonSessionNotifierProvider).isCompleted, isTrue);
+      },
+    );
+
+    testWidgets(
+      '7. FIX-P1-55: RegisterScreen purges stale half-signed-up session when user switches to a different email',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        SupabaseConfig.hasRemoteConfiguration = true;
+
+        final storage = await LocalStorageService.load();
+        final client = widgetClient!;
+        await SupabaseConfig.bindClientForTesting(client, storage: storage);
+
+        final fakeProfile = LearnerProfile(
+          id: 'user-half-signup',
+          name: 'Sardor',
+          selectedCourseId: 'course_eng_01',
+          goal: OnboardingGoal.mastery,
+          dailyMinutes: 15,
+          initialLevel: InitialLevel.beginner,
+          xp: 0,
+          streakDays: 0,
+          lastActiveDate: '2026-11-26',
+          scoresByCourse: const {},
+          completedLessonIds: const [],
+          completedNodeIds: const [],
+          completedReinforcementIds: const [],
+          createdAt: 1,
+        );
+
+        final router = GoRouter(
+          initialLocation: '/register',
+          routes: [
+            GoRoute(
+              path: '/register',
+              builder: (_, _) => const RegisterScreen(),
+            ),
+            GoRoute(
+              path: '/login',
+              builder: (_, _) => const Scaffold(body: Text('LOGIN_FOR_CONFIRM')),
+            ),
+            GoRoute(
+              path: '/courses',
+              builder: (_, _) => const Scaffold(body: Text('COURSES_SCREEN')),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              localStorageServiceProvider.overrideWithValue(storage),
+              courseRepositoryProvider.overrideWithValue(
+                InMemoryCourseRepository(),
+              ),
+              lessonRepositoryProvider.overrideWithValue(
+                InMemoryLessonRepository(),
+              ),
+              learnerRepositoryProvider.overrideWithValue(
+                _StaticProfileRepo(
+                  fakeProfile,
+                  shouldFail: () => true,
+                  storage: storage,
+                ),
+              ),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final fields = find.byType(TextField);
+        await tester.enterText(fields.at(0), 'Sardor');
+        await tester.enterText(fields.at(1), 'half@example.invalid');
+        await tester.enterText(fields.at(2), 'ValidPass123');
+        await tester.enterText(fields.at(3), 'ValidPass123');
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // Tap 1: half@example.invalid creates session, profile load fails -> stays on /register
+        final submitBtn = find.byType(AppButton).first;
+        await tester.tap(submitBtn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(client.auth.currentSession, isNotNull);
+
+        // Tap 2: user edits email to other@example.invalid (which requires email confirmation)
+        await tester.enterText(fields.at(1), 'other@example.invalid');
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.tap(submitBtn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('LOGIN_FOR_CONFIRM'), findsOneWidget);
+        // Stale session for half@example.invalid MUST be cleared!
+        expect(client.auth.currentSession, isNull);
+        expect(SupabaseConfig.authUserIdListenable.value, isNull);
       },
       timeout: const Timeout(Duration(seconds: 30)),
     );

@@ -16,6 +16,9 @@ export interface DurablePendingAttempt {
   payloadSignature: string;
   selectedIndex?: number;
   selectedText?: string;
+  matchedPairs?: Record<string, string>;
+  orderedTokens?: string[];
+  checkedCriteriaIds?: string[];
   status: 'submitting' | 'graded';
   cachedLessonResult?: LessonAnswerResult;
   cachedServerResult?: SubmitAnswerAttemptResult;
@@ -114,6 +117,16 @@ export function readPendingAttempt(
       payloadSignature: parsed.payloadSignature,
       selectedIndex: typeof parsed.selectedIndex === 'number' ? parsed.selectedIndex : undefined,
       selectedText: typeof parsed.selectedText === 'string' ? parsed.selectedText : undefined,
+      matchedPairs:
+        parsed.matchedPairs && typeof parsed.matchedPairs === 'object' && !Array.isArray(parsed.matchedPairs)
+          ? (parsed.matchedPairs as Record<string, string>)
+          : undefined,
+      orderedTokens: Array.isArray(parsed.orderedTokens)
+        ? parsed.orderedTokens.filter((item): item is string => typeof item === 'string')
+        : undefined,
+      checkedCriteriaIds: Array.isArray(parsed.checkedCriteriaIds)
+        ? parsed.checkedCriteriaIds.filter((item): item is string => typeof item === 'string')
+        : undefined,
       status: parsed.status,
       cachedLessonResult: parsed.cachedLessonResult,
       cachedServerResult: parsed.cachedServerResult,
@@ -132,6 +145,9 @@ export function getOrCreatePendingAttempt(params: {
   payloadSignature: string;
   selectedIndex?: number;
   selectedText?: string;
+  matchedPairs?: Record<string, string>;
+  orderedTokens?: string[];
+  checkedCriteriaIds?: string[];
 }): DurablePendingAttempt {
   const existing = readPendingAttempt(
     params.accountId,
@@ -151,6 +167,9 @@ export function getOrCreatePendingAttempt(params: {
     payloadSignature: params.payloadSignature,
     selectedIndex: params.selectedIndex,
     selectedText: params.selectedText,
+    matchedPairs: params.matchedPairs,
+    orderedTokens: params.orderedTokens,
+    checkedCriteriaIds: params.checkedCriteriaIds,
     status: 'submitting',
     updatedAt: Date.now(),
   };

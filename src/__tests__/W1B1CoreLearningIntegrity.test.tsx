@@ -10,7 +10,10 @@ import { SubmitReinforcementUseCase } from '@/domain/usecases/SubmitReinforcemen
 import { InMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
 import { InMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
 import { registerQuestionAnswerKey, clearQuestionAnswerKeys } from '@/core/runtime/questionAnswerKeys';
-import { readLessonPosition, saveLessonPosition } from '@/features/lesson/readingPosition';
+import { clearLessonPosition, readLessonPosition, saveLessonPosition } from '@/features/lesson/readingPosition';
+import { writePersistedAnsweredQuestionIds } from '@/features/lesson/lessonRecoveryStorage';
+import { setDemoRuntimeActive } from '@/core/runtime/demoRuntime';
+import { resetAllSessionStores } from '@/core/runtime/sessionReset';
 
 const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -334,6 +337,12 @@ describe('W1-B1 Core Learning Integrity (FIX-P0-24, FIX-P1-55, FIX-P2-23)', () =
       isCorrect: true,
     });
     expect((await repo.getProfile()).xp).toBe(xpAfterFirstRecord);
+
+    // Completing a lesson adds +20 XP and lessonsCompleted=1 to today's daily activity summary
+    await repo.markLessonCompleted('lesson_eng_starter', 'course_eng_01');
+    const [afterCompletionStats] = await repo.getDailyActivity(1);
+    expect(afterCompletionStats.lessonsCompleted).toBe(1);
+    expect(afterCompletionStats.xpEarned).toBe(24);
   });
 
   it('4. FIX-P1-55: AuthProvider signUp recovers half-signed-up session without 422 and signOut("global") always clears local auth state when offline', async () => {
@@ -343,16 +352,21 @@ describe('W1-B1 Core Learning Integrity (FIX-P0-24, FIX-P1-55, FIX-P2-23)', () =
     let currentSession: typeof sessionObj | null = null;
     let failProfileRead = true;
 
-    const signUpMock = vi.fn(async () => {
-      if (currentSession) {
-        return {
-          data: { user: null, session: null },
-          error: { status: 422, message: 'User already registered' },
-        };
-      }
-      currentSession = sessionObj;
-      return { data: { user: userObj, session: sessionObj }, error: null };
-    });
+    const signUpMock = vi.fn(
+      async (): Promise<{
+        data: { user: { id: string; email: string } | null; session: typeof sessionObj | null };
+        error: { status: number; message: string } | null;
+      }> => {
+        if (currentSession) {
+          return {
+            data: { user: null, session: null },
+            error: { status: 422, message: 'User already registered' },
+          };
+        }
+        currentSession = sessionObj;
+        return { data: { user: userObj, session: sessionObj }, error: null };
+      },
+    );
     const getSessionMock = vi.fn(async () => ({ data: { session: currentSession }, error: null }));
     const signOutMock = vi.fn(async ({ scope }: { scope?: 'local' | 'global' } = {}) => {
       if (scope === 'global') {
@@ -443,5 +457,120 @@ describe('W1-B1 Core Learning Integrity (FIX-P0-24, FIX-P1-55, FIX-P2-23)', () =
     expect(captured.user).toBeNull();
     expect(captured.session).toBeNull();
     expect(captured.profile).toBeNull();
+
+    // Attempt 3: half-signed-up session for typo@example.invalid followed by signup with a DIFFERENT email purges typo session first
+    failProfileRead = true;
+    await act(async () => {
+      await captured.signUp(userObj.email, 'ValidPass123', 'Ali', 'Valiyev');
+    });
+    expect(currentSession).not.toBeNull();
+
+    signUpMock.mockImplementationOnce(async () => ({
+      data: { user: { id: 'user-signup-2', email: 'real@example.invalid' }, session: null },
+      error: null,
+    }));
+    let diffEmailRes!: Awaited<ReturnType<typeof captured.signUp>>;
+    await act(async () => {
+      diffEmailRes = await captured.signUp('real@example.invalid', 'ValidPass123', 'Ali', 'Valiyev');
+    });
+    expect(diffEmailRes.requiresEmailConfirmation).toBe(true);
+    expect(currentSession).toBeNull();
+    expect(captured.user).toBeNull();
+    expect(captured.session).toBeNull();
+  });
+
+  it('5. FIX-P1-55: unifies Demo readingPosition scope across guest_user_01 / learner_default_01 / demo, purges on session reset, and preserves server-confirmed step results if user navigates mid-RPC', async () => {
+    const lesson = multiStepLesson('lesson_w1b1_demo_scope', false);
+    setDemoRuntimeActive(true);
+    try {
+      writePersistedAnsweredQuestionIds('demo', lesson.courseId, lesson.id, ['q_w1b1_step_1']);
+      saveLessonPosition('guest_user_01', lesson, 3);
+      expect(readLessonPosition('guest_user_01', lesson)).toBe(3);
+
+      // Clearing via learner_default_01 (store profile ID) clears the exact same Demo key
+      clearLessonPosition('learner_default_01', lesson);
+      expect(readLessonPosition('guest_user_01', lesson)).toBe(0);
+
+      saveLessonPosition('guest_user_01', lesson, 2);
+      expect(readLessonPosition('guest_user_01', lesson)).toBe(2);
+      resetAllSessionStores();
+      expect(readLessonPosition('guest_user_01', lesson)).toBe(0);
+    } finally {
+      setDemoRuntimeActive(false);
+    }
+
+    // Mid-RPC step navigation: server-confirmed final-step attempt stays cached as 'graded' so returning & retrying skips duplicate submitAnswerAttempt
+    vi.resetModules();
+    const completedSet = new Set<string>();
+    const makeProfile = (): LearnerProfile => ({
+      id: 'user-w1b1-midrpc',
+      name: 'Aziza',
+      selectedCourseId: 'course_eng_01',
+      goal: 'mastery',
+      dailyMinutes: 15,
+      initialLevel: 'beginner',
+      xp: 0,
+      streakDays: 1,
+      lastActiveDate: '2026-11-26',
+      scoresByCourse: {},
+      completedLessonIds: [...completedSet],
+      completedNodeIds: [],
+      completedReinforcementIds: [],
+      createdAt: 1,
+    });
+
+    let resolveSubmit!: (val: unknown) => void;
+    const submitSpy = vi.fn(
+      () =>
+        new Promise((res) => {
+          resolveSubmit = res;
+        }),
+    );
+    const completeSpy = vi.fn(async (id: string) => {
+      completedSet.add(id);
+    });
+
+    vi.doMock('@/data/repositories/SupabaseLessonRepository', () => ({
+      supabaseLessonRepository: {
+        getLessonById: vi.fn(async () => lesson),
+        saveLesson: vi.fn(),
+      },
+    }));
+    vi.doMock('@/data/repositories/SupabaseLearnerRepository', () => ({
+      supabaseLearnerRepository: {
+        submitAnswerAttempt: submitSpy,
+        markLessonCompleted: completeSpy,
+        getProfile: vi.fn(async () => makeProfile()),
+      },
+    }));
+
+    const { useLearnerStore } = await import('@/app/store/useLearnerStore');
+    const { useLessonStore } = await import('@/app/store/useLessonStore');
+
+    useLearnerStore.setState({ profile: makeProfile(), isLoading: false });
+    writePersistedAnsweredQuestionIds('user-w1b1-midrpc', lesson.courseId, lesson.id, ['q_w1b1_step_1']);
+    await useLessonStore.getState().loadLesson(lesson.id);
+    useLessonStore.getState().goToStep(3);
+
+    const inFlight = useLessonStore.getState().submitAnswer(1);
+    // Navigate away to step 2 while submitAnswerAttempt RPC is still in-flight!
+    useLessonStore.getState().prevStep();
+    resolveSubmit({
+      isCorrect: true,
+      explanation: 'Confirmed while navigated',
+      newSkillScore: 100,
+      overallScore: 100,
+      xpAwarded: 2,
+    });
+    await inFlight;
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+
+    // Return to step 3 and submit again -> reuses graded pending attempt (0 extra submitAnswerAttempt calls!) and completes lesson
+    useLessonStore.getState().goToStep(3);
+    const finished = await useLessonStore.getState().submitAnswer(1);
+    expect(finished?.isCorrect).toBe(true);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(completeSpy).toHaveBeenCalledTimes(1);
+    expect(useLessonStore.getState().isCompleted).toBe(true);
   });
 });

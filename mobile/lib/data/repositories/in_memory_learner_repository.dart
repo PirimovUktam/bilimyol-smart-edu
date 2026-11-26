@@ -39,6 +39,37 @@ class _SkillBaseline {
   }
 }
 
+class _DailyBonusEvent {
+  final int timestamp;
+  final int xpEarned;
+  final int lessonsCompleted;
+
+  const _DailyBonusEvent({
+    required this.timestamp,
+    required this.xpEarned,
+    required this.lessonsCompleted,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'timestamp': timestamp,
+    'xpEarned': xpEarned,
+    'lessonsCompleted': lessonsCompleted,
+  };
+
+  static _DailyBonusEvent? fromJson(dynamic raw) {
+    if (raw is! Map) return null;
+    final ts = raw['timestamp'];
+    if (ts is! num) return null;
+    return _DailyBonusEvent(
+      timestamp: ts.toInt(),
+      xpEarned: raw['xpEarned'] is num ? (raw['xpEarned'] as num).toInt() : 0,
+      lessonsCompleted: raw['lessonsCompleted'] is num
+          ? (raw['lessonsCompleted'] as num).toInt()
+          : 0,
+    );
+  }
+}
+
 class InMemoryLearnerRepository extends ILearnerRepository {
   static const int _snapshotVersion = 1;
 
@@ -66,6 +97,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
   bool get supportsServerReinforcementPersistence => false;
 
   final List<AnswerAttemptRecord> _answerAttempts = [];
+  final List<_DailyBonusEvent> _dailyBonusEvents = [];
   final Set<String> _processedActionKeys = {};
   final Set<String> _recordedActivityDates = {};
   final Map<String, Map<String, _SkillBaseline>> _skillBaselines = {};
@@ -177,11 +209,25 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         }
       }
 
+      final bonusEventsJson = decoded['dailyBonusEvents'];
+      final parsedBonusEvents = <_DailyBonusEvent>[];
+      if (bonusEventsJson is List) {
+        for (final item in bonusEventsJson) {
+          final parsed = _DailyBonusEvent.fromJson(item);
+          if (parsed != null) {
+            parsedBonusEvents.add(parsed);
+          }
+        }
+      }
+
       if (_hydrationEpoch != epoch) return;
       _profile = parsedProfile;
       _answerAttempts
         ..clear()
         ..addAll(parsedAttempts);
+      _dailyBonusEvents
+        ..clear()
+        ..addAll(parsedBonusEvents);
       _processedActionKeys
         ..clear()
         ..addAll(parsedActionKeys);
@@ -248,6 +294,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         'version': _snapshotVersion,
         'profile': _profileToJson(_profile),
         'answerAttempts': _answerAttempts.map(_attemptToJson).toList(),
+        'dailyBonusEvents': _dailyBonusEvents.map((e) => e.toJson()).toList(),
         'processedActionKeys': _processedActionKeys.toList(),
         'recordedActivityDates': _recordedActivityDates.toList(),
         'skillBaselines': {
@@ -434,7 +481,14 @@ class InMemoryLearnerRepository extends ILearnerRepository {
             ...<String>{..._profile.completedNodeIds, ...targetNodeIds},
           ],
         );
-        _addXpInMemory(20, 'lesson_completed_$lessonId');
+        final addedXp = _addXpInMemory(20, 'lesson_completed_$lessonId');
+        _dailyBonusEvents.add(
+          _DailyBonusEvent(
+            timestamp: DateTime.now().millisecondsSinceEpoch,
+            xpEarned: addedXp ? 20 : 0,
+            lessonsCompleted: 1,
+          ),
+        );
         _applyDailyActivityInMemory();
         _markDirty();
         await _persistSnapshot(expectedEpoch: epoch);
@@ -480,6 +534,13 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         final list = List<String>.from(_profile.completedReinforcementIds)
           ..add(reinforcementId);
         _profile = _profile.copyWith(completedReinforcementIds: list);
+        _dailyBonusEvents.add(
+          _DailyBonusEvent(
+            timestamp: DateTime.now().millisecondsSinceEpoch,
+            xpEarned: xpAwarded > 0 ? xpAwarded : 0,
+            lessonsCompleted: 0,
+          ),
+        );
         _applyDailyActivityInMemory();
         _markDirty();
         await _persistSnapshot(expectedEpoch: epoch);
@@ -889,19 +950,27 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     return _answerAttempts.sublist(_answerAttempts.length - limit);
   }
 
+  static String _tashkentDateFromMs(int timestampMs) =>
+      DateTime.fromMillisecondsSinceEpoch(
+        timestampMs,
+        isUtc: true,
+      ).add(const Duration(hours: 5)).toIso8601String().split('T').first;
+
   @override
   Future<List<DailyActivitySummary>> getDailyActivity([int days = 7]) async {
     await _ensureHydrated();
     final result = <DailyActivitySummary>[];
-    final now = DateTime.now();
+    final tashkentNow = DateTime.now().toUtc().add(const Duration(hours: 5));
+    final todayTashkentUtc = DateTime.utc(
+      tashkentNow.year,
+      tashkentNow.month,
+      tashkentNow.day,
+    );
     for (int i = days - 1; i >= 0; i--) {
-      final day = now.subtract(Duration(days: i));
+      final day = todayTashkentUtc.subtract(Duration(days: i));
       final dateStr = day.toIso8601String().split('T').first;
       final dayAttempts = _answerAttempts.where((a) {
-        return DateTime.fromMillisecondsSinceEpoch(
-              a.timestamp,
-            ).toIso8601String().split('T').first ==
-            dateStr;
+        return _tashkentDateFromMs(a.timestamp) == dateStr;
       }).toList();
       final latestByQuestion = <String, AnswerAttemptRecord>{};
       for (final attempt in dayAttempts) {
@@ -914,13 +983,20 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       final accuracyPercent = questionsAnswered > 0
           ? ((correctAnswers * 100) / questionsAnswered).round()
           : 0;
-      final xpEarned = dayAttempts.fold<int>(0, (sum, a) => sum + a.xpAwarded);
+      var xpEarned = dayAttempts.fold<int>(0, (sum, a) => sum + a.xpAwarded);
+      var lessonsCompleted = 0;
+      for (final ev in _dailyBonusEvents) {
+        if (_tashkentDateFromMs(ev.timestamp) == dateStr) {
+          xpEarned += ev.xpEarned;
+          lessonsCompleted += ev.lessonsCompleted;
+        }
+      }
       result.add(
         DailyActivitySummary(
           date: dateStr,
           activeMinutes: (questionsAnswered * 1.5).round(),
           xpEarned: xpEarned,
-          lessonsCompleted: 0,
+          lessonsCompleted: lessonsCompleted,
           questionsAnswered: questionsAnswered,
           correctAnswers: correctAnswers,
           accuracyPercent: accuracyPercent,
@@ -1025,6 +1101,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     final resetProfile = _defaultProfile();
     _profile = resetProfile;
     _answerAttempts.clear();
+    _dailyBonusEvents.clear();
     _processedActionKeys.clear();
     _recordedActivityDates.clear();
     _skillBaselines.clear();
