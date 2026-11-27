@@ -14,6 +14,7 @@ import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine'
 import { PLACEMENT_QUESTIONS } from '@/data/datasources/questions';
 import { SEED_LESSONS } from '@/data/datasources/lessons';
 import { SEED_ROADMAP_NODES } from '@/data/datasources/roadmaps';
+import { STARTER_LESSONS } from '@/data/datasources/starterLessons';
 import { getQuestionAnswerKey } from '@/core/runtime/questionAnswerKeys';
 import { learningDate } from '@/core/utils/learningDate';
 import {
@@ -217,6 +218,11 @@ interface DailyBonusEvent {
   lessonsCompleted: number;
 }
 
+interface SkillBaselineEntry {
+  score: number;
+  attemptCountAtBaseline: number;
+}
+
 export class InMemoryLearnerRepository implements ILearnerRepository {
   readonly supportsNodeCompletion = true;
   private profile: LearnerProfile = createDefaultProfile();
@@ -224,6 +230,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   private dailyBonusEvents: DailyBonusEvent[] = [];
   private processedActionKeys: Set<string> = new Set();
   private recordedActivityDates: Set<string> = new Set();
+  private skillBaselines: Record<string, Record<string, SkillBaselineEntry>> = {};
 
   constructor(private readonly tabStorage?: () => Storage) {
     try {
@@ -245,6 +252,25 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         : [];
       this.processedActionKeys = new Set(normalizeStringArray(stored.processedActionKeys));
       this.recordedActivityDates = new Set(normalizeStringArray(stored.recordedActivityDates));
+      if (isPlainRecord(stored.skillBaselines)) {
+        const parsedBaselines: Record<string, Record<string, SkillBaselineEntry>> = {};
+        for (const [courseId, rawCourseMap] of Object.entries(stored.skillBaselines)) {
+          if (!isPlainRecord(rawCourseMap)) continue;
+          const skillMap: Record<string, SkillBaselineEntry> = {};
+          for (const [skillId, rawBase] of Object.entries(rawCourseMap)) {
+            if (isPlainRecord(rawBase) && typeof rawBase.score === 'number' && typeof rawBase.attemptCountAtBaseline === 'number') {
+              skillMap[skillId] = {
+                score: SkillScoringEngine.clampScore(rawBase.score),
+                attemptCountAtBaseline: Math.max(0, Math.trunc(rawBase.attemptCountAtBaseline)),
+              };
+            }
+          }
+          if (Object.keys(skillMap).length > 0) {
+            parsedBaselines[courseId] = skillMap;
+          }
+        }
+        this.skillBaselines = parsedBaselines;
+      }
     } catch { /* A malformed snapshot starts a fresh demo. */ }
   }
 
@@ -256,6 +282,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         dailyBonusEvents: this.dailyBonusEvents,
         processedActionKeys: [...this.processedActionKeys],
         recordedActivityDates: [...this.recordedActivityDates],
+        skillBaselines: this.skillBaselines,
       }));
     } catch { /* The demo still works when browser storage is unavailable. */ }
   }
@@ -269,24 +296,111 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
   }
 
   /**
-   * Mirrors the server-side anti-cheat scoring: a skill score is computed over
-   * UNIQUE questions only, using each question's LATEST attempt. Re-solving or
-   * deliberately failing the same question can no longer inflate/deflate the
-   * score, keeping the client cache consistent with `submit_answer_attempt`.
+   * Calibrates skill mastery over UNIQUE non-placement questions (latest attempt wins),
+   * blending prior diagnostic baseline (`priorWeight = 4`), enforcing `starterOnlyMaxScore = 55`
+   * on starter/foundation lessons, discounting spoiled choice retries (`0.75`), and requiring
+   * `attemptCount >= 4` for `'mastered'` (`FIX-P1-09`, `FIX-P2-09`).
    */
-  private computeUniqueSkillScore(courseId: string, skillId: string): { score: number; total: number; correct: number } {
-    const latestByQuestion = new Map<string, boolean>();
-    for (const a of this.answerAttempts) {
-      if (a.courseId === courseId && a.skillId === skillId && a.lessonId !== 'placement_test') {
-        latestByQuestion.set(a.questionId, a.isCorrect);
+  private computeUniqueSkillScore(courseId: string, skillId: string): {
+    score: number;
+    total: number;
+    correct: number;
+    masteryLevel: SkillScore['masteryLevel'];
+    confidence: NonNullable<SkillScore['confidence']>;
+  } {
+    const nonPlacementAttempts = this.answerAttempts.filter(
+      (a) => a.courseId === courseId && a.skillId === skillId && a.lessonId !== 'placement_test'
+    );
+    const baseline = this.skillBaselines[courseId]?.[skillId];
+    const postBaselineAttempts =
+      baseline && baseline.attemptCountAtBaseline <= nonPlacementAttempts.length
+        ? nonPlacementAttempts.slice(baseline.attemptCountAtBaseline)
+        : nonPlacementAttempts;
+
+    const placementPrior = this.profile.placementSkillScoresByCourse?.[courseId]?.[skillId]?.score;
+    const deduplicateByQuestion = courseId === 'course_eng_01' && !baseline;
+
+    const latestByQuestion = new Map<string, { isCorrect: boolean; firstIsCorrect: boolean; lessonId?: string }>();
+    for (const a of postBaselineAttempts) {
+      const prev = latestByQuestion.get(a.questionId);
+      latestByQuestion.set(a.questionId, {
+        isCorrect: a.isCorrect,
+        firstIsCorrect: prev ? prev.firstIsCorrect : a.isCorrect,
+        lessonId: a.lessonId,
+      });
+    }
+
+    let correct = 0;
+    let weightedCorrect = 0;
+    let weightedTotal = 0;
+    let unadjustedEarned = 0;
+    let hasNonStarterAttempt = false;
+
+    if (deduplicateByQuestion) {
+      latestByQuestion.forEach((entry, qid) => {
+        const isStarter = Boolean(entry.lessonId && STARTER_LESSONS[entry.lessonId]);
+        const weight = isStarter ? 0.5 : 1.0;
+        if (!isStarter) {
+          hasNonStarterAttempt = true;
+        }
+        weightedTotal += weight;
+        if (entry.isCorrect) {
+          correct += 1;
+          const matchedQ = this.findQuestionById(qid);
+          const qType = matchedQ?.questionType ?? 'multiple_choice';
+          const isChoiceMode =
+            qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+          const retryFactor = !entry.firstIsCorrect && isChoiceMode ? 0.75 : 1.0;
+          weightedCorrect += weight * retryFactor;
+          unadjustedEarned += retryFactor;
+        }
+      });
+    } else {
+      latestByQuestion.forEach((entry) => {
+        if (entry.isCorrect) correct += 1;
+      });
+      for (const a of postBaselineAttempts) {
+        const isStarter = Boolean(a.lessonId && STARTER_LESSONS[a.lessonId]);
+        const weight = isStarter ? 0.5 : 1.0;
+        if (!isStarter) {
+          hasNonStarterAttempt = true;
+        }
+        weightedTotal += weight;
+        if (a.isCorrect) {
+          weightedCorrect += weight;
+        }
       }
     }
-    let correct = 0;
-    latestByQuestion.forEach((isCorrect) => {
-      if (isCorrect) correct += 1;
-    });
+
     const total = latestByQuestion.size;
-    return { score: SkillScoringEngine.computeSkillScore(correct, total), total, correct };
+    const priorScore =
+      courseId !== 'course_eng_01'
+        ? (baseline?.score ?? placementPrior ?? null)
+        : (baseline?.score ?? (!hasNonStarterAttempt ? (placementPrior ?? null) : null));
+
+    let score: number;
+    if (postBaselineAttempts.length === 0) {
+      score = priorScore ?? 0;
+    } else if (courseId === 'course_eng_01' && priorScore === null && hasNonStarterAttempt) {
+      score = SkillScoringEngine.clampScore((unadjustedEarned / Math.max(1, total)) * 100);
+    } else {
+      score = SkillScoringEngine.computeCalibratedSkillScore({
+        weightedCorrect,
+        weightedTotal,
+        priorScore,
+        starterOnly: priorScore === null && !hasNonStarterAttempt,
+        hasNonStarterAttempt,
+      });
+    }
+
+    const effectiveCount = Math.max(total, priorScore !== null ? 2 : 0);
+    return {
+      score,
+      total,
+      correct,
+      masteryLevel: SkillScoringEngine.getMasteryLevel(score, total > 0 ? total : (priorScore !== null ? 4 : undefined)),
+      confidence: SkillScoringEngine.computeConfidence(effectiveCount),
+    };
   }
 
   async updateProfile(updates: Partial<LearnerProfile>): Promise<LearnerProfile> {
@@ -334,6 +448,17 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       ...(this.profile.scoresByCourse[courseId] || {}),
       ...scores,
     };
+    const courseBaselines = { ...(this.skillBaselines[courseId] ?? {}) };
+    for (const [skillId, entry] of Object.entries(scores)) {
+      const existingNonPlacementCount = this.answerAttempts.filter(
+        (a) => a.courseId === courseId && a.skillId === skillId && a.lessonId !== 'placement_test'
+      ).length;
+      courseBaselines[skillId] = {
+        score: entry.score,
+        attemptCountAtBaseline: existingNonPlacementCount,
+      };
+    }
+    this.skillBaselines[courseId] = courseBaselines;
     this.saveTabProgress();
   }
 
@@ -614,8 +739,13 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     await this.recordDailyActivity();
 
     // Recalculate skill score over unique questions (latest attempt each) for non-placement attempts only.
-    const { score: newScoreVal, total: uniqueTotal, correct: uniqueCorrect } =
-      this.computeUniqueSkillScore(request.courseId, request.skillId);
+    const {
+      score: newScoreVal,
+      total: uniqueTotal,
+      correct: uniqueCorrect,
+      masteryLevel,
+      confidence,
+    } = this.computeUniqueSkillScore(request.courseId, request.skillId);
 
     if (request.lessonId !== 'placement_test') {
       if (!this.profile.scoresByCourse[request.courseId]) {
@@ -627,7 +757,9 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         courseId: request.courseId,
         score: newScoreVal,
         lastUpdated: Date.now(),
-        masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
+        masteryLevel,
+        attemptCount: uniqueTotal,
+        confidence,
       };
     }
 
@@ -702,7 +834,12 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
 
     // Recalculate cumulative unique-question skill score for independent lesson/reinforcement attempts only.
     if (attempt.lessonId !== 'placement_test') {
-      const { score: newScoreVal } = this.computeUniqueSkillScore(attempt.courseId, attempt.skillId);
+      const {
+        score: newScoreVal,
+        total: uniqueTotal,
+        masteryLevel,
+        confidence,
+      } = this.computeUniqueSkillScore(attempt.courseId, attempt.skillId);
 
       if (!this.profile.scoresByCourse[attempt.courseId]) {
         this.profile.scoresByCourse[attempt.courseId] = {};
@@ -713,7 +850,9 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         courseId: attempt.courseId,
         score: newScoreVal,
         lastUpdated: Date.now(),
-        masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
+        masteryLevel,
+        attemptCount: uniqueTotal,
+        confidence,
       };
     }
 
@@ -819,6 +958,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     this.dailyBonusEvents = [];
     this.processedActionKeys.clear();
     this.recordedActivityDates.clear();
+    this.skillBaselines = {};
     this.saveTabProgress();
     return this.getProfile();
   }

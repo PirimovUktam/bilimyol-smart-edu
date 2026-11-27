@@ -36,17 +36,31 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
     }
   }, [courseId]);
 
-  const scores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
+  const lessonScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
+  const placementSkillScores = courseId ? profile?.placementSkillScoresByCourse?.[courseId] ?? {} : {};
+  const scores =
+    courseId === 'course_eng_01' && Object.keys(lessonScores).length === 0
+      ? placementSkillScores
+      : lessonScores;
   const path = roadmap?.courseId === courseId ? roadmap : null;
   const mathPilot = usesMathMastery(courseId);
   const objectives = path?.nodes.filter((node) => node.mastery && !node.isOptional) ?? [];
   const entries = mathPilot ? objectives.map((node) => ({
     id: node.id, name: node.title, description: node.description, node,
     score: node.mastery?.answered ? Math.round(100 * node.mastery.correct / node.mastery.answered) : undefined,
-  })) : skills.map((skill) => ({
-    ...skill, node: path?.nodes.find((item) => !item.isReinforcement && item.skillId === skill.id),
-    score: scores[skill.id]?.score,
-  }));
+    confidence: undefined,
+  })) : skills.map((skill) => {
+    const skillObj = scores[skill.id];
+    const resolvedConfidence = skillObj
+      ? (skillObj.confidence ?? SkillScoringEngine.computeConfidence(skillObj.attemptCount ?? 2))
+      : undefined;
+    return {
+      ...skill,
+      node: path?.nodes.find((item) => !item.isReinforcement && item.skillId === skill.id),
+      score: skillObj?.score,
+      confidence: resolvedConfidence,
+    };
+  });
   const evaluated = entries.filter((skill) => skill.score != null);
   const hasScores = evaluated.length > 0;
   const overall = mathPilot
@@ -244,23 +258,40 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <h3 className="heading break-words text-lg font-extrabold">{skill.name}</h3>
-                          {effectiveness && score != null && (() => {
-                            const delta = effectiveness.skillDeltas.find((d) => d.skillId === skill.id);
-                            if (!delta) return null;
-                            const gapLabel = delta.status === 'gap_detected'
-                              ? t('adaptive.gapStatusDetected')
-                              : delta.status === 'closed_gap'
-                              ? t('adaptive.gapStatusClosed')
-                              : delta.status === 'mastered'
-                              ? t('adaptive.gapStatusMastered')
-                              : t('adaptive.gapStatusReinforcing');
-                            const variant = delta.status === 'gap_detected'
-                              ? 'rose'
-                              : delta.status === 'closed_gap' || delta.status === 'mastered'
-                              ? 'emerald'
-                              : 'amber';
-                            return <Badge variant={variant} size="sm">{gapLabel}</Badge>;
-                          })()}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {!mathPilot && skill.confidence && (
+                              <Badge
+                                variant={skill.confidence === 'high' ? 'emerald' : skill.confidence === 'medium' ? 'indigo' : 'slate'}
+                                size="sm"
+                                data-confidence={skill.confidence}
+                              >
+                                {t(
+                                  skill.confidence === 'high'
+                                    ? 'path.confidenceHigh'
+                                    : skill.confidence === 'medium'
+                                      ? 'path.confidenceMedium'
+                                      : 'path.confidenceLow'
+                                )}
+                              </Badge>
+                            )}
+                            {effectiveness && score != null && (() => {
+                              const delta = effectiveness.skillDeltas.find((d) => d.skillId === skill.id);
+                              if (!delta) return null;
+                              const gapLabel = delta.status === 'gap_detected'
+                                ? t('adaptive.gapStatusDetected')
+                                : delta.status === 'closed_gap'
+                                ? t('adaptive.gapStatusClosed')
+                                : delta.status === 'mastered'
+                                ? t('adaptive.gapStatusMastered')
+                                : t('adaptive.gapStatusReinforcing');
+                              const variant = delta.status === 'gap_detected'
+                                ? 'rose'
+                                : delta.status === 'closed_gap' || delta.status === 'mastered'
+                                ? 'emerald'
+                                : 'amber';
+                              return <Badge variant={variant} size="sm">{gapLabel}</Badge>;
+                            })()}
+                          </div>
                         </div>
                         <p className="line-clamp-2 text-sm text-slatefine">{skill.description}</p>
                         <div className="space-y-1.5 pt-2">

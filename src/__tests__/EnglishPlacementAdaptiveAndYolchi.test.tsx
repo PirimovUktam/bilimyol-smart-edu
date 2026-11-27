@@ -125,31 +125,47 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
     }
   });
 
-  it('starts English placement at easy (A1), prevents miss jumps to hard, and computes scores strictly over answered items', () => {
+  it('starts English placement at medium (A2), steps down to easy (A1) on miss or up to hard (B1) on hit, and computes scores strictly over answered items', () => {
     const engBank = PLACEMENT_QUESTIONS['course_eng_01'];
     const skills = ['skill_eng_vocab', 'skill_eng_grammar', 'skill_eng_listening', 'skill_eng_reading'];
 
     const first = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [], 2);
-    expect(first?.difficulty).toBe('easy');
-    expect(first?.cefrLevel).toBe('A1');
+    expect(first?.difficulty).toBe('medium');
+    expect(first?.cefrLevel).toBe('A2');
 
-    // Miss on easy A1 vocab -> next vocab question should stay medium (never hard if easy exhausted)
+    // Miss on medium A2 vocab -> next vocab question steps down to easy (A1), never hard
     const afterMiss = AdaptiveQuestionSelector.getNextQuestion(
       engBank,
       skills,
       [
-        { questionId: first!.id, skillId: 'skill_eng_vocab', difficulty: 'easy', isCorrect: false },
-        { questionId: 'q_eng_place_grammar_a1', skillId: 'skill_eng_grammar', difficulty: 'easy', isCorrect: true },
-        { questionId: 'q_eng_place_listening_a1', skillId: 'skill_eng_listening', difficulty: 'easy', isCorrect: true },
-        { questionId: 'q_eng_place_reading_a1', skillId: 'skill_eng_reading', difficulty: 'easy', isCorrect: true },
+        { questionId: first!.id, skillId: 'skill_eng_vocab', difficulty: 'medium', isCorrect: false },
+        { questionId: 'q_eng_place_grammar_a2', skillId: 'skill_eng_grammar', difficulty: 'medium', isCorrect: true },
+        { questionId: 'q_eng_place_listening_a2', skillId: 'skill_eng_listening', difficulty: 'medium', isCorrect: true },
+        { questionId: 'q_eng_place_reading_a2', skillId: 'skill_eng_reading', difficulty: 'medium', isCorrect: true },
       ],
       2,
     );
     expect(afterMiss?.skillId).toBe('skill_eng_vocab');
-    expect(afterMiss?.difficulty).toBe('medium');
+    expect(afterMiss?.difficulty).toBe('easy');
+
+    // Hit on medium A2 grammar -> next grammar question escalates to hard (B1)
+    const afterHit = AdaptiveQuestionSelector.getNextQuestion(
+      engBank,
+      skills,
+      [
+        { questionId: first!.id, skillId: 'skill_eng_vocab', difficulty: 'medium', isCorrect: false },
+        { questionId: 'q_eng_place_grammar_a2', skillId: 'skill_eng_grammar', difficulty: 'medium', isCorrect: true },
+        { questionId: 'q_eng_place_listening_a2', skillId: 'skill_eng_listening', difficulty: 'medium', isCorrect: true },
+        { questionId: 'q_eng_place_reading_a2', skillId: 'skill_eng_reading', difficulty: 'medium', isCorrect: true },
+        { questionId: afterMiss!.id, skillId: 'skill_eng_vocab', difficulty: 'easy', isCorrect: true },
+      ],
+      2,
+    );
+    expect(afterHit?.skillId).toBe('skill_eng_grammar');
+    expect(afterHit?.difficulty).toBe('hard');
 
     // 8 answered items out of 12-item bank -> 8/8 = 100%, 0/8 = 0% (never 67% from unasked 4)
-    const asked8 = engBank.filter((q) => q.difficulty !== 'hard');
+    const asked8 = engBank.filter((q) => q.difficulty !== 'easy');
     expect(asked8).toHaveLength(8);
     const allRight = SkillScoringEngine.computePlacementScores(
       'course_eng_01',
@@ -178,7 +194,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
     const useCase = new SubmitPlacementTestUseCase(courseRepo, learnerRepo);
 
     const bank = await courseRepo.getPlacementQuestions('course_eng_01');
-    const asked8 = bank.filter((q) => q.difficulty !== 'hard');
+    const asked8 = bank.filter((q) => q.difficulty !== 'easy');
     const perfectSubs: QuestionAnswerSubmission[] = asked8.map((q) => ({
       questionId: q.id,
       selectedIndex: q.correctIndex ?? 0,
@@ -823,7 +839,7 @@ describe('M5.1 English Placement, Adaptive/SRS, Deferred B2-C2 & Yolchi AI', () 
   it('recomputes CEFR on Supabase retake, completes word_match in ReinforcementModal, isolates submitAnswerAttempt, and fixes light contrast', async () => {
     // 1. Live Supabase placement retake recomputes 'B1' over stale 'A1'
     const engBank = PLACEMENT_QUESTIONS['course_eng_01'];
-    const asked8 = engBank.filter((q) => q.difficulty !== 'hard');
+    const asked8 = engBank.filter((q) => q.difficulty !== 'easy');
     const staleProfile: LearnerProfile = {
       id: 'learner_sb_01',
       name: 'Retaker',

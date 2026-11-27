@@ -898,9 +898,14 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
           .map((answer) => answer.submission)
           .toList(growable: false);
       var placementQuestions = const <Question>[];
-      var computedScores = profile?.scoresByCourse[courseId] ?? {};
-      var overallScore = 0;
-      String? cefrLevel;
+      var computedScores = completed.skillScores ??
+          (courseId == 'course_eng_01'
+              ? (profile?.placementSkillScoresByCourse[courseId] ?? {})
+              : (profile?.scoresByCourse[courseId] ?? {}));
+      var overallScore = completed.overallScore ?? 0;
+      String? cefrLevel = completed.placementCefr;
+      String? assessedCefr = completed.assessedCefr;
+      String? unlockedCefrFloor = completed.unlockedCefrFloor;
       if (courseId == 'course_eng_01') {
         try {
           placementQuestions = await ref
@@ -914,49 +919,87 @@ class PlacementStateNotifier extends StateNotifier<PlacementState> {
           placementQuestions = englishPlacementQuestionsRaw;
         }
         if (reviewSubmissions.isNotEmpty) {
-          computedScores = SkillScoringEngine.computePlacementScores(
-            courseId,
-            placementQuestions,
-            reviewSubmissions,
-          );
-          overallScore = SkillScoringEngine.computeOverallScore(computedScores);
-          cefrLevel = SkillScoringEngine.computeEnglishPlacementCefr(
+          if (computedScores.isEmpty) {
+            computedScores = SkillScoringEngine.computePlacementScores(
+              courseId,
+              placementQuestions,
+              reviewSubmissions,
+            );
+          }
+          if (completed.overallScore == null) {
+            overallScore = SkillScoringEngine.computeOverallScore(
+              computedScores,
+            );
+          }
+          final cefrEval = SkillScoringEngine.evaluateEnglishPlacementCefr(
             placementQuestions,
             reviewSubmissions,
             completedNodeIds: profile?.completedNodeIds ?? const [],
           );
+          cefrLevel ??= cefrEval.effectiveCefr;
+          assessedCefr ??= cefrEval.assessedCefr;
+          unlockedCefrFloor ??= cefrEval.unlockedCefrFloor;
         } else {
-          overallScore = profile?.placementScoreByCourse[courseId] ?? 0;
-          final rawCefr =
+          overallScore = completed.overallScore ??
+              profile?.placementScoreByCourse[courseId] ??
+              0;
+          final cefrEval = SkillScoringEngine.evaluateEnglishPlacementCefr(
+            placementQuestions,
+            reviewSubmissions,
+            completedNodeIds: profile?.completedNodeIds ?? const [],
+          );
+          final rawCefr = completed.placementCefr ??
               profile?.placementCefrByCourse[courseId] ??
-              SkillScoringEngine.computeEnglishPlacementCefr(
-                placementQuestions,
-                reviewSubmissions,
-                completedNodeIds: profile?.completedNodeIds ?? const [],
-              );
+              cefrEval.effectiveCefr;
           cefrLevel = SkillScoringEngine.englishEntryTargetForCefr(
             rawCefr,
           ).cefrLevel;
+          assessedCefr ??= cefrEval.assessedCefr;
+          unlockedCefrFloor ??= cefrEval.unlockedCefrFloor;
         }
       } else {
-        final correctCount = reviewSubmissions
-            .where((s) => s.isCorrect)
-            .length;
-        overallScore = reviewSubmissions.isEmpty
-            ? 0
-            : SkillScoringEngine.computeSkillScore(
-                correctCount,
-                reviewSubmissions.length,
-              );
+        if (completed.overallScore != null) {
+          overallScore = completed.overallScore!;
+        } else if (computedScores.isNotEmpty) {
+          overallScore = SkillScoringEngine.computeOverallScore(computedScores);
+        } else {
+          final correctCount = reviewSubmissions
+              .where((s) => s.isCorrect)
+              .length;
+          overallScore = reviewSubmissions.isEmpty
+              ? 0
+              : SkillScoringEngine.computeSkillScore(
+                  correctCount,
+                  reviewSubmissions.length,
+                );
+        }
+      }
+      var resolvedWeakest = completed.weakestSkillId;
+      if (computedScores.isNotEmpty) {
+        var minScore = 101;
+        var minId = '';
+        for (final s in computedScores.values) {
+          if (s.score < minScore) {
+            minScore = s.score;
+            minId = s.skillId;
+          }
+        }
+        if (minScore >= 80) {
+          resolvedWeakest = '';
+        } else if (resolvedWeakest.isEmpty) {
+          resolvedWeakest = minId;
+        }
       }
       result = AssessmentResult(
         assessmentId: completed.attemptId,
         courseId: courseId,
         submissions: reviewSubmissions,
         computedScores: computedScores,
-        weakestSkillId: completed.weakestSkillId,
+        weakestSkillId: resolvedWeakest,
         overallScore: overallScore,
         cefrLevel: cefrLevel,
+        assessedCefr: assessedCefr,
+        unlockedCefrFloor: unlockedCefrFloor,
         timestamp: completed.completedAt.millisecondsSinceEpoch,
         review: completed.review,
       );

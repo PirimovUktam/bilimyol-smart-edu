@@ -135,7 +135,8 @@ describe('InMemoryLearnerRepository free-text grading, retries & persistence', (
     const profile = await reloaded.getProfile();
     expect(profile.completedLessonIds).toContain('lesson_eng_starter');
     expect(profile.xp).toBeGreaterThanOrEqual(22);
-    expect(profile.scoresByCourse['course_eng_01']?.['skill_eng_vocab']?.score).toBe(100);
+    expect(profile.scoresByCourse['course_eng_01']?.['skill_eng_vocab']?.score).toBe(51);
+    expect(profile.scoresByCourse['course_eng_01']?.['skill_eng_vocab']?.masteryLevel).toBe('developing');
     expect(profile.scoresByCourse['course_math_01']).toBeUndefined();
   });
 });

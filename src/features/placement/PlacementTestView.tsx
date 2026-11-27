@@ -92,10 +92,20 @@ export function PlacementTestView({ onComplete, onChooseCourse, onStartLearning 
                 <Badge variant="indigo" size="sm">
                   {t('assessment.cefrResultBadge', { level: result.placementCefr })}
                 </Badge>
+                {result.assessedCefr && result.unlockedCefrFloor && result.assessedCefr !== result.placementCefr && (
+                  <Badge variant="slate" size="sm">
+                    {t('assessment.reassessedCefrBadge', { level: result.assessedCefr })}
+                  </Badge>
+                )}
                 <Badge variant="amber" size="sm">
                   {t('path.deferredStageBadge')}
                 </Badge>
               </div>
+              {result.assessedCefr && result.unlockedCefrFloor && result.assessedCefr !== result.placementCefr && (
+                <p className="text-xs font-semibold text-graphite">
+                  {t('assessment.unlockedFloorNote', { floor: result.unlockedCefrFloor, assessed: result.assessedCefr })}
+                </p>
+              )}
               <p className="text-xs font-semibold text-ink">{t('assessment.cefrB2DeferredNote')}</p>
               <p className="flex items-start gap-1.5 text-xs text-slatefine">
                 <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand" />

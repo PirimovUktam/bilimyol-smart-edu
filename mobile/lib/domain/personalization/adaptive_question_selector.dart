@@ -84,15 +84,12 @@ class AdaptiveQuestionSelector {
     );
     final nextSkillId = pendingSkills.first;
     final candidates = unasked.where((q) => q.skillId == nextSkillId).toList();
-    final isEnglish = candidates.any((q) => q.courseId == 'course_eng_01');
 
-    // 2. Determine target difficulty (English A1-B1 starts at easy/A1)
+    // 2. Determine target difficulty (all courses start at medium so English A2=1 -> B1, A2=0 -> A1)
     final targetDiff = determineNextDifficulty(
       nextSkillId,
       history,
-      initialDifficulty: isEnglish
-          ? QuestionDifficulty.easy
-          : QuestionDifficulty.medium,
+      initialDifficulty: QuestionDifficulty.medium,
     );
 
     // 3. Find candidate questions matching skill & nearest difficulty

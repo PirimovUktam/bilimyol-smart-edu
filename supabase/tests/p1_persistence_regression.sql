@@ -138,8 +138,19 @@ BEGIN
   PERFORM pg_temp.assert_true(first_result->>'score' = '50', 'placement ignores forged is_correct flags');
   PERFORM pg_temp.assert_true(first_result->>'attempt_id' = retry_result->>'attempt_id'
     AND (retry_result->>'already_processed')::BOOLEAN, 'placement retry returns the same row');
-  PERFORM pg_temp.assert_true((SELECT score = 50 FROM public.learner_skill_scores
-    WHERE user_id = auth.uid() AND skill_id = 'skill_eng_vocab'), 'atomic placement persists skill score');
+  PERFORM pg_temp.assert_true(
+    NOT EXISTS (
+      SELECT 1 FROM public.learner_skill_scores
+      WHERE user_id = auth.uid() AND course_id = 'course_eng_01'
+    )
+    AND (
+      SELECT (placement_score_by_course->>'course_eng_01')::INT = 50
+        AND (placement_skill_scores_by_course->'course_eng_01'->'skill_eng_vocab'->>'score')::INT = 50
+      FROM public.learner_profiles
+      WHERE user_id = auth.uid()
+    ),
+    'atomic English placement persists diagnostic summary on learner_profiles without polluting learner_skill_scores'
+  );
   PERFORM pg_temp.assert_true((SELECT xp = 22 FROM public.gamification_profiles WHERE user_id = auth.uid()),
     'answer and placement XP awarded once');
   PERFORM pg_temp.assert_true((SELECT questions_answered = 2 AND correct_answers = 1 AND xp_earned = 22

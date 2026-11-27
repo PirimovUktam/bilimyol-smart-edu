@@ -48,12 +48,12 @@ void main() {
 
     test('isolates course_eng_01 placement from scoresByCourse and persists placementSummary across reloads', () async {
       final engQuestions = await courseRepo.getPlacementQuestions('course_eng_01');
-      final a1AndA2 = engQuestions
-          .where((q) => q.difficulty != QuestionDifficulty.hard)
+      final a2AndB1 = engQuestions
+          .where((q) => q.difficulty != QuestionDifficulty.easy)
           .toList();
-      expect(a1AndA2.length, equals(8));
+      expect(a2AndB1.length, equals(8));
 
-      final submissions = a1AndA2
+      final submissions = a2AndB1
           .map(
             (q) => QuestionAnswerSubmission(
               questionId: q.id,

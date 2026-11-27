@@ -296,7 +296,7 @@ void main() {
             masteryLevel: MasteryLevel.developing,
           ),
         },
-        completedNodeIds: [],
+        completedNodeIds: ['node_eng_a1_u3_checkpoint'],
         completedReinforcementIds: [],
       );
       final readNode = engRoadmap.nodes.firstWhere((n) => n.id == 'node_eng_read');

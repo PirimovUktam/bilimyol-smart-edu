@@ -139,9 +139,10 @@ export function registerTests() {
           true,
           'Expected lesson_eng_starter to stay completed after switching via course_math_01.',
         );
+        const vocabScore = snapshot.progress?.profile?.scoresByCourse?.course_eng_01?.skill_eng_vocab?.score ?? 0;
         assert.ok(
-          (snapshot.progress?.profile?.scoresByCourse?.course_eng_01?.skill_eng_vocab?.score ?? 0) >= 80,
-          'Expected English vocab score preserved after switching courses.',
+          vocabScore >= 50 && vocabScore <= 55,
+          `Expected calibrated starter English vocab score (50..55) preserved after switching courses, got ${vocabScore}.`,
         );
 
         await navigateToRoadmapFromWorkspace(page);

@@ -366,6 +366,10 @@ class InMemoryLearnerRepository extends ILearnerRepository {
               fields.contains(LearnerProfileField.placementCefrByCourse)
               ? updated.placementCefrByCourse
               : null,
+          placementSkillScoresByCourse:
+              fields.contains(LearnerProfileField.placementSkillScoresByCourse)
+              ? updated.placementSkillScoresByCourse
+              : null,
           flashcardSrsByCourse:
               fields.contains(LearnerProfileField.flashcardSrsByCourse)
               ? updated.flashcardSrsByCourse
@@ -404,8 +408,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
               (a) =>
                   a.courseId == courseId &&
                   a.skillId == entry.key &&
-                  !(courseId == 'course_eng_01' &&
-                      a.lessonId == 'placement_test'),
+                  a.lessonId != 'placement_test',
             )
             .length;
         courseBaselines[entry.key] = _SkillBaseline(
@@ -435,9 +438,18 @@ class InMemoryLearnerRepository extends ILearnerRepository {
         if (data.cefrLevel != null && data.cefrLevel!.trim().isNotEmpty) {
           nextPlacementCefr[data.courseId] = data.cefrLevel!.trim();
         }
+        final nextPlacementSkillScores =
+            Map<String, Map<String, SkillScore>>.from(
+              _profile.placementSkillScoresByCourse,
+            );
+        if (data.skillScores != null && data.skillScores!.isNotEmpty) {
+          nextPlacementSkillScores[data.courseId] =
+              Map<String, SkillScore>.from(data.skillScores!);
+        }
         _profile = _profile.copyWith(
           placementScoreByCourse: nextPlacementScores,
           placementCefrByCourse: nextPlacementCefr,
+          placementSkillScoresByCourse: nextPlacementSkillScores,
         );
         _markDirty();
         await _persistSnapshot(expectedEpoch: epoch);
@@ -554,45 +566,87 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     });
   }
 
+  Question? _findSeedQuestion(String questionId) {
+    for (final candidate in placementQuestionsData.values.expand(
+      (items) => items,
+    )) {
+      if (candidate.id == questionId) return candidate;
+    }
+    for (final lesson in seedLessons.values) {
+      for (final step in lesson.steps) {
+        if (step.interactiveQuestion?.id == questionId) {
+          return step.interactiveQuestion;
+        }
+      }
+      if (lesson.reinforcementExercise.id == questionId) {
+        return lesson.reinforcementExercise;
+      }
+      if (lesson.alternateExercise?.id == questionId) {
+        return lesson.alternateExercise;
+      }
+    }
+    return null;
+  }
+
   SkillScore? _computeCourseSkillScore(String courseId, String skillId) {
     final skillAttempts = _answerAttempts
         .where(
           (a) =>
               a.courseId == courseId &&
               a.skillId == skillId &&
-              !(courseId == 'course_eng_01' && a.lessonId == 'placement_test'),
+              a.lessonId != 'placement_test',
         )
         .toList();
     final baseline = _skillBaselines[courseId]?[skillId];
+    final placementPrior =
+        _profile.placementSkillScoresByCourse[courseId]?[skillId]?.score;
     final postBaselineAttempts = baseline != null &&
             baseline.attemptCountAtBaseline <= skillAttempts.length
         ? skillAttempts.skip(baseline.attemptCountAtBaseline).toList()
         : skillAttempts;
 
-    if (postBaselineAttempts.isEmpty && baseline == null) {
-      return null;
+    final latestByQuestion =
+        <String, ({bool isCorrect, bool firstIsCorrect, String lessonId})>{};
+    for (final attempt in postBaselineAttempts) {
+      final prev = latestByQuestion[attempt.questionId];
+      latestByQuestion[attempt.questionId] = (
+        isCorrect: attempt.isCorrect,
+        firstIsCorrect: prev != null ? prev.firstIsCorrect : attempt.isCorrect,
+        lessonId: attempt.lessonId,
+      );
     }
 
-    final int newScoreVal;
-    if (postBaselineAttempts.isEmpty) {
-      newScoreVal = baseline!.score;
-    } else if (courseId == 'course_eng_01' && baseline == null) {
-      // English lesson attempts without a prior baseline deduplicate by
-      // questionId (latest attempt wins) so retries yield full mastery.
-      final latestByQuestion = <String, AnswerAttemptRecord>{};
-      for (final attempt in postBaselineAttempts) {
-        latestByQuestion[attempt.questionId] = attempt;
+    final deduplicateByQuestion =
+        courseId == 'course_eng_01' && baseline == null;
+    var weightedCorrect = 0.0;
+    var weightedTotal = 0.0;
+    var unadjustedEarned = 0.0;
+    var hasNonStarterAttempt = false;
+
+    if (deduplicateByQuestion) {
+      for (final mapEntry in latestByQuestion.entries) {
+        final qid = mapEntry.key;
+        final entry = mapEntry.value;
+        final isStarter = starterLessons.containsKey(entry.lessonId);
+        final weight = isStarter ? 0.5 : 1.0;
+        if (!isStarter) {
+          hasNonStarterAttempt = true;
+        }
+        weightedTotal += weight;
+        if (entry.isCorrect) {
+          final matchedQ = _findSeedQuestion(qid);
+          final mode = matchedQ?.mode ?? QuestionMode.multipleChoice;
+          final isChoiceMode =
+              mode == QuestionMode.multipleChoice ||
+              mode == QuestionMode.errorCorrection ||
+              mode == QuestionMode.conversationCompletion;
+          final retryFactor =
+              (!entry.firstIsCorrect && isChoiceMode) ? 0.75 : 1.0;
+          weightedCorrect += weight * retryFactor;
+          unadjustedEarned += retryFactor;
+        }
       }
-      final uniqueAttempts = latestByQuestion.values.toList();
-      final correctCount = uniqueAttempts.where((a) => a.isCorrect).length;
-      newScoreVal = SkillScoringEngine.computeSkillScore(
-        correctCount,
-        uniqueAttempts.length,
-      );
     } else {
-      var weightedCorrect = 0.0;
-      var weightedTotal = 0.0;
-      var hasNonStarterAttempt = false;
       for (final attempt in postBaselineAttempts) {
         final isStarter = starterLessons.containsKey(attempt.lessonId);
         final weight = isStarter ? 0.5 : 1.0;
@@ -604,21 +658,52 @@ class InMemoryLearnerRepository extends ILearnerRepository {
           weightedCorrect += weight;
         }
       }
+    }
+
+    final priorScore = courseId != 'course_eng_01'
+        ? (baseline?.score ?? placementPrior)
+        : (baseline?.score ?? (!hasNonStarterAttempt ? placementPrior : null));
+
+    if (postBaselineAttempts.isEmpty && priorScore == null) {
+      return null;
+    }
+
+    final uniqueTotal = latestByQuestion.length;
+    final int newScoreVal;
+    if (postBaselineAttempts.isEmpty) {
+      newScoreVal = priorScore!;
+    } else if (courseId == 'course_eng_01' &&
+        priorScore == null &&
+        hasNonStarterAttempt) {
+      newScoreVal = ((unadjustedEarned / max(1, uniqueTotal)) * 100)
+          .round()
+          .clamp(0, 100);
+    } else {
       newScoreVal = SkillScoringEngine.computeCalibratedSkillScore(
         weightedCorrect: weightedCorrect,
         weightedTotal: weightedTotal,
-        priorScore: baseline?.score,
-        starterOnly: baseline == null && !hasNonStarterAttempt,
+        priorScore: priorScore,
+        starterOnly: priorScore == null && !hasNonStarterAttempt,
         hasNonStarterAttempt: hasNonStarterAttempt,
       );
     }
+
+    final effectiveCount = max(uniqueTotal, priorScore != null ? 2 : 0);
+    final masteryAttemptCount = uniqueTotal > 0
+        ? uniqueTotal
+        : (priorScore != null ? 4 : null);
 
     return SkillScore(
       skillId: skillId,
       courseId: courseId,
       score: newScoreVal,
       lastUpdated: DateTime.now().millisecondsSinceEpoch,
-      masteryLevel: SkillScoringEngine.getMasteryLevel(newScoreVal),
+      masteryLevel: SkillScoringEngine.getMasteryLevel(
+        newScoreVal,
+        attemptCount: masteryAttemptCount,
+      ),
+      attemptCount: effectiveCount,
+      confidence: SkillScoringEngine.computeConfidence(effectiveCount),
     );
   }
 
@@ -737,9 +822,10 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       _answerAttempts.add(provisionalRecord);
       final addedToday = _applyDailyActivityInMemory(today);
 
-      // English placement scores remain isolated from independent lesson mastery.
+      // Placement attempts never overwrite course skill scores directly;
+      // saveSkillScores / placementSkillScoresByCourse manages placement baselines.
       final computedScore =
-          (courseId == 'course_eng_01' && lessonId == 'placement_test')
+          lessonId == 'placement_test'
               ? null
               : _computeCourseSkillScore(courseId, skillId);
       final record = computedScore == null
@@ -1218,6 +1304,13 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     },
     'placementScoreByCourse': p.placementScoreByCourse,
     'placementCefrByCourse': p.placementCefrByCourse,
+    'placementSkillScoresByCourse': {
+      for (final courseEntry in p.placementSkillScoresByCourse.entries)
+        courseEntry.key: {
+          for (final skillEntry in courseEntry.value.entries)
+            skillEntry.key: _skillScoreToJson(skillEntry.value),
+        },
+    },
     'flashcardSrsByCourse': {
       for (final courseEntry in p.flashcardSrsByCourse.entries)
         courseEntry.key: {
@@ -1289,6 +1382,25 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       }
     }
 
+    final placementSkillScoresByCourse = <String, Map<String, SkillScore>>{};
+    final rawPlacementSkillScores = json['placementSkillScoresByCourse'];
+    if (rawPlacementSkillScores is Map) {
+      for (final courseEntry in rawPlacementSkillScores.entries) {
+        final courseId = courseEntry.key;
+        final skillMap = courseEntry.value;
+        if (courseId is String && skillMap is Map) {
+          final parsedMap = <String, SkillScore>{};
+          for (final skillEntry in skillMap.entries) {
+            final skillScore = _skillScoreFromJson(skillEntry.value);
+            if (skillEntry.key is String && skillScore != null) {
+              parsedMap[skillEntry.key as String] = skillScore;
+            }
+          }
+          placementSkillScoresByCourse[courseId] = parsedMap;
+        }
+      }
+    }
+
     final flashcardSrsByCourse = <String, Map<String, FlashcardSrsRecord>>{};
     final rawSrsByCourse = json['flashcardSrsByCourse'];
     if (rawSrsByCourse is Map) {
@@ -1340,6 +1452,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       scoresByCourse: scoresByCourse,
       placementScoreByCourse: placementScoreByCourse,
       placementCefrByCourse: placementCefrByCourse,
+      placementSkillScoresByCourse: placementSkillScoresByCourse,
       flashcardSrsByCourse: flashcardSrsByCourse,
       completedLessonIds: _stringList(json['completedLessonIds']),
       completedNodeIds: _stringList(json['completedNodeIds']),
@@ -1357,6 +1470,8 @@ class InMemoryLearnerRepository extends ILearnerRepository {
     'lastUpdated': s.lastUpdated,
     'masteryLevel': s.masteryLevel.name,
     'isWeakestFocus': s.isWeakestFocus,
+    if (s.attemptCount != null) 'attemptCount': s.attemptCount,
+    if (s.confidence != null) 'confidence': s.confidence!.name,
   };
 
   static SkillScore? _skillScoreFromJson(dynamic raw) {
@@ -1372,12 +1487,24 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       return null;
     }
     final clampedScore = score.toInt().clamp(0, 100);
+    final attemptCount = raw['attemptCount'] is num
+        ? (raw['attemptCount'] as num).toInt()
+        : null;
+    final confidenceName = raw['confidence'] is String
+        ? raw['confidence'] as String
+        : null;
+    final confidence = ConfidenceLevel.values
+        .where((c) => c.name == confidenceName)
+        .firstOrNull;
     final masteryName =
         raw['masteryLevel'] is String ? raw['masteryLevel'] as String : null;
     final mastery = MasteryLevel.values
             .where((m) => m.name == masteryName)
             .firstOrNull ??
-        SkillScoringEngine.getMasteryLevel(clampedScore);
+        SkillScoringEngine.getMasteryLevel(
+          clampedScore,
+          attemptCount: attemptCount,
+        );
     return SkillScore(
       skillId: skillId,
       courseId: courseId,
@@ -1385,6 +1512,8 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       lastUpdated: lastUpdated.toInt(),
       masteryLevel: mastery,
       isWeakestFocus: raw['isWeakestFocus'] == true,
+      attemptCount: attemptCount,
+      confidence: confidence,
     );
   }
 

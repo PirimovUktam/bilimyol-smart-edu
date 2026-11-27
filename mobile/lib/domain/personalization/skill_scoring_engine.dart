@@ -1,9 +1,28 @@
 import '../entities/skill_score.dart';
 import '../entities/question.dart';
 
-enum ConfidenceLevel { low, medium, high }
+export '../entities/skill_score.dart' show ConfidenceLevel;
+
+class EnglishPlacementCefrBreakdown {
+  final String assessedCefr;
+  final String? unlockedCefrFloor;
+  final String effectiveCefr;
+
+  const EnglishPlacementCefrBreakdown({
+    required this.assessedCefr,
+    required this.unlockedCefrFloor,
+    required this.effectiveCefr,
+  });
+}
 
 class SkillScoringEngine {
+  static const Map<String, int> _cefrRank = {
+    'Pre-A1': 0,
+    'A1': 1,
+    'A2': 2,
+    'B1': 3,
+  };
+
   /// Clamps score strictly within [0, 100]
   static int clampScore(num value) {
     if (value.isNaN) return 0;
@@ -14,12 +33,13 @@ class SkillScoringEngine {
   /// 0–39: needsRemediation (Boshlang‘ich)
   /// 40–59: developing (Rivojlanmoqda)
   /// 60–79: proficient (O‘rta)
-  /// 80–100: mastered (Yuqori)
-  static MasteryLevel getMasteryLevel(int score) {
+  /// 80–100: mastered (Yuqori — requires attemptCount >= 4 when attemptCount is provided)
+  static MasteryLevel getMasteryLevel(int score, {int? attemptCount}) {
     final clamped = clampScore(score);
     if (clamped < 40) return MasteryLevel.needsRemediation;
     if (clamped < 60) return MasteryLevel.developing;
     if (clamped < 80) return MasteryLevel.proficient;
+    if (attemptCount != null && attemptCount < 4) return MasteryLevel.proficient;
     return MasteryLevel.mastered;
   }
 
@@ -43,6 +63,14 @@ class SkillScoringEngine {
     if (attemptCount < 3) return ConfidenceLevel.low;
     if (attemptCount <= 5) return ConfidenceLevel.medium;
     return ConfidenceLevel.high;
+  }
+
+  static double getDifficultyWeight(QuestionDifficulty difficulty) {
+    return switch (difficulty) {
+      QuestionDifficulty.easy => 0.75,
+      QuestionDifficulty.medium => 1.0,
+      QuestionDifficulty.hard => 1.25,
+    };
   }
 
   static const int starterOnlyMaxScore = 55;
@@ -84,9 +112,8 @@ class SkillScoringEngine {
       }
       return clamped;
     }
-    if (weightedTotal <= 0) return 0;
+    if (weightedTotal <= 0 || weightedCorrect <= 0) return 0;
     if (starterOnly) {
-      if (weightedCorrect <= 0) return 0;
       final raw = ((weightedCorrect + 0.25) / (weightedTotal + 0.75)) * 85;
       return clampScore(raw).clamp(0, starterOnlyMaxScore);
     }
@@ -102,8 +129,9 @@ class SkillScoringEngine {
     return clampScore(sum / scores.length);
   }
 
-  /// Real statistical placement test scoring from actual student submissions.
-  /// Denominator is strictly the count of answered questions per skill.
+  /// Difficulty-weighted statistical placement test scoring from actual student submissions.
+  /// Deduplicates by `questionId` using `last wins`, weights credit by item difficulty,
+  /// and tags `isWeakestFocus = true` strictly when `lowestScore < 80` (`FIX-P1-16`).
   static Map<String, SkillScore> computePlacementScores(
     String courseId,
     List<Question> questions,
@@ -114,21 +142,32 @@ class SkillScoringEngine {
     final Map<String, Question> questionsById = {
       for (final q in questions) q.id: q,
     };
-    final Set<String> seenQuestionIds = {};
+    final Map<String, QuestionAnswerSubmission> deduped = {};
 
     for (final sub in submissions) {
-      if (!seenQuestionIds.add(sub.questionId)) continue;
+      if (questionsById.containsKey(sub.questionId)) {
+        deduped[sub.questionId] = sub;
+      }
+    }
+
+    for (final sub in deduped.values) {
       final q = questionsById[sub.questionId];
       if (q == null) continue;
       final stats = skillStats.putIfAbsent(q.skillId, () => _SkillStats());
-      stats.total += 1;
+      final weight = getDifficultyWeight(q.difficulty);
+      stats.count += 1;
       if (sub.isCorrect) {
-        stats.correct += 1;
+        stats.earned += weight;
+        stats.possible += weight;
+      } else {
+        stats.possible += weight < 1.0 ? weight : 1.0;
       }
     }
 
     skillStats.forEach((skillId, stats) {
-      final finalScore = computeSkillScore(stats.correct, stats.total);
+      final finalScore = stats.possible > 0
+          ? clampScore((stats.earned / stats.possible) * 100)
+          : 0;
 
       skillScoreMap[skillId] = SkillScore(
         skillId: skillId,
@@ -136,10 +175,12 @@ class SkillScoringEngine {
         score: finalScore,
         lastUpdated: DateTime.now().millisecondsSinceEpoch,
         masteryLevel: getMasteryLevel(finalScore),
+        attemptCount: stats.count,
+        confidence: computeConfidence(stats.count),
       );
     });
 
-    // Find and tag weakest skill dynamically
+    // Find and tag weakest skill dynamically only when lowestScore < 80
     int lowestScore = 101;
     String weakestId = '';
     for (final s in skillScoreMap.values) {
@@ -149,7 +190,9 @@ class SkillScoringEngine {
       }
     }
 
-    if (weakestId.isNotEmpty && skillScoreMap.containsKey(weakestId)) {
+    if (weakestId.isNotEmpty &&
+        lowestScore < 80 &&
+        skillScoreMap.containsKey(weakestId)) {
       skillScoreMap[weakestId] = skillScoreMap[weakestId]!.copyWith(
         isWeakestFocus: true,
       );
@@ -158,10 +201,8 @@ class SkillScoringEngine {
     return skillScoreMap;
   }
 
-  /// Computes calibrated CEFR placement tier (`Pre-A1`, `A1`, `A2`, `B1`),
-  /// strictly capped at `B1` (`B2–C2` are DEFERRED).
-  /// Matches Web `EnglishCefrPlacement.computeEnglishPlacementCefr` parity.
-  static String computeEnglishPlacementCefr(
+  /// Evaluates both `assessedCefr` and `unlockedCefrFloor` separately (`FIX-P0-11`, `FIX-P2-09`).
+  static EnglishPlacementCefrBreakdown evaluateEnglishPlacementCefr(
     List<Question> questions,
     List<QuestionAnswerSubmission> submissions, {
     List<String> completedNodeIds = const [],
@@ -217,37 +258,66 @@ class SkillScoringEngine {
     }
 
     final overall = total > 0 ? correct / total : 0.0;
-    final a1Acc = a1Total > 0 ? a1Correct / a1Total : overall;
     final higherTotal = a2Total + b1Total;
     final higherCorrect = a2Correct + b1Correct;
     final higherAcc = higherTotal > 0 ? higherCorrect / higherTotal : overall;
-    final b1Acc = b1Total > 0 ? b1Correct / b1Total : higherAcc;
     final a2Acc = a2Total > 0 ? a2Correct / a2Total : higherAcc;
+    final a1Acc = a1Total > 0
+        ? a1Correct / a1Total
+        : (a2Total > 0 ? a2Acc : overall);
+    final b1Acc = b1Total > 0 ? b1Correct / b1Total : 0.0;
 
-    var placed = 'Pre-A1';
+    var assessedCefr = 'Pre-A1';
     if (total > 0) {
       if (overall >= 0.875 &&
           a1Acc >= 0.75 &&
           higherAcc >= 0.75 &&
+          b1Total >= 2 &&
           b1Acc >= 0.5) {
-        placed = 'B1';
-      } else if (overall >= 0.625 && a1Acc >= 0.5 && a2Acc >= 0.5) {
-        placed = 'A2';
+        assessedCefr = 'B1';
+      } else if ((overall >= 0.625 && a1Acc >= 0.5 && a2Acc >= 0.5) ||
+          (a2Total >= 3 && a2Acc >= 0.75 && a1Acc >= 0.5)) {
+        assessedCefr = 'A2';
       } else if (overall >= 0.375) {
-        placed = 'A1';
+        assessedCefr = 'A1';
       } else {
-        placed = 'Pre-A1';
+        assessedCefr = 'Pre-A1';
       }
     }
 
+    String? unlockedFloor;
     if (completedNodeIds.contains('node_eng_a2_exit')) {
-      return 'B1';
+      unlockedFloor = 'B1';
+    } else if (completedNodeIds.contains('node_eng_a1_exit')) {
+      unlockedFloor = 'A2';
     }
-    if (completedNodeIds.contains('node_eng_a1_exit') &&
-        (placed == 'Pre-A1' || placed == 'A1')) {
-      return 'A2';
-    }
-    return placed;
+
+    final effectiveCefr =
+        unlockedFloor != null &&
+            (_cefrRank[unlockedFloor] ?? 0) > (_cefrRank[assessedCefr] ?? 0)
+        ? unlockedFloor
+        : assessedCefr;
+
+    return EnglishPlacementCefrBreakdown(
+      assessedCefr: assessedCefr,
+      unlockedCefrFloor: unlockedFloor,
+      effectiveCefr: effectiveCefr,
+    );
+  }
+
+  /// Computes calibrated CEFR placement tier (`Pre-A1`, `A1`, `A2`, `B1`),
+  /// strictly capped at `B1` (`B2–C2` are DEFERRED).
+  /// Matches Web `EnglishCefrPlacement.computeEnglishPlacementCefr` parity.
+  static String computeEnglishPlacementCefr(
+    List<Question> questions,
+    List<QuestionAnswerSubmission> submissions, {
+    List<String> completedNodeIds = const [],
+  }) {
+    return evaluateEnglishPlacementCefr(
+      questions,
+      submissions,
+      completedNodeIds: completedNodeIds,
+    ).effectiveCefr;
   }
 
   static ({String lessonId, String? nodeId, String cefrLevel})
@@ -297,6 +367,7 @@ class SkillScoringEngine {
 }
 
 class _SkillStats {
-  int correct = 0;
-  int total = 0;
+  double earned = 0;
+  double possible = 0;
+  int count = 0;
 }

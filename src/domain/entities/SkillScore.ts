@@ -7,4 +7,6 @@ export interface SkillScore {
   lastUpdated: number;
   masteryLevel: 'needs_remediation' | 'developing' | 'proficient' | 'mastered';
   isWeakestFocus?: boolean;
+  attemptCount?: number;
+  confidence?: 'low' | 'medium' | 'high';
 }

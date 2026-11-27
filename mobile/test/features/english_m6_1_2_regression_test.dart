@@ -46,7 +46,7 @@ void main() {
 
         final learnerRepo = InMemoryLearnerRepository();
         await learnerRepo.markNodeCompleted(
-          'node_eng_vocab',
+          'node_eng_a1_m2_sentence_builder',
           courseId: 'course_eng_01',
         );
         final profile = await learnerRepo.getProfile();
@@ -75,7 +75,7 @@ void main() {
             const <LearningPathNode>[];
         expect(
           beforeNodes
-              .firstWhere((n) => n.id == 'node_eng_list')
+              .firstWhere((n) => n.id == 'node_eng_a1_m2_daily_life')
               .status,
           NodeStatus.locked,
         );
@@ -104,7 +104,7 @@ void main() {
         );
         expect(
           afterNodes
-              .firstWhere((n) => n.id == 'node_eng_list')
+              .firstWhere((n) => n.id == 'node_eng_a1_m2_daily_life')
               .status,
           isNot(NodeStatus.locked),
         );
@@ -112,7 +112,7 @@ void main() {
     );
 
     testWidgets(
-      'RoadmapScreen unlocks node_eng_list after context.push(/lesson) -> complete -> context.go(/roadmap)',
+      'RoadmapScreen unlocks downstream A1 node after context.push(/lesson) -> complete -> context.go(/roadmap)',
       (tester) async {
         tester.view.physicalSize = const Size(1440, 900);
         tester.view.devicePixelRatio = 1.0;
@@ -148,7 +148,7 @@ void main() {
           ),
         });
         await learnerRepo.markNodeCompleted(
-          'node_eng_vocab',
+          'node_eng_a1_m2_sentence_builder',
           courseId: 'course_eng_01',
         );
         final profile = await learnerRepo.getProfile();
@@ -183,15 +183,15 @@ void main() {
 
         expect(find.byType(RoadmapScreen), findsOneWidget);
 
-        final listeningTitle = find.text('Listening');
-        await tester.scrollUntilVisible(listeningTitle, 200);
-        expect(listeningTitle, findsOneWidget);
-        final listeningColumnBefore = find
-            .ancestor(of: listeningTitle, matching: find.byType(Column))
+        final downstreamTitle = find.text('Present Simple: Bo‘sh joyni to‘ldirish');
+        await tester.scrollUntilVisible(downstreamTitle, 200);
+        expect(downstreamTitle, findsOneWidget);
+        final downstreamColumnBefore = find
+            .ancestor(of: downstreamTitle, matching: find.byType(Column))
             .first;
         expect(
           find.descendant(
-            of: listeningColumnBefore,
+            of: downstreamColumnBefore,
             matching: find.text('Boshlash'),
           ),
           findsNothing,
@@ -225,13 +225,13 @@ void main() {
 
         expect(find.byType(RoadmapScreen), findsOneWidget);
 
-        await tester.scrollUntilVisible(listeningTitle, 200);
-        final listeningColumnAfter = find
-            .ancestor(of: listeningTitle, matching: find.byType(Column))
+        await tester.scrollUntilVisible(downstreamTitle, 200);
+        final downstreamColumnAfter = find
+            .ancestor(of: downstreamTitle, matching: find.byType(Column))
             .first;
         expect(
           find.descendant(
-            of: listeningColumnAfter,
+            of: downstreamColumnAfter,
             matching: find.text('Boshlash'),
           ),
           findsOneWidget,

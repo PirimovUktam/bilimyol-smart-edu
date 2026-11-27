@@ -4,7 +4,10 @@
   "courseId": "course_eng_01",
   "cefrLevel": "A1",
   "starterLessonId": "lesson_eng_starter",
-  "foundationLessonIds": ["lesson_eng_starter", "lesson_eng_foundation_02"],
+  "foundationLessonIds": [
+    "lesson_eng_starter",
+    "lesson_eng_foundation_02"
+  ],
   "skills": [
     "skill_eng_vocab",
     "skill_eng_grammar",
@@ -124,7 +127,9 @@
       "titleRu": "Глагол «to be», Present Simple и школьная жизнь",
       "canDoObjectiveUz": "«To be» va Present Simple bilan tasdiq, inkor va so‘roq gaplar tuzadi.",
       "canDoObjectiveRu": "Строит утвердительные, отрицательные и вопросительные предложения с «to be» и Present Simple.",
-      "prerequisites": ["node_eng_a1_u1_checkpoint"],
+      "prerequisites": [
+        "node_eng_a1_u1_checkpoint"
+      ],
       "units": [
         {
           "id": "unit_eng_a1_u2",
@@ -134,7 +139,9 @@
           "titleRu": "Раздел 2: Личные местоимения и школьные привычки",
           "canDoObjectiveUz": "Inglizcha SVO tartibida maktab va kun tartibi haqida to‘g‘ri gap tuzadi.",
           "canDoObjectiveRu": "Строит предложения о школе и распорядке дня в порядке слов SVO.",
-          "prerequisites": ["node_eng_a1_u1_checkpoint"],
+          "prerequisites": [
+            "node_eng_a1_u1_checkpoint"
+          ],
           "plannedLessonIds": [
             "lesson_eng_foundation_02",
             "lesson_eng_a1_m2_sentence_builder",
@@ -171,7 +178,9 @@
       "titleRu": "Предметы дома, предлоги места и время",
       "canDoObjectiveUz": "Xona buyumlari joylashuvini (beside, between, behind) va soat vaqtini aniq aytadi.",
       "canDoObjectiveRu": "Определяет положение вещей в комнате (beside, between, behind) и называет время.",
-      "prerequisites": ["node_eng_a1_u2_checkpoint"],
+      "prerequisites": [
+        "node_eng_a1_u2_checkpoint"
+      ],
       "units": [
         {
           "id": "unit_eng_a1_u3",
@@ -181,7 +190,9 @@
           "titleRu": "Раздел 3: Расположение предметов и расписание",
           "canDoObjectiveUz": "Buyumlar o‘rnini aytadi hamda e’londagi ertalab/kunduzgi vaqtni ajratadi.",
           "canDoObjectiveRu": "Указывает расположение предметов и различает утреннее и дневное время.",
-          "prerequisites": ["node_eng_a1_u2_checkpoint"],
+          "prerequisites": [
+            "node_eng_a1_u2_checkpoint"
+          ],
           "plannedLessonIds": [
             "lesson_eng_vocab_01",
             "lesson_eng_listening_01",
@@ -216,7 +227,9 @@
       "titleRu": "Чтение, письмо и итоговая интеграция A1",
       "canDoObjectiveUz": "Qisqa matndan asosiy g‘oya va dalilni topadi, o‘z xonasi va o‘qish vaqti haqida xabar yozadi.",
       "canDoObjectiveRu": "Находит главную мысль и факты в тексте, пишет короткое сообщение о комнате и учёбе.",
-      "prerequisites": ["node_eng_a1_u3_checkpoint"],
+      "prerequisites": [
+        "node_eng_a1_u3_checkpoint"
+      ],
       "units": [
         {
           "id": "unit_eng_a1_u4",
@@ -226,7 +239,9 @@
           "titleRu": "Раздел 4: Анализ текста, письмо и выходной тест A1",
           "canDoObjectiveUz": "Qisqa e’lonni tushunadi, 3–4 gapli xabar yozadi va A1 yakuniy sinovini topshiradi.",
           "canDoObjectiveRu": "Понимает объявление, пишет сообщение из 3–4 фраз и сдаёт итоговую проверку A1.",
-          "prerequisites": ["node_eng_a1_u3_checkpoint"],
+          "prerequisites": [
+            "node_eng_a1_u3_checkpoint"
+          ],
           "plannedLessonIds": [
             "lesson_eng_reading_01",
             "lesson_eng_a1_m4_writing",
@@ -286,24 +301,46 @@
           "ru": "Что вы говорите сначала при знакомстве с новым одноклассником?"
         },
         "vocabularyItems": [
-          { "word": "What's your name?", "uz": "Ismingiz nima?", "ru": "Как вас зовут?", "ipa": "/wɒts jɔː neɪm/" },
-          { "word": "Nice to meet you.", "uz": "Tanishganimdan xursandman.", "ru": "Приятно познакомиться.", "ipa": "/naɪs tə miːt juː/" }
+          {
+            "word": "What's your name?",
+            "uz": "Ismingiz nima?",
+            "ru": "Как вас зовут?",
+            "ipa": "/wɒts jɔː neɪm/"
+          },
+          {
+            "word": "Nice to meet you.",
+            "uz": "Tanishganimdan xursandman.",
+            "ru": "Приятно познакомиться.",
+            "ipa": "/naɪs tə miːt juː/"
+          }
         ],
         "grammarNote": {
           "rule": "I'm + Name / My name is + Name",
           "simpleExplanationUz": "O‘zingizni tanishtirishda «I'm» (I am qisqartmasi) yoki «My name is» dan foydalaning.",
           "simpleExplanationRu": "Для представления используйте «I'm» (сокращение от I am) или «My name is».",
           "structure": "I'm [Name] / My name is [Name]",
-          "positiveExamples": ["I'm Aziza.", "My name is Ben."],
-          "negativeExamples": ["Only saying a name without 'I'm' or 'My name is' in full replies."],
-          "questions": ["What's your name?"],
-          "commonMistakes": ["Yolg‘iz ismni aytib to‘xtash yoki salom o‘rniga 'Goodbye' deyish."]
+          "positiveExamples": [
+            "I'm Aziza.",
+            "My name is Ben."
+          ],
+          "negativeExamples": [
+            "Only saying a name without 'I'm' or 'My name is' in full replies."
+          ],
+          "questions": [
+            "What's your name?"
+          ],
+          "commonMistakes": [
+            "Yolg‘iz ismni aytib to‘xtash yoki salom o‘rniga 'Goodbye' deyish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«What's» so‘zida «t» va «s» birga talaffuz qilinadi; BrE /jɔː/ va AmE /jɔːr/ farqiga e’tibor bering.",
           "ru": "В «What's» звуки /ts/ произносятся слитно; обратите внимание на BrE /jɔː/ и AmE /jɔːr/."
         },
-        "examples": ["Aziza: Hi, I'm Aziza. What's your name?", "Ben: I'm Ben. Nice to meet you."],
+        "examples": [
+          "Aziza: Hi, I'm Aziza. What's your name?",
+          "Ben: I'm Ben. Nice to meet you."
+        ],
         "guidedPractice": {
           "uz": "Ikki flashcard orqali iboralarni eslab, talaffuzini tinglang.",
           "ru": "Повторите фразы по двум карточкам и прослушайте произношение."
@@ -404,7 +441,16 @@
               "imageSrc": "/lesson-media/english/a1-starter-greeting.png",
               "alt": "Toshkentdagi maktab oldida ikki o‘quvchi salomlashib suhbatlashmoqda",
               "altRu": "Двое учеников приветствуют друг друга и общаются перед школой в Ташкенте",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_starter_2",
@@ -422,7 +468,16 @@
               "imageSrc": "/lesson-media/english/a1-starter-greeting.png",
               "alt": "Maktab hovlisida uchrashgan do‘stlar qo‘l silkib ko‘rishmoqda",
               "altRu": "Друзья во дворе школы приветливо машут друг другу рукой",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             }
           ]
         },
@@ -488,7 +543,11 @@
         "evaluationMode": "deterministic",
         "text": "Yangi tanishgan do‘stingiz «I'm Ben» dedi. Odob bilan qanday javob berasiz?",
         "textRu": "Новый знакомый сказал «I'm Ben». Как вежливо ответить?",
-        "options": ["Goodbye.", "Nice to meet you.", "What is your name?"],
+        "options": [
+          "Goodbye.",
+          "Nice to meet you.",
+          "What is your name?"
+        ],
         "correctIndex": 1,
         "mistakeFeedbackByOption": {
           "Goodbye.": {
@@ -538,26 +597,58 @@
           "ru": "Как вы поприветствуете учителя утром по-английски?"
         },
         "vocabularyItems": [
-          { "word": "Good morning", "uz": "Xayrli tong", "ru": "Доброе утро", "ipa": "/ɡʊd ˈmɔːnɪŋ/" },
-          { "word": "Good evening", "uz": "Xayrli kech", "ru": "Добрый вечер", "ipa": "/ɡʊd ˈiːvnɪŋ/" },
-          { "word": "How are you?", "uz": "Ishlaringiz qanday?", "ru": "Как у вас дела?", "ipa": "/haʊ ɑː juː/" },
-          { "word": "I'm fine, thanks.", "uz": "Yaxshiman, rahmat.", "ru": "У меня всё хорошо, спасибо.", "ipa": "/aɪm faɪn θæŋks/" }
+          {
+            "word": "Good morning",
+            "uz": "Xayrli tong",
+            "ru": "Доброе утро",
+            "ipa": "/ɡʊd ˈmɔːnɪŋ/"
+          },
+          {
+            "word": "Good evening",
+            "uz": "Xayrli kech",
+            "ru": "Добрый вечер",
+            "ipa": "/ɡʊd ˈiːvnɪŋ/"
+          },
+          {
+            "word": "How are you?",
+            "uz": "Ishlaringiz qanday?",
+            "ru": "Как у вас дела?",
+            "ipa": "/haʊ ɑː juː/"
+          },
+          {
+            "word": "I'm fine, thanks.",
+            "uz": "Yaxshiman, rahmat.",
+            "ru": "У меня всё хорошо, спасибо.",
+            "ipa": "/aɪm faɪn θæŋks/"
+          }
         ],
         "grammarNote": {
           "rule": "Good + [morning / afternoon / evening] + Title/Name",
           "simpleExplanationUz": "Rasmiy murojaatda salomdan so‘ng «Mr. / Mrs. / Ms.» bilan familiya yoki ism qo‘yiladi.",
           "simpleExplanationRu": "В вежливом обращении после приветствия добавляется «Mr. / Mrs. / Ms.» или имя.",
           "structure": "Good morning, Mr. Karim. How are you?",
-          "positiveExamples": ["Good morning, Madina!", "I'm fine, thanks."],
-          "negativeExamples": ["Good night! (used only when parting at night or going to sleep, not as a greeting)"],
-          "questions": ["How are you?"],
-          "commonMistakes": ["Kechki salomlashishda 'Good evening' o‘rniga 'Good night' deb yuborish."]
+          "positiveExamples": [
+            "Good morning, Madina!",
+            "I'm fine, thanks."
+          ],
+          "negativeExamples": [
+            "Good night! (used only when parting at night or going to sleep, not as a greeting)"
+          ],
+          "questions": [
+            "How are you?"
+          ],
+          "commonMistakes": [
+            "Kechki salomlashishda 'Good evening' o‘rniga 'Good night' deb yuborish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«Good» so‘zidagi /d/ tovushi keyingi undosh oldida yumshoq aytiladi.",
           "ru": "Звук /d/ в слове «Good» перед следующим согласным произносится мягко без паузы."
         },
-        "examples": ["Madina: Good morning, Mr. Karim. How are you?", "Mr. Karim: I'm fine, thanks."],
+        "examples": [
+          "Madina: Good morning, Mr. Karim. How are you?",
+          "Mr. Karim: I'm fine, thanks."
+        ],
         "guidedPractice": {
           "uz": "Dialogdagi 4 ta iborani juftlash va talaffuz kartochkalari bilan mustahkamlang.",
           "ru": "Закрепите 4 фразы через аудио-карточки и сопоставление пар."
@@ -658,7 +749,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
               "alt": "Quyosh chiqayotgan saharda maktab darvozasi oldida uchrashgan o‘quvchi va ustoz",
               "altRu": "На рассвете у ворот школы встретились ученица и учитель",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m1_2",
@@ -675,7 +775,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m4-home-study.png",
               "alt": "Oy va yulduzlar ko‘ringan qorong‘i deraza yonidagi xonada stol chirog‘i yonib turibdi",
               "altRu": "В комнате у тёмного окна с луной и звёздами горит настольная лампа",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m1_3",
@@ -693,7 +802,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
               "alt": "Maktab oldida suhbat boshlayotgan ikki suhbatdosh",
               "altRu": "Два собеседника, начинающие разговор перед школой",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m1_4",
@@ -710,7 +828,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m1-morning-greeting.png",
               "alt": "Tabassum bilan qo‘l silkib javob berayotgan ustoz",
               "altRu": "Улыбающийся учитель приветливо машет рукой",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             }
           ]
         },
@@ -736,10 +863,26 @@
             "textRu": "Сопоставьте английские фразы приветствия с их переводом:",
             "options": [],
             "matchPairs": [
-              { "id": "pair_gm", "left": "Good morning", "right": "Xayrli tong" },
-              { "id": "pair_ge", "left": "Good evening", "right": "Xayrli kech" },
-              { "id": "pair_hay", "left": "How are you?", "right": "Ahvolingiz qanday?" },
-              { "id": "pair_ift", "left": "I'm fine, thanks.", "right": "Yaxshiman, rahmat." }
+              {
+                "id": "pair_gm",
+                "left": "Good morning",
+                "right": "Xayrli tong"
+              },
+              {
+                "id": "pair_ge",
+                "left": "Good evening",
+                "right": "Xayrli kech"
+              },
+              {
+                "id": "pair_hay",
+                "left": "How are you?",
+                "right": "Ahvolingiz qanday?"
+              },
+              {
+                "id": "pair_ift",
+                "left": "I'm fine, thanks.",
+                "right": "Yaxshiman, rahmat."
+              }
             ],
             "explanation": "Barakalla! Ertalab 'Good morning', kechqurun 'Good evening', hol-ahvol uchun 'How are you?' — 'I'm fine, thanks.' juftliklari to‘g‘ri.",
             "explanationRu": "Отлично! Утром «Good morning», вечером «Good evening», а для обмена вопросом о делах — «How are you?» и «I'm fine, thanks.».",
@@ -803,7 +946,9 @@
       "unitId": "unit_eng_a1_u1",
       "canDoObjective": "O‘z ismi, shahri va salomlashuvdan iborat 3 gapli og‘zaki tanishtiruv matnini tuzadi va o‘zini baholaydi.",
       "canDoObjectiveRu": "Составляет устное представление из 3 предложений и оценивает себя по рубрике.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_m1_greetings"
+      ],
       "title": "Speaking: O‘zingizni va shahringizni tanishtirish",
       "titleRu": "Speaking: Устное представление себя и родного города",
       "estimatedMinutes": 5,
@@ -826,23 +971,39 @@
           "ru": "Вспомните фразы «I am from Tashkent» и «My name is ...»."
         },
         "vocabularyItems": [
-          { "word": "I am from ...", "uz": "Men ...danman", "ru": "Я из ...", "ipa": "/aɪ æm frɒm/" }
+          {
+            "word": "I am from ...",
+            "uz": "Men ...danman",
+            "ru": "Я из ...",
+            "ipa": "/aɪ æm frɒm/"
+          }
         ],
         "grammarNote": {
           "rule": "Hello! My name is [Name]. I am from [City]. Nice to meet you.",
           "simpleExplanationUz": "Qayerdan ekaningizni aytish uchun «I am from + shahar» (yoki «I'm from ...») tuzilmasini ishlating.",
           "simpleExplanationRu": "Чтобы назвать город, используйте конструкцию «I am from + город».",
           "structure": "I am from [City].",
-          "positiveExamples": ["I am from Tashkent.", "I am from Samarkand."],
-          "negativeExamples": ["I from Tashkent (missing verb 'am')"],
-          "questions": ["Where are you from?"],
-          "commonMistakes": ["«I am» dagi 'am' bog‘lovchi fe’lini tushirib qoldirish: «I from Tashkent»."]
+          "positiveExamples": [
+            "I am from Tashkent.",
+            "I am from Samarkand."
+          ],
+          "negativeExamples": [
+            "I from Tashkent (missing verb 'am')"
+          ],
+          "questions": [
+            "Where are you from?"
+          ],
+          "commonMistakes": [
+            "«I am» dagi 'am' bog‘lovchi fe’lini tushirib qoldirish: «I from Tashkent»."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«from» so‘zi gap o‘rtasida /frəm/ shaklida yumshoq aytiladi.",
           "ru": "Предлог «from» в беглой речи звучит мягко — /frəm/."
         },
-        "examples": ["Hello! My name is Dilnoza. I am from Tashkent. Nice to meet you."],
+        "examples": [
+          "Hello! My name is Dilnoza. I am from Tashkent. Nice to meet you."
+        ],
         "guidedPractice": {
           "uz": "Dilnozaning audio namunasini tinglab, har bir gapdan keyin pauza qilib takrorlang.",
           "ru": "Прослушайте аудио Дилнозы и повторите по одной фразе."
@@ -1015,7 +1176,9 @@
       "unitId": "unit_eng_a1_u1",
       "canDoObjective": "1-modul yakuniy sinovida yangi suhbat vaziyatini to‘g‘ri yakunlab, 2-modulni ochadi.",
       "canDoObjectiveRu": "Проходит итоговую проверку 1-го модуля в новой диалоговой ситуации и открывает 2-й модуль.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_m1_speaking"
+      ],
       "title": "1-modul yakuni: Tanishuv va salomlashish sinovi",
       "titleRu": "Итог модуля 1: Проверка по теме знакомства и приветствий",
       "estimatedMinutes": 5,
@@ -1038,23 +1201,38 @@
           "ru": "Представьте, что вы впервые обращаетесь к преподавателю на стойке регистрации."
         },
         "vocabularyItems": [
-          { "word": "Good afternoon", "uz": "Xayrli kun", "ru": "Добрый день", "ipa": "/ɡʊd ˌɑːftəˈnuːn/" }
+          {
+            "word": "Good afternoon",
+            "uz": "Xayrli kun",
+            "ru": "Добрый день",
+            "ipa": "/ɡʊd ˌɑːftəˈnuːn/"
+          }
         ],
         "grammarNote": {
           "rule": "Polite Greeting + Self-Introduction",
           "simpleExplanationUz": "Suhbat boshida salomlashib, so‘ng o‘z ismingizni «I'm ...» yoki «My name is ...» bilan aytasiz.",
           "simpleExplanationRu": "В начале беседы поприветствуйте собеседника и назовите своё имя.",
           "structure": "Good afternoon! My name is [Name].",
-          "positiveExamples": ["Good afternoon, Miss Nilufar. My name is Anvar."],
-          "negativeExamples": ["Good night, Miss Nilufar. (wrong time/purpose)"],
-          "questions": ["How are you?"],
-          "commonMistakes": ["Suhbat boshida xayrlashish iborasini tanlash."]
+          "positiveExamples": [
+            "Good afternoon, Miss Nilufar. My name is Anvar."
+          ],
+          "negativeExamples": [
+            "Good night, Miss Nilufar. (wrong time/purpose)"
+          ],
+          "questions": [
+            "How are you?"
+          ],
+          "commonMistakes": [
+            "Suhbat boshida xayrlashish iborasini tanlash."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«afternoon» so‘zida urg‘u oxirgi bo‘g‘inga tushadi: /ˌɑːftəˈnuːn/.",
           "ru": "В слове «afternoon» главное ударение падает на последний слог."
         },
-        "examples": ["Anvar: Good afternoon, Miss Nilufar. My name is Anvar."],
+        "examples": [
+          "Anvar: Good afternoon, Miss Nilufar. My name is Anvar."
+        ],
         "guidedPractice": {
           "uz": "Sinov savolini diqqat bilan o‘qing va kontekstga mos javobni tanlang.",
           "ru": "Внимательно прочитайте контекст ситуации и выберите уместную реплику."
@@ -1229,7 +1407,9 @@
       "unitId": "unit_eng_a1_u2",
       "canDoObjective": "Shaxs olmoshlari (I, you, he, she) bilan «to be» (am, are, is) shakllarini to‘g‘ri bog‘laydi.",
       "canDoObjectiveRu": "Правильно сочетает личные местоимения (I, you, he, she) с формами «to be» (am, are, is).",
-      "prerequisites": ["lesson_eng_starter"],
+      "prerequisites": [
+        "lesson_eng_starter"
+      ],
       "title": "Men, siz va oddiy gaplar",
       "titleRu": "Личные местоимения и глагол «to be»",
       "estimatedMinutes": 5,
@@ -1250,24 +1430,50 @@
           "ru": "Что означает сокращение «'m» в предложении «I'm Aziza» из прошлого урока?"
         },
         "vocabularyItems": [
-          { "word": "student", "uz": "o‘quvchi / talaba", "ru": "ученик / студент", "ipa": "/ˈstjuːdənt/" },
-          { "word": "teacher", "uz": "o‘qituvchi", "ru": "учитель", "ipa": "/ˈtiːtʃə/" }
+          {
+            "word": "student",
+            "uz": "o‘quvchi / talaba",
+            "ru": "ученик / студент",
+            "ipa": "/ˈstjuːdənt/"
+          },
+          {
+            "word": "teacher",
+            "uz": "o‘qituvchi",
+            "ru": "учитель",
+            "ipa": "/ˈtiːtʃə/"
+          }
         ],
         "grammarNote": {
           "rule": "I + am | You/We/They + are | He/She/It + is",
           "simpleExplanationUz": "O‘zbek tilida «Men o‘quvchiman» gapida fe’l oxirda qo‘shimcha bo‘ladi, ingliz tilida esa egadan darhol keyin am/is/are keladi.",
           "simpleExplanationRu": "В английском языке связка am/is/are ставится сразу после подлежащего и не опускается.",
           "structure": "Subject + am/is/are + a/an + noun",
-          "positiveExamples": ["I am a student.", "You are a student.", "She is a teacher."],
-          "negativeExamples": ["I am not a teacher.", "She is not a student."],
-          "questions": ["Are you a student?", "Is she a teacher?"],
-          "commonMistakes": ["«I is a student» deyish yoki «a» artiklini tushirib qoldirish."]
+          "positiveExamples": [
+            "I am a student.",
+            "You are a student.",
+            "She is a teacher."
+          ],
+          "negativeExamples": [
+            "I am not a teacher.",
+            "She is not a student."
+          ],
+          "questions": [
+            "Are you a student?",
+            "Is she a teacher?"
+          ],
+          "commonMistakes": [
+            "«I is a student» deyish yoki «a» artiklini tushirib qoldirish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«I am» tez nutqda /aɪm/, «She is» esa /ʃiːz/ tarzida qisqartirilishi mumkin.",
           "ru": "В разговорной речи «I am» часто звучит как /aɪm/, а «She is» как /ʃiːz/."
         },
-        "examples": ["I am a student.", "You are a student.", "She is a student."],
+        "examples": [
+          "I am a student.",
+          "You are a student.",
+          "She is a student."
+        ],
         "guidedPractice": {
           "uz": "Namuna gaplardagi am, are va is o‘rnini solishtiring.",
           "ru": "Сравните употребление am, are и is в примерах."
@@ -1336,7 +1542,11 @@
             "evaluationMode": "deterministic",
             "text": "«Men o‘quvchiman» gapini to‘ldiring. I ___ a student.",
             "textRu": "Дополните предложение «Я ученик»: I ___ a student.",
-            "options": ["is", "am", "are"],
+            "options": [
+              "is",
+              "am",
+              "are"
+            ],
             "correctIndex": 1,
             "mistakeFeedbackByOption": {
               "is": {
@@ -1367,7 +1577,11 @@
         "evaluationMode": "deterministic",
         "text": "«U o‘qituvchi» gapini to‘ldiring. She ___ a teacher.",
         "textRu": "Дополните предложение «Она учитель»: She ___ a teacher.",
-        "options": ["am", "is", "are"],
+        "options": [
+          "am",
+          "is",
+          "are"
+        ],
         "correctIndex": 1,
         "mistakeFeedbackByOption": {
           "am": {
@@ -1396,7 +1610,9 @@
       "unitId": "unit_eng_a1_u2",
       "canDoObjective": "Inglizcha SVO so‘z tartibida maktab buyumlari va kundalik o‘qish haqida gap tuzadi hamda xatoni tuzatadi.",
       "canDoObjectiveRu": "Составляет предложения о школьных предметах в порядке SVO и исправляет грамматические ошибки.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_u1_checkpoint"
+      ],
       "title": "Gap tuzish: Kundalik maktab hayoti",
       "titleRu": "Построение предложений: Школьные будни",
       "estimatedMinutes": 7,
@@ -1417,26 +1633,58 @@
           "ru": "Что лежит у вас в школьном рюкзаке?"
         },
         "vocabularyItems": [
-          { "word": "notebook", "uz": "daftar", "ru": "тетрадь", "ipa": "/ˈnəʊtbʊk/" },
-          { "word": "classroom", "uz": "sinf xonasi", "ru": "классная комната", "ipa": "/ˈklɑːsruːm/" },
-          { "word": "schedule", "uz": "dars jadvali", "ru": "расписание", "ipa": "/ˈʃedjuːl/" },
-          { "word": "homework", "uz": "uy vazifasi", "ru": "домашнее задание", "ipa": "/ˈhəʊmwɜːk/" }
+          {
+            "word": "notebook",
+            "uz": "daftar",
+            "ru": "тетрадь",
+            "ipa": "/ˈnəʊtbʊk/"
+          },
+          {
+            "word": "classroom",
+            "uz": "sinf xonasi",
+            "ru": "классная комната",
+            "ipa": "/ˈklɑːsruːm/"
+          },
+          {
+            "word": "schedule",
+            "uz": "dars jadvali",
+            "ru": "расписание",
+            "ipa": "/ˈʃedjuːl/"
+          },
+          {
+            "word": "homework",
+            "uz": "uy vazifasi",
+            "ru": "домашнее задание",
+            "ipa": "/ˈhəʊmwɜːk/"
+          }
         ],
         "grammarNote": {
           "rule": "Subject + Verb + Object + Place/Time (SVO)",
           "simpleExplanationUz": "Ingliz gapining qat’iy tartibi: 1) Kim? (They), 2) Nima qiladi? (read), 3) Nimani? (books), 4) Qayerda? (in the library).",
           "simpleExplanationRu": "Строгий порядок слов: 1) Кто? (They), 2) Что делает? (read), 3) Что? (books), 4) Где? (in the library).",
           "structure": "Subject + Verb(+s) + Object + Place",
-          "positiveExamples": ["They read books in the library.", "He goes to school at eight."],
-          "negativeExamples": ["They in the library books read. (Uzbek SOV interference)"],
-          "questions": ["Do they read books in the library?"],
-          "commonMistakes": ["O‘zbekcha tartibda fe’lni gap oxiriga surish yoki 'he/she' bilan '-s/-es' tushirib qoldirish."]
+          "positiveExamples": [
+            "They read books in the library.",
+            "He goes to school at eight."
+          ],
+          "negativeExamples": [
+            "They in the library books read. (Uzbek SOV interference)"
+          ],
+          "questions": [
+            "Do they read books in the library?"
+          ],
+          "commonMistakes": [
+            "O‘zbekcha tartibda fe’lni gap oxiriga surish yoki 'he/she' bilan '-s/-es' tushirib qoldirish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«schedule» so‘zi Britancha /ˈʃedjuːl/ va Amerikancha /ˈskedʒuːl/ tarzida aytiladi.",
           "ru": "Слово «schedule» произносится как /ˈʃedjuːl/ (BrE) или /ˈskedʒuːl/ (AmE)."
         },
-        "examples": ["They read books in the library.", "He goes to school at eight."],
+        "examples": [
+          "They read books in the library.",
+          "He goes to school at eight."
+        ],
         "guidedPractice": {
           "uz": "4 ta maktab kartochkasi bilan so‘zlarni mustahkamlang.",
           "ru": "Повторите 4 школьных слова по карточкам."
@@ -1529,7 +1777,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m2-school-classroom.png",
               "alt": "Sinf xonasida parta ustida ochiq holda turgan oq varaqli yozuv buyumi va qalam",
               "altRu": "Раскрытый белый бумажный блок с листами и карандаш на парте в классе",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m2_2",
@@ -1547,7 +1804,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m2-school-classroom.png",
               "alt": "Yashil doskali va partali yorug‘ o‘quv joyi ko‘rinishi",
               "altRu": "Светлое учебное помещение с зелёной доской и партой",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m2_3",
@@ -1565,7 +1831,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m2-school-classroom.png",
               "alt": "Devorning o‘ng tomonidagi rangli katakchalardan iborat haftalik reja taxtasi",
               "altRu": "Настенная таблица с цветными блоками на правой стене",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m2_4",
@@ -1583,7 +1858,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m4-home-study.png",
               "alt": "Stol chirog‘i ostida ochiq yozuv daftari va ruchka",
               "altRu": "Открытая тетрадь и ручка под тёплым светом настольной лампы",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             }
           ]
         },
@@ -1608,8 +1892,17 @@
             "text": "«Ular kutubxonada kitob o‘qiydi» gapini inglizcha to‘g‘ri tartibda tuzing:",
             "textRu": "Составьте английское предложение «Они читают книги в библиотеке» в правильном порядке:",
             "options": [],
-            "orderedTokens": ["They", "read", "books", "in", "the", "library."],
-            "acceptedAnswers": ["They read books in the library."],
+            "orderedTokens": [
+              "They",
+              "read",
+              "books",
+              "in",
+              "the",
+              "library."
+            ],
+            "acceptedAnswers": [
+              "They read books in the library."
+            ],
             "explanation": "To‘g‘ri tartib: Ega (They) + Fe’l (read) + To‘ldiruvchi (books) + Joy (in the library.).",
             "explanationRu": "Правильный порядок SVO: Подлежащее (They) + Глагол (read) + Дополнение (books) + Место (in the library.).",
             "wrongFeedback": "Ingliz tilida «kim» so‘zidan keyin darhol harakat (read) keladi, joy (in the library.) esa oxirida turadi.",
@@ -1668,7 +1961,9 @@
       "unitId": "unit_eng_a1_u2",
       "canDoObjective": "Bo‘sh joyga Present Simple 3-shaxs shaklini yozadi va kundalik odatlar haqida gap tuzadi.",
       "canDoObjectiveRu": "Вставляет форму 3-го лица Present Simple и строит предложения о повседневной жизни.",
-      "prerequisites": ["node_eng_a1_u1_checkpoint"],
+      "prerequisites": [
+        "node_eng_gram"
+      ],
       "title": "Kundalik hayot: Present Simple amaliyoti",
       "titleRu": "Повседневная жизнь: практика Present Simple",
       "estimatedMinutes": 6,
@@ -1689,24 +1984,46 @@
           "ru": "Вспомните изменение глаголов на «согласная + y» в 3-м лице единственного числа."
         },
         "vocabularyItems": [
-          { "word": "study", "uz": "o‘qimoq / o‘rganmoq", "ru": "учиться / изучать", "ipa": "/ˈstʌdi/" },
-          { "word": "together", "uz": "birga", "ru": "вместе", "ipa": "/təˈɡeðə/" }
+          {
+            "word": "study",
+            "uz": "o‘qimoq / o‘rganmoq",
+            "ru": "учиться / изучать",
+            "ipa": "/ˈstʌdi/"
+          },
+          {
+            "word": "together",
+            "uz": "birga",
+            "ru": "вместе",
+            "ipa": "/təˈɡeðə/"
+          }
         ],
         "grammarNote": {
           "rule": "Consonant + y -> -ies (study -> studies)",
           "simpleExplanationUz": "Fe’l «undosh + y» harfi bilan tugasa va ega «he / she / it» bo‘lsa, «y» o‘rniga «-ies» yoziladi.",
           "simpleExplanationRu": "Если глагол оканчивается на «согласная + y», то в 3-м лице ед. ч. «y» меняется на «-ies».",
           "structure": "My sister + studies + English.",
-          "positiveExamples": ["My sister studies English every morning.", "We go to school together."],
-          "negativeExamples": ["My sister doesn't study at night."],
-          "questions": ["Does your sister study English?"],
-          "commonMistakes": ["«My sister study» (3-shaxs qo‘shimchasini tushirish) yoki «studys» deb yozish."]
+          "positiveExamples": [
+            "My sister studies English every morning.",
+            "We go to school together."
+          ],
+          "negativeExamples": [
+            "My sister doesn't study at night."
+          ],
+          "questions": [
+            "Does your sister study English?"
+          ],
+          "commonMistakes": [
+            "«My sister study» (3-shaxs qo‘shimchasini tushirish) yoki «studys» deb yozish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«studies» so‘zi /ˈstʌdiz/ deb yumshoq /z/ tovushi bilan tugaydi.",
           "ru": "Форма «studies» произносится со звонким /z/ на конце: /ˈstʌdiz/."
         },
-        "examples": ["My sister studies English at school every morning.", "We go to school together."],
+        "examples": [
+          "My sister studies English at school every morning.",
+          "We go to school together."
+        ],
         "guidedPractice": {
           "uz": "«study» fe’lining «he/she» bilan qanday o‘zgarishini misolda ko‘ring.",
           "ru": "Изучите пример изменения глагола «study» в 3-м лице."
@@ -1795,7 +2112,9 @@
             "text": "Qavsdagi fe’lni mos shaklda yozing: «My sister ___ (study) English at school every morning.»",
             "textRu": "Вставьте глагол в нужной форме: «My sister ___ (study) English at school every morning.»",
             "options": [],
-            "acceptedAnswers": ["studies"],
+            "acceptedAnswers": [
+              "studies"
+            ],
             "explanation": "«My sister» (she) 3-shaxs birlik bo‘lgani uchun «study» fe’li «studies» shakliga o‘zgaradi.",
             "explanationRu": "«My sister» (she) — 3-е лицо ед. ч., поэтому «study» меняется на «studies».",
             "wrongFeedback": "Ega «my sister» (she) bo‘lganda, «undosh + y» bilan tugagan fe’l oxirini «-ies» ga o‘zgartirib yozing.",
@@ -1816,8 +2135,16 @@
         "text": "«Biz maktabga birga boramiz» gapini so‘zlardan to‘g‘ri tuzing:",
         "textRu": "Составьте предложение «Мы вместе ходим в школу» в правильном порядке:",
         "options": [],
-        "orderedTokens": ["We", "go", "to", "school", "together."],
-        "acceptedAnswers": ["We go to school together."],
+        "orderedTokens": [
+          "We",
+          "go",
+          "to",
+          "school",
+          "together."
+        ],
+        "acceptedAnswers": [
+          "We go to school together."
+        ],
         "explanation": "Ko‘plikdagi «We» bilan fe’l qo‘shimchasiz («go») keladi: «We go to school together.».",
         "explanationRu": "С местоимением «We» глагол употребляется без окончания: «We go to school together.».",
         "wrongFeedback": "Gapni «We» bilan boshlab, darhol harakat («go to school») va oxirida «together.» ni qo‘ying.",
@@ -1835,7 +2162,9 @@
       "unitId": "unit_eng_a1_u2",
       "canDoObjective": "Present Simple da tasdiq, inkor (don't/doesn't) va savol (Do/Does) shakllarini o‘zbekcha L1 xatolarisiz ishlatadi.",
       "canDoObjectiveRu": "Употребляет утверждения, отрицания (don't/doesn't) и вопросы (Do/Does) в Present Simple.",
-      "prerequisites": ["node_eng_vocab"],
+      "prerequisites": [
+        "node_eng_a1_m2_sentence_builder"
+      ],
       "title": "Grammar: Present Simple va «to be» kundalik hayotda",
       "titleRu": "Grammar: Present Simple и «to be» в повседневной жизни",
       "estimatedMinutes": 10,
@@ -1856,24 +2185,49 @@
           "ru": "В чём разница между «I am a student» и «I walk to school»?"
         },
         "vocabularyItems": [
-          { "word": "every evening", "uz": "har oqshom", "ru": "каждый вечер", "ipa": "/ˈevri ˈiːvnɪŋ/" },
-          { "word": "take the bus", "uz": "avtobusga minmoq", "ru": "ехать на автобусе", "ipa": "/teɪk ðə bʌs/" }
+          {
+            "word": "every evening",
+            "uz": "har oqshom",
+            "ru": "каждый вечер",
+            "ipa": "/ˈevri ˈiːvnɪŋ/"
+          },
+          {
+            "word": "take the bus",
+            "uz": "avtobusga minmoq",
+            "ru": "ехать на автобусе",
+            "ipa": "/teɪk ðə bʌs/"
+          }
         ],
         "grammarNote": {
           "rule": "Present Simple: Verb / Verb+s | Negative: don't / doesn't + base verb | Question: Do / Does + Subject + base verb?",
           "simpleExplanationUz": "«I/you/we/they» bilan fe’lning asosiy shakli va «don't / Do» ishlatiladi. «He/she/it» bilan esa tasdiqda «-s/-es» qo‘shiladi, inkor va savolda «doesn't / Does» keladi.",
           "simpleExplanationRu": "С «I/you/we/they» используется начальная форма глагола и «don't / Do». С «he/she/it» в утверждении добавляется «-s/-es», а в отрицании и вопросе ставится «doesn't / Does».",
           "structure": "Subject + don't / doesn't + Verb(base)",
-          "positiveExamples": ["I walk at eight o'clock.", "My sister takes the bus.", "My brother does his homework."],
-          "negativeExamples": ["They don't go to school on Sundays.", "She doesn't take the bus."],
-          "questions": ["Do you walk to school every day?", "Does he do his homework?"],
-          "commonMistakes": ["«is do» kabi «to be» + fe’l qo‘shish, 3-shaxsda «do» dan «-es» ni tushirish yoki «They doesn't» deyish."]
+          "positiveExamples": [
+            "I walk at eight o'clock.",
+            "My sister takes the bus.",
+            "My brother does his homework."
+          ],
+          "negativeExamples": [
+            "They don't go to school on Sundays.",
+            "She doesn't take the bus."
+          ],
+          "questions": [
+            "Do you walk to school every day?",
+            "Does he do his homework?"
+          ],
+          "commonMistakes": [
+            "«is do» kabi «to be» + fe’l qo‘shish, 3-shaxsda «do» dan «-es» ni tushirish yoki «They doesn't» deyish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«does» so‘zi /dʌz/ deb o‘qiladi («duz» emas!), «doesn't» esa /ˈdʌznt/.",
           "ru": "Слово «does» читается /dʌz/, а отрицание «doesn't» — /ˈdʌznt/."
         },
-        "examples": ["Aziza: Do you walk to school every day?", "Ben: Yes, I walk at eight o'clock, and my sister takes the bus."],
+        "examples": [
+          "Aziza: Do you walk to school every day?",
+          "Ben: Yes, I walk at eight o'clock, and my sister takes the bus."
+        ],
         "guidedPractice": {
           "uz": "Aziza va Ben suhbatini tinglab, «walk» va «takes» farqini kuzating.",
           "ru": "Прослушайте диалог Азизы и Бена, обратив внимание на «walk» и «takes»."
@@ -1972,7 +2326,12 @@
             "evaluationMode": "deterministic",
             "text": "To‘g‘ri fe’l shaklini tanlang: «My brother ___ his homework every evening.»",
             "textRu": "Выберите верную форму глагола: «My brother ___ his homework every evening.»",
-            "options": ["does", "do", "doing", "is do"],
+            "options": [
+              "does",
+              "do",
+              "doing",
+              "is do"
+            ],
             "correctIndex": 0,
             "mistakeFeedbackByOption": {
               "do": {
@@ -2007,7 +2366,12 @@
         "evaluationMode": "deterministic",
         "text": "Mustahkamlash: «Ular yakshanba kunlari maktabga bormaydi» gapini to‘g‘ri to‘ldiring: «They ___ go to school on Sundays.»",
         "textRu": "Закрепление: дополните предложение «They ___ go to school on Sundays.»",
-        "options": ["don't", "doesn't", "aren't", "not"],
+        "options": [
+          "don't",
+          "doesn't",
+          "aren't",
+          "not"
+        ],
         "correctIndex": 0,
         "mistakeFeedbackByOption": {
           "doesn't": {
@@ -2040,7 +2404,9 @@
       "unitId": "unit_eng_a1_u2",
       "canDoObjective": "2-modul yakuniy sinovida Dilnozaning dars jadvali va kundalik odatlari bo‘yicha Present Simple shakllarini to‘g‘ri qo‘llaydi.",
       "canDoObjectiveRu": "В итоговой проверке 2-го модуля применяет формы Present Simple в новом контексте расписания Дилнозы.",
-      "prerequisites": ["node_eng_a1_m2_daily_life"],
+      "prerequisites": [
+        "node_eng_a1_m2_daily_life"
+      ],
       "title": "2-modul yakuni: «To be» va Present Simple sinovi",
       "titleRu": "Итог модуля 2: Проверка «to be» и Present Simple",
       "estimatedMinutes": 5,
@@ -2063,23 +2429,38 @@
           "ru": "Как пишется глагол «watch» в форме «she»?"
         },
         "vocabularyItems": [
-          { "word": "watch", "uz": "tomosha qilmoq", "ru": "смотреть", "ipa": "/wɒtʃ/" }
+          {
+            "word": "watch",
+            "uz": "tomosha qilmoq",
+            "ru": "смотреть",
+            "ipa": "/wɒtʃ/"
+          }
         ],
         "grammarNote": {
           "rule": "-ch, -sh, -s, -x, -o -> + -es",
           "simpleExplanationUz": "«watch» kabi -ch bilan tugagan fe’llarga «he/she/it» da «-es» qo‘shiladi: «watches».",
           "simpleExplanationRu": "К глаголам на -ch, -sh, -s, -x, -o в 3-м лице ед. ч. добавляется «-es».",
           "structure": "Dilnoza watches cartoons on Saturday.",
-          "positiveExamples": ["Dilnoza watches cartoons on Saturday evenings."],
-          "negativeExamples": ["She doesn't watch TV in the morning."],
-          "questions": ["Does Dilnoza watch cartoons?"],
-          "commonMistakes": ["«watchs» deb 'e' ni tushirib yuborish."]
+          "positiveExamples": [
+            "Dilnoza watches cartoons on Saturday evenings."
+          ],
+          "negativeExamples": [
+            "She doesn't watch TV in the morning."
+          ],
+          "questions": [
+            "Does Dilnoza watch cartoons?"
+          ],
+          "commonMistakes": [
+            "«watchs» deb 'e' ni tushirib yuborish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«watches» /ˈwɒtʃɪz/ — oxirida alohida bo‘g‘in eshitiladi.",
           "ru": "В «watches» /ˈwɒtʃɪz/ окончание образует дополнительный слог."
         },
-        "examples": ["Dilnoza watches cartoons on Saturday evenings."],
+        "examples": [
+          "Dilnoza watches cartoons on Saturday evenings."
+        ],
         "guidedPractice": {
           "uz": "«Dilnoza» bitta shaxs (she) ekaniga e’tibor bering.",
           "ru": "Обратите внимание, что «Dilnoza» — это 3-е лицо единственного числа."
@@ -2141,7 +2522,9 @@
             "text": "Gapni to‘g‘ri fe’l shakli bilan to‘ldiring: «Dilnoza ___ (watch) cartoons on Saturday evenings.»",
             "textRu": "Заполните пропуск верной формой глагола: «Dilnoza ___ (watch) cartoons on Saturday evenings.»",
             "options": [],
-            "acceptedAnswers": ["watches"],
+            "acceptedAnswers": [
+              "watches"
+            ],
             "explanation": "Fe’l «-ch» bilan tugagani uchun «Dilnoza» (she) bilan oxiriga «-es» qo‘shiladi: «watches».",
             "explanationRu": "Поскольку глагол оканчивается на «-ch», с «Dilnoza» (she) добавляется «-es»: «watches».",
             "wrongFeedback": "«Dilnoza» (she) 3-shaxs birlik bo‘lib, «-ch» bilan tugagan fe’l oxiriga «-es» qo‘shishni unutmang.",
@@ -2229,7 +2612,9 @@
       "unitId": "unit_eng_a1_u3",
       "canDoObjective": "Xonadagi buyumlarning joylashuvini (beside, between, behind) ko‘rib va tinglab aniq farqlaydi.",
       "canDoObjectiveRu": "Определяет расположение предметов в комнате (beside, between, behind) по изображению и на слух.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_u2_checkpoint"
+      ],
       "title": "Vocabulary: Xona buyumlari va joylashuv (beside, between, behind)",
       "titleRu": "Vocabulary: Предметы в комнате и предлоги места (beside, between, behind)",
       "estimatedMinutes": 8,
@@ -2250,26 +2635,60 @@
           "ru": "Где сейчас в вашей комнате лежит рюкзак или тетрадь?"
         },
         "vocabularyItems": [
-          { "word": "beside", "uz": "yonida", "ru": "рядом с", "ipa": "/bɪˈsaɪd/" },
-          { "word": "between", "uz": "ikki narsa orasida", "ru": "между двумя предметами", "ipa": "/bɪˈtwiːn/" },
-          { "word": "behind", "uz": "orqasida", "ru": "позади / за", "ipa": "/bɪˈhaɪnd/" },
-          { "word": "armchair", "uz": "kreslo", "ru": "кресло", "ipa": "/ˈɑːmtʃeə/" }
+          {
+            "word": "beside",
+            "uz": "yonida",
+            "ru": "рядом с",
+            "ipa": "/bɪˈsaɪd/"
+          },
+          {
+            "word": "between",
+            "uz": "ikki narsa orasida",
+            "ru": "между двумя предметами",
+            "ipa": "/bɪˈtwiːn/"
+          },
+          {
+            "word": "behind",
+            "uz": "orqasida",
+            "ru": "позади / за",
+            "ipa": "/bɪˈhaɪnd/"
+          },
+          {
+            "word": "armchair",
+            "uz": "kreslo",
+            "ru": "кресло",
+            "ipa": "/ˈɑːmtʃeə/"
+          }
         ],
         "grammarNote": {
           "rule": "Item + is/are + beside / between / behind + Reference Object",
           "simpleExplanationUz": "«beside the desk» (stol yonida), «between the chair and the shelf» (stul va javon orasida), «behind the armchair» (kreslo orqasida).",
           "simpleExplanationRu": "Предлог ставится перед названием предмета: «beside the desk», «between A and B», «behind the armchair».",
           "structure": "The [item] is [preposition] the [furniture].",
-          "positiveExamples": ["The notebook is beside the desk.", "The lamp is between the chair and the shelf.", "The backpack is behind the armchair."],
-          "negativeExamples": ["The notebook is the desk beside. (Uzbek postposition order)"],
-          "questions": ["Where is my notebook?"],
-          "commonMistakes": ["«between» (ikki narsa orasida) bilan «behind» (orqasida) ni chalkashtirish."]
+          "positiveExamples": [
+            "The notebook is beside the desk.",
+            "The lamp is between the chair and the shelf.",
+            "The backpack is behind the armchair."
+          ],
+          "negativeExamples": [
+            "The notebook is the desk beside. (Uzbek postposition order)"
+          ],
+          "questions": [
+            "Where is my notebook?"
+          ],
+          "commonMistakes": [
+            "«between» (ikki narsa orasida) bilan «behind» (orqasida) ni chalkashtirish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«beside», «between», «behind» so‘zlarining birinchi bo‘g‘ini urg‘usiz /bɪ-/ bilan boshlanadi.",
           "ru": "В словах «beside», «between», «behind» первый слог безударный (/bɪ-/), а ударение на втором слоге."
         },
-        "examples": ["It is beside the desk.", "The lamp is between the chair and the shelf.", "Your backpack is behind the armchair."],
+        "examples": [
+          "It is beside the desk.",
+          "The lamp is between the chair and the shelf.",
+          "Your backpack is behind the armchair."
+        ],
         "guidedPractice": {
           "uz": "3 qismli rasm va 4 ta flashcard orqali har bir joylashuvni eslab qoling.",
           "ru": "Изучите трёхзонную иллюстрацию и 4 карточки с предлогами."
@@ -2371,7 +2790,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
               "alt": "Chap hududda ko‘k stol chetida kichik stend ustida sariq daftar turibdi",
               "altRu": "В левой зоне рисунка жёлтая тетрадь лежит на подставке сбоку от синего стола",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m3_between",
@@ -2388,7 +2816,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
               "alt": "Markaziy hududda chapda stul, o‘ngda kitob javoni, ularning qoq markazida esa iliq nurli chiroq turibdi",
               "altRu": "В центральной зоне лампа стоит на столике посередине: слева стул, справа книжная полка",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m3_behind",
@@ -2405,7 +2842,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
               "alt": "O‘ng hududda yashil kreslo suyanchig‘ining narigi tomonida ko‘k ryukzakning yuqori qismi ko‘rinib turibdi",
               "altRu": "В правой зоне верхняя часть синего рюкзака видна с обратной стороны зелёного кресла",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m3_armchair",
@@ -2423,7 +2869,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-vocab-room-prepositions.png",
               "alt": "Xonaning o‘ng tomonidagi ikki tirsakli qulay yashil o‘rindiq",
               "altRu": "Мягкое зелёное сиденье с подлокотниками в правой части комнаты",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             }
           ]
         },
@@ -2489,7 +2944,12 @@
         "evaluationMode": "deterministic",
         "text": "Mustahkamlash: Sizning ryukzakingiz kresloning orqa tomonida turibdi. Ingliz tilida qaysi predlog to‘g‘ri?",
         "textRu": "Закрепление: ваш рюкзак стоит с обратной стороны кресла. Какой предлог верный?",
-        "options": ["behind", "between", "under", "inside"],
+        "options": [
+          "behind",
+          "between",
+          "under",
+          "inside"
+        ],
         "correctIndex": 0,
         "mistakeFeedbackByOption": {
           "between": {
@@ -2522,7 +2982,9 @@
       "unitId": "unit_eng_a1_u3",
       "canDoObjective": "Audio e’londagi soat ifodasi va kun qismi («in the afternoon») dalilidan foydalanib aniq vaqtni topadi.",
       "canDoObjectiveRu": "Определяет точное время по часовому выражению и уточнению части дня («in the afternoon») в аудио.",
-      "prerequisites": ["node_eng_gram"],
+      "prerequisites": [
+        "node_eng_vocab"
+      ],
       "title": "Listening: Audio xabarlar va vaqt ko‘rsatkichlari",
       "titleRu": "Listening: Аудиосообщения и время дня",
       "estimatedMinutes": 12,
@@ -2543,24 +3005,44 @@
           "ru": "Сколько минут означает слово «quarter» применительно ко времени?"
         },
         "vocabularyItems": [
-          { "word": "quarter past", "uz": "chorak (15 daqiqa) o‘tdi", "ru": "пятнадцать минут (после часа)", "ipa": "/ˈkwɔːtə pɑːst/" },
-          { "word": "in the afternoon", "uz": "kunduzi / tushdan keyin", "ru": "днём / после полудня", "ipa": "/ɪn ði ˌɑːftəˈnuːn/" }
+          {
+            "word": "quarter past",
+            "uz": "chorak (15 daqiqa) o‘tdi",
+            "ru": "пятнадцать минут (после часа)",
+            "ipa": "/ˈkwɔːtə pɑːst/"
+          },
+          {
+            "word": "in the afternoon",
+            "uz": "kunduzi / tushdan keyin",
+            "ru": "днём / после полудня",
+            "ipa": "/ɪn ði ˌɑːftəˈnuːn/"
+          }
         ],
         "grammarNote": {
           "rule": "quarter past [hour] + in the morning / in the afternoon",
           "simpleExplanationUz": "«Quarter past three» — 3:15 ham, 15:15 ham bo‘lishi mumkin; «in the afternoon» kunduzgi 15:15 ekanini isbotlaydi.",
           "simpleExplanationRu": "Выражение «quarter past three» само по себе может означать 03:15 или 15:15; уточнение «in the afternoon» доказывает 15:15.",
           "structure": "starts at [time] + in the afternoon",
-          "positiveExamples": ["The lecture starts at quarter past three in the afternoon."],
-          "negativeExamples": ["03:15 is in the morning / at night, not in the afternoon."],
-          "questions": ["What time does the lecture start?"],
-          "commonMistakes": ["«in the afternoon» dalilini eshitmasdan 03:15 AM ni belgilash."]
+          "positiveExamples": [
+            "The lecture starts at quarter past three in the afternoon."
+          ],
+          "negativeExamples": [
+            "03:15 is in the morning / at night, not in the afternoon."
+          ],
+          "questions": [
+            "What time does the lecture start?"
+          ],
+          "commonMistakes": [
+            "«in the afternoon» dalilini eshitmasdan 03:15 AM ni belgilash."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«quarter» so‘zi /ˈkwɔːtə/ tarzida talaffuz qilinadi.",
           "ru": "Слово «quarter» произносится как /ˈkwɔːtə/."
         },
-        "examples": ["Excuse me, the university lecture starts at quarter past three in the afternoon in hall B."],
+        "examples": [
+          "Excuse me, the university lecture starts at quarter past three in the afternoon in hall B."
+        ],
         "guidedPractice": {
           "uz": "Audio xabarni tinglab, kerak bo‘lsa «Matnli bayon» ni ochib tekshiring.",
           "ru": "Прослушайте аудио и при необходимости сверьтесь со скрытым текстом."
@@ -2696,7 +3178,12 @@
         "evaluationMode": "deterministic",
         "text": "Mustahkamlash: \"Half past four\" kunduzi qaysi vaqtni anglatadi?",
         "textRu": "Закрепление: какое дневное время означает «Half past four»?",
-        "options": ["16:30", "16:15", "16:45", "17:00"],
+        "options": [
+          "16:30",
+          "16:15",
+          "16:45",
+          "17:00"
+        ],
         "correctIndex": 0,
         "mistakeFeedbackByOption": {
           "16:15": {
@@ -2729,7 +3216,9 @@
       "unitId": "unit_eng_a1_u3",
       "canDoObjective": "Avtobus jadvali e’lonidan «quarter to» va «o'clock» vaqtlarini tinglab aniq raqamli soatga aylantiradi.",
       "canDoObjectiveRu": "Переводит услышанные выражения «quarter to» и «o'clock» из расписания в точное цифровое время.",
-      "prerequisites": ["node_eng_a1_u2_checkpoint"],
+      "prerequisites": [
+        "node_eng_list"
+      ],
       "title": "Avtobus jadvali va «quarter to» vaqtlari",
       "titleRu": "Расписание автобусов и время «quarter to»",
       "estimatedMinutes": 7,
@@ -2750,25 +3239,50 @@
           "ru": "Сколько часов и минут означает «без пятнадцати восемь»?"
         },
         "vocabularyItems": [
-          { "word": "quarter to", "uz": "chorak (15 daqiqa) kam", "ru": "без пятнадцати", "ipa": "/ˈkwɔːtə tuː/" },
-          { "word": "half past", "uz": "yarim (30 daqiqa o‘tdi)", "ru": "половина", "ipa": "/hɑːf pɑːst/" },
-          { "word": "o'clock", "uz": "soat (aniq soat)", "ru": "ровно (часов)", "ipa": "/əˈklɒk/" }
+          {
+            "word": "quarter to",
+            "uz": "chorak (15 daqiqa) kam",
+            "ru": "без пятнадцати",
+            "ipa": "/ˈkwɔːtə tuː/"
+          },
+          {
+            "word": "half past",
+            "uz": "yarim (30 daqiqa o‘tdi)",
+            "ru": "половина",
+            "ipa": "/hɑːf pɑːst/"
+          },
+          {
+            "word": "o'clock",
+            "uz": "soat (aniq soat)",
+            "ru": "ровно (часов)",
+            "ipa": "/əˈklɒk/"
+          }
         ],
         "grammarNote": {
           "rule": "quarter to [N] = [N - 1]:45",
           "simpleExplanationUz": "«Quarter to eight» — sakkizga hali 15 daqiqa bor, ya’ni 07:45 (08:45 emas!).",
           "simpleExplanationRu": "«Quarter to eight» означает, что до 8 часов не хватает 15 минут — то есть 07:45.",
           "structure": "leaves at quarter to [hour]",
-          "positiveExamples": ["The morning bus leaves at quarter to eight (07:45)."],
-          "negativeExamples": ["08:15 is quarter past eight, and 19:45 is in the evening."],
-          "questions": ["When does the morning bus leave?"],
-          "commonMistakes": ["«quarter to eight» ni 08:45 yoki 08:15 deb tushunish."]
+          "positiveExamples": [
+            "The morning bus leaves at quarter to eight (07:45)."
+          ],
+          "negativeExamples": [
+            "08:15 is quarter past eight, and 19:45 is in the evening."
+          ],
+          "questions": [
+            "When does the morning bus leave?"
+          ],
+          "commonMistakes": [
+            "«quarter to eight» ni 08:45 yoki 08:15 deb tushunish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«o'clock» da urg‘u ikkinchi bo‘g‘inga tushadi: /əˈklɒk/.",
           "ru": "В слове «o'clock» ударение падает на второй слог: /əˈklɒk/."
         },
-        "examples": ["The morning bus to the city library leaves at quarter to eight."],
+        "examples": [
+          "The morning bus to the city library leaves at quarter to eight."
+        ],
         "guidedPractice": {
           "uz": "Soat rasmi va avtobus suhbatini solishtirib, 3 ta vaqt kartasini ko‘ring.",
           "ru": "Сопоставьте рисунок часов, диалог и 3 карточки времени."
@@ -2868,7 +3382,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-m3-clock-times.png",
               "alt": "Chapda quyoshli deraza, o‘ngda esa katta mili to‘qqizga, kichik mili sakkizga yaqinlashib qolgan dumaloq siferblat",
               "altRu": "Слева утреннее окно, справа круглый циферблат со стрелками у девяти и почти у восьми",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m3_hp",
@@ -2886,7 +3409,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-everyday-objects.png",
               "alt": "Oltita kundalik buyum to‘plami va pastki o‘ng burchakdagi dumaloq soat belgisi",
               "altRu": "Набор из шести повседневных предметов и круглые часы в правом нижнем углу",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             },
             {
               "id": "fc_eng_a1_m3_oc",
@@ -2904,7 +3436,16 @@
               "imageSrc": "/lesson-media/english/a1/a1-everyday-objects.png",
               "alt": "Oltita kundalik buyum to‘plamining pastki o‘ng katakchasidagi ikkita strelkali dumaloq siferblat tasviri",
               "altRu": "Изображение круглого циферблата со стрелками в правом нижнем углу набора из шести предметов",
-              "srsDefaults": { "initialBucket": 0, "intervalsDays": [0, 1, 3, 7, 14] }
+              "srsDefaults": {
+                "initialBucket": 0,
+                "intervalsDays": [
+                  0,
+                  1,
+                  3,
+                  7,
+                  14
+                ]
+              }
             }
           ]
         },
@@ -2928,7 +3469,12 @@
             "evaluationMode": "deterministic",
             "text": "Audiodagi ertalabki avtobus shahar kutubxonasiga soat nechada jo‘naydi?",
             "textRu": "Во сколько утренний автобус из аудио отправляется к городской библиотеке?",
-            "options": ["07:45", "08:15", "19:45", "07:15"],
+            "options": [
+              "07:45",
+              "08:15",
+              "19:45",
+              "07:15"
+            ],
             "correctIndex": 0,
             "mistakeFeedbackByOption": {
               "08:15": {
@@ -2965,7 +3511,9 @@
         "text": "Kunduzgi «half past two in the afternoon» vaqtini 24 soatlik raqamli ko‘rinishda (HH:MM) yozing.",
         "textRu": "Запишите дневное время «half past two in the afternoon» в 24-часовом формате (ЧЧ:ММ).",
         "options": [],
-        "acceptedAnswers": ["14:30"],
+        "acceptedAnswers": [
+          "14:30"
+        ],
         "explanation": "«Half past two» — ikki yarim, «in the afternoon» esa kunduzgi vaqtni ko‘rsatadi: 14:30.",
         "explanationRu": "«Half past two» — половина третьего, а «in the afternoon» указывает на день: 14:30.",
         "wrongFeedback": "Kunduzgi 2 yarimni 24 soatlik ko‘rinishda ikki nuqta bilan (masalan, 13:30 kabi) yozing.",
@@ -2983,7 +3531,9 @@
       "unitId": "unit_eng_a1_u3",
       "canDoObjective": "3-modul yakuniy sinovida joylashuv predloglari va kechki vaqt jadvalini to‘g‘ri tahlil qiladi.",
       "canDoObjectiveRu": "В итоговой проверке 3-го модуля исправляет ошибку с предлогом места и определяет вечернее время.",
-      "prerequisites": ["node_eng_a1_m3_time_schedule"],
+      "prerequisites": [
+        "node_eng_a1_m3_time_schedule"
+      ],
       "title": "3-modul yakuni: Joylashuv va vaqt sinovi",
       "titleRu": "Итог модуля 3: Предлоги места и время",
       "estimatedMinutes": 5,
@@ -3006,23 +3556,39 @@
           "ru": "Предлог «beside» ставится перед существительным или после него?"
         },
         "vocabularyItems": [
-          { "word": "night train", "uz": "tungi poyezd", "ru": "ночной поезд", "ipa": "/naɪt treɪn/" }
+          {
+            "word": "night train",
+            "uz": "tungi poyezd",
+            "ru": "ночной поезд",
+            "ipa": "/naɪt treɪn/"
+          }
         ],
         "grammarNote": {
           "rule": "Preposition BEFORE noun + Time disambiguation",
           "simpleExplanationUz": "Ingliz tilida «window beside» deyilmaydi — «beside the window» deyiladi.",
           "simpleExplanationRu": "По-английски предлог ставится перед существительным: «beside the window».",
           "structure": "The study desk is beside the window.",
-          "positiveExamples": ["The study desk is beside the window."],
-          "negativeExamples": ["The study desk is the window beside."],
-          "questions": ["Where is the study desk?"],
-          "commonMistakes": ["O‘zbekcha ko‘makchi tartibida predlogni otdan keyin qo‘yish."]
+          "positiveExamples": [
+            "The study desk is beside the window."
+          ],
+          "negativeExamples": [
+            "The study desk is the window beside."
+          ],
+          "questions": [
+            "Where is the study desk?"
+          ],
+          "commonMistakes": [
+            "O‘zbekcha ko‘makchi tartibida predlogni otdan keyin qo‘yish."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«evening» ikki bo‘g‘in bilan /ˈiːvnɪŋ/ deb o‘qiladi.",
           "ru": "Слово «evening» произносится в два слога: /ˈiːvnɪŋ/."
         },
-        "examples": ["The study desk is beside the window.", "The train leaves at 22:30."],
+        "examples": [
+          "The study desk is beside the window.",
+          "The train leaves at 22:30."
+        ],
         "guidedPractice": {
           "uz": "Xatoli gapni o‘qib, predlog joyini to‘g‘rilang.",
           "ru": "Прочтите предложение с ошибкой и выберите верное положение предлога."
@@ -3118,7 +3684,12 @@
         "evaluationMode": "deterministic",
         "text": "E’londa: «The train departs at half past ten in the evening.» — Poyezd soat nechada jo‘naydi?",
         "textRu": "В объявлении сказано: «The train departs at half past ten in the evening.» — Во сколько отправляется поезд?",
-        "options": ["22:30", "10:30", "21:30", "22:15"],
+        "options": [
+          "22:30",
+          "10:30",
+          "21:30",
+          "22:15"
+        ],
         "correctIndex": 0,
         "mistakeFeedbackByOption": {
           "10:30": {
@@ -3184,7 +3755,9 @@
       "unitId": "unit_eng_a1_u4",
       "canDoObjective": "Qisqa maktab matnidan asosiy g‘oyani hamda aniq dalilni (kun va harakat) ajratib oladi.",
       "canDoObjectiveRu": "Выделяет главную мысль и точные факты (день и действие) в коротком школьном тексте.",
-      "prerequisites": ["node_eng_list"],
+      "prerequisites": [
+        "node_eng_a1_u3_checkpoint"
+      ],
       "title": "Asosiy g‘oya va dalil",
       "titleRu": "Главная мысль и факты в тексте",
       "estimatedMinutes": 8,
@@ -3205,24 +3778,46 @@
           "ru": "Свяжите понятия «чинить» (fix) и «сокращать отходы» (reduce waste)."
         },
         "vocabularyItems": [
-          { "word": "repair club", "uz": "ta’mirlash to‘garagi", "ru": "клуб ремонта", "ipa": "/rɪˈpeə klʌb/" },
-          { "word": "reduce waste", "uz": "chiqindini kamaytirmoq", "ru": "сокращать отходы", "ipa": "/rɪˈdjuːs weɪst/" }
+          {
+            "word": "repair club",
+            "uz": "ta’mirlash to‘garagi",
+            "ru": "клуб ремонта",
+            "ipa": "/rɪˈpeə klʌb/"
+          },
+          {
+            "word": "reduce waste",
+            "uz": "chiqindini kamaytirmoq",
+            "ru": "сокращать отходы",
+            "ipa": "/rɪˈdjuːs weɪst/"
+          }
         ],
         "grammarNote": {
           "rule": "Main Idea (all sentences combined) vs Specific Detail (On Fridays...)",
           "simpleExplanationUz": "Asosiy g‘oya barcha gaplarni umumlashtiradi, dalil esa «qachon?», «nima?» degan aniq savolga javob beradi.",
           "simpleExplanationRu": "Главная мысль обобщает весь абзац, а факт отвечает на конкретный вопрос (когда? что?).",
           "structure": "On + [Day(s)] + Subject + Verb",
-          "positiveExamples": ["On Fridays students fix broken lamps.", "The club helps reduce waste."],
-          "negativeExamples": ["The club is open every day. (contradicts 'On Fridays')"],
-          "questions": ["What is the main idea?", "Which detail matches the text?"],
-          "commonMistakes": ["Matnda yo‘q kun yoki narx haqidagi taxminiy variantni tanlash."]
+          "positiveExamples": [
+            "On Fridays students fix broken lamps.",
+            "The club helps reduce waste."
+          ],
+          "negativeExamples": [
+            "The club is open every day. (contradicts 'On Fridays')"
+          ],
+          "questions": [
+            "What is the main idea?",
+            "Which detail matches the text?"
+          ],
+          "commonMistakes": [
+            "Matnda yo‘q kun yoki narx haqidagi taxminiy variantni tanlash."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«reuse» /ˌriːˈjuːz/ so‘zidagi «re-» qayta bajarishni bildiradi.",
           "ru": "Приставка «re-» в «reuse» /ˌriːˈjuːz/ означает повторное действие."
         },
-        "examples": ["The school opened a repair club. On Fridays students fix broken lamps and learn to reuse old parts. The club helps reduce waste."],
+        "examples": [
+          "The school opened a repair club. On Fridays students fix broken lamps and learn to reuse old parts. The club helps reduce waste."
+        ],
         "guidedPractice": {
           "uz": "Misol matnidagi 3 ta gapni o‘qing va umumiy foydani toping.",
           "ru": "Прочитайте три предложения текста и определите его цель."
@@ -3371,7 +3966,9 @@
       "unitId": "unit_eng_a1_u4",
       "canDoObjective": "O‘z xonasi va kechki o‘qish vaqti haqida «to be», joylashuv predlogi va soat bilan 3–4 gapli xabar yozadi.",
       "canDoObjectiveRu": "Пишет короткое сообщение (3–4 предложения) о своей комнате и времени занятий, оценивая себя по рубрике.",
-      "prerequisites": ["node_eng_a1_u3_checkpoint"],
+      "prerequisites": [
+        "node_eng_read"
+      ],
       "title": "Writing: Xonam va o‘qish vaqtim haqida qisqa xabar",
       "titleRu": "Writing: Короткое сообщение о комнате и времени занятий",
       "estimatedMinutes": 7,
@@ -3394,24 +3991,44 @@
           "ru": "Где в вашей комнате стоит письменный стол?"
         },
         "vocabularyItems": [
-          { "word": "study desk", "uz": "o‘quv stoli", "ru": "письменный стол", "ipa": "/ˈstʌdi desk/" },
-          { "word": "window", "uz": "deraza", "ru": "окно", "ipa": "/ˈwɪndəʊ/" }
+          {
+            "word": "study desk",
+            "uz": "o‘quv stoli",
+            "ru": "письменный стол",
+            "ipa": "/ˈstʌdi desk/"
+          },
+          {
+            "word": "window",
+            "uz": "deraza",
+            "ru": "окно",
+            "ipa": "/ˈwɪndəʊ/"
+          }
         ],
         "grammarNote": {
           "rule": "Short Paragraph: Greeting + Room Position + Study Time",
           "simpleExplanationUz": "Har bir gapni bosh harf bilan boshlab, nuqta bilan tugating; fe’l va predloglarni to‘g‘ri joylang.",
           "simpleExplanationRu": "Начинайте каждое предложение с заглавной буквы, ставьте точку и проверяйте глаголы с предлогами.",
           "structure": "I am [Name]. My desk is [preposition] the window. I study at [time].",
-          "positiveExamples": ["My desk is beside the window. I do my homework at six o'clock."],
-          "negativeExamples": ["my desk beside window. i study 6 (missing verb, preposition/article, capitalization)"],
-          "questions": ["Where is your desk and when do you study?"],
-          "commonMistakes": ["«is» fe’lini tushirib qoldirish yoki vaqt oldidan «at» qo‘ymaslik."]
+          "positiveExamples": [
+            "My desk is beside the window. I do my homework at six o'clock."
+          ],
+          "negativeExamples": [
+            "my desk beside window. i study 6 (missing verb, preposition/article, capitalization)"
+          ],
+          "questions": [
+            "Where is your desk and when do you study?"
+          ],
+          "commonMistakes": [
+            "«is» fe’lini tushirib qoldirish yoki vaqt oldidan «at» qo‘ymaslik."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«window» /ˈwɪndəʊ/ so‘zida oxiridagi «w» alohida talaffuz qilinmaydi.",
           "ru": "В слове «window» /ˈwɪndəʊ/ конечная «w» не произносится как отдельный звук."
         },
-        "examples": ["Hi Ben! I am in my room now. My desk is beside the window, and my lamp is on the desk. I do my homework at seven o'clock in the evening."],
+        "examples": [
+          "Hi Ben! I am in my room now. My desk is beside the window, and my lamp is on the desk. I do my homework at seven o'clock in the evening."
+        ],
         "guidedPractice": {
           "uz": "Kechki o‘qish burchagi rasmini va namuna xabarni o‘rganing.",
           "ru": "Рассмотрите иллюстрацию рабочего стола и изучите образец сообщения."
@@ -3539,8 +4156,17 @@
         "text": "«Mening stolim deraza yonida» gapini to‘g‘ri tartibda tuzing:",
         "textRu": "Составьте предложение «Мой стол находится рядом с окном» в правильном порядке:",
         "options": [],
-        "orderedTokens": ["My", "desk", "is", "beside", "the", "window."],
-        "acceptedAnswers": ["My desk is beside the window."],
+        "orderedTokens": [
+          "My",
+          "desk",
+          "is",
+          "beside",
+          "the",
+          "window."
+        ],
+        "acceptedAnswers": [
+          "My desk is beside the window."
+        ],
         "explanation": "To‘g‘ri tartib: My desk + is + beside + the window.",
         "explanationRu": "Правильный порядок: My desk + is + beside + the window.",
         "wrongFeedback": "Ega («My desk») dan keyin «is» va predlog («beside the window.») kelishini eslang.",
@@ -3558,7 +4184,9 @@
       "unitId": "unit_eng_a1_u4",
       "canDoObjective": "4-modul yakuniy sinovida yangi kutubxona e’lonini tushunib, A1 chiqish sinovini ochadi.",
       "canDoObjectiveRu": "В итоговой проверке 4-го модуля анализирует новое библиотечное объявление и открывает выходной тест A1.",
-      "prerequisites": ["node_eng_a1_m4_writing"],
+      "prerequisites": [
+        "node_eng_a1_m4_writing"
+      ],
       "title": "4-modul yakuni: O‘qish va muloqot sinovi",
       "titleRu": "Итог модуля 4: Проверка чтения и общения",
       "estimatedMinutes": 5,
@@ -3581,24 +4209,44 @@
           "ru": "Найдите в объявлении слова «free» и «Saturday morning»."
         },
         "vocabularyItems": [
-          { "word": "free", "uz": "bepul", "ru": "бесплатно", "ipa": "/friː/" },
-          { "word": "bring", "uz": "olib kelmoq", "ru": "приносить", "ipa": "/brɪŋ/" }
+          {
+            "word": "free",
+            "uz": "bepul",
+            "ru": "бесплатно",
+            "ipa": "/friː/"
+          },
+          {
+            "word": "bring",
+            "uz": "olib kelmoq",
+            "ru": "приносить",
+            "ipa": "/brɪŋ/"
+          }
         ],
         "grammarNote": {
           "rule": "Scanning notices for day, time, and required item",
           "simpleExplanationUz": "E’lonlarda shart va vaqtni aniq ajratish uchun «at» va «bring» so‘zlariga qarang.",
           "simpleExplanationRu": "В объявлениях ищите время после «at» и требования после глагола «bring».",
           "structure": "Starts at [time]. Please bring [item].",
-          "positiveExamples": ["The club meets at ten o'clock on Saturday morning."],
-          "negativeExamples": ["Tickets cost ten dollars. (contradicts 'free')"],
-          "questions": ["What should visitors bring?"],
-          "commonMistakes": ["Matnda yo‘q narx yoki boshqa kunni tanlash."]
+          "positiveExamples": [
+            "The club meets at ten o'clock on Saturday morning."
+          ],
+          "negativeExamples": [
+            "Tickets cost ten dollars. (contradicts 'free')"
+          ],
+          "questions": [
+            "What should visitors bring?"
+          ],
+          "commonMistakes": [
+            "Matnda yo‘q narx yoki boshqa kunni tanlash."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«Saturday» so‘zida urg‘u birinchi bo‘g‘inda: /ˈsætədeɪ/.",
           "ru": "В слове «Saturday» ударение падает на первый слог: /ˈsætədeɪ/."
         },
-        "examples": ["Samarkand Youth Library: Our English reading club meets on Saturday morning at ten o'clock. Entry is free. Please bring one notebook and a pen."],
+        "examples": [
+          "Samarkand Youth Library: Our English reading club meets on Saturday morning at ten o'clock. Entry is free. Please bring one notebook and a pen."
+        ],
         "guidedPractice": {
           "uz": "E’lon matnini diqqat bilan o‘qib, savollarga javob bering.",
           "ru": "Прочтите объявление и ответьте на вопросы."
@@ -3770,7 +4418,9 @@
       "unitId": "unit_eng_a1_u4",
       "canDoObjective": "A1 yakuniy integratsiyalashgan sinovida tinglash, to‘ldirish, gap tuzish va o‘qish vazifalarini kamida 70% bilan bajaradi.",
       "canDoObjectiveRu": "Проходит итоговую комплексную проверку уровня A1 (аудирование, заполнение, порядок слов, чтение) с результатом от 70%.",
-      "prerequisites": ["node_eng_a1_u4_checkpoint"],
+      "prerequisites": [
+        "node_eng_a1_u4_checkpoint"
+      ],
       "title": "A1 Yakuniy sinov: Kafedagi buyurtma va kundalik muloqot",
       "titleRu": "Итоговый тест A1: Заказ в кафе и чтение",
       "estimatedMinutes": 10,
@@ -3793,24 +4443,45 @@
           "ru": "Вспомните, как сделать заказ и спросить время закрытия кафе."
         },
         "vocabularyItems": [
-          { "word": "green tea", "uz": "ko‘k choy", "ru": "зелёный чай", "ipa": "/ɡriːn tiː/" },
-          { "word": "cheese sandwich", "uz": "pishloqli sendvich", "ru": "сэндвич с сыром", "ipa": "/tʃiːz ˈsænwɪtʃ/" }
+          {
+            "word": "green tea",
+            "uz": "ko‘k choy",
+            "ru": "зелёный чай",
+            "ipa": "/ɡriːn tiː/"
+          },
+          {
+            "word": "cheese sandwich",
+            "uz": "pishloqli sendvich",
+            "ru": "сэндвич с сыром",
+            "ipa": "/tʃiːz ˈsænwɪtʃ/"
+          }
         ],
         "grammarNote": {
           "rule": "Integrated A1: Present Simple + Time + Prepositions",
           "simpleExplanationUz": "Yakuniy sinovda «closes at half past eight in the evening» (20:30), «opens» (3-shaxs birlik) va SVO tartibi tekshiriladi.",
           "simpleExplanationRu": "В тесте проверяются время закрытия (20:30), форма 3-го лица «opens» и порядок слов SVO.",
           "structure": "Subject + Verb(+s) + Object + at [time]",
-          "positiveExamples": ["We close at half past eight in the evening.", "The cafe opens at nine o'clock."],
-          "negativeExamples": ["The cafe close at 08:30 AM."],
-          "questions": ["Is the cafe open until eight o'clock?"],
-          "commonMistakes": ["Kechki 20:30 o‘rniga ertalabki 08:30 ni belgilash."]
+          "positiveExamples": [
+            "We close at half past eight in the evening.",
+            "The cafe opens at nine o'clock."
+          ],
+          "negativeExamples": [
+            "The cafe close at 08:30 AM."
+          ],
+          "questions": [
+            "Is the cafe open until eight o'clock?"
+          ],
+          "commonMistakes": [
+            "Kechki 20:30 o‘rniga ertalabki 08:30 ni belgilash."
+          ]
         },
         "pronunciationFocus": {
           "uz": "«sandwich» so‘zida o‘rtadagi «d» odatda o‘qilmaydi: /ˈsænwɪtʃ/.",
           "ru": "В слове «sandwich» буква «d» в беглой речи выпадает: /ˈsænwɪtʃ/."
         },
-        "examples": ["Waiter: Yes, we close at half past eight in the evening."],
+        "examples": [
+          "Waiter: Yes, we close at half past eight in the evening."
+        ],
         "guidedPractice": {
           "uz": "Avval kafedagi audioni tinglang, so‘ng bosqichma-bosqich 4 ta sinov topshirig‘ini bajaring.",
           "ru": "Сначала прослушайте диалог в кафе, затем выполните 4 задания."
@@ -3891,7 +4562,12 @@
             "evaluationMode": "deterministic",
             "text": "Audiodagi suhbatga ko‘ra, kafe soat nechada yopiladi?",
             "textRu": "Согласно диалогу, во сколько закрывается кафе?",
-            "options": ["20:30", "08:30", "20:00", "19:30"],
+            "options": [
+              "20:30",
+              "08:30",
+              "20:00",
+              "19:30"
+            ],
             "correctIndex": 0,
             "mistakeFeedbackByOption": {
               "08:30": {
@@ -3935,7 +4611,9 @@
             "text": "Gapni to‘g‘ri shaklda to‘ldiring: «The city cafe ___ (open) at nine o'clock every morning.»",
             "textRu": "Дополните предложение: «The city cafe ___ (open) at nine o'clock every morning.»",
             "options": [],
-            "acceptedAnswers": ["opens"],
+            "acceptedAnswers": [
+              "opens"
+            ],
             "explanation": "«The city cafe» bitta joy (it) bo‘lgani uchun Present Simple da fe’lga «-s» qo‘shiladi: «opens».",
             "explanationRu": "«The city cafe» (it) — 3-е лицо ед. ч., поэтому к глаголу добавляется «-s»: «opens».",
             "wrongFeedback": "«The city cafe» (it) 3-shaxs birlik ekanini hisobga olib, qavsdagi fe’l oxiriga «-s» qo‘shing.",
@@ -3963,8 +4641,18 @@
             "text": "«Men choyimni deraza yonida ichaman» ma’nosidagi gapni tuzing:",
             "textRu": "Составьте предложение «Я пью свой чай рядом с окном»:",
             "options": [],
-            "orderedTokens": ["I", "drink", "my", "tea", "beside", "the", "window."],
-            "acceptedAnswers": ["I drink my tea beside the window."],
+            "orderedTokens": [
+              "I",
+              "drink",
+              "my",
+              "tea",
+              "beside",
+              "the",
+              "window."
+            ],
+            "acceptedAnswers": [
+              "I drink my tea beside the window."
+            ],
             "explanation": "To‘g‘ri tartib: Ega (I) + Fe’l (drink) + To‘ldiruvchi (my tea) + Joy (beside the window.).",
             "explanationRu": "Правильный порядок: I + drink + my tea + beside the window.",
             "wrongFeedback": "«I drink my tea» qismidan keyin joylashuv predlogini («beside the window.») qo‘ying.",
@@ -4142,9 +4830,11 @@
       "titleRu": "Speaking: Представление себя",
       "description": "Ovozli namuna va o‘zini baholash mezoni bilan nutq mashqi.",
       "descriptionRu": "Устная практика с аудио-образцом и критериями самооценки.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_m1_greetings"
+      ],
       "requiredScore": 50,
-      "status": "available",
+      "status": "locked",
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_a1_m1_speaking",
       "estimatedMinutes": 5,
@@ -4170,9 +4860,11 @@
       "titleRu": "Итог модуля 1: Контрольная точка",
       "description": "Qabulxonadagi yangi muloqot vaziyati bilan 1-modul tekshiruvi.",
       "descriptionRu": "Проверка 1-го модуля в новой диалоговой ситуации.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_m1_speaking"
+      ],
       "requiredScore": 70,
-      "status": "available",
+      "status": "locked",
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_a1_u1_checkpoint",
       "estimatedMinutes": 5,
@@ -4198,70 +4890,15 @@
       "titleRu": "Порядок слов: Школьные будни",
       "description": "Maktab lug‘ati, SVO tartibida gap tuzish va xatoni tuzatish.",
       "descriptionRu": "Школьная лексика, составление предложений и исправление ошибок.",
-      "prerequisites": [],
+      "prerequisites": [
+        "node_eng_a1_u1_checkpoint"
+      ],
       "requiredScore": 50,
-      "status": "available",
+      "status": "locked",
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_a1_m2_sentence_builder",
       "estimatedMinutes": 7,
       "order": 4
-    },
-    {
-      "id": "node_eng_a1_m2_daily_life",
-      "courseId": "course_eng_01",
-      "skillId": "skill_eng_grammar",
-      "skillDomain": "grammar",
-      "cefrLevel": "A1",
-      "moduleId": "mod_eng_a1_m2",
-      "moduleTitle": "2-modul: «To be» va Present Simple",
-      "moduleTitleRu": "Модуль 2: «To be» и Present Simple",
-      "unitId": "unit_eng_a1_u2",
-      "canDoObjective": "Present Simple 3-shaxs birlik shakllarini to‘g‘ri yozadi",
-      "canDoObjectiveRu": "Правильно пишет глаголы в 3-м лице Present Simple",
-      "nodeKind": "lesson",
-      "isCheckpoint": false,
-      "hasRichExercise": true,
-      "taskKind": "standard",
-      "title": "Present Simple: Bo‘sh joyni to‘ldirish",
-      "titleRu": "Present Simple: Заполнение пропусков",
-      "description": "Kundalik odatlar uchun «-ies» qo‘shimchasi va gap tartibi mashqi.",
-      "descriptionRu": "Окончание «-ies» для регулярных действий и порядок слов.",
-      "prerequisites": ["node_eng_a1_u1_checkpoint"],
-      "requiredScore": 50,
-      "status": "locked",
-      "isReinforcement": false,
-      "targetLessonId": "lesson_eng_a1_m2_daily_life",
-      "estimatedMinutes": 6,
-      "order": 5
-    },
-    {
-      "id": "node_eng_vocab",
-      "courseId": "course_eng_01",
-      "skillId": "skill_eng_vocab",
-      "skillDomain": "vocabulary",
-      "cefrLevel": "A1",
-      "moduleId": "mod_eng_a1_m3",
-      "moduleTitle": "3-modul: Uy, joylashuv va vaqt",
-      "moduleTitleRu": "Модуль 3: Дом, предлоги места и время",
-      "unitId": "unit_eng_a1_u3",
-      "canDoObjective": "Buyumlar joylashuvini (beside, between, behind) aniq ko‘rsatadi",
-      "canDoObjectiveRu": "Точно называет положение предметов (beside, between, behind)",
-      "nodeKind": "lesson",
-      "isCheckpoint": false,
-      "hasRichExercise": false,
-      "taskKind": "standard",
-      "title": "Vocabulary",
-      "titleRu": "Лексика",
-      "description": "Xona buyumlari va joylashuv predloglari (beside, between, behind).",
-      "descriptionRu": "Предметы в комнате и предлоги места (beside, between, behind).",
-      "prerequisites": [],
-      "requiredScore": 50,
-      "status": "completed",
-      "score": 84,
-      "isReinforcement": false,
-      "targetLessonId": "lesson_eng_vocab_01",
-      "estimatedMinutes": 8,
-      "order": 6
     },
     {
       "id": "node_eng_gram",
@@ -4283,14 +4920,46 @@
       "titleRu": "Грамматика",
       "description": "Present Simple, «to be» va kundalik maktab odatlari.",
       "descriptionRu": "Present Simple, «to be» и школьные привычки.",
-      "prerequisites": ["node_eng_vocab"],
+      "prerequisites": [
+        "node_eng_a1_m2_sentence_builder"
+      ],
       "requiredScore": 50,
-      "status": "completed",
+      "status": "locked",
       "score": 72,
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_grammar_01",
       "estimatedMinutes": 10,
-      "order": 7
+      "order": 5
+    },
+    {
+      "id": "node_eng_a1_m2_daily_life",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_grammar",
+      "skillDomain": "grammar",
+      "cefrLevel": "A1",
+      "moduleId": "mod_eng_a1_m2",
+      "moduleTitle": "2-modul: «To be» va Present Simple",
+      "moduleTitleRu": "Модуль 2: «To be» и Present Simple",
+      "unitId": "unit_eng_a1_u2",
+      "canDoObjective": "Present Simple 3-shaxs birlik shakllarini to‘g‘ri yozadi",
+      "canDoObjectiveRu": "Правильно пишет глаголы в 3-м лице Present Simple",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": true,
+      "taskKind": "standard",
+      "title": "Present Simple: Bo‘sh joyni to‘ldirish",
+      "titleRu": "Present Simple: Заполнение пропусков",
+      "description": "Kundalik odatlar uchun «-ies» qo‘shimchasi va gap tartibi mashqi.",
+      "descriptionRu": "Окончание «-ies» для регулярных действий и порядок слов.",
+      "prerequisites": [
+        "node_eng_gram"
+      ],
+      "requiredScore": 50,
+      "status": "locked",
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_a1_m2_daily_life",
+      "estimatedMinutes": 6,
+      "order": 6
     },
     {
       "id": "node_eng_a1_u2_checkpoint",
@@ -4312,12 +4981,45 @@
       "titleRu": "Итог модуля 2: Контрольная точка",
       "description": "Dilnozaning dars jadvali bo‘yicha Present Simple yakuniy sinovi.",
       "descriptionRu": "Контроль Present Simple по расписанию Дилнозы.",
-      "prerequisites": ["node_eng_a1_m2_daily_life"],
+      "prerequisites": [
+        "node_eng_a1_m2_daily_life"
+      ],
       "requiredScore": 70,
       "status": "locked",
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_a1_u2_checkpoint",
       "estimatedMinutes": 5,
+      "order": 7
+    },
+    {
+      "id": "node_eng_vocab",
+      "courseId": "course_eng_01",
+      "skillId": "skill_eng_vocab",
+      "skillDomain": "vocabulary",
+      "cefrLevel": "A1",
+      "moduleId": "mod_eng_a1_m3",
+      "moduleTitle": "3-modul: Uy, joylashuv va vaqt",
+      "moduleTitleRu": "Модуль 3: Дом, предлоги места и время",
+      "unitId": "unit_eng_a1_u3",
+      "canDoObjective": "Buyumlar joylashuvini (beside, between, behind) aniq ko‘rsatadi",
+      "canDoObjectiveRu": "Точно называет положение предметов (beside, between, behind)",
+      "nodeKind": "lesson",
+      "isCheckpoint": false,
+      "hasRichExercise": false,
+      "taskKind": "standard",
+      "title": "Vocabulary",
+      "titleRu": "Лексика",
+      "description": "Xona buyumlari va joylashuv predloglari (beside, between, behind).",
+      "descriptionRu": "Предметы в комнате и предлоги места (beside, between, behind).",
+      "prerequisites": [
+        "node_eng_a1_u2_checkpoint"
+      ],
+      "requiredScore": 50,
+      "status": "locked",
+      "score": 84,
+      "isReinforcement": false,
+      "targetLessonId": "lesson_eng_vocab_01",
+      "estimatedMinutes": 8,
       "order": 8
     },
     {
@@ -4340,9 +5042,11 @@
       "titleRu": "Аудирование",
       "description": "Audio xabarlar va vaqt ko‘rsatkichlarini farqlash.",
       "descriptionRu": "Распознавание времени и деталей в аудиосообщениях.",
-      "prerequisites": ["node_eng_gram"],
+      "prerequisites": [
+        "node_eng_vocab"
+      ],
       "requiredScore": 50,
-      "status": "reinforcement",
+      "status": "locked",
       "score": 43,
       "isReinforcement": false,
       "targetLessonId": "lesson_eng_listening_01",
@@ -4369,7 +5073,9 @@
       "titleRu": "Время и расписание: Quarter to и Half past",
       "description": "Ertalabki avtobus e’loni, soat kartochkalari va 24 soatlik vaqt mashqi.",
       "descriptionRu": "Объявление утреннего автобуса, карточки времени и ввод цифр.",
-      "prerequisites": ["node_eng_a1_u2_checkpoint"],
+      "prerequisites": [
+        "node_eng_list"
+      ],
       "requiredScore": 50,
       "status": "locked",
       "isReinforcement": false,
@@ -4397,7 +5103,9 @@
       "titleRu": "Итог модуля 3: Контрольная точка",
       "description": "Predlog tartibi va kechki poyezd vaqti bo‘yicha yakuniy tekshiruv.",
       "descriptionRu": "Проверка порядка предлогов и вечернего времени поезда.",
-      "prerequisites": ["node_eng_a1_m3_time_schedule"],
+      "prerequisites": [
+        "node_eng_a1_m3_time_schedule"
+      ],
       "requiredScore": 70,
       "status": "locked",
       "isReinforcement": false,
@@ -4425,7 +5133,9 @@
       "titleRu": "Чтение",
       "description": "Matnni tahlil qilish va xulosa chiqarish.",
       "descriptionRu": "Анализ короткого текста и поиск подтверждающих деталей.",
-      "prerequisites": ["node_eng_list"],
+      "prerequisites": [
+        "node_eng_a1_u3_checkpoint"
+      ],
       "requiredScore": 70,
       "status": "locked",
       "score": 79,
@@ -4454,7 +5164,9 @@
       "titleRu": "Writing: Сообщение о комнате",
       "description": "Namuna, o‘zini baholash rubrikasi va gap tuzish bilan yozma mashq.",
       "descriptionRu": "Письменная практика с образцом, рубрикой самооценки и порядком слов.",
-      "prerequisites": ["node_eng_a1_u3_checkpoint"],
+      "prerequisites": [
+        "node_eng_read"
+      ],
       "requiredScore": 50,
       "status": "locked",
       "isReinforcement": false,
@@ -4482,7 +5194,9 @@
       "titleRu": "Итог модуля 4: Контрольная точка",
       "description": "Kutubxona e’loni asosida tushunish va suhbat yakunlash sinovi.",
       "descriptionRu": "Проверка понимания библиотечного объявления и диалога.",
-      "prerequisites": ["node_eng_a1_m4_writing"],
+      "prerequisites": [
+        "node_eng_a1_m4_writing"
+      ],
       "requiredScore": 70,
       "status": "locked",
       "isReinforcement": false,
@@ -4510,7 +5224,9 @@
       "titleRu": "Итоговый тест уровня A1",
       "description": "Tinglash, grammatika, gap tuzish va o‘qish bo‘yicha A1 yakuniy baholash.",
       "descriptionRu": "Комплексная итоговая проверка уровня A1 по всем навыкам.",
-      "prerequisites": ["node_eng_a1_u4_checkpoint"],
+      "prerequisites": [
+        "node_eng_a1_u4_checkpoint"
+      ],
       "requiredScore": 70,
       "status": "locked",
       "isReinforcement": false,

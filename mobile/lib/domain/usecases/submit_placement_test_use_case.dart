@@ -13,6 +13,8 @@ class AssessmentResult {
   final String weakestSkillId;
   final int overallScore;
   final String? cefrLevel;
+  final String? assessedCefr;
+  final String? unlockedCefrFloor;
   final int timestamp;
   final List<PlacementReview> review;
 
@@ -24,6 +26,8 @@ class AssessmentResult {
     required this.weakestSkillId,
     this.overallScore = 0,
     this.cefrLevel,
+    this.assessedCefr,
+    this.unlockedCefrFloor,
     required this.timestamp,
     this.review = const [],
   });
@@ -112,8 +116,7 @@ class SubmitPlacementTestUseCase {
       verifiedSubmissions,
     );
 
-    // Save to learner profile
-    // Identify weakest skill dynamically
+    // Identify weakest skill dynamically only when below mastery (< 80)
     String weakestSkillId = '';
     int minScore = 101;
     for (final s in computedScores.values) {
@@ -121,6 +124,9 @@ class SubmitPlacementTestUseCase {
         minScore = s.score;
         weakestSkillId = s.skillId;
       }
+    }
+    if (minScore >= 80) {
+      weakestSkillId = '';
     }
 
     final overallScore = SkillScoringEngine.computeOverallScore(computedScores);
@@ -132,13 +138,14 @@ class SubmitPlacementTestUseCase {
         completedNodeIds = const [];
       }
     }
-    final cefrLevel = courseId == 'course_eng_01'
-        ? SkillScoringEngine.computeEnglishPlacementCefr(
+    final cefrEvaluation = courseId == 'course_eng_01'
+        ? SkillScoringEngine.evaluateEnglishPlacementCefr(
             questions,
             verifiedSubmissions,
             completedNodeIds: completedNodeIds,
           )
         : null;
+    final cefrLevel = cefrEvaluation?.effectiveCefr;
 
     // Save placement attempt record
     final attemptId = await learnerRepository.savePlacementAttempt(
@@ -147,6 +154,7 @@ class SubmitPlacementTestUseCase {
         score: overallScore,
         weakestSkillId: weakestSkillId,
         cefrLevel: cefrLevel,
+        skillScores: computedScores,
         submissions: verifiedSubmissions
             .map(
               (s) => PlacementAttemptSubmission(
@@ -164,12 +172,16 @@ class SubmitPlacementTestUseCase {
       final persistedProfile = await learnerRepository.getProfile();
       if (courseId != 'course_eng_01') {
         computedScores = persistedProfile.scoresByCourse[courseId] ?? {};
+      } else if (persistedProfile.placementSkillScoresByCourse[courseId]
+          case final serverDiagnostic? when serverDiagnostic.isNotEmpty) {
+        computedScores = serverDiagnostic;
       }
       weakestSkillId = '';
       minScore = 101;
       for (final score in computedScores.values) {
-        if (score.isWeakestFocus) {
+        if (score.isWeakestFocus && score.score < 80) {
           weakestSkillId = score.skillId;
+          minScore = score.score;
           break;
         }
         if (score.score < minScore) {
@@ -177,14 +189,36 @@ class SubmitPlacementTestUseCase {
           weakestSkillId = score.skillId;
         }
       }
+      if (minScore >= 80) {
+        weakestSkillId = '';
+      }
     } else {
       if (courseId == 'course_eng_01') {
         await learnerRepository.savePlacementSummary(
           courseId: courseId,
           score: overallScore,
           cefrTier: cefrLevel!,
+          skillScores: computedScores,
         );
       } else {
+        final current = await learnerRepository.getProfile();
+        final nextPlacementScores =
+            Map<String, int>.from(current.placementScoreByCourse)
+              ..[courseId] = overallScore;
+        final nextPlacementSkills =
+            Map<String, Map<String, SkillScore>>.from(
+              current.placementSkillScoresByCourse,
+            )..[courseId] = Map<String, SkillScore>.from(computedScores);
+        await learnerRepository.updateProfile(
+          current.copyWith(
+            placementScoreByCourse: nextPlacementScores,
+            placementSkillScoresByCourse: nextPlacementSkills,
+          ),
+          fields: {
+            LearnerProfileField.placementScoreByCourse,
+            LearnerProfileField.placementSkillScoresByCourse,
+          },
+        );
         await learnerRepository.saveSkillScores(courseId, computedScores);
       }
       await learnerRepository.addXp(20, 'placement_completed_$courseId');
@@ -199,6 +233,8 @@ class SubmitPlacementTestUseCase {
       weakestSkillId: weakestSkillId,
       overallScore: overallScore,
       cefrLevel: cefrLevel,
+      assessedCefr: cefrEvaluation?.assessedCefr,
+      unlockedCefrFloor: cefrEvaluation?.unlockedCefrFloor,
       timestamp: DateTime.now().millisecondsSinceEpoch,
       review: [
         for (final submission in verifiedSubmissions)

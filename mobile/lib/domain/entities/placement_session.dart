@@ -1,4 +1,5 @@
 import 'question.dart';
+import 'skill_score.dart';
 
 class PlacementReview {
   final QuestionAnswerSubmission submission;
@@ -41,12 +42,22 @@ class CompletedPlacement {
   final String weakestSkillId;
   final DateTime completedAt;
   final List<PlacementReview> review;
+  final int? overallScore;
+  final String? placementCefr;
+  final String? assessedCefr;
+  final String? unlockedCefrFloor;
+  final Map<String, SkillScore>? skillScores;
 
   const CompletedPlacement({
     required this.attemptId,
     required this.weakestSkillId,
     required this.completedAt,
     required this.review,
+    this.overallScore,
+    this.placementCefr,
+    this.assessedCefr,
+    this.unlockedCefrFloor,
+    this.skillScores,
   });
 }
 

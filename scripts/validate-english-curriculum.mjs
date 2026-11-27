@@ -362,25 +362,35 @@ for (const { lvl, doc } of loadedLevels) {
       doc.lessonsOrder[0] === 'lesson_eng_listening_01',
       'course_eng_01 lessonsOrder[0] must be lesson_eng_listening_01',
     );
-    const openableRichNode = doc.roadmapNodes.find(
-      (n) => n.prerequisites.length === 0 && n.hasRichExercise && n.nodeKind === 'lesson',
+    const entryNodes = doc.roadmapNodes.filter((n) => n.prerequisites.length === 0);
+    assert(
+      entryNodes.length === 1 &&
+        entryNodes[0].id === 'node_eng_a1_m1_greetings' &&
+        entryNodes[0].hasRichExercise &&
+        entryNodes[0].nodeKind === 'lesson',
+      'Expected exactly 1 entry-openable A1 node (node_eng_a1_m1_greetings)',
     );
-    assert(Boolean(openableRichNode), 'Expected at least 1 entry-openable A1 rich exercise node');
-
-    const openableCheckpoint = doc.roadmapNodes.find(
-      (n) => n.prerequisites.length === 0 && n.nodeKind === 'unit_checkpoint' && n.isCheckpoint,
-    );
-    assert(Boolean(openableCheckpoint), 'Expected at least 1 entry-openable A1 unit_checkpoint node');
-
-    const openableSpeaking = doc.roadmapNodes.find(
-      (n) => n.prerequisites.length === 0 && n.taskKind === 'speaking_prompt',
-    );
-    assert(Boolean(openableSpeaking), 'Expected at least 1 entry-openable A1 speaking_prompt node');
 
     const lockedCheckpoints = doc.roadmapNodes.filter(
       (n) => n.prerequisites.length > 0 && (n.nodeKind === 'unit_checkpoint' || n.nodeKind === 'level_assessment'),
     );
-    assert(lockedCheckpoints.length >= 4, 'Expected A1 Unit 2-4 checkpoints and A1 exit gated by prerequisites');
+    assert(lockedCheckpoints.length === 5, 'Expected all 5 A1 Unit 1-4 checkpoints and A1 exit gated by prerequisites');
+
+    const a1NodeMap = new Map(doc.roadmapNodes.map((n) => [n.id, n]));
+    const ancestors = new Set();
+    const stack = [...(a1NodeMap.get('node_eng_a1_exit')?.prerequisites ?? [])];
+    while (stack.length > 0) {
+      const cur = stack.pop();
+      if (!cur || ancestors.has(cur)) continue;
+      ancestors.add(cur);
+      for (const p of a1NodeMap.get(cur)?.prerequisites ?? []) {
+        stack.push(p);
+      }
+    }
+    assert(
+      ancestors.size === 14,
+      `Expected node_eng_a1_exit to require all 14 prior A1 nodes transitively, got ${ancestors.size}`,
+    );
 
     const starterLesson = doc.lessons.find((l) => l.id === 'lesson_eng_starter');
     const starterQuiz = starterLesson?.steps?.find(

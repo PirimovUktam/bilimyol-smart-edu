@@ -9,6 +9,7 @@ import { AdaptiveQuestionSelector, AnswerHistoryItem } from '@/domain/personaliz
 import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import {
   computeEnglishPlacementCefr,
+  evaluateEnglishPlacementCefr,
   getEnglishPlacementEntryNodeId,
 } from '@/domain/personalization/EnglishCefrPlacement';
 import { PLACEMENT_QUESTION_METADATA } from '@/data/datasources/placementMetadata';
@@ -59,14 +60,25 @@ async function sessionState(session: PlacementSession, isCurrent: () => boolean)
   let learner = useLearnerStore.getState().profile;
   if (result && result.courseId === 'course_eng_01' && isCurrent()) {
     const engBank = PLACEMENT_QUESTION_METADATA['course_eng_01'] ?? [];
-    const placementScores = SkillScoringEngine.computePlacementScores(result.courseId, engBank, result.submissions);
-    const overallScore = SkillScoringEngine.computeOverallScore(placementScores);
+    const serverScores = result.computedScores && Object.keys(result.computedScores).length > 0
+      ? result.computedScores
+      : null;
+    const placementScores = serverScores ?? SkillScoringEngine.computePlacementScores(result.courseId, engBank, result.submissions);
+    const overallScore = serverScores && typeof result.overallScore === 'number'
+      ? result.overallScore
+      : SkillScoringEngine.computeOverallScore(placementScores);
+    const localBreakdown = evaluateEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? []);
     const placementCefr =
-      result.submissions.length > 0
-        ? computeEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? [])
+      result.placementCefr ??
+      (result.submissions.length > 0
+        ? localBreakdown.effectiveCefr
         : (learner?.placementCefrByCourse?.[result.courseId] ??
-           computeEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? []));
+           computeEnglishPlacementCefr(engBank, result.submissions, learner?.completedNodeIds ?? [])));
+    const assessedCefr = result.assessedCefr ?? localBreakdown.assessedCefr;
+    const unlockedCefrFloor =
+      result.unlockedCefrFloor !== undefined ? result.unlockedCefrFloor : localBreakdown.unlockedCefrFloor;
     const recommendedNodeId = getEnglishPlacementEntryNodeId(placementCefr);
+    const weakestCandidate = Object.values(placementScores).find((s) => s.isWeakestFocus)?.skillId ?? '';
     await supabaseLearnerRepository.updateProfile({
       placementScoreByCourse: { ...(learner?.placementScoreByCourse ?? {}), [result.courseId]: overallScore },
       placementCefrByCourse: { ...(learner?.placementCefrByCourse ?? {}), [result.courseId]: placementCefr },
@@ -83,17 +95,31 @@ async function sessionState(session: PlacementSession, isCurrent: () => boolean)
         computedScores: placementScores,
         overallScore,
         placementCefr,
+        assessedCefr,
+        unlockedCefrFloor,
         recommendedNodeId,
+        weakestSkillId: weakestCandidate,
       },
       isLoading: false, isSubmitting: false,
       error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
     };
   }
+  const nonEngScores = result
+    ? (learner?.scoresByCourse[result.courseId] && Object.keys(learner.scoresByCourse[result.courseId]).length > 0
+        ? learner.scoresByCourse[result.courseId]
+        : (result.computedScores ?? {}))
+    : {};
   return {
     allQuestions: [], currentQuestion: session.question, questionNumber: session.number,
     totalQuestionsToAsk: session.total, sessionId: session.id, canRetake: session.canRetake,
     submissions: result?.submissions ?? [], history: [], hasFinished: result !== null,
-    assessmentResult: result ? { ...result, computedScores: learner?.scoresByCourse[result.courseId] ?? {} } : null,
+    assessmentResult: result
+      ? {
+          ...result,
+          computedScores: nonEngScores,
+          overallScore: result.overallScore ?? SkillScoringEngine.computeOverallScore(nonEngScores),
+        }
+      : null,
     isLoading: false, isSubmitting: false,
     error: session.wasReset ? 'Savollar yangilandi yoki sessiya muddati tugadi. Diagnostika boshidan boshlandi.' : null,
   };

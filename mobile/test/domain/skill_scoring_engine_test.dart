@@ -197,12 +197,24 @@ void main() {
         equals('A2'),
       );
 
-      // 8/8 (A1 + A2 100%) -> B1 (capped)
+      // 8/8 (A1 + A2 100%, b1Total == 0) -> caps at A2 without B1 evidence
       expect(
         SkillScoringEngine.computeEnglishPlacementCefr(
           englishPlacementQuestionsRaw,
           [
             for (final q in [...a1Qs, ...a2Qs])
+              QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
+          ],
+        ),
+        equals('A2'),
+      );
+
+      // 8/8 (A2 + B1 100%, b1Total == 4) -> B1
+      expect(
+        SkillScoringEngine.computeEnglishPlacementCefr(
+          englishPlacementQuestionsRaw,
+          [
+            for (final q in [...a2Qs, ...b1Qs])
               QuestionAnswerSubmission(questionId: q.id, selectedIndex: q.correctIndex, isCorrect: true),
           ],
         ),

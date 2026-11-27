@@ -149,7 +149,7 @@ describe('Server-Side Scoring & Anti-Cheat Protection (Bosqich 2)', () => {
     const algScore = profile.scoresByCourse['course_math_01']?.['skill_math_algebra'];
 
     expect(algScore).toBeDefined();
-    expect(algScore?.score).toBe(100);
-    expect(algScore?.masteryLevel).toBe('mastered');
+    expect(algScore?.score).toBe(75);
+    expect(algScore?.masteryLevel).toBe('proficient');
   });
 });

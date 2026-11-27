@@ -6,6 +6,7 @@ import '../../domain/entities/learner_profile.dart';
 import '../../domain/entities/placement_session.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill_score.dart';
+import '../../domain/personalization/skill_scoring_engine.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/attempt_uuid.dart';
@@ -79,6 +80,13 @@ class SupabaseLearnerRepository extends ILearnerRepository {
     ) as Map<String, dynamic>;
     final question = data['question'] as Map<String, dynamic>?;
     final result = data['result'] as Map<String, dynamic>?;
+    Map<String, SkillScore>? parsedResultSkills;
+    if (result != null && result['skill_scores'] is Map) {
+      parsedResultSkills = _parseSkillScoreMap(
+        courseId,
+        result['skill_scores'] as Map,
+      );
+    }
     return PlacementSession(
       id: data['session_id'] as String,
       questionNumber: data['question_number'] as int,
@@ -91,6 +99,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           : CompletedPlacement(
               attemptId: result['attempt_id'] as String,
               weakestSkillId: result['weakest_skill_id'] as String? ?? '',
+              overallScore: (result['score'] as num?)?.toInt(),
+              placementCefr: result['placement_cefr'] as String?,
+              assessedCefr: result['assessed_cefr'] as String?,
+              unlockedCefrFloor: result['unlocked_cefr_floor'] as String?,
+              skillScores: parsedResultSkills,
               completedAt: DateTime.parse(result['completed_at'] as String),
               review: (result['answers'] as List)
                   .map((answer) {
@@ -103,9 +116,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
                         timeSpentSeconds: row['time_spent_seconds'] as int,
                       ),
                       question: row['question_text'] as String,
+                      questionRu: row['question_text_ru'] as String?,
                       selected: row['selected_option'] as String,
                       correct: row['correct_option'] as String,
                       explanation: row['explanation'] as String,
+                      explanationRu: row['explanation_ru'] as String?,
                     );
                   })
                   .toList(growable: false),
@@ -230,6 +245,11 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       for (final row in scoreRows) {
         final courseId = row['course_id'] as String;
         final skillId = row['skill_id'] as String;
+        final attemptCount = (row['attempt_count'] as num?)?.toInt();
+        final confidence = _parseConfidence(
+          row['confidence'],
+          attemptCount: attemptCount,
+        );
         scoresByCourse[courseId] ??= {};
         scoresByCourse[courseId]![skillId] = SkillScore(
           skillId: skillId,
@@ -240,6 +260,8 @@ class SupabaseLearnerRepository extends ILearnerRepository {
           ).millisecondsSinceEpoch,
           masteryLevel: _parseMasteryLevel(row['mastery_level']),
           isWeakestFocus: row['is_weakest_focus'] == true,
+          attemptCount: attemptCount,
+          confidence: confidence,
         );
       }
 
@@ -293,6 +315,22 @@ class SupabaseLearnerRepository extends ILearnerRepository {
               (entry.value as String).trim().isNotEmpty)
             entry.key: (entry.value as String).trim(),
       };
+      final placementSkillScoresByCourse = <String, Map<String, SkillScore>>{};
+      final rawPlacementSkills =
+          learnerData?['placement_skill_scores_by_course'];
+      if (rawPlacementSkills is Map) {
+        for (final entry in rawPlacementSkills.entries) {
+          if (entry.key is String && entry.value is Map) {
+            final parsed = _parseSkillScoreMap(
+              entry.key as String,
+              entry.value as Map,
+            );
+            if (parsed.isNotEmpty) {
+              placementSkillScoresByCourse[entry.key as String] = parsed;
+            }
+          }
+        }
+      }
 
       final userSrs = await _readUserFlashcardSrs(user.id);
       if (client.auth.currentUser?.id != user.id) {
@@ -322,6 +360,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
         scoresByCourse: scoresByCourse,
         placementScoreByCourse: placementScoreByCourse,
         placementCefrByCourse: placementCefrByCourse,
+        placementSkillScoresByCourse: placementSkillScoresByCourse,
         flashcardSrsByCourse: userSrs,
         completedLessonIds: completedLessonIds,
         completedNodeIds: completedNodeIds,
@@ -1187,6 +1226,60 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       default:
         return MasteryLevel.developing;
     }
+  }
+
+  static ConfidenceLevel? _parseConfidence(Object? raw, {int? attemptCount}) {
+    switch (raw?.toString()) {
+      case 'low':
+        return ConfidenceLevel.low;
+      case 'medium':
+        return ConfidenceLevel.medium;
+      case 'high':
+        return ConfidenceLevel.high;
+      default:
+        return attemptCount != null
+            ? SkillScoringEngine.computeConfidence(attemptCount)
+            : null;
+    }
+  }
+
+  static Map<String, SkillScore> _parseSkillScoreMap(
+    String courseId,
+    Map<dynamic, dynamic> rawMap,
+  ) {
+    final out = <String, SkillScore>{};
+    for (final entry in rawMap.entries) {
+      final skillId = entry.key;
+      final val = entry.value;
+      if (skillId is! String || val is! Map) continue;
+      final scoreNum = val['score'];
+      if (scoreNum is! num) continue;
+      final clamped = scoreNum.toInt().clamp(0, 100);
+      final attemptCount = (val['attemptCount'] as num?)?.toInt() ??
+          (val['attempt_count'] as num?)?.toInt();
+      final lastUpdatedRaw = val['lastUpdated'] ?? val['last_updated'];
+      final lastUpdated = lastUpdatedRaw is num
+          ? lastUpdatedRaw.toInt()
+          : (lastUpdatedRaw is String
+                ? (DateTime.tryParse(lastUpdatedRaw)?.millisecondsSinceEpoch ??
+                      0)
+                : 0);
+      out[skillId] = SkillScore(
+        skillId: skillId,
+        courseId: courseId,
+        score: clamped,
+        lastUpdated: lastUpdated,
+        masteryLevel: _parseMasteryLevel(val['masteryLevel'] ?? val['mastery_level']),
+        isWeakestFocus:
+            val['isWeakestFocus'] == true || val['is_weakest_focus'] == true,
+        attemptCount: attemptCount,
+        confidence: _parseConfidence(
+          val['confidence'],
+          attemptCount: attemptCount,
+        ),
+      );
+    }
+    return out;
   }
 
   static InitialLevel _parseInitialLevel(Object? raw) {

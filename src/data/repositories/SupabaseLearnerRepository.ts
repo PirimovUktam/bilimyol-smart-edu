@@ -12,6 +12,7 @@ import {
 import { FlashcardSrsEntry, LearnerProfile } from '../../domain/entities/LearnerProfile';
 import type { CefrLevelId } from '../../domain/entities/Question';
 import { computeNextFlashcardSrs } from '@/domain/personalization/FlashcardSrsEngine';
+import { SkillScoringEngine } from '@/domain/personalization/SkillScoringEngine';
 import type { PlacementSession } from '@/domain/entities/Assessment';
 import { learningDate } from '@/core/utils/learningDate';
 import { generateAttemptUuid } from '@/core/utils/attemptUuid';
@@ -231,6 +232,14 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
       if (scoreRows) {
         for (const row of scoreRows) {
           scoresByCourse[row.course_id] = scoresByCourse[row.course_id] || {};
+          const attemptCount = typeof row.attempt_count === 'number' ? row.attempt_count : undefined;
+          const numericConfidence = typeof row.confidence === 'number' ? row.confidence : undefined;
+          const resolvedConfidence =
+            attemptCount !== undefined
+              ? SkillScoringEngine.computeConfidence(attemptCount)
+              : numericConfidence !== undefined
+                ? (numericConfidence < 0.55 ? 'low' : numericConfidence < 0.8 ? 'medium' : 'high')
+                : undefined;
           scoresByCourse[row.course_id][row.skill_id] = {
             skillId: row.skill_id,
             courseId: row.course_id,
@@ -238,6 +247,8 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
             lastUpdated: new Date(row.last_updated).getTime(),
             masteryLevel: row.mastery_level,
             isWeakestFocus: row.is_weakest_focus,
+            ...(attemptCount !== undefined ? { attemptCount } : {}),
+            ...(resolvedConfidence ? { confidence: resolvedConfidence } : {}),
           };
         }
       }
@@ -249,6 +260,67 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
 
       const localPlacement = readLocalPlacementMeta(user.id);
 
+      const dbPlacementScore: Record<string, number> = {};
+      if (learnerData?.placement_score_by_course && typeof learnerData.placement_score_by_course === 'object' && !Array.isArray(learnerData.placement_score_by_course)) {
+        for (const [cid, val] of Object.entries(learnerData.placement_score_by_course as Record<string, unknown>)) {
+          if (typeof val === 'number' && Number.isFinite(val)) {
+            dbPlacementScore[cid] = SkillScoringEngine.clampScore(val);
+          }
+        }
+      }
+
+      const dbPlacementCefr: Record<string, CefrLevelId> = {};
+      if (learnerData?.placement_cefr_by_course && typeof learnerData.placement_cefr_by_course === 'object' && !Array.isArray(learnerData.placement_cefr_by_course)) {
+        for (const [cid, val] of Object.entries(learnerData.placement_cefr_by_course as Record<string, unknown>)) {
+          if (typeof val === 'string' && val.trim()) {
+            dbPlacementCefr[cid] = val.trim() as CefrLevelId;
+          }
+        }
+      }
+
+      const dbPlacementSkillScores: Record<string, Record<string, SkillScore>> = {};
+      if (learnerData?.placement_skill_scores_by_course && typeof learnerData.placement_skill_scores_by_course === 'object' && !Array.isArray(learnerData.placement_skill_scores_by_course)) {
+        for (const [cid, rawMap] of Object.entries(learnerData.placement_skill_scores_by_course as Record<string, unknown>)) {
+          if (!rawMap || typeof rawMap !== 'object' || Array.isArray(rawMap)) continue;
+          const parsedCourseMap: Record<string, SkillScore> = {};
+          for (const [sid, rawEntry] of Object.entries(rawMap as Record<string, unknown>)) {
+            if (!rawEntry || typeof rawEntry !== 'object' || Array.isArray(rawEntry)) continue;
+            const entry = rawEntry as Record<string, unknown>;
+            const scoreVal = typeof entry.score === 'number' ? SkillScoringEngine.clampScore(entry.score) : 0;
+            const attCount =
+              typeof entry.attemptCount === 'number'
+                ? entry.attemptCount
+                : typeof entry.attempt_count === 'number'
+                  ? entry.attempt_count
+                  : undefined;
+            parsedCourseMap[sid] = {
+              skillId: sid,
+              courseId: cid,
+              score: scoreVal,
+              lastUpdated: typeof entry.lastUpdated === 'number' ? entry.lastUpdated : new Date(learnerData?.updated_at || Date.now()).getTime(),
+              masteryLevel: SkillScoringEngine.getMasteryLevel(scoreVal),
+              isWeakestFocus: Boolean(entry.isWeakestFocus ?? entry.is_weakest_focus),
+              ...(attCount !== undefined ? { attemptCount: attCount, confidence: SkillScoringEngine.computeConfidence(attCount) } : {}),
+            };
+          }
+          if (Object.keys(parsedCourseMap).length > 0) {
+            dbPlacementSkillScores[cid] = parsedCourseMap;
+          }
+        }
+      }
+
+      const mergedPlacementScore = { ...(localPlacement.placementScoreByCourse ?? {}), ...dbPlacementScore };
+      const mergedPlacementCefr = { ...(localPlacement.placementCefrByCourse ?? {}), ...dbPlacementCefr };
+      const mergedPlacementSkillScores = { ...(localPlacement.placementSkillScoresByCourse ?? {}), ...dbPlacementSkillScores };
+
+      if (Object.keys(dbPlacementScore).length > 0 || Object.keys(dbPlacementCefr).length > 0 || Object.keys(dbPlacementSkillScores).length > 0) {
+        writeLocalPlacementMeta(user.id, {
+          placementScoreByCourse: mergedPlacementScore,
+          placementCefrByCourse: mergedPlacementCefr,
+          placementSkillScoresByCourse: mergedPlacementSkillScores,
+        });
+      }
+
       return {
         id: user.id,
         name: firstName,
@@ -256,7 +328,7 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         lastName,
         email: user.email || userProfileData?.email || '',
         avatarUrl: userProfileData?.avatar_url || '',
-         selectedCourseId: learnerData?.selected_course_id || '',
+        selectedCourseId: learnerData?.selected_course_id || '',
         goal: learnerData?.goal || 'mastery',
         dailyMinutes: learnerData?.daily_minutes || 15,
         initialLevel: learnerData?.initial_level || 'intermediate',
@@ -265,9 +337,9 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
         streakDays: gamifyData?.streak_days ?? 0,
         lastActiveDate: gamifyData?.last_activity_date ?? '',
         scoresByCourse,
-        placementScoreByCourse: localPlacement.placementScoreByCourse ?? {},
-        placementCefrByCourse: localPlacement.placementCefrByCourse ?? {},
-        placementSkillScoresByCourse: localPlacement.placementSkillScoresByCourse ?? {},
+        placementScoreByCourse: mergedPlacementScore,
+        placementCefrByCourse: mergedPlacementCefr,
+        placementSkillScoresByCourse: mergedPlacementSkillScores,
         completedLessonIds,
         completedNodeIds,
         completedReinforcementIds: (reinfRows || []).map((r) => r.reinforcement_node_id),
@@ -420,24 +492,63 @@ export class SupabaseLearnerRepository implements ILearnerRepository {
     const q = data.question;
     const review = data.result?.answers.map((a: {
       question_id: string; selected_index: number; is_correct: boolean; time_spent_seconds: number;
-      question_text: string; selected_option: string; correct_option: string; explanation: string;
+      question_text: string; question_text_ru?: string; selected_option: string; correct_option: string;
+      explanation: string; explanation_ru?: string;
     }) => ({
       questionId: a.question_id, selectedIndex: a.selected_index, isCorrect: a.is_correct,
       timeSpentSeconds: a.time_spent_seconds, questionText: a.question_text,
+      ...(a.question_text_ru ? { questionTextRu: a.question_text_ru } : {}),
       selectedOption: a.selected_option, correctOption: a.correct_option, explanation: a.explanation,
+      ...(a.explanation_ru ? { explanationRu: a.explanation_ru } : {}),
     }));
+    const serverSkillScores: Record<string, SkillScore> = {};
+    if (data.result?.skill_scores && typeof data.result.skill_scores === 'object' && !Array.isArray(data.result.skill_scores)) {
+      for (const [sid, rawEntry] of Object.entries(data.result.skill_scores as Record<string, unknown>)) {
+        if (!rawEntry || typeof rawEntry !== 'object' || Array.isArray(rawEntry)) continue;
+        const entry = rawEntry as Record<string, unknown>;
+        const scoreVal = typeof entry.score === 'number' ? SkillScoringEngine.clampScore(entry.score) : 0;
+        const attCount = typeof entry.attempt_count === 'number'
+          ? entry.attempt_count
+          : typeof entry.attemptCount === 'number'
+            ? entry.attemptCount
+            : 2;
+        serverSkillScores[sid] = {
+          skillId: sid,
+          courseId,
+          score: scoreVal,
+          lastUpdated: Date.parse(data.result.completed_at) || Date.now(),
+          masteryLevel: SkillScoringEngine.getMasteryLevel(scoreVal),
+          isWeakestFocus: Boolean(entry.is_weakest_focus ?? entry.isWeakestFocus),
+          attemptCount: attCount,
+          confidence: SkillScoringEngine.computeConfidence(attCount),
+        };
+      }
+    }
     return {
       id: data.session_id, number: data.question_number, total: data.total_questions,
       wasReset: data.reset, canRetake: data.can_retake,
       question: q ? {
         id: q.id, courseId: q.course_id, skillId: q.skill_id, text: q.text,
+        ...(q.text_ru ? { textRu: q.text_ru } : {}),
         options: q.options, contextSnippet: q.context_snippet, formulaLatex: q.formula_latex,
         audioSimText: q.audio_sim_text, audioSimSpeaker: q.audio_sim_speaker,
+        ...(q.media ? { media: q.media } : {}),
         difficulty: 'medium', explanation: '',
       } : null,
       result: data.result ? {
-        assessmentId: data.result.attempt_id, courseId, weakestSkillId: data.result.weakest_skill_id ?? '',
-        submissions: review, review, timestamp: Date.parse(data.result.completed_at),
+        assessmentId: data.result.attempt_id,
+        courseId,
+        weakestSkillId: data.result.weakest_skill_id ?? '',
+        ...(typeof data.result.score === 'number' ? { overallScore: data.result.score } : {}),
+        ...(typeof data.result.placement_cefr === 'string' ? { placementCefr: data.result.placement_cefr as CefrLevelId } : {}),
+        ...(typeof data.result.assessed_cefr === 'string' ? { assessedCefr: data.result.assessed_cefr as CefrLevelId } : {}),
+        ...(data.result.unlocked_cefr_floor !== undefined
+          ? { unlockedCefrFloor: (data.result.unlocked_cefr_floor ?? null) as CefrLevelId | null }
+          : {}),
+        ...(Object.keys(serverSkillScores).length > 0 ? { computedScores: serverSkillScores } : {}),
+        submissions: review,
+        review,
+        timestamp: Date.parse(data.result.completed_at),
       } : null,
     };
   }

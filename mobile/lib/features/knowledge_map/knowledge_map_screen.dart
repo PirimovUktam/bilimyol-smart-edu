@@ -1006,9 +1006,15 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
             ref.read(learnerStateNotifierProvider.notifier).loadProfile(),
       ),
       data: (profile) {
-        final scores =
-            profile.scoresByCourse[activeCourse?.id ?? ''] ??
-            const <String, SkillScore>{};
+        final courseId = activeCourse?.id ?? '';
+        final lessonScores =
+            profile.scoresByCourse[courseId] ?? const <String, SkillScore>{};
+        final scores = lessonScores.isNotEmpty
+            ? lessonScores
+            : (courseId == 'course_eng_01'
+                  ? (profile.placementSkillScoresByCourse[courseId] ??
+                        const <String, SkillScore>{})
+                  : const <String, SkillScore>{});
         final skills = courseState.activeSkills;
 
         SkillScore? weakestSkill;
@@ -1152,7 +1158,10 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                                       ),
                                     ),
                                     AppBadge(
-                                      text: s.masteryLabel(score),
+                                      text: s.masteryLabel(
+                                        score,
+                                        attemptCount: scoreObj?.attemptCount,
+                                      ),
                                       variant: isWeak
                                           ? AppBadgeVariant.rose
                                           : masteryVariant,
@@ -1164,6 +1173,25 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                                             : scoreTextColor,
                                       ),
                                     ),
+                                    if (scoreObj != null &&
+                                        (scoreObj.confidence != null ||
+                                            scoreObj.attemptCount != null))
+                                      Builder(
+                                        builder: (context) {
+                                          final conf =
+                                              scoreObj.confidence ??
+                                              SkillScoringEngine.computeConfidence(
+                                                scoreObj.attemptCount!,
+                                              );
+                                          return AppBadge(
+                                            text: s.confidenceBadgeLabel(conf),
+                                            variant:
+                                                conf == ConfidenceLevel.high
+                                                ? AppBadgeVariant.blue
+                                                : AppBadgeVariant.slate,
+                                          );
+                                        },
+                                      ),
                                     if (showNodeBadge)
                                       AppBadge(
                                         text: nodeMeta.label,

@@ -13,6 +13,7 @@ enum LearnerProfileField {
   courseLevels,
   placementScoreByCourse,
   placementCefrByCourse,
+  placementSkillScoresByCourse,
   flashcardSrsByCourse,
 }
 
@@ -69,6 +70,7 @@ class PlacementAttemptData {
   final int score;
   final String? weakestSkillId;
   final String? cefrLevel;
+  final Map<String, SkillScore>? skillScores;
   final List<PlacementAttemptSubmission> submissions;
 
   const PlacementAttemptData({
@@ -76,6 +78,7 @@ class PlacementAttemptData {
     required this.score,
     this.weakestSkillId,
     this.cefrLevel,
+    this.skillScores,
     required this.submissions,
   });
 }
@@ -174,20 +177,32 @@ abstract class ILearnerRepository {
     required String courseId,
     required int score,
     required String cefrTier,
+    Map<String, SkillScore>? skillScores,
   }) async {
     final current = await getProfile();
     final nextScores = Map<String, int>.from(current.placementScoreByCourse)
       ..[courseId] = score;
     final nextCefr = Map<String, String>.from(current.placementCefrByCourse)
       ..[courseId] = cefrTier;
+    final nextPlacementSkills =
+        Map<String, Map<String, SkillScore>>.from(
+          current.placementSkillScoresByCourse,
+        );
+    if (skillScores != null) {
+      nextPlacementSkills[courseId] = Map<String, SkillScore>.from(skillScores);
+    }
     await updateProfile(
       current.copyWith(
         placementScoreByCourse: nextScores,
         placementCefrByCourse: nextCefr,
+        placementSkillScoresByCourse:
+            skillScores != null ? nextPlacementSkills : null,
       ),
       fields: {
         LearnerProfileField.placementScoreByCourse,
         LearnerProfileField.placementCefrByCourse,
+        if (skillScores != null)
+          LearnerProfileField.placementSkillScoresByCourse,
       },
     );
   }

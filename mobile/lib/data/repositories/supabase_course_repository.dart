@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
 import '../../domain/entities/course.dart';
+import '../../domain/entities/lesson_media.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/skill.dart';
 import '../../domain/repositories/i_course_repository.dart';
@@ -114,12 +115,15 @@ class SupabaseCourseRepository implements ICourseRepository {
       id: row['id'] as String,
       courseId: row['course_id'] as String,
       skillId: row['skill_id'] as String,
+      cefrLevel: row['cefr_level'] as String? ?? row['cefrLevel'] as String?,
       text: row['text'] as String? ?? '',
+      textRu: row['text_ru'] as String? ?? row['textRu'] as String?,
       contextSnippet: row['context_snippet'] as String?,
       options: _strings(row['options']),
       // learner_questions deliberately has no answer-key column. A negative
       // sentinel prevents accidental local scoring; the server RPC owns it.
       correctIndex: -1,
+      media: LessonMedia.tryParse(row['media']),
       difficulty: _difficulty(row['difficulty']),
       explanation: '',
       formulaLatex: row['formula_latex'] as String?,

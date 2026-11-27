@@ -4,7 +4,7 @@ import { QuestionAnswerSubmission } from '../entities/Question';
 import { AssessmentResult } from '../entities/Assessment';
 import { SkillScoringEngine } from '../personalization/SkillScoringEngine';
 import {
-  computeEnglishPlacementCefr,
+  evaluateEnglishPlacementCefr,
   getEnglishPlacementEntryNodeId,
 } from '../personalization/EnglishCefrPlacement';
 
@@ -72,12 +72,16 @@ export class SubmitPlacementTestUseCase {
     let computedScores = SkillScoringEngine.computePlacementScores(courseId, questions, verifiedSubmissions);
     const overallScore = SkillScoringEngine.computeOverallScore(computedScores);
 
-    // Find weakest skill dynamically
-    const findWeakestSkillId = (scores: typeof computedScores): string =>
-      Object.values(scores).reduce(
-        (weakest, score) => score.score < weakest.score ? score : weakest,
+    // Find weakest skill dynamically only when lowest score < 80 (`FIX-P1-16`)
+    const findWeakestSkillId = (scores: typeof computedScores): string => {
+      const flagged = Object.values(scores).find((score) => score.isWeakestFocus);
+      if (flagged) return flagged.skillId;
+      const candidate = Object.values(scores).reduce(
+        (weakest, score) => (score.score < weakest.score ? score : weakest),
         { score: 101, skillId: '' }
-      ).skillId;
+      );
+      return candidate.score < 80 ? candidate.skillId : '';
+    };
     let weakestSkillId = findWeakestSkillId(computedScores);
 
     // Save placement attempt & individual answers to Supabase / repository
@@ -98,9 +102,12 @@ export class SubmitPlacementTestUseCase {
     assertCurrent();
     const profileSnapshot = await this.learnerRepo.getProfile();
     assertCurrent();
-    const placementCefr = courseId === 'course_eng_01'
-      ? computeEnglishPlacementCefr(questions, verifiedSubmissions, profileSnapshot.completedNodeIds ?? [])
+    const cefrBreakdown = courseId === 'course_eng_01'
+      ? evaluateEnglishPlacementCefr(questions, verifiedSubmissions, profileSnapshot.completedNodeIds ?? [])
       : undefined;
+    const placementCefr = cefrBreakdown?.effectiveCefr;
+    const assessedCefr = cefrBreakdown?.assessedCefr;
+    const unlockedCefrFloor = cefrBreakdown?.unlockedCefrFloor;
     const recommendedNodeId = placementCefr ? getEnglishPlacementEntryNodeId(placementCefr) : undefined;
 
     if (this.learnerRepo.supportsServerPlacementPersistence) {
@@ -139,6 +146,8 @@ export class SubmitPlacementTestUseCase {
       computedScores,
       overallScore,
       ...(placementCefr ? { placementCefr } : {}),
+      ...(assessedCefr ? { assessedCefr } : {}),
+      ...(unlockedCefrFloor !== undefined ? { unlockedCefrFloor } : {}),
       ...(recommendedNodeId ? { recommendedNodeId } : {}),
       weakestSkillId,
       timestamp: Date.now(),

@@ -82,6 +82,7 @@ class LearnerProfile {
   scoresByCourse; // courseId -> skillId -> SkillScore
   final Map<String, int> placementScoreByCourse;
   final Map<String, String> placementCefrByCourse;
+  final Map<String, Map<String, SkillScore>> placementSkillScoresByCourse;
   final Map<String, Map<String, FlashcardSrsRecord>>
   flashcardSrsByCourse; // courseId -> cardId -> FlashcardSrsRecord
   final List<String> completedLessonIds;
@@ -103,6 +104,7 @@ class LearnerProfile {
     required this.scoresByCourse,
     this.placementScoreByCourse = const {},
     this.placementCefrByCourse = const {},
+    this.placementSkillScoresByCourse = const {},
     this.flashcardSrsByCourse = const {},
     required this.completedLessonIds,
     required this.completedNodeIds,
@@ -124,6 +126,7 @@ class LearnerProfile {
     Map<String, Map<String, SkillScore>>? scoresByCourse,
     Map<String, int>? placementScoreByCourse,
     Map<String, String>? placementCefrByCourse,
+    Map<String, Map<String, SkillScore>>? placementSkillScoresByCourse,
     Map<String, Map<String, FlashcardSrsRecord>>? flashcardSrsByCourse,
     List<String>? completedLessonIds,
     List<String>? completedNodeIds,
@@ -146,6 +149,8 @@ class LearnerProfile {
           placementScoreByCourse ?? this.placementScoreByCourse,
       placementCefrByCourse:
           placementCefrByCourse ?? this.placementCefrByCourse,
+      placementSkillScoresByCourse:
+          placementSkillScoresByCourse ?? this.placementSkillScoresByCourse,
       flashcardSrsByCourse: flashcardSrsByCourse ?? this.flashcardSrsByCourse,
       completedLessonIds: completedLessonIds ?? this.completedLessonIds,
       completedNodeIds: completedNodeIds ?? this.completedNodeIds,

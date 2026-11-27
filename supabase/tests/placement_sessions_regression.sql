@@ -27,15 +27,15 @@ SELECT pg_temp.assert_condition(NOT EXISTS (
 ), 'bundled seeds are excluded even if loaded after migrations');
 DO $$
 DECLARE
-  history JSONB := '[{"question_id":"q_live_eng_vocab_context","is_correct":true},
-    {"question_id":"q_live_eng_grammar_daily","is_correct":true},
-    {"question_id":"q_live_eng_listening_place","is_correct":true},
-    {"question_id":"q_live_eng_reading_evidence","is_correct":true}]';
+  history JSONB := '[{"question_id":"q_eng_place_vocab_a2","is_correct":true},
+    {"question_id":"q_eng_place_grammar_a2","is_correct":true},
+    {"question_id":"q_eng_place_listening_a2","is_correct":true},
+    {"question_id":"q_eng_place_reading_a2","is_correct":true}]';
 BEGIN
   PERFORM pg_temp.assert_condition(
-    bilimyol_private.next_placement_question('course_eng_01', history) = 'q_live_eng_vocab_scarce'
+    bilimyol_private.next_placement_question('course_eng_01', history) = 'q_eng_place_vocab_b1'
       AND bilimyol_private.next_placement_question('course_eng_01',
-        jsonb_set(history, '{0,is_correct}', 'false'::jsonb)) = 'q_live_eng_vocab_borrow',
+        jsonb_set(history, '{0,is_correct}', 'false'::jsonb)) = 'q_eng_place_vocab_a1',
     'non-pilot skill coverage still adapts to the previous answer');
 END;
 $$;
@@ -104,8 +104,8 @@ BEGIN
     AND (current_state->'result'->'answers'->0) ? 'correct_option', 'review is delivered after the final answer');
   PERFORM pg_temp.assert_condition(NOT EXISTS (
     SELECT 1 FROM jsonb_array_elements(current_state->'result'->'answers') answer
-    WHERE answer->>'question_id' NOT LIKE 'q_live_%'
-  ), 'diagnostic never scores bundled sample questions');
+    WHERE answer->>'question_id' NOT LIKE 'q_eng_place_%'
+  ), 'English diagnostic serves canonical q_eng_place_* questions and never retired demo items');
   retry_state := public.advance_placement(course_id, session_id, last_question, 0);
   PERFORM pg_temp.assert_condition(retry_state = current_state
     AND public.advance_placement(course_id, p_restart => true) = current_state,
@@ -113,9 +113,14 @@ BEGIN
   PERFORM pg_temp.assert_condition((SELECT count(*) FROM public.placement_attempts WHERE user_id = original_user) = 1
     AND (SELECT count(*) FROM public.placement_answers WHERE user_id = original_user) = answer_count,
     'one authoritative assessment and its complete answer set are persisted');
-  PERFORM pg_temp.assert_condition((SELECT count(*) FROM public.learner_skill_scores
-      WHERE user_id = original_user AND learner_skill_scores.course_id = 'course_eng_01') = 4,
-    'diagnostic result persists all four course skill scores for the roadmap');
+  PERFORM pg_temp.assert_condition(
+    (SELECT count(*) FROM public.learner_skill_scores
+      WHERE user_id = original_user AND learner_skill_scores.course_id = 'course_eng_01') = 0
+    AND (SELECT (placement_cefr_by_course ? 'course_eng_01')
+      AND jsonb_typeof(placement_skill_scores_by_course->'course_eng_01') = 'object'
+      AND (SELECT count(*) FROM jsonb_object_keys(placement_skill_scores_by_course->'course_eng_01')) = 4
+      FROM public.learner_profiles WHERE user_id = original_user),
+    'English diagnostic persists CEFR & 4 diagnostic skill scores on learner_profiles while isolating learner_skill_scores');
 END;
 $$;
 RESET ROLE;

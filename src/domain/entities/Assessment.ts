@@ -16,6 +16,8 @@ export interface AssessmentResult {
   computedScores: Record<string, SkillScore>;
   overallScore?: number;
   placementCefr?: CefrLevelId;
+  assessedCefr?: CefrLevelId;
+  unlockedCefrFloor?: CefrLevelId | null;
   recommendedNodeId?: string;
   weakestSkillId: string;
   timestamp: number;
@@ -38,5 +40,7 @@ export interface PlacementSession {
   total: number;
   wasReset: boolean;
   canRetake: boolean;
-  result: Omit<AssessmentResult, 'computedScores'> | null;
+  result: (Omit<AssessmentResult, 'computedScores'> & {
+    computedScores?: Record<string, SkillScore>;
+  }) | null;
 }

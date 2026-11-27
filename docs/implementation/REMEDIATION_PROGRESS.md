@@ -1,14 +1,14 @@
 # BilimYo‘l Smart Edu — Cumulative Engineering Remediation Progress Tracker
 
 - **Repository:** `PirimovUktam/bilimyol-smart-edu`
-- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_1_b2_cefr_sql_grading_parity` (`fix/wave-1-b2-cefr-sql-grading-parity`, continuing from `fix/wave-1-b1-core-learning-integrity` @ `5376a0cf4f0cef005c7e28ab13bf518318e6fed8`)
+- **Implementation Worktree:** `C:\Users\user\.gemini\antigravity\worktrees\Bilimyol\fix_wave_1_b3_placement_priors_prereqs` (`fix/wave-1-b3-placement-priors-prereqs`, continuing from `fix/wave-1-b2-cefr-sql-grading-parity` @ `5c8ff7fa6b385564450f0829253e484b183950b3`)
 - **Baseline Audit Commit (`READ-ONLY`):** `5c22343b2246dedcee7866cd11931c48346cf65c`
 - **Baseline Composite Score (Preserved):** **`49.28 / 100` (`NO-GO`)** — *score is NOT inflated before full cross-wave remediation + staging/production verification*
-- **Latest Executed Batch:** **Wave 1 · Batch `W1-B2`** (`FIX-P0-01`, `FIX-P1-40` `FIXED_LOCAL`; `FIX-P0-26` remains `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` from `W0-B4`)
+- **Latest Executed Batch:** **Wave 1 · Batch `W1-B3`** (`FIX-P0-02`, `FIX-P0-11`, `FIX-P1-07`, `FIX-P1-09`, `FIX-P1-14`, `FIX-P1-16`, `FIX-P1-46`, `FIX-P2-09` `FIXED_LOCAL`; `FIX-P0-26` remains `BLOCKED — RELEASE SIGNING CREDENTIALS MISSING` from `W0-B4`)
 - **Status Taxonomy:** `OPEN` | `IN_PROGRESS` | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `BLOCKED`
 
 > [!NOTE]
-> Completed Wave 0 & Wave 1 (`W1-B1`, `W1-B2`) items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`, `FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23`, `FIX-P0-01`, `FIX-P1-40`) are marked strictly **`FIXED_LOCAL`** based on local test, build, disposable PostgreSQL `17.11`, Deno, Flutter, Android Gradle, and E2E verification. `FIX-P0-26` remains **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) until real production keystore and CI secrets are provisioned. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
+> Completed Wave 0 & Wave 1 (`W1-B1`, `W1-B2`, `W1-B3`) items (`FIX-P0-27`, `FIX-P0-28`, `FIX-P2-22`, `FIX-P0-23`, `FIX-P0-25`, `FIX-P1-44`, `FIX-P1-48`, `FIX-P2-11`, `FIX-P0-24`, `FIX-P1-55`, `FIX-P2-23`, `FIX-P0-01`, `FIX-P1-40`, `FIX-P0-02`, `FIX-P0-11`, `FIX-P1-07`, `FIX-P1-09`, `FIX-P1-14`, `FIX-P1-16`, `FIX-P1-46`, `FIX-P2-09`) are marked strictly **`FIXED_LOCAL`** based on local test, build, disposable PostgreSQL `17.11`, Deno, Flutter, Android Gradle, and E2E verification. `FIX-P0-26` remains **`BLOCKED`** (`BLOCKED — RELEASE SIGNING CREDENTIALS MISSING`) until real production keystore and CI secrets are provisioned. Zero items are claimed `VERIFIED_STAGING` or `VERIFIED_PRODUCTION`.
 
 ---
 
@@ -16,11 +16,11 @@
 
 | Original Severity | Total Findings | `FIXED_LOCAL` | `VERIFIED_STAGING` | `VERIFIED_PRODUCTION` | `OPEN` | `BLOCKED` |
 |---|---:|---:|---:|---:|---:|---:|
-| `P0` | 28 | 6 | 0 | 0 | 21 | 1 |
-| `P1` | 55 | 4 | 0 | 0 | 51 | 0 |
-| `P2` | 30 | 3 | 0 | 0 | 27 | 0 |
+| `P0` | 28 | 8 | 0 | 0 | 19 | 1 |
+| `P1` | 55 | 9 | 0 | 0 | 46 | 0 |
+| `P2` | 30 | 4 | 0 | 0 | 26 | 0 |
 | `P3` | 8 | 0 | 0 | 0 | 8 | 0 |
-| **Total** | **121** | **13** | **0** | **0** | **107** | **1** |
+| **Total** | **121** | **21** | **0** | **0** | **99** | **1** |
 
 ---
 
@@ -29,13 +29,13 @@
 | Wave | Batches (`FIXED_LOCAL` / Total) | Total Findings | `FIXED_LOCAL` | `OPEN` | `BLOCKED` | Status |
 |---|---|---:|---:|---:|---:|---|
 | **Wave 0** | `W0-B1` (3/3), `W0-B2` (1/1), `W0-B3` (3/3), `W0-B4` (1/2, 1 `BLOCKED`) | 9 | 8 | 0 | 1 | Wave 0 Local Hardening Complete (`FIX-P0-26` Real Signing `BLOCKED` on Secrets) |
-| **Wave 1** | `W1-B1` (3/3), `W1-B2` (2/2), `W1-B3` (0/8), `W1-B4` (0/7) | 20 | 5 | 15 | 0 | In Progress (`W1-B1`, `W1-B2` `FIXED_LOCAL`; `W1-B3` Next) |
+| **Wave 1** | `W1-B1` (3/3), `W1-B2` (2/2), `W1-B3` (8/8), `W1-B4` (0/7) | 20 | 13 | 7 | 0 | In Progress (`W1-B1`, `W1-B2`, `W1-B3` `FIXED_LOCAL`; `W1-B4` Next) |
 | **Wave 2** | `W2-B1` (0/4), `W2-B2` (0/5), `W2-B3` (0/6), `W2-B4` (0/9) | 24 | 0 | 24 | 0 | Not Started |
 | **Wave 3** | `W3-B1` (0/5), `W3-B2` (0/5), `W3-B3` (0/4) | 14 | 0 | 14 | 0 | Not Started |
 | **Wave 4** | `W4-B1` (0/4), `W4-B2` (0/6), `W4-B3` (0/6) | 16 | 0 | 16 | 0 | Not Started |
 | **Wave 5** | `W5-B1` (0/4), `W5-B2` (0/7), `W5-B3` (0/6), `W5-B4` (0/5) | 22 | 0 | 22 | 0 | Not Started |
 | **Wave 6** | `W6-B1` (0/3), `W6-B2` (0/1), `W6-B3` (0/6), `W6-B4` (0/6) | 16 | 0 | 16 | 0 | Not Started |
-| **Total** | **26 Atomic Batches** | **121** | **13** | **107** | **1** | **13 / 121 Fixed Locally, 1 / 121 Blocked** |
+| **Total** | **26 Atomic Batches** | **121** | **21** | **99** | **1** | **21 / 121 Fixed Locally, 1 / 121 Blocked** |
 
 ---
 
@@ -44,7 +44,7 @@
 | Finding ID | Original Severity | Assigned Wave/Batch | Current Status | Fix Commit | Regression Evidence | Reviewer Verdict | Remaining Verification |
 |---|---|---|---|---|---|---|---|
 | `FIX-P0-01` | `P0` | `W1-B2` | `FIXED_LOCAL` | `fix/wave-1-b2-cefr-sql-grading-parity` (`708f8d3` + review hardening) | PG 17.11 migration `20261127000100` (`33` CEFR A1-B1 lessons + `31` nodes seeded with `SEED_LESSONS` option permutation, `learner_lessons` `unlocked_math_lesson_ids` single-CTE rewrite `0` `OFFSET 0`, `admin_save_lesson` JSON-null safe preservation, `sanitize_learner_content` stripping `acceptedAnswers`/`explanationRu`/`mistakeFeedbackByOption` & scrambling `orderedTokens`/`matchPairs` without Web double-permutation, 9-mode + `alternate_exercise` server grading; `2x` idempotency + `11/11` SQL suites x2 postures = `22/22` runs); Web `SupabaseLessonRepository.ts`, `InteractiveLessonView.tsx`, `ReinforcementModal.tsx` (`W1B2CefrSqlAndGradingParity.test.tsx` 5/5, `61/61` Vitest, `365/365` tests); Mobile `supabase_lesson_repository.dart` `select('*')` (`w1_b2_cefr_sql_and_grading_parity_test.dart` 5/5, `532` passed / `2` skips) | Independent skeptical reviewer (`W1-B2`): 7 issues found & fixed, re-verified `GREEN` | Staging & production Supabase migration `20261127000100` apply + live end-to-end verification (`UNVERIFIED`) |
-| `FIX-P0-02` | `P0` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P0-02` | `P0` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | PG 17.11 migration `20261128000100` (`12` `q_eng_place_*` seeded with `cefr_level`/`text_ru`/`explanation_ru`/`media` & deterministic `permuteQuestionOptions`, `q_live_eng_*` retired, `placement_score_by_course`/`placement_cefr_by_course`/`placement_skill_scores_by_course` persisted behind `trg_guard_learner_profile_derived_placement` `42501`, `'placement_test'` isolated from `course_eng_01` `learner_skill_scores`; `24/24` SQL runs across `Cloud-Default` & `Legacy-Grant`); Web `SupabaseLearnerRepository.ts` (`W1B3PlacementCefrPriorsAndPrereqs.test.tsx` 5/5, `62/62` Vitest, `370/370` tests); Mobile `supabase_learner_repository.dart` & `supabase_course_repository.dart` (`w1_b3_placement_cefr_priors_and_prereqs_test.dart` 6/6, `538` passed / `2` skips) | Pending `W1-B3` independent review | Staging & production Supabase migration `20261128000100` apply + live placement persistence verification (`UNVERIFIED`) |
 | `FIX-P0-03` | `P0` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-04` | `P0` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-05` | `P0` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
@@ -53,7 +53,7 @@
 | `FIX-P0-08` | `P0` | `W3-B2` | `OPEN` | — | — | — | Implement in `W3-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-09` | `P0` | `W2-B3` | `OPEN` | — | — | — | Implement in `W2-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-10` | `P0` | `W2-B1` | `OPEN` | — | — | — | Implement in `W2-B1`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P0-11` | `P0` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P0-11` | `P0` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | `course_eng_01` adaptive placement starts at `'medium'` (`A2`) and gates `'B1'` on `overallAccuracy >= 0.75 && b1Total >= 2 && b1Acc >= 0.5` across SQL (`next_placement_question`, `advance_placement`, `submit_placement_diagnostic`), Web (`AdaptiveQuestionSelector.ts`, `EnglishCefrPlacement.ts`), and Mobile (`adaptive_question_selector.dart`, `skill_scoring_engine.dart`); verified across `24/24` PG17 SQL runs, `62/62` Vitest (`370/370`), and `538` Flutter tests | Pending `W1-B3` independent review | Staging & production CEFR placement calibration verification (`UNVERIFIED`) |
 | `FIX-P0-12` | `P0` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-13` | `P0` | `W2-B1` | `OPEN` | — | — | — | Implement in `W2-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P0-14` | `P0` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
@@ -77,16 +77,16 @@
 | `FIX-P1-04` | `P1` | `W5-B3` | `OPEN` | — | — | — | Implement in `W5-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-05` | `P1` | `W2-B4` | `OPEN` | — | — | — | Implement in `W2-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-06` | `P1` | `W2-B4` | `OPEN` | — | — | — | Implement in `W2-B4`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-07` | `P1` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-07` | `P1` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Chained all `15` A1 English roadmap nodes sequentially (`1..15`, `14` transitive ancestors into `node_eng_a1_exit`; only `node_eng_a1_m1_greetings` has `prerequisites: []`) and cleared false prerequisites on `node_it_web` & `node_logic_patterns` across `content/english/a1-curriculum.json`, `validate-english-curriculum.mjs` (`[OK schema+curriculum]`), Web `roadmaps.ts`, Mobile `a1_roadmap_data.dart`/`a1_lessons_data.dart`/`roadmaps_data.dart`, and SQL `20261128000100` (`24/24` PG17 SQL runs, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production curriculum graph verification (`UNVERIFIED`) |
 | `FIX-P1-08` | `P1` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-09` | `P1` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-09` | `P1` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Unified calibrated empirical Bayesian skill scoring (`priorWeight = 4`, `starterOnlyMaxScore = 55`, starter weight `0.5`, spoiled choice-retry `0.75`, `attemptCount >= 4` for `'mastered'`; `0%` placement + `1` starter = `11% <= 25%`) across SQL `recalculate_course_skill_scores_for_user`, Web `SkillScoringEngine.ts`, and Mobile `skill_scoring_engine.dart` (`24/24` PG17 SQL runs, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production skill score calibration verification (`UNVERIFIED`) |
 | `FIX-P1-10` | `P1` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-11` | `P1` | `W2-B3` | `OPEN` | — | — | — | Implement in `W2-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-12` | `P1` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-13` | `P1` | `W6-B3` | `OPEN` | — | — | — | Implement in `W6-B3`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-14` | `P1` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-14` | `P1` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Aligned Web `AdaptiveQuestionSelector.ts` to 1-step Markov transition on `skillHistory.at(-1)` matching Mobile `adaptive_question_selector.dart` and SQL `next_placement_question` (`W1B3PlacementCefrPriorsAndPrereqs.test.tsx`, `24/24` PG17 SQL runs, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production adaptive selector parity verification (`UNVERIFIED`) |
 | `FIX-P1-15` | `P1` | `W2-B2` | `OPEN` | — | — | — | Implement in `W2-B2`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-16` | `P1` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-16` | `P1` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Difficulty-weighted placement item credit (`0.75 / 1.0 / 1.25`, missed denominator `Math.min(w, 1.0)`), gated `isWeakestFocus` & `weakestSkillId` on `lowestScore < 80`, and unified Mobile `computePlacementScores` to `last wins` across SQL, Web, and Mobile (`24/24` PG17 SQL runs, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production placement breakdown verification (`UNVERIFIED`) |
 | `FIX-P1-17` | `P1` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-18` | `P1` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-19` | `P1` | `W1-B4` | `OPEN` | — | — | — | Implement in `W1-B4`, pass TDD/regression gates, then verify in staging & production |
@@ -116,7 +116,7 @@
 | `FIX-P1-43` | `P1` | `W6-B1` | `OPEN` | — | — | — | Implement in `W6-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-44` | `P1` | `W0-B3` | `FIXED_LOCAL` | `bb65c3c`, `f4972ae`, `e221439` | Web `flowType: 'pkce'` (`W0B3AuthSessionAndRecoveryIsolation.test.tsx`, `57/57` Vitest); Flutter `flutter_secure_storage` `10.3.1` (`--offline`), `SecureAuthStorageCoordinator` + iOS uninstall Keychain purge + `MissingPluginException` test-only gate + `uz.bilimyol.mobile` IDs + `android:allowBackup="false"` (`flutter analyze --fatal-infos` 0, `514` passed / `2` offline skips); `config.toml` redirect/PKCE alignment | `spec-reviewer` (`0a6dea03`, `77e83062`, `31c91577`): `COMPLIANT`; `code-reviewer` (`9dd8b3aa`, `d0a468f4` -> `459fd74c`): `APPROVED`; `teamwork_auditor` (`d57308b0`): `CLEAN`; `final-reviewer` (`9f5ddc48`): `APPROVED` | Real Android/iOS native builds & hardware Keystore/Keychain check; OS App Links / Universal Links (`assetlinks.json` / `apple-app-site-association`) `BLOCKED` until `W0-B4` release cert SHA-256 & `W6-B2` Apple `DEVELOPMENT_TEAM`; `/callback` signup link in `W4-B2` |
 | `FIX-P1-45` | `P1` | `W3-B1` | `OPEN` | — | — | — | Implement in `W3-B1`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P1-46` | `P1` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P1-46` | `P1` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Superseded prior `'placement_test'` sessions on Day-2 placement retakes (`p_restart => true` / new placement submission) so `8/8 (100%)` retakes achieve `100%` (`>= 70%`) across all skills without stale Day-1 misses across SQL, Web, and Mobile (`24/24` PG17 SQL runs + 8-worker concurrency race, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production placement retake verification (`UNVERIFIED`) |
 | `FIX-P1-47` | `P1` | `W5-B4` | `OPEN` | — | — | — | Implement in `W5-B4`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P1-48` | `P1` | `W0-B3` | `FIXED_LOCAL` | `bb65c3c`, `f4972ae`, `e221439`, `02435d2`, `5e85b79`, `32ad3c6` | PG 17.11 (`28/28` fresh install, `Cloud-Default` & `Legacy-Grant` `2x` idempotency, `18/18` SQL suites across `9` suites, rollback, real 2-session `READ COMMITTED` mutual demotion lock & post-lock `is_admin()` rejection, `0` postgres procs); Web `AdminContentService.getUser()` (`AdminContentQueries.test.ts` 4/4, `W0B3` 5/5); Flutter `verifyActiveSessionOrSignOut()` (`514` passed / `2` skipped); `node --check tests/e2e/supabase.mjs`; Deno (`2/2`) | `spec-reviewer` (`12a242a0`, `0a6dea03`, `77e83062`, `31c91577`): `COMPLIANT`; `code-reviewer` (`bf8086b8`, `9dd8b3aa`, `c1bc561e`, `d0a468f4` -> `459fd74c`): `APPROVED`; `teamwork_auditor` (`d57308b0`): `CLEAN`; `final-reviewer` (`9f5ddc48`): `APPROVED` | Staging & production Supabase migration apply + Hosted Supabase Cloud Auth Dashboard toggle verification (`UNVERIFIED`) + live `npm run test:e2e:supabase` & `local_supabase_test.dart` against local/staging Docker stack |
 | `FIX-P1-49` | `P1` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
@@ -134,7 +134,7 @@
 | `FIX-P2-06` | `P2` | `W6-B1` | `OPEN` | — | — | — | Implement in `W6-B1`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-07` | `P2` | `W6-B3` | `OPEN` | — | — | — | Implement in `W6-B3`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-08` | `P2` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
-| `FIX-P2-09` | `P2` | `W1-B3` | `OPEN` | — | — | — | Implement in `W1-B3`, pass TDD/regression gates, then verify in staging & production |
+| `FIX-P2-09` | `P2` | `W1-B3` | `FIXED_LOCAL` | `fix/wave-1-b3-placement-priors-prereqs` | Separated `assessedCefr` from monotonic `unlockedCefrFloor` (`0/8` post-`node_eng_a1_exit` reassessment reports `assessedCefr = 'Pre-A1'` + `unlockedCefrFloor = 'A2'`) and wired localized `ConfidenceLevel` (`low`/`medium`/`high`) badges onto Knowledge Map across SQL, Web (`PlacementTestView.tsx`, `KnowledgeMapView.tsx`), and Mobile (`placement_test_screen.dart`, `knowledge_map_screen.dart`) (`24/24` PG17 SQL runs, `370/370` Vitest, `538` Flutter tests) | Pending `W1-B3` independent review | Staging & production CEFR reassessment & Knowledge Map UI verification (`UNVERIFIED`) |
 | `FIX-P2-10` | `P2` | `W4-B2` | `OPEN` | — | — | — | Implement in `W4-B2`, pass TDD/regression gates, then verify in staging & production |
 | `FIX-P2-11` | `P2` | `W0-B4` | `FIXED_LOCAL` | `fix/wave-0-b4-release-ci-tests` (`fix: harden Android release pipeline and test infrastructure`) | Mobile `learning_start.dart` (`usesMathMastery`) + Coupling #6 (`main.dart`, `router.dart`, `providers.dart`, `welcome_screen.dart`, `login_screen.dart`, `demo_control_bar.dart`, `InMemory*`/`Supabase*` repos, `SupabaseAITutorService`, `AITutorScreen`); `w0_b4_release_config_and_demo_guard_test.dart` (7/7), `flutter analyze --fatal-infos` (0), `flutter test` (`521` passed, `2` env-gated skips), `p1_persistence_contracts_test.dart` & `w0_b3_account_isolation_and_secure_storage_test.dart` unchanged | `spec-reviewer`: `APPROVE`; `code-reviewer`: `APPROVE`; `qa-reviewer`: `APPROVE`; `security-reviewer-r2`: `APPROVE`; `teamwork_auditor_r2`: `CLEAN`; `final-reviewer`: `APPROVE` | Staging/production APK verification with live Supabase & Demo-off production config (`FIXED_LOCAL` only) |
 | `FIX-P2-12` | `P2` | `W4-B3` | `OPEN` | — | — | — | Implement in `W4-B3`, pass TDD/regression gates, then verify in staging & production |
@@ -208,3 +208,20 @@
   - **Web & Deno:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors), `npm test` (`61/61` files, `365/365` tests), `npm run build` (`2382` modules, `0` warnings), `npm run test:e2e` (`0`), `deno check supabase/functions/yolchi-tutor/*.ts` (`0`, `4/4` files).
   - **Flutter:** `flutter analyze --no-pub --fatal-infos` (`0`), `flutter test --no-pub test/features/w1_b2_cefr_sql_and_grading_parity_test.dart` (`5/5`), `flutter test --no-pub` (`532` passed, `2` env-gated skips, `0` failed).
 - **Next Step:** Stop after `W1-B2` report; await review before `W1-B3`.
+
+---
+
+## 7. `W1-B3` Batch Execution Summary (`fix/wave-1-b3-placement-priors-prereqs` — Committed Local Remediation)
+
+- **Report:** [W1-B3_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b3_placement_priors_prereqs/docs/implementation/wave-1/W1-B3_REPORT.md) | **Plan:** [W1-B3_IMPLEMENTATION_PLAN.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b3_placement_priors_prereqs/docs/implementation/wave-1/W1-B3_IMPLEMENTATION_PLAN.md) | **Audit Mirror:** [W1-B3_EXECUTION_REPORT.md](file:///C:/Users/user/.gemini/antigravity/worktrees/Bilimyol/fix_wave_1_b3_placement_priors_prereqs/docs/hackathon-audit/W1-B3_EXECUTION_REPORT.md)
+- **Findings Resolved (`FIXED_LOCAL`):**
+  - **`FIX-P0-02` (`FIXED_LOCAL`):** Seeded all `12` canonical CEFR-tagged `q_eng_place_*` items into `public.questions` (`20261128000100`) with `cefr_level`, `text_ru`, `explanation_ru`, `media`, and deterministic `permuteQuestionOptions` option ordering; retired `12` legacy `q_live_eng_*` IDs into `bilimyol_private.demo_placement_question_ids`; added `placement_score_by_course`, `placement_cefr_by_course`, and `placement_skill_scores_by_course` to `public.learner_profiles` behind `trg_guard_learner_profile_derived_placement` (`42501`); mapped them in Web & Mobile `getProfile()`; and isolated `'placement_test'` from `course_eng_01` `learner_skill_scores`.
+  - **`FIX-P0-11` & `FIX-P1-14` (`FIXED_LOCAL`):** Started `course_eng_01` adaptive placement at `'medium'` (`A2`) with 1-step Markov transitions (`skillHistory.at(-1)`) across Web, Mobile, and SQL, requiring `overallAccuracy >= 0.75 && b1Total >= 2 && b1Acc >= 0.5` before awarding `'B1'`.
+  - **`FIX-P1-07` (`FIXED_LOCAL`):** Chained all `15` A1 English roadmap nodes sequentially (`1..15`, `14` transitive ancestors into `node_eng_a1_exit`; only `node_eng_a1_m1_greetings` has `prerequisites: []`) and cleared artificial prerequisites on orthogonal `node_it_web` and `node_logic_patterns` across Curriculum JSON, Validator, Web, Mobile, and SQL.
+  - **`FIX-P1-09`, `FIX-P1-16` & `FIX-P1-46` (`FIXED_LOCAL`):** Unified empirical Bayesian skill scoring (`priorWeight = 4`, `starterOnlyMaxScore = 55`, starter weight `0.5`, spoiled choice-retry `0.75`, `attemptCount >= 4` for `'mastered'`), difficulty-weighted placement item credit (`0.75 / 1.0 / 1.25`), `< 80` weakest-skill gating, `last wins` deduplication, and Day-2 placement retake session superseding across Web, Mobile, and SQL.
+  - **`FIX-P2-09` (`FIXED_LOCAL`):** Separated `assessedCefr` from monotonic `unlockedCefrFloor` across SQL, Web, and Mobile placement completion/reassessment flows, and wired localized `ConfidenceLevel` (`low`/`medium`/`high`) badges onto Knowledge Map cards on Web and Mobile.
+- **Verification Summary:**
+  - **Curriculum & PostgreSQL `17.11` (Disposable Local):** `node scripts/validate-english-curriculum.mjs` (`[OK schema+curriculum]`), `31/31` migrations + `2x` idempotency on `Cloud-Default` & `Legacy-Grant`, `12/12` SQL suites (`24/24` runs, `EXIT=0`), 8-session concurrent `advance_placement` + `submit_answer_attempt` race (`attempts:xp:score = 1:2:55`, `0` deadlocks).
+  - **Web & Deno:** `npm run typecheck` (`0`), `npm run typecheck:tests` (`0`), `npm run lint` (`0` errors), `npm test` (`62/62` files, `370/370` tests), `npm run build` (`2382` modules, `0` warnings, `W0-B2` `6/6` bundle isolation preserved), `npm run test:e2e` (`0`), `deno check supabase/functions/yolchi-tutor/index.ts supabase/functions/yolchi-tutor/math-pilot.ts` (`0`).
+  - **Flutter:** `flutter analyze --no-pub --fatal-infos` (`0`), `flutter test --no-pub test/features/w1_b3_placement_cefr_priors_and_prereqs_test.dart` (`6/6`), `flutter test --no-pub` (`538` passed, `2` env-gated skips, `0` failed).
+- **Next Step:** Stop after `W1-B3` report; await review before `W1-B4`.

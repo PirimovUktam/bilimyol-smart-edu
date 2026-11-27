@@ -318,6 +318,14 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                                 text: cefrTier,
                                 variant: AppBadgeVariant.blue,
                               ),
+                              if (result.assessedCefr != null &&
+                                  result.assessedCefr != cefrTier)
+                                AppBadge(
+                                  text: isRu
+                                      ? 'Диагностика: ${result.assessedCefr}'
+                                      : 'Diagnostika: ${result.assessedCefr}',
+                                  variant: AppBadgeVariant.amber,
+                                ),
                               Text(
                                 isRu
                                     ? 'Стартовый уровень: $cefrTier (${result.overallScore}%)'
@@ -330,6 +338,23 @@ class _PlacementTestScreenState extends ConsumerState<PlacementTestScreen> {
                               ),
                             ],
                           ),
+                          if (result.assessedCefr != null &&
+                              result.unlockedCefrFloor != null &&
+                              result.assessedCefr != cefrTier) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              s.reassessmentFloorNote(
+                                result.assessedCefr!,
+                                result.unlockedCefrFloor!,
+                              ),
+                              style: AppTypography.ui(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: c.warningText,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Text(
                             isRu

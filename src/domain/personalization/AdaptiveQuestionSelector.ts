@@ -9,6 +9,30 @@ export interface AnswerHistoryItem {
 
 export class AdaptiveQuestionSelector {
   /**
+   * Determines the 1-step Markov difficulty transition from the latest answer
+   * for a given skill, matching Mobile and SQL `next_placement_question`.
+   */
+  public static determineNextDifficulty(
+    skillId: string,
+    history: AnswerHistoryItem[],
+    initialDifficulty: 'easy' | 'medium' | 'hard' = 'medium'
+  ): 'easy' | 'medium' | 'hard' {
+    const skillHistory = history.filter((h) => h.skillId === skillId);
+    if (skillHistory.length === 0) {
+      return initialDifficulty;
+    }
+
+    const last = skillHistory[skillHistory.length - 1];
+    if (last.difficulty === 'medium') {
+      return last.isCorrect ? 'hard' : 'easy';
+    }
+    if (last.difficulty === 'easy') {
+      return last.isCorrect ? 'medium' : 'easy';
+    }
+    return last.isCorrect ? 'hard' : 'medium';
+  }
+
+  /**
    * Selects the next adaptive question based on balanced skill coverage and dynamic difficulty adjustment
    */
   public static getNextQuestion(
@@ -39,35 +63,10 @@ export class AdaptiveQuestionSelector {
     const candidateSkillId = sortedSkills[0];
     if (!candidateSkillId) return null;
 
-    // 2. Determine target difficulty for candidateSkillId based on recent performance
-    const skillHistory = history.filter((h) => h.skillId === candidateSkillId);
-    const defaultInitial: 'easy' | 'medium' | 'hard' =
-      initialDifficulty ??
-      (unasked.some((q) => q.skillId === candidateSkillId && q.courseId === 'course_eng_01')
-        ? 'easy'
-        : 'medium');
-    let targetDifficulty: 'easy' | 'medium' | 'hard' = defaultInitial;
-
-    if (skillHistory.length > 0) {
-      const recent = skillHistory.slice(-2);
-      const correctCount = recent.filter((r) => r.isCorrect).length;
-
-      if (correctCount === recent.length && recent.length >= 1) {
-        // Performing well -> increase difficulty
-        const lastDiff = recent[recent.length - 1].difficulty;
-        if (lastDiff === 'easy') targetDifficulty = 'medium';
-        else if (lastDiff === 'medium') targetDifficulty = 'hard';
-        else targetDifficulty = 'hard';
-      } else if (correctCount === 0) {
-        // Struggling -> decrease difficulty
-        const lastDiff = recent[recent.length - 1].difficulty;
-        if (lastDiff === 'hard') targetDifficulty = 'medium';
-        else if (lastDiff === 'medium') targetDifficulty = 'easy';
-        else targetDifficulty = 'easy';
-      } else {
-        targetDifficulty = 'medium';
-      }
-    }
+    // 2. Determine target difficulty for candidateSkillId based on latest skill attempt
+    // English placement starts at 'medium' (A2) so A2=1 -> B1 and A2=0 -> A1 within 2 items/skill.
+    const defaultInitial: 'easy' | 'medium' | 'hard' = initialDifficulty ?? 'medium';
+    const targetDifficulty = this.determineNextDifficulty(candidateSkillId, history, defaultInitial);
 
     // 3. Find matching question in unasked pool with difficulty-proximity fallback
     const proximityOrder: Record<'easy' | 'medium' | 'hard', Array<'easy' | 'medium' | 'hard'>> = {

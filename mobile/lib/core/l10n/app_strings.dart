@@ -749,8 +749,11 @@ class AppStrings {
     'Ko‘nikmalar xaritasini ko‘rish uchun diagnostika yoki darsni boshlang.',
     'Пройдите диагностику или начните урок, чтобы увидеть карту навыков.',
   );
-  String masteryLabel(int score) {
-    final level = SkillScoringEngine.getMasteryLevel(score);
+  String masteryLabel(int score, {int? attemptCount}) {
+    final level = SkillScoringEngine.getMasteryLevel(
+      score,
+      attemptCount: attemptCount,
+    );
     return switch (level) {
       MasteryLevel.needsRemediation => _t('Boshlang‘ich', 'Начальный'),
       MasteryLevel.developing => _t('Rivojlanmoqda', 'Развивается'),
@@ -758,6 +761,15 @@ class AppStrings {
       MasteryLevel.mastered => _t('Yuqori', 'Высокий'),
     };
   }
+  String confidenceBadgeLabel(ConfidenceLevel level) => switch (level) {
+    ConfidenceLevel.low => _t('Aniqlik: Dastlabki', 'Точность: Начальная'),
+    ConfidenceLevel.medium => _t('Aniqlik: O‘rta', 'Точность: Средняя'),
+    ConfidenceLevel.high => _t('Aniqlik: Yuqori', 'Точность: Высокая'),
+  };
+  String reassessmentFloorNote(String assessed, String floor) => _t(
+    'Joriy diagnostika natijasi: $assessed. Oldingi o‘zlashtirilgan bosqich saqlandi: $floor.',
+    'Результат текущей диагностики: $assessed. Ранее освоенный уровень сохранён: $floor.',
+  );
 
   // --- Progress (/progress) ---
   String get progressScreenTitle => _t('Mening natijalarim', 'Мои результаты');

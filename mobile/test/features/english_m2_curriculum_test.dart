@@ -79,10 +79,16 @@ void main() {
       }
       expect(seenModes, containsAll(QuestionMode.values));
 
+      final m2SentenceNode = a1RoadmapNodes.firstWhere(
+        (n) => n.id == 'node_eng_a1_m2_sentence_builder',
+      );
+      expect(m2SentenceNode.prerequisites, ['node_eng_a1_u1_checkpoint']);
+      expect(m2SentenceNode.status, NodeStatus.locked);
+
       final m2Node = a1RoadmapNodes.firstWhere(
         (n) => n.id == 'node_eng_a1_m2_daily_life',
       );
-      expect(m2Node.prerequisites, ['node_eng_a1_u1_checkpoint']);
+      expect(m2Node.prerequisites, ['node_eng_gram']);
       expect(m2Node.status, NodeStatus.locked);
     });
 

@@ -53,7 +53,7 @@ void main() {
       expect(nextQ, isNull);
     });
 
-    test('course_eng_01 starts at easy (A1), advances easy -> medium -> hard, and falls back to nearest difficulty', () {
+    test('course_eng_01 starts at medium (A2), advances medium -> hard, steps down to easy, and falls back to nearest difficulty', () {
       const engBank = [
         Question(id: 'e_v_e', courseId: 'course_eng_01', skillId: 'skill_eng_vocab', text: 'V-A1', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.easy, cefrLevel: 'A1', explanation: 'E'),
         Question(id: 'e_v_m', courseId: 'course_eng_01', skillId: 'skill_eng_vocab', text: 'V-A2', options: ['A'], correctIndex: 0, difficulty: QuestionDifficulty.medium, cefrLevel: 'A2', explanation: 'E'),
@@ -62,21 +62,20 @@ void main() {
       const skills = ['skill_eng_vocab'];
 
       final q1 = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [], 3);
-      expect(q1?.id, equals('e_v_e'));
-      expect(q1?.difficulty, equals(QuestionDifficulty.easy));
+      expect(q1?.id, equals('e_v_m'));
+      expect(q1?.difficulty, equals(QuestionDifficulty.medium));
 
       final q2 = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [
-        const AnswerHistoryItem(questionId: 'e_v_e', skillId: 'skill_eng_vocab', difficulty: QuestionDifficulty.easy, isCorrect: true),
-      ], 3);
-      expect(q2?.id, equals('e_v_m'));
-      expect(q2?.difficulty, equals(QuestionDifficulty.medium));
-
-      final q3 = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [
-        const AnswerHistoryItem(questionId: 'e_v_e', skillId: 'skill_eng_vocab', difficulty: QuestionDifficulty.easy, isCorrect: true),
         const AnswerHistoryItem(questionId: 'e_v_m', skillId: 'skill_eng_vocab', difficulty: QuestionDifficulty.medium, isCorrect: true),
       ], 3);
-      expect(q3?.id, equals('e_v_h'));
-      expect(q3?.difficulty, equals(QuestionDifficulty.hard));
+      expect(q2?.id, equals('e_v_h'));
+      expect(q2?.difficulty, equals(QuestionDifficulty.hard));
+
+      final qDown = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [
+        const AnswerHistoryItem(questionId: 'e_v_m', skillId: 'skill_eng_vocab', difficulty: QuestionDifficulty.medium, isCorrect: false),
+      ], 3);
+      expect(qDown?.id, equals('e_v_e'));
+      expect(qDown?.difficulty, equals(QuestionDifficulty.easy));
 
       // Miss on easy stays easy, and falls back to nearest difficulty (medium) when easy is exhausted
       final qFallback = AdaptiveQuestionSelector.getNextQuestion(engBank, skills, [

@@ -1170,9 +1170,21 @@ void main() {
           masteryLevel: MasteryLevel.proficient,
         ),
       });
-      await repo.markNodeCompleted('node_eng_vocab', courseId: 'course_eng_01');
-      await repo.markNodeCompleted('node_eng_gram', courseId: 'course_eng_01');
-      await repo.markNodeCompleted('node_eng_list', courseId: 'course_eng_01');
+      for (final prereqId in const [
+        'node_eng_a1_m1_greetings',
+        'node_eng_a1_m1_speaking',
+        'node_eng_a1_u1_checkpoint',
+        'node_eng_a1_m2_sentence_builder',
+        'node_eng_gram',
+        'node_eng_a1_m2_daily_life',
+        'node_eng_a1_u2_checkpoint',
+        'node_eng_vocab',
+        'node_eng_list',
+        'node_eng_a1_m3_listening_time',
+        'node_eng_a1_u3_checkpoint',
+      ]) {
+        await repo.markNodeCompleted(prereqId, courseId: 'course_eng_01');
+      }
       final profile = await repo.getProfile();
       await repo.updateProfile(profile.copyWith(selectedCourseId: 'course_eng_01'));
 
