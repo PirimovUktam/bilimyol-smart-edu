@@ -176,7 +176,27 @@ void main() {
         orderedTokens: const ['I wake up', 'at seven.'],
       );
       expect(repo.lastSubmittedAnswer, equals('["I wake up","at seven."]'));
-      expect(orderRes.correctOption, equals('I wake up at seven.'));
+      expect(orderRes.correctOption, isEmpty);
+      expect(orderRes.explanation, equals('Vaqt predlogi at ishlatiladi.'));
+
+      // 1b. MCQ Lesson forwards serverCorrectOption when local correctIndex == -1
+      const mcqQ = Question(
+        id: 'q_mcq_live',
+        courseId: 'course_eng_01',
+        skillId: 'skill_eng_vocab',
+        text: 'Select morning greeting',
+        mode: QuestionMode.multipleChoice,
+        options: ['Good night!', 'I wake up at seven.'],
+        correctIndex: -1,
+        difficulty: QuestionDifficulty.easy,
+        explanation: '',
+      );
+      final mcqRes = await lessonUseCase.execute(
+        question: mcqQ,
+        lessonId: 'lesson_eng_a1_m1_greetings',
+        selectedIndex: 0,
+      );
+      expect(mcqRes.correctOption, equals('I wake up at seven.'));
 
       // 2. wordMatch with unsorted map -> key-sorted JSON {"pair_a":"...","pair_b":"..."}
       const matchQ = Question(
@@ -297,6 +317,21 @@ void main() {
         find.text('Ertalab rasmiy salomlashishda Good morning ishlatiladi.'),
         findsOneWidget,
       );
+
+      // Verify InMemoryLearnerRepository returns wrongFeedback (NOT praise explanation) and null correctOption on wrong text_input
+      final demoRepo = InMemoryLearnerRepository();
+      final wrongStarter = await demoRepo.submitAnswerAttempt(
+        courseId: 'course_eng_01',
+        skillId: 'skill_eng_vocab',
+        lessonId: 'lesson_eng_starter',
+        questionId: 'q_lesson_eng_starter_quiz',
+        selectedIndex: 0,
+        selectedAnswer: 'Goodbye',
+      );
+      expect(wrongStarter.isCorrect, isFalse);
+      expect(wrongStarter.correctOption, isNull);
+      expect(wrongStarter.explanation, isNot(startsWith('Ajoyib!')));
+      expect(wrongStarter.explanation, contains("I'm"));
     });
 
     test('FIX-P1-40: RouteEngine clears NodeStatus.reinforcement once reinf_<node_id> is completed even when score < 50', () {

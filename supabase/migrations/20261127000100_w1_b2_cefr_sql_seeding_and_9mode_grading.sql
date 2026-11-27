@@ -232,10 +232,9 @@ BEGIN
          AND pg_catalog.jsonb_typeof(v_val) = 'array'
          AND pg_catalog.jsonb_array_length(v_val) >= 2 THEN
         v_len := pg_catalog.jsonb_array_length(v_val);
-        v_ui_shift := GREATEST(1, pg_catalog.char_length(v_qid) % v_len);
         v_sanitized_val := v_val;
 
-        FOR v_seed IN 1..6 LOOP
+        FOR v_seed IN 1..12 LOOP
           SELECT pg_catalog.jsonb_agg(
             public.sanitize_learner_content(elem)
             ORDER BY pg_catalog.md5(v_seed::TEXT || ':' || v_qid || ':' || ord::TEXT || ':' || elem::TEXT), ord DESC
@@ -243,23 +242,26 @@ BEGIN
           INTO v_candidate
           FROM pg_catalog.jsonb_array_elements(v_val) WITH ORDINALITY AS t(elem, ord);
 
-          SELECT pg_catalog.jsonb_agg(
-            v_candidate->(((idx - 1 + v_ui_shift) % v_len)::INT)
-            ORDER BY idx
-          )
-          INTO v_ui_rotated
-          FROM pg_catalog.generate_series(1, v_len) AS idx;
-
-          IF v_candidate IS DISTINCT FROM v_val AND v_ui_rotated IS DISTINCT FROM v_val THEN
+          IF v_candidate IS DISTINCT FROM v_val THEN
             v_sanitized_val := v_candidate;
             EXIT;
           END IF;
         END LOOP;
 
         IF v_sanitized_val = v_val THEN
-          SELECT pg_catalog.jsonb_agg(public.sanitize_learner_content(elem) ORDER BY ord DESC)
-          INTO v_sanitized_val
-          FROM pg_catalog.jsonb_array_elements(v_val) WITH ORDINALITY AS t(elem, ord);
+          FOR v_seed IN 1..(v_len - 1) LOOP
+            SELECT pg_catalog.jsonb_agg(
+              public.sanitize_learner_content(v_val->(((idx - 1 + v_seed) % v_len)::INT))
+              ORDER BY idx
+            )
+            INTO v_candidate
+            FROM pg_catalog.generate_series(1, v_len) AS idx;
+
+            IF v_candidate IS DISTINCT FROM v_val THEN
+              v_sanitized_val := v_candidate;
+              EXIT;
+            END IF;
+          END LOOP;
         END IF;
 
         v_result := v_result || pg_catalog.jsonb_build_object(v_key, COALESCE(v_sanitized_val, '[]'::pg_catalog.jsonb));
@@ -443,10 +445,21 @@ BEGIN
     COALESCE((p_lesson->>'estimated_minutes')::INT, 15),
     COALESCE(p_lesson->>'official_cefr_disclaimer_uz', p_lesson->>'officialCefrDisclaimerUz'),
     COALESCE(p_lesson->>'official_cefr_disclaimer_ru', p_lesson->>'officialCefrDisclaimerRu'),
-    p_lesson->'pedagogy17',
+    CASE
+      WHEN pg_catalog.jsonb_typeof(p_lesson->'pedagogy17') = 'object' THEN p_lesson->'pedagogy17'
+      ELSE NULL
+    END,
     p_lesson->'steps',
-    COALESCE(p_lesson->'reinforcement_exercise', p_lesson->'reinforcementExercise'),
-    COALESCE(p_lesson->'alternate_exercise', p_lesson->'alternateExercise'),
+    CASE
+      WHEN pg_catalog.jsonb_typeof(COALESCE(p_lesson->'reinforcement_exercise', p_lesson->'reinforcementExercise')) = 'object'
+      THEN COALESCE(p_lesson->'reinforcement_exercise', p_lesson->'reinforcementExercise')
+      ELSE NULL
+    END,
+    CASE
+      WHEN pg_catalog.jsonb_typeof(COALESCE(p_lesson->'alternate_exercise', p_lesson->'alternateExercise')) = 'object'
+      THEN COALESCE(p_lesson->'alternate_exercise', p_lesson->'alternateExercise')
+      ELSE NULL
+    END,
     COALESCE(
       (p_lesson->>'requires_mastery')::BOOLEAN,
       (p_lesson->>'requiresMastery')::BOOLEAN,
@@ -479,9 +492,17 @@ BEGIN
     official_cefr_disclaimer_ru = COALESCE(EXCLUDED.official_cefr_disclaimer_ru, public.lessons.official_cefr_disclaimer_ru),
     pedagogy17 = COALESCE(EXCLUDED.pedagogy17, public.lessons.pedagogy17),
     steps = EXCLUDED.steps,
-    reinforcement_exercise = EXCLUDED.reinforcement_exercise,
+    reinforcement_exercise = CASE
+      WHEN (p_lesson ? 'reinforcement_exercise' OR p_lesson ? 'reinforcementExercise')
+      THEN EXCLUDED.reinforcement_exercise
+      ELSE public.lessons.reinforcement_exercise
+    END,
     alternate_exercise = COALESCE(EXCLUDED.alternate_exercise, public.lessons.alternate_exercise),
-    requires_mastery = EXCLUDED.requires_mastery,
+    requires_mastery = CASE
+      WHEN (p_lesson ? 'requires_mastery' OR p_lesson ? 'requiresMastery')
+      THEN EXCLUDED.requires_mastery
+      ELSE (public.lessons.requires_mastery OR pg_catalog.jsonb_path_exists(EXCLUDED.steps, '$[*].masteryCheckpoint'))
+    END,
     is_published = EXCLUDED.is_published,
     is_archived = EXCLUDED.is_archived,
     updated_at = pg_catalog.now();
@@ -969,7 +990,10 @@ BEGIN
       WHERE gl.id = v_reinf_target.target_lesson_id
         AND gl.course_id = p_course_id
         AND gl.course_id <> 'course_math_01'
-        AND gl.skill_id = p_skill_id
+        AND (
+          gl.skill_id = p_skill_id
+          OR COALESCE(cand.elem->>'skillId', cand.elem->>'skill_id') = p_skill_id
+        )
         AND pg_catalog.jsonb_typeof(cand.elem) = 'object'
         AND cand.elem->>'id' = p_question_id
       LIMIT 1;
@@ -1070,8 +1094,8 @@ BEGIN
   v_is_correct := bilimyol_private.grade_question_attempt(v_q_body, p_selected_index, v_clean_text);
   IF NOT v_is_correct THEN
     v_explanation := COALESCE(
-      NULLIF(pg_catalog.btrim(COALESCE(v_explanation, '')), ''),
-      NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'wrongFeedback', v_q_body->>'wrong_feedback', '')), '')
+      NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'wrongFeedback', v_q_body->>'wrong_feedback', '')), ''),
+      NULLIF(pg_catalog.btrim(COALESCE(v_explanation, '')), '')
     );
   END IF;
 
@@ -1469,6 +1493,12 @@ DECLARE
   v_unique_total INT := 0;
   v_unique_correct INT := 0;
   v_before INT := 0;
+  v_parent_skill_id TEXT;
+  v_parent_total INT := 0;
+  v_parent_correct INT := 0;
+  v_parent_lss_score INT;
+  v_parent_before INT := 0;
+  v_parent_needs_remediation BOOLEAN := false;
   v_current_raw INT := 0;
   v_after INT := 50;
   v_server_xp_awarded CONSTANT INT := 30;
@@ -1534,7 +1564,10 @@ BEGIN
     WHERE gl.id = v_target.target_lesson_id
       AND gl.course_id = p_course_id
       AND gl.course_id <> 'course_math_01'
-      AND gl.skill_id = p_skill_id
+      AND (
+        gl.skill_id = p_skill_id
+        OR COALESCE(cand.elem->>'skillId', cand.elem->>'skill_id') = p_skill_id
+      )
       AND NOT EXISTS (SELECT 1 FROM public.lessons existing_l WHERE existing_l.id = v_target.target_lesson_id)
       AND pg_catalog.jsonb_typeof(cand.elem) = 'object'
       AND cand.elem->>'id' = p_question_id
@@ -1547,18 +1580,22 @@ BEGIN
   FROM public.reinforcement_attempts ra
   WHERE ra.user_id = v_uid
     AND ra.course_id = p_course_id
-    AND ra.skill_id = p_skill_id
     AND (
-      ra.reinforcement_node_id = p_reinforcement_node_id
-      OR ra.reinforcement_node_id = v_target.canonical_reinf_id
-      OR ra.reinforcement_node_id = 'reinf_lesson_' || v_target.target_lesson_id
-      OR ra.reinforcement_node_id = 'reinf_' || p_course_id || '_' || p_skill_id
-      OR EXISTS (
-        SELECT 1
-        FROM bilimyol_private.resolve_reinforcement_target(
-          p_course_id, p_skill_id, ra.reinforcement_node_id
-        ) existing_t
-        WHERE existing_t.target_lesson_id = v_target.target_lesson_id
+      ra.reinforcement_node_id = v_target.canonical_reinf_id
+      OR (
+        ra.skill_id = p_skill_id
+        AND (
+          ra.reinforcement_node_id = p_reinforcement_node_id
+          OR ra.reinforcement_node_id = 'reinf_lesson_' || v_target.target_lesson_id
+          OR ra.reinforcement_node_id = 'reinf_' || p_course_id || '_' || p_skill_id
+          OR EXISTS (
+            SELECT 1
+            FROM bilimyol_private.resolve_reinforcement_target(
+              p_course_id, p_skill_id, ra.reinforcement_node_id
+            ) existing_t
+            WHERE existing_t.target_lesson_id = v_target.target_lesson_id
+          )
+        )
       )
     )
   ORDER BY ra.created_at ASC, ra.id ASC
@@ -1570,19 +1607,20 @@ BEGIN
     FROM public.answer_attempts aa
     WHERE aa.user_id = v_uid
       AND aa.course_id = p_course_id
-      AND aa.skill_id = p_skill_id
+      AND aa.skill_id = v_existing.skill_id
       AND aa.is_correct = true
       AND aa.created_at <= v_existing.created_at
       AND aa.lesson_id IN (
         v_existing.reinforcement_node_id,
         v_target.canonical_reinf_id,
         'reinf_lesson_' || v_target.target_lesson_id,
-        'reinf_' || p_course_id || '_' || p_skill_id
+        'reinf_' || p_course_id || '_' || v_existing.skill_id
       )
     ORDER BY aa.created_at DESC, aa.id DESC
     LIMIT 1;
 
-    IF COALESCE(v_origin_alias, v_existing.reinforcement_node_id) = p_reinforcement_node_id THEN
+    IF v_existing.skill_id = p_skill_id
+       AND COALESCE(v_origin_alias, v_existing.reinforcement_node_id) = p_reinforcement_node_id THEN
       RETURN pg_catalog.jsonb_build_object(
         'already_processed', true,
         'old_score', v_existing.before_score,
@@ -1647,7 +1685,78 @@ BEGIN
         AND newer_wrong.created_at > ra.created_at
     );
 
-  IF v_before >= v_target.required_score THEN
+  SELECT COALESCE(
+    (SELECT rn.skill_id
+     FROM public.roadmap_nodes rn
+     WHERE rn.course_id = p_course_id
+       AND rn.is_active
+       AND (
+         v_target.canonical_reinf_id = 'reinf_' || rn.id
+         OR (rn.is_reinforcement AND v_target.canonical_reinf_id = rn.id)
+       )
+     ORDER BY rn.order_index ASC, rn.id ASC
+     LIMIT 1),
+    (SELECT l.skill_id FROM public.lessons l WHERE l.id = v_target.target_lesson_id LIMIT 1),
+    p_skill_id
+  )
+  INTO v_parent_skill_id;
+
+  IF v_parent_skill_id IS DISTINCT FROM p_skill_id THEN
+    SELECT pg_catalog.count(*)::INT,
+           pg_catalog.count(*) FILTER (WHERE latest.is_correct)::INT
+    INTO v_parent_total, v_parent_correct
+    FROM (
+      SELECT DISTINCT ON (aa.question_id) aa.is_correct
+      FROM public.answer_attempts aa
+      WHERE aa.user_id = v_uid
+        AND aa.course_id = p_course_id
+        AND aa.skill_id = v_parent_skill_id
+        AND aa.lesson_id NOT IN (
+          p_reinforcement_node_id,
+          v_target.canonical_reinf_id,
+          'reinf_lesson_' || v_target.target_lesson_id
+        )
+      ORDER BY aa.question_id, aa.created_at DESC, aa.id DESC
+    ) latest;
+
+    SELECT lss.score
+    INTO v_parent_lss_score
+    FROM public.learner_skill_scores lss
+    WHERE lss.user_id = v_uid
+      AND lss.course_id = p_course_id
+      AND lss.skill_id = v_parent_skill_id;
+
+    IF v_parent_total > 0 OR v_parent_lss_score IS NOT NULL THEN
+      v_parent_before := CASE
+        WHEN v_parent_total > 0 THEN
+          pg_catalog.round((v_parent_correct::NUMERIC / v_parent_total::NUMERIC) * 100)::INT
+        ELSE
+          v_parent_lss_score
+      END;
+
+      SELECT GREATEST(v_parent_before, COALESCE(pg_catalog.max(ra.after_score), 0))
+      INTO v_parent_before
+      FROM public.reinforcement_attempts ra
+      WHERE ra.user_id = v_uid
+        AND ra.course_id = p_course_id
+        AND ra.skill_id = v_parent_skill_id
+        AND ra.is_correct = true
+        AND NOT EXISTS (
+          SELECT 1 FROM public.answer_attempts newer_wrong
+          WHERE newer_wrong.user_id = v_uid
+            AND newer_wrong.course_id = p_course_id
+            AND newer_wrong.skill_id = v_parent_skill_id
+            AND newer_wrong.is_correct = false
+            AND newer_wrong.created_at > ra.created_at
+        );
+
+      v_parent_needs_remediation := (v_parent_before < v_target.required_score);
+    ELSE
+      v_parent_needs_remediation := false;
+    END IF;
+  END IF;
+
+  IF v_before >= v_target.required_score AND NOT v_parent_needs_remediation THEN
     RAISE EXCEPTION 'Ushbu ko‘nikma allaqachon yetarli darajada o‘zlashtirilgan.' USING ERRCODE = '42501';
   END IF;
 
@@ -1721,10 +1830,15 @@ GRANT EXECUTE ON FUNCTION public.complete_reinforcement(TEXT, TEXT, TEXT, TEXT, 
   TO authenticated, service_role;
 
 -- ----------------------------------------------------------------------------
--- 9. Rich 9-mode mistake feedback in public.tutor_mistake_context (FIX-P1-40)
+-- 9. Rich 9-mode mistake feedback in bilimyol_private.resolve_mistake_context,
+--    public.tutor_mistake_context, and public.get_mistake_feedback (FIX-P1-40)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.tutor_mistake_context(
-  p_user_id UUID, p_course_id TEXT, p_skill_id TEXT, p_question_id TEXT
+CREATE OR REPLACE FUNCTION bilimyol_private.resolve_mistake_context(
+  p_user_id UUID,
+  p_course_id TEXT,
+  p_skill_id TEXT,
+  p_question_id TEXT,
+  p_expose_non_choice_answer BOOLEAN
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1797,7 +1911,10 @@ BEGIN
         )
       )
       AND gl.course_id = p_course_id
-      AND gl.skill_id = p_skill_id
+      AND (
+        gl.skill_id = p_skill_id
+        OR COALESCE(cand.elem->>'skillId', cand.elem->>'skill_id') = p_skill_id
+      )
       AND pg_catalog.jsonb_typeof(cand.elem) = 'object'
       AND cand.elem->>'id' = p_question_id
     UNION ALL
@@ -1873,6 +1990,26 @@ BEGIN
     v_correct_option := COALESCE(NULLIF(v_correct_option, ''), v_q_body->'acceptedAnswers'->>0, v_q_body->'accepted_answers'->>0);
   ELSIF v_q_type = 'word_match' THEN
     v_selected_option := COALESCE(NULLIF(pg_catalog.btrim(COALESCE(v_selected_answer, '')), ''), '—');
+    IF pg_catalog.starts_with(v_selected_option, '{') THEN
+      BEGIN
+        v_parsed := v_selected_option::pg_catalog.jsonb;
+        IF pg_catalog.jsonb_typeof(v_parsed) = 'object' THEN
+          SELECT COALESCE(
+            NULLIF(pg_catalog.string_agg(
+              (pair->>'left') || ' -> ' || COALESCE(NULLIF(pg_catalog.btrim(COALESCE(v_parsed->>(pair->>'id'), '')), ''), '—'),
+              ', ' ORDER BY ord
+            ), ''),
+            v_selected_option
+          )
+          INTO v_selected_option
+          FROM pg_catalog.jsonb_array_elements(
+            COALESCE(v_q_body->'matchPairs', v_q_body->'match_pairs', '[]'::pg_catalog.jsonb)
+          ) WITH ORDINALITY AS mp(pair, ord);
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END IF;
     SELECT pg_catalog.string_agg((pair->>'left') || ' -> ' || (pair->>'right'), ', ' ORDER BY ord)
     INTO v_correct_option
     FROM pg_catalog.jsonb_array_elements(
@@ -1880,6 +2017,16 @@ BEGIN
     ) WITH ORDINALITY AS mp(pair, ord);
   ELSIF v_q_type IN ('speaking_prompt', 'writing_prompt') THEN
     v_selected_option := COALESCE(NULLIF(pg_catalog.btrim(COALESCE(v_selected_answer, '')), ''), '—');
+    IF pg_catalog.starts_with(v_selected_option, '{') THEN
+      BEGIN
+        v_parsed := v_selected_option::pg_catalog.jsonb;
+        IF pg_catalog.jsonb_typeof(v_parsed) = 'object' AND v_parsed ? 'response' THEN
+          v_selected_option := COALESCE(NULLIF(pg_catalog.btrim(COALESCE(v_parsed->>'response', '')), ''), '—');
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END;
+    END IF;
     v_correct_option := COALESCE(v_q_body->>'sampleResponse', v_q_body->>'sample_response');
   ELSE
     v_selected_option := v_q_body->'options'->>v_selected_index;
@@ -1900,8 +2047,8 @@ BEGIN
           ''
         )), '')
     END,
-    NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'explanation', '')), ''),
-    NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'wrongFeedback', v_q_body->>'wrong_feedback', '')), '')
+    NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'wrongFeedback', v_q_body->>'wrong_feedback', '')), ''),
+    NULLIF(pg_catalog.btrim(COALESCE(v_q_body->>'explanation', '')), '')
   );
 
   IF v_question_text IS NULL
@@ -1942,16 +2089,60 @@ BEGIN
   RETURN pg_catalog.jsonb_build_object(
     'questionText', v_question_text,
     'selectedOption', v_selected_option,
-    'correctOption', v_correct_option,
+    'correctOption', CASE
+      WHEN p_expose_non_choice_answer
+           OR v_q_type IN ('multiple_choice', 'error_correction', 'conversation_completion')
+      THEN v_correct_option
+      ELSE NULL
+    END,
     'explanation', v_explanation
   );
 END;
+$$;
+
+REVOKE ALL ON FUNCTION bilimyol_private.resolve_mistake_context(UUID, TEXT, TEXT, TEXT, BOOLEAN)
+  FROM PUBLIC, anon, authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.tutor_mistake_context(
+  p_user_id UUID, p_course_id TEXT, p_skill_id TEXT, p_question_id TEXT
+)
+RETURNS JSONB
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT bilimyol_private.resolve_mistake_context(p_user_id, p_course_id, p_skill_id, p_question_id, true);
 $$;
 
 REVOKE ALL ON FUNCTION public.tutor_mistake_context(UUID, TEXT, TEXT, TEXT)
   FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.tutor_mistake_context(UUID, TEXT, TEXT, TEXT)
   TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_mistake_feedback(
+  p_course_id TEXT, p_skill_id TEXT, p_question_id TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN bilimyol_private.resolve_mistake_context(v_uid, p_course_id, p_skill_id, p_question_id, false);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_mistake_feedback(TEXT, TEXT, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_mistake_feedback(TEXT, TEXT, TEXT)
+  TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 COMMIT;

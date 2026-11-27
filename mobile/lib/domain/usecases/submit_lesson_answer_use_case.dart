@@ -76,7 +76,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: isCorrect,
         selectedOption: answerText,
-        correctOption: attempt.correctOption ?? '',
+        correctOption: '',
         explanation: isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -126,7 +126,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: summary.isEmpty ? '—' : summary,
-        correctOption: attempt.correctOption ?? '',
+        correctOption: '',
         explanation: attempt.isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -169,7 +169,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: joined.isEmpty ? '—' : joined,
-        correctOption: attempt.correctOption ?? '',
+        correctOption: '',
         explanation: attempt.isCorrect
             ? (attempt.explanation ?? question.localizedExplanation(uiLocale))
             : (attempt.explanation ?? wrongExplanation),
@@ -200,7 +200,7 @@ class SubmitLessonAnswerUseCase {
       return LessonAnswerResult(
         isCorrect: attempt.isCorrect,
         selectedOption: responseText,
-        correctOption: attempt.correctOption ?? '',
+        correctOption: '',
         explanation: attempt.explanation ?? question.localizedExplanation(uiLocale),
       );
     }

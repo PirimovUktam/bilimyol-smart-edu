@@ -112,7 +112,6 @@ export class SubmitLessonAnswerUseCase {
     const qType = question.questionType === 'fill_blank' ? 'fill_blank' : 'text_input';
 
     let isCorrect = false;
-    let correctOption = '';
     let explanation = '';
     let newSkillScore: number | undefined;
     let overallScore: number | undefined;
@@ -133,7 +132,6 @@ export class SubmitLessonAnswerUseCase {
       });
 
       isCorrect = serverResult.isCorrect;
-      correctOption = serverResult.correctOption || '';
       explanation = serverResult.explanation;
       newSkillScore = serverResult.newSkillScore;
       overallScore = serverResult.overallScore;
@@ -148,7 +146,7 @@ export class SubmitLessonAnswerUseCase {
     return {
       isCorrect,
       selectedOption: trimmed,
-      correctOption,
+      correctOption: '',
       explanation,
       newSkillScore,
       overallScore,
@@ -170,7 +168,6 @@ export class SubmitLessonAnswerUseCase {
   ): Promise<LessonAnswerResult> {
     const qType = question.questionType ?? 'word_match';
     let isCorrect = false;
-    let correctOption = '';
     let explanation = '';
     let newSkillScore: number | undefined;
     let overallScore: number | undefined;
@@ -190,7 +187,6 @@ export class SubmitLessonAnswerUseCase {
         idempotencyKey: idempotencyKey ?? generateAttemptUuid(),
       });
       isCorrect = serverResult.isCorrect;
-      correctOption = serverResult.correctOption || '';
       explanation = serverResult.explanation;
       newSkillScore = serverResult.newSkillScore;
       overallScore = serverResult.overallScore;
@@ -213,7 +209,7 @@ export class SubmitLessonAnswerUseCase {
     return {
       isCorrect,
       selectedOption: payload.displayAnswer,
-      correctOption,
+      correctOption: '',
       explanation,
       newSkillScore,
       overallScore,
@@ -231,7 +227,7 @@ export class SubmitLessonAnswerUseCase {
   ): Promise<LessonAnswerResult> {
     const trimmed = responseText.trim();
     const qType = question.questionType === 'speaking_prompt' ? 'speaking_prompt' : 'writing_prompt';
-    const serialized = JSON.stringify({ response: trimmed, criteria: checkedCriteriaIds });
+    const serialized = JSON.stringify({ response: trimmed, criteria: [...checkedCriteriaIds].sort() });
 
     let isCorrect = false;
     let explanation = '';

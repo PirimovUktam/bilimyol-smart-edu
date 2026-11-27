@@ -229,16 +229,25 @@ export const InteractiveLessonView: React.FC<InteractiveLessonViewProps> = ({
   const currentStep = currentLesson?.steps[currentStepIndex];
   const interactiveQ = currentStep?.interactiveQuestion;
 
+  const isInteractiveQServerSanitized = Boolean(
+    interactiveQ &&
+      interactiveQ.explanation === '' &&
+      interactiveQ.correctIndex === undefined &&
+      !interactiveQ.acceptedAnswers?.length,
+  );
+
   const shuffledRightPairs = useMemo<WordMatchPair[]>(() => {
     if (!interactiveQ?.matchPairs) return [];
+    if (isInteractiveQServerSanitized) return [...interactiveQ.matchPairs];
     return deterministicPermute(interactiveQ.matchPairs, interactiveQ.id);
-  }, [interactiveQ?.id, interactiveQ?.matchPairs]);
+  }, [interactiveQ?.id, interactiveQ?.matchPairs, isInteractiveQServerSanitized]);
 
   const shuffledOrderTokens = useMemo<Array<{ index: number; token: string }>>(() => {
     if (!interactiveQ?.orderedTokens) return [];
     const indexed = interactiveQ.orderedTokens.map((token, index) => ({ index, token }));
+    if (isInteractiveQServerSanitized) return indexed;
     return deterministicPermute(indexed, interactiveQ.id);
-  }, [interactiveQ?.id, interactiveQ?.orderedTokens]);
+  }, [interactiveQ?.id, interactiveQ?.orderedTokens, isInteractiveQServerSanitized]);
 
   useEffect(() => {
     // Each step owns its answer controls; restore any unconfirmed pending attempt

@@ -2317,7 +2317,12 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         skillId: skillId,
         lessonId: lesson.id,
       );
-      final reinfInputSig = selectedText != null
+      final sortedReinfCriteria = targetQuestion.isSelfAssessed
+          ? ([...(checkedCriteriaIds ?? const <String>[])]..sort())
+          : null;
+      final reinfInputSig = targetQuestion.isSelfAssessed
+          ? 'self:${(selectedText ?? '').trim()}|${(sortedReinfCriteria ?? const <String>[]).join(',')}'
+          : selectedText != null
           ? 'txt:${selectedText.trim()}'
           : matchedPairs != null
           ? 'pairs:${(matchedPairs.entries.map((e) => '${e.key}=${e.value}').toList()..sort()).join('&')}'
@@ -2359,6 +2364,7 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
         'selectedText': ?selectedText,
         'matchedPairs': ?matchedPairs,
         'orderedTokens': ?orderedTokens,
+        'checkedCriteriaIds': ?sortedReinfCriteria,
         if (cachedAttempt != null)
           'cachedAttempt': _attemptRecordToJson(cachedAttempt),
         'updatedAt': DateTime.now().millisecondsSinceEpoch,

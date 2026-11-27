@@ -40,6 +40,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   const [matchedPairs, setMatchedPairs] = useState<Record<string, string>>({});
   const [selectedMatchLeft, setSelectedMatchLeft] = useState<string | null>(null);
   const [pickedTokenIndices, setPickedTokenIndices] = useState<number[]>([]);
+  const [checkedRubricIds, setCheckedRubricIds] = useState<string[]>([]);
   const [feedbackState, setFeedbackState] = useState<'answering' | 'success' | 'incorrect'>('answering');
   const [scoreTransition, setScoreTransition] = useState<{ oldScore: number; newScore: number; xpAwarded?: number } | null>(null);
   const [failureFeedback, setFailureFeedback] = useState<{ correctOption?: string; explanation?: string } | null>(null);
@@ -50,21 +51,25 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
   const isOrderMode = qType === 'sentence_order';
   const isSelfAssessed = qType === 'speaking_prompt' || qType === 'writing_prompt';
   const isChoiceMode = !isTextMode && !isOrderMode && !isMatchMode && !isSelfAssessed;
+  const isServerSanitized =
+    question.explanation === '' &&
+    question.correctIndex === undefined &&
+    !question.acceptedAnswers?.length;
 
   const shuffledRightPairs = React.useMemo<WordMatchPair[]>(() => {
     const pairs = question.matchPairs ?? [];
-    if (pairs.length <= 1) return [...pairs];
+    if (pairs.length <= 1 || isServerSanitized) return [...pairs];
     const shift = Math.max(1, question.id.length % pairs.length);
     return [...pairs.slice(shift), ...pairs.slice(0, shift)];
-  }, [question.id, question.matchPairs]);
+  }, [question.id, question.matchPairs, isServerSanitized]);
 
   const shuffledOrder = React.useMemo(() => {
     const tokens = question.orderedTokens ?? [];
-    if (tokens.length <= 1) return tokens.map((token, idx) => ({ idx, token }));
+    if (tokens.length <= 1 || isServerSanitized) return tokens.map((token, idx) => ({ idx, token }));
     const copy = tokens.map((token, idx) => ({ idx, token }));
     const shift = Math.max(1, question.id.length % copy.length);
     return [...copy.slice(shift), ...copy.slice(0, shift)];
-  }, [question.id, question.orderedTokens]);
+  }, [question.id, question.orderedTokens, isServerSanitized]);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,6 +78,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
       setMatchedPairs({});
       setSelectedMatchLeft(null);
       setPickedTokenIndices([]);
+      setCheckedRubricIds([]);
       setFeedbackState('answering');
       setScoreTransition(null);
       setFailureFeedback(null);
@@ -141,7 +147,7 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
       : isOrderMode
       ? JSON.stringify(pickedTokenIndices.map((idx) => shuffledOrder[idx]?.token ?? '').filter(Boolean))
       : isSelfAssessed
-      ? JSON.stringify({ response: textInput.trim(), criteria: [] })
+      ? JSON.stringify({ response: textInput.trim(), criteria: [...checkedRubricIds].sort() })
       : undefined;
 
     let result: Awaited<ReturnType<typeof completeReinforcement>>;
@@ -284,6 +290,33 @@ export const ReinforcementModal: React.FC<ReinforcementModalProps> = ({
                     <p className="rounded-xl border border-hairline bg-canvas px-3 py-2 text-xs text-slatefine">
                       {t('lesson.modelResponse')}: {question.sampleResponse}
                     </p>
+                  )}
+                  {question.rubricCriteria && question.rubricCriteria.length > 0 && (
+                    <div className="space-y-1.5">
+                      {question.rubricCriteria.map((crit) => {
+                        const checked = checkedRubricIds.includes(crit.id);
+                        return (
+                          <label
+                            key={crit.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-hairline bg-canvas px-3 py-2 text-xs font-medium text-ink"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={isUpdating}
+                              onChange={() =>
+                                setCheckedRubricIds((prev) =>
+                                  prev.includes(crit.id)
+                                    ? prev.filter((id) => id !== crit.id)
+                                    : [...prev, crit.id],
+                                )
+                              }
+                            />
+                            <span>{language === 'ru' && crit.labelRu ? crit.labelRu : crit.labelUz}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               ) : isMatchMode && question.matchPairs ? (

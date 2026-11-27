@@ -718,12 +718,23 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                       final orderCorrectText = q.correctIndex >= 0
                           ? q.orderedTokens.join(' ')
                           : serverCorrect;
-                      final localExplanation = q
-                          .localizedExplanation(lang)
+                      final selectedChoiceText =
+                          (q.usesOptionSelection &&
+                              _selectedOption != null &&
+                              _selectedOption! >= 0 &&
+                              _selectedOption! < q.options.length)
+                          ? q.options[_selectedOption!]
+                          : '';
+                      final serverExplanation = (_result?.explanation ?? '')
                           .trim();
-                      final effectiveExplanation = localExplanation.isNotEmpty
-                          ? localExplanation
-                          : (_result?.explanation ?? '').trim();
+                      final localWrongHint =
+                          (q.localizedOptionFeedback(selectedChoiceText, lang) ??
+                                  q.localizedWrongFeedback(lang) ??
+                                  q.localizedExplanation(lang))
+                              .trim();
+                      final effectiveExplanation = serverExplanation.isNotEmpty
+                          ? serverExplanation
+                          : localWrongHint;
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),

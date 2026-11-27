@@ -1707,7 +1707,7 @@ class _InteractiveLessonScreenState
                 color: c.errorText,
               ),
             ),
-            if (!isTextOrRich) ...[
+            if (!isTextOrRich && result.correctOption.trim().isNotEmpty) ...[
               const SizedBox(height: 3),
               Text(
                 s.correctAnswerIs(correctText),

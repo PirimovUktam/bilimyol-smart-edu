@@ -974,29 +974,30 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       isCorrect: isCorrect,
     );
     String? resolvedCorrectOption;
-    if (!isCorrect) {
-      if (question.usesOptionSelection &&
-          question.correctIndex >= 0 &&
-          question.correctIndex < question.options.length) {
-        resolvedCorrectOption = question.options[question.correctIndex];
-      } else if (question.usesTextEvaluation &&
-          question.acceptedAnswers.isNotEmpty) {
-        resolvedCorrectOption = question.acceptedAnswers.first;
-      } else if (question.mode == QuestionMode.sentenceOrder &&
-          question.orderedTokens.isNotEmpty) {
-        resolvedCorrectOption = question.orderedTokens.join(' ');
-      } else if (question.mode == QuestionMode.wordMatch &&
-          question.matchPairs.isNotEmpty) {
-        resolvedCorrectOption = question.matchPairs
-            .map((p) => '${p.left} → ${p.right}')
-            .join(', ');
-      }
+    if (!isCorrect &&
+        question.usesOptionSelection &&
+        question.correctIndex >= 0 &&
+        question.correctIndex < question.options.length) {
+      resolvedCorrectOption = question.options[question.correctIndex];
     }
+    final selectedOptText =
+        (question.usesOptionSelection &&
+            selectedIndex >= 0 &&
+            selectedIndex < question.options.length)
+        ? question.options[selectedIndex]
+        : selectedAnswer;
+    final optionHint = !isCorrect
+        ? question.localizedOptionFeedback(selectedOptText, 'uz')
+        : null;
+    final wrongHint = (question.wrongFeedback != null &&
+            question.wrongFeedback!.trim().isNotEmpty)
+        ? question.wrongFeedback
+        : null;
     final resolvedExplanation = isCorrect
         ? (question.explanation.isNotEmpty ? question.explanation : null)
-        : (question.explanation.isNotEmpty
-              ? question.explanation
-              : question.wrongFeedback);
+        : (optionHint ??
+              wrongHint ??
+              (question.explanation.isNotEmpty ? question.explanation : null));
     return AnswerAttemptRecord(
       id: recorded.id,
       courseId: recorded.courseId,

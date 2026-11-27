@@ -135,20 +135,26 @@ DECLARE
   v_res JSONB;
   v_fb JSONB;
 BEGIN
-  -- Mode 1: text_input (normalized punctuation/apostrophe/case + wrong-answer feedback)
+  -- Mode 1: text_input (normalized punctuation/apostrophe/case + non-spoiler wrongFeedback)
   v_res := public.submit_answer_attempt(
     auth.uid(), 'course_eng_01', 'skill_eng_vocab',
     'lesson_eng_starter', 'q_lesson_eng_starter_quiz', 0,
     'Wrong answer', '12011111-1111-4111-8111-111111111201'
   );
-  PERFORM pg_temp.assert_w1b2((v_res->>'is_correct')::BOOLEAN = false, 'Mode 1 (text_input): rejects wrong text');
+  PERFORM pg_temp.assert_w1b2(
+    (v_res->>'is_correct')::BOOLEAN = false
+    AND (v_res->>'explanation') NOT LIKE 'Ajoyib!%'
+    AND (v_res->>'explanation') LIKE '%I''m ...%',
+    'Mode 1 (text_input): rejects wrong text with wrongFeedback instead of praise/spoiler explanation'
+  );
 
   v_fb := public.get_mistake_feedback('course_eng_01', 'skill_eng_vocab', 'q_lesson_eng_starter_quiz');
   PERFORM pg_temp.assert_w1b2(
     v_fb IS NOT NULL
-    AND NULLIF(btrim(COALESCE(v_fb->>'correctOption', '')), '') IS NOT NULL
-    AND NULLIF(btrim(COALESCE(v_fb->>'explanation', '')), '') IS NOT NULL,
-    'FIX-P1-40: get_mistake_feedback returns non-null correctOption and explanation for wrong non-MCQ text_input'
+    AND (v_fb->>'correctOption') IS NULL
+    AND NULLIF(btrim(COALESCE(v_fb->>'explanation', '')), '') IS NOT NULL
+    AND (v_fb->>'explanation') NOT LIKE 'Ajoyib!%',
+    'FIX-P1-40: get_mistake_feedback withholds literal correctOption on text_input while returning targeted wrongFeedback'
   );
 
   v_res := public.submit_answer_attempt(
@@ -177,14 +183,18 @@ BEGIN
     '12011111-1111-4111-8111-111111111204'
   );
   PERFORM pg_temp.assert_w1b2(
-    (v_res->>'is_correct')::BOOLEAN = false,
-    'Mode 3 (word_match): rejects pair-ID cheat payload {"pair_gm":"pair_gm"}'
+    (v_res->>'is_correct')::BOOLEAN = false
+    AND (v_res->>'explanation') NOT LIKE 'Barakalla!%',
+    'Mode 3 (word_match): rejects pair-ID cheat payload {"pair_gm":"pair_gm"} with wrongFeedback'
   );
 
   v_fb := public.get_mistake_feedback('course_eng_01', 'skill_eng_vocab', 'q_eng_a1_m1_greet_match');
   PERFORM pg_temp.assert_w1b2(
-    v_fb IS NOT NULL AND NULLIF(btrim(COALESCE(v_fb->>'correctOption', '')), '') IS NOT NULL,
-    'FIX-P1-40: get_mistake_feedback returns correctOption summary on wrong word_match attempt'
+    v_fb IS NOT NULL
+    AND (v_fb->>'correctOption') IS NULL
+    AND (v_fb->>'selectedOption') LIKE 'Good morning -> %'
+    AND (v_fb->>'explanation') NOT LIKE 'Barakalla!%',
+    'FIX-P1-40: get_mistake_feedback formats word_match selectedOption cleanly and withholds answer-key spoiler'
   );
 
   v_res := public.submit_answer_attempt(
@@ -209,8 +219,10 @@ BEGIN
 
   v_fb := public.get_mistake_feedback('course_eng_01', 'skill_eng_grammar', 'q_eng_a1_m2_order_1');
   PERFORM pg_temp.assert_w1b2(
-    v_fb IS NOT NULL AND (v_fb->>'correctOption') = 'They read books in the library.',
-    'FIX-P1-40: get_mistake_feedback returns exact unscrambled sentence on wrong sentence_order attempt'
+    v_fb IS NOT NULL
+    AND (v_fb->>'correctOption') IS NULL
+    AND (v_fb->>'selectedOption') = 'books They read',
+    'FIX-P1-40: get_mistake_feedback formats sentence_order selectedOption and withholds unscrambled spoiler from authenticated caller'
   );
 
   v_res := public.submit_answer_attempt(
@@ -394,4 +406,145 @@ END;
 $$;
 
 RESET ROLE;
+
+-- ============================================================================
+-- 6. Adversarial edge cases: service_role tutor_mistake_context, multi-skill
+--    complete_reinforcement (parent <50% vs exercise >=70%), cross-skill
+--    alternate_exercise 42501 guard, admin_save_lesson rich column preservation,
+--    and 2-token / palindrome orderedTokens scrambling
+-- ============================================================================
+INSERT INTO auth.users (id, email, email_confirmed_at, raw_user_meta_data) VALUES
+  ('00000000-0000-0000-0000-000000001203', 'w1b2-multireinf@example.invalid', now(), '{"first_name":"Malika","last_name":"Saidova"}'),
+  ('00000000-0000-0000-0000-000000001204', 'w1b2-altdup@example.invalid', now(), '{"first_name":"Otabek","last_name":"Nazarov"}'),
+  ('00000000-0000-0000-0000-000000001205', 'w1b2-admin@example.invalid', now(), '{"first_name":"Admin","last_name":"CMS"}');
+
+SELECT set_config('bilimyol.authorized_role_change', 'true', true);
+UPDATE public.profiles SET role = 'admin' WHERE id = '00000000-0000-0000-0000-000000001205';
+SELECT set_config('bilimyol.authorized_role_change', '', true);
+
+-- 6a. service_role tutor_mistake_context receives full correctOption & formatted selectedOption
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001203', true);
+SET LOCAL ROLE authenticated;
+SELECT public.submit_answer_attempt(
+  auth.uid(), 'course_eng_01', 'skill_eng_vocab',
+  'lesson_eng_starter', 'q_lesson_eng_starter_quiz', 0, 'wrong',
+  '12031111-1111-4111-8111-111111111201'
+);
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+SELECT pg_temp.assert_w1b2(
+  (public.tutor_mistake_context('00000000-0000-0000-0000-000000001203', 'course_eng_01', 'skill_eng_vocab', 'q_lesson_eng_starter_quiz')->>'correctOption') = 'I''m Sam'
+  AND (public.tutor_mistake_context('00000000-0000-0000-0000-000000001203', 'course_eng_01', 'skill_eng_vocab', 'q_lesson_eng_starter_quiz')->>'explanation') NOT LIKE 'Ajoyib!%',
+  'FIX-P1-40: service_role tutor_mistake_context returns full correctOption and non-praise wrongFeedback for yolchi-tutor'
+);
+RESET ROLE;
+
+-- 6b. Multi-skill complete_reinforcement succeeds when parent node skill <50% while exercise skill >=70%
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001203', true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_reinf JSONB;
+BEGIN
+  -- Learner has 0% on skill_eng_vocab (parent skill of node_eng_b1_m4_decisions) and 100% on skill_eng_grammar
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_grammar',
+    'lesson_eng_a1_m2_daily_life', 'q_eng_a1_m2_daily_fill', 0, 'studies',
+    '12031111-1111-4111-8111-111111111202'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_grammar',
+    'reinf_node_eng_b1_m4_decisions', 'q_eng_b1_m4_rep_text', 0,
+    'Ali told us that he could send the agenda that day',
+    '12031111-1111-4111-8111-111111111203'
+  );
+  v_reinf := public.complete_reinforcement(
+    'reinf_node_eng_b1_m4_decisions', 'course_eng_01', 'skill_eng_grammar', 'q_eng_b1_m4_rep_text', 30
+  );
+  PERFORM pg_temp.assert_w1b2(
+    (v_reinf->>'already_processed')::BOOLEAN = false
+    AND (v_reinf->>'xp_awarded')::INT = 30
+    AND EXISTS (
+      SELECT 1 FROM public.reinforcement_attempts
+      WHERE user_id = auth.uid() AND reinforcement_node_id = 'reinf_node_eng_b1_m4_decisions'
+    ),
+    'FIX-P1-40: multi-skill complete_reinforcement succeeds when parent node skill <50% even if exercise skill >=70%'
+  );
+END;
+$$;
+RESET ROLE;
+
+-- 6c. Cross-skill alternate_exercise duplicate reinforcement raises controlled 42501 instead of raw 23505
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001204', true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  v_sqlstate TEXT := '';
+BEGIN
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_grammar',
+    'reinf_node_eng_b1_u2_checkpoint', 'q_eng_b1_u2_cp_reinf_order', 0,
+    '["If","the bus","arrives late,","we","will take","a taxi."]',
+    '12041111-1111-4111-8111-111111111201'
+  );
+  PERFORM public.complete_reinforcement(
+    'reinf_node_eng_b1_u2_checkpoint', 'course_eng_01', 'skill_eng_grammar', 'q_eng_b1_u2_cp_reinf_order', 30
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_eng_01', 'skill_eng_vocab',
+    'reinf_node_eng_b1_u2_checkpoint', 'q_eng_b1_u2_cp_alt_text', 0,
+    'Unless you save a backup, you will lose the file',
+    '12041111-1111-4111-8111-111111111202'
+  );
+  BEGIN
+    PERFORM public.complete_reinforcement(
+      'reinf_node_eng_b1_u2_checkpoint', 'course_eng_01', 'skill_eng_vocab', 'q_eng_b1_u2_cp_alt_text', 30
+    );
+  EXCEPTION WHEN OTHERS THEN
+    v_sqlstate := SQLSTATE;
+  END;
+  PERFORM pg_temp.assert_w1b2(
+    v_sqlstate = '42501',
+    'FIX-P1-40: cross-skill alternate_exercise duplicate reinforcement raises controlled 42501 instead of 23505'
+  );
+END;
+$$;
+RESET ROLE;
+
+-- 6d. admin_save_lesson preserves requires_mastery, cefr_level, pedagogy17, reinforcement_exercise, and alternate_exercise on minimal/null CMS payloads
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000001205', true);
+SET LOCAL ROLE authenticated;
+SELECT public.admin_save_lesson(jsonb_build_object(
+  'id', 'lesson_eng_b1_u3_checkpoint',
+  'course_id', 'course_eng_01',
+  'skill_id', 'skill_eng_grammar',
+  'title', 'Updated Checkpoint Title',
+  'steps', (SELECT steps FROM public.admin_lessons WHERE id = 'lesson_eng_b1_u3_checkpoint'),
+  'pedagogy17', NULL
+));
+RESET ROLE;
+
+SELECT pg_temp.assert_w1b2(
+  (
+    SELECT l.requires_mastery = true
+      AND l.cefr_level = 'B1'
+      AND jsonb_typeof(l.pedagogy17) = 'object'
+      AND jsonb_typeof(l.reinforcement_exercise) = 'object'
+      AND jsonb_typeof(l.alternate_exercise) = 'object'
+    FROM public.lessons l
+    WHERE l.id = 'lesson_eng_b1_u3_checkpoint'
+  ),
+  'FIX-P0-01: admin_save_lesson preserves requires_mastery, cefr_level, pedagogy17, reinforcement_exercise, and alternate_exercise'
+);
+
+-- 6e. sanitize_learner_content scrambles 2-token and palindrome orderedTokens arrays
+SELECT pg_temp.assert_w1b2(
+  (public.sanitize_learner_content('{"id":"q_2tok","orderedTokens":["Hello","world"]}'::jsonb)->'orderedTokens')
+    = '["world","Hello"]'::jsonb
+  AND (public.sanitize_learner_content('{"id":"q_pal","orderedTokens":["a","b","a"]}'::jsonb)->'orderedTokens')
+    IS DISTINCT FROM '["a","b","a"]'::jsonb,
+  'FIX-P0-01: sanitize_learner_content scrambles 2-token and palindrome orderedTokens arrays'
+);
+
 ROLLBACK;
