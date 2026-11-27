@@ -21,8 +21,8 @@ Full detailed engineering & test verification report: [docs/implementation/wave-
   - `node scripts/validate-english-curriculum.mjs` (`EXIT=0`, `[OK schema+curriculum]`).
   - All `31` migrations applied cleanly + `2x` idempotency verified under both `Cloud-Default` and `Legacy-Grant` postures.
   - All `12/12` SQL regression suites passed on both postures (`24/24` runs), including `supabase/tests/w1_b3_placement_cefr_priors_and_prereqs_regression.sql` and updated `supabase/tests/p1_persistence_regression.sql` & `supabase/tests/placement_sessions_regression.sql`.
-  - 8-session concurrent `advance_placement` + `submit_answer_attempt` race verified (`attempts:xp:score = 1:2:55`, `0` deadlocks).
+  - 8-session concurrent `advance_placement` + `submit_answer_attempt` race verified (`attempts:xp:score:sessions = 1:2:51:1`, `0` deadlocks).
 - **Web & Deno:**
-  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`62/62` files, `370/370` tests, `5/5` `W1B3PlacementCefrPriorsAndPrereqs.test.tsx`), `npm run build` (`2382` modules, `0` warnings, `W0-B2` `6/6` bundle answer-key isolation preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/index.ts supabase/functions/yolchi-tutor/math-pilot.ts` (`EXIT=0`).
+  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`62/62` files, `371/371` tests, `6/6` `W1B3PlacementCefrPriorsAndPrereqs.test.tsx`), `npm run build` (`2382` modules, `0` warnings, `W0-B2` `6/6` bundle answer-key isolation preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/index.ts supabase/functions/yolchi-tutor/math-pilot.ts` (`EXIT=0`).
 - **Flutter Mobile:**
-  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b3_placement_cefr_priors_and_prereqs_test.dart` (`6/6` passed), full `flutter test --no-pub` (`538` passed, `2` env-gated skips, `0` failed).
+  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b3_placement_cefr_priors_and_prereqs_test.dart` (`7/7` passed), full `flutter test --no-pub` (`539` passed, `2` env-gated skips, `0` failed).

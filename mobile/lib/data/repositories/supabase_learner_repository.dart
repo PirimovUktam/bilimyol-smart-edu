@@ -1229,6 +1229,15 @@ class SupabaseLearnerRepository extends ILearnerRepository {
   }
 
   static ConfidenceLevel? _parseConfidence(Object? raw, {int? attemptCount}) {
+    if (attemptCount != null) {
+      return SkillScoringEngine.computeConfidence(attemptCount);
+    }
+    if (raw is num) {
+      final numeric = raw.toDouble();
+      if (numeric < 0.55) return ConfidenceLevel.low;
+      if (numeric < 0.80) return ConfidenceLevel.medium;
+      return ConfidenceLevel.high;
+    }
     switch (raw?.toString()) {
       case 'low':
         return ConfidenceLevel.low;
@@ -1237,9 +1246,7 @@ class SupabaseLearnerRepository extends ILearnerRepository {
       case 'high':
         return ConfidenceLevel.high;
       default:
-        return attemptCount != null
-            ? SkillScoringEngine.computeConfidence(attemptCount)
-            : null;
+        return null;
     }
   }
 

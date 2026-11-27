@@ -446,7 +446,58 @@ class InMemoryLearnerRepository extends ILearnerRepository {
           nextPlacementSkillScores[data.courseId] =
               Map<String, SkillScore>.from(data.skillScores!);
         }
+        var nextScoresByCourse = _profile.scoresByCourse;
+        if (data.courseId == 'course_eng_01' &&
+            data.skillScores != null &&
+            data.skillScores!.isNotEmpty) {
+          final engBaselines = Map<String, _SkillBaseline>.from(
+            _skillBaselines['course_eng_01'] ?? {},
+          );
+          for (final entry in data.skillScores!.entries) {
+            final existingCount = _answerAttempts
+                .where(
+                  (a) =>
+                      a.courseId == 'course_eng_01' &&
+                      a.skillId == entry.key &&
+                      a.lessonId != 'placement_test',
+                )
+                .length;
+            engBaselines[entry.key] = _SkillBaseline(
+              score: entry.value.score,
+              attemptCountAtBaseline: existingCount,
+            );
+          }
+          _skillBaselines['course_eng_01'] = engBaselines;
+
+          final existingEngScores = nextScoresByCourse['course_eng_01'];
+          if (existingEngScores != null) {
+            final filteredEngScores = Map<String, SkillScore>.from(
+              existingEngScores,
+            );
+            for (final skillId in existingEngScores.keys) {
+              final hasPriorCurriculumAttempt = _answerAttempts.any(
+                (a) =>
+                    a.courseId == 'course_eng_01' &&
+                    a.skillId == skillId &&
+                    a.lessonId != 'placement_test' &&
+                    !starterLessons.containsKey(a.lessonId),
+              );
+              if (!hasPriorCurriculumAttempt) {
+                filteredEngScores.remove(skillId);
+              }
+            }
+            nextScoresByCourse = Map<String, Map<String, SkillScore>>.from(
+              nextScoresByCourse,
+            );
+            if (filteredEngScores.isEmpty) {
+              nextScoresByCourse.remove('course_eng_01');
+            } else {
+              nextScoresByCourse['course_eng_01'] = filteredEngScores;
+            }
+          }
+        }
         _profile = _profile.copyWith(
+          scoresByCourse: nextScoresByCourse,
           placementScoreByCourse: nextPlacementScores,
           placementCefrByCourse: nextPlacementCefr,
           placementSkillScoresByCourse: nextPlacementSkillScores,
@@ -616,8 +667,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
       );
     }
 
-    final deduplicateByQuestion =
-        courseId == 'course_eng_01' && baseline == null;
+    final deduplicateByQuestion = courseId == 'course_eng_01';
     var weightedCorrect = 0.0;
     var weightedTotal = 0.0;
     var unadjustedEarned = 0.0;
@@ -662,7 +712,7 @@ class InMemoryLearnerRepository extends ILearnerRepository {
 
     final priorScore = courseId != 'course_eng_01'
         ? (baseline?.score ?? placementPrior)
-        : (baseline?.score ?? (!hasNonStarterAttempt ? placementPrior : null));
+        : (!hasNonStarterAttempt ? (baseline?.score ?? placementPrior) : null);
 
     if (postBaselineAttempts.isEmpty && priorScore == null) {
       return null;

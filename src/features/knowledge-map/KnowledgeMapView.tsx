@@ -39,8 +39,8 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
   const lessonScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
   const placementSkillScores = courseId ? profile?.placementSkillScoresByCourse?.[courseId] ?? {} : {};
   const scores =
-    courseId === 'course_eng_01' && Object.keys(lessonScores).length === 0
-      ? placementSkillScores
+    courseId === 'course_eng_01'
+      ? { ...placementSkillScores, ...lessonScores }
       : lessonScores;
   const path = roadmap?.courseId === courseId ? roadmap : null;
   const mathPilot = usesMathMastery(courseId);

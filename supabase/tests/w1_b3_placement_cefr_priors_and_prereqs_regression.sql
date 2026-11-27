@@ -491,10 +491,258 @@ BEGIN
     v_state->'result'->>'assessed_cefr' = 'Pre-A1'
     AND v_state->'result'->>'unlocked_cefr_floor' = 'A2'
     AND v_state->'result'->>'placement_cefr' = 'A2'
+    AND (SELECT bool_and((kv.value->>'confidence') = 'low')
+         FROM jsonb_each(v_state->'result'->'skill_scores') kv)
     AND (SELECT placement_cefr_by_course->>'course_eng_01' = 'A2'
          FROM public.learner_profiles WHERE user_id = v_uid),
-    'FIX-P2-09: reassessment after node_eng_a1_exit reports assessed_cefr=Pre-A1 while preserving unlocked_cefr_floor=A2'
+    'FIX-P2-09: reassessment after node_eng_a1_exit reports assessed_cefr=Pre-A1, confidence=low (attemptCount=2), while preserving unlocked_cefr_floor=A2'
   );
+END;
+$$;
+
+-- ============================================================================
+-- 6. Cross-Platform Parity & Interleaved Retake / Tamper Hardening
+-- ============================================================================
+DO $$
+DECLARE
+  v_cefr_5_of_8 JSONB;
+  v_cefr_2_of_8 JSONB;
+  v_cefr_empty JSONB;
+  v_uid_interleave UUID := '00000000-0000-0000-0000-000000000935';
+  v_uid_retake_eng UUID := '00000000-0000-0000-0000-000000000936';
+  v_uid_forger UUID := '00000000-0000-0000-0000-000000000937';
+  v_state JSONB;
+  v_session_id UUID;
+  v_qid TEXT;
+  v_idx INT;
+  v_wrong_res JSONB;
+  v_fb_retry JSONB;
+BEGIN
+  INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+    (v_uid_interleave, 'w1b3-interleave@example.invalid', '{"first_name":"Diyor"}'),
+    (v_uid_retake_eng, 'w1b3-retake-eng@example.invalid', '{"first_name":"Zarina"}'),
+    (v_uid_forger, 'w1b3-forger@example.invalid', '{"first_name":"Temur"}');
+
+  -- 6a. Exact Web/Mobile CEFR parity on 5/8, 2/8, and empty submissions
+  v_cefr_5_of_8 := bilimyol_private.evaluate_english_placement_cefr(
+    NULL,
+    jsonb_build_array(
+      jsonb_build_object('question_id', 'q_eng_place_vocab_a2', 'selected_index', 3),
+      jsonb_build_object('question_id', 'q_eng_place_grammar_a2', 'selected_index', 1),
+      jsonb_build_object('question_id', 'q_eng_place_listening_a2', 'selected_index', 1),
+      jsonb_build_object('question_id', 'q_eng_place_reading_a2', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_vocab_b1', 'selected_index', 1),
+      jsonb_build_object('question_id', 'q_eng_place_grammar_b1', 'selected_index', 3),
+      jsonb_build_object('question_id', 'q_eng_place_listening_b1', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_reading_a1', 'selected_index', 0)
+    )
+  );
+  v_cefr_2_of_8 := bilimyol_private.evaluate_english_placement_cefr(
+    NULL,
+    jsonb_build_array(
+      jsonb_build_object('question_id', 'q_eng_place_vocab_a2', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_grammar_a2', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_listening_a2', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_reading_a2', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_vocab_a1', 'selected_index', 2),
+      jsonb_build_object('question_id', 'q_eng_place_grammar_a1', 'selected_index', 0),
+      jsonb_build_object('question_id', 'q_eng_place_listening_a1', 'selected_index', 1),
+      jsonb_build_object('question_id', 'q_eng_place_reading_a1', 'selected_index', 0)
+    )
+  );
+  v_cefr_empty := bilimyol_private.evaluate_english_placement_cefr(NULL, '[]'::jsonb);
+
+  PERFORM pg_temp.assert_w1b3(
+    v_cefr_5_of_8->>'assessed_cefr' = 'A1'
+    AND v_cefr_2_of_8->>'assessed_cefr' = 'Pre-A1'
+    AND v_cefr_empty->>'assessed_cefr' = 'Pre-A1',
+    'FIX-P0-11 & FIX-P2-09: SQL evaluate_english_placement_cefr matches Web/Mobile cutoffs 1:1 (5/8->A1, 2/8->Pre-A1, empty->Pre-A1)'
+  );
+
+  -- 6b. Confidence & calibrated 0/1 / 1/1 parity with Web & Mobile
+  PERFORM pg_temp.assert_w1b3(
+    bilimyol_private.compute_confidence_label(2) = 'low'
+    AND bilimyol_private.compute_confidence_numeric(2) = 0.35
+    AND bilimyol_private.compute_confidence_label(3) = 'medium'
+    AND bilimyol_private.compute_confidence_label(6) = 'high'
+    AND bilimyol_private.compute_calibrated_skill_score(0, 0.5, NULL, true, false) = 0
+    AND bilimyol_private.compute_calibrated_skill_score(0, 1.0, NULL, false, true) = 0
+    AND bilimyol_private.compute_calibrated_skill_score(0.5, 0.5, NULL, true, false) = 51
+    AND bilimyol_private.compute_calibrated_skill_score(1.0, 1.0, NULL, false, true) = 75,
+    'FIX-P1-09 & FIX-P2-09: SQL confidence (2->low) and calibrated scores (0/1->0, 1/1 starter->51, 1/1 regular->75) match Web/Mobile 1:1'
+  );
+
+  -- 6c. 0/1 starter wrong -> 8/8 B1 placement clears stale pre-placement starter 0% row,
+  --     and constructive fill_blank retry earns full 100% without 0.75 choice penalty
+  PERFORM set_config('request.jwt.claim.sub', v_uid_interleave::TEXT, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_wrong_res := public.submit_answer_attempt(
+    v_uid_interleave, 'course_eng_01', 'skill_eng_vocab',
+    'lesson_eng_starter', 'q_lesson_eng_starter_quiz', 0, 'wrong text', 'w1b3-int-wrong-1'
+  );
+  EXECUTE 'RESET ROLE';
+
+  PERFORM pg_temp.assert_w1b3(
+    (v_wrong_res->>'new_skill_score')::INT = 0,
+    'FIX-P1-09: 0/1 starter wrong without placement yields 0% (needs_remediation), never 44%'
+  );
+
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_state := public.advance_placement('course_eng_01');
+  EXECUTE 'RESET ROLE';
+  v_session_id := (v_state->>'session_id')::UUID;
+  FOR i IN 1..8 LOOP
+    v_qid := v_state->'question'->>'id';
+    SELECT correct_index INTO v_idx FROM public.questions WHERE id = v_qid;
+    EXECUTE 'SET LOCAL ROLE authenticated';
+    v_state := public.advance_placement('course_eng_01', v_session_id, v_qid, v_idx);
+    EXECUTE 'RESET ROLE';
+  END LOOP;
+
+  PERFORM pg_temp.assert_w1b3(
+    NOT EXISTS (
+      SELECT 1 FROM public.learner_skill_scores
+      WHERE user_id = v_uid_interleave AND course_id = 'course_eng_01'
+    )
+    AND (SELECT placement_cefr_by_course->>'course_eng_01' = 'B1'
+         FROM public.learner_profiles WHERE user_id = v_uid_interleave),
+    'FIX-P0-02 & FIX-P1-46: 8/8 B1 placement supersedes pre-placement 0/1 starter attempt without leaving 0% remediation drag'
+  );
+
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  PERFORM public.submit_answer_attempt(
+    v_uid_interleave, 'course_eng_01', 'skill_eng_grammar',
+    'lesson_eng_a1_m2_daily_life', 'q_eng_a1_m2_daily_fill', 0, 'wrong verb', 'w1b3-fb-miss'
+  );
+  v_fb_retry := public.submit_answer_attempt(
+    v_uid_interleave, 'course_eng_01', 'skill_eng_grammar',
+    'lesson_eng_a1_m2_daily_life', 'q_eng_a1_m2_daily_fill', 0, 'studies', 'w1b3-fb-hit'
+  );
+  EXECUTE 'RESET ROLE';
+
+  PERFORM pg_temp.assert_w1b3(
+    (v_fb_retry->>'is_correct')::BOOLEAN = true
+    AND (v_fb_retry->>'new_skill_score')::INT = 100,
+    'FIX-P1-09: constructive fill_blank retry earns 100% without 0.75 multiple-choice spoiler discount'
+  );
+
+  SELECT COALESCE(
+    (SELECT q.correct_index FROM public.questions q WHERE q.id = 'q_eng_a1_u1_cp_main'),
+    (SELECT (COALESCE(s->'interactiveQuestion', s->'interactive_question')->>'correctIndex')::INT
+     FROM public.lessons l, jsonb_array_elements(l.steps) s
+     WHERE l.id = 'lesson_eng_a1_u1_checkpoint'
+       AND COALESCE(s->'interactiveQuestion', s->'interactive_question')->>'id' = 'q_eng_a1_u1_cp_main'
+     LIMIT 1),
+    0
+  ) INTO v_idx;
+
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  PERFORM public.submit_answer_attempt(
+    v_uid_interleave, 'course_eng_01', 'skill_eng_vocab',
+    'lesson_eng_a1_u1_checkpoint', 'q_eng_a1_u1_cp_main', (v_idx + 1) % 4, NULL, 'w1b3-mc-miss'
+  );
+  v_fb_retry := public.submit_answer_attempt(
+    v_uid_interleave, 'course_eng_01', 'skill_eng_vocab',
+    'lesson_eng_a1_u1_checkpoint', 'q_eng_a1_u1_cp_main', v_idx, NULL, 'w1b3-mc-hit'
+  );
+  EXECUTE 'RESET ROLE';
+
+  PERFORM pg_temp.assert_w1b3(
+    (v_fb_retry->>'is_correct')::BOOLEAN = true
+    AND (v_fb_retry->>'new_skill_score')::INT = 75,
+    'FIX-P1-09: spoiled multiple_choice retry earns 75% (0.75 credit) on course_eng_01'
+  );
+
+  -- 6d. Day-1 0/8 placement -> starter 1/1 (11%) -> Day-2 abandoned restart preserves Day-1 -> Day-2 0/8 retake supersedes starter (never 100%)
+  PERFORM set_config('request.jwt.claim.sub', v_uid_retake_eng::TEXT, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_state := public.advance_placement('course_eng_01');
+  EXECUTE 'RESET ROLE';
+  v_session_id := (v_state->>'session_id')::UUID;
+  FOR i IN 1..8 LOOP
+    v_qid := v_state->'question'->>'id';
+    SELECT (correct_index + 1) % 4 INTO v_idx FROM public.questions WHERE id = v_qid;
+    EXECUTE 'SET LOCAL ROLE authenticated';
+    v_state := public.advance_placement('course_eng_01', v_session_id, v_qid, v_idx);
+    EXECUTE 'RESET ROLE';
+  END LOOP;
+
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  PERFORM public.submit_answer_attempt(
+    v_uid_retake_eng, 'course_eng_01', 'skill_eng_vocab',
+    'lesson_eng_starter', 'q_lesson_eng_starter_quiz', 0, 'I''m Sam', 'w1b3-ret-st-1'
+  );
+  EXECUTE 'RESET ROLE';
+
+  UPDATE bilimyol_private.placement_sessions
+  SET completed_at = completed_at - interval '2 days',
+      question_started_at = question_started_at - interval '2 days'
+  WHERE user_id = v_uid_retake_eng AND course_id = 'course_eng_01';
+  UPDATE public.placement_attempts
+  SET started_at = started_at - interval '2 days',
+      completed_at = completed_at - interval '2 days'
+  WHERE user_id = v_uid_retake_eng AND course_id = 'course_eng_01';
+  UPDATE public.answer_attempts
+  SET created_at = created_at - interval '1 day'
+  WHERE user_id = v_uid_retake_eng AND course_id = 'course_eng_01';
+
+  -- Start Day-2 retake (p_restart => true) and abandon mid-way: prior Day-1 placement & 11% starter remain intact
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_state := public.advance_placement('course_eng_01', p_restart => true);
+  EXECUTE 'RESET ROLE';
+  v_session_id := (v_state->>'session_id')::UUID;
+
+  PERFORM pg_temp.assert_w1b3(
+    (SELECT (placement_score_by_course->>'course_eng_01')::INT = 0
+         AND placement_cefr_by_course->>'course_eng_01' = 'Pre-A1'
+     FROM public.learner_profiles WHERE user_id = v_uid_retake_eng)
+    AND (SELECT score = 11 FROM public.learner_skill_scores
+         WHERE user_id = v_uid_retake_eng AND course_id = 'course_eng_01' AND skill_id = 'skill_eng_vocab'),
+    'FIX-P1-46: incomplete restarted placement session preserves prior placement summary and starter score until finished'
+  );
+
+  -- Finish Day-2 0/8 retake: must supersede pre-retake starter without inflating 1/1 starter to 100%
+  FOR i IN 1..8 LOOP
+    v_qid := v_state->'question'->>'id';
+    SELECT (correct_index + 1) % 4 INTO v_idx FROM public.questions WHERE id = v_qid;
+    EXECUTE 'SET LOCAL ROLE authenticated';
+    v_state := public.advance_placement('course_eng_01', v_session_id, v_qid, v_idx);
+    EXECUTE 'RESET ROLE';
+  END LOOP;
+
+  PERFORM pg_temp.assert_w1b3(
+    NOT EXISTS (
+      SELECT 1 FROM public.learner_skill_scores
+      WHERE user_id = v_uid_retake_eng AND course_id = 'course_eng_01' AND score > 25
+    ),
+    'FIX-P1-09 & FIX-P1-46: Day-2 0/8 retake never inflates prior Day-1 starter attempt to 100%'
+  );
+
+  -- 6e. Combined preference + derived-placement UPDATE and INSERT forgery both blocked with 42501
+  DELETE FROM public.learner_profiles WHERE user_id = v_uid_forger;
+  PERFORM set_config('request.jwt.claim.sub', v_uid_forger::TEXT, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  BEGIN
+    INSERT INTO public.learner_profiles (user_id, daily_minutes, placement_score_by_course)
+    VALUES (v_uid_forger, 30, '{"course_eng_01":100}'::jsonb);
+    RAISE EXCEPTION 'ASSERT [W1-B3]: authenticated INSERT forged placement_score_by_course';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  INSERT INTO public.learner_profiles (user_id, daily_minutes)
+  VALUES (v_uid_forger, 30);
+
+  BEGIN
+    UPDATE public.learner_profiles
+    SET daily_minutes = 60,
+        placement_skill_scores_by_course = '{"course_eng_01":{"skill_eng_vocab":{"score":100}}}'::jsonb
+    WHERE user_id = v_uid_forger;
+    RAISE EXCEPTION 'ASSERT [W1-B3]: authenticated combined UPDATE forged placement_skill_scores_by_course';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  EXECUTE 'RESET ROLE';
 END;
 $$;
 

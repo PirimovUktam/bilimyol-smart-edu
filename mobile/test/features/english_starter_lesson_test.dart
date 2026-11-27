@@ -1180,7 +1180,7 @@ void main() {
         'node_eng_a1_u2_checkpoint',
         'node_eng_vocab',
         'node_eng_list',
-        'node_eng_a1_m3_listening_time',
+        'node_eng_a1_m3_time_schedule',
         'node_eng_a1_u3_checkpoint',
       ]) {
         await repo.markNodeCompleted(prereqId, courseId: 'course_eng_01');

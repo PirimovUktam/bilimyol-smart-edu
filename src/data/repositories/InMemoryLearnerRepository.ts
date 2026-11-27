@@ -318,7 +318,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
         : nonPlacementAttempts;
 
     const placementPrior = this.profile.placementSkillScoresByCourse?.[courseId]?.[skillId]?.score;
-    const deduplicateByQuestion = courseId === 'course_eng_01' && !baseline;
+    const deduplicateByQuestion = courseId === 'course_eng_01';
 
     const latestByQuestion = new Map<string, { isCorrect: boolean; firstIsCorrect: boolean; lessonId?: string }>();
     for (const a of postBaselineAttempts) {
@@ -376,7 +376,7 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
     const priorScore =
       courseId !== 'course_eng_01'
         ? (baseline?.score ?? placementPrior ?? null)
-        : (baseline?.score ?? (!hasNonStarterAttempt ? (placementPrior ?? null) : null));
+        : (!hasNonStarterAttempt ? (baseline?.score ?? placementPrior ?? null) : null);
 
     let score: number;
     if (postBaselineAttempts.length === 0) {
@@ -413,6 +413,44 @@ export class InMemoryLearnerRepository implements ILearnerRepository {
       placementSkillScoresByCourse: updates.placementSkillScoresByCourse || this.profile.placementSkillScoresByCourse || {},
       flashcardSrsByCourse: updates.flashcardSrsByCourse || this.profile.flashcardSrsByCourse || {},
     };
+    const engPlacementSkills = updates.placementSkillScoresByCourse?.['course_eng_01'];
+    if (engPlacementSkills && Object.keys(engPlacementSkills).length > 0 && !updates.scoresByCourse) {
+      const engBaselines = { ...(this.skillBaselines['course_eng_01'] ?? {}) };
+      for (const [skillId, entry] of Object.entries(engPlacementSkills)) {
+        const existingCount = this.answerAttempts.filter(
+          (a) => a.courseId === 'course_eng_01' && a.skillId === skillId && a.lessonId !== 'placement_test'
+        ).length;
+        engBaselines[skillId] = {
+          score: entry.score,
+          attemptCountAtBaseline: existingCount,
+        };
+      }
+      this.skillBaselines['course_eng_01'] = engBaselines;
+
+      const existingEngScores = this.profile.scoresByCourse?.['course_eng_01'];
+      if (existingEngScores) {
+        const nextEngScores = { ...existingEngScores };
+        for (const skillId of Object.keys(nextEngScores)) {
+          const hasPriorCurriculumAttempt = this.answerAttempts.some(
+            (a) =>
+              a.courseId === 'course_eng_01' &&
+              a.skillId === skillId &&
+              a.lessonId !== 'placement_test' &&
+              !(a.lessonId && STARTER_LESSONS[a.lessonId])
+          );
+          if (!hasPriorCurriculumAttempt) {
+            delete nextEngScores[skillId];
+          }
+        }
+        const nextScoresByCourse = { ...this.profile.scoresByCourse };
+        if (Object.keys(nextEngScores).length === 0) {
+          delete nextScoresByCourse['course_eng_01'];
+        } else {
+          nextScoresByCourse['course_eng_01'] = nextEngScores;
+        }
+        this.profile = { ...this.profile, scoresByCourse: nextScoresByCourse };
+      }
+    }
     this.saveTabProgress();
     return this.getProfile();
   }

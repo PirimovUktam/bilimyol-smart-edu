@@ -534,5 +534,110 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'preserves all 4 English placement skills on KnowledgeMapScreen after 1 lesson, supersedes pre-placement starter misses, and wraps cleanly at 360dp @ 2.0x in Russian',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = const Size(360, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final courseRepo = InMemoryCourseRepository();
+        final learnerRepo = InMemoryLearnerRepository();
+        final useCase = SubmitPlacementTestUseCase(courseRepo, learnerRepo);
+
+        // 0/1 starter miss BEFORE placement must be superseded by 8/8 B1 placement
+        await learnerRepo.recordAnswerAttempt(
+          courseId: 'course_eng_01',
+          skillId: 'skill_eng_vocab',
+          lessonId: 'lesson_eng_starter',
+          questionId: 'q_lesson_eng_starter_quiz',
+          selectedIndex: 0,
+          selectedAnswer: 'wrong',
+          isCorrect: false,
+        );
+        final engBank = await courseRepo.getPlacementQuestions('course_eng_01');
+        final a2AndB1 = engBank
+            .where((q) => q.difficulty != QuestionDifficulty.easy)
+            .toList();
+        await useCase.execute(
+          'course_eng_01',
+          [
+            for (final q in a2AndB1)
+              QuestionAnswerSubmission(
+                questionId: q.id,
+                selectedIndex: q.correctIndex,
+                isCorrect: true,
+              ),
+          ],
+        );
+        expect(
+          (await learnerRepo.getProfile()).scoresByCourse['course_eng_01'],
+          isNull,
+        );
+
+        // Complete 1 vocab lesson answer: KnowledgeMapScreen must still display all 4 evaluated skills
+        await learnerRepo.recordAnswerAttempt(
+          courseId: 'course_eng_01',
+          skillId: 'skill_eng_vocab',
+          lessonId: 'lesson_eng_a1_m1_greetings',
+          questionId: 'q_eng_a1_m1_greet_match',
+          selectedIndex: 0,
+          selectedAnswer: 'Good morning',
+          isCorrect: true,
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            learnerRepositoryProvider.overrideWithValue(learnerRepo),
+            lessonAudioControllerFactoryProvider.overrideWithValue(
+              () => FakeLessonAudioController(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(learnerStateNotifierProvider.notifier).loadProfile();
+        await container.read(courseStateNotifierProvider.notifier).init();
+        await container
+            .read(courseStateNotifierProvider.notifier)
+            .selectCourse('course_eng_01');
+
+        final router = GoRouter(
+          initialLocation: '/knowledge-map',
+          routes: [
+            GoRoute(
+              path: '/knowledge-map',
+              builder: (_, _) => const KnowledgeMapScreen(),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MediaQuery(
+              data: const MediaQueryData(
+                size: Size(360, 800),
+                textScaler: TextScaler.linear(2.0),
+              ),
+              child: MaterialApp.router(
+                locale: const Locale('ru'),
+                supportedLocales: AppStrings.supportedLocales,
+                localizationsDelegates: AppStrings.localizationsDelegates,
+                routerConfig: router,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.textContaining('Точность: Начальная'), findsWidgets);
+        expect(find.text('100%'), findsWidgets);
+      },
+    );
   });
 }

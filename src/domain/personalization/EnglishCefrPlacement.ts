@@ -96,9 +96,17 @@ export function evaluateEnglishPlacementCefr(
   }
 
   let unlockedCefrFloor: PlacementCefrLevel | null = null;
-  if (completedNodeIds.includes('node_eng_a2_exit')) {
+  if (
+    completedNodeIds.includes('node_eng_b1_exit') ||
+    completedNodeIds.includes('node_eng_a2_exit') ||
+    completedNodeIds.includes('lesson_eng_b1_exit_assessment') ||
+    completedNodeIds.includes('lesson_eng_a2_exit_assessment')
+  ) {
     unlockedCefrFloor = 'B1';
-  } else if (completedNodeIds.includes('node_eng_a1_exit')) {
+  } else if (
+    completedNodeIds.includes('node_eng_a1_exit') ||
+    completedNodeIds.includes('lesson_eng_a1_exit_assessment')
+  ) {
     unlockedCefrFloor = 'A2';
   }
 

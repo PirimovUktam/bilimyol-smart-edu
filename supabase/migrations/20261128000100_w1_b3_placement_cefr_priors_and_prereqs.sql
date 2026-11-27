@@ -569,8 +569,8 @@ IMMUTABLE
 SET search_path = ''
 AS $$
   SELECT CASE
-    WHEN COALESCE(p_attempt_count, 0) < 2 THEN 'low'
-    WHEN COALESCE(p_attempt_count, 0) < 4 THEN 'medium'
+    WHEN COALESCE(p_attempt_count, 0) < 3 THEN 'low'
+    WHEN COALESCE(p_attempt_count, 0) <= 5 THEN 'medium'
     ELSE 'high'
   END;
 $$;
@@ -585,8 +585,8 @@ IMMUTABLE
 SET search_path = ''
 AS $$
   SELECT CASE
-    WHEN COALESCE(p_attempt_count, 0) < 2 THEN 0.35::NUMERIC(3,2)
-    WHEN COALESCE(p_attempt_count, 0) < 4 THEN 0.65::NUMERIC(3,2)
+    WHEN COALESCE(p_attempt_count, 0) < 3 THEN 0.35::NUMERIC(3,2)
+    WHEN COALESCE(p_attempt_count, 0) <= 5 THEN 0.65::NUMERIC(3,2)
     ELSE 0.90::NUMERIC(3,2)
   END;
 $$;
@@ -609,38 +609,54 @@ AS $$
 DECLARE
   v_prior_weight CONSTANT NUMERIC := 4.0;
   v_starter_max CONSTANT INT := 55;
-  v_base NUMERIC;
+  v_prior_clamped INT;
+  v_prior_correct NUMERIC;
   v_raw INT;
   v_clamped INT;
+  v_starter_ceiling INT;
 BEGIN
-  IF p_weighted_total IS NULL OR p_weighted_total <= 0 THEN
-    RETURN GREATEST(0, LEAST(100, COALESCE(p_prior_score, 0)));
+  IF p_prior_score IS NOT NULL THEN
+    v_prior_clamped := GREATEST(0, LEAST(100, p_prior_score));
+    IF p_weighted_total IS NULL OR p_weighted_total <= 0 THEN
+      RETURN v_prior_clamped;
+    END IF;
+
+    IF NOT COALESCE(p_has_non_starter, false)
+       AND v_prior_clamped >= v_starter_max
+       AND p_weighted_correct >= p_weighted_total THEN
+      RETURN v_prior_clamped;
+    END IF;
+
+    v_prior_correct := (v_prior_clamped::NUMERIC / 100.0) * v_prior_weight;
+    v_raw := pg_catalog.round(
+      ((v_prior_correct + p_weighted_correct) / (v_prior_weight + p_weighted_total)) * 100.0
+    )::INT;
+    v_clamped := GREATEST(0, LEAST(100, v_raw));
+
+    IF NOT COALESCE(p_has_non_starter, false) THEN
+      v_starter_ceiling := GREATEST(v_starter_max, v_prior_clamped);
+      RETURN LEAST(v_starter_ceiling, v_clamped);
+    END IF;
+
+    RETURN v_clamped;
   END IF;
 
-  v_base := CASE
-    WHEN p_prior_score IS NOT NULL THEN GREATEST(0, LEAST(100, p_prior_score))::NUMERIC
-    ELSE 50.0
-  END;
+  IF p_weighted_total IS NULL OR p_weighted_total <= 0
+     OR p_weighted_correct IS NULL OR p_weighted_correct <= 0 THEN
+    RETURN 0;
+  END IF;
 
-  IF p_prior_score IS NOT NULL
-     AND p_prior_score >= v_starter_max
-     AND NOT COALESCE(p_has_non_starter, false)
-     AND p_weighted_correct >= p_weighted_total THEN
-    RETURN GREATEST(0, LEAST(100, p_prior_score));
+  IF COALESCE(p_starter_only, false) THEN
+    v_raw := pg_catalog.round(
+      ((p_weighted_correct + 0.25) / (p_weighted_total + 0.75)) * 85.0
+    )::INT;
+    RETURN LEAST(v_starter_max, GREATEST(0, LEAST(100, v_raw)));
   END IF;
 
   v_raw := pg_catalog.round(
-    ((v_base * v_prior_weight) + (p_weighted_correct * 100.0))
-    / (v_prior_weight + p_weighted_total)
+    ((p_weighted_correct + 0.5) / (p_weighted_total + 1.0)) * 100.0
   )::INT;
-  v_clamped := GREATEST(0, LEAST(100, v_raw));
-
-  IF COALESCE(p_starter_only, false)
-     OR (p_prior_score IS NOT NULL AND p_prior_score < v_starter_max AND NOT COALESCE(p_has_non_starter, false)) THEN
-    RETURN LEAST(v_starter_max, v_clamped);
-  END IF;
-
-  RETURN v_clamped;
+  RETURN GREATEST(0, LEAST(100, v_raw));
 END;
 $$;
 
@@ -821,12 +837,15 @@ DECLARE
   v_a1_acc NUMERIC := 0;
   v_a2_acc NUMERIC := 0;
   v_b1_acc NUMERIC := 0;
+  v_higher_total INT := 0;
+  v_higher_correct INT := 0;
+  v_higher_acc NUMERIC := 0;
   v_overall_acc NUMERIC := 0;
-  v_assessed TEXT := 'A1';
+  v_assessed TEXT := 'Pre-A1';
   v_floor TEXT := NULL;
-  v_effective TEXT := 'A1';
-  v_assessed_rank INT := 1;
-  v_floor_rank INT := 0;
+  v_effective TEXT := 'Pre-A1';
+  v_assessed_rank INT := 0;
+  v_floor_rank INT := -1;
 BEGIN
   IF p_user_id IS NOT NULL THEN
     IF EXISTS (
@@ -871,7 +890,9 @@ BEGIN
   banded AS (
     SELECT
       CASE
-        WHEN q.cefr_level IN ('A1', 'A2', 'B1') THEN q.cefr_level
+        WHEN q.cefr_level IN ('B1', 'B2', 'C1', 'C2') THEN 'B1'
+        WHEN q.cefr_level = 'A2' THEN 'A2'
+        WHEN q.cefr_level IN ('Pre-A1', 'A1') THEN 'A1'
         WHEN q.difficulty = 'easy' THEN 'A1'
         WHEN q.difficulty = 'hard' THEN 'B1'
         ELSE 'A2'
@@ -897,26 +918,39 @@ BEGIN
   FROM banded;
 
   IF v_total = 0 THEN
-    v_assessed := 'A1';
+    v_assessed := 'Pre-A1';
   ELSE
-    v_a1_acc := CASE WHEN v_a1_total > 0 THEN v_a1_correct::NUMERIC / v_a1_total::NUMERIC ELSE 0 END;
-    v_a2_acc := CASE WHEN v_a2_total > 0 THEN v_a2_correct::NUMERIC / v_a2_total::NUMERIC ELSE 0 END;
-    v_b1_acc := CASE WHEN v_b1_total > 0 THEN v_b1_correct::NUMERIC / v_b1_total::NUMERIC ELSE 0 END;
     v_overall_acc := v_correct::NUMERIC / v_total::NUMERIC;
+    v_higher_total := v_a2_total + v_b1_total;
+    v_higher_correct := v_a2_correct + v_b1_correct;
+    v_higher_acc := CASE
+      WHEN v_higher_total > 0 THEN v_higher_correct::NUMERIC / v_higher_total::NUMERIC
+      ELSE v_overall_acc
+    END;
+    v_a2_acc := CASE
+      WHEN v_a2_total > 0 THEN v_a2_correct::NUMERIC / v_a2_total::NUMERIC
+      ELSE v_higher_acc
+    END;
+    v_a1_acc := CASE
+      WHEN v_a1_total > 0 THEN v_a1_correct::NUMERIC / v_a1_total::NUMERIC
+      WHEN v_a2_total > 0 THEN v_a2_acc
+      ELSE v_overall_acc
+    END;
+    v_b1_acc := CASE
+      WHEN v_b1_total > 0 THEN v_b1_correct::NUMERIC / v_b1_total::NUMERIC
+      ELSE 0
+    END;
 
-    IF v_b1_total >= 2
-       AND v_b1_acc >= 0.5
-       AND (v_a2_total = 0 OR v_a2_acc >= 0.5)
-       AND v_overall_acc >= 0.625 THEN
+    IF v_overall_acc >= 0.875
+       AND v_a1_acc >= 0.75
+       AND v_higher_acc >= 0.75
+       AND v_b1_total >= 2
+       AND v_b1_acc >= 0.5 THEN
       v_assessed := 'B1';
-    ELSIF v_a2_total > 0
-          AND v_a2_acc >= 0.5
-          AND (v_b1_total > 0 OR v_a1_total = 0 OR v_a1_acc >= 0.5)
-          AND v_overall_acc >= 0.375 THEN
+    ELSIF (v_overall_acc >= 0.625 AND v_a1_acc >= 0.5 AND v_a2_acc >= 0.5)
+          OR (v_a2_total >= 3 AND v_a2_acc >= 0.75 AND v_a1_acc >= 0.5) THEN
       v_assessed := 'A2';
-    ELSIF v_b1_total = 0 AND v_a2_total = 0 AND v_overall_acc >= 0.75 THEN
-      v_assessed := 'A2';
-    ELSIF (v_a1_total > 0 AND v_a1_acc >= 0.5) OR v_overall_acc >= 0.25 THEN
+    ELSIF v_overall_acc >= 0.375 THEN
       v_assessed := 'A1';
     ELSE
       v_assessed := 'Pre-A1';
@@ -957,6 +991,85 @@ REVOKE ALL ON FUNCTION bilimyol_private.evaluate_english_placement_cefr(UUID, JS
 -- ----------------------------------------------------------------------------
 -- 6. Unified Course Skill Score Recalculation (FIX-P0-02, FIX-P1-09, FIX-P1-46)
 -- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION bilimyol_private.is_choice_question(
+  p_course_id TEXT,
+  p_question_id TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SET search_path = ''
+AS $$
+DECLARE
+  v_qtype TEXT;
+BEGIN
+  SELECT COALESCE(NULLIF(q.question_type, ''), 'multiple_choice')
+  INTO v_qtype
+  FROM public.questions q
+  WHERE q.id = p_question_id
+    AND q.course_id = p_course_id
+  LIMIT 1;
+
+  IF v_qtype IS NULL THEN
+    SELECT COALESCE(
+      NULLIF(COALESCE(cand.elem->>'questionType', cand.elem->>'question_type', cand.elem->>'mode', ''), ''),
+      'multiple_choice'
+    )
+    INTO v_qtype
+    FROM public.lessons l
+    CROSS JOIN LATERAL (
+      SELECT COALESCE(step_elem->'interactiveQuestion', step_elem->'interactive_question') AS elem
+      FROM pg_catalog.jsonb_array_elements(
+        CASE WHEN pg_catalog.jsonb_typeof(l.steps) = 'array' THEN l.steps ELSE '[]'::pg_catalog.jsonb END
+      ) AS step_elem
+      UNION ALL
+      SELECT l.reinforcement_exercise AS elem
+      WHERE pg_catalog.jsonb_typeof(l.reinforcement_exercise) = 'object'
+      UNION ALL
+      SELECT l.alternate_exercise AS elem
+      WHERE pg_catalog.jsonb_typeof(l.alternate_exercise) = 'object'
+    ) cand
+    WHERE l.course_id = p_course_id
+      AND pg_catalog.jsonb_typeof(cand.elem) = 'object'
+      AND cand.elem->>'id' = p_question_id
+    LIMIT 1;
+  END IF;
+
+  IF v_qtype IS NULL THEN
+    SELECT COALESCE(
+      NULLIF(COALESCE(g_cand.elem->>'questionType', g_cand.elem->>'question_type', g_cand.elem->>'mode', ''), ''),
+      'multiple_choice'
+    )
+    INTO v_qtype
+    FROM public.generated_lessons gl
+    CROSS JOIN LATERAL (
+      SELECT elem
+      FROM pg_catalog.jsonb_array_elements(
+        CASE WHEN pg_catalog.jsonb_typeof(gl.questions) = 'array' THEN gl.questions ELSE '[]'::pg_catalog.jsonb END
+      ) AS elem
+      UNION ALL
+      SELECT COALESCE(step_elem->'interactiveQuestion', step_elem->'interactive_question') AS elem
+      FROM pg_catalog.jsonb_array_elements(
+        CASE WHEN pg_catalog.jsonb_typeof(gl.steps) = 'array' THEN gl.steps ELSE '[]'::pg_catalog.jsonb END
+      ) AS step_elem
+    ) g_cand
+    WHERE gl.course_id = p_course_id
+      AND pg_catalog.jsonb_typeof(g_cand.elem) = 'object'
+      AND g_cand.elem->>'id' = p_question_id
+    LIMIT 1;
+  END IF;
+
+  RETURN COALESCE(v_qtype, 'multiple_choice') IN (
+    'multiple_choice',
+    'error_correction',
+    'conversation_completion'
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION bilimyol_private.is_choice_question(TEXT, TEXT)
+  FROM PUBLIC, anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION bilimyol_private.recalculate_course_skill_scores_for_user(
   p_user_id UUID,
   p_course_id TEXT
@@ -1045,6 +1158,14 @@ BEGIN
           AND aa.course_id = 'course_eng_01'
           AND aa.skill_id = lss.skill_id
           AND aa.lesson_id <> 'placement_test'
+          AND NOT (
+            v_latest_plc_at IS NOT NULL
+            AND aa.created_at <= v_latest_plc_at
+            AND (
+              aa.lesson_id IN ('lesson_math_starter', 'lesson_eng_starter', 'lesson_it_starter', 'lesson_logic_starter')
+              OR (v_starter_lesson_id IS NOT NULL AND aa.lesson_id = v_starter_lesson_id)
+            )
+          )
       )
       AND NOT EXISTS (
         SELECT 1
@@ -1064,6 +1185,15 @@ BEGIN
       WHERE aa.user_id = p_user_id
         AND aa.course_id = p_course_id
         AND aa.lesson_id <> 'placement_test'
+        AND NOT (
+          p_course_id = 'course_eng_01'
+          AND v_latest_plc_at IS NOT NULL
+          AND aa.created_at <= v_latest_plc_at
+          AND (
+            aa.lesson_id IN ('lesson_math_starter', 'lesson_eng_starter', 'lesson_it_starter', 'lesson_logic_starter')
+            OR (v_starter_lesson_id IS NOT NULL AND aa.lesson_id = v_starter_lesson_id)
+          )
+        )
       UNION
       SELECT ra.skill_id
       FROM public.reinforcement_attempts ra
@@ -1115,7 +1245,8 @@ BEGIN
            FROM post_attempts p_first
            WHERE p_first.question_id = pa.question_id
            ORDER BY p_first.created_at ASC, p_first.id ASC
-           LIMIT 1) AS first_is_correct
+           LIMIT 1) AS first_is_correct,
+          bilimyol_private.is_choice_question(p_course_id, pa.question_id) AS is_choice
         FROM post_attempts pa
         ORDER BY pa.question_id, pa.created_at DESC, pa.id DESC
       )
@@ -1128,14 +1259,14 @@ BEGIN
         COALESCE(pg_catalog.sum(
           CASE
             WHEN NOT pq.latest_is_correct THEN 0
-            WHEN NOT pq.first_is_correct AND NOT pq.is_starter THEN (CASE WHEN pq.is_starter THEN 0.5 ELSE 1.0 END) * 0.75
+            WHEN NOT pq.first_is_correct AND NOT pq.is_starter AND pq.is_choice THEN (CASE WHEN pq.is_starter THEN 0.5 ELSE 1.0 END) * 0.75
             ELSE (CASE WHEN pq.is_starter THEN 0.5 ELSE 1.0 END)
           END
         ), 0),
         COALESCE(pg_catalog.sum(
           CASE
             WHEN NOT pq.latest_is_correct THEN 0
-            WHEN NOT pq.first_is_correct AND NOT pq.is_starter THEN 0.75
+            WHEN NOT pq.first_is_correct AND NOT pq.is_starter AND pq.is_choice THEN 0.75
             ELSE 1.0
           END
         ), 0)
@@ -1156,23 +1287,54 @@ BEGIN
       END IF;
 
       IF v_post_count = 0 THEN
-        SELECT pg_catalog.count(*)::INT,
-               pg_catalog.count(*) FILTER (WHERE latest_all.is_correct)::INT
-        INTO v_unique_total, v_unique_correct
-        FROM (
-          SELECT DISTINCT ON (aa.question_id) aa.is_correct
+        WITH prior_curriculum AS (
+          SELECT
+            aa.id,
+            aa.question_id,
+            aa.is_correct,
+            aa.created_at
           FROM public.answer_attempts aa
           WHERE aa.user_id = p_user_id
             AND aa.course_id = p_course_id
             AND aa.skill_id = v_skill.skill_id
             AND aa.lesson_id <> 'placement_test'
-          ORDER BY aa.question_id, aa.created_at DESC, aa.id DESC
-        ) latest_all;
+            AND NOT (
+              aa.lesson_id IN ('lesson_math_starter', 'lesson_eng_starter', 'lesson_it_starter', 'lesson_logic_starter')
+              OR (v_starter_lesson_id IS NOT NULL AND aa.lesson_id = v_starter_lesson_id)
+            )
+        ),
+        prior_per_q AS (
+          SELECT DISTINCT ON (pc.question_id)
+            pc.question_id,
+            pc.is_correct AS latest_is_correct,
+            (SELECT p0.is_correct
+             FROM prior_curriculum p0
+             WHERE p0.question_id = pc.question_id
+             ORDER BY p0.created_at ASC, p0.id ASC
+             LIMIT 1) AS first_is_correct,
+            bilimyol_private.is_choice_question(p_course_id, pc.question_id) AS is_choice
+          FROM prior_curriculum pc
+          ORDER BY pc.question_id, pc.created_at DESC, pc.id DESC
+        )
+        SELECT
+          pg_catalog.count(*)::INT,
+          pg_catalog.count(*) FILTER (WHERE ppq.latest_is_correct)::INT,
+          COALESCE(pg_catalog.sum(
+            CASE
+              WHEN NOT ppq.latest_is_correct THEN 0
+              WHEN NOT ppq.first_is_correct AND ppq.is_choice THEN 0.75
+              ELSE 1.0
+            END
+          ), 0)
+        INTO v_unique_total, v_unique_correct, v_unadjusted_earned
+        FROM prior_per_q ppq;
 
-        v_score := CASE
-          WHEN v_unique_total > 0 THEN pg_catalog.round((v_unique_correct::NUMERIC / v_unique_total::NUMERIC) * 100.0)::INT
-          ELSE COALESCE(v_prior_score, 0)
-        END;
+        IF v_unique_total > 0 THEN
+          v_prior_score := NULL;
+          v_score := pg_catalog.round((v_unadjusted_earned / v_unique_total::NUMERIC) * 100.0)::INT;
+        ELSE
+          v_score := 0;
+        END IF;
       ELSIF v_prior_score IS NULL AND v_has_non_starter THEN
         v_score := pg_catalog.round((v_unadjusted_earned / GREATEST(1, v_unique_total)::NUMERIC) * 100.0)::INT;
       ELSE
@@ -2582,6 +2744,31 @@ BEGIN
   ) latest;
 
   v_before := CASE
+    WHEN v_unique_total > 0 AND NOT EXISTS (
+      SELECT 1
+      FROM public.answer_attempts aa_ns
+      WHERE aa_ns.user_id = v_uid
+        AND aa_ns.course_id = p_course_id
+        AND aa_ns.skill_id = p_skill_id
+        AND aa_ns.lesson_id <> 'placement_test'
+        AND (v_latest_plc_at IS NULL OR aa_ns.created_at > v_latest_plc_at)
+        AND aa_ns.lesson_id NOT IN (
+          p_reinforcement_node_id,
+          v_target.canonical_reinf_id,
+          'reinf_lesson_' || v_target.target_lesson_id,
+          'lesson_math_starter',
+          'lesson_eng_starter',
+          'lesson_it_starter',
+          'lesson_logic_starter'
+        )
+    ) THEN
+      bilimyol_private.compute_calibrated_skill_score(
+        (v_unique_correct::NUMERIC * 0.5),
+        (v_unique_total::NUMERIC * 0.5),
+        v_plc_skill_score,
+        (v_plc_skill_score IS NULL),
+        false
+      )
     WHEN v_unique_total > 0 THEN
       pg_catalog.round((v_unique_correct::NUMERIC / v_unique_total::NUMERIC) * 100)::INT
     ELSE

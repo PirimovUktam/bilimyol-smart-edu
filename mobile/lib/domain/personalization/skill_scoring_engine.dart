@@ -286,9 +286,13 @@ class SkillScoringEngine {
     }
 
     String? unlockedFloor;
-    if (completedNodeIds.contains('node_eng_a2_exit')) {
+    if (completedNodeIds.contains('node_eng_b1_exit') ||
+        completedNodeIds.contains('node_eng_a2_exit') ||
+        completedNodeIds.contains('lesson_eng_b1_exit_assessment') ||
+        completedNodeIds.contains('lesson_eng_a2_exit_assessment')) {
       unlockedFloor = 'B1';
-    } else if (completedNodeIds.contains('node_eng_a1_exit')) {
+    } else if (completedNodeIds.contains('node_eng_a1_exit') ||
+        completedNodeIds.contains('lesson_eng_a1_exit_assessment')) {
       unlockedFloor = 'A2';
     }
 

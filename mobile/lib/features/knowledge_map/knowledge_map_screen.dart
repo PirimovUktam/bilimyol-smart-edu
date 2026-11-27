@@ -1009,12 +1009,12 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
         final courseId = activeCourse?.id ?? '';
         final lessonScores =
             profile.scoresByCourse[courseId] ?? const <String, SkillScore>{};
-        final scores = lessonScores.isNotEmpty
-            ? lessonScores
-            : (courseId == 'course_eng_01'
-                  ? (profile.placementSkillScoresByCourse[courseId] ??
-                        const <String, SkillScore>{})
-                  : const <String, SkillScore>{});
+        final scores = courseId == 'course_eng_01'
+            ? <String, SkillScore>{
+                ...?profile.placementSkillScoresByCourse[courseId],
+                ...lessonScores,
+              }
+            : lessonScores;
         final skills = courseState.activeSkills;
 
         SkillScore? weakestSkill;
@@ -1173,15 +1173,13 @@ class _KnowledgeMapScreenState extends ConsumerState<KnowledgeMapScreen> {
                                             : scoreTextColor,
                                       ),
                                     ),
-                                    if (scoreObj != null &&
-                                        (scoreObj.confidence != null ||
-                                            scoreObj.attemptCount != null))
+                                    if (scoreObj != null)
                                       Builder(
                                         builder: (context) {
                                           final conf =
                                               scoreObj.confidence ??
                                               SkillScoringEngine.computeConfidence(
-                                                scoreObj.attemptCount!,
+                                                scoreObj.attemptCount ?? 2,
                                               );
                                           return AppBadge(
                                             text: s.confidenceBadgeLabel(conf),

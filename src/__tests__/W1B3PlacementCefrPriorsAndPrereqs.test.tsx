@@ -244,6 +244,36 @@ describe('W1-B3: Placement CEFR Calibration, Priors, Prerequisites & Retake Inte
       effectiveCefr: 'A2',
     });
 
+    const evalB1ExitFloor = evaluateEnglishPlacementCefr(engBank, allWrong, ['node_eng_b1_exit']);
+    expect(evalB1ExitFloor.unlockedCefrFloor).toBe('B1');
+    expect(evalB1ExitFloor.effectiveCefr).toBe('B1');
+
+    // Cross-platform boundary parity (5/8 -> A1 when A1 missed; 2/8 -> Pre-A1)
+    expect(
+      evaluateEnglishPlacementCefr(engBank, [
+        { questionId: 'q_eng_place_vocab_a2', selectedIndex: 3, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_grammar_a2', selectedIndex: 1, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_listening_a2', selectedIndex: 1, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_reading_a2', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_vocab_b1', selectedIndex: 1, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_grammar_b1', selectedIndex: 3, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_listening_b1', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_reading_a1', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+      ]).assessedCefr,
+    ).toBe('A1');
+    expect(
+      evaluateEnglishPlacementCefr(engBank, [
+        { questionId: 'q_eng_place_vocab_a2', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_grammar_a2', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_listening_a2', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_reading_a2', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_vocab_a1', selectedIndex: 2, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_grammar_a1', selectedIndex: 0, isCorrect: true, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_listening_a1', selectedIndex: 1, isCorrect: false, timeSpentSeconds: 4 },
+        { questionId: 'q_eng_place_reading_a1', selectedIndex: 0, isCorrect: false, timeSpentSeconds: 4 },
+      ]).assessedCefr,
+    ).toBe('Pre-A1');
+
     const engCourse = SEED_COURSES.find((c) => c.id === 'course_eng_01')!;
     const engSkills = SEED_SKILLS.filter((s) => s.courseId === 'course_eng_01');
 
@@ -340,5 +370,85 @@ describe('W1-B3: Placement CEFR Calibration, Priors, Prerequisites & Retake Inte
     );
     expect(screen.getByText(/Joriy sinov natijasi: Pre-A1/i)).toBeInTheDocument();
     expect(screen.getByText(/A2 bosqichi ochiq saqlanadi/i)).toBeInTheDocument();
+  });
+
+  it('supersedes pre-placement starter misses on English placement completion and preserves all 4 placement skills on KnowledgeMapView after 1 lesson', async () => {
+    const courseRepo = new InMemoryCourseRepository();
+    const learnerRepo = new InMemoryLearnerRepository();
+    await learnerRepo.resetAll();
+    const useCase = new SubmitPlacementTestUseCase(courseRepo, learnerRepo);
+
+    // 1. 0/1 starter miss BEFORE placement must be superseded by 8/8 B1 placement
+    await learnerRepo.recordAnswerAttempt({
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_vocab',
+      lessonId: 'lesson_eng_starter',
+      questionId: 'q_lesson_eng_starter_quiz',
+      selectedIndex: 0,
+      selectedAnswer: 'wrong',
+      isCorrect: false,
+    });
+    expect((await learnerRepo.getProfile()).scoresByCourse['course_eng_01']?.['skill_eng_vocab']?.score).toBe(0);
+
+    const engBank = PLACEMENT_QUESTIONS['course_eng_01'];
+    const a2AndB1 = engBank.filter((q) => q.difficulty !== 'easy');
+    await useCase.execute(
+      'course_eng_01',
+      a2AndB1.map((q) => ({
+        questionId: q.id,
+        selectedIndex: q.correctIndex ?? 0,
+        isCorrect: true,
+        timeSpentSeconds: 4,
+      })),
+    );
+    expect((await learnerRepo.getProfile()).scoresByCourse['course_eng_01']).toBeUndefined();
+
+    // 2. Answer 1 vocab curriculum question: KnowledgeMapView still shows all 4 evaluated topics
+    await learnerRepo.recordAnswerAttempt({
+      courseId: 'course_eng_01',
+      skillId: 'skill_eng_vocab',
+      lessonId: 'lesson_eng_a1_m1_greetings',
+      questionId: 'q_eng_a1_m1_greet_match',
+      selectedIndex: 0,
+      selectedAnswer: 'Good morning',
+      isCorrect: true,
+    });
+    const mergedProfile = await learnerRepo.getProfile();
+    const engCourse = SEED_COURSES.find((c) => c.id === 'course_eng_01')!;
+    const engSkills = SEED_SKILLS.filter((s) => s.courseId === 'course_eng_01');
+
+    useCourseStore.setState({
+      courses: SEED_COURSES,
+      activeCourse: engCourse,
+      activeCourseSkills: engSkills,
+      isLoading: false,
+    });
+    useLearnerStore.setState({
+      profile: mergedProfile,
+      isLoading: false,
+    });
+    vi.spyOn(useRoadmapStore.getState(), 'loadRoadmap').mockResolvedValue(undefined);
+    useRoadmapStore.setState({
+      roadmap: RouteEngine.adaptRoadmap(
+        'course_eng_01',
+        SEED_ROADMAP_NODES['course_eng_01'],
+        mergedProfile.scoresByCourse['course_eng_01'] ?? {},
+        [],
+        [],
+        { placementCefr: 'B1' },
+      ),
+      isLoading: false,
+      error: null,
+    });
+
+    render(
+      <KnowledgeMapView
+        onProceedToRoadmap={() => undefined}
+        onStartPlacement={() => undefined}
+        onChooseCourse={() => undefined}
+      />,
+    );
+    expect(screen.getByText(/4 · Baholangan mavzular/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Baholash aniqligi: Dastlabki/i)).toHaveLength(4);
   });
 });
