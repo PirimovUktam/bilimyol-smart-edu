@@ -17,8 +17,10 @@ import '../../core/widgets/subject_icon.dart';
 import '../../core/widgets/yolchi_ai_mascot.dart';
 import '../../domain/entities/course.dart';
 import '../../domain/entities/learning_path_node.dart';
+import '../../domain/personalization/adaptive_cycle_engine.dart';
 import '../../domain/personalization/learning_start.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
+import 'widgets/adaptive_cycle_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -30,6 +32,21 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _courseTabIndex = 0; // 0: Aktiv, 1: Tavsiya, 2: Barchasi
   String _searchQuery = '';
+  String? _requestedRoadmapCourseId;
+
+  void _ensureRoadmapLoaded(String? courseId) {
+    if (!mounted || courseId == null || courseId.isEmpty) return;
+    final currentPath = ref.read(roadmapStateNotifierProvider).valueOrNull;
+    if (currentPath?.courseId == courseId ||
+        _requestedRoadmapCourseId == courseId) {
+      return;
+    }
+    _requestedRoadmapCourseId = courseId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(courseId);
+    });
+  }
 
   static AppStrings _resolveStrings(BuildContext context) {
     final localized = Localizations.of<AppStrings>(context, AppStrings);
@@ -164,6 +181,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final overallScore = !mathPilot && courseScores.isNotEmpty
                 ? SkillScoringEngine.computeOverallScore(courseScores)
                 : progressPct;
+            _ensureRoadmapLoaded(activeCourse.id);
+            final validRoadmap =
+                currentPath != null && currentPath.courseId == activeCourse.id
+                ? currentPath
+                : null;
+            final adaptiveInput = AdaptiveContextInput(
+              course: activeCourse,
+              profile: profile,
+              skills: state.activeSkills,
+              skillScores: courseScores,
+              roadmap: validRoadmap,
+              localeCode: lang,
+            );
+            final adaptiveCycle = AdaptiveCycleEngine.evaluateCycle(
+              adaptiveInput,
+            );
+            final adaptiveFactors = AdaptiveCycleEngine.buildExplainableFactors(
+              adaptiveInput,
+            );
+            final adaptiveTasks = AdaptiveCycleEngine.buildDailyMicroTasks(
+              adaptiveInput,
+            );
 
             final allCourses = state.courses;
             final query = _searchQuery.trim().toLowerCase();
@@ -925,9 +964,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Yo‘lchi AI & Quick Actions Card
+                    // 5-Step Adaptive Cycle & 6-Input Explainable AI Card
                     EdTechReveal(
                       index: 4,
+                      child: AdaptiveCycleCard(
+                        cycle: adaptiveCycle,
+                        factors: adaptiveFactors,
+                        dailyTasks: adaptiveTasks,
+                        localeCode: lang,
+                        onStepAction: (stepKey) {
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          switch (stepKey) {
+                            case AdaptiveStepKey.diagnostic:
+                              context.push('/placement');
+                            case AdaptiveStepKey.profile:
+                              context.go('/knowledge-map');
+                            case AdaptiveStepKey.path:
+                              context.go('/roadmap');
+                            case AdaptiveStepKey.practice:
+                              triggerContinueLesson();
+                            case AdaptiveStepKey.progress:
+                              context.go('/progress');
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Yo‘lchi AI & Quick Actions Card
+                    EdTechReveal(
+                      index: 5,
                       child: AppCard(
                         padding: const EdgeInsets.all(18),
                         child: Column(

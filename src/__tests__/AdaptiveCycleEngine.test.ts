@@ -256,6 +256,7 @@ describe('AdaptiveCycleEngine & 5-Step Loop', () => {
       profile: makeProfile({
         initialLevel: 'beginner',
         courseLevels: { course_math_01: 'beginner' },
+        placementSkillScoresByCourse: { course_math_01: initialScores },
         scoresByCourse: { course_math_01: postScores },
         completedLessonIds: ['lesson_math_algebra_01'],
         completedReinforcementIds,

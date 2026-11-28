@@ -31,7 +31,6 @@ export function resolveContinuationLessonId(
     const activeTopic = roadmap.nodes.find(
       (node) =>
         node.id === roadmap.activeNodeId &&
-        !node.isReinforcement &&
         node.status !== 'locked' &&
         node.status !== 'completed'
     );

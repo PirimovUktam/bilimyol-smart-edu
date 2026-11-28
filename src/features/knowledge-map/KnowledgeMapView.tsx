@@ -81,7 +81,7 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
     ?? path?.nodes.find((item) => item.skillId === skillId)?.title
     ?? skillId;
   const nextLessonId = resolveNextLearningLesson(course, profile, path);
-  const effectiveness = mathPilot ? null : AdaptiveCycleEngine.measureEffectiveness({
+  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
     course,
     profile,
     skills,
@@ -275,7 +275,9 @@ export function KnowledgeMapView({ onProceedToRoadmap, onStartPlacement, onChoos
                               </Badge>
                             )}
                             {effectiveness && score != null && (() => {
-                              const delta = effectiveness.skillDeltas.find((d) => d.skillId === skill.id);
+                              const delta = effectiveness.skillDeltas.find(
+                                (d) => d.skillId === skill.id || (skill.node && d.skillId === skill.node.skillId)
+                              );
                               if (!delta) return null;
                               const gapLabel = delta.status === 'gap_detected'
                                 ? t('adaptive.gapStatusDetected')

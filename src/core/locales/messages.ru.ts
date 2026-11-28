@@ -762,6 +762,7 @@ export const ru: Translated<typeof uz> = {
     effectivenessDesc: "Реальный рост от базового уровня до текущего освоения и закрытые пробелы в знаниях.",
     baselineScore: "Базовый уровень",
     currentScore: "Текущее освоение",
+    diagnosticNotTaken: "Диагностика не пройдена",
     growthDelta: "Рост (+Δ)",
     gapsClosed: "Закрытые пробелы",
     cycleUpdates: "Обновления цикла",

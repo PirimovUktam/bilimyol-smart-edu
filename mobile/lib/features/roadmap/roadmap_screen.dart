@@ -22,6 +22,7 @@ import '../../domain/entities/learning_path_node.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/personalization/skill_scoring_engine.dart';
 import '../lesson/flashcard_deck_widget.dart';
+import '../reinforcement/reinforcement_sheet.dart';
 
 const List<LessonFlashcard> _englishAllFlashcards = [
   ...a1AllFlashcards,
@@ -184,6 +185,93 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _openStandaloneReinforcementSheet(
+    BuildContext context,
+    LearningPathNode node,
+    List<LearningPathNode> allNodes,
+    String lang,
+  ) async {
+    final isRu = lang == 'ru';
+    try {
+      final baseNode = resolveRoadmapPracticeBaseNode(allNodes, node);
+      final targetLessonId = node.targetLessonId ?? baseNode?.targetLessonId;
+      final lessonRepo = ref.read(lessonRepositoryProvider);
+      final lesson =
+          (targetLessonId != null && targetLessonId.trim().isNotEmpty)
+          ? await lessonRepo.getLessonById(targetLessonId)
+          : await lessonRepo.getLessonByCourseAndSkill(
+              node.courseId,
+              node.skillId,
+            );
+      if (!context.mounted) return;
+      if (lesson == null || lesson.courseId != node.courseId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isRu
+                  ? 'Упражнение закрепления не найдено.'
+                  : 'Mustahkamlash mashqi topilmadi.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final q = lesson.reinforcementExercise;
+      final resolvedReinfNodeId = node.isReinforcement
+          ? node.id
+          : (baseNode != null ? 'reinf_${baseNode.id}' : 'reinf_${node.id}');
+      final notifier = ref.read(roadmapStateNotifierProvider.notifier);
+
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetCtx) => ReinforcementSheet(
+          question: q,
+          completionActionLabel:
+              isRu ? 'Вернуться к плану' : 'Yo‘l xaritasiga qaytish',
+          onGoToDashboard: () => Navigator.of(sheetCtx).pop(),
+          onSubmit: (selectedIndex) => notifier.submitStandaloneReinforcement(
+            courseId: q.courseId,
+            skillId: q.skillId,
+            reinforcementNodeId: resolvedReinfNodeId,
+            question: q,
+            selectedIndex: selectedIndex,
+          ),
+          onSubmitRichWithRubric: ({
+            required int selectedIndex,
+            String? selectedText,
+            Map<String, String>? matchedPairs,
+            List<String>? orderedTokens,
+            List<String>? checkedCriteriaIds,
+          }) => notifier.submitStandaloneReinforcement(
+            courseId: q.courseId,
+            skillId: q.skillId,
+            reinforcementNodeId: resolvedReinfNodeId,
+            question: q,
+            selectedIndex: selectedIndex,
+            selectedText: selectedText,
+            matchedPairs: matchedPairs,
+            orderedTokens: orderedTokens,
+            checkedCriteriaIds: checkedCriteriaIds,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isRu
+                ? 'Не удалось загрузить упражнение.'
+                : 'Mashqni yuklab bo‘lmadi.',
+          ),
+        ),
+      );
+    }
   }
 
   void _showLockedCefrSnackBar(
@@ -383,7 +471,13 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                             },
                           ),
                           data: (roadmap) {
-                            final nodes = roadmap.nodes;
+                            final allRoadmapNodes = roadmap.nodes;
+                            final nodes = allRoadmapNodes
+                                .where(
+                                  (n) => !(n.isReinforcement &&
+                                      n.status == NodeStatus.completed),
+                                )
+                                .toList();
                             if (nodes.isEmpty) {
                               return Center(
                                 child: Padding(
@@ -1294,6 +1388,15 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           statusBadge,
                           if (isAvailable &&
                               !isReinforcement &&
+                              node.isPlacementUnlocked)
+                            AppBadge(
+                              text: isRu
+                                  ? 'Освоено • Диагностика'
+                                  : 'O‘zlashtirilgan • Diagnostika',
+                              variant: AppBadgeVariant.emerald,
+                            ),
+                          if (isAvailable &&
+                              !isReinforcement &&
                               !node.reviewDue &&
                               node.needsTargetedPractice)
                             AppBadge(
@@ -1389,7 +1492,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           ),
                         ],
                       ),
-                      if (isAvailable && target != null)
+                      if (isAvailable && (isReinforcement || target != null))
                         AppButton(
                           text: isReinforcement ? s.practiceNode : s.startNode,
                           size: AppButtonSize.small,
@@ -1401,9 +1504,18 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                           ),
                           onPressed: () async {
                             ScaffoldMessenger.of(context).clearSnackBars();
+                            if (node.isReinforcement) {
+                              await _openStandaloneReinforcementSheet(
+                                context,
+                                node,
+                                nodeById.values.toList(),
+                                lang,
+                              );
+                              return;
+                            }
                             await ref
                                 .read(lessonSessionNotifierProvider.notifier)
-                                .startLesson(target, uiLocale: lang);
+                                .startLesson(target!, uiLocale: lang);
                             if (context.mounted) context.push('/lesson');
                           },
                         )

@@ -140,6 +140,9 @@ class SubmitReinforcementUseCase {
         skillScores: currentScores,
         completedNodeIds: currentProfile.completedNodeIds,
         completedReinforcementIds: currentProfile.completedReinforcementIds,
+        placementCefrTier: currentProfile.placementCefrByCourse[courseId],
+        goal: currentProfile.goal,
+        dailyMinutes: currentProfile.dailyMinutes,
       );
       return ReinforcementResult(
         isCorrect: false,
@@ -193,6 +196,9 @@ class SubmitReinforcementUseCase {
           skillScores: persistedProfile.scoresByCourse[courseId] ?? {},
           completedNodeIds: persistedProfile.completedNodeIds,
           completedReinforcementIds: persistedProfile.completedReinforcementIds,
+          placementCefrTier: persistedProfile.placementCefrByCourse[courseId],
+          goal: persistedProfile.goal,
+          dailyMinutes: persistedProfile.dailyMinutes,
         ),
       );
     }
@@ -230,6 +236,9 @@ class SubmitReinforcementUseCase {
       skillScores: updatedScores,
       completedNodeIds: finalProfile.completedNodeIds,
       completedReinforcementIds: finalProfile.completedReinforcementIds,
+      placementCefrTier: finalProfile.placementCefrByCourse[courseId],
+      goal: finalProfile.goal,
+      dailyMinutes: finalProfile.dailyMinutes,
     );
 
     return ReinforcementResult(

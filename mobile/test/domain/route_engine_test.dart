@@ -257,7 +257,8 @@ void main() {
 
       final algNode = roadmap.nodes.firstWhere((n) => n.id == 'node_math_alg');
       final eqNode = roadmap.nodes.firstWhere((n) => n.id == 'node_math_eq');
-      expect(algNode.status, equals(NodeStatus.completed));
+      expect(algNode.status, equals(NodeStatus.available));
+      expect(algNode.isPlacementUnlocked, isTrue);
       expect(eqNode.status, equals(NodeStatus.available));
       expect(roadmap.activeNodeId, equals('node_math_eq'));
       expect(RouteEngine.canStartNode(eqNode, const []), isTrue);

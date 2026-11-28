@@ -116,10 +116,10 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
   const shown = nodes.filter((node) => filter === 'all' || (filter === 'active'
     ? node.status !== 'locked' && (node.status !== 'completed' || node.mastery?.reviewDue) : node.status === 'completed'));
   const courseScores = courseId ? profile?.scoresByCourse[courseId] ?? {} : {};
-  const adaptiveCycle = path && !policy
+  const adaptiveCycle = path
     ? AdaptiveCycleEngine.evaluateCycle({ course, profile, skills, skillScores: courseScores, roadmap: path })
     : null;
-  const adaptiveRec = path && !policy
+  const adaptiveRec = path
     ? RecommendationEngine.generateRecommendation(courseId ?? '', skills, courseScores, path, profile)
     : null;
 
@@ -208,8 +208,10 @@ export function RoadmapView({ onStartLesson, onOpenKnowledgeMap, onChooseCourse,
       if (
         !linked ||
         linked.courseId !== node.courseId ||
-        (linked.skillId !== node.skillId &&
-          linked.reinforcementExercise?.skillId !== node.skillId)
+        !linked.reinforcementExercise ||
+        (linked.id !== targetLessonId &&
+          linked.skillId !== node.skillId &&
+          linked.reinforcementExercise.skillId !== node.skillId)
       ) {
         throw new Error(t('path.noExercise'));
       }

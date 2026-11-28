@@ -84,6 +84,19 @@ String? resolveNextLearningLesson(
   final foundation = pendingFoundationLesson(course, profile);
   if (foundation != null && foundation.trim().isNotEmpty) return foundation;
   if (validPath != null) {
+    final activeNode = validPath.nodes
+        .where(
+          (node) =>
+              node.id == validPath.activeNodeId &&
+              !node.isOptional &&
+              node.status != NodeStatus.locked &&
+              node.status != NodeStatus.completed,
+        )
+        .firstOrNull;
+    final activeLessonId = activeNode?.targetLessonId;
+    if (activeLessonId != null && activeLessonId.trim().isNotEmpty) {
+      return activeLessonId;
+    }
     final next = validPath.nodes
         .where(
           (node) =>

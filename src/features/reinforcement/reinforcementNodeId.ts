@@ -18,10 +18,11 @@ export function resolveRoadmapPracticeBaseNode(
   const strippedId = node.id.startsWith('reinf_') ? node.id.slice(6) : node.id;
 
   return (
-    baseNodes.find((n) => n.id === strippedId || node.prerequisites.includes(n.id)) ??
+    baseNodes.find((n) => n.id === strippedId) ??
     (node.targetLessonId
       ? baseNodes.find((n) => n.targetLessonId === node.targetLessonId)
       : undefined) ??
+    baseNodes.find((n) => node.prerequisites.includes(n.id)) ??
     baseNodes.find((n) => n.skillId === node.skillId)
   );
 }

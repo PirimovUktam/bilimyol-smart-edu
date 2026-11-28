@@ -91,7 +91,11 @@ export class SubmitReinforcementUseCase {
         currentScores,
         currentProfile.completedNodeIds,
         currentProfile.completedReinforcementIds,
-        { placementCefr: currentProfile.placementCefrByCourse?.[courseId] }
+        {
+          placementCefr: currentProfile.placementCefrByCourse?.[courseId],
+          goal: currentProfile.goal,
+          dailyMinutes: currentProfile.dailyMinutes,
+        }
       );
       return {
         isCorrect: false,
@@ -131,7 +135,11 @@ export class SubmitReinforcementUseCase {
           updatedProfile.scoresByCourse[courseId] || {},
           updatedProfile.completedNodeIds,
           updatedProfile.completedReinforcementIds,
-          { placementCefr: updatedProfile.placementCefrByCourse?.[courseId] }
+          {
+            placementCefr: updatedProfile.placementCefrByCourse?.[courseId],
+            goal: updatedProfile.goal,
+            dailyMinutes: updatedProfile.dailyMinutes,
+          }
         ),
       };
     }
@@ -187,7 +195,11 @@ export class SubmitReinforcementUseCase {
       updatedScores,
       updatedProfile.completedNodeIds,
       updatedProfile.completedReinforcementIds,
-      { placementCefr: updatedProfile.placementCefrByCourse?.[courseId] }
+      {
+        placementCefr: updatedProfile.placementCefrByCourse?.[courseId],
+        goal: updatedProfile.goal,
+        dailyMinutes: updatedProfile.dailyMinutes,
+      }
     );
 
     return {

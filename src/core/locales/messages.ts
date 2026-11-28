@@ -760,6 +760,7 @@ export const uz = {
     effectivenessDesc: "Boshlang‘ich holatdan joriy o‘zlashtirishgacha bo‘lgan real o‘sish va yopilgan bilim bo‘shliqlari.",
     baselineScore: "Boshlang‘ich daraja",
     currentScore: "Joriy o‘zlashtirish",
+    diagnosticNotTaken: "Diagnostika topshirilmagan",
     growthDelta: "O‘sish (+Δ)",
     gapsClosed: "Yopilgan bo‘shliqlar",
     cycleUpdates: "Sikl yangilanishlari",

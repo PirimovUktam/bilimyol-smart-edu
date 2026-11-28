@@ -12,7 +12,19 @@ export class GetRoadmapUseCase {
   async execute(courseId: string): Promise<LearningPath> {
     const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
     if (baseNodes.some((node) => node.mastery)) {
-      return RouteEngine.adaptRoadmap(courseId, baseNodes, {}, [], []);
+      try {
+        const profile = await this.learnerRepo.getProfile();
+        const combinedScores = {
+          ...(profile.placementSkillScoresByCourse?.[courseId] ?? {}),
+          ...(profile.scoresByCourse[courseId] ?? {}),
+        };
+        return RouteEngine.adaptRoadmap(courseId, baseNodes, combinedScores, [], [], {
+          goal: profile.goal,
+          dailyMinutes: profile.dailyMinutes,
+        });
+      } catch {
+        return RouteEngine.adaptRoadmap(courseId, baseNodes, {}, [], []);
+      }
     }
     const profile = await this.learnerRepo.getProfile();
     const scores = profile.scoresByCourse[courseId] || {};
@@ -23,7 +35,11 @@ export class GetRoadmapUseCase {
       scores,
       profile.completedNodeIds || [],
       profile.completedReinforcementIds || [],
-      { placementCefr: profile.placementCefrByCourse?.[courseId] }
+      {
+        placementCefr: profile.placementCefrByCourse?.[courseId],
+        goal: profile.goal,
+        dailyMinutes: profile.dailyMinutes,
+      }
     );
   }
 }

@@ -182,14 +182,13 @@ export function DashboardView({
       ? SkillScoringEngine.computeOverallScore(courseScores)
       : progressPct;
   const adaptiveBundle = useMemo(() => {
-    if (mathPilot) return null;
     const input = { course, profile, skills, skillScores: courseScores, roadmap: path };
     return {
       cycle: AdaptiveCycleEngine.evaluateCycle(input),
       factors: AdaptiveCycleEngine.buildExplainableFactors(input),
       dailyTasks: AdaptiveCycleEngine.buildDailyMicroTasks(input),
     };
-  }, [course, profile, skills, courseScores, path, mathPilot]);
+  }, [course, profile, skills, courseScores, path]);
 
   const handleCycleStepAction = useCallback((stepKey: AdaptiveStepKey) => {
     switch (stepKey) {

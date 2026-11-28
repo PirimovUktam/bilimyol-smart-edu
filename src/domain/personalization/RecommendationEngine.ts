@@ -30,10 +30,15 @@ export class RecommendationEngine {
     const targetSkill = skills.find((s) => s.id === weakestSkillId);
     const targetSkillName = targetSkill ? targetSkill.name : 'Asosiy mavzu';
 
-    // 2. Find next active node in roadmap
-    const activeNode = roadmap.nodes.find(
-      (n) => n.status === 'reinforcement' || n.status === 'available' || n.status === 'in_progress'
-    ) || roadmap.nodes[0];
+    // 2. Find next active node in roadmap (respecting RouteEngine.activeNodeId first)
+    const activeNode =
+      roadmap.nodes.find(
+        (n) => n.id === roadmap.activeNodeId && n.status !== 'locked' && n.status !== 'completed'
+      ) ||
+      roadmap.nodes.find(
+        (n) => n.status === 'reinforcement' || n.status === 'available' || n.status === 'in_progress'
+      ) ||
+      roadmap.nodes[0];
 
     const isReinforcement = activeNode ? activeNode.isReinforcement || activeNode.status === 'reinforcement' : false;
     const weakestScoreValue = weakestSkill ? (weakestSkill as SkillScore).score : 100;

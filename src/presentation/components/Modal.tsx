@@ -26,10 +26,18 @@ export function Modal({
     const node = dialog.current;
     if (!isOpen || !node) return;
     const overflow = document.body.style.overflow;
-    node.showModal();
+    if (typeof node.showModal === 'function') {
+      node.showModal();
+    } else {
+      node.setAttribute('open', '');
+    }
     document.body.style.overflow = 'hidden';
     return () => {
-      node.close();
+      if (typeof node.close === 'function') {
+        node.close();
+      } else {
+        node.removeAttribute('open');
+      }
       document.body.style.overflow = overflow;
     };
   }, [isOpen]);

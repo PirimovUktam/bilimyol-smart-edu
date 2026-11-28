@@ -11,7 +11,8 @@ $$;
 
 INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
   ('00000000-0000-0000-0000-000000000561', 'math-beginner@example.invalid', '{}'),
-  ('00000000-0000-0000-0000-000000000562', 'math-returning@example.invalid', '{}');
+  ('00000000-0000-0000-0000-000000000562', 'math-returning@example.invalid', '{}'),
+  ('00000000-0000-0000-0000-000000000563', 'math-placed@example.invalid', '{}');
 
 INSERT INTO public.lesson_progress (user_id, lesson_id, course_id, status, progress_percent, completed_at)
 VALUES ('00000000-0000-0000-0000-000000000562', 'lesson_math_starter', 'course_math_01', 'completed', 100, now() - interval '30 days');
@@ -44,6 +45,7 @@ BEGIN
       FROM jsonb_array_elements(lesson) s WHERE s ? 'interactiveQuestion')
     AND (SELECT is_locked AND steps = '[]'::jsonb FROM public.learner_lessons WHERE id = 'lesson_math_functions_03'),
     'A: foundational content is easy and advanced content is gated');
+  PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000563', true);
   state := public.advance_placement('course_math_01');
   IF state->'question'->>'id' IS DISTINCT FROM 'q_math_pilot_place_add_01' THEN
     RAISE EXCEPTION 'Expected an arithmetic foundation question, received: %', state->'question'->>'text';
@@ -58,10 +60,16 @@ BEGIN
     state := public.advance_placement('course_math_01', (state->>'session_id')::UUID, qid, idx);
   END LOOP;
   PERFORM pg_temp.check_scenario(state->>'total_questions' = '4' AND state->'result'->>'score' = '100'
-    AND public.get_math_progression() = nodes
+    AND (SELECT count(*) FROM jsonb_array_elements(public.get_math_progression()) n WHERE n->>'status' = 'completed') = 0
+    AND public.get_math_progression()->0->>'status' = 'available'
+    AND public.get_math_progression()->1->>'status' = 'available'
+    AND public.get_math_progression()->2->>'status' = 'available'
+    AND public.get_math_progression()->3->>'status' = 'locked'
     AND (SELECT count(*) FROM public.learner_skill_scores WHERE user_id = auth.uid()
       AND course_id = 'course_math_01' AND score = 100 AND skill_id IN ('skill_math_addition', 'skill_math_multiplication')) = 2,
-    'B: perfect placement scores only two skills and leaves the gates untouched');
+    'B: perfect placement unlocks foundation arithmetic without fabricating completed objectives or opening advanced gates');
+
+  PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000561', true);
 
   PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter',
     'q_pilot_lesson_math_starter_1', 0, '', 'pilot-first');
@@ -168,9 +176,10 @@ SELECT pg_temp.check_scenario(public.get_math_progression()->0->>'review_due' = 
 SELECT public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter',
   'q_pilot_lesson_math_starter_4', 0, '', 'pilot-forgotten');
 SELECT pg_temp.check_scenario(public.get_math_progression()->0->>'mastery_state' = 'needs_review'
-  AND public.get_math_progression()->1->>'status' = 'locked'
+  AND public.get_math_progression()->0->>'status' = 'reinforcement'
+  AND public.get_math_progression()->1->>'status' = 'available'
   AND EXISTS (SELECT 1 FROM public.lesson_progress WHERE user_id = auth.uid() AND lesson_id = 'lesson_math_starter' AND status = 'completed'),
-  'F: recent weak evidence recommends practice without deleting history');
+  'F: recent weak evidence recommends practice on the slipped node without re-locking downstream chapters');
 RESET ROLE;
 
 ROLLBACK;

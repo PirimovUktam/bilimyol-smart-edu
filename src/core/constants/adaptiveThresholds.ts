@@ -14,6 +14,7 @@ export const ADAPTIVE_THRESHOLDS = {
   STANDARD_MIN: 70,
   STANDARD_MAX: 84,
   ADVANCED_MIN: 85,
+  DIAGNOSTIC_MASTERY_MIN: 80,
 } as const;
 
 export type RouteStrategy = 'reinforcement' | 'targeted_practice' | 'standard' | 'advanced';

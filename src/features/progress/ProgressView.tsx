@@ -59,7 +59,7 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
   useEffect(() => {
     if (mathPilot && courseId) void useRoadmapStore.getState().loadRoadmap(courseId);
   }, [courseId, mathPilot]);
-  const effectiveness = mathPilot ? null : AdaptiveCycleEngine.measureEffectiveness({
+  const effectiveness = AdaptiveCycleEngine.measureEffectiveness({
     course: activeCourse,
     profile,
     skills,
@@ -122,7 +122,9 @@ export function ProgressView({ onContinueLesson, onOpenRoadmap, onOpenKnowledgeM
             <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">
               <p className="text-[11px] font-bold text-slatefine">{t('adaptive.baselineScore')} → {t('adaptive.currentScore')}</p>
               <p className="mt-1 font-mono text-base font-extrabold text-ink">
-                {effectiveness.baselineScore}% → {effectiveness.currentScore}%
+                {effectiveness.hasDiagnosticBaseline
+                  ? `${effectiveness.baselineScore}% → ${effectiveness.currentScore}%`
+                  : t('adaptive.diagnosticNotTaken')}
               </p>
             </div>
             <div className="rounded-2xl border border-hairline bg-canvas/60 p-3">

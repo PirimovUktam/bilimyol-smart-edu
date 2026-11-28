@@ -205,9 +205,12 @@ describe('W0-B1: canonical reinforcement node ID & RouteEngine roadmap resolutio
 
     const algReinf = adaptedMath.nodes.find((n) => n.id === 'reinf_node_math_alg');
     expect(algReinf).toBeDefined();
-    expect(algReinf?.targetLessonId).toBeUndefined();
+    expect(algReinf?.targetLessonId).toBe('lesson_math_algebra_01');
 
-    const resolvedAlg = resolveRoadmapPracticeBaseNode(adaptedMath.nodes, algReinf!);
+    const resolvedAlg = resolveRoadmapPracticeBaseNode(adaptedMath.nodes, {
+      ...algReinf!,
+      targetLessonId: undefined,
+    });
     expect(resolvedAlg?.id).toBe('node_math_alg');
     expect(resolvedAlg?.targetLessonId).toBe('lesson_math_algebra_01');
 

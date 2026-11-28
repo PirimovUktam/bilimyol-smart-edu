@@ -78,6 +78,8 @@ class LearningPathNode {
   final int requiredScore;
   final NodeStatus status;
   final int? score;
+  final bool isPlacementRecommended;
+  final bool isPlacementUnlocked;
   final bool isReinforcement;
   final String? targetLessonId;
   final int estimatedMinutes;
@@ -111,6 +113,8 @@ class LearningPathNode {
     required this.requiredScore,
     required this.status,
     this.score,
+    this.isPlacementRecommended = false,
+    this.isPlacementUnlocked = false,
     required this.isReinforcement,
     this.targetLessonId,
     required this.estimatedMinutes,
@@ -187,6 +191,8 @@ class LearningPathNode {
     int? requiredScore,
     NodeStatus? status,
     int? score,
+    bool? isPlacementRecommended,
+    bool? isPlacementUnlocked,
     bool? isReinforcement,
     String? targetLessonId,
     int? estimatedMinutes,
@@ -220,6 +226,9 @@ class LearningPathNode {
       requiredScore: requiredScore ?? this.requiredScore,
       status: status ?? this.status,
       score: score ?? this.score,
+      isPlacementRecommended:
+          isPlacementRecommended ?? this.isPlacementRecommended,
+      isPlacementUnlocked: isPlacementUnlocked ?? this.isPlacementUnlocked,
       isReinforcement: isReinforcement ?? this.isReinforcement,
       targetLessonId: targetLessonId ?? this.targetLessonId,
       estimatedMinutes: estimatedMinutes ?? this.estimatedMinutes,

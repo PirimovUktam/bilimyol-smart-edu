@@ -27,6 +27,7 @@ class ReinforcementSheet extends StatefulWidget {
     List<String>? checkedCriteriaIds,
   })? onSubmitRichWithRubric;
   final VoidCallback onGoToDashboard;
+  final String? completionActionLabel;
 
   const ReinforcementSheet({
     super.key,
@@ -35,6 +36,7 @@ class ReinforcementSheet extends StatefulWidget {
     this.onSubmitRich,
     this.onSubmitRichWithRubric,
     required this.onGoToDashboard,
+    this.completionActionLabel,
   });
 
   @override
@@ -1069,7 +1071,9 @@ class _ReinforcementSheetState extends State<ReinforcementSheet> {
                 const SizedBox(height: 18),
 
                 AppButton(
-                  text: isRu ? 'Перейти на главную' : s.goToDashboardBtn,
+                  text:
+                      widget.completionActionLabel ??
+                      (isRu ? 'Перейти на главную' : s.goToDashboardBtn),
                   isFullWidth: true,
                   size: AppButtonSize.large,
                   rightIcon: const Icon(

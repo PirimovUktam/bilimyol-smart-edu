@@ -1,14 +1,30 @@
 import { LearningPathNode, LearningPath } from '../entities/LearningPathNode';
 import { SkillScore } from '../entities/SkillScore';
 import { ADAPTIVE_THRESHOLDS, getRouteStrategy } from '@/core/constants/adaptiveThresholds';
+import type { DailyTimeCommitment, OnboardingGoal } from '@/core/types/common';
 
 export interface AdaptRoadmapOptions {
   placementCefr?: string;
+  goal?: OnboardingGoal;
+  dailyMinutes?: DailyTimeCommitment | number;
+}
+
+function normalizeEnglishPlacementTier(rawTier?: string): 'Pre-A1' | 'A1' | 'A2' | 'B1' | null {
+  const normalized = rawTier?.trim().toUpperCase();
+  if (normalized === 'B1' || normalized === 'B2' || normalized === 'C1' || normalized === 'C2') {
+    return 'B1';
+  }
+  if (normalized === 'A2') return 'A2';
+  if (normalized === 'A1') return 'A1';
+  if (normalized === 'PRE-A1') return 'Pre-A1';
+  return null;
 }
 
 export class RouteEngine {
   /**
-   * Generates or adapts an adaptive learning path based on skill scores and completed nodes.
+   * Generates or adapts an adaptive learning path based on skill scores, completed nodes,
+   * diagnostic mastery pass-through (>= 80% keeps status 'available' without fabricating
+   * 'completed'), returning-learner reinforcement, and learner goal/time preferences.
    */
   public static adaptRoadmap(
     courseId: string,
@@ -18,60 +34,97 @@ export class RouteEngine {
     completedReinforcementIds: string[],
     options?: AdaptRoadmapOptions
   ): LearningPath {
+    const goal: OnboardingGoal = options?.goal ?? 'mastery';
+
     if (baseNodes.some((node) => node.mastery)) {
-      const next = baseNodes.find((node) => !node.isOptional && node.status !== 'locked' && node.status !== 'completed');
+      const nonOptionalOpen = baseNodes.filter(
+        (node) => !node.isOptional && node.status !== 'locked' && node.status !== 'completed'
+      );
+      const urgentPilot = nonOptionalOpen.find(
+        (node) => node.status === 'reinforcement' || node.status === 'in_progress'
+      );
+      const unmasteredInPlacement = nonOptionalOpen.filter(
+        (node) => (skillScores[node.skillId]?.score ?? -1) < node.requiredScore
+      );
+      const next =
+        urgentPilot ??
+        (goal === 'exam_prep' && unmasteredInPlacement.length === 0
+          ? nonOptionalOpen.at(-1)
+          : unmasteredInPlacement[0]) ??
+        nonOptionalOpen[0];
+
       return {
-        id: `roadmap_${courseId}`, courseId, title: 'Moslashuvchan Yo‘l Xaritasi',
-        nodes: baseNodes, activeNodeId: next?.id ?? '', updatedAt: Date.now(),
+        id: `roadmap_${courseId}`,
+        courseId,
+        title: 'Moslashuvchan Yo‘l Xaritasi',
+        nodes: baseNodes,
+        activeNodeId: next?.id ?? '',
+        updatedAt: Date.now(),
       };
     }
 
+    const effectivePlacementTier = normalizeEnglishPlacementTier(options?.placementCefr);
     const placementUnlockedIds = new Set<string>();
     let recommendedEntryId: string | undefined;
-    if (courseId === 'course_eng_01' && options?.placementCefr) {
-      if (options.placementCefr === 'B1' || options.placementCefr === 'B2' || options.placementCefr === 'C1' || options.placementCefr === 'C2') {
+    if (courseId === 'course_eng_01' && effectivePlacementTier) {
+      if (effectivePlacementTier === 'B1') {
         placementUnlockedIds.add('node_eng_a2_m1_directions');
         placementUnlockedIds.add('node_eng_b1_m1_travel');
         recommendedEntryId = 'node_eng_b1_m1_travel';
-      } else if (options.placementCefr === 'A2') {
+      } else if (effectivePlacementTier === 'A2') {
         placementUnlockedIds.add('node_eng_a2_m1_directions');
         recommendedEntryId = 'node_eng_a2_m1_directions';
-      } else if (options.placementCefr === 'A1' || options.placementCefr === 'Pre-A1') {
+      } else {
         recommendedEntryId = 'node_eng_a1_m1_greetings';
       }
     }
 
+    const orderedBase = [...baseNodes].sort((a, b) => a.order - b.order);
+    const completedSet = new Set<string>(completedNodeIds);
+    const effectivePrereqIds = new Set<string>(completedNodeIds);
+    const diagnosticSkippedIds = new Set<string>();
     const adaptedNodes: LearningPathNode[] = [];
 
-    for (const baseNode of baseNodes) {
+    for (const baseNode of orderedBase) {
       const skillScoreObj = skillScores[baseNode.skillId];
       const score = skillScoreObj?.score;
       const needsPractice = score != null && score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN;
-      const isCompleted = completedNodeIds.includes(baseNode.id);
-      const isPlacementUnlocked = placementUnlockedIds.has(baseNode.id);
+      const isCompleted = completedSet.has(baseNode.id);
+      const strictPrereqsMet = baseNode.prerequisites.every((prereqId) => completedSet.has(prereqId));
+      const prerequisitesMet = baseNode.prerequisites.every((prereqId) => effectivePrereqIds.has(prereqId));
+      const cefrUnlocked = placementUnlockedIds.has(baseNode.id);
+
+      const allowDiagnosticSkip =
+        courseId !== 'course_eng_01' || (!baseNode.hasRichExercise && !baseNode.isCheckpoint);
+      const unlockedViaDiagnostic =
+        !isCompleted &&
+        allowDiagnosticSkip &&
+        score != null &&
+        (prerequisitesMet || cefrUnlocked) &&
+        score >= ADAPTIVE_THRESHOLDS.DIAGNOSTIC_MASTERY_MIN;
+
+      if (isCompleted || unlockedViaDiagnostic) {
+        effectivePrereqIds.add(baseNode.id);
+      }
+      if (unlockedViaDiagnostic) {
+        diagnosticSkippedIds.add(baseNode.id);
+      }
+
+      const isUnlocked = prerequisitesMet || cefrUnlocked;
+      const isPlacementUnlocked = cefrUnlocked || unlockedViaDiagnostic || (isUnlocked && !strictPrereqsMet);
 
       const reinforcementId = `reinf_${baseNode.id}`;
       const isReinforcementCompleted = completedReinforcementIds.includes(reinforcementId);
 
-      // Check prerequisites
-      const prerequisitesMet =
-        baseNode.prerequisites.every((prereqId) => completedNodeIds.includes(prereqId)) ||
-        isPlacementUnlocked;
-
       let status: LearningPathNode['status'] = 'locked';
-
       if (isCompleted) {
         status = 'completed';
-      } else if (!prerequisitesMet) {
+      } else if (!isUnlocked) {
         status = 'locked';
+      } else if (needsPractice && !isReinforcementCompleted) {
+        status = 'reinforcement';
       } else {
-        // Prerequisites are met
-        if (needsPractice && !isReinforcementCompleted) {
-          // Score < 50 and reinforcement not yet completed => requires reinforcement
-          status = 'reinforcement';
-        } else {
-          status = 'available';
-        }
+        status = 'available';
       }
 
       const routeStrategy = score != null ? getRouteStrategy(score) : undefined;
@@ -90,9 +143,9 @@ export class RouteEngine {
 
       adaptedNodes.push(updatedNode);
 
-      // If the node is in reinforcement or has low score, we attach reinforcement flow
-      if ((needsPractice && !isCompleted) || isReinforcementCompleted) {
-
+      // Attach reinforcement node when < 50% (even for returning completed nodes) or when previously completed
+      if (needsPractice || isReinforcementCompleted) {
+        const reinfUnlocked = isCompleted || isUnlocked;
         const reinforcementNode: LearningPathNode = {
           id: reinforcementId,
           courseId,
@@ -109,35 +162,95 @@ export class RouteEngine {
           descriptionRu: baseNode.titleRu
             ? `Рекомендация Yo‘lchi AI: закрепление темы «${baseNode.titleRu}»`
             : undefined,
-          prerequisites: [baseNode.id], // Follows after interactive lesson attempt
+          prerequisites: baseNode.prerequisites,
           requiredScore: ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN,
-          status: isReinforcementCompleted ? 'completed' : prerequisitesMet ? 'available' : 'locked',
+          status: isReinforcementCompleted ? 'completed' : reinfUnlocked ? 'available' : 'locked',
           routeStrategy: 'reinforcement',
+          isPlacementUnlocked: isPlacementUnlocked || (reinfUnlocked && !strictPrereqsMet),
           isReinforcement: true,
+          targetLessonId: baseNode.targetLessonId,
           estimatedMinutes: 5,
           order: baseNode.order + 0.5,
-          score: score,
+          score,
         };
 
         adaptedNodes.push(reinforcementNode);
       }
     }
 
-    // Sort nodes in display order
     adaptedNodes.sort((a, b) => a.order - b.order);
 
-    // Determine current active node (reinforcement -> placement entry -> targeted_practice -> available/in_progress)
+    const placedEntryNode =
+      recommendedEntryId && (effectivePlacementTier === 'A2' || effectivePlacementTier === 'B1')
+        ? adaptedNodes.find(
+            (n) =>
+              n.id === recommendedEntryId &&
+              (n.status === 'available' || n.status === 'reinforcement' || n.status === 'in_progress')
+          )
+        : undefined;
+
+    const urgentRemediations = adaptedNodes.filter(
+      (n) =>
+        !n.isOptional &&
+        (n.status === 'reinforcement' || (n.isReinforcement && n.status === 'available'))
+    );
+    const prioritizedRemediation =
+      goal === 'exam_prep' && urgentRemediations.length > 1
+        ? [...urgentRemediations].sort(
+            (a, b) => (a.score ?? 0) - (b.score ?? 0) || a.order - b.order
+          )[0]
+        : urgentRemediations[0];
+
+    const nonSkippedCandidates = adaptedNodes.filter(
+      (n) =>
+        !n.isOptional &&
+        !n.isReinforcement &&
+        !diagnosticSkippedIds.has(n.id) &&
+        (n.status === 'available' || n.status === 'in_progress')
+    );
+
+    let selectedCandidate: LearningPathNode | undefined;
+    if (goal === 'exam_prep') {
+      selectedCandidate =
+        nonSkippedCandidates.find((n) => n.isCheckpoint) ??
+        [...nonSkippedCandidates].sort(
+          (a, b) => (a.score ?? 100) - (b.score ?? 100) || a.order - b.order
+        )[0];
+    } else if (goal === 'skills_boost') {
+      selectedCandidate =
+        nonSkippedCandidates.find((n) => n.routeStrategy === 'targeted_practice') ??
+        nonSkippedCandidates.find(
+          (n) => n.hasRichExercise || (n.taskKind && n.taskKind !== 'standard')
+        ) ??
+        nonSkippedCandidates[0];
+    } else {
+      selectedCandidate =
+        nonSkippedCandidates.find((n) => n.routeStrategy === 'targeted_practice') ??
+        nonSkippedCandidates[0];
+    }
+
+    const skippedAvailable = adaptedNodes.filter(
+      (n) =>
+        !n.isOptional &&
+        !n.isReinforcement &&
+        (n.status === 'available' || n.status === 'in_progress')
+    );
+    const fallbackSkipped =
+      goal === 'exam_prep'
+        ? skippedAvailable.find((n) => n.isCheckpoint) ?? skippedAvailable.at(-1)
+        : skippedAvailable[0];
+
     const activeNode =
-      adaptedNodes.find((n) => n.status === 'reinforcement') ||
-      adaptedNodes.find((n) => n.isPlacementRecommended && n.status !== 'completed' && n.status !== 'locked') ||
-      adaptedNodes.find((n) => n.status === 'available' && n.routeStrategy === 'targeted_practice') ||
-      adaptedNodes.find((n) => n.status === 'available' || n.status === 'in_progress') ||
+      placedEntryNode ||
+      prioritizedRemediation ||
+      selectedCandidate ||
+      fallbackSkipped ||
       adaptedNodes[0];
 
     return {
       id: `roadmap_${courseId}`,
       courseId,
-      title: `Moslashuvchan Yo‘l Xaritasi`,
+      title: 'Moslashuvchan Yo‘l Xaritasi',
       nodes: adaptedNodes,
       activeNodeId: activeNode ? activeNode.id : '',
       updatedAt: Date.now(),

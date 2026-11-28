@@ -505,12 +505,36 @@ class LearnerStateNotifier extends StateNotifier<AsyncValue<LearnerProfile>> {
     }
 
     await repo.saveSkillScores(course.id, scores);
+    final baseNodes = await ref
+        .read(lessonRepositoryProvider)
+        .getBaseRoadmapNodes(course.id);
+    final seededCompletedNodes = <String>{};
+    final seededCompletedLessons = <String>{};
+    for (final node in baseNodes) {
+      if (node.isReinforcement || node.isOptional) continue;
+      final nodeScore = scores[node.skillId]?.score ?? 0;
+      if (nodeScore >= 80) {
+        seededCompletedNodes.add(node.id);
+        final lessonId = node.targetLessonId;
+        if (lessonId != null && lessonId.isNotEmpty) {
+          seededCompletedLessons.add(lessonId);
+        }
+      }
+    }
     final current = await repo.getProfile();
     await repo.updateProfile(
       current.copyWith(
         selectedCourseId: course.id,
         xp: current.xp < 120 ? 120 : current.xp,
         streakDays: current.streakDays < 3 ? 3 : current.streakDays,
+        completedNodeIds: {
+          ...current.completedNodeIds,
+          ...seededCompletedNodes,
+        }.toList(),
+        completedLessonIds: {
+          ...current.completedLessonIds,
+          ...seededCompletedLessons,
+        }.toList(),
       ),
     );
     await loadProfile();
@@ -1238,6 +1262,39 @@ class RoadmapStateNotifier extends StateNotifier<AsyncValue<LearningPath>> {
   void updateRoadmapDirect(LearningPath path) {
     _loadGeneration++;
     state = AsyncValue.data(path);
+  }
+
+  Future<ReinforcementResult?> submitStandaloneReinforcement({
+    required String courseId,
+    required String skillId,
+    required String reinforcementNodeId,
+    required Question question,
+    required int selectedIndex,
+    String? selectedText,
+    Map<String, String>? matchedPairs,
+    List<String>? orderedTokens,
+    List<String>? checkedCriteriaIds,
+  }) async {
+    if (_isLoggedOutRemote) return null;
+    final submitUseCase = ref.read(submitReinforcementUseCaseProvider);
+    final result = await submitUseCase.execute(
+      courseId: courseId,
+      skillId: skillId,
+      reinforcementNodeId: reinforcementNodeId,
+      reinforcementQuestion: question,
+      selectedIndex: selectedIndex,
+      selectedText: selectedText,
+      matchedPairs: matchedPairs,
+      orderedTokens: orderedTokens,
+      checkedCriteriaIds: checkedCriteriaIds,
+    );
+    if (!mounted) return null;
+    final activeCourseId = ref.read(courseStateNotifierProvider).activeCourse?.id;
+    if (activeCourseId == null || activeCourseId == courseId) {
+      updateRoadmapDirect(result.updatedRoadmap);
+    }
+    await ref.read(learnerStateNotifierProvider.notifier).loadProfile();
+    return result;
   }
 }
 
@@ -2493,6 +2550,28 @@ class LessonSessionNotifier extends StateNotifier<LessonSessionState> {
       }
     }
   }
+}
+
+LearningPathNode? resolveRoadmapPracticeBaseNode(
+  List<LearningPathNode> nodes,
+  LearningPathNode node,
+) {
+  if (!node.isReinforcement) return node;
+  final baseNodes = nodes.where((n) => !n.isReinforcement).toList();
+  final strippedId = node.id.startsWith('reinf_')
+      ? node.id.substring(6)
+      : node.id;
+
+  return baseNodes.where((n) => n.id == strippedId).firstOrNull ??
+      (node.targetLessonId != null && node.targetLessonId!.trim().isNotEmpty
+          ? baseNodes
+                .where((n) => n.targetLessonId == node.targetLessonId)
+                .firstOrNull
+          : null) ??
+      baseNodes
+          .where((n) => node.prerequisites.contains(n.id))
+          .firstOrNull ??
+      baseNodes.where((n) => n.skillId == node.skillId).firstOrNull;
 }
 
 String deriveCanonicalReinforcementNodeId({
