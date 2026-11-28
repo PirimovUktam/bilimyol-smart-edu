@@ -141,26 +141,39 @@ AS $$
     ) a ON true
     GROUP BY item.lesson_id
   ),
-  historical_evidence AS (
+  historical_mastery AS (
     SELECT
-      item.lesson_id,
-      count(DISTINCT item.question_id) FILTER (WHERE h.ever_attempted)::INT AS hist_answered,
-      count(DISTINCT item.question_id) FILTER (WHERE h.ever_correct)::INT AS hist_correct,
-      count(DISTINCT item.checkpoint) FILTER (WHERE h.ever_correct)::INT AS hist_checkpoints
-    FROM bilimyol_private.math_pilot_items item
-    LEFT JOIN LATERAL (
-      SELECT
-        count(attempt.id) > 0 AS ever_attempted,
-        COALESCE(bool_or(attempt.is_correct), false) AS ever_correct
-      FROM public.answer_attempts attempt
-      WHERE p_uid IS NOT NULL
-        AND attempt.user_id = p_uid
-        AND attempt.course_id = 'course_math_01'
-        AND attempt.skill_id = item.skill_id
-        AND attempt.lesson_id = item.lesson_id
-        AND attempt.question_id = item.question_id
-    ) h ON true
-    GROUP BY item.lesson_id
+      obj.target_lesson_id AS lesson_id,
+      EXISTS (
+        SELECT 1
+        FROM public.answer_attempts ref_a
+        CROSS JOIN bilimyol_private.math_pilot_policy pol
+        WHERE p_uid IS NOT NULL
+          AND ref_a.user_id = p_uid
+          AND ref_a.course_id = 'course_math_01'
+          AND ref_a.lesson_id = obj.target_lesson_id
+          AND (
+            SELECT
+              count(snap.id)::INT >= pol.min_items
+              AND 100 * (count(snap.id) FILTER (WHERE snap.is_correct)::INT) >= pol.min_accuracy * (count(snap.id)::INT)
+              AND (count(DISTINCT item.checkpoint) FILTER (WHERE snap.is_correct)::INT) >= pol.min_checkpoints
+            FROM bilimyol_private.math_pilot_items item
+            LEFT JOIN LATERAL (
+              SELECT a_in.id, a_in.is_correct
+              FROM public.answer_attempts a_in
+              WHERE a_in.user_id = p_uid
+                AND a_in.course_id = 'course_math_01'
+                AND a_in.skill_id = item.skill_id
+                AND a_in.lesson_id = item.lesson_id
+                AND a_in.question_id = item.question_id
+                AND (a_in.created_at, a_in.id::TEXT) <= (ref_a.created_at, ref_a.id::TEXT)
+              ORDER BY a_in.created_at DESC, a_in.id DESC
+              LIMIT 1
+            ) snap ON true
+            WHERE item.lesson_id = obj.target_lesson_id
+          )
+      ) AS ever_mastered
+    FROM objectives obj
   ),
   retrieval_srs AS (
     SELECT
@@ -233,12 +246,7 @@ AS $$
           AND lp.lesson_id = n.target_lesson_id
           AND lp.status = 'completed'
       ) AS previously_completed,
-      COALESCE(
-        he.hist_answered >= p.min_items
-          AND 100 * he.hist_correct >= p.min_accuracy * he.hist_answered
-          AND he.hist_checkpoints >= p.min_checkpoints,
-        false
-      ) AS ever_mastered,
+      COALESCE(hm.ever_mastered, false) AS ever_mastered,
       (
         n.id IN ('node_math_addition', 'node_math_multiplication')
         AND (COALESCE(e.answered, 0) - COALESCE(e.correct, 0) < 2)
@@ -249,7 +257,7 @@ AS $$
     CROSS JOIN bilimyol_private.math_pilot_policy p
     CROSS JOIN placement_context plc
     LEFT JOIN evidence e ON e.lesson_id = n.target_lesson_id
-    LEFT JOIN historical_evidence he ON he.lesson_id = n.target_lesson_id
+    LEFT JOIN historical_mastery hm ON hm.lesson_id = n.target_lesson_id
     LEFT JOIN retrieval_srs rs ON rs.lesson_id = n.target_lesson_id
   ),
   resolved AS (

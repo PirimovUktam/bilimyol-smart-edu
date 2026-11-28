@@ -260,9 +260,26 @@ export class RouteEngine {
   /**
    * Evaluates if a specific node can be started by the learner.
    */
-  public static canStartNode(node: LearningPathNode, completedNodeIds: string[]): boolean {
+  public static canStartNode(
+    node: LearningPathNode,
+    completedNodeIds: string[],
+    placementCefr?: string
+  ): boolean {
     if (node.status === 'locked') return false;
     if (node.mastery || node.isPlacementUnlocked || node.isPlacementRecommended) return true;
+    const tier = normalizeEnglishPlacementTier(placementCefr);
+    if (
+      node.courseId === 'course_eng_01' &&
+      ((tier === 'A2' &&
+        (node.id === 'node_eng_a2_m1_directions' || node.id === 'reinf_node_eng_a2_m1_directions')) ||
+        (tier === 'B1' &&
+          (node.id === 'node_eng_a2_m1_directions' ||
+            node.id === 'reinf_node_eng_a2_m1_directions' ||
+            node.id === 'node_eng_b1_m1_travel' ||
+            node.id === 'reinf_node_eng_b1_m1_travel')))
+    ) {
+      return true;
+    }
     return node.prerequisites.every((id) => completedNodeIds.includes(id));
   }
 }

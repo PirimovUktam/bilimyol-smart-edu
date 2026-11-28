@@ -1236,10 +1236,20 @@ class RoadmapStateNotifier extends StateNotifier<AsyncValue<LearningPath>> {
   final Ref ref;
   final String? sessionScope;
   int _loadGeneration = 0;
+  final Map<String, AnswerAttemptRecord> _pendingStandaloneAttempts = {};
 
   bool get _isLoggedOutRemote =>
       sessionScope == null &&
       ref.read(learnerRepositoryProvider).supportsServerPlacementPersistence;
+
+  String get _storageAccountScope {
+    final scope = sessionScope;
+    if (scope != null && scope.isNotEmpty && scope != 'demo') {
+      return scope;
+    }
+    final profileId = ref.read(learnerStateNotifierProvider).valueOrNull?.id.trim();
+    return (profileId != null && profileId.isNotEmpty) ? profileId : 'demo';
+  }
 
   RoadmapStateNotifier(this.ref, {this.sessionScope})
     : super(const AsyncValue.loading());
@@ -1276,6 +1286,71 @@ class RoadmapStateNotifier extends StateNotifier<AsyncValue<LearningPath>> {
     List<String>? checkedCriteriaIds,
   }) async {
     if (_isLoggedOutRemote) return null;
+    final sortedCriteria = question.isSelfAssessed
+        ? ([...(checkedCriteriaIds ?? const <String>[])]..sort())
+        : null;
+    final inputSig = question.isSelfAssessed
+        ? 'self:${(selectedText ?? '').trim()}|${(sortedCriteria ?? const <String>[]).join(',')}'
+        : selectedText != null
+        ? 'txt:${selectedText.trim()}'
+        : matchedPairs != null
+        ? 'pairs:${(matchedPairs.entries.map((e) => '${e.key}=${e.value}').toList()..sort()).join('&')}'
+        : orderedTokens != null
+        ? 'ord:${orderedTokens.join('\u0001')}'
+        : 'idx:$selectedIndex';
+    final cacheKey = '$reinforcementNodeId:${question.id}:$inputSig';
+    final storage = ref.read(localStorageServiceProvider);
+    final accountScope = _storageAccountScope;
+    final existingPending = await storage.getPendingAttempt(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: reinforcementNodeId,
+      questionId: question.id,
+    );
+    if (!mounted) return null;
+    var cachedAttempt = _pendingStandaloneAttempts[cacheKey];
+    if (cachedAttempt == null &&
+        existingPending != null &&
+        existingPending['payloadSig'] == inputSig &&
+        existingPending['status'] == 'graded') {
+      cachedAttempt = LessonSessionNotifier._attemptRecordFromJson(
+        existingPending['cachedAttempt'],
+      );
+    }
+    final String attemptId;
+    if (existingPending != null &&
+        existingPending['payloadSig'] == inputSig &&
+        existingPending['attemptId'] is String &&
+        (existingPending['attemptId'] as String).trim().isNotEmpty) {
+      attemptId = (existingPending['attemptId'] as String).trim();
+    } else {
+      attemptId = generateAttemptUuidV4();
+    }
+    final submittingData = <String, dynamic>{
+      'managedBySession': true,
+      'attemptId': attemptId,
+      'payloadSig': inputSig,
+      'status': cachedAttempt != null ? 'graded' : 'submitting',
+      'selectedIndex': selectedIndex,
+      'selectedText': ?selectedText,
+      'matchedPairs': ?matchedPairs,
+      'orderedTokens': ?orderedTokens,
+      'checkedCriteriaIds': ?sortedCriteria,
+      if (cachedAttempt != null)
+        'cachedAttempt': LessonSessionNotifier._attemptRecordToJson(cachedAttempt),
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (cachedAttempt == null) {
+      await storage.setPendingAttempt(
+        accountScope: accountScope,
+        courseId: courseId,
+        lessonId: reinforcementNodeId,
+        questionId: question.id,
+        data: submittingData,
+      );
+      if (!mounted) return null;
+    }
+
     final submitUseCase = ref.read(submitReinforcementUseCaseProvider);
     final result = await submitUseCase.execute(
       courseId: courseId,
@@ -1287,6 +1362,33 @@ class RoadmapStateNotifier extends StateNotifier<AsyncValue<LearningPath>> {
       matchedPairs: matchedPairs,
       orderedTokens: orderedTokens,
       checkedCriteriaIds: checkedCriteriaIds,
+      idempotencyKey: attemptId,
+      cachedAttempt: cachedAttempt,
+      onAttemptGraded: (attempt) {
+        _pendingStandaloneAttempts[cacheKey] = attempt;
+        unawaited(
+          storage.setPendingAttempt(
+            accountScope: accountScope,
+            courseId: courseId,
+            lessonId: reinforcementNodeId,
+            questionId: question.id,
+            data: {
+              ...submittingData,
+              'status': 'graded',
+              'cachedAttempt': LessonSessionNotifier._attemptRecordToJson(attempt),
+              'updatedAt': DateTime.now().millisecondsSinceEpoch,
+            },
+          ),
+        );
+      },
+    );
+    if (!mounted) return null;
+    _pendingStandaloneAttempts.remove(cacheKey);
+    await storage.clearPendingAttempt(
+      accountScope: accountScope,
+      courseId: courseId,
+      lessonId: reinforcementNodeId,
+      questionId: question.id,
     );
     if (!mounted) return null;
     final activeCourseId = ref.read(courseStateNotifierProvider).activeCourse?.id;

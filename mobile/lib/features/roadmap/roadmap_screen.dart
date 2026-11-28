@@ -241,6 +241,21 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             question: q,
             selectedIndex: selectedIndex,
           ),
+          onSubmitRich: ({
+            required int selectedIndex,
+            String? selectedText,
+            Map<String, String>? matchedPairs,
+            List<String>? orderedTokens,
+          }) => notifier.submitStandaloneReinforcement(
+            courseId: q.courseId,
+            skillId: q.skillId,
+            reinforcementNodeId: resolvedReinfNodeId,
+            question: q,
+            selectedIndex: selectedIndex,
+            selectedText: selectedText,
+            matchedPairs: matchedPairs,
+            orderedTokens: orderedTokens,
+          ),
           onSubmitRichWithRubric: ({
             required int selectedIndex,
             String? selectedText,

@@ -33,17 +33,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _courseTabIndex = 0; // 0: Aktiv, 1: Tavsiya, 2: Barchasi
   String _searchQuery = '';
   String? _requestedRoadmapCourseId;
+  RoadmapStateNotifier? _requestedRoadmapNotifier;
 
   void _ensureRoadmapLoaded(String? courseId) {
     if (!mounted || courseId == null || courseId.isEmpty) return;
+    final notifier = ref.read(roadmapStateNotifierProvider.notifier);
     final currentPath = ref.read(roadmapStateNotifierProvider).valueOrNull;
-    if (currentPath?.courseId == courseId ||
+    if (currentPath?.courseId == courseId) {
+      _requestedRoadmapCourseId = null;
+      _requestedRoadmapNotifier = null;
+      return;
+    }
+    if (identical(_requestedRoadmapNotifier, notifier) &&
         _requestedRoadmapCourseId == courseId) {
       return;
     }
+    _requestedRoadmapNotifier = notifier;
     _requestedRoadmapCourseId = courseId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final latestCourseId =
+          ref.read(courseStateNotifierProvider).activeCourse?.id;
+      if (latestCourseId != courseId) return;
+      final latestPath = ref.read(roadmapStateNotifierProvider).valueOrNull;
+      if (latestPath?.courseId == courseId) return;
       ref.read(roadmapStateNotifierProvider.notifier).loadRoadmap(courseId);
     });
   }

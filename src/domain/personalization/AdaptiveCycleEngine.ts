@@ -185,6 +185,77 @@ function resolveReinforcementTargetNodeId(
   return `reinf_${weakestSkillId}`;
 }
 
+function collectCourseCompletedReinforcements(
+  courseId: string | undefined,
+  course: Course | null | undefined,
+  roadmap: LearningPath | null | undefined,
+  skills: Skill[],
+  profile: LearnerProfile | null | undefined
+): Set<string> {
+  const result = new Set<string>();
+  const rawCompleted = profile?.completedReinforcementIds ?? [];
+  const rawSet = new Set(rawCompleted);
+
+  if (roadmap) {
+    for (const node of roadmap.nodes) {
+      if (node.isReinforcement && (node.status === 'completed' || rawSet.has(node.id))) {
+        result.add(node.id);
+      }
+    }
+  }
+
+  if (!roadmap && !course && !courseId) {
+    for (const rid of rawCompleted) {
+      result.add(rid);
+    }
+    return result;
+  }
+
+  for (const rid of rawCompleted) {
+    const matchesRoadmapNode =
+      roadmap?.nodes.some(
+        (n) =>
+          n.id === rid ||
+          (!n.isReinforcement && rid === `reinf_${n.id}`) ||
+          Boolean(n.targetLessonId && rid === `reinf_lesson_${n.targetLessonId}`)
+      ) ?? false;
+    const matchesCourseLesson =
+      course?.lessons.some((lid) => rid === `reinf_lesson_${lid}`) ?? false;
+    const matchesCoursePrefix = Boolean(courseId && rid.startsWith(`reinf_${courseId}_`));
+    const matchesSkillFallback =
+      !roadmap && skills.some((sk) => rid === `reinf_${sk.id}`);
+
+    if (matchesRoadmapNode || matchesCourseLesson || matchesCoursePrefix || matchesSkillFallback) {
+      result.add(rid);
+    }
+  }
+
+  return result;
+}
+
+function hasSkillCompletedReinforcement(
+  skillId: string,
+  courseId: string | undefined,
+  roadmap: LearningPath | null | undefined,
+  completedCourseReinfIds: Set<string>
+): boolean {
+  for (const rid of completedCourseReinfIds) {
+    if (rid === `reinf_${skillId}` || (courseId && rid === `reinf_${courseId}_${skillId}`)) {
+      return true;
+    }
+    if (
+      roadmap?.nodes.some(
+        (n) =>
+          n.skillId === skillId &&
+          (n.id === rid || (!n.isReinforcement && rid === `reinf_${n.id}`))
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Pure domain engine implementing BilimYo'l's 5-step Adaptive Learning Cycle,
  * 6-input Explainable AI transparent reasoning, and honest cycle effectiveness metrics.
@@ -213,9 +284,13 @@ export class AdaptiveCycleEngine {
           (n) => !n.isReinforcement && !n.isOptional && n.status === 'completed'
         ).length
       : (profile?.completedNodeIds.length ?? 0);
-    const completedReinforcementsCount = roadmap
-      ? roadmap.nodes.filter((n) => n.isReinforcement && n.status === 'completed').length
-      : (profile?.completedReinforcementIds.length ?? 0);
+    const completedReinforcementsCount = collectCourseCompletedReinforcements(
+      courseId,
+      course,
+      roadmap,
+      skills,
+      profile
+    ).size;
 
     const weakScores = scoreValues.filter((s) => s.score < ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN);
     const strongScores = scoreValues.filter((s) => s.score >= ADAPTIVE_THRESHOLDS.STANDARD_MIN);
@@ -254,6 +329,8 @@ export class AdaptiveCycleEngine {
       activeStep = 1;
     } else if (hasPracticeActivity && hasProgressMeasured) {
       activeStep = 5;
+    } else if (hasPracticeActivity) {
+      activeStep = 4;
     } else if (hasPathSelected) {
       activeStep = 3;
     } else {
@@ -262,10 +339,10 @@ export class AdaptiveCycleEngine {
 
     const stepStatus = (
       stepNum: AdaptiveStepId,
-      doneCondition: boolean
+      _doneCondition: boolean
     ): AdaptiveStepState['status'] => {
       if (activeStep === stepNum) return 'active';
-      if (doneCondition || stepNum < activeStep) return 'completed';
+      if (stepNum < activeStep) return 'completed';
       return 'upcoming';
     };
 
@@ -572,7 +649,13 @@ export class AdaptiveCycleEngine {
     const hasPlacementSkills = Object.keys(placementSkillScores).length > 0;
     const hasDiagnosticBaseline = explicitPlacementScore != null || hasPlacementSkills;
 
-    const completedReinforcements = new Set(profile?.completedReinforcementIds ?? []);
+    const completedCourseReinfIds = collectCourseCompletedReinforcements(
+      courseId,
+      course,
+      roadmap,
+      skills,
+      profile
+    );
     const completedLessons = course
       ? course.lessons.filter((id) => profile?.completedLessonIds.includes(id)).length
       : (profile?.completedLessonIds.length ?? 0);
@@ -581,9 +664,7 @@ export class AdaptiveCycleEngine {
           (n) => !n.isReinforcement && !n.isOptional && n.status === 'completed'
         ).length
       : mathObjectives.filter((n) => n.status === 'completed').length;
-    const completedCourseReinforcements = roadmap
-      ? roadmap.nodes.filter((n) => n.isReinforcement && completedReinforcements.has(n.id)).length
-      : completedReinforcements.size;
+    const completedCourseReinforcements = completedCourseReinfIds.size;
 
     const hasPracticeActivity =
       completedLessons > 0 || completedCourseReinforcements > 0 || completedNodesCount > 0;
@@ -603,9 +684,11 @@ export class AdaptiveCycleEngine {
     const skillDeltas: AdaptiveSkillDelta[] = skills.map((skill) => {
       const scoreObj = skillScores[skill.id];
       const plcObj = placementSkillScores[skill.id];
-      const hasReinforcementCompleted = Array.from(completedReinforcements).some(
-        (rid) =>
-          roadmap?.nodes.some((n) => n.id === rid && n.skillId === skill.id) ?? false
+      const hasReinforcementCompleted = hasSkillCompletedReinforcement(
+        skill.id,
+        courseId,
+        roadmap,
+        completedCourseReinfIds
       );
 
       if (!scoreObj) {

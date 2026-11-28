@@ -17,7 +17,8 @@ $$;
 INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
   ('00000000-0000-0000-0000-00000000b401', 'w1b4-math-placed@example.invalid', '{}'),
   ('00000000-0000-0000-0000-00000000b402', 'w1b4-math-srs@example.invalid', '{}'),
-  ('00000000-0000-0000-0000-00000000b403', 'w1b4-eng-isolation@example.invalid', '{}');
+  ('00000000-0000-0000-0000-00000000b403', 'w1b4-eng-isolation@example.invalid', '{}'),
+  ('00000000-0000-0000-0000-00000000b404', 'w1b4-math-false-unlock@example.invalid', '{}');
 
 -- ============================================================================
 -- 1. FIX-P1-08: 4/4 (100%) Math Pilot placement unlocks foundation arithmetic
@@ -253,5 +254,101 @@ BEGIN
   );
 END;
 $$;
+
+-- ============================================================================
+-- 4. FIX-P1-17 (Edge Cases): Same-UTC-day repeated retrieval passes do NOT
+--    inflate streak to 30d; a wrong retrieval answer resets interval back to 7d
+--    without unlocking unmastered node_math_functions or re-locking mastered
+--    node_math_multiplication; and disjoint < 4/5 guesses NEVER falsely unlock
+--    downstream chapters via ever_mastered.
+-- ============================================================================
+-- Advance b402 Node 2 attempts by another +12d (total -32d >= 30d -> due)
+UPDATE public.answer_attempts
+SET created_at = created_at - interval '12 days'
+WHERE user_id = '00000000-0000-0000-0000-00000000b402'
+  AND lesson_id = 'lesson_math_foundation_02';
+
+SET LOCAL ROLE authenticated;
+DO $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000b402', true);
+  PERFORM pg_temp.assert_w1_b4(
+    public.get_math_progression()->1->>'review_due' = 'true',
+    'FIX-P1-17: 30d interval becomes review_due after 32d'
+  );
+
+  -- Learner answers _4 WRONG first, then recovers _4 and _5 CORRECT twice on the SAME UTC day!
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_math_01', 'skill_math_multiplication', 'lesson_math_foundation_02',
+    'q_pilot_lesson_math_foundation_02_4', 0, '', 'w1b4-mul-wrong-reset'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_math_01', 'skill_math_multiplication', 'lesson_math_foundation_02',
+    'q_pilot_lesson_math_foundation_02_4', 2, '', 'w1b4-mul-recover-4a'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_math_01', 'skill_math_multiplication', 'lesson_math_foundation_02',
+    'q_pilot_lesson_math_foundation_02_4', 2, '', 'w1b4-mul-recover-4b'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_math_01', 'skill_math_multiplication', 'lesson_math_foundation_02',
+    'q_pilot_lesson_math_foundation_02_5', 1, '', 'w1b4-mul-recover-5a'
+  );
+  PERFORM public.submit_answer_attempt(
+    auth.uid(), 'course_math_01', 'skill_math_multiplication', 'lesson_math_foundation_02',
+    'q_pilot_lesson_math_foundation_02_5', 1, '', 'w1b4-mul-recover-5b'
+  );
+
+  PERFORM pg_temp.assert_w1_b4(
+    public.get_math_progression()->1->>'status' = 'completed'
+    AND public.get_math_progression()->1->>'review_due' = 'false'
+    AND public.get_math_progression()->4->>'status' = 'locked',
+    'FIX-P1-17: recovery keeps Node 2 completed without unlocking unmastered Node 5 (functions)'
+  );
+END;
+$$;
+RESET ROLE;
+
+-- Advance Node 2 attempts by +8 days (> 7d, < 14d): because _4 had a wrong attempt followed
+-- by only 1 distinct UTC day of correct attempts, interval MUST have reset to 7d (due = true)!
+UPDATE public.answer_attempts
+SET created_at = created_at - interval '8 days'
+WHERE user_id = '00000000-0000-0000-0000-00000000b402'
+  AND lesson_id = 'lesson_math_foundation_02';
+
+SET LOCAL ROLE authenticated;
+DO $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000b402', true);
+  PERFORM pg_temp.assert_w1_b4(
+    public.get_math_progression()->1->>'review_due' = 'true'
+    AND public.get_math_progression()->1->>'status' = 'completed',
+    'FIX-P1-17: wrong retrieval attempt + same-UTC-day retries resets review interval to 7d (due at +8d)'
+  );
+
+  -- Disjoint wrong/right retries on b404 (Round 1: 1/5, Round 2: 2/5, Round 3: 1/5 — never >= 4/5 simultaneously)
+  PERFORM set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000b404', true);
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 0, '', 'w1b4-fu-r1-1');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_2', 0, '', 'w1b4-fu-r1-2');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_3', 0, '', 'w1b4-fu-r1-3');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_4', 0, '', 'w1b4-fu-r1-4');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_5', 1, '', 'w1b4-fu-r1-5');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_1', 1, '', 'w1b4-fu-r2-1');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_2', 2, '', 'w1b4-fu-r2-2');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_3', 1, '', 'w1b4-fu-r2-3');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_2', 0, '', 'w1b4-fu-r3-2');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_3', 0, '', 'w1b4-fu-r3-3');
+  PERFORM public.submit_answer_attempt(auth.uid(), 'course_math_01', 'skill_math_addition', 'lesson_math_starter', 'q_pilot_lesson_math_starter_4', 2, '', 'w1b4-fu-r3-4');
+
+  PERFORM pg_temp.assert_w1_b4(
+    public.get_math_progression()->0->>'status' = 'reinforcement'
+    AND public.get_math_progression()->0->>'correct' = '1'
+    AND public.get_math_progression()->1->>'status' = 'locked'
+    AND public.can_open_math_lesson('lesson_math_foundation_02') = false,
+    'FIX-P1-17: disjoint retries never reaching >=4/5 simultaneously do NOT falsely unlock downstream chapters'
+  );
+END;
+$$;
+RESET ROLE;
 
 ROLLBACK;

@@ -6,7 +6,11 @@ import { SEED_SKILLS } from '@/data/datasources/skills';
 import { SEED_ROADMAP_NODES } from '@/data/datasources/roadmaps';
 import { SEED_LESSONS } from '@/data/datasources/lessons';
 import { AdaptiveCycleEngine } from '@/domain/personalization/AdaptiveCycleEngine';
+import { RecommendationEngine } from '@/domain/personalization/RecommendationEngine';
 import { RouteEngine } from '@/domain/personalization/RouteEngine';
+import { SubmitReinforcementUseCase } from '@/domain/usecases/SubmitReinforcementUseCase';
+import { InMemoryLearnerRepository } from '@/data/repositories/InMemoryLearnerRepository';
+import { InMemoryLessonRepository } from '@/data/repositories/InMemoryLessonRepository';
 import type { LearnerProfile } from '@/domain/entities/LearnerProfile';
 import type { LearningPath, LearningPathNode } from '@/domain/entities/LearningPathNode';
 import type { SkillScore } from '@/domain/entities/SkillScore';
@@ -476,5 +480,122 @@ describe('W1-B4: Unified Roadmap Unlock Policy, Targeted Reinforcement & Honest 
     expect(screen.getByRole('heading', { name: /Qo‘shish va ayirish/i })).toBeInTheDocument();
     expect(screen.getByText(/Bo‘shliq aniqlangan/i)).toBeInTheDocument();
     unmountMap();
+
+    // Live Math Pilot RecommendationEngine identifies exact weak objective (33%, 'high') even when scoresByCourse is empty
+    const pilotRec = RecommendationEngine.generateRecommendation(
+      'course_math_01',
+      mathSkills,
+      {},
+      pilotRoadmap,
+      pilotProfile
+    );
+    expect(pilotRec.targetSkillId).toBe('skill_math_multiplication');
+    expect(pilotRec.title).toContain('Teng guruhlar va ko‘paytirish');
+    expect(pilotRec.priority).toBe('high');
+    expect(pilotRec.reason).toContain('33%');
+  });
+
+  it('FIX-P0-12 & FIX-P1-19: real SubmitReinforcementUseCase remediates multi-skill B1 parent without corrupting unassessed exercise skill to 22%', async () => {
+    const learnerRepo = new InMemoryLearnerRepository();
+    const lessonRepo = new InMemoryLessonRepository();
+    await learnerRepo.resetAll();
+
+    await learnerRepo.updateProfile({
+      selectedCourseId: 'course_eng_01',
+      placementCefrByCourse: { course_eng_01: 'B1' },
+      scoresByCourse: {
+        course_eng_01: {
+          skill_eng_listening: makeScore('course_eng_01', 'skill_eng_listening', 32),
+        },
+      },
+    });
+
+    const b1Lesson = await lessonRepo.getLessonById('lesson_eng_b1_m1_travel');
+    expect(b1Lesson).not.toBeNull();
+    const q = b1Lesson!.reinforcementExercise;
+    expect(q.skillId).toBe('skill_eng_grammar');
+
+    const useCase = new SubmitReinforcementUseCase(learnerRepo, lessonRepo);
+    const qType = q.questionType ?? 'multiple_choice';
+    const isChoice =
+      qType === 'multiple_choice' || qType === 'error_correction' || qType === 'conversation_completion';
+
+    const res = await useCase.execute(
+      'course_eng_01',
+      q.skillId,
+      'reinf_node_eng_b1_m1_travel',
+      q,
+      isChoice ? (q.correctIndex ?? 0) : 0,
+      isChoice ? undefined : (q.acceptedAnswers?.[0] ?? ''),
+    );
+
+    expect(res.isCorrect).toBe(true);
+    expect(res.oldScore).toBe(32);
+    expect(res.newScore).toBe(54);
+
+    const updatedProfile = await learnerRepo.getProfile();
+    expect(updatedProfile.scoresByCourse.course_eng_01.skill_eng_listening.score).toBe(54);
+    expect(updatedProfile.scoresByCourse.course_eng_01.skill_eng_grammar.score).toBeGreaterThanOrEqual(50);
+
+    const b1Entry = res.updatedRoadmap.nodes.find((n) => n.id === 'node_eng_b1_m1_travel')!;
+    const b1Reinf = res.updatedRoadmap.nodes.find((n) => n.id === 'reinf_node_eng_b1_m1_travel')!;
+    const b1GrammarNode = res.updatedRoadmap.nodes.find((n) => n.id === 'node_eng_b1_m2_work_study')!;
+    expect(b1Entry.status).toBe('available');
+    expect(b1Reinf.status).toBe('completed');
+    expect(b1GrammarNode.status).not.toBe('reinforcement');
+    expect(RouteEngine.canStartNode(b1Reinf, [], 'B1')).toBe(true);
+  });
+
+  it('FIX-P1-01: enforces monotonic Step 01..05 statuses on Day-0 onboarding and counts standalone lesson-keyed reinforcements toward growthDelta', () => {
+    const mathCourse = SEED_COURSES.find((c) => c.id === 'course_math_01')!;
+    const mathSkills = SEED_SKILLS.filter((s) => s.courseId === 'course_math_01');
+    const mathNodes = SEED_ROADMAP_NODES['course_math_01'];
+    const day0Roadmap = RouteEngine.adaptRoadmap('course_math_01', mathNodes, {}, [], []);
+
+    const day0Cycle = AdaptiveCycleEngine.evaluateCycle({
+      course: mathCourse,
+      profile: makeProfile({
+        courseLevels: { course_math_01: 'beginner' },
+      }),
+      skills: mathSkills,
+      skillScores: {},
+      roadmap: day0Roadmap,
+    });
+    expect(day0Cycle.activeStep).toBe(1);
+    expect(day0Cycle.steps[0].status).toBe('active');
+    expect(day0Cycle.steps.slice(1).every((s) => s.status === 'upcoming')).toBe(true);
+
+    // Reinforcement recorded under reinf_lesson_* with 0 completed lessons still unlocks Step 05 and honest +22% growthDelta
+    const postReinfScores: Record<string, SkillScore> = {
+      skill_math_algebra: makeScore('course_math_01', 'skill_math_algebra', 22),
+    };
+    const postReinfRoadmap = RouteEngine.adaptRoadmap('course_math_01', mathNodes, postReinfScores, [], []);
+    const postReinfProfile = makeProfile({
+      scoresByCourse: { course_math_01: postReinfScores },
+      placementScoreByCourse: { course_math_01: 0 },
+      placementSkillScoresByCourse: {
+        course_math_01: {
+          skill_math_algebra: makeScore('course_math_01', 'skill_math_algebra', 0),
+        },
+      },
+      completedReinforcementIds: ['reinf_lesson_lesson_math_algebra_01'],
+    });
+    const postReinfCycle = AdaptiveCycleEngine.evaluateCycle({
+      course: mathCourse,
+      profile: postReinfProfile,
+      skills: mathSkills,
+      skillScores: postReinfScores,
+      roadmap: postReinfRoadmap,
+    });
+    const postReinfEff = AdaptiveCycleEngine.measureEffectiveness({
+      course: mathCourse,
+      profile: postReinfProfile,
+      skills: mathSkills,
+      skillScores: postReinfScores,
+      roadmap: postReinfRoadmap,
+    });
+    expect(postReinfCycle.activeStep).toBe(5);
+    expect(postReinfCycle.steps[3].status).toBe('completed');
+    expect(postReinfEff.growthDelta).toBe(22);
   });
 });

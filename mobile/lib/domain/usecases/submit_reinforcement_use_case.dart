@@ -103,7 +103,21 @@ class SubmitReinforcementUseCase {
     }
     final profile = await learnerRepository.getProfile();
     final courseScores = profile.scoresByCourse[courseId] ?? {};
+    final hadPriorSkillScore = courseScores.containsKey(skillId);
     final currentSkillScore = courseScores[skillId]?.score ?? 0;
+
+    Map<String, SkillScore> resolveEffectiveScores(
+      Map<String, Map<String, SkillScore>> placementByCourse,
+      Map<String, Map<String, SkillScore>> scoresByCourse,
+    ) {
+      if (courseId == 'course_eng_01') {
+        return scoresByCourse[courseId] ?? const {};
+      }
+      return <String, SkillScore>{
+        ...(placementByCourse[courseId] ?? const {}),
+        ...(scoresByCourse[courseId] ?? const {}),
+      };
+    }
 
     final resolvedKey =
         (idempotencyKey != null && idempotencyKey.trim().isNotEmpty)
@@ -129,7 +143,10 @@ class SubmitReinforcementUseCase {
 
     if (!isCorrect) {
       final currentProfile = await learnerRepository.getProfile();
-      final currentScores = currentProfile.scoresByCourse[courseId] ?? {};
+      final currentScores = resolveEffectiveScores(
+        currentProfile.placementSkillScoresByCourse,
+        currentProfile.scoresByCourse,
+      );
       final actualScore = currentScores[skillId]?.score ??
           answerAttempt.newSkillScore ??
           currentSkillScore;
@@ -155,10 +172,57 @@ class SubmitReinforcementUseCase {
       );
     }
 
-    // Calculate all persistence context before writing the completion row.
-    final newScore = SkillScoringEngine.calculateReinforcementScore(
+    // Calculate all persistence context before writing the completion row
+    // (preserving multi-skill parent remediation parity with Web & SQL).
+    final postAttemptProfile = await learnerRepository.getProfile();
+    final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
+    final parentBase = baseNodes
+        .where(
+          (n) =>
+              !n.isReinforcement &&
+              (reinforcementNodeId == 'reinf_${n.id}' ||
+                  n.id == reinforcementNodeId),
+        )
+        .firstOrNull;
+    final isMultiSkillParent =
+        parentBase != null && parentBase.skillId != skillId;
+    final postAttemptSkillScore =
+        postAttemptProfile.scoresByCourse[courseId]?[skillId]?.score ??
+        answerAttempt.newSkillScore ??
+        0;
+    final bumpedSkillScore = SkillScoringEngine.calculateReinforcementScore(
       currentSkillScore,
     );
+    final exerciseNewScore = isMultiSkillParent
+        ? (hadPriorSkillScore
+              ? (postAttemptSkillScore > bumpedSkillScore
+                    ? postAttemptSkillScore
+                    : bumpedSkillScore)
+              : [50, postAttemptSkillScore, bumpedSkillScore].reduce(
+                  (a, b) => a > b ? a : b,
+                ))
+        : bumpedSkillScore;
+
+    final parentExisting = isMultiSkillParent
+        ? courseScores[parentBase.skillId]
+        : null;
+    final remediateParent =
+        parentBase != null &&
+        parentExisting != null &&
+        parentExisting.score < parentBase.requiredScore;
+    final parentOldScore = parentExisting?.score ?? 0;
+    final parentNewScore = remediateParent
+        ? SkillScoringEngine.calculateReinforcementScore(parentOldScore)
+        : parentOldScore;
+    final useParentReport =
+        remediateParent &&
+        (!hadPriorSkillScore ||
+            currentSkillScore >= parentBase.requiredScore);
+    final reportedOldScore =
+        useParentReport ? parentOldScore : currentSkillScore;
+    final reportedNewScore =
+        useParentReport ? parentNewScore : exerciseNewScore;
+
     final xpCalc = ProgressEngine.calculateNewXP(
       currentXP: profile.xp,
       actionType: 'reinforcement_completion',
@@ -174,8 +238,8 @@ class SubmitReinforcementUseCase {
       courseId: courseId,
       skillId: skillId,
       questionId: reinforcementQuestion.id,
-      beforeScore: currentSkillScore,
-      afterScore: newScore,
+      beforeScore: reportedOldScore,
+      afterScore: reportedNewScore,
       xpAwarded: xpAwarded,
     );
 
@@ -184,7 +248,6 @@ class SubmitReinforcementUseCase {
         throw StateError('Server reinforcement completion result is missing.');
       }
       final persistedProfile = await learnerRepository.getProfile();
-      final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
       return ReinforcementResult(
         isCorrect: true,
         oldScore: completion.oldScore,
@@ -193,7 +256,10 @@ class SubmitReinforcementUseCase {
         updatedRoadmap: RouteEngine.adaptRoadmap(
           courseId: courseId,
           baseNodes: baseNodes,
-          skillScores: persistedProfile.scoresByCourse[courseId] ?? {},
+          skillScores: resolveEffectiveScores(
+            persistedProfile.placementSkillScoresByCourse,
+            persistedProfile.scoresByCourse,
+          ),
           completedNodeIds: persistedProfile.completedNodeIds,
           completedReinforcementIds: persistedProfile.completedReinforcementIds,
           placementCefrTier: persistedProfile.placementCefrByCourse[courseId],
@@ -203,19 +269,29 @@ class SubmitReinforcementUseCase {
       );
     }
 
-    // Save the new skill score.
-    final updatedSkillScore = SkillScore(
-      skillId: skillId,
-      courseId: courseId,
-      score: newScore,
-      lastUpdated: DateTime.now().millisecondsSinceEpoch,
-      masteryLevel: SkillScoringEngine.getMasteryLevel(newScore),
-      isWeakestFocus: false,
-    );
+    // Save the new skill score (and remediate parent node's weak skill when exercise skill differs).
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final scoresToSave = <String, SkillScore>{
+      skillId: SkillScore(
+        skillId: skillId,
+        courseId: courseId,
+        score: exerciseNewScore,
+        lastUpdated: now,
+        masteryLevel: SkillScoringEngine.getMasteryLevel(exerciseNewScore),
+        isWeakestFocus: false,
+      ),
+      if (remediateParent)
+        parentBase.skillId: SkillScore(
+          skillId: parentBase.skillId,
+          courseId: courseId,
+          score: parentNewScore,
+          lastUpdated: now,
+          masteryLevel: SkillScoringEngine.getMasteryLevel(parentNewScore),
+          isWeakestFocus: false,
+        ),
+    };
 
-    await learnerRepository.saveSkillScores(courseId, {
-      skillId: updatedSkillScore,
-    });
+    await learnerRepository.saveSkillScores(courseId, scoresToSave);
 
     if (xpCalc.wasAwarded) {
       // Preserve completion/score changes made by the repositories above.
@@ -227,8 +303,10 @@ class SubmitReinforcementUseCase {
 
     // 5. Adapt updated roadmap
     final finalProfile = await learnerRepository.getProfile();
-    final baseNodes = await lessonRepository.getBaseRoadmapNodes(courseId);
-    final updatedScores = finalProfile.scoresByCourse[courseId] ?? {};
+    final updatedScores = resolveEffectiveScores(
+      finalProfile.placementSkillScoresByCourse,
+      finalProfile.scoresByCourse,
+    );
 
     final updatedRoadmap = RouteEngine.adaptRoadmap(
       courseId: courseId,
@@ -243,8 +321,8 @@ class SubmitReinforcementUseCase {
 
     return ReinforcementResult(
       isCorrect: true,
-      oldScore: currentSkillScore,
-      newScore: newScore,
+      oldScore: reportedOldScore,
+      newScore: reportedNewScore,
       xpAwarded: xpAwarded,
       updatedRoadmap: updatedRoadmap,
     );

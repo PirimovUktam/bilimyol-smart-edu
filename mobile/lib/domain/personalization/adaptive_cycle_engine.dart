@@ -344,6 +344,82 @@ class AdaptiveCycleEngine {
     return 'reinf_$weakestSkillId';
   }
 
+  static Set<String> _collectCourseCompletedReinforcements({
+    required String? courseId,
+    required Course? course,
+    required LearningPath? roadmap,
+    required List<Skill> skills,
+    required LearnerProfile? profile,
+  }) {
+    final result = <String>{};
+    final rawCompleted = profile?.completedReinforcementIds ?? const <String>[];
+    final rawSet = rawCompleted.toSet();
+
+    if (roadmap != null) {
+      for (final node in roadmap.nodes) {
+        if (node.isReinforcement &&
+            (node.status == NodeStatus.completed || rawSet.contains(node.id))) {
+          result.add(node.id);
+        }
+      }
+    }
+
+    if (roadmap == null && course == null && courseId == null) {
+      result.addAll(rawCompleted);
+      return result;
+    }
+
+    for (final rid in rawCompleted) {
+      final matchesRoadmapNode =
+          roadmap?.nodes.any(
+            (n) =>
+                n.id == rid ||
+                (!n.isReinforcement && rid == 'reinf_${n.id}') ||
+                (n.targetLessonId?.isNotEmpty == true &&
+                    rid == 'reinf_lesson_${n.targetLessonId}'),
+          ) ??
+          false;
+      final matchesCourseLesson =
+          course?.lessons.any((lid) => rid == 'reinf_lesson_$lid') ?? false;
+      final matchesCoursePrefix =
+          courseId != null && rid.startsWith('reinf_${courseId}_');
+      final matchesSkillFallback =
+          roadmap == null && skills.any((sk) => rid == 'reinf_${sk.id}');
+
+      if (matchesRoadmapNode ||
+          matchesCourseLesson ||
+          matchesCoursePrefix ||
+          matchesSkillFallback) {
+        result.add(rid);
+      }
+    }
+
+    return result;
+  }
+
+  static bool _hasSkillCompletedReinforcement({
+    required String skillId,
+    required String? courseId,
+    required LearningPath? roadmap,
+    required Set<String> completedCourseReinfIds,
+  }) {
+    for (final rid in completedCourseReinfIds) {
+      if (rid == 'reinf_$skillId' ||
+          (courseId != null && rid == 'reinf_${courseId}_$skillId')) {
+        return true;
+      }
+      if (roadmap?.nodes.any(
+            (n) =>
+                n.skillId == skillId &&
+                (n.id == rid || (!n.isReinforcement && rid == 'reinf_${n.id}')),
+          ) ==
+          true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static AdaptiveCycleSnapshot evaluateCycle(AdaptiveContextInput input) {
     final isRu = input.localeCode == 'ru';
     final lang = isRu ? 'ru' : 'uz';
@@ -373,13 +449,13 @@ class AdaptiveCycleEngine {
               )
               .length
         : (profile?.completedNodeIds.length ?? 0);
-    final completedReinforcementsCount = roadmap != null
-        ? roadmap.nodes
-              .where(
-                (n) => n.isReinforcement && n.status == NodeStatus.completed,
-              )
-              .length
-        : (profile?.completedReinforcementIds.length ?? 0);
+    final completedReinforcementsCount = _collectCourseCompletedReinforcements(
+      courseId: ctx.courseId,
+      course: course,
+      roadmap: roadmap,
+      skills: ctx.skills,
+      profile: profile,
+    ).length;
 
     final weakScores = scoreValues
         .where((s) => s.score < AdaptiveThresholds.targetedPracticeMin)
@@ -425,15 +501,17 @@ class AdaptiveCycleEngine {
       activeStep = 1;
     } else if (hasPracticeActivity && hasProgressMeasured) {
       activeStep = 5;
+    } else if (hasPracticeActivity) {
+      activeStep = 4;
     } else if (hasPathSelected) {
       activeStep = 3;
     } else {
       activeStep = 2;
     }
 
-    AdaptiveStepStatus stepStatus(int stepNum, bool doneCondition) {
+    AdaptiveStepStatus stepStatus(int stepNum, bool _) {
       if (activeStep == stepNum) return AdaptiveStepStatus.active;
-      if (doneCondition || stepNum < activeStep) {
+      if (stepNum < activeStep) {
         return AdaptiveStepStatus.completed;
       }
       return AdaptiveStepStatus.upcoming;
@@ -859,9 +937,13 @@ class AdaptiveCycleEngine {
     final hasDiagnosticBaseline =
         explicitPlacementScore != null || hasPlacementSkills;
 
-    final completedReinforcements = <String>{
-      ...(profile?.completedReinforcementIds ?? const []),
-    };
+    final completedCourseReinfIds = _collectCourseCompletedReinforcements(
+      courseId: ctx.courseId,
+      course: course,
+      roadmap: roadmap,
+      skills: ctx.skills,
+      profile: profile,
+    );
     final completedLessons = course != null
         ? course.lessons
               .where((id) => profile?.completedLessonIds.contains(id) == true)
@@ -879,14 +961,7 @@ class AdaptiveCycleEngine {
         : ctx.mathObjectives
               .where((n) => n.status == NodeStatus.completed)
               .length;
-    final completedCourseReinforcements = roadmap != null
-        ? roadmap.nodes
-              .where(
-                (n) =>
-                    n.isReinforcement && completedReinforcements.contains(n.id),
-              )
-              .length
-        : completedReinforcements.length;
+    final completedCourseReinforcements = completedCourseReinfIds.length;
 
     final hasPracticeActivity =
         completedLessons > 0 ||
@@ -909,10 +984,11 @@ class AdaptiveCycleEngine {
     final skillDeltas = ctx.skills.map((skill) {
       final scoreObj = ctx.skillScores[skill.id];
       final plcObj = ctx.placementSkillScores[skill.id];
-      final hasReinforcementCompleted = completedReinforcements.any(
-        (rid) =>
-            roadmap?.nodes.any((n) => n.id == rid && n.skillId == skill.id) ==
-            true,
+      final hasReinforcementCompleted = _hasSkillCompletedReinforcement(
+        skillId: skill.id,
+        courseId: ctx.courseId,
+        roadmap: roadmap,
+        completedCourseReinfIds: completedCourseReinfIds,
       );
 
       if (scoreObj == null) {

@@ -27,7 +27,13 @@ export class GetRoadmapUseCase {
       }
     }
     const profile = await this.learnerRepo.getProfile();
-    const scores = profile.scoresByCourse[courseId] || {};
+    const scores =
+      courseId !== 'course_eng_01'
+        ? {
+            ...(profile.placementSkillScoresByCourse?.[courseId] ?? {}),
+            ...(profile.scoresByCourse[courseId] ?? {}),
+          }
+        : (profile.scoresByCourse[courseId] || {});
 
     return RouteEngine.adaptRoadmap(
       courseId,

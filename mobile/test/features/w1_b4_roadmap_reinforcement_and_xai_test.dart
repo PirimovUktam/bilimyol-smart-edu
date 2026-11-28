@@ -15,6 +15,7 @@ import 'package:bilimyol_mobile/data/repositories/in_memory_lesson_repository.da
 import 'package:bilimyol_mobile/domain/entities/learner_profile.dart';
 import 'package:bilimyol_mobile/domain/entities/learning_path_node.dart';
 import 'package:bilimyol_mobile/domain/entities/skill_score.dart';
+import 'package:bilimyol_mobile/domain/repositories/i_learner_repository.dart';
 import 'package:bilimyol_mobile/domain/personalization/adaptive_cycle_engine.dart';
 import 'package:bilimyol_mobile/domain/personalization/route_engine.dart';
 import 'package:bilimyol_mobile/domain/usecases/submit_reinforcement_use_case.dart';
@@ -376,5 +377,335 @@ void main() {
       expect(find.byType(ReinforcementSheet), findsOneWidget);
       expect(find.text('FULL_LESSON_SCREEN'), findsNothing);
     });
+
+    test('FIX-P1-18 & FIX-P1-19: Multi-skill B1 SubmitReinforcementUseCase remediates listening parent without corrupting unassessed grammar to 22%', () async {
+      SharedPreferences.setMockInitialValues({});
+      final learnerRepo = InMemoryLearnerRepository();
+      final lessonRepo = InMemoryLessonRepository();
+      final current = await learnerRepo.getProfile();
+      await learnerRepo.updateProfile(
+        current.copyWith(
+          selectedCourseId: 'course_eng_01',
+          placementCefrByCourse: const {'course_eng_01': 'B1'},
+          scoresByCourse: {
+            'course_eng_01': {
+              'skill_eng_listening': _score(
+                'course_eng_01',
+                'skill_eng_listening',
+                32,
+              ),
+            },
+          },
+        ),
+      );
+
+      final b1Lesson = b1LessonsData['lesson_eng_b1_m1_travel']!;
+      final q = b1Lesson.reinforcementExercise;
+      expect(q.skillId, 'skill_eng_grammar');
+      final useCase = SubmitReinforcementUseCase(learnerRepo, lessonRepo);
+
+      final res = await useCase.execute(
+        courseId: 'course_eng_01',
+        skillId: q.skillId,
+        reinforcementNodeId: 'reinf_node_eng_b1_m1_travel',
+        reinforcementQuestion: q,
+        selectedIndex: q.usesOptionSelection ? q.correctIndex : 0,
+        selectedText: q.usesTextEvaluation ? q.acceptedAnswers.first : null,
+      );
+
+      expect(res.isCorrect, isTrue);
+      expect(res.oldScore, 32);
+      expect(res.newScore, 54);
+
+      final updated = await learnerRepo.getProfile();
+      expect(
+        updated.scoresByCourse['course_eng_01']!['skill_eng_listening']!.score,
+        54,
+      );
+      expect(
+        updated.scoresByCourse['course_eng_01']!['skill_eng_grammar']!.score,
+        greaterThanOrEqualTo(50),
+      );
+
+      final b1Entry = res.updatedRoadmap.nodes.firstWhere(
+        (n) => n.id == 'node_eng_b1_m1_travel',
+      );
+      final b1Reinf = res.updatedRoadmap.nodes.firstWhere(
+        (n) => n.id == 'reinf_node_eng_b1_m1_travel',
+      );
+      final b1GrammarNode = res.updatedRoadmap.nodes.firstWhere(
+        (n) => n.id == 'node_eng_b1_m2_work_study',
+      );
+      expect(b1Entry.status, NodeStatus.available);
+      expect(b1Reinf.status, NodeStatus.completed);
+      expect(b1GrammarNode.status, isNot(NodeStatus.reinforcement));
+      expect(
+        RouteEngine.canStartNode(
+          b1Reinf,
+          const [],
+          placementCefrTier: 'B1',
+        ),
+        isTrue,
+      );
+    });
+
+    test('FIX-P0-03 & FIX-P1-01: Mobile AdaptiveCycleEngine counts omitted <50% completed reinforcements and keeps Day-0 steps monotonic', () async {
+      final courseRepo = InMemoryCourseRepository();
+      final mathCourse = (await courseRepo.getAllCourses()).firstWhere(
+        (c) => c.id == 'course_math_01',
+      );
+      final mathSkills = await courseRepo.getSkillsByCourseId('course_math_01');
+      final mathNodes = seedRoadmapNodes['course_math_01']!;
+
+      // 1. Day-0 onboarded learner -> Step 01 active, Steps 02..05 strictly upcoming
+      final day0Roadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_math_01',
+        baseNodes: mathNodes,
+        skillScores: const {},
+        completedNodeIds: const [],
+        completedReinforcementIds: const [],
+      );
+      const day0Profile = LearnerProfile(
+        id: 'learner_day0',
+        name: 'Aziza',
+        selectedCourseId: 'course_math_01',
+        goal: OnboardingGoal.mastery,
+        dailyMinutes: 15,
+        initialLevel: InitialLevel.beginner,
+        courseLevels: {'course_math_01': InitialLevel.beginner},
+        xp: 0,
+        streakDays: 0,
+        lastActiveDate: '',
+        scoresByCourse: {},
+        completedLessonIds: [],
+        completedNodeIds: [],
+        completedReinforcementIds: [],
+        createdAt: 1700000000000,
+      );
+      final day0Cycle = AdaptiveCycleEngine.evaluateCycle(
+        AdaptiveContextInput(
+          course: mathCourse,
+          profile: day0Profile,
+          skills: mathSkills,
+          skillScores: const {},
+          roadmap: day0Roadmap,
+        ),
+      );
+      expect(day0Cycle.activeStep, 1);
+      expect(day0Cycle.steps[0].status, AdaptiveStepStatus.active);
+      expect(
+        day0Cycle.steps.skip(1).every((s) => s.status == AdaptiveStepStatus.upcoming),
+        isTrue,
+      );
+
+      // 2. Completing reinf_node_math_alg (0% -> 22%) omits reinf_node_math_alg from Mobile roadmap.nodes
+      // yet AdaptiveCycleEngine still detects practice activity, Step 05, and +22% growthDelta
+      final postReinfScores = {
+        'skill_math_algebra': _score('course_math_01', 'skill_math_algebra', 22),
+      };
+      final postReinfRoadmap = RouteEngine.adaptRoadmap(
+        courseId: 'course_math_01',
+        baseNodes: mathNodes,
+        skillScores: postReinfScores,
+        completedNodeIds: const [],
+        completedReinforcementIds: const ['reinf_node_math_alg'],
+      );
+      expect(
+        postReinfRoadmap.nodes.any((n) => n.id == 'reinf_node_math_alg'),
+        isFalse,
+      );
+      final postReinfProfile = LearnerProfile(
+        id: 'learner_reinf22',
+        name: 'Aziza',
+        selectedCourseId: 'course_math_01',
+        goal: OnboardingGoal.mastery,
+        dailyMinutes: 15,
+        initialLevel: InitialLevel.beginner,
+        xp: 30,
+        streakDays: 1,
+        lastActiveDate: '2026-11-28',
+        scoresByCourse: {'course_math_01': postReinfScores},
+        placementScoreByCourse: const {'course_math_01': 0},
+        placementSkillScoresByCourse: {
+          'course_math_01': {
+            'skill_math_algebra': _score('course_math_01', 'skill_math_algebra', 0),
+          },
+        },
+        completedLessonIds: const [],
+        completedNodeIds: const [],
+        completedReinforcementIds: const ['reinf_node_math_alg'],
+        createdAt: 1700000000000,
+      );
+      final postReinfCycle = AdaptiveCycleEngine.evaluateCycle(
+        AdaptiveContextInput(
+          course: mathCourse,
+          profile: postReinfProfile,
+          skills: mathSkills,
+          skillScores: postReinfScores,
+          roadmap: postReinfRoadmap,
+        ),
+      );
+      final postReinfEff = AdaptiveCycleEngine.measureEffectiveness(
+        AdaptiveContextInput(
+          course: mathCourse,
+          profile: postReinfProfile,
+          skills: mathSkills,
+          skillScores: postReinfScores,
+          roadmap: postReinfRoadmap,
+        ),
+      );
+      expect(postReinfCycle.activeStep, 5);
+      expect(postReinfCycle.steps[3].status, AdaptiveStepStatus.completed);
+      expect(postReinfEff.growthDelta, 22);
+    });
+
+    test('FIX-P1-18: RoadmapStateNotifier.submitStandaloneReinforcement reuses UUID and graded attempt across transient completion failure', () async {
+      SharedPreferences.setMockInitialValues({});
+      final baseRepo = InMemoryLearnerRepository();
+      final lessonRepo = InMemoryLessonRepository();
+      final courseRepo = InMemoryCourseRepository();
+      final current = await baseRepo.getProfile();
+      await baseRepo.updateProfile(
+        current.copyWith(
+          selectedCourseId: 'course_eng_01',
+          placementCefrByCourse: const {'course_eng_01': 'B1'},
+          scoresByCourse: {
+            'course_eng_01': {
+              'skill_eng_listening': _score(
+                'course_eng_01',
+                'skill_eng_listening',
+                32,
+              ),
+            },
+          },
+        ),
+      );
+
+      final proxyRepo = _TransientFailReinforcementRepo(baseRepo);
+      final container = ProviderContainer(
+        overrides: [
+          learnerRepositoryProvider.overrideWithValue(proxyRepo),
+          lessonRepositoryProvider.overrideWithValue(lessonRepo),
+          courseRepositoryProvider.overrideWithValue(courseRepo),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final q = b1LessonsData['lesson_eng_b1_m1_travel']!.reinforcementExercise;
+      final notifier = container.read(roadmapStateNotifierProvider.notifier);
+
+      // 1st attempt: submitAnswerAttemptIdempotent succeeds, markReinforcementCompleted throws transiently
+      await expectLater(
+        () => notifier.submitStandaloneReinforcement(
+          courseId: 'course_eng_01',
+          skillId: q.skillId,
+          reinforcementNodeId: 'reinf_node_eng_b1_m1_travel',
+          question: q,
+          selectedIndex: q.usesOptionSelection ? q.correctIndex : 0,
+          selectedText: q.usesTextEvaluation ? q.acceptedAnswers.first : null,
+        ),
+        throwsStateError,
+      );
+      expect(proxyRepo.submittedKeys.length, 1);
+
+      // 2nd attempt (retry): reuses cached graded attempt without re-calling submitAnswerAttemptIdempotent
+      final retryRes = await notifier.submitStandaloneReinforcement(
+        courseId: 'course_eng_01',
+        skillId: q.skillId,
+        reinforcementNodeId: 'reinf_node_eng_b1_m1_travel',
+        question: q,
+        selectedIndex: q.usesOptionSelection ? q.correctIndex : 0,
+        selectedText: q.usesTextEvaluation ? q.acceptedAnswers.first : null,
+      );
+      expect(retryRes, isNotNull);
+      expect(retryRes!.isCorrect, isTrue);
+      expect(proxyRepo.submittedKeys.length, 1);
+    });
   });
+}
+
+class _TransientFailReinforcementRepo implements ILearnerRepository {
+  final InMemoryLearnerRepository _inner;
+  bool failNextCompletion = true;
+  final List<String> submittedKeys = [];
+
+  _TransientFailReinforcementRepo(this._inner);
+
+  @override
+  bool get supportsNodeCompletion => _inner.supportsNodeCompletion;
+  @override
+  bool get supportsServerPlacementPersistence =>
+      _inner.supportsServerPlacementPersistence;
+  @override
+  bool get supportsServerReinforcementPersistence =>
+      _inner.supportsServerReinforcementPersistence;
+
+  @override
+  Future<AnswerAttemptRecord> submitAnswerAttemptIdempotent({
+    required String courseId,
+    required String skillId,
+    required String lessonId,
+    required String questionId,
+    required int selectedIndex,
+    required String selectedAnswer,
+    String? idempotencyKey,
+  }) {
+    submittedKeys.add(idempotencyKey ?? '');
+    return _inner.submitAnswerAttemptIdempotent(
+      courseId: courseId,
+      skillId: skillId,
+      lessonId: lessonId,
+      questionId: questionId,
+      selectedIndex: selectedIndex,
+      selectedAnswer: selectedAnswer,
+      idempotencyKey: idempotencyKey,
+    );
+  }
+
+  @override
+  Future<ReinforcementCompletionResult?> markReinforcementCompleted({
+    required String reinforcementId,
+    required String courseId,
+    required String skillId,
+    required String questionId,
+    required int beforeScore,
+    required int afterScore,
+    required int xpAwarded,
+  }) async {
+    if (failNextCompletion) {
+      failNextCompletion = false;
+      throw StateError('Transient network failure');
+    }
+    return _inner.markReinforcementCompleted(
+      reinforcementId: reinforcementId,
+      courseId: courseId,
+      skillId: skillId,
+      questionId: questionId,
+      beforeScore: beforeScore,
+      afterScore: afterScore,
+      xpAwarded: xpAwarded,
+    );
+  }
+
+  @override
+  Future<LearnerProfile> getProfile() => _inner.getProfile();
+
+  @override
+  Future<LearnerProfile> getCurrentProfile() => _inner.getCurrentProfile();
+
+  @override
+  Future<LearnerProfile> updateProfile(
+    LearnerProfile updated, {
+    Set<LearnerProfileField>? fields,
+  }) => _inner.updateProfile(updated, fields: fields);
+
+  @override
+  Future<void> saveSkillScores(
+    String courseId,
+    Map<String, SkillScore> scores,
+  ) => _inner.saveSkillScores(courseId, scores);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      super.noSuchMethod(invocation);
 }

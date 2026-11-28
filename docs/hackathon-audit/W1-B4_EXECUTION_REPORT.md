@@ -22,9 +22,9 @@ Full detailed engineering & test verification report: [docs/implementation/wave-
   - All `13/13` SQL regression suites passed on both postures (`26/26` runs), including `supabase/tests/w1_b4_roadmap_unlock_and_spaced_review_regression.sql` and updated `supabase/tests/math_mastery_pilot_regression.sql` (`L61`, `L171`).
   - 8-worker concurrent `READ COMMITTED` Day-8 review-slip test verified (`reinforcement:completed:completed:2`, `0` deadlocks, `0` leftover `postgres.exe`).
 - **Web & Deno:**
-  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`63/63` files, `376/376` tests, `5/5` `W1B4RoadmapReinforcementAndXai.test.tsx`), `npm run build` (`2382` modules, `0` warnings, `W0-B2` `6/6` bundle answer-key isolation preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/index.ts supabase/functions/yolchi-tutor/math-pilot.ts` (`EXIT=0`).
+  - `npm run typecheck` (`EXIT=0`), `npm run typecheck:tests` (`EXIT=0`), `npm run lint` (`0` errors), `npm test` (`63/63` files, `378/378` tests, `7/7` `W1B4RoadmapReinforcementAndXai.test.tsx`), `npm run build` (`2382` modules, `0` warnings, `W0-B2` `6/6` bundle answer-key isolation preserved), `npm run test:e2e` (`EXIT=0`), `deno check supabase/functions/yolchi-tutor/index.ts supabase/functions/yolchi-tutor/math-pilot.ts` (`EXIT=0`).
 - **Flutter Mobile:**
-  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b4_roadmap_reinforcement_and_xai_test.dart` (`5/5` passed), full `flutter test --no-pub` (`544` passed, `2` env-gated skips, `0` failed).
+  - `flutter analyze --no-pub --fatal-infos` (`EXIT=0`, `0` issues), `flutter test --no-pub test/features/w1_b4_roadmap_reinforcement_and_xai_test.dart` (`8/8` passed), full `flutter test --no-pub` (`547` passed, `2` env-gated skips, `0` failed).
 
 ## Wave 1 Overall Completion Summary (`20 / 20 FIXED_LOCAL`)
 

@@ -337,10 +337,13 @@ class RouteEngine {
     );
     if (node.courseId == 'course_eng_01' &&
         ((effectivePlacementTier == 'A2' &&
-                node.id == 'node_eng_a2_m1_directions') ||
+                (node.id == 'node_eng_a2_m1_directions' ||
+                    node.id == 'reinf_node_eng_a2_m1_directions')) ||
             (effectivePlacementTier == 'B1' &&
                 (node.id == 'node_eng_a2_m1_directions' ||
-                    node.id == 'node_eng_b1_m1_travel')))) {
+                    node.id == 'reinf_node_eng_a2_m1_directions' ||
+                    node.id == 'node_eng_b1_m1_travel' ||
+                    node.id == 'reinf_node_eng_b1_m1_travel')))) {
       return true;
     }
     return node.prerequisites.every((id) => completedNodeIds.contains(id));

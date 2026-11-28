@@ -39,7 +39,12 @@ class GetRoadmapUseCase {
       }
     }
     final profile = await learnerRepository.getProfile();
-    final scores = profile.scoresByCourse[courseId] ?? {};
+    final scores = courseId == 'course_eng_01'
+        ? (profile.scoresByCourse[courseId] ?? const <String, SkillScore>{})
+        : <String, SkillScore>{
+            ...(profile.placementSkillScoresByCourse[courseId] ?? const {}),
+            ...(profile.scoresByCourse[courseId] ?? const {}),
+          };
 
     return RouteEngine.adaptRoadmap(
       courseId: courseId,

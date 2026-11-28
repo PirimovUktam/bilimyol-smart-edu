@@ -5,6 +5,7 @@ import { Skill } from '../entities/Skill';
 import { LearnerProfile } from '../entities/LearnerProfile';
 import { ADAPTIVE_THRESHOLDS } from '@/core/constants/adaptiveThresholds';
 import { AdaptiveCycleEngine } from './AdaptiveCycleEngine';
+import { SkillScoringEngine } from './SkillScoringEngine';
 
 export class RecommendationEngine {
   /**
@@ -17,9 +18,53 @@ export class RecommendationEngine {
     roadmap: LearningPath,
     profile?: LearnerProfile | null
   ): Recommendation {
+    const effectiveSkills: Skill[] = [...skills];
+    const effectiveScores: Record<string, SkillScore> = {
+      ...(courseId !== 'course_eng_01' ? (profile?.placementSkillScoresByCourse?.[courseId] ?? {}) : {}),
+      ...skillScores,
+    };
+
+    const mathObjectives = roadmap.nodes.filter((n) => n.mastery && !n.isOptional);
+    if (mathObjectives.length > 0) {
+      if (profile?.placementSkillScoresByCourse?.[courseId]) {
+        for (const [sid, sc] of Object.entries(profile.placementSkillScoresByCourse[courseId])) {
+          if (!effectiveScores[sid]) {
+            effectiveScores[sid] = sc;
+          }
+        }
+      }
+      for (const node of mathObjectives) {
+        if (!effectiveSkills.some((s) => s.id === node.skillId)) {
+          effectiveSkills.push({
+            id: node.skillId,
+            courseId: node.courseId,
+            name: node.title,
+            code: node.skillId.toUpperCase(),
+            description: node.description ?? '',
+            order: node.order,
+            iconName: 'calculator',
+          });
+        }
+        if (node.mastery && node.mastery.answered > 0) {
+          const rawPct = Math.round((100 * node.mastery.correct) / node.mastery.answered);
+          const pilotScore =
+            node.status === 'reinforcement' || node.mastery.state === 'needs_review'
+              ? Math.min(rawPct, 45)
+              : rawPct;
+          effectiveScores[node.skillId] = {
+            skillId: node.skillId,
+            courseId: node.courseId,
+            score: pilotScore,
+            lastUpdated: roadmap.updatedAt,
+            masteryLevel: SkillScoringEngine.getMasteryLevel(pilotScore),
+          };
+        }
+      }
+    }
+
     // 1. Find weakest skill
     let weakestSkill: SkillScore | null = null;
-    const scoreList = Object.values(skillScores);
+    const scoreList = Object.values(effectiveScores);
     for (const sc of scoreList) {
       if (!weakestSkill || sc.score < weakestSkill.score) {
         weakestSkill = sc;
@@ -27,7 +72,7 @@ export class RecommendationEngine {
     }
 
     const weakestSkillId = weakestSkill ? (weakestSkill as SkillScore).skillId : '';
-    const targetSkill = skills.find((s) => s.id === weakestSkillId);
+    const targetSkill = effectiveSkills.find((s) => s.id === weakestSkillId);
     const targetSkillName = targetSkill ? targetSkill.name : 'Asosiy mavzu';
 
     // 2. Find next active node in roadmap (respecting RouteEngine.activeNodeId first)
@@ -40,23 +85,32 @@ export class RecommendationEngine {
       ) ||
       roadmap.nodes[0];
 
-    const isReinforcement = activeNode ? activeNode.isReinforcement || activeNode.status === 'reinforcement' : false;
+    const isReinforcement = activeNode
+      ? activeNode.isReinforcement ||
+        activeNode.status === 'reinforcement' ||
+        activeNode.mastery?.state === 'needs_review'
+      : false;
     const weakestScoreValue = weakestSkill ? (weakestSkill as SkillScore).score : 100;
     const isTargetedPractice =
       !isReinforcement &&
       weakestScoreValue >= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MIN &&
       weakestScoreValue <= ADAPTIVE_THRESHOLDS.TARGETED_PRACTICE_MAX;
 
-    const cycle = AdaptiveCycleEngine.evaluateCycle({ skills, skillScores, roadmap, profile });
+    const cycle = AdaptiveCycleEngine.evaluateCycle({
+      skills: effectiveSkills,
+      skillScores: effectiveScores,
+      roadmap,
+      profile,
+    });
     const explainableFactors = AdaptiveCycleEngine.buildExplainableFactors({
-      skills,
-      skillScores,
+      skills: effectiveSkills,
+      skillScores: effectiveScores,
       roadmap,
       profile,
     });
     const dailyMicroTasks = AdaptiveCycleEngine.buildDailyMicroTasks({
-      skills,
-      skillScores,
+      skills: effectiveSkills,
+      skillScores: effectiveScores,
       roadmap,
       profile,
     });

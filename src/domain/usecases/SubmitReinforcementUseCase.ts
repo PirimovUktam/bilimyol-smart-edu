@@ -56,7 +56,12 @@ export class SubmitReinforcementUseCase {
     // client-side correctIndex (or default to one when it is absent).
     const profile = await this.learnerRepo.getProfile();
     const courseScores = profile.scoresByCourse[courseId] || {};
+    const hadPriorSkillScore = Object.prototype.hasOwnProperty.call(courseScores, skillId);
     const currentSkillScore = courseScores[skillId]?.score ?? 0;
+    const resolveEffectiveScores = (p: typeof profile) =>
+      courseId !== 'course_eng_01'
+        ? { ...(p.placementSkillScoresByCourse?.[courseId] ?? {}), ...(p.scoresByCourse[courseId] ?? {}) }
+        : (p.scoresByCourse[courseId] ?? {});
     const selectedAnswer = isChoiceType
       ? reinforcementQuestion.options[selectedIndex] || ''
       : (selectedAnswerOverride ?? '');
@@ -83,7 +88,7 @@ export class SubmitReinforcementUseCase {
       const currentProfile = this.learnerRepo.supportsServerReinforcementPersistence
         ? await this.learnerRepo.getProfile()
         : profile;
-      const currentScores = currentProfile.scoresByCourse[courseId] || {};
+      const currentScores = resolveEffectiveScores(currentProfile);
       const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
       const currentRoadmap = RouteEngine.adaptRoadmap(
         courseId,
@@ -132,7 +137,7 @@ export class SubmitReinforcementUseCase {
         updatedRoadmap: RouteEngine.adaptRoadmap(
           courseId,
           baseNodes,
-          updatedProfile.scoresByCourse[courseId] || {},
+          resolveEffectiveScores(updatedProfile),
           updatedProfile.completedNodeIds,
           updatedProfile.completedReinforcementIds,
           {
@@ -144,8 +149,41 @@ export class SubmitReinforcementUseCase {
       };
     }
 
-    // 1. Calculate new score deterministically
-    const newScore = SkillScoringEngine.calculateReinforcementScore(currentSkillScore);
+    // 1. Calculate new score deterministically (preserving multi-skill parent remediation parity)
+    const postAttemptProfile = await this.learnerRepo.getProfile();
+    const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
+    const parentBase = baseNodes.find(
+      (n) => !n.isReinforcement && (reinforcementNodeId === `reinf_${n.id}` || n.id === reinforcementNodeId)
+    );
+    const isMultiSkillParent = Boolean(parentBase && parentBase.skillId !== skillId);
+    const postAttemptSkillScore =
+      postAttemptProfile.scoresByCourse[courseId]?.[skillId]?.score ??
+      answerResult.newSkillScore ??
+      0;
+    const bumpedSkillScore = SkillScoringEngine.calculateReinforcementScore(currentSkillScore);
+    const exerciseNewScore = isMultiSkillParent
+      ? hadPriorSkillScore
+        ? Math.max(postAttemptSkillScore, bumpedSkillScore)
+        : Math.max(50, postAttemptSkillScore, bumpedSkillScore)
+      : bumpedSkillScore;
+
+    const parentExisting =
+      isMultiSkillParent && parentBase ? courseScores[parentBase.skillId] : undefined;
+    const remediateParent = Boolean(
+      parentBase && parentExisting && parentExisting.score < parentBase.requiredScore
+    );
+    const parentOldScore = parentExisting?.score ?? 0;
+    const parentNewScore = remediateParent
+      ? SkillScoringEngine.calculateReinforcementScore(parentOldScore)
+      : parentOldScore;
+    const reportedOldScore =
+      remediateParent && (!hadPriorSkillScore || currentSkillScore >= (parentBase?.requiredScore ?? 50))
+        ? parentOldScore
+        : currentSkillScore;
+    const reportedNewScore =
+      remediateParent && (!hadPriorSkillScore || currentSkillScore >= (parentBase?.requiredScore ?? 50))
+        ? parentNewScore
+        : exerciseNewScore;
 
     // 2. Calculate XP idempotently BEFORE writes so the audit row stores real values
     const { newXP, wasAwarded } = ProgressEngine.calculateNewXP(
@@ -161,24 +199,35 @@ export class SubmitReinforcementUseCase {
       courseId,
       skillId,
       questionId: reinforcementQuestion.id,
-      beforeScore: currentSkillScore,
-      afterScore: newScore,
+      beforeScore: reportedOldScore,
+      afterScore: reportedNewScore,
       xpAwarded,
     });
 
-    // 4. Save new score
-    const updatedSkillScore = {
-      skillId,
-      courseId,
-      score: newScore,
-      lastUpdated: Date.now(),
-      masteryLevel: SkillScoringEngine.getMasteryLevel(newScore),
-      isWeakestFocus: false,
+    // 4. Save new score (and remediate parent node's weak skill when exercise skill differs)
+    const now = Date.now();
+    const scoresToSave: Record<string, typeof courseScores[string]> = {
+      [skillId]: {
+        skillId,
+        courseId,
+        score: exerciseNewScore,
+        lastUpdated: now,
+        masteryLevel: SkillScoringEngine.getMasteryLevel(exerciseNewScore),
+        isWeakestFocus: false,
+      },
     };
+    if (remediateParent && parentBase) {
+      scoresToSave[parentBase.skillId] = {
+        skillId: parentBase.skillId,
+        courseId,
+        score: parentNewScore,
+        lastUpdated: now,
+        masteryLevel: SkillScoringEngine.getMasteryLevel(parentNewScore),
+        isWeakestFocus: false,
+      };
+    }
 
-    await this.learnerRepo.saveSkillScores(courseId, {
-      [skillId]: updatedSkillScore,
-    });
+    await this.learnerRepo.saveSkillScores(courseId, scoresToSave);
 
     if (wasAwarded) {
       await this.learnerRepo.updateProfile({ xp: newXP });
@@ -186,8 +235,7 @@ export class SubmitReinforcementUseCase {
 
     // 5. Adapt updated roadmap
     const updatedProfile = await this.learnerRepo.getProfile();
-    const baseNodes = await this.lessonRepo.getBaseRoadmapNodes(courseId);
-    const updatedScores = updatedProfile.scoresByCourse[courseId] || {};
+    const updatedScores = resolveEffectiveScores(updatedProfile);
 
     const updatedRoadmap = RouteEngine.adaptRoadmap(
       courseId,
@@ -204,8 +252,8 @@ export class SubmitReinforcementUseCase {
 
     return {
       isCorrect: true,
-      oldScore: currentSkillScore,
-      newScore,
+      oldScore: reportedOldScore,
+      newScore: reportedNewScore,
       xpAwarded,
       updatedRoadmap,
     };
